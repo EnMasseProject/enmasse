@@ -15,12 +15,12 @@
  */
 package io.enmasse.controller;
 
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.types.Plan;
-import io.enmasse.address.model.types.TemplateConfig;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.SchemaApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Service;
@@ -47,16 +47,24 @@ public class ControllerHelper {
     private final String namespace;
     private final AuthenticationServiceResolverFactory authResolverFactory;
     private final EventLogger eventLogger;
+    private final SchemaApi schemaApi;
+    private final AddressSpaceResolver addressSpaceResolver;
 
-    public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, EventLogger eventLogger) {
+    public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, EventLogger eventLogger, SchemaApi schemaApi) {
         this.kubernetes = kubernetes;
         this.namespace = kubernetes.getNamespace();
         this.authResolverFactory = authResolverFactory;
         this.eventLogger = eventLogger;
+        this.schemaApi = schemaApi;
+        Schema schema = schemaApi.getSchema();
+        this.addressSpaceResolver = new AddressSpaceResolver(schema);
     }
 
     public void create(AddressSpace addressSpace) {
         Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
+
+        addressSpaceResolver.validate(addressSpace);
+
         if (namespace.equals(addressSpace.getNamespace())) {
             if (instanceClient.hasService("messaging")) {
                 return;
@@ -71,6 +79,7 @@ public class ControllerHelper {
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
             kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
+            schemaApi.copyIntoNamespace(addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
@@ -96,28 +105,31 @@ public class ControllerHelper {
     }
 
     private StandardResources createResourceList(AddressSpace addressSpace) {
-        Plan plan = addressSpace.getPlan();
         StandardResources returnVal = new StandardResources();
         returnVal.resourceList = new KubernetesList();
         returnVal.routeEndpoints = new ArrayList<>();
 
+        AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace);
+        AddressSpacePlan plan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace);
+        ResourceDefinition resourceDefinition = addressSpaceResolver.getResourceDefinition(plan);
 
-        if (plan.getTemplateConfig().isPresent()) {
-            List<ParameterValue> parameterValues = new ArrayList<>();
+        if (resourceDefinition != null && resourceDefinition.getTemplateName().isPresent()) {
+            Map<String, String> parameters = new HashMap<>();
             AuthenticationService authService = addressSpace.getAuthenticationService();
             AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
-            parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE, addressSpace.getName()));
-            parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer()));
-            parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService)));
-            parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService))));
-            authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt")))));
-            kubernetes.getSecret("address-controller-cert").ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_CONTROLLER_CA_CERT, secret.getData().get("tls.crt"))));
-            authResolver.getClientSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret)));
-            authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
+            parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+            parameters.put(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer());
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
+
+            authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
+            kubernetes.getSecret("address-controller-cert").ifPresent(secret -> parameters.put(TemplateParameter.ADDRESS_CONTROLLER_CA_CERT, secret.getData().get("tls.crt")));
+            authResolver.getClientSecretName(authService).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
+            authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));
 
             // Step 1: Validate endpoints and remove unknown
-            List<String> availableServices = addressSpace.getType().getServiceNames();
+            List<String> availableServices = addressSpaceType.getServiceNames();
             Map<String, CertProvider> serviceCertProviders = new HashMap<>();
 
             List<Endpoint> endpoints = null;
@@ -163,18 +175,24 @@ public class ControllerHelper {
                     }).collect(Collectors.toList());
 
             if (availableServices.contains("messaging")) {
-                parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
+                parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName());
             }
             if (availableServices.contains("console")) {
-                parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_SECRET, serviceCertProviders.get("console").getSecretName()));
+                parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertProviders.get("console").getSecretName());
             }
             if (availableServices.contains("mqtt")) {
-                parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
+                parameters.put(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName());
+            }
+
+            parameters.putAll(resourceDefinition.getTemplateParameters());
+
+            List<ParameterValue> parameterValues = new ArrayList<>();
+            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                parameterValues.add(new ParameterValue(entry.getKey(), entry.getValue()));
             }
 
             // Step 5: Create infrastructure
-            TemplateConfig templateConfig = plan.getTemplateConfig().get();
-            returnVal.resourceList = kubernetes.processTemplate(templateConfig.getName(), parameterValues.toArray(new ParameterValue[0]));
+            returnVal.resourceList = kubernetes.processTemplate(resourceDefinition.getTemplateName().get(), parameterValues.toArray(new ParameterValue[0]));
         }
         return returnVal;
     }

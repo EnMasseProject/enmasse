@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Red Hat Inc.
+ * Copyright 2018 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.config;
+package io.enmasse.address.model;
 
-public interface AnnotationKeys {
-    String CLUSTER_ID = "cluster_id";
-    String ADDRESS_SPACE = "addressSpace";
-    String CERT_SECRET_NAME = "io.enmasse.certSecretName";
-    String CERT_CN = "io.enmasse.certCn";
-    String ENDPOINT_PORT = "io.enmasse.endpointPort";
-    String SERVICE_NAME = "io.enmasse.serviceName";
-    String CREATED_BY = "io.enmasse.createdBy";
-    String DEFINED_BY = "enmasse.io/defined-by";
+public class ResourceAllowance {
+    private final String resourceName;
+    private final double min;
+    private final double max;
+
+    public ResourceAllowance(String resourceName, double min, double max) {
+        this.resourceName = resourceName;
+        this.min = min;
+        this.max = max;
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public double getMin() {
+        return min;
+    }
+
+    public double getMax() {
+        return max;
+    }
 }

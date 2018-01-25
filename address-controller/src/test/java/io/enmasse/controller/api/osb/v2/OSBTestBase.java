@@ -4,7 +4,6 @@ import io.enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import io.enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import io.enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import io.enmasse.controller.api.osb.v2.provision.ProvisionRequest;
-import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
@@ -24,8 +23,8 @@ import static org.mockito.Mockito.when;
 public class OSBTestBase {
     protected static final UUID QUEUE_SERVICE_ID = ServiceType.QUEUE.uuid();
     protected static final UUID TOPIC_SERVICE_ID = ServiceType.TOPIC.uuid();
-    protected static final UUID QUEUE_PLAN_ID = UUID.fromString(StandardType.QUEUE.getPlans().get(0).getUuid());
-    protected static final UUID TOPIC_PLAN_ID = UUID.fromString(StandardType.TOPIC.getPlans().get(0).getUuid());
+    protected static final UUID QUEUE_PLAN_ID = UUID.fromString("3c7f4fdc-0597-11e8-abdb-507b9def37d9");
+    protected static final UUID TOPIC_PLAN_ID = UUID.fromString("48837510-0597-11e8-8517-507b9def37d9");
     protected static final String SERVICE_INSTANCE_ID = UUID.randomUUID().toString();
     protected static final String ORGANIZATION_ID = UUID.randomUUID().toString();
     protected static final String SPACE_ID = UUID.randomUUID().toString();

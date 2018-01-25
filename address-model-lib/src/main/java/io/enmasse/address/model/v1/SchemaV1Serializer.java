@@ -21,17 +21,14 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.enmasse.address.model.types.AddressSpaceType;
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
-import io.enmasse.address.model.types.Schema;
+import io.enmasse.address.model.*;
 
 import java.io.IOException;
 
 /**
  * Serializer for schema
  */
-class SchemaV1Serializer extends JsonSerializer<io.enmasse.address.model.types.Schema> {
+class SchemaV1Serializer extends JsonSerializer<Schema> {
 
     @Override
     public void serialize(Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
@@ -52,19 +49,19 @@ class SchemaV1Serializer extends JsonSerializer<io.enmasse.address.model.types.S
                 t.put(Fields.NAME, atype.getName());
                 t.put(Fields.DESCRIPTION, atype.getDescription());
                 ArrayNode plans = t.putArray(Fields.PLANS);
-                for (Plan plan : atype.getPlans()) {
+                for (AddressPlan plan : atype.getAddressPlans()) {
                     ObjectNode p = plans.addObject();
                     p.put(Fields.NAME, plan.getName());
-                    p.put(Fields.DESCRIPTION, plan.getDescription());
+                    p.put(Fields.DESCRIPTION, plan.getShortDescription());
                 }
                 spaceType.put(Fields.NAME, type.getName());
             }
 
             ArrayNode aplans = spaceType.putArray(Fields.PLANS);
-            for (Plan plan : type.getPlans()) {
+            for (AddressSpacePlan plan : type.getPlans()) {
                 ObjectNode p = aplans.addObject();
                 p.put(Fields.NAME, plan.getName());
-                p.put(Fields.DESCRIPTION, plan.getDescription());
+                p.put(Fields.DESCRIPTION, plan.getShortDescription());
             }
             spaceType.put(Fields.DESCRIPTION, type.getDescription());
             spaceType.put(Fields.NAME, type.getName());

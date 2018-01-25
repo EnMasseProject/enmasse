@@ -18,12 +18,10 @@ package io.enmasse.address.model.v1;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.v1.Fields;
 
 import java.io.IOException;
 
@@ -51,8 +49,8 @@ class AddressV1Serializer extends JsonSerializer<Address> {
         metadata.put(Fields.ADDRESS_SPACE, address.getAddressSpace());
         metadata.put(Fields.UUID, address.getUuid());
 
-        spec.put(Fields.TYPE, address.getType().getName());
-        spec.put(Fields.PLAN, address.getPlan().getName());
+        spec.put(Fields.TYPE, address.getType());
+        spec.put(Fields.PLAN, address.getPlan());
         spec.put(Fields.ADDRESS, address.getAddress());
 
         status.put(Fields.IS_READY, address.getStatus().isReady());

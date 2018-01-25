@@ -1,12 +1,13 @@
 package io.enmasse.controller.api.osb.v2;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
+import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.controller.api.RbacSecurityContext;
 import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.catalog.InputParameters;
@@ -15,8 +16,6 @@ import io.enmasse.controller.api.osb.v2.catalog.Schemas;
 import io.enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
@@ -58,7 +57,7 @@ public abstract class OSBServiceBase {
 
     protected void provisionAddress(AddressSpace addressSpace, Address address) {
         log.info("Creating address {} with plan {} of MaaS addressspace {} (namespace {})",
-                address.getAddress(), address.getPlan().getName(), addressSpace.getName(), addressSpace.getNamespace());
+                address.getAddress(), address.getPlan(), addressSpace.getName(), addressSpace.getNamespace());
         addressSpaceApi.withAddressSpace(addressSpace).createAddress(address);
     }
 
@@ -67,8 +66,8 @@ public abstract class OSBServiceBase {
         if (!instance.isPresent()) {
             AddressSpace i = new AddressSpace.Builder()
                     .setName(addressSpaceId)
-                    .setType(new StandardAddressSpaceType()) // TODO: Generify?
-                    .setPlan(new StandardAddressSpaceType().getDefaultPlan())
+                    .setType("standard")
+                    .setPlan("unlimited")
                     .build();
             addressSpaceApi.createAddressSpace(i);
             log.info("Created MaaS addressspace {}", i.getName());
@@ -94,13 +93,7 @@ public abstract class OSBServiceBase {
         return false;
     }
 
-    protected static io.enmasse.address.model.types.Plan getPlan(AddressType addressType, UUID planId) {
-        String uuid = planId.toString();
-        for (io.enmasse.address.model.types.Plan plan : addressType.getPlans()) {
-            if (plan.getUuid().equals(uuid)) {
-                return plan;
-            }
-        }
+    protected static String getPlan(String addressType, UUID planId) {
         return null;
     }
 
@@ -109,20 +102,18 @@ public abstract class OSBServiceBase {
     }
 
     protected List<Plan> getPlans(ServiceType serviceType) {
-        return serviceType.addressType().getPlans().stream()
-                .map(p -> convertPlanToOSBPlan(p, serviceType))
-                .collect(Collectors.toList());
+        return Collections.emptyList();
     }
 
-    private Plan convertPlanToOSBPlan(io.enmasse.address.model.types.Plan p, ServiceType serviceType) {
-        Plan plan = new Plan(
-                UUID.fromString(p.getUuid()),
-                sanitizePlanName(p.getName()),
-                p.getDescription(),
+    private Plan convertPlanToOSBPlan(AddressSpacePlan plan, ServiceType serviceType) {
+        Plan osbPlan = new Plan(
+                UUID.fromString(plan.getUuid()),
+                sanitizePlanName(plan.getName()),
+                plan.getShortDescription(),
                 true, true);
-        plan.getMetadata().put("displayName", p.getDisplayName());
-        plan.setSchemas(createSchemas(serviceType));
-        return plan;
+        osbPlan.getMetadata().put("displayName", plan.getDisplayName());
+        osbPlan.setSchemas(createSchemas(serviceType));
+        return osbPlan;
     }
 
     private Schemas createSchemas(ServiceType serviceType) {

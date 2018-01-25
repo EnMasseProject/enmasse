@@ -3,9 +3,10 @@ package io.enmasse.controller.api.v1.http;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.api.DefaultExceptionMapper;
+import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.api.TestSchemaApi;
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +34,8 @@ public class HttpAddressSpaceServiceTest {
     @Before
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, "controller");
+        SchemaApi schemaApi = new TestSchemaApi();
+        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, schemaApi,"controller");
         securityContext = mock(SecurityContext.class);
         when(securityContext.getUserPrincipal()).thenReturn(new BasicUserPrincipal("me"));
         when(securityContext.isUserInRole(any())).thenReturn(true);
@@ -41,7 +43,8 @@ public class HttpAddressSpaceServiceTest {
         a1 = new AddressSpace.Builder()
                 .setName("a1")
                 .setNamespace("myspace")
-                .setType(new StandardAddressSpaceType())
+                .setType("type1")
+                .setPlan("myplan")
                 .setEndpointList(Arrays.asList(
                         new Endpoint.Builder()
                             .setName("messaging")
@@ -57,7 +60,8 @@ public class HttpAddressSpaceServiceTest {
 
         a2 = new AddressSpace.Builder()
                 .setName("a2")
-                .setType(new StandardAddressSpaceType())
+                .setType("type1")
+                .setPlan("myplan")
                 .setNamespace("othernamespace")
                 .build();
     }

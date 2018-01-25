@@ -16,10 +16,9 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.v1.CodecV1;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
@@ -35,8 +34,7 @@ import java.util.*;
 public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
     private final OpenShiftClient client;
-    // TODO: Parameterize
-    private static final ObjectMapper mapper = CodecV1.getMapper();
+    private final ObjectMapper mapper = CodecV1.getMapper();
 
     public ConfigMapAddressSpaceApi(OpenShiftClient client) {
         this.client = client;
@@ -135,7 +133,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        return new ConfigMapAddressApi(client, new AddressResolver(addressSpace.getType()), addressSpace.getNamespace());
+        return new ConfigMapAddressApi(client, addressSpace.getNamespace());
     }
 
     public static String getConfigMapName(String name) {

@@ -12,9 +12,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
-import io.enmasse.address.model.types.standard.StandardType;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,10 +33,10 @@ public class ConfigServiceClientTest {
     public void testClientUpdatesListener() throws Exception {
         assertNull(listener.addressMap);
         client.resourcesUpdated(Sets.newSet(
-                createAddress("queue1", StandardType.QUEUE, "pooled-inmemory"),
-                createAddress("queue2", StandardType.QUEUE, "pooled-inmemory"),
-                createAddress("queue3", StandardType.QUEUE, "inmemory"),
-                createAddress("direct1", StandardType.ANYCAST, "standard")));
+                createAddress("queue1", "queue", "pooled-inmemory"),
+                createAddress("queue2", "queue", "pooled-inmemory"),
+                createAddress("queue3", "queue", "inmemory"),
+                createAddress("direct1", "anycast", "standard")));
 
         assertNotNull(listener.addressMap);
         assertThat(listener.addressMap.size(), is(2));
@@ -50,18 +47,11 @@ public class ConfigServiceClientTest {
         assertThat(listener.addressMap.get("queue3"), hasItem("queue3"));
     }
 
-    private Address createAddress(String name, AddressType type, String planName) {
-        Plan selectedPlan = null;
-        for (Plan plan : type.getPlans()) {
-            if (plan.getName().equals(planName)) {
-                selectedPlan = plan;
-                break;
-            }
-        }
+    private Address createAddress(String name, String type, String planName) {
         return new Address.Builder()
                 .setName(name)
                 .setType(type)
-                .setPlan(selectedPlan)
+                .setPlan(planName)
                 .build();
     }
 

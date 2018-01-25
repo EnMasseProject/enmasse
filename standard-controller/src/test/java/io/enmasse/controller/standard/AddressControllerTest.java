@@ -16,12 +16,11 @@
 
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.address.model.AddressResolver;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.TestSchemaApi;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -53,25 +52,14 @@ public class AddressControllerTest {
         mockGenerator = mock(AddressClusterGenerator.class);
         mockApi = mock(AddressApi.class);
         mockClient = mock(OpenShiftClient.class);
+        TestSchemaApi testSchemaApi = new TestSchemaApi();
+        AddressResolver testResolver = new AddressResolver(testSchemaApi.getSchema(), testSchemaApi.getSchema().findAddressSpaceType("type1").get());
         EventLogger eventLogger = mock(EventLogger.class);
 
-        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger);
+        controller = new AddressController("me", mockApi, testResolver, mockHelper, mockGenerator, null, eventLogger);
     }
 
-    private Address createAddress(String address, AddressType type) {
-        return createAddress(address, type, type.getPlans().get(0));
-    }
-
-    private Address createAddress(String address, StandardType type, String planName) {
-        for (Plan p : type.getPlans()) {
-            if (p.getName().equals(planName)) {
-                return createAddress(address, type, p);
-            }
-        }
-        return null;
-    }
-
-    private Address createAddress(String address, AddressType type, Plan plan) {
+    private Address createAddress(String address, String type, String plan) {
         return new Address.Builder()
                 .setName(address)
                 .setAddress(address)
@@ -85,7 +73,7 @@ public class AddressControllerTest {
 
     @Test
     public void testClusterIsCreated() throws Exception {
-        Address queue = createAddress("myqueue", StandardType.QUEUE);
+        Address queue = createAddress("myqueue", "queue", "plan1");
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
         AddressCluster cluster = new AddressCluster("myqueue", resources);
@@ -103,14 +91,14 @@ public class AddressControllerTest {
 
     @Test
     public void testNodesAreRetained() throws Exception {
-        Address queue = createAddress("myqueue", StandardType.QUEUE);
+        Address queue = createAddress("myqueue", "queue", "plan1");
 
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
         AddressCluster existing = new AddressCluster(queue.getAddress(), resources);
         when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
 
-        Address newQueue = createAddress("newqueue", StandardType.QUEUE);
+        Address newQueue = createAddress("newqueue", "queue", "plan1");
         AddressCluster newCluster = new AddressCluster(newQueue.getAddress(), resources);
 
         when(mockGenerator.generateCluster("newqueue", Collections.singleton(newQueue))).thenReturn(newCluster);
@@ -125,13 +113,13 @@ public class AddressControllerTest {
 
     @Test
     public void testClusterIsRemoved() throws Exception {
-        Address queue = createAddress("myqueue", StandardType.QUEUE);
+        Address queue = createAddress("myqueue", "queue", "plan1");
 
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
         AddressCluster existing = new AddressCluster("myqueue", resources);
 
-        Address newQueue = createAddress("newqueue", StandardType.QUEUE);
+        Address newQueue = createAddress("newqueue", "queue", "plan1");
 
         AddressCluster newCluster = new AddressCluster("newqueue", resources);
 
@@ -144,10 +132,10 @@ public class AddressControllerTest {
 
     @Test
     public void testAddressesAreGrouped() throws Exception {
-        Address addr0 = createAddress("myqueue0", StandardType.QUEUE);
-        Address addr1 = createAddress("myqueue1", StandardType.QUEUE, "pooled-inmemory");
-        Address addr2 = createAddress("myqueue2", StandardType.QUEUE, "pooled-inmemory");
-        Address addr3 = createAddress("myqueue3", StandardType.QUEUE);
+        Address addr0 = createAddress("myqueue0", "queue", "plan1");
+        Address addr1 = createAddress("myqueue1", "queue", "pooled-inmemory");
+        Address addr2 = createAddress("myqueue2", "queue", "pooled-inmemory");
+        Address addr3 = createAddress("myqueue3", "queue", "plan1");
 
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
@@ -165,8 +153,8 @@ public class AddressControllerTest {
 
     @Test
     public void testAddressesAreNotRecreated() throws Exception {
-        Address address = createAddress("addr1", StandardType.ANYCAST);
-        Address newAddress = createAddress("addr2", StandardType.ANYCAST);
+        Address address = createAddress("addr1", "anycast", "plan1");
+        Address newAddress = createAddress("addr2", "anycast", "plan1");
 
         KubernetesList resources = new KubernetesList();
         when(mockGenerator.generateCluster(eq("addr1"), anySet())).thenReturn(new AddressCluster("addr1", resources));

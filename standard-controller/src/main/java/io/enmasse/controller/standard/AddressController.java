@@ -15,7 +15,7 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.AddressResolver;
 import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.address.model.Address;
 import io.enmasse.k8s.api.*;
@@ -40,8 +40,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static io.enmasse.address.model.types.standard.StandardType.QUEUE;
-import static io.enmasse.address.model.types.standard.StandardType.TOPIC;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
 import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.*;
@@ -60,10 +58,12 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private Watch watch;
     private final String certDir;
     private final EventLogger eventLogger;
+    private final AddressResolver addressResolver;
 
-    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir, EventLogger eventLogger) {
+    public AddressController(String addressSpaceName, AddressApi addressApi, AddressResolver addressResolver, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir, EventLogger eventLogger) {
         this.addressSpaceName = addressSpaceName;
         this.addressApi = addressApi;
+        this.addressResolver = addressResolver;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
         this.certDir = certDir;
@@ -110,7 +110,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     // TODO: Put this constant somewhere appropriate
     private static boolean isPooled(Address address) {
-        return address.getPlan().getName().startsWith("pooled");
+        return address.getPlan().startsWith("pooled");
     }
 
     @Override
@@ -121,7 +121,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         for (Address address : newAddressSet) {
             String key;
             if (isPooled(address)) {
-                key = address.getPlan().getName();
+                key = address.getPlan();
             } else {
                 key = address.getName();
             }
@@ -160,15 +160,16 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
      * Ensure that a address groups meet the criteria of all address sharing the same properties, until we can
      * support a mix.
      */
-    private static void validateAddressGroups(Map<String, Set<Address>> addressByGroup) {
+    private void validateAddressGroups(Map<String, Set<Address>> addressByGroup) {
         for (Map.Entry<String, Set<Address>> entry : addressByGroup.entrySet()) {
             Iterator<Address> it = entry.getValue().iterator();
             Address first = it.next();
             while (it.hasNext()) {
                 Address current = it.next();
+                addressResolver.validate(current);
                 if (!first.getAddressSpace().equals(current.getAddressSpace()) ||
-                        !first.getType().getName().equals(current.getType().getName()) ||
-                        !first.getPlan().getName().equals(current.getPlan().getName())) {
+                        !first.getType().equals(current.getType()) ||
+                        !first.getPlan().equals(current.getPlan())) {
 
                     throw new IllegalArgumentException("All address in a shared group must share the same properties. Found: " + current + " and " + first);
                 }
@@ -238,9 +239,10 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     private void checkClusterStatus(Address address) {
-        String clusterName = isPooled(address) ? address.getPlan().getName() : address.getName();
-        AddressType addressType = address.getType();
-        if ((addressType.getName().equals(QUEUE.getName()) || addressType.getName().equals(TOPIC.getName())) && !kubernetes.isDestinationClusterReady(clusterName)) {
+        String clusterName = isPooled(address) ? address.getPlan() : address.getName();
+        String addressType = address.getType();
+        // TODO: Get rid of references to queue and topic
+        if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterName)) {
             address.getStatus().setReady(false).appendMessage("Cluster is unavailable");
         }
     }
@@ -276,12 +278,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             List<String> linkRoutes = checkRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
 
             for (Address address : addressList) {
-                if (!address.getType().getName().equals(TOPIC.getName())) {
+                // TODO: Move these checks to agent
+                if (!address.getType().equals("topic")) {
                     boolean found = addresses.contains(address.getAddress());
                     if (!found) {
                         address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
                     }
-                    if (address.getType().getName().equals(QUEUE.getName())) {
+                    if (address.getType().equals("queue")) {
                         found = autoLinks.contains(address.getAddress());
                         if (!found) {
                             address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());

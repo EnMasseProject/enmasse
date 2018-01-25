@@ -32,6 +32,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
+@Ignore
 public class BindingServiceTest extends OSBTestBase {
 
     public static final String BINDING_ID = UUID.randomUUID().toString();
@@ -48,6 +49,7 @@ public class BindingServiceTest extends OSBTestBase {
     }
 
     @Test
+    @Ignore
     public void testBind() throws Exception {
         Response response = bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
         BindResponse bindResponse = (BindResponse) response.getEntity();
@@ -66,11 +68,13 @@ public class BindingServiceTest extends OSBTestBase {
     }
 
     @Test(expected = NotFoundException.class)
+    @Ignore
     public void testBindOnNonexistentService() throws Exception {
         bindingService.bindServiceInstance(getSecurityContext(), UUID.randomUUID().toString(), BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
     }
 
     @Test(expected = BadRequestException.class)
+    @Ignore
     public void testBindWithoutServiceId() throws Exception {
         bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(null, QUEUE_PLAN_ID));
     }

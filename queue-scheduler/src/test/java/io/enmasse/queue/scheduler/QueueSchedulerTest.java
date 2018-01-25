@@ -17,7 +17,6 @@
 package io.enmasse.queue.scheduler;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.types.standard.StandardType;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
@@ -208,8 +207,8 @@ public class QueueSchedulerTest {
     private Address createQueue(String name, boolean pooled, boolean persisted) {
         Address.Builder builder = new Address.Builder();
         builder.setName(name);
-        builder.setType(StandardType.QUEUE);
-        builder.setPlan(StandardType.QUEUE.getPlans().stream().filter(p -> p.getName().equals(pooled ? persisted ? POOLED_PERSISTED : POOLED_INMEMORY : INMEMORY) ).findFirst().get());
+        builder.setType("queue");
+        builder.setPlan(pooled ? (persisted ? "pooled-persisted" : "pooled-inmemory") : (persisted ? "persisted" : "inmemory"));
         return builder.build();
     }
 

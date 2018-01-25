@@ -3,11 +3,10 @@ package io.enmasse.controller.api.v1.http;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.api.TestSchemaApi;
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,11 +35,12 @@ public class HttpAddressServiceTest {
     @Before
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        this.addressService = new HttpAddressService(addressSpaceApi);
+        this.addressService = new HttpAddressService(addressSpaceApi, new TestSchemaApi());
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
-                .setType(new StandardAddressSpaceType())
+                .setType("type1")
+                .setPlan("myplan")
                 .build();
 
         securityContext = mock(SecurityContext.class);
@@ -51,11 +51,11 @@ public class HttpAddressServiceTest {
         addressApi = (TestAddressApi) addressSpaceApi.withAddressSpace(addressSpace);
         q1 = new Address.Builder()
                 .setName("q1")
-                .setType(StandardType.QUEUE)
+                .setType("queue")
                 .build();
         a1 = new Address.Builder()
                 .setName("a1")
-                .setType(StandardType.ANYCAST)
+                .setType("anycast")
                 .build();
         addressApi.createAddress(q1);
         addressApi.createAddress(a1);
@@ -118,7 +118,8 @@ public class HttpAddressServiceTest {
     public void testCreate() {
         Address a2 = new Address.Builder()
                 .setName("a2")
-                .setType(StandardType.ANYCAST)
+                .setType("anycast")
+                .setPlan("plan1")
                 .setAddressSpace("myspace")
                 .build();
         AddressList list = new AddressList();
@@ -134,7 +135,8 @@ public class HttpAddressServiceTest {
         addressApi.throwException = true;
         Address a2 = new Address.Builder()
                 .setName("a2")
-                .setType(StandardType.ANYCAST)
+                .setPlan("plan1")
+                .setType("anycast")
                 .build();
         AddressList list = new AddressList();
         list.add(a2);
@@ -172,7 +174,8 @@ public class HttpAddressServiceTest {
 
         Address a2 = new Address.Builder()
                 .setName("a2")
-                .setType(StandardType.ANYCAST)
+                .setType("anycast")
+                .setPlan("plan1")
                 .setAddressSpace("myspace")
                 .build();
         AddressList list = new AddressList();

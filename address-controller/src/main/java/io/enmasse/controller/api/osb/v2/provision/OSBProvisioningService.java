@@ -22,8 +22,6 @@ import io.enmasse.controller.api.osb.v2.OSBServiceBase;
 import io.enmasse.controller.api.osb.v2.ServiceType;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}")
@@ -63,8 +61,8 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         String name = request.getParameter("name").orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
 
-        AddressType addressType = serviceType.addressType();
-        Plan plan = getPlan(addressType, request.getPlanId());
+        String addressType = serviceType.addressType();
+        String plan = getPlan(addressType, request.getPlanId());
         AddressSpace addressSpace = getOrCreateAddressSpace(shortOrganizationId);
 
         // TODO: Allow address to be separate

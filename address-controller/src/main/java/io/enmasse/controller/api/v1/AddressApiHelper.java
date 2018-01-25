@@ -8,9 +8,8 @@ import java.util.Set;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.controller.api.RbacSecurityContext;
 import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
@@ -25,9 +24,11 @@ import org.slf4j.LoggerFactory;
 public class AddressApiHelper {
     private static final Logger log = LoggerFactory.getLogger(AddressApiHelper.class.getName());
     private final AddressSpaceApi addressSpaceApi;
+    private final SchemaProvider schemaProvider;
 
-    public AddressApiHelper(AddressSpaceApi addressSpaceApi) {
+    public AddressApiHelper(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider) {
         this.addressSpaceApi = addressSpaceApi;
+        this.schemaProvider = schemaProvider;
     }
 
     private void verifyAuthorized(SecurityContext securityContext, AddressSpace addressSpace, ResourceVerb verb) {
@@ -48,6 +49,7 @@ public class AddressApiHelper {
     public AddressList putAddresses(SecurityContext securityContext, String addressSpaceId, AddressList addressList) throws Exception {
         AddressSpace addressSpace = getAddressSpace(addressSpaceId);
         verifyAuthorized(securityContext, addressSpace, ResourceVerb.create);
+        validateAddresses(addressSpace, addressList);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
         Set<Address> toRemove = new HashSet<>(addressApi.listAddresses());
@@ -55,6 +57,16 @@ public class AddressApiHelper {
         toRemove.forEach(addressApi::deleteAddress);
         addressList.forEach(addressApi::createAddress);
         return new AddressList(addressApi.listAddresses());
+    }
+
+    private void validateAddresses(AddressSpace addressSpace, AddressList addressList) {
+        Schema schema = schemaProvider.getSchema();
+        AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getType()));
+
+        AddressResolver addressResolver = new AddressResolver(schema, type);
+        for (Address address : addressList) {
+            addressResolver.validate(address);
+        }
     }
 
     private AddressSpace getAddressSpace(String addressSpaceId) throws Exception {
@@ -80,6 +92,7 @@ public class AddressApiHelper {
     public AddressList appendAddresses(SecurityContext securityContext, String addressSpaceId, AddressList addressList) throws Exception {
         AddressSpace addressSpace = getAddressSpace(addressSpaceId);
         verifyAuthorized(securityContext, addressSpace, ResourceVerb.create);
+        validateAddresses(addressSpace, addressList);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         for (Address address : addressList) {
             addressApi.createAddress(address);

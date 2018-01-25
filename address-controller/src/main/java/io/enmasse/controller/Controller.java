@@ -49,6 +49,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
     private final OpenShiftClient client;
 
     private final AddressSpaceApi addressSpaceApi;
+
     private Watch watch;
 
     private final ControllerHelper helper;
@@ -60,8 +61,9 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                       Kubernetes kubernetes,
                       AuthenticationServiceResolverFactory authResolverFactory,
                       EventLogger eventLogger,
-                      AuthController authController) {
-        this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger);
+                      AuthController authController,
+                      SchemaApi schemaApi) {
+        this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger, schemaApi);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.eventLogger = eventLogger;

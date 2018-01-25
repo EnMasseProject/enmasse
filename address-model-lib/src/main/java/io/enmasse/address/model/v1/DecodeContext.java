@@ -16,20 +16,12 @@
 package io.enmasse.address.model.v1;
 
 import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.types.AddressSpaceType;
+import io.enmasse.address.model.Schema;
 
 /**
  * An interface for decoding address space types names
  */
 public interface DecodeContext {
-    /**
-     * Get the address space type corresponding to the provided type name
-     *
-     * @param typeName The type name to lookup
-     * @return The address space type
-     */
-    AddressSpaceType getAddressSpaceType(String typeName);
-
     /**
      * Get the defeault authentication service type.
      *

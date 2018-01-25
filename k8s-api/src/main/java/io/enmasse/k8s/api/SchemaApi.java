@@ -13,35 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.types;
+package io.enmasse.k8s.api;
 
-import java.util.List;
+import io.enmasse.address.model.v1.SchemaProvider;
 
 /**
- * Respresents an Address Type (i.e. Queue, Topic etc.)
+ * Interface for Schema of the address model
  */
-public interface AddressType {
+public interface SchemaApi extends SchemaProvider {
     /**
-     * Get name of address type.
-     *
-     * @return Name of type
+     * Copy schema definitions into namespace;
      */
-    String getName();
-
-    /**
-     * Get a longer description of the address type.
-     *
-     * @return A textual description
-     */
-    String getDescription();
-
-    /**
-     * Get plans available for this address type.
-     */
-    List<Plan> getPlans();
-
-    /**
-     * Get default plan for this address type.
-     */
-    Plan getDefaultPlan();
+    void copyIntoNamespace(String otherNamespace);
 }

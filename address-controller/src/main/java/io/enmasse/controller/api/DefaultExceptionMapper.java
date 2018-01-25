@@ -3,11 +3,16 @@ package io.enmasse.controller.api;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
+import io.enmasse.address.model.UnresolvedAddressException;
+import io.enmasse.address.model.UnresolvedAddressSpaceException;
 import io.enmasse.controller.common.exceptionmapping.ErrorResponse;
+import okhttp3.ResponseBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
     protected static final Logger log = LoggerFactory.getLogger(DefaultExceptionMapper.class.getName());
 
@@ -19,6 +24,11 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             WebApplicationException webApplicationException = (WebApplicationException) exception;
             status = Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
             response = webApplicationException.getResponse();
+        } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException) {
+            status = Response.Status.BAD_REQUEST;
+            response = Response.status(status)
+                    .entity(new ErrorResponse(null, exception.getMessage()))
+                    .build();
         } else {
             status = Response.Status.INTERNAL_SERVER_ERROR;
             response = Response.status(status)

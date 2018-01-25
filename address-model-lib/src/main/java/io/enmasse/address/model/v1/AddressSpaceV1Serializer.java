@@ -51,8 +51,8 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
         metadata.put(Fields.NAMESPACE, addressSpace.getNamespace());
         metadata.put(Fields.CREATED_BY, addressSpace.getCreatedBy());
 
-        spec.put(Fields.TYPE, addressSpace.getType().getName());
-        spec.put(Fields.PLAN, addressSpace.getPlan().getName());
+        spec.put(Fields.TYPE, addressSpace.getType());
+        spec.put(Fields.PLAN, addressSpace.getPlan());
 
         if (addressSpace.getEndpoints() != null) {
             ArrayNode endpoints = spec.putArray(Fields.ENDPOINTS);

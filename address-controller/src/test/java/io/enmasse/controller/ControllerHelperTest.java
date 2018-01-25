@@ -16,13 +16,16 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.types.AddressSpaceType;
-import io.enmasse.address.model.types.common.Plan;
+import io.enmasse.address.model.Schema;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.k8s.api.TestSchemaApi;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
+import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -38,19 +41,18 @@ public class ControllerHelperTest {
         when(kubernetes.hasService(any())).thenReturn(false);
         when(kubernetes.getNamespace()).thenReturn("otherspace");
 
-        AddressSpaceType mockType = mock(AddressSpaceType.class);
-
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
                 .setNamespace("mynamespace")
-                .setType(mockType)
-                .setPlan(new Plan("myplan", "myplan", "myplan", "myuuid", null))
+                .setType("type1")
+                .setPlan("myplan")
                 .build();
 
 
         EventLogger eventLogger = mock(EventLogger.class);
 
-        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger);
+        SchemaApi testSchema = new TestSchemaApi();
+        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger, testSchema);
         helper.create(addressSpace);
         ArgumentCaptor<AddressSpace> addressSpaceArgumentCaptor = ArgumentCaptor.forClass(AddressSpace.class);
         verify(kubernetes).createNamespace(addressSpaceArgumentCaptor.capture());

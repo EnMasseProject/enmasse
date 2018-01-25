@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Red Hat Inc.
+ * Copyright 2018 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.types;
+package io.enmasse.address.model;
 
-import java.util.List;
-
-/**
- * Interface for Schema of the address model
- */
-public interface Schema {
-    /**
-     * Get the list of {@link AddressSpaceType} instances.
-     */
-    List<AddressSpaceType> getAddressSpaceTypes();
+public class UnresolvedAddressException extends RuntimeException {
+    public UnresolvedAddressException(String message) {
+        super(message);
+    }
 }
