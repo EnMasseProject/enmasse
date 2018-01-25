@@ -76,12 +76,20 @@ public class ConsoleWebPage {
         log.info("Connections page opened");
     }
 
+    public WebElement getCreateButton() throws Exception {
+        return selenium.driver.findElement(ByAngular.buttonText("Create"));
+    }
+
+    public WebElement getRemoveButton() throws Exception {
+        return selenium.driver.findElement(ByAngular.buttonText("Delete"));
+    }
+
     public void clickOnCreateButton() throws Exception {
-        selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Create")));
+        selenium.clickOnItem(getCreateButton());
     }
 
     public void clickOnRemoveButton() throws Exception {
-        selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Delete")));
+        selenium.clickOnItem(getRemoveButton());
     }
 
 

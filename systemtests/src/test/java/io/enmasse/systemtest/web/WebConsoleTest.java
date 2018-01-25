@@ -10,8 +10,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.openqa.selenium.WebDriver;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,8 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public abstract class WebConsoleTest extends TestBaseWithDefault implements ISeleniumProvider {
 
@@ -425,5 +423,25 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private List<AddressWebItem> getAddressProperty(List<AddressWebItem> allItems, Predicate<AddressWebItem> f) {
         return allItems.stream().filter(f).collect(Collectors.toList());
+    }
+
+    private void assertElementDisabled(WebElement element) {
+        assertFalse(element.isEnabled());
+    }
+
+    private void assertElementEnabled(WebElement element) {
+        assertTrue(element.isEnabled());
+    }
+
+    private void assertViewOnlyUsersAddresses(String group, List<AddressWebItem> addresses) {
+        for (AddressWebItem item : addresses) {
+            assertTrue(item.getName().matches(group));
+        }
+    }
+
+    private void assertViewOnlyUsersConnections(String username, List<ConnectionWebItem> connections) {
+        for (ConnectionWebItem conn : connections) {
+            assertTrue(conn.getUser().equals(username));
+        }
     }
 }
