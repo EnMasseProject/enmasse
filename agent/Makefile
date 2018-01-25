@@ -28,3 +28,5 @@ package: build
 test: npm_test
 
 coverage: npm_coverage
+
+.PHONY: generate www/help.html www/tooltips.json

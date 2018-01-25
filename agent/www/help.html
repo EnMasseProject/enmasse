@@ -425,10 +425,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 </head>
-<body class="book">
+<body class="book toc2 toc-left">
 <div id="header">
 <h1>Using {ProductName}</h1>
-<div id="toc" class="toc">
+<div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel2">
 <li><a href="#address_model">1. Address Model</a>
@@ -509,7 +509,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="plans">1.3. Plans</h4>
 <div class="paragraph">
-<p>Both address spaces and addresses can be restricted by a plan, which enforces a limit on resource usage across multiple dimensions. &lt;tag for upstream only&gt;Note that the set of plans currently offered might be extended in the future, and the constraints imposed by a plan within an address space might change as operational experience is gained.&lt;/tag for upstream only&gt;</p>
+<p>Both address spaces and addresses can be restricted by a plan, which enforces a limit on resource usage across multiple dimensions. Note that the set of plans currently offered might be extended in the future, and the constraints imposed by a plan within an address space might change as operational experience is gained.</p>
 </div>
 <div class="sect4">
 <h5 id="address_space_plans">Address Space Plans</h5>
@@ -557,7 +557,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect4">
 <h5 id="standard-queue">Queue</h5>
 <div class="paragraph">
-<p>The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units, in which case message order is no longer guaranteed.</p>
+<p>The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units; however, message order is no longer guaranteed.</p>
 </div>
 <div class="sect5">
 <h6 id="queue-plans">Queue Plans</h6>
@@ -702,11 +702,8 @@ transactions, message groups, and so on.</p>
 <p>The queue address type is a store-and-forward queue. This address type is appropriate for
 implementing a distributed work queue, handling traffic bursts, and other use cases where you want
 to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
-message groups, transactions and other JMS features. If the queue is a high volume queue and these
-semantics are not needed, see the <a href="#standard-queue">standard address space <code>queue</code></a> type.</p>
-</div>
-<div class="paragraph">
-<p>Only a standard plan is available for queues.</p>
+message groups, transactions, and other JMS features.
+Only a standard plan is available for queues.</p>
 </div>
 </div>
 <div class="sect4">
@@ -975,7 +972,7 @@ namespace Test
         public static void Main(string[] args)
         {
             String url = (args.Length &gt; 0) ? args[0] : "amqps://&lt;messaging-route-hostname&gt;:443";
-            String address = (args.Length &gt; 1) ? args[0] : "myqueue";
+            String address = (args.Length &gt; 1) ? args[1] : "myqueue";
 
             Connection.DisableServerCertValidation = true;
             Connection connection = new Connection(new Address(url));
@@ -987,7 +984,7 @@ namespace Test
 
             ReceiverLink receiver = new ReceiverLink(session, "test-receiver", address);
             Message messageReceived = receiver.Receive(TimeSpan.FromSeconds(2));
-            Console.WriteLine(messageReceived.GetBody&lt;String&gt;());
+            Console.WriteLine(messageReceived.Body);
             receiver.Accept(messageReceived);
 
             sender.Close();
@@ -1005,7 +1002,7 @@ namespace Test
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-12-18 12:10:44 GMT
+Last updated 2017-11-01 23:15:24 CET
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
