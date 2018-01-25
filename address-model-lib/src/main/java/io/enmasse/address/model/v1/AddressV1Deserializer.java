@@ -45,7 +45,7 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
 
-        AddressType type = new AddressType(spec.get(Fields.TYPE).asText());
+        String type = spec.get(Fields.TYPE).asText();
 
 
         Address.Builder builder = new Address.Builder()
@@ -53,7 +53,7 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
                 .setType(type);
 
         if (spec.hasNonNull(Fields.PLAN)) {
-            builder.setPlan(new Plan(spec.get(Fields.PLAN).asText()));
+            builder.setPlan(spec.get(Fields.PLAN).asText());
         }
 
         if (metadata.hasNonNull(Fields.ADDRESS_SPACE)) {

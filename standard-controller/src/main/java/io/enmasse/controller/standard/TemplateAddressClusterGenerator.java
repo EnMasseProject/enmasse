@@ -17,18 +17,15 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.address.model.types.Plan;
-import io.enmasse.address.model.types.TemplateConfig;
 import io.enmasse.k8s.api.KubeUtil;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -36,11 +33,12 @@ import java.util.stream.Collectors;
  */
 public class TemplateAddressClusterGenerator implements AddressClusterGenerator {
     private final Kubernetes kubernetes;
-    private static final AddressResolver addressResolver = new AddressResolver(new StandardAddressSpaceType());
+    private final AddressResolver addressResolver;
     private final TemplateOptions templateOptions;
 
-    public TemplateAddressClusterGenerator(Kubernetes kubernetes, TemplateOptions templateOptions) {
+    public TemplateAddressClusterGenerator(Kubernetes kubernetes, AddressResolver addressResolver, TemplateOptions templateOptions) {
         this.kubernetes = kubernetes;
+        this.addressResolver = addressResolver;
         this.templateOptions = templateOptions;
     }
 
@@ -54,13 +52,21 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
     public AddressCluster generateCluster(String clusterId, Set<Address> addressSet) {
         Address first = addressSet.iterator().next();
 
-        Plan plan = addressResolver.getPlan(first);
-        KubernetesList resources = plan.getTemplateConfig().map(t -> processTemplate(clusterId, first, addressSet, t)).orElse(new KubernetesList());
-        return new AddressCluster(clusterId, resources);
+        AddressPlan plan = addressResolver.getPlan(addressResolver.getType(first), first);
+        List<ResourceDefinition> resourceDefinitions = addressResolver.getResourceDefinitions(plan);
+
+        KubernetesListBuilder resourcesBuilder = new KubernetesListBuilder();
+        for (ResourceDefinition resourceDefinition : resourceDefinitions) {
+            if (resourceDefinition.getTemplateName().isPresent()) {
+                KubernetesList newResources = processTemplate(clusterId, first, addressSet, resourceDefinition.getTemplateName().get(), resourceDefinition.getTemplateParameters());
+                resourcesBuilder.addAllToItems(newResources.getItems());
+            }
+        }
+        return new AddressCluster(clusterId, resourcesBuilder.build());
     }
 
-    private KubernetesList processTemplate(String clusterId, Address first, Set<Address> addressSet, TemplateConfig templateConfig) {
-        Map<String, String> paramMap = new LinkedHashMap<>(templateConfig.getParameters());
+    private KubernetesList processTemplate(String clusterId, Address first, Set<Address> addressSet, String templateName, Map<String, String> parameterMap) {
+        Map<String, String> paramMap = new LinkedHashMap<>(parameterMap);
 
         paramMap.put(TemplateParameter.NAME, KubeUtil.sanitizeName(clusterId));
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
@@ -83,7 +89,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
                 .toArray(new ParameterValue[0]);
 
 
-        KubernetesList items = kubernetes.processTemplate(templateConfig.getName(), parameters);
+        KubernetesList items = kubernetes.processTemplate(templateName, parameters);
 
 
         // These are attributes that we need to identify components belonging to this address

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Red Hat Inc.
+ * Copyright 2018 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.types;
+package io.enmasse.address.model;
 
-import java.util.Map;
-
-/**
- * Represents configuration for a particular template.
- */
-public interface TemplateConfig {
-    /**
-     * Get template name.
-     *
-     * @return Template name
-     */
-    String getName();
-
-    /**
-     * Get template parameters.
-     *
-     * @return a Map of parameters
-     */
-    Map<String, String> getParameters();
+public class UnresolvedAddressSpaceException extends RuntimeException {
+    public UnresolvedAddressSpaceException(String s) {
+        super(s);
+    }
 }

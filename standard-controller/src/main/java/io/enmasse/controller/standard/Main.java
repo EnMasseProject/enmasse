@@ -15,8 +15,14 @@
  */
 package io.enmasse.controller.standard;
 
+import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.Schema;
+import io.enmasse.k8s.api.ConfigMapSchemaApi;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.SchemaApi;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,17 +50,23 @@ public class Main {
                 .orElse(null);
 
         String certDir = getEnvOrThrow(env, "CERT_DIR");
+        String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
+        OpenShiftClient openShiftClient = new DefaultOpenShiftClient();
+        SchemaApi schemaApi = new ConfigMapSchemaApi(openShiftClient, openShiftClient.getNamespace());
+        Schema schema = schemaApi.getSchema();
+        AddressSpaceType addressSpaceType = schema.findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to start standard-controller: standard address space not found in schema!"));
 
+        AddressResolver addressResolver = new AddressResolver(schema, addressSpaceType);
         Kubernetes kubernetes = new KubernetesHelper(new DefaultOpenShiftClient(), templateDir);
-        AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(kubernetes, templateOptions);
+        AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(kubernetes, addressResolver, templateOptions);
 
         EventLogger eventLogger = kubernetes.createEventLogger(Clock.systemUTC(), "standard-controller");
 
-        String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
 
         AddressController addressController = new AddressController(
                 addressSpace,
                 kubernetes.createAddressApi(),
+                addressResolver,
                 kubernetes,
                 clusterGenerator,
                 certDir,

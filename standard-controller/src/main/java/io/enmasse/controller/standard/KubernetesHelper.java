@@ -15,8 +15,6 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressApi;
@@ -26,7 +24,6 @@ import io.enmasse.k8s.api.KubeEventLogger;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -120,7 +117,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public AddressApi createAddressApi() {
-        return new ConfigMapAddressApi(client, new AddressResolver(new StandardAddressSpaceType()), client.getNamespace());
+        return new ConfigMapAddressApi(client, client.getNamespace());
     }
 
     @Override

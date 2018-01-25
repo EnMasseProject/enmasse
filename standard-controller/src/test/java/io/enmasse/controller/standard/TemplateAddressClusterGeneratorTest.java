@@ -18,9 +18,7 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.k8s.api.TestSchemaApi;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.ParameterValue;
 import org.junit.Before;
@@ -42,12 +40,14 @@ public class TemplateAddressClusterGeneratorTest {
     public void setUp() {
         kubernetes = mock(Kubernetes.class);
         Map<String, String> env = new HashMap<>();
-        generator = new TemplateAddressClusterGenerator(kubernetes, new TemplateOptions(env));
+        TestSchemaApi testSchemaApi = new TestSchemaApi();
+        AddressResolver resolver = new AddressResolver(testSchemaApi.getSchema(), testSchemaApi.getSchema().findAddressSpaceType("type1").get());
+        generator = new TemplateAddressClusterGenerator(kubernetes, resolver, new TemplateOptions(env));
     }
 
     @Test
     public void testDirect() {
-        Address dest = createAddress("foo_bar_FOO", StandardType.ANYCAST);
+        Address dest = createAddress("foo_bar_FOO", "anycast");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         AddressCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
@@ -58,7 +58,7 @@ public class TemplateAddressClusterGeneratorTest {
 
     @Test
     public void testStoreAndForward() {
-        Address dest = createAddress("foo.bar", StandardType.QUEUE);
+        Address dest = createAddress("foo.bar", "queue");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         AddressCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
@@ -72,11 +72,12 @@ public class TemplateAddressClusterGeneratorTest {
         assertThat(parameters.size(), is(10));
     }
 
-    private Address createAddress(String address, AddressType type) {
+    private Address createAddress(String address, String type) {
         return new Address.Builder()
                 .setName(address)
                 .setAddressSpace("myinstance")
                 .setType(type)
+                .setPlan("plan1")
                 .build();
     }
 
@@ -84,7 +85,7 @@ public class TemplateAddressClusterGeneratorTest {
         return new AddressSpace.Builder()
                 .setName(name)
                 .setNamespace(name)
-                .setType(new StandardAddressSpaceType())
+                .setType("standard")
                 .appendEndpoint(new Endpoint.Builder()
                         .setName("foo")
                         .setService("messaging")

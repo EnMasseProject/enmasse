@@ -16,15 +16,12 @@
 package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.types.AddressSpaceType;
-import io.enmasse.address.model.types.Plan;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,14 +33,14 @@ import java.util.function.Function;
 class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private final DecodeContext context;
+    private final DecodeContext decodeContext;
 
-    AddressSpaceV1Deserializer(DecodeContext context) {
-        this.context = context;
+    AddressSpaceV1Deserializer(DecodeContext decodeContext) {
+        this.decodeContext = decodeContext;
     }
 
     @Override
-    public AddressSpace deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+    public AddressSpace deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
         return deserialize(root);
     }
@@ -53,14 +50,15 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
         ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
 
-        AddressSpaceType type = context.getAddressSpaceType(spec.get(Fields.TYPE).asText());
+        String typeName = spec.get(Fields.TYPE).asText();
 
         AddressSpace.Builder builder = new AddressSpace.Builder()
                 .setName(metadata.get(Fields.NAME).asText())
-                .setType(type);
+                .setType(typeName);
 
         if (spec.hasNonNull(Fields.PLAN)) {
-            builder.setPlan(findPlan(type, spec.get(Fields.PLAN).asText()));
+            String planName = spec.get(Fields.PLAN).asText();
+            builder.setPlan(planName);
         }
 
         if (metadata.hasNonNull(Fields.NAMESPACE)) {
@@ -113,7 +111,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                     Map.Entry<String, JsonNode> entry = it.next();
                     JsonNode node = entry.getValue();
                     if (!authType.getDetailsFields().containsKey(entry.getKey())) {
-                        throw new RuntimeException("Unknown details field " + entry.getKey() + " encountered");
+                        throw new DeserializeException("Unknown details field " + entry.getKey() + " encountered");
                     }
                     detailsMap.put(entry.getKey(), TypeConverter.getValue(authType.getDetailsFields().get(entry.getKey()), node));
                 }
@@ -122,7 +120,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             if (!detailsMap.keySet().containsAll(authType.getMandatoryFields())) {
                 Set<String> missingDetails = new HashSet<>(authType.getMandatoryFields());
                 missingDetails.removeAll(detailsMap.keySet());
-                throw new RuntimeException("Missing details " + missingDetails + " for type " + authType.getName());
+                throw new DeserializeException("Missing details " + missingDetails + " for type " + authType.getName());
             }
 
             if (!authType.getDetailsFields().keySet().containsAll(detailsMap.keySet())) {
@@ -133,7 +131,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             builder.setAuthenticationService(authService.build());
         } else {
             builder.setAuthenticationService(new AuthenticationService.Builder()
-                    .setType(context.getDefaultAuthenticationServiceType())
+                    .setType(decodeContext.getDefaultAuthenticationServiceType())
                     .build());
         }
 
@@ -150,16 +148,6 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             builder.setStatus(s);
         }
         return builder.build();
-    }
-
-    private static Plan findPlan(AddressSpaceType type, String planName) {
-        for (Plan plan : type.getPlans()) {
-            if (plan.getName().equals(planName)) {
-                return plan;
-            }
-        }
-
-        throw new RuntimeException("Unknown plan " + planName + " for type " + type.getName());
     }
 
     static class TypeConverter {

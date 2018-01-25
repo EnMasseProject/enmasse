@@ -16,16 +16,14 @@
 
 package io.enmasse.controller;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.SecretCertProvider;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.SubjectAccessReview;
 import io.enmasse.controller.common.TokenReview;
+import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.api.TestSchemaApi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -41,6 +39,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.Matchers.any;
@@ -62,12 +61,13 @@ public class HTTPServerTest {
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
+        SchemaProvider schemaProvider = new TestSchemaApi();
         Kubernetes kubernetes = mock(Kubernetes.class);
         when(kubernetes.getNamespace()).thenReturn("controller");
         when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, schemaProvider,"/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
     }
 
     @After
@@ -79,8 +79,8 @@ public class HTTPServerTest {
         return new AddressSpace.Builder()
                 .setName(name)
                 .setNamespace(name)
-                .setType(new StandardAddressSpaceType())
-                .setPlan(new StandardAddressSpaceType().getPlans().get(0))
+                .setType("mytype")
+                .setPlan("myplan")
                 .setStatus(new io.enmasse.address.model.Status(false))
                 .appendEndpoint(new Endpoint.Builder()
                         .setName("foo")
@@ -97,8 +97,8 @@ public class HTTPServerTest {
                     .setAddressSpace("myinstance")
                 .setName("addr1")
                 .setAddress("addr1")
-                .setType(StandardType.QUEUE)
-                .setPlan(StandardType.QUEUE.getPlans().get(0))
+                .setType("queue")
+                .setPlan("myplan")
                 .setUuid(UUID.randomUUID().toString())
                 .build());
 
@@ -197,8 +197,9 @@ public class HTTPServerTest {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
+                        System.out.println(data.toString());
                         context.assertTrue(data.containsKey("spec"));
-                        context.assertEquals("standard", data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(1).getString("name"));
+                        context.assertEquals("type1", data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(0).getString("name"));
                         async.complete();
                     });
                 });

@@ -27,12 +27,12 @@ public class Address {
     private final String uuid;
     private final String address;
     private final String addressSpace;
-    private final AddressType type;
-    private final Plan plan;
+    private final String type;
+    private final String plan;
     private final Status status;
     private final String version;
 
-    private Address(String name, String uuid, String address, String addressSpace, AddressType type, Plan plan, Status status, String version) {
+    private Address(String name, String uuid, String address, String addressSpace, String type, String plan, Status status, String version) {
         this.name = name;
         this.uuid = uuid;
         this.address = address;
@@ -59,11 +59,11 @@ public class Address {
         return addressSpace;
     }
 
-    public AddressType getType() {
+    public String getType() {
         return type;
     }
 
-    public Plan getPlan() {
+    public String getPlan() {
         return plan;
     }
 
@@ -97,12 +97,6 @@ public class Address {
         Objects.requireNonNull(status, "status not set");
     }
 
-    public void validate(AddressResolver addressResolver) {
-        this.validate();
-        Objects.requireNonNull(addressResolver.getAddressType(this));
-        Objects.requireNonNull(addressResolver.getPlan(this));
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -128,8 +122,8 @@ public class Address {
         private String uuid;
         private String address;
         private String addressSpace;
-        private AddressType type;
-        private Plan plan;
+        private String type;
+        private String plan;
         private Status status = new Status(false);
         private String version;
 
@@ -170,26 +164,13 @@ public class Address {
             return this;
         }
 
-        public Builder setType(AddressType addressType) {
+        public Builder setType(String addressType) {
             this.type = addressType;
             return this;
         }
 
-        public Builder setType(io.enmasse.address.model.types.AddressType type) {
-            this.type = new AddressType(type.getName());
-            if (plan == null) {
-                this.plan = new Plan(type.getDefaultPlan().getName());
-            }
-            return this;
-        }
-
-        public Builder setPlan(Plan plan) {
+        public Builder setPlan(String plan) {
             this.plan = plan;
-            return this;
-        }
-
-        public Builder setPlan(io.enmasse.address.model.types.Plan plan) {
-            this.plan = new Plan(plan.getName());
             return this;
         }
 

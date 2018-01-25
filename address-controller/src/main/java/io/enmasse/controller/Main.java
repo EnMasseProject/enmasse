@@ -19,16 +19,10 @@ package io.enmasse.controller;
 import java.time.Clock;
 import java.util.*;
 
-import io.enmasse.address.model.AuthenticationServiceResolver;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.CertProvider;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.*;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.KubeEventLogger;
+import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -56,6 +50,7 @@ public class Main extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) {
+        SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller");
 
@@ -65,9 +60,9 @@ public class Main extends AbstractVerticle {
         AuthController authController = new AuthController(certManager, authEventLogger);
 
         deployVerticles(startPromise,
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, eventLogger, authController)),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, eventLogger, authController, schemaApi)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {

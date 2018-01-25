@@ -1,9 +1,6 @@
 package io.enmasse.queue.scheduler;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.k8s.api.ConfigMapAddressApi;
 import io.enmasse.k8s.api.Watch;
 import io.enmasse.k8s.api.Watcher;
@@ -27,7 +24,7 @@ public class ConfigServiceClient extends AbstractVerticle implements Watcher<Add
     private volatile Watch watch;
 
     public ConfigServiceClient(ConfigListener configListener, KubernetesClient kubernetesClient, String namespace) {
-        this.addressApi = new ConfigMapAddressApi(kubernetesClient, new AddressResolver(new StandardAddressSpaceType()), namespace);
+        this.addressApi = new ConfigMapAddressApi(kubernetesClient, namespace);
         this.configListener = configListener;
     }
 
@@ -57,19 +54,19 @@ public class ConfigServiceClient extends AbstractVerticle implements Watcher<Add
     }
 
     private boolean isQueue(Address address) {
-        return StandardType.QUEUE.getName().equals(address.getType().getName());
+        return "queue".equals(address.getType());
     }
 
 
     // TODO: Put this constant somewhere appropriate
     private boolean isPooled(Address address) {
-        return address.getPlan().getName().startsWith("pooled");
+        return address.getPlan().startsWith("pooled");
     }
 
     //TODO: This logic is replicated from AddressController (and is also horrid and broken)
     private String getClusterIdForQueue(Address address) {
         if (isPooled(address)) {
-            return address.getPlan().getName();
+            return address.getPlan();
         } else {
             return address.getName();
         }

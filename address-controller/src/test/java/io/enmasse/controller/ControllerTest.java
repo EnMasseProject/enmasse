@@ -16,13 +16,14 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Schema;
 import io.enmasse.address.model.Status;
-import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.api.TestSchemaApi;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
@@ -33,10 +34,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.internal.util.collections.Sets;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -67,19 +67,22 @@ public class ControllerTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), testLogger, null);
+        SchemaApi schemaApi = new TestSchemaApi();
+        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), testLogger, null, schemaApi);
 
         vertx.deployVerticle(controller, context.asyncAssertSuccess());
 
         AddressSpace a1 = new AddressSpace.Builder()
                 .setName("myspace")
-                .setType(new StandardAddressSpaceType())
+                .setType("type1")
+                .setPlan("myplan")
                 .setStatus(new Status(false))
                 .build();
 
         AddressSpace a2 = new AddressSpace.Builder()
-                .setName("myspace")
-                .setType(new BrokeredAddressSpaceType())
+                .setName("myspace2")
+                .setType("type1")
+                .setPlan("myplan")
                 .setStatus(new Status(false))
                 .build();
 
