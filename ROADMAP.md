@@ -11,21 +11,13 @@ This roadmap describes the features we expect to be available in the next releas
 0.18.0
 * Add support for colocated topics together with queues
 * Support using wildcard certificates for external routes
-* Support durable subscriptions as part of address config
-* Support oauth for console
-* Rework service broker to operate on address spaces and support binding
+* Change service broker to operate on address spaces and support binding
 * Support viewing status of addresses in console
 
 0.19.0
-* Rework broker scaledown by initiating scaledown in standard-controller for topics as well as queues to get rid of shutdown hook
-* Enable HA for standard authentication service (keycloak) 
 * Make mqtt components deployed on-demand instead
-
-
-
-
-
-
+* OAUTH support in keycloak plugin and console
+* ...
 
 
 
