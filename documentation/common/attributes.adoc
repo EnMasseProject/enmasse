@@ -12,7 +12,6 @@
 :toc: left
 :linkattrs:
 :toclevels: 4
-:Title: Using {ProductName}
 
 // Product attributes
 
@@ -27,6 +26,7 @@
 :ExampleQueue: myqueue
 :ExampleAuthInstruction: Enable anonymous access.
 :OnlineBookURL: http://enmasse.io/documentation/
+:Title: Using {ProductName}
 
 // Component attributes
 
