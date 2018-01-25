@@ -10,17 +10,17 @@ public class AuthorizationTest extends AuthorizationTestBase {
         return AddressSpaceType.BROKERED;
     }
 
-    @Test
+    //@Test
     public void testSendAuthz() throws Exception {
         doTestSendAuthz();
     }
 
-    @Test
+    //@Test
     public void testReceiveAuthz() throws Exception {
         doTestReceiveAuthz();
     }
 
-    @Test
+    //@Test
     public void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }
