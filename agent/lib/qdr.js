@@ -39,6 +39,7 @@ var Router = function (connection, router, agent) {
     }
     this.connection.on('receiver_open', this.ready.bind(this));
     this.connection.on('disconnected', this.disconnected.bind(this));
+    this.connection.on('sender_error', this.on_sender_error.bind(this));
 };
 
 Router.prototype.closed = function (context) {
@@ -60,6 +61,11 @@ Router.prototype._abort_requests = function (error) {
     }
     while (this.requests.length > 0) { this.requests.shift(); };
 }
+
+Router.prototype.on_sender_error = function (context) {
+    var error = this.connection.container_id + ' sender error ' + JSON.stringify(context.sender.error);
+    log.info('[' + this.connection.container_id + '] ' + error);
+};
 
 Router.prototype.disconnected = function (context) {
     this.address = undefined;
