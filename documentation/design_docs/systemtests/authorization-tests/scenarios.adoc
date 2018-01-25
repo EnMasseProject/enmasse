@@ -1,0 +1,125 @@
+This document contains testing scenarios for authorization system tests in EnMasse.
+
+
+== Permissions(webconsole):
+Manage
+Monitor
+View
+
+==== Wildcards examples:
+
+- View_*
+- View_queue*
+- View_topic*
+- View_queueA*
+- View_topicA*
+- View_queue_*
+- View_topic_*
+- View_topic_12*
+- View_queue_23*
+
+== brokered/standard (webconsole tests)
+
+Monitor
+
+* testCannotCreateAddresses
+- Monitor permissions
+- try to create addresses (queue, topic, anycast, multicast)
+
+* testCannotDeleteAddresses
+- Monitor permissions
+- try to delete addresses (queue, topic, anycast, multicast)
+
+* testHackCreateDeleteAddressesButtons (manually check)
+- Monitor permissions
+- try to enable “create/delete addresses” button via javscript and click
+- try to click on some inner element (if exists)
+
+
+View
+
+* testViewAddresses
+- View permissions
+- create user $user within group view_queue-1
+- verify that queue-1 is visible via webconsole
+
+* testViewConnections
+- View permissions + send/receiver permissions
+- create user $user within group view_queue-1
+- create 5 connections under $user
+- create 5 connection under user test
+- verify that only connections under $user are visible
+
+* testViewAddressesWildcards
+- View permissions
+- create user $user within group see (list of wildcards for web)
+- verify that user can only see these addresses
+
+== Permissions(clients):
+send
+receive
+
+==== Wildcards examples:
+
+- send_*
+- send_queue*
+- send_topic*
+- send_queueA*
+- send_topicA*
+- send_queue_*
+- send_topic_*
+- send_topic_12*
+- send_queue_34*
+
+== brokered/standard (clients tests)
+
+
+* testSendAuthzWithWIldcards
+- create user $user within group see (list of wildcards for clients)
+- verify that user can send messages
+
+* testReceiveAuthzWithWIldcards
+- create user $user within group see (list of wildcards for clients)
+- verify that user can receive messages
+
+* testDifferentNamespacesSameUserName
+- create $namespace-1 and $namespace-2
+- create user $user within $namespace-1 (send_all) and $namespace-2 (receive_all)
+- verify that $user can/cannot send/receive within $namespace-1 and $namespace-2
+
+* testSendAuthz
+- create user $user-1 within group "send_*"
+- verify can send messages
+- remove $user-1
+- create user $user-1 within group "send_{queue/topic/anycast/multicast}"
+- verify can send messages to anycast, queue, topic, multicast
+- remove $user-1
+- create user $user-2 within group "null"
+- verify cannot send messages
+- remove $user-2
+- create user $user-2 within group "recv_*"
+- verify cannot send messages
+- remove $user-2
+
+
+* testReceiveAuthz
+- create user $user-1 within group "receive_*"
+- verify can receive messages
+- remove $user-1
+- create user $user-1 within group "send_{queue/topic/anycast/multicast}"
+- verify can receive messages from anycast, queue, topic, multicast
+- remove $user-1
+- create user $user-2 within group "null"
+- verify cannot receive messages
+- remove $user-2
+- create user $user-2 within group "send_*"
+- verify cannot receivemessages
+- remove $user-2
+
+* testUserPermissionAfterRemoveAuthz
+- create user $user-1 within group "receive_*"
+- verify can receive messages
+- remove $user-1
+- create user $user-1 within group "pepa_group"
+- verify cannot receive messages
+- remove $user-1
