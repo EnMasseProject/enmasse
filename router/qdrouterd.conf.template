@@ -131,3 +131,8 @@ address {
     prefix: ${DOLLAR}temp
     distribution: balanced
 }
+
+policy {
+    enableVhostPolicy: true
+    policyDir: /etc/qpid-dispatch
+}

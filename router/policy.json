@@ -1,0 +1,18 @@
+[
+    ["vhost",
+     {
+         "id": "$default",
+         "allowUnknownUser": true,
+         "groups": {
+             "$default" : {
+                 "users":            "*",
+                 "remoteHosts":      "*",
+                 "allowDynamicSource":   true,
+                 "allowAnonymousSender": true,
+                 "sources": "*",
+                 "targets": "*"
+             }
+         }
+     }
+    ]
+]
