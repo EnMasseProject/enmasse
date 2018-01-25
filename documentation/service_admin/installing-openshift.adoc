@@ -96,6 +96,12 @@ oc process -f ./openshift/addons/standard-authservice.yaml | oc create -f -
 
 ==== Deploying {ProductName}
 
+To deploy {ProductName} in production, it is recommended that you have cluster-admin access in order
+to setup the required roles for creating namespaces and managing resources in those namespaces. For
+evaluation purposes, {ProductName} can also be deployed in a single namespace.
+
+===== Deploying {ProductName} for production
+
 .Procedure
 
 . Create service account for the {ProductName} address controller:
@@ -143,6 +149,58 @@ oc create secret tls address-controller-cert --cert=address-controller-cert/tls.
 [options="nowrap"]
 ----
 oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=true ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -f -
+----
++
+The deployments required for running {ProductName} are now created.
+
+. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
++
+[options="nowrap"]
+----
+oc get pods -n enmasse
+----
+
+===== Deploying {ProductName} for evaluation
+
+.Procedure
+
+. Create service accounts for the {ProductName} address controller and address space:
++
+[options="nowrap"]
+----
+oc create sa -n enmasse enmasse-admin
+oc create sa -n enmasse address-space-admin
+----
+
+. Grant privileges required for viewing and managing resources:
++
+[options="nowrap"]
+----
+oc policy add-role-to-user view system:serviceaccount:enmasse:default
+oc policy add-role-to-user edit system:serviceaccount:enmasse:enmasse-admin
+oc policy add-role-to-user edit system:serviceaccount:enmasse:address-space-admin
+----
+
+. Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p address-controller-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out address-controller-cert/tls.crt -keyout address-controller-cert/tls.key
+----
+
+. Create secret with address-controller certificate:
++
+[options="nowrap"]
+----
+oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
+----
+
+. Deploy address-controller:
++
+[options="nowrap"]
+----
+oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=false ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -f -
 ----
 +
 The deployments required for running {ProductName} are now created.
