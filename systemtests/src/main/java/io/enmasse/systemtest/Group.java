@@ -4,8 +4,7 @@ public enum Group {
     MANAGE,
     SEND_ALL,
     RECV_ALL,
-    MONITOR,
-    VIEW_CONSOLE;
+    MONITOR;
 
     @Override
     public String toString() {
