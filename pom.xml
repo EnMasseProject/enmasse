@@ -41,7 +41,6 @@
      <module>k8s-api</module>
      <module>k8s-api-testutil</module>
      <module>amqp-utils</module>
-     <module>configserv</module>
      <module>queue-scheduler</module>
      <module>discovery-lib</module>
      <module>topic-forwarder</module>
