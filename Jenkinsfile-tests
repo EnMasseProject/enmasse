@@ -22,6 +22,7 @@ pipeline {
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
         string(name: 'MAILING_LIST', defaultValue: '', description: '')
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
+        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
     }
     options {
         timeout(time: 3, unit: 'HOURS')
@@ -45,6 +46,7 @@ pipeline {
         stage ('checkout') {
             steps {
                 checkout scm
+                sh "git checkout ${params.COMMIT_SHA}"
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
