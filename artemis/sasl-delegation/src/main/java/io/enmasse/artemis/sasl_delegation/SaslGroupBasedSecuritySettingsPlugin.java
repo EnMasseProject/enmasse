@@ -124,6 +124,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                         for(String encoded : knownAddresses.get(address)) {
                             roles.add(new Role("send_" + encoded, true, false, false, false, true, false, false, false, false, false));
                             roles.add(new Role("consume_" + encoded, false, true, false, false, true, true, false, true, false, false));
+                            roles.add(new Role("recv_" + encoded, false, true, false, false, true, true, false, true, false, false));
                             roles.add(new Role("browse_" + encoded, false, false, false, false, false, false, false, true, false, false));
                         }
                         securityRepository.addMatch(address, roles);
