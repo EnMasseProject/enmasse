@@ -29,10 +29,7 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -140,7 +137,7 @@ public class Artemis implements AutoCloseable {
         Message message = createOperationMessage(resource, operation);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + operation + " with parameters: " + parameters);
+            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + operation + " with parameters: " + Arrays.toString(parameters));
         }
         return response;
     }
@@ -149,7 +146,7 @@ public class Artemis implements AutoCloseable {
         Message message = createAttributeMessage(resource, attribute);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + attribute + " with parameters: " + parameters);
+            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + attribute + " with parameters: " + Arrays.toString(parameters));
         }
         return response;
     }
