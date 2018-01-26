@@ -38,7 +38,8 @@ An AddressSpacePlan has the following fields:
   special 'aggregate' pseudo-resource, whose 'max' value would limit
   the total number of pods allowed. The supported resources would be
   configured via a separate resource definition (to be described in a
-  separate document).
+  separate document).  Out of the box it is envisaged that 'router'
+  and 'broker' resources will be offered to users definiing plans.
 
 * addressPlans [required], a list of the names of AddressPlan
   definitions valid for address spaces operating under this plan
@@ -66,7 +67,8 @@ An AddressPlan has the following fields:
   number indicating the amount of that resource an address of this
   plan would require. The supported resources would be configured via
   a separate resource definition (to be described in a separate
-  document).
+  document). Out of the box it is envisaged that 'router' and 'broker'
+  resources will be offered to users definiing plans.
 
 The console could then determine both the address-types it could offer
 as well as the plans supported for each type just by reading the
