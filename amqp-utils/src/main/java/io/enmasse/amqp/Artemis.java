@@ -16,6 +16,7 @@
 
 package io.enmasse.amqp;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -43,7 +44,7 @@ import java.util.concurrent.TimeoutException;
 public class Artemis implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(Artemis.class.getName());
     private static final int maxRetries = 10;
-    private final Vertx vertx;
+    private final Context context;
     private final ProtonConnection connection;
     private final ProtonSender sender;
     private final ProtonReceiver receiver;
@@ -52,8 +53,8 @@ public class Artemis implements AutoCloseable {
     private final String brokerContainerId;
     private long requestTimeoutMillis = 10_000;
 
-    private Artemis(Vertx vertx, ProtonConnection connection, ProtonSender sender, ProtonReceiver receiver, String replyTo, BlockingQueue<Message> replies) {
-        this.vertx = vertx;
+    private Artemis(Context context, ProtonConnection connection, ProtonSender sender, ProtonReceiver receiver, String replyTo, BlockingQueue<Message> replies) {
+        this.context = context;
         this.connection = connection;
         this.brokerContainerId = connection.getRemoteContainer();
         this.sender = sender;
@@ -114,7 +115,7 @@ public class Artemis implements AutoCloseable {
         receiver.setSource(source);
         receiver.openHandler(h -> {
             if (h.succeeded()) {
-                promise.complete(new Artemis(vertx, connection, sender, receiver, h.result().getRemoteSource().getAddress(), replies));
+                promise.complete(new Artemis(vertx.getOrCreateContext(), connection, sender, receiver, h.result().getRemoteSource().getAddress(), replies));
             } else {
                 if (retries > maxRetries) {
                     promise.fail(h.cause());
@@ -194,7 +195,7 @@ public class Artemis implements AutoCloseable {
     }
 
     private Message sendMessage(Message message, long timeout, TimeUnit timeUnit) {
-        vertx.runOnContext(h -> sender.send(message));
+        context.runOnContext(h -> sender.send(message));
         try {
             Message m = replies.poll(timeout, timeUnit);
             return m;
@@ -275,7 +276,7 @@ public class Artemis implements AutoCloseable {
     }
 
     public void close() {
-        vertx.runOnContext(id -> connection.close());
+        context.runOnContext(id -> connection.close());
     }
 
     public void pauseQueue(String queueName) throws TimeoutException {
