@@ -21,6 +21,14 @@ local authService = import "auth-service.jsonnet";
         common.volume_mount("authservice-ca", "/etc/authservice-ca", true),
         common.volume_mount("broker-prometheus-config", "/etc/prometheus-config", true)
       ],
+      "resources": {
+        "requests": {
+          "memory": "${BROKER_MEMORY_LIMIT}"
+        },
+        "limits": {
+          "memory": "${BROKER_MEMORY_LIMIT}"
+        }
+      },
       "livenessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 120),
       "readinessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 10),
       "lifecycle": {

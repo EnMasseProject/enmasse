@@ -197,6 +197,11 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
           "description": "The hostname to use in sasl init",
+        },
+        {
+          "name": "BROKER_MEMORY_LIMIT",
+          "description": "Memory limits for Artemis",
+          "value": "2Gi"
         }
       ]
     }

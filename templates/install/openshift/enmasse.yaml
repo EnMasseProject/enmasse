@@ -664,6 +664,11 @@ objects:
                   - -c
                   - $ARTEMIS_HOME/bin/probe.sh
                 initialDelaySeconds: 10
+              resources:
+                limits:
+                  memory: ${BROKER_MEMORY_LIMIT}
+                requests:
+                  memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
                 name: vol-${NAME}
@@ -740,6 +745,9 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+    - description: Memory limits for Artemis
+      name: BROKER_MEMORY_LIMIT
+      value: 2Gi
   - apiVersion: v1
     kind: Template
     metadata:
@@ -833,6 +841,11 @@ objects:
                   - -c
                   - $ARTEMIS_HOME/bin/probe.sh
                 initialDelaySeconds: 10
+              resources:
+                limits:
+                  memory: ${BROKER_MEMORY_LIMIT}
+                requests:
+                  memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
                 name: vol-${NAME}
@@ -923,6 +936,9 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+    - description: Memory limits for Artemis
+      name: BROKER_MEMORY_LIMIT
+      value: 2Gi
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1016,6 +1032,11 @@ objects:
                   - -c
                   - $ARTEMIS_HOME/bin/probe.sh
                 initialDelaySeconds: 10
+              resources:
+                limits:
+                  memory: ${BROKER_MEMORY_LIMIT}
+                requests:
+                  memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
                 name: vol-${NAME}
@@ -1165,6 +1186,9 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+    - description: Memory limits for Artemis
+      name: BROKER_MEMORY_LIMIT
+      value: 2Gi
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1258,6 +1282,11 @@ objects:
                   - -c
                   - $ARTEMIS_HOME/bin/probe.sh
                 initialDelaySeconds: 10
+              resources:
+                limits:
+                  memory: ${BROKER_MEMORY_LIMIT}
+                requests:
+                  memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
                 name: vol-${NAME}
@@ -1421,6 +1450,9 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+    - description: Memory limits for Artemis
+      name: BROKER_MEMORY_LIMIT
+      value: 2Gi
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST
