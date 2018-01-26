@@ -40,6 +40,12 @@ public class KeycloakClient {
     private final KeycloakCredentials credentials;
     private final KeyStore trustStore;
 
+    public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials, String keycloakCaCert) throws Exception {
+        this.endpoint = endpoint;
+        this.credentials = credentials;
+        this.trustStore = createTrustStore(keycloakCaCert);
+    }
+
     private static KeyStore createTrustStore(String keycloakCaCert) throws Exception {
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
@@ -55,17 +61,6 @@ public class KeycloakClient {
         }
     }
 
-    public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials, String keycloakCaCert) throws Exception {
-        this.endpoint = endpoint;
-        this.credentials = credentials;
-        this.trustStore = createTrustStore(keycloakCaCert);
-    }
-
-    @FunctionalInterface
-    interface GroupMethod<T, U, V> {
-        void apply(T t, U u, V v);
-    }
-
     public void joinGroup(String realm, String groupName, String username) throws Exception {
         groupOperation(realm, groupName, username, 3, TimeUnit.MINUTES, (realmResource, clientId, groupId) -> {
             realmResource.users().get(clientId).joinGroup(groupId);
@@ -78,6 +73,12 @@ public class KeycloakClient {
             realmResource.users().get(clientId).leaveGroup(groupId);
             Logging.log.info("User '{}' successfully removed from group '{}'", username, groupName);
         });
+    }
+
+    public void leaveGroups(String realm, String username, String... groups) throws Exception {
+        for (String group : groups) {
+            leaveGroup(realm, group, username);
+        }
     }
 
     public void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
@@ -158,12 +159,27 @@ public class KeycloakClient {
         }
     }
 
-
     public void createUser(String realm, String userName, String password) throws Exception {
-        createUser(realm, userName, password, 3, TimeUnit.MINUTES);
+        createUser(realm, userName, password, 3, TimeUnit.MINUTES,
+                Group.SEND_ALL.toString(),
+                Group.RECV_ALL.toString(),
+                Group.MANAGE.toString());
     }
 
-    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit) throws Exception {
+    public void createUser(String realm, String userName, String password, String... groups) throws Exception {
+        createUser(realm, userName, password, 3, TimeUnit.MINUTES, groups);
+    }
+
+    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit)
+            throws Exception {
+        createUser(realm, userName, password, timeout, timeUnit,
+                Group.SEND_ALL.toString(),
+                Group.RECV_ALL.toString(),
+                Group.MANAGE.toString());
+    }
+
+    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit, String... groups)
+            throws Exception {
 
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
@@ -195,17 +211,11 @@ public class KeycloakClient {
             }
         }
 
-        String sendGroup = "send_*";
-        String receiveGroup = "recv_*";
-        String manageGroup = "manage";//allows full access to console
-        createGroup(realm, sendGroup);
-        createGroup(realm, receiveGroup);
-        createGroup(realm, manageGroup);
-        joinGroup(realm, sendGroup, userName);
-        joinGroup(realm, receiveGroup, userName);
-        joinGroup(realm, manageGroup, userName);
+        for (String group : groups) {
+            createGroup(realm, group);
+            joinGroup(realm, group, userName);
+        }
     }
-
 
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, long timeout, TimeUnit timeUnit) throws Exception {
         Logging.log.info("Waiting for realm {} to exist", realmName);
@@ -246,6 +256,11 @@ public class KeycloakClient {
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
             TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName));
         }
+    }
+
+    @FunctionalInterface
+    interface GroupMethod<T, U, V> {
+        void apply(T t, U u, V v);
     }
 
     private static class CloseableKeycloak implements AutoCloseable {

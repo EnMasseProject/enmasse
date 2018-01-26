@@ -41,7 +41,7 @@ class Sender extends ClientHandlerBase<Integer> {
             connectLatch.countDown();
             sendNext(connection, sender);
         });
-        sender.closeHandler(result -> handleError(connection, sender.getCondition()));
+        sender.closeHandler(result -> handleError(connection, sender.getRemoteCondition()));
         sender.open();
     }
 
