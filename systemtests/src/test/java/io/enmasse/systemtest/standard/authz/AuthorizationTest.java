@@ -20,7 +20,7 @@ public class AuthorizationTest extends AuthorizationTestBase {
         doTestReceiveAuthz();
     }
 
-    @Test
+    //@Test disabled due to issue #786
     public void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }
