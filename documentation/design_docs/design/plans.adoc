@@ -33,11 +33,12 @@ An AddressSpacePlan has the following fields:
 * longDescription [optional]
 
 * resources [required], a list of objects each containing the resource
-  name (currently broker and router are recognised resources) and
-  'min' and 'max' values for the number of pods of that resource an
-  address of this plan would allow. There would also be an 'aggregate'
-  resource, whose 'max' value would limit the total number of pods
-  allowed. Broker, router and aggregate resources are all required.
+  name and 'min' and 'max' values for the number of pods of that
+  resource an address of this plan would allow. There would also be a
+  special 'aggregate' pseudo-resource, whose 'max' value would limit
+  the total number of pods allowed. The supported resources would be
+  configured via a separate resource definition (to be described in a
+  separate document).
 
 * addressPlans [required], a list of the names of AddressPlan
   definitions valid for address spaces operating under this plan
@@ -61,10 +62,11 @@ An AddressPlan has the following fields:
 * addressType [required], indicating the type of address it is associated with
 
 * requiredResources [required], a list of objects containing the
-  resource name (currently broker and router are recognised resources)
-  and a credits field whose value is a floating point number
-  indicating the amount of that resource an address of this plan would
-  require
+  resource name and a credits field whose value is a floating point
+  number indicating the amount of that resource an address of this
+  plan would require. The supported resources would be configured via
+  a separate resource definition (to be described in a separate
+  document).
 
 The console could then determine both the address-types it could offer
 as well as the plans supported for each type just by reading the
