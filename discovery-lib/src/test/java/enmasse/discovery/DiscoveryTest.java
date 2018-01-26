@@ -1,6 +1,5 @@
 package enmasse.discovery;
 
-import io.enmasse.config.service.model.Subscriber;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.Test;
