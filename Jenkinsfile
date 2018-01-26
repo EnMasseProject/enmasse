@@ -28,6 +28,7 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
+                sh 'echo $(git log --format=format:%H -n1) > actual-commit.file'
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
@@ -50,12 +51,16 @@ pipeline {
             }
         }
         stage('execute brokered') {
+            environment {
+                ACTUAL_COMMIT = readFile('actual-commit.file')
+            }
             steps {
                 build job: env.BROKERED_JOB_NAME, wait: false, parameters:
                         [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'brokered.**'],
+                                [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
             }
         }
@@ -66,6 +71,7 @@ pipeline {
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'standard.**'],
+                                [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
             }
         }
