@@ -97,14 +97,16 @@ oc process -f ./openshift/addons/standard-authservice.yaml | oc create -f -
 ==== Deploying {ProductName}
 
 To deploy {ProductName} in production, it is recommended that you have cluster-admin access in order
-to setup the required roles for creating namespaces and managing resources in those namespaces. For
-evaluation purposes, {ProductName} can also be deployed in a single namespace.
+to set up the required roles for creating namespaces and managing resources in those namespaces. See 
+<<openshift-install-single-address-space>> for how to deploy {ProductName} without cluster-admin
+access, which will restrict it to a single address space.
 
-===== Deploying {ProductName} for production
+
+===== Deploying {ProductName}
 
 .Procedure
 
-. Create service account for the {ProductName} address controller:
+. Create a service account for the {ProductName} address controller:
 +
 [options="nowrap"]
 ----
@@ -137,14 +139,14 @@ mkdir -p address-controller-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out address-controller-cert/tls.crt -keyout address-controller-cert/tls.key
 ----
 
-. Create secret with address-controller certificate:
+. Create a secret containing the address-controller certificate:
 +
 [options="nowrap"]
 ----
 oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
 ----
 
-. Deploy address-controller:
+. Deploy the address-controller:
 +
 [options="nowrap"]
 ----
@@ -160,7 +162,8 @@ The deployments required for running {ProductName} are now created.
 oc get pods -n enmasse
 ----
 
-===== Deploying {ProductName} for evaluation
+===== Deploying {ProductName} limited to a single address space
+[[openshift-install-single-address-space]]
 
 .Procedure
 
