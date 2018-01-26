@@ -1,0 +1,102 @@
+== why
+
+The address controller and standard controller needs a way to tie plans into templates that get
+instantiated. Previously, the plans have contained this information directly, and a 'special' name
+was used for variations like pooled queues.
+
+With the new plans, resources are named along with an amount of resource required for that plan.
+This proposal defines a format for such resources, which makes them configurable for the messaging
+service admin.
+
+Essentially, a resource definition ties a template name together with parameters.
+
+== what/how
+
+ConfigMaps would be used to store the resource definition. A type label is used to distinguish it
+from other configmaps. In the global namespace, all resources referenced by the address space plans
+and address plans need to exist.
+
+A resource definition would be specified in a configmap containing the actual definition in one of
+the fields. The fields of a resource definition is:
+
+name [required], name of the resource
+
+template [optional], name of the template to instantiate
+
+parameters [optional], parameters to pass to the template
+
+An example resource definition:
+
+```
+{
+    "apiVersion": "enmasse.io/v1",
+    "kind": "ResourceDefinition",
+    "metadata": {
+        "name": "broker"
+    },
+    "template": "persisted-broker",
+    "parameters": [
+        {
+            "name": "MY_PARAMETER",
+            "value": "val1"
+        }
+    ]
+}
+```
+
+The resource definition configmap would look like this (in YAML for readability)
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-definition-foo
+  labels:
+    type: resource-definition
+data:
+  definition: |-
+    {
+        "apiVersion": "enmasse.io/v1",
+        "kind": "ResourceDefinition",
+        "metadata": {
+            "name": "broker"
+        },
+        "template": "persisted-broker",
+        "parameters": [
+            {
+                "name": "MY_PARAMETER",
+                "value": "val1"
+            }
+        ]
+    }
+```
+
+All resource definitions are stored and validated globally by the address controller. When an
+address space is created, the resource definitions are copied into the address space.
+
+The ResourceDefinition can be referenced by both AddressPlans and AddressSpacePlans. A plan is  
+validated for pointing to a valid resource definition. For address space plans, an annotation
+'definedBy' points to the name of the resource definition that should be instantiated for that
+address space. The address controller is responsible for instantiating the template when creating
+the address space.
+
+For address plans, the name for each entry in the requiredResources list refers a resource
+definition. The standard-controller will be responsible for instantiating the template pointed by
+the resource definition.
+
+The 'router' resource will in the first instance not point to a resource definition, but be handled
+in a different way. To begin with, there will exist one resource definition for the 'broker'
+resource by default.
+
+At some point, this resource should be versioned. When introduced, any non-versioned definition will
+be treated as version 1.
+
+== testing
+
+To begin with, no additional tests are needed. Once we support creating new resource definitions,
+additional testing will be needed.
+
+== documentation
+
+Same as for testing, when the resource definitions are introduced as a first-class concept, then we
+need documentation.
