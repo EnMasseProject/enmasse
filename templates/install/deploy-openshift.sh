@@ -163,7 +163,7 @@ fi
 runcmd "oc create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
 
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
-runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
+runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 
 create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
@@ -206,7 +206,7 @@ fi
 
 if [ "$MODE" == "singletenant" ]; then
     runcmd "oc create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
-    runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
+    runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
 
     create_address_space "oc" "default" $NAMESPACE
 fi
