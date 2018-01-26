@@ -224,14 +224,14 @@ local images = import "images.jsonnet";
                 ],
                 "resources": {
                     "requests": {
-                        "memory": "1Gi",
+                        "memory": "2Gi",
                     },
                     "limits": {
-                        "memory": "1Gi",
+                        "memory": "2Gi",
                     }
                 },
                 "env": [
-                  common.env("JAVA_OPTS", "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Xms512m -Xmx512m"),
+                  common.env("JAVA_OPTS", "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Xms512m -Xmx1024m"),
                   {
                     "name": "KEYCLOAK_USER",
                     "valueFrom": {
