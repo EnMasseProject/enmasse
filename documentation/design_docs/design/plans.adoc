@@ -23,39 +23,48 @@ deployed.
 
 An AddressSpacePlan has the following fields:
 
-* name (this would be the name of the config map)
+* name [required] (this would be the name of the config map)
 
-* displayName (a possibly different name more suitable for displaying
+* displayName [optional] (a possibly different name more suitable for displaying
   to users, with less constraints on allowed chars)
 
-* description
+* shortDescription [optional]
 
-* resources, a list of objects each containing the resource name
-  (currently broker and router are recognised resources) and 'min' and
-  'max' values for the number of pods of that resource an address of
-  this plan would allow. There would also be an 'aggregate' resource,
-  whose 'max' value would limit the total number of pods allowed
+* longDescription [optional]
 
-* addressPlans, a list of the names of AddressPlan definitions valid
-  for address spaces operating under this plan
+* resources [required], a list of objects each containing the resource
+  name (currently broker and router are recognised resources) and
+  'min' and 'max' values for the number of pods of that resource an
+  address of this plan would allow. There would also be an 'aggregate'
+  resource, whose 'max' value would limit the total number of pods
+  allowed. Broker, router and aggregate resources are all required.
+
+* addressPlans [required], a list of the names of AddressPlan
+  definitions valid for address spaces operating under this plan
 
 * uuid to identify this plan for the service broker
 
 An AddressPlan has the following fields:
 
-* name, unique within the namespace (and by implication generally
+* name [required], unique within the namespace (and by implication generally
   unique within the cluster also)
 
-* displayName (doesn't need to be unique)
+* displayName [optional] (doesn't need to be unique)
 
-* description
+* displayOrder [optional] a number used to influence display order of
+  different plans
 
-* addressType, indicating the type of address it is associated with
+* shortDescription [optional]
 
-* requiredResources, a list of objects containing the resource name (currently
-  broker and router are recognised resources) and a credits field
-  whose value is a floating point number indicating the amount of that
-  resource an address of this plan would require
+* longDescription [optional]
+
+* addressType [required], indicating the type of address it is associated with
+
+* requiredResources [required], a list of objects containing the
+  resource name (currently broker and router are recognised resources)
+  and a credits field whose value is a floating point number
+  indicating the amount of that resource an address of this plan would
+  require
 
 The console could then determine both the address-types it could offer
 as well as the plans supported for each type just by reading the
