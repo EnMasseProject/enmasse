@@ -1,0 +1,187 @@
+== why
+
+Plans should allow the resources consumed by a particuar deployment to
+be restricted. At present there is no clear mechanism for this.
+
+== what/how
+
+ConfigMaps would be used to store definitions of AddressPlan and
+AddressSpacePlan definitions, as is done for ADdresses today. A type
+label would be used to identify the type of object defined within a
+config map.
+
+There would be a ConfigMap in the namespace of the address-controller
+for each defined AddressPlan and AddressSpacePlan. With type labels
+'address=plan' and 'address-space-plan' respectively.
+
+The address-controller would create (copy, effectively) the necessary
+ConfigMaps in the namespace of any deployed address-space. Each
+address-space would have the AddressSpacePlan definition it was
+operating under and any AddressPlan definitions it could offer. This
+allows the address-space to be self-contained once it has been
+deployed.
+
+An AddressSpacePlan has the following fields:
+
+* name [required] (this would be the name of the config map)
+
+* displayName [optional] (a possibly different name more suitable for displaying
+  to users, with less constraints on allowed chars)
+
+* shortDescription [optional]
+
+* longDescription [optional]
+
+* resources [required], a list of objects each containing the resource
+  name and 'min' and 'max' values for the number of pods of that
+  resource an address of this plan would allow. There would also be a
+  special 'aggregate' pseudo-resource, whose 'max' value would limit
+  the total number of pods allowed. The supported resources would be
+  configured via a separate resource definition (to be described in a
+  separate document).  Out of the box it is envisaged that 'router'
+  and 'broker' resources will be offered to users definiing plans.
+
+* addressPlans [required], a list of the names of AddressPlan
+  definitions valid for address spaces operating under this plan
+
+* uuid to identify this plan for the service broker
+
+An AddressPlan has the following fields:
+
+* name [required], unique within the namespace (and by implication generally
+  unique within the cluster also)
+
+* displayName [optional] (doesn't need to be unique)
+
+* displayOrder [optional] a number used to influence display order of
+  different plans
+
+* shortDescription [optional]
+
+* longDescription [optional]
+
+* addressType [required], indicating the type of address it is associated with
+
+* requiredResources [required], a list of objects containing the
+  resource name and a credits field whose value is a floating point
+  number indicating the amount of that resource an address of this
+  plan would require. The supported resources would be configured via
+  a separate resource definition (to be described in a separate
+  document). Out of the box it is envisaged that 'router' and 'broker'
+  resources will be offered to users definiing plans.
+
+The console could then determine both the address-types it could offer
+as well as the plans supported for each type just by reading the
+config maps containing AddressPlan definitions. It could also use the
+provided display_name and description.
+
+The current apporach of parsing tooltips out of the docs will be
+abandoned for now, as the plan configuration will replace most of the
+current usage.
+
+The standard-controller would use both the AddressSpacePlan and
+AddressPlans to determine when to scale up a deployment and to enforce
+limits. The standard-controller would also allocate any queues or
+topics that were to be deployed on a pool of shared broker to one of
+the brokers in that pool. It would mark the address with that
+broker's identity. The agent would use that information to determine which
+broker to create the address on.
+
+TODO: need to determine exactly how the addresses are marked.
+
+Example AddressSpacePlan definition:
+
+{
+    "apiVersion": "enmasse.io/v1",
+    "kind": "AddressSpacePlan",
+    "metadata": {
+        "name": "my-address-space-plan"
+    },
+    "displayName": "a really good plan",
+    "shortDescription": "Demonstrates the syntax",
+    "longDescription": "Insert lengthy discussion of my plan in here...",
+    "uuid": "e47135de-28d5-336d-95ed-5a816cf61658"
+    "resources": [
+        {
+            "name": "broker",
+            "min": 0,
+            "max": 5
+        },
+        {
+            "name": "router",
+            "min": 1,
+            "max": 5
+        },
+        {
+            "name": "aggregate",
+            "max": 6
+        }
+    },
+    "addressPlans":["queue-myplan", "topic-small", "topic-large"]
+}
+
+
+Example ConfigMap for this AddressSpacePlan:
+
+{
+    "apiVersion": "v1",
+    "data": {
+        "definition": "{\n    \"apiVersion\": \"enmasse.io/v1\",\n    \"kind\": \"AddressSpacePlan\",\n    \"metadata\": {\n        \"name\": \"my-address-space-plan\"\n    },\n    \"displayName\": \"a really good plan\",\n    \"shortDescription\": \"Demonstrates the syntax\",\n    \"longDescription\": \"Insert lengthy discussion of my plan in here...\",\n    \"uuid\": \"e47135de-28d5-336d-95ed-5a816cf61658\"\n    \"resources\": [\n        {\n            \"name\": \"broker\",\n            \"min\": 0,\n            \"max\": 5\n        },\n        {\n            \"name\": \"router\",\n            \"min\": 1,\n            \"max\": 5\n        },\n        {\n            \"name\": \"aggregate\",\n            \"max\": 6\n        }\n    },\n    \"addressPlans\":[\"queue-myplan\", \"topic-small\", \"topic-large\"]\n}\n"
+    },
+    "kind": "ConfigMap",
+    "metadata": {
+        "creationTimestamp": "2018-01-25T11:40:32Z",
+        "labels": {
+            "type": "address-space-plan"
+        },
+        "name": "my-address-space-plan-config",
+        "namespace": "enmasse-myspace",
+        "resourceVersion": "6702",
+        "selfLink": "/api/v1/namespaces/enmasse-myspace/configmaps/my-address-space-plan-config",
+        "uid": "8ceff61f-01c4-11e8-b50e-54ee755a3014"
+    }
+}
+
+Example AddressPlan:
+
+{
+    "apiVersion": "enmasse.io/v1",
+    "kind": "AddressPlan",
+    "metadata": {
+        "name": "queue-myplan"
+    },
+    "displayName": "my plan",
+    "shortDescription": "Demonstrates the syntax",
+    "longDescription": "Insert lengthy discussion of my plan in here...",
+    "addressType": "queue"
+    "requiredResources": [
+        {
+            "name": "broker",
+            "credit": 0.05
+        },
+        {
+            "name": "router",
+            "credit": 0.01
+        }
+    ]
+}
+
+Example ConfigMap for this AddressSpacePlan:
+{
+    "apiVersion": "v1",
+    "data": {
+        "definition": "{\n    \"apiVersion\": \"enmasse.io/v1\",\n    \"kind\": \"AddressPlan\",\n    \"metadata\": {\n        \"name\": \"queue-myplan\"\n    },\n    \"displayName\": \"my plan\",\n    \"shortDescription\": \"Demonstrates the syntax\",\n    \"longDescription\": \"Insert lengthy discussion of my plan in here...\",\n    \"addressType\": \"queue\"\n    \"requiredResources\": [\n        {\n            \"name\": \"broker\",\n            \"credit\": 0.05\n        },\n        {\n            \"name\": \"router\",\n            \"credit\": 0.01\n        }\n    ]\n}\n"
+    },
+    "kind": "ConfigMap",
+    "metadata": {
+        "creationTimestamp": "2018-01-25T11:40:41Z",
+        "labels": {
+            "type": "address-plan"
+        },
+        "name": "my-address-plan-config",
+        "namespace": "enmasse-myspace",
+        "resourceVersion": "6853",
+        "selfLink": "/api/v1/namespaces/enmasse-myspace/configmaps/my-address-plan-config",
+        "uid": "9254765b-01c4-11e8-b50e-54ee755a3014"
+    }
+}
