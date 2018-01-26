@@ -159,8 +159,8 @@ The deployments required for running {ProductName} are now created.
 oc get pods -n enmasse
 ----
 
-==== Deploying {ProductName} limited to a single address space
 [[openshift-install-single-address-space]]
+==== Deploying {ProductName} limited to a single address space
 
 .Procedure
 
