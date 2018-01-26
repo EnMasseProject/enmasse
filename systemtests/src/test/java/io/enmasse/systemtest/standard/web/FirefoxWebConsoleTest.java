@@ -109,6 +109,11 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestCannotDeleteAddresses();
     }
 
+    @Test
+    public void testViewAddresses() throws Exception {
+        doTestViewAddresses();
+    }
+
     @Override
     public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();

@@ -494,6 +494,14 @@ public class ConsoleWebPage {
         log.info("Create address using web console");
         //get console page
         openConsolePageWebConsole();
+        createAddressWebConsole(destination, true);
+    }
+
+    public void createAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
+        log.info("Create address using web console");
+
+        if (openConsolePage)
+            openConsolePageWebConsole();
 
         //get addresses item from left panel view
         openAddressesPageWebConsole();
@@ -536,6 +544,14 @@ public class ConsoleWebPage {
         log.info("Remove address using web console");
         //open console webpage
         openConsolePageWebConsole();
+        createAddressWebConsole(destination, true);
+    }
+
+    public void deleteAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
+        log.info("Remove address using web console");
+
+        if (openConsolePage)
+            openConsolePageWebConsole();
 
         //open addresses
         openAddressesPageWebConsole();

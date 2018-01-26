@@ -396,7 +396,9 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCannotCreateAddresses() throws Exception {
-        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test", "monitorPa55");
+        Destination destination = Destination.queue("authz-queue");
+        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
+
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
                 monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
 
@@ -406,20 +408,21 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.openConsolePageWebConsole();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertElementDisabled(consoleWebPage.getCreateButton());
         try {
-            selenium.clickOnItem(consoleWebPage.getCreateButton());
-            fail("Button is clickable");
+            assertElementDisabled(consoleWebPage.getCreateButton());
+            consoleWebPage.createAddressWebConsole(destination, false);
+            fail("Create button is clickable");
         }catch (Exception ex){
             assertTrue(ex instanceof InvalidElementStateException);
         }
     }
 
     public void doTestCannotDeleteAddresses() throws Exception {
-        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test", "monitorPa55");
+        Destination destination = Destination.queue("test-cannot-delete-address");
+        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
+
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
                 monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
-        Destination destination = Destination.queue("test-cannot-delete-address");
         setAddresses(destination);
 
         consoleWebPage = new ConsoleWebPage(selenium,
@@ -428,15 +431,32 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.openConsolePageWebConsole();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertElementDisabled(consoleWebPage.getRemoveButton());
         try {
-            AddressWebItem addressItem = consoleWebPage.getAddressItem(destination);
-            selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());
-            selenium.clickOnItem(consoleWebPage.getRemoveButton());
-            fail("Button is clickable");
+            assertElementDisabled(consoleWebPage.getRemoveButton());
+            consoleWebPage.deleteAddressWebConsole(destination, false);
+            fail("Remove button is clickable");
         }catch (Exception ex){
             assertTrue(ex instanceof InvalidElementStateException);
         }
+    }
+
+    public void doTestViewAddresses() throws Exception {
+        Destination queueView = Destination.queue("test-view-queue");
+        Destination queueNotView = Destination.queue("test-not-view-queue");
+
+        KeycloakCredentials monitorUser = new KeycloakCredentials("view_user_test", "viewPa55");
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                monitorUser.getUsername(), monitorUser.getPassword(), "view_" + queueView.getAddress());
+        setAddresses(queueNotView, queueView);
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, defaultAddressSpace);
+        consoleWebPage.openConsolePageWebConsole();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        assertThat(consoleWebPage.getAddressItems().size(), is(1));
+        assertEquals(queueView.getAddress(), consoleWebPage.getAddressItems().get(0).getName());
     }
 
     //============================================================================================

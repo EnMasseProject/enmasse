@@ -82,6 +82,21 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
         doTestClientsMetrics();
     }
 
+    //@Test
+    public void testCannotCreateAddresses() throws Exception {
+        doTestCannotCreateAddresses();
+    }
+
+    //@Test
+    public void testCannotDeleteAddresses() throws Exception {
+        doTestCannotDeleteAddresses();
+    }
+
+    //@Test
+    public void testViewAddresses() throws Exception {
+        doTestViewAddresses();
+    }
+
     @Override
     public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();
