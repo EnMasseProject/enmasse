@@ -19,5 +19,5 @@ touch $HOME/.kube/config
 docker run -d -p 5000:5000 registry
 
 export KUBECONFIG=$HOME/.kube/config
-sudo -E minikube start --vm-driver=none --insecure-registry localhost:5000
+sudo -E minikube start --vm-driver=none --kubernetes-version v1.8.7 --insecure-registry localhost:5000
 sudo -E minikube addons enable default-storageclass
