@@ -30,7 +30,7 @@ items:
         - env:
           - name: JAVA_OPTS
             value: -Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true
-              -Xms512m -Xmx512m
+              -Xms512m -Xmx1024m
           - name: KEYCLOAK_USER
             valueFrom:
               secretKeyRef:
@@ -62,9 +62,9 @@ items:
             initialDelaySeconds: 120
           resources:
             limits:
-              memory: 1Gi
+              memory: 2Gi
             requests:
-              memory: 1Gi
+              memory: 2Gi
           volumeMounts:
           - mountPath: /opt/jboss/keycloak/providers
             name: keycloak-providers
