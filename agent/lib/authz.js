@@ -49,17 +49,14 @@ AuthorizationPolicy.prototype.is_admin = function (connection) {
 AuthorizationPolicy.prototype.set_authz_props = function (request, credentials, properties) {
     if (credentials) {
         request.authz_props = {groups:properties.groups, authid:credentials.name};
+    } else {
+        request.authz_props = {groups:properties.groups};
     }
 };
 
 AuthorizationPolicy.prototype.get_authz_props = function (request) {
     try {
-        var credentials = myutils.basic_auth(request);
-        if (credentials) {
-            return request.authz_props;
-        } else {
-            return undefined;
-        }
+        return request.authz_props;
     } catch (error) {
         log.error('error retrieving authz properties for user: %s', error);
         return undefined;
