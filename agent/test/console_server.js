@@ -470,6 +470,7 @@ function define_authz_tests(v, client) {
         });
 
         it('rejects unauthorized address creation requests', function(done) {
+            auth_service.groups = ['monitor'];
             var connection = connect({});
             connection.on('accepted', function (context) {
                 assert.fail('request should fail');
@@ -487,6 +488,7 @@ function define_authz_tests(v, client) {
         });
 
         it('rejects unauthorized address deletion requests', function(done) {
+            auth_service.groups = ['monitor'];
             var foo = {address:'foo',type:'queue',plan:'delete-me'};
             console_server.address_ctrl.addresses.foo = foo;
             var connection = connect({});
