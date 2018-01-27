@@ -342,18 +342,18 @@ items:
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
       {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"1Gi\"}]}", "queue-persisted.json": "{\"apiVersion\": \"v1\", \"kind\":
-      \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"queue-persisted\"},
-      \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"clusterIP\":
-      \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
-      \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
-      {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
-      1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
-      {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
+      \"value\": \"512Mi\"}]}", "queue-persisted.json": "{\"apiVersion\": \"v1\",
+      \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"queue-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\",
+      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
+      \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
+      \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
+      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
+      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\":
       \"true\"}, \"labels\": {\"addresstype\": \"queue\", \"app\": \"enmasse\", \"name\":
       \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\":
@@ -411,7 +411,7 @@ items:
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
       {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"1Gi\"}]}", "topic-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\":
+      \"value\": \"512Mi\"}]}", "topic-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\":
       \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-inmemory\"},
       \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
@@ -499,18 +499,18 @@ items:
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
       {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"1Gi\"}]}", "topic-persisted.json": "{\"apiVersion\": \"v1\", \"kind\":
-      \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-persisted\"},
-      \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"clusterIP\":
-      \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
-      \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
-      {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
-      1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
-      {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
+      \"value\": \"512Mi\"}]}", "topic-persisted.json": "{\"apiVersion\": \"v1\",
+      \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"topic-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\",
+      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
+      \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
+      \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
+      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
+      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\":
       \"true\"}, \"labels\": {\"addresstype\": \"topic\", \"app\": \"enmasse\", \"name\":
       \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\":
@@ -591,7 +591,7 @@ items:
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
       {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"1Gi\"}]}"}, "kind": "ConfigMap", "metadata": {"labels": {"app":
+      \"value\": \"512Mi\"}]}"}, "kind": "ConfigMap", "metadata": {"labels": {"app":
       "enmasse"}, "name": "enmasse-storage-templates"}}], "parameters": [{"description":
       "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_IMAGE",
