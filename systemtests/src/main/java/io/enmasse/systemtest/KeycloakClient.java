@@ -219,6 +219,19 @@ public class KeycloakClient {
         }
     }
 
+    public void getGroupAndUser(String realm) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+            keycloak.get().realm(realm).groups().groups().forEach(group -> {
+                if (group != null) {
+                    Logging.log.info("group '{}' within path: '{}'", group.getName(), group.getPath());
+
+                }
+            });
+            Logging.log.info("user pavel: '{}'", keycloak.get().realm(realm).users().get("Pavel").toString());
+
+        }
+    }
+
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, long timeout, TimeUnit timeUnit) throws Exception {
         log.info("Waiting for realm {} to exist", realmName);
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);

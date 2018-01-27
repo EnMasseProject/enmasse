@@ -47,10 +47,16 @@ public class AuthenticationTest extends AuthenticationTestBase {
         getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
 
         assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
+        Thread.sleep(20000);
 
+        Logging.log.info("get namespace groups before restart");
+//        getKeycloakClient().getGroupAndUser(addressSpace.getName());
         scaleKeycloak(0);
         scaleKeycloak(1);
         Thread.sleep(160000);
+
+        Logging.log.info("get namespace groups after restart");
+        getKeycloakClient().getGroupAndUser(addressSpace.getName());
 
         assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
     }
