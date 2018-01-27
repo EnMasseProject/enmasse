@@ -747,7 +747,7 @@ objects:
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
-      value: 2Gi
+      value: 1Gi
   - apiVersion: v1
     kind: Template
     metadata:
@@ -938,7 +938,7 @@ objects:
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
-      value: 2Gi
+      value: 1Gi
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1188,7 +1188,7 @@ objects:
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
-      value: 2Gi
+      value: 1Gi
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1452,7 +1452,7 @@ objects:
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
-      value: 2Gi
+      value: 1Gi
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST

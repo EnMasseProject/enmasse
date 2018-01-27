@@ -201,7 +201,7 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "BROKER_MEMORY_LIMIT",
           "description": "Memory limits for Artemis",
-          "value": "2Gi"
+          "value": "1Gi"
         }
       ]
     }
