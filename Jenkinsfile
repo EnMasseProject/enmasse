@@ -65,6 +65,9 @@ pipeline {
             }
         }
         stage('execute standard') {
+            environment {
+                ACTUAL_COMMIT = readFile('actual-commit.file')
+            }
             steps {
                 build job: env.STANDARD_JOB_NAME, wait: false, parameters:
                         [
