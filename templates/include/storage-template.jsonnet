@@ -12,7 +12,6 @@ local forwarder = import "forwarder.jsonnet";
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
     local volumeName = "vol-${NAME}";
     local templateName = "%s-%s" % [addrtype, (if persistence then "persisted" else "inmemory")];
-    local claimName = "pvc-${NAME}";
     {
       "apiVersion": "v1",
       "kind": "Template",
@@ -100,7 +99,7 @@ local forwarder = import "forwarder.jsonnet";
                 "apiVersion": "v1",
                 "kind": "PersistentVolumeClaim",
                 "metadata": {
-                  "name": claimName,
+                  "name": volumeName,
                   "labels": {
                     "app": "enmasse"
                   },

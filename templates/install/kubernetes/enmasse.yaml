@@ -384,7 +384,7 @@ items:
       \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}, \"volumeClaimTemplates\":
       [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"pvc-${NAME}\"}, \"spec\": {\"accessModes\":
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"vol-${NAME}\"}, \"spec\": {\"accessModes\":
       [\"ReadWriteOnce\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}],
       \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
       \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
@@ -564,7 +564,7 @@ items:
       {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}},
       \"volumeClaimTemplates\": [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\",
       \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"pvc-${NAME}\"},
+      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"vol-${NAME}\"},
       \"spec\": {\"accessModes\": [\"ReadWriteOnce\"], \"resources\": {\"requests\":
       {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",

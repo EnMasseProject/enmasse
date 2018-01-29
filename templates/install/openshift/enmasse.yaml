@@ -884,7 +884,7 @@ objects:
               cluster_id: ${CLUSTER_ID}
             labels:
               app: enmasse
-            name: pvc-${NAME}
+            name: vol-${NAME}
           spec:
             accessModes:
             - ReadWriteOnce
@@ -1398,7 +1398,7 @@ objects:
               cluster_id: ${CLUSTER_ID}
             labels:
               app: enmasse
-            name: pvc-${NAME}
+            name: vol-${NAME}
           spec:
             accessModes:
             - ReadWriteOnce
