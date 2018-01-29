@@ -23,6 +23,7 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -89,13 +90,20 @@ public class HttpAddressService {
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response appendAddresses(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, AddressList list) {
+    public Response appendAddresses(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, @NotNull  AddressList list) {
+        checkNotNull(list);
         return doRequest("Error appending addresses", () -> {
             AddressList addressList = setAddressSpace(addressSpaceName, list);
             verifyAddressSpace(addressSpaceName, addressList);
             addressList = apiHelper.appendAddresses(securityContext, addressSpaceName, addressList);
             return Response.ok(addressList).build();
         });
+    }
+
+    private void checkNotNull(Object object) {
+        if (object == null) {
+            throw new BadRequestException("Missing request body");
+        }
     }
 
     private void verifyAddressSpace(String addressSpaceName, AddressList addressList) {
@@ -123,7 +131,8 @@ public class HttpAddressService {
     @PUT
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response replaceAddresses(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, AddressList list) {
+    public Response replaceAddresses(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, @NotNull  AddressList list) {
+        checkNotNull(list);
         return doRequest("Error updating addresses", () -> {
             AddressList addressList = setAddressSpace(addressSpaceName, list);
             verifyAddressSpace(addressSpaceName, addressList);

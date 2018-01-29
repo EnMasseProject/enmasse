@@ -24,6 +24,7 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -84,7 +85,7 @@ public class HttpAddressSpaceService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createAddressSpace(@Context SecurityContext securityContext, AddressSpace input) {
+    public Response createAddressSpace(@Context SecurityContext securityContext, @NotNull  AddressSpace input) {
         return doRequest(securityContext, ResourceVerb.create, "Error creating address space " + input.getName(), () -> {
 
             AddressSpace addressSpace = input;
