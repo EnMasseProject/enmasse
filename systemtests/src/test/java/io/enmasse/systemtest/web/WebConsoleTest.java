@@ -460,11 +460,11 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.openConsolePageWebConsole();
         consoleWebPage.openConnectionsPageWebConsole();
 
-        AbstractClient noUsersConnections = attachConnector(dests.get(0), 2, 0, 0);
+        AbstractClient noUsersConnections = attachConnector(dests.get(0), 2, 1, 0);
         AbstractClient usersConnections = attachConnector(defaultAddressSpace, dests.get(0),
-                2, 0, 0, "view_user_connections", "viewPa55");
-        selenium.waitUntilPropertyPresent(60, 2,
-                () -> consoleWebPage.getConnectionItems().size());
+                2, 1, 0, "view_user_connections", "viewPa55");
+        selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
+        consoleWebPage.getConnectionItems();
 
         assertViewOnlyUsersConnections("view_user_connections", consoleWebPage.getConnectionItems());
 
@@ -562,12 +562,20 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     private void assertViewOnlyUsersAddresses(String group, List<AddressWebItem> addresses) {
+        if (addresses == null || addresses.size() == 0)
+            fail("No address items in console for group " + group);
         for (AddressWebItem item : addresses) {
-            assertTrue(item.getName().matches(group));
+            if (group.contains("*")) {
+                assertTrue(item.getName().matches(group.replace("view_", "")));
+            }else{
+                assertTrue(item.getName().equals(group.replace("view_", "")));
+            }
         }
     }
 
     private void assertViewOnlyUsersConnections(String username, List<ConnectionWebItem> connections) {
+        if (connections == null || connections.size() == 0)
+            fail("No connection items in console under user " + username);
         for (ConnectionWebItem conn : connections) {
             assertTrue(conn.getUser().equals(username));
         }
