@@ -43,7 +43,7 @@ public class ConsoleWebPage {
     public void openConsolePageWebConsole(String route) throws Exception {
         selenium.driver.get(route);
         selenium.angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Console page opened");
+        log.info("Console page opened");
         selenium.takeScreenShot();
     }
 
