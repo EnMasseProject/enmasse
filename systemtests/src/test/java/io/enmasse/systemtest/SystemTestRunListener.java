@@ -4,29 +4,31 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
+import org.slf4j.Logger;
 
 import java.util.Iterator;
 import java.util.Map;
 
 public class SystemTestRunListener extends RunListener {
+    private static Logger log = CustomLogger.getLogger();
 
 
     @Override
     public void testStarted(Description description) throws Exception {
-        Logging.log.info("###########################################################");
-        Logging.log.info(description + "STARTED");
+        log.info("###########################################################");
+        log.info(description + "STARTED");
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        Logging.log.info(description + "FINISHED");
-        Logging.log.info("###########################################################");
+        log.info(description + "FINISHED");
+        log.info("###########################################################");
     }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
         TestBaseWithDefault.defaultAddressSpaces.forEach((name, addrSpace) -> {
-            Logging.log.info("default address space '{}' will be removed", addrSpace);
+            log.info("default address space '{}' will be removed", addrSpace);
             try {
                 TestBase.deleteAddressSpace(addrSpace);
             } catch (Exception e) {
@@ -39,10 +41,10 @@ public class SystemTestRunListener extends RunListener {
     public void testFailure(Failure failure) throws Exception {
         Throwable ex = failure.getException();
         if (ex instanceof OutOfMemoryError) {
-            Logging.log.error("Got OOM, dumping thread info");
+            log.error("Got OOM, dumping thread info");
             printThreadDump();
         } else {
-            Logging.log.error("Caught exception {}", ex);
+            log.error("Caught exception {}", ex);
         }
     }
 
@@ -57,7 +59,7 @@ public class SystemTestRunListener extends RunListener {
             for (int i = 0; i < trace.length; i++) {
                 sb.append(" " + trace[i] + "\r\n");
             }
-            Logging.log.error(sb.toString());
+            log.error(sb.toString());
         }
     }
 }

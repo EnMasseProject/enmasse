@@ -1,11 +1,12 @@
 package io.enmasse.systemtest.amqp;
 
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Logging;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.slf4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -14,6 +15,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
     protected final CompletableFuture<T> promise;
+    private static Logger log = CustomLogger.getLogger();
 
     public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise) {
         this.clientOptions = clientOptions;
@@ -48,7 +50,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.disconnectHandler(result -> connectionDisconnected(conn));
                 conn.open();
             } else {
-                Logging.log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
+                log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
                 promise.completeExceptionally(connection.cause());
             }
         });
@@ -60,9 +62,9 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     protected void handleError(ProtonConnection connection, ErrorCondition error) {
         if (error == null || error.getCondition() == null) {
-            Logging.log.info("Link closed without error");
+            log.info("Link closed without error");
         } else {
-            Logging.log.info("Link closed with " + error);
+            log.info("Link closed with " + error);
             connection.close();
             promise.completeExceptionally(new RuntimeException(error.getDescription()));
         }

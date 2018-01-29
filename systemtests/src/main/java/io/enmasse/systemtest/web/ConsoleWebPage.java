@@ -5,6 +5,7 @@ import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.systemtest.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ public class ConsoleWebPage {
     private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
+    private static Logger log = CustomLogger.getLogger();
 
 
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
@@ -34,7 +36,7 @@ public class ConsoleWebPage {
     public void openConsolePageWebConsole() throws Exception {
         selenium.driver.get(consoleRoute);
         selenium.angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Console page opened");
+        log.info("Console page opened");
         selenium.takeScreenShot();
     }
 
@@ -43,14 +45,14 @@ public class ConsoleWebPage {
     }
 
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        Logging.log.info("Getting navigation menu items");
+        log.info("Getting navigation menu items");
         List<WebElement> items = getNavigateMenu()
                 .findElement(By.className("list-group"))
                 .findElements(ByAngular.repeater("item in items"));
         assertNotNull(items);
         WebElement returnedItem = null;
         for (WebElement item : items) {
-            Logging.log.info("Got item: " + item.getText());
+            log.info("Got item: " + item.getText());
             if (item.getText().equals(itemText))
                 returnedItem = item;
         }
@@ -60,18 +62,18 @@ public class ConsoleWebPage {
     public void openAddressesPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
         toolbarType = ToolbarType.ADDRESSES;
-        Logging.log.info("Addresses page opened");
+        log.info("Addresses page opened");
     }
 
     public void openDashboardPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
-        Logging.log.info("Dashboard page opened");
+        log.info("Dashboard page opened");
     }
 
     public void openConnectionsPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
         toolbarType = ToolbarType.CONNECTIONS;
-        Logging.log.info("Connections page opened");
+        log.info("Connections page opened");
     }
 
     public void clickOnCreateButton() throws Exception {
@@ -166,7 +168,7 @@ public class ConsoleWebPage {
             if (subEl.size() > 0) {
                 List<WebElement> liElements = subEl.get(0).findElements(By.tagName("li"));
                 liElements.forEach(liEl -> {
-                    Logging.log.info("Got item: {}",
+                    log.info("Got item: {}",
                             liEl.findElement(By.tagName("a")).findElement(By.tagName("span")).getText());
                 });
                 return liElements;
@@ -241,7 +243,7 @@ public class ConsoleWebPage {
      * switch type of sorting Name/Senders/Receivers
      */
     private void switchSort(SortType sortType) throws Exception {
-        Logging.log.info("Switch sorting to: " + sortType.toString());
+        log.info("Switch sorting to: " + sortType.toString());
         switchFilterOrSort(sortType, getSortSwitch(), getSortDropDown());
     }
 
@@ -249,7 +251,7 @@ public class ConsoleWebPage {
      * switch type of filtering Name/Type
      */
     private void switchFilter(FilterType filterType) throws Exception {
-        Logging.log.info("Switch filtering to: " + filterType.toString());
+        log.info("Switch filtering to: " + filterType.toString());
         switchFilterOrSort(filterType, getFilterSwitch(), getFilterDropDown());
     }
 
@@ -284,7 +286,7 @@ public class ConsoleWebPage {
      * @throws Exception
      */
     public void addAddressesFilter(FilterType filterType, String filterValue) throws Exception {
-        Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
+        log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
             case TYPE:
@@ -308,7 +310,7 @@ public class ConsoleWebPage {
      * @throws Exception
      */
     public void addConnectionsFilter(FilterType filterType, String filterValue) throws Exception {
-        Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
+        log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
             case CONTAINER:
@@ -358,7 +360,7 @@ public class ConsoleWebPage {
      * remove filter element by (Name: Value)
      */
     private void removeFilter(FilterType filterType, String filterName) throws Exception {
-        Logging.log.info("Removing filter: " + filterName);
+        log.info("Removing filter: " + filterName);
         String filterText = String.format("%s: %s", filterType.toString().toLowerCase(), filterName);
         List<WebElement> filters = getFilterResultsToolbar().findElements(ByAngular.repeater("filter in config.appliedFilters"));
         for (WebElement filter : filters) {
@@ -394,7 +396,7 @@ public class ConsoleWebPage {
      * remove all filters elements
      */
     public void clearAllFilters() throws Exception {
-        Logging.log.info("Removing all filters");
+        log.info("Removing all filters");
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
         selenium.clickOnItem(clearAllButton);
     }
@@ -403,7 +405,7 @@ public class ConsoleWebPage {
      * Sort address items
      */
     public void sortItems(SortType sortType, boolean asc) throws Exception {
-        Logging.log.info("Sorting");
+        log.info("Sorting");
         switchSort(sortType);
         if (asc && !isSortAsc()) {
             selenium.clickOnItem(getAscDescButton(), "Asc");
@@ -421,7 +423,7 @@ public class ConsoleWebPage {
         List<AddressWebItem> addressItems = new ArrayList<>();
         for (WebElement element : elements) {
             AddressWebItem item = new AddressWebItem(element);
-            Logging.log.info(String.format("Got address: %s", item.toString()));
+            log.info(String.format("Got address: %s", item.toString()));
             addressItems.add(item);
         }
         return addressItems;
@@ -450,7 +452,7 @@ public class ConsoleWebPage {
         for (WebElement element : elements) {
             if (!element.getAttribute("class").contains("disabled")) {
                 ConnectionWebItem item = new ConnectionWebItem(element);
-                Logging.log.info(String.format("Got connection: %s", item.toString()));
+                log.info(String.format("Got connection: %s", item.toString()));
                 connectionItems.add(item);
             }
         }
@@ -470,7 +472,7 @@ public class ConsoleWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Destination destination) throws Exception {
-        Logging.log.info("Create address using web console");
+        log.info("Create address using web console");
         //get console page
         openConsolePageWebConsole();
 
@@ -512,7 +514,7 @@ public class ConsoleWebPage {
      * delete specific address
      */
     public void deleteAddressWebConsole(Destination destination) throws Exception {
-        Logging.log.info("Remove address using web console");
+        log.info("Remove address using web console");
         //open console webpage
         openConsolePageWebConsole();
 

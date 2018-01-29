@@ -18,14 +18,17 @@ package io.enmasse.systemtest.brokered.auth;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.auth.AuthenticationTestBase;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 public class AuthenticationTest extends AuthenticationTestBase {
+    private static Logger log = CustomLogger.getLogger();
+    
     /**
      * related github issue: #523
      */
     @Test
     public void testStandardAuthenticationServiceRestartBrokered() throws Exception {
-        Logging.log.info("testStandardAuthenticationServiceRestartBrokered");
+        log.info("testStandardAuthenticationServiceRestartBrokered");
         AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "standard");
 

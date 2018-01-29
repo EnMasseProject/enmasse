@@ -1,6 +1,7 @@
 package io.enmasse.systemtest.executor;
 
-import io.enmasse.systemtest.Logging;
+import io.enmasse.systemtest.CustomLogger;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public class Executor {
     private String stdErr;
     private StreamGobbler stdOutReader;
     private StreamGobbler stdErrReader;
+    private static Logger log = CustomLogger.getLogger();
 
     /**
      * Getter for stdOutput
@@ -54,7 +56,7 @@ public class Executor {
      * @throws ExecutionException
      */
     public int execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
-        Logging.log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
+        log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));

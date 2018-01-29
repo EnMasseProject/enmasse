@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,6 +40,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     private final Map<String, LogWatch> logWatches = new HashMap<>();
     private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private final String namespace;
+    private static Logger log = CustomLogger.getLogger();
 
     public LogCollector(Kubernetes kubernetes, File logDir, String namespace) {
         this.kubernetes = kubernetes;
@@ -61,7 +63,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     @Override
     public void onClose(KubernetesClientException cause) {
         if (cause != null) {
-            Logging.log.info("LogCollector closed with message: " + cause.getMessage() + ", reconnecting");
+            log.info("LogCollector closed with message: " + cause.getMessage() + ", reconnecting");
             watch = kubernetes.watchPods(namespace, this);
         }
     }
@@ -70,7 +72,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
         if (logWatches.containsKey(pod.getMetadata().getName())) {
             return;
         }
-        Logging.log.info("Waiting for pod {} to start", pod.getMetadata().getName());
+        log.info("Waiting for pod {} to start", pod.getMetadata().getName());
         while (!"Running".equals(pod.getStatus().getPhase())) {
             try {
                 Thread.sleep(1000);
@@ -79,18 +81,18 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
             }
             pod = kubernetes.getPod(namespace, pod.getMetadata().getName());
         }
-        Logging.log.info("Collecting logs for pod {} in namespace {}", pod.getMetadata().getName(), namespace);
+        log.info("Collecting logs for pod {} in namespace {}", pod.getMetadata().getName(), namespace);
         for (Container container : pod.getSpec().getContainers()) {
             try {
                 File outputFile = new File(logDir, pod.getMetadata().getName() + "." + container.getName());
                 FileOutputStream outputFileStream = new FileOutputStream(outputFile);
 
                 synchronized (logWatches) {
-                    Logging.log.info("Starting watcher for container {} in pod {} and writing to {}", container.getName(), pod.getMetadata().getName(), outputFile.getAbsolutePath());
+                    log.info("Starting watcher for container {} in pod {} and writing to {}", container.getName(), pod.getMetadata().getName(), outputFile.getAbsolutePath());
                     logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
-                Logging.log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());
+                log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());
             }
         }
     }

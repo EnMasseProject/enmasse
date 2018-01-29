@@ -18,6 +18,7 @@ package io.enmasse.systemtest.amqp;
 import io.enmasse.systemtest.*;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
+import org.slf4j.Logger;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class AmqpClientFactory {
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
+    private static Logger log = CustomLogger.getLogger();
 
     public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, String defaultUsername, String defaultPassword) {
         this.kubernetes = kubernetes;
@@ -90,7 +92,7 @@ public class AmqpClientFactory {
                 clientEndpoint = new Endpoint("localhost", 443);
                 clientOptions.setSniServerName(messagingEndpoint.getHost());
             }
-            Logging.log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+            log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
 
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {

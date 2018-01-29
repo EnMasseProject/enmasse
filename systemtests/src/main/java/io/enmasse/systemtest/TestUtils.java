@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -30,6 +31,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestUtils {
+    private static Logger log = CustomLogger.getLogger();
+    
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
         kubernetes.setDeploymentReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
         waitForNReplicas(
@@ -66,7 +69,7 @@ public class TestUtils {
                 pods = kubernetes.listPods(tenantNamespace, labelSelector, annotationSelector);
             }
             actualReplicas = numReady(pods);
-            Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
+            log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
                 Thread.sleep(5000);
             } else {
@@ -85,7 +88,7 @@ public class TestUtils {
             if ("Running".equals(pod.getStatus().getPhase())) {
                 numReady++;
             } else {
-                Logging.log.info("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
+                log.info("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
             }
         }
         return numReady;
@@ -153,7 +156,7 @@ public class TestUtils {
                 }
             }
             int expectedPods = kubernetes.getExpectedPods() + groups.size();
-            Logging.log.info("Waiting for " + expectedPods + " pods");
+            log.info("Waiting for " + expectedPods + " pods");
             waitForExpectedPods(kubernetes, addressSpace, expectedPods, budget);
         }
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
@@ -198,7 +201,7 @@ public class TestUtils {
             if (!isReady) {
                 Thread.sleep(5000);
             }
-            Logging.log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
+            log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
         }
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
@@ -242,7 +245,7 @@ public class TestUtils {
                 }
                 break;
             default:
-                Logging.log.warn("Unspecified kind: " + kind);
+                log.warn("Unspecified kind: " + kind);
         }
         return addresses;
     }
@@ -277,7 +280,7 @@ public class TestUtils {
     }
 
     private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination... destinations) {
-        Logging.log.info("Checking {} for ready state", destinations);
+        log.info("Checking {} for ready state", destinations);
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
         for (Destination destination : destinations) {
             JsonObject addressObject = lookupAddress(addressList, destination.getAddress());
@@ -338,7 +341,7 @@ public class TestUtils {
         } catch (Exception ex) {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
-                    Logging.log.info("{} remaining iterations", retry);
+                    log.info("{} remaining iterations", retry);
                     return doRequestNTimes(retry - 1, fn);
                 } catch (Exception ex2) {
                     throw ex2;

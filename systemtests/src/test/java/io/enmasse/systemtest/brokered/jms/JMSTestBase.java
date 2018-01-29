@@ -1,7 +1,8 @@
 package io.enmasse.systemtest.brokered.jms;
 
-import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.BrokeredTestBase;
+import io.enmasse.systemtest.CustomLogger;
+import org.slf4j.Logger;
 
 import javax.jms.*;
 import javax.naming.Context;
@@ -16,6 +17,7 @@ import java.util.stream.IntStream;
 import static org.junit.Assert.assertTrue;
 
 public class JMSTestBase extends BrokeredTestBase {
+    private static Logger log = CustomLogger.getLogger();
 
     protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
         return setUpEnv(url, username, password, "", prop);
@@ -77,7 +79,7 @@ public class JMSTestBase extends BrokeredTestBase {
             resultsList.add(new CompletableFuture<>());
             receivedResList.add(new ArrayList<>());
             MessageListener myListener = message -> {
-                Logging.log.info("Mesages received" + message + " count: " + totalCount.get());
+                log.info("Mesages received" + message + " count: " + totalCount.get());
                 receivedResList.get(index).add(message);
                 if (totalCount.decrementAndGet() == 0) {
                     for (int j = 0; j < consumer.length; j++) {
@@ -94,7 +96,7 @@ public class JMSTestBase extends BrokeredTestBase {
         CompletableFuture<List<Message>> received = new CompletableFuture<>();
         List<Message> recvd = new ArrayList<>();
         MessageListener myListener = message -> {
-            Logging.log.info("Mesages received" + message + " count: " + totalCount.get());
+            log.info("Mesages received" + message + " count: " + totalCount.get());
             recvd.add(message);
             if (totalCount.decrementAndGet() == 0) {
                 received.complete(recvd);
