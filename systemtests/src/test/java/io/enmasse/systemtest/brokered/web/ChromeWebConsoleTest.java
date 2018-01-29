@@ -97,6 +97,11 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
         doTestViewAddresses();
     }
 
+    //@Test
+    public void testViewConnections() throws Exception {
+        doTestViewConnections();
+    }
+
     @Override
     public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();

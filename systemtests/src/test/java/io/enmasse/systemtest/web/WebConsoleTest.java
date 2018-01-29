@@ -14,12 +14,14 @@ import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -441,22 +443,67 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewAddresses() throws Exception {
-        Destination queueView = Destination.queue("test-view-queue");
-        Destination queueNotView = Destination.queue("test-not-view-queue");
+        List<Destination> dests = prepareViewItemTest("view_user_addresses", "viewPa55",
+                "test-view-queue", "test-not-view-queue");
 
-        KeycloakCredentials monitorUser = new KeycloakCredentials("view_user_test", "viewPa55");
-        getKeycloakClient().createUser(defaultAddressSpace.getName(),
-                monitorUser.getUsername(), monitorUser.getPassword(), "view_" + queueView.getAddress());
-        setAddresses(queueNotView, queueView);
-
-        consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
-                addressApiClient, defaultAddressSpace);
         consoleWebPage.openConsolePageWebConsole();
         consoleWebPage.openAddressesPageWebConsole();
 
         assertThat(consoleWebPage.getAddressItems().size(), is(1));
-        assertEquals(queueView.getAddress(), consoleWebPage.getAddressItems().get(0).getName());
+        assertViewOnlyUsersAddresses("view_test-view-queue", consoleWebPage.getAddressItems());
+    }
+
+    public void doTestViewConnections() throws Exception {
+        List<Destination> dests = prepareViewItemTest("view_user_connections", "viewPa55",
+                "test-view-queue-connections", null);
+
+        consoleWebPage.openConsolePageWebConsole();
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        AbstractClient noUsersConnections = attachConnector(dests.get(0), 2, 0, 0);
+        AbstractClient usersConnections = attachConnector(defaultAddressSpace, dests.get(0),
+                2, 0, 0, "view_user_connections", "viewPa55");
+        selenium.waitUntilPropertyPresent(60, 2,
+                () -> consoleWebPage.getConnectionItems().size());
+
+        assertViewOnlyUsersConnections("view_user_connections", consoleWebPage.getConnectionItems());
+
+        noUsersConnections.stop();
+        usersConnections.stop();
+    }
+
+    private List<Destination> prepareViewItemTest(String username, String password,
+                                     String allowedAddressPattern, String noAllowedAddressPattern) throws Exception {
+        List<Destination> allowedAddresses = prepareAddresses(allowedAddressPattern);
+        List<Destination> notAllowedAddresses = prepareAddresses(noAllowedAddressPattern);
+
+        KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                monitorUser.getUsername(), monitorUser.getPassword(),
+                "view_" + allowedAddressPattern, "send_*");
+
+        setAddresses(Stream.concat(allowedAddresses.stream(), notAllowedAddresses.stream())
+                .collect(Collectors.toList()).toArray(new Destination[0]));
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, defaultAddressSpace);
+
+        return allowedAddresses;
+    }
+
+    private List<Destination> prepareAddresses(String pattern) {
+        List<Destination> dest = new ArrayList<>();
+        if(pattern != null && !pattern.equals("")){
+            if(pattern.contains("*")) {
+                for(int i = 0; i < 2; i++){
+                    dest.add(Destination.queue(pattern.replace("*", Integer.toString(i))));
+                }
+            }else{
+                dest.add(Destination.queue(pattern));
+            }
+        }
+        return dest;
     }
 
     //============================================================================================

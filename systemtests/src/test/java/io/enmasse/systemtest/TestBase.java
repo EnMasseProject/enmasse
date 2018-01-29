@@ -551,7 +551,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
-                                             int senderCount, int receiverCount) throws Exception {
+                                             int senderCount, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
