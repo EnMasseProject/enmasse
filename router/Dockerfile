@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.0.0-fix4
+FROM gordons/qdrouter-base:DISPATCH-920
 ARG version=latest
 
 COPY ./run_qdr.sh ./qdrouterd.conf.template colocated-topic.snippet subscriptions.snippet amqp-kafka-bridge.snippet policy.json /etc/qpid-dispatch/
