@@ -4,6 +4,7 @@ package io.enmasse.systemtest.brokered.jms;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.Destination;
 import org.junit.*;
+import org.slf4j.Logger;
 
 import javax.jms.*;
 import javax.naming.Context;
@@ -21,7 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class TopicTest extends JMSTestBase {
-
+    private static Logger log = CustomLogger.getLogger();
 
     private Hashtable<Object, Object> env;
     private ConnectionFactory connectionFactory;
@@ -73,7 +74,7 @@ public class TopicTest extends JMSTestBase {
 
     @Test
     public void testMessageSubscription() throws Exception {
-        Logging.log.info("testMessageSubscription");
+        log.info("testMessageSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic testTopic = (Topic) context.lookup(topic);
         MessageConsumer subscriber1 = session.createConsumer(testTopic);
@@ -95,10 +96,10 @@ public class TopicTest extends JMSTestBase {
         subscriber1.setMessageListener(myListener);
 
         sendMessages(messageProducer, listMsgs);
-        Logging.log.info("messages sent");
+        log.info("messages sent");
 
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(count));
-        Logging.log.info("messages received");
+        log.info("messages received");
 
         subscriber1.close();
         messageProducer.close();
@@ -106,7 +107,7 @@ public class TopicTest extends JMSTestBase {
 
     //TODO: this test can be enabled when ENTMQBR-910 will be fixed
     public void testMessageDurableSubscription() throws Exception {
-        Logging.log.info("testMessageDurableSubscription");
+        log.info("testMessageDurableSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic testTopic = (Topic) context.lookup(topic);
 
@@ -120,40 +121,40 @@ public class TopicTest extends JMSTestBase {
         String batchPrefix = "First";
         List<Message> listMsgs = generateMessages(session, batchPrefix, count);
         sendMessages(messageProducer, listMsgs);
-        Logging.log.info("First batch messages sent");
+        log.info("First batch messages sent");
 
         List<Message> recvd1 = receiveMessages(subscriber1, count);
         List<Message> recvd2 = receiveMessages(subscriber2, count);
 
         assertThat(recvd1.size(), is(count));
         assertMessageContent(recvd1, batchPrefix);
-        Logging.log.info(sub1ID + " :First batch messages received");
+        log.info(sub1ID + " :First batch messages received");
 
         assertThat(recvd2.size(), is(count));
         assertMessageContent(recvd2, batchPrefix);
-        Logging.log.info(sub2ID + " :First batch messages received");
+        log.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
         Thread.sleep(30000); //!TODO: this row can be removed when ENTMQBR-910 will be fixed
-        Logging.log.info(sub1ID + " : closed");
+        log.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
         listMsgs = generateMessages(session, batchPrefix, count);
         sendMessages(messageProducer, listMsgs);
-        Logging.log.info("Second batch messages sent");
+        log.info("Second batch messages sent");
 
         recvd2 = receiveMessages(subscriber2, count);
         assertThat(recvd2.size(), is(count));
         assertMessageContent(recvd2, batchPrefix);
-        Logging.log.info(sub2ID + " :Second batch messages received");
+        log.info(sub2ID + " :Second batch messages received");
 
         subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
-        Logging.log.info(sub1ID + " :connected");
+        log.info(sub1ID + " :connected");
 
         recvd1 = receiveMessages(subscriber1, count);
         assertThat(recvd1.size(), is(count));
         assertMessageContent(recvd1, batchPrefix);
-        Logging.log.info(sub1ID + " :Second batch messages received");
+        log.info(sub1ID + " :Second batch messages received");
 
         subscriber1.close();
         subscriber2.close();
@@ -164,7 +165,7 @@ public class TopicTest extends JMSTestBase {
 
     @Test
     public void testMessageDurableSubscriptionTransacted() throws Exception {
-        Logging.log.info("testMessageDurableSubscriptionTransacted");
+        log.info("testMessageDurableSubscriptionTransacted");
         session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Topic testTopic = (Topic) context.lookup(topic);
 
@@ -178,15 +179,15 @@ public class TopicTest extends JMSTestBase {
         List<Message> listMsgs = generateMessages(session, count);
         sendMessages(messageProducer, listMsgs);
         session.commit();
-        Logging.log.info("messages sent");
+        log.info("messages sent");
 
         List<Message> recvd1 = receiveMessages(subscriber1, count);
         session.commit();
         List<Message> recvd2 = receiveMessages(subscriber2, count);
         session.commit();
 
-        Logging.log.info(sub1ID + " :messages received");
-        Logging.log.info(sub2ID + " :messages received");
+        log.info(sub1ID + " :messages received");
+        log.info(sub2ID + " :messages received");
 
         assertThat(recvd1.size(), is(count));
         assertThat(recvd2.size(), is(count));
@@ -200,7 +201,7 @@ public class TopicTest extends JMSTestBase {
 
     @Test
     public void testSharedDurableSubscription() throws JMSException, NamingException {
-        Logging.log.info("testSharedDurableSubscription");
+        log.info("testSharedDurableSubscription");
 
         Context context1 = createContextForShared();
         ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
@@ -218,23 +219,23 @@ public class TopicTest extends JMSTestBase {
 
         String subID = "sharedConsumerDurable123";
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
-        Logging.log.info("sub1 DONE");
+        log.info("sub1 DONE");
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
-        Logging.log.info("sub1 DONE");
+        log.info("sub1 DONE");
         MessageProducer messageProducer = session.createProducer(testTopic);
-        Logging.log.info("producer DONE");
+        log.info("producer DONE");
         messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
         int count = 10;
         List<Message> listMsgs = generateMessages(session, count);
         sendMessages(messageProducer, listMsgs);
-        Logging.log.info("messages sent");
+        log.info("messages sent");
 
         List<Message> recvd1 = receiveMessages(subscriber1, count, 1);
         List<Message> recvd2 = receiveMessages(subscriber2, count, 1);
 
-        Logging.log.info(subID + " :messages received");
-        Logging.log.info(subID + " :messages received");
+        log.info(subID + " :messages received");
+        log.info(subID + " :messages received");
 
 
         assertThat(recvd1.size() + recvd2.size(), is(2 * count));
@@ -253,7 +254,7 @@ public class TopicTest extends JMSTestBase {
 
     @Test
     public void testSharedNonDurableSubscription() throws JMSException, NamingException, InterruptedException, ExecutionException, TimeoutException {
-        Logging.log.info("testSharedNonDurableSubscription");
+        log.info("testSharedNonDurableSubscription");
 
         Context context1 = createContextForShared();
         ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
@@ -279,14 +280,14 @@ public class TopicTest extends JMSTestBase {
         List<Message> listMsgs = generateMessages(session, count);
         List<CompletableFuture<List<Message>>> results = receiveMessagesAsync(count, subscriber1, subscriber2, subscriber3);
         sendMessages(messageProducer, listMsgs);
-        Logging.log.info("messages sent");
+        log.info("messages sent");
 
         assertThat("Each message should be received only by one consumer",
                 results.get(0).get(20, TimeUnit.SECONDS).size() +
                         results.get(1).get(20, TimeUnit.SECONDS).size() +
                         results.get(2).get(20, TimeUnit.SECONDS).size(),
                 is(count));
-        Logging.log.info("messages received");
+        log.info("messages received");
 
         connection1.stop();
         connection2.stop();

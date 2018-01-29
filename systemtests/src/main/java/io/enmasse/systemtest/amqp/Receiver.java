@@ -1,6 +1,6 @@
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.Logging;
+import io.enmasse.systemtest.CustomLogger;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
@@ -8,6 +8,7 @@ import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
     private final List<Message> messages = new ArrayList<>();
     private final Predicate<Message> done;
     private final CountDownLatch connectLatch;
+    private static Logger log = CustomLogger.getLogger();
 
     public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<Message>> promise, LinkOptions linkOptions, CountDownLatch connectLatch) {
         super(clientOptions, linkOptions, promise);
@@ -47,7 +49,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
             }
         });
         receiver.openHandler(result -> {
-            Logging.log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
+            log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
             receiver.flow(1);
             connectLatch.countDown();
         });
@@ -55,7 +57,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.closeHandler(closed -> {
             if (receiver.getRemoteCondition() != null && LinkError.REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                 String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
-                Logging.log.info("Receiver link redirected to '" + relocated + "'");
+                log.info("Receiver link redirected to '" + relocated + "'");
                 Source newSource = linkOptions.getSource();
                 newSource.setAddress(relocated);
                 String newLinkName = linkOptions.getLinkName().orElse(newSource.getAddress());

@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.Future;
@@ -15,6 +16,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class ArtemisManagement extends BrokerManagement {
+    private static Logger log = CustomLogger.getLogger();
 
     public ArtemisManagement() {
         managementAddress = "activemq.management";
@@ -35,14 +37,14 @@ public class ArtemisManagement extends BrokerManagement {
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
         assertThat(sent.get(30, TimeUnit.SECONDS), is(1));
-        Logging.log.info("request sent");
+        log.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
 
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
-        Logging.log.info("answer received: " + val.toString());
+        log.info("answer received: " + val.toString());
         String queues = val.getValue().toString();
         queues = queues.replaceAll("\\[|]|\"", "");
 
@@ -63,14 +65,14 @@ public class ArtemisManagement extends BrokerManagement {
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
         assertThat(sent.get(30, TimeUnit.SECONDS), is(1));
-        Logging.log.info("request sent");
+        log.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
 
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
-        Logging.log.info("answer received: " + val.toString());
+        log.info("answer received: " + val.toString());
         String count = val.getValue().toString().replaceAll("\\[|]|\"", "");
 
         return Integer.valueOf(count);

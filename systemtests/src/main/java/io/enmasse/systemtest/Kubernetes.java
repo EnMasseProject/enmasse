@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import org.slf4j.Logger;
 
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -30,6 +31,7 @@ public abstract class Kubernetes {
     protected final Environment environment;
     protected final KubernetesClient client;
     protected final String globalNamespace;
+    private static Logger log = CustomLogger.getLogger();
 
     protected Kubernetes(Environment environment, KubernetesClient client, String globalNamespace) {
         this.environment = environment;
@@ -78,7 +80,7 @@ public abstract class Kubernetes {
         HashMap<String, String> terminatedPodsLogs = new HashMap<>();
         client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
             pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
-                Logging.log.info("pod:'{}' : restart count '{}'",
+                log.info("pod:'{}' : restart count '{}'",
                         pod.getMetadata().getName(),
                         containerStatus.getRestartCount());
                 if (containerStatus.getRestartCount() > 0) {

@@ -16,14 +16,15 @@
 
 package io.enmasse.systemtest.mqtt;
 
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
     private final int qos;
     private final Predicate<MqttMessage> done;
     private final CountDownLatch connectLatch;
+    private static Logger log = CustomLogger.getLogger();
 
     public Subscriber(Endpoint endpoint,
                       final MqttConnectOptions options,
@@ -61,7 +63,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {
 
-                    Logging.log.info("Subscription response code {}", iMqttToken.getGrantedQos()[0]);
+                    log.info("Subscription response code {}", iMqttToken.getGrantedQos()[0]);
 
                     if (iMqttToken.getGrantedQos()[0] == 0x80) {
                         getPromise().completeExceptionally(new RuntimeException("Subscription refused"));
@@ -73,7 +75,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 @Override
                 public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
 
-                    Logging.log.info("Subscribe to '{}' failed: {}", iMqttToken.getTopics()[0], throwable.getMessage());
+                    log.info("Subscribe to '{}' failed: {}", iMqttToken.getTopics()[0], throwable.getMessage());
                     getPromise().completeExceptionally(throwable);
                     connectLatch.countDown();
                 }
@@ -82,7 +84,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 @Override
                 public void messageArrived(String s, MqttMessage message) throws Exception {
 
-                    Logging.log.info("Arrived message-id {}", message.getId());
+                    log.info("Arrived message-id {}", message.getId());
                     messages.add(String.valueOf(message.getPayload()));
                     if (done.test(message)) {
 
@@ -103,7 +105,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
 
     @Override
     protected void connectionOpenFailed(Throwable throwable) {
-        Logging.log.info("Connection to " + getEndpoint().getHost() + ":" + getEndpoint().getPort() + " failed: " + throwable.getMessage());
+        log.info("Connection to " + getEndpoint().getHost() + ":" + getEndpoint().getPort() + " failed: " + throwable.getMessage());
         getPromise().completeExceptionally(throwable);
         connectLatch.countDown();
     }

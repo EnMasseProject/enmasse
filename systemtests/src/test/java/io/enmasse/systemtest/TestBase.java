@@ -33,6 +33,7 @@ import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.After;
 import org.junit.Before;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +51,7 @@ import static org.junit.Assert.*;
  * Base class for all tests
  */
 public abstract class TestBase extends SystemTestRunListener {
+    private static Logger log = CustomLogger.getLogger();
 
     protected static final Environment environment = new Environment();
 
@@ -75,7 +77,7 @@ public abstract class TestBase extends SystemTestRunListener {
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
             logCollector.stopCollecting(addressSpace.getNamespace());
         } else {
-            Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
+            log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
     }
 
@@ -104,7 +106,7 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            Logging.log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
+            log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
@@ -114,11 +116,11 @@ public abstract class TestBase extends SystemTestRunListener {
             }
 
             if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
-                Logging.log.info("Waiting for 2 minutes before starting tests");
+                log.info("Waiting for 2 minutes before starting tests");
                 Thread.sleep(120_000);
             }
         } else {
-            Logging.log.info("Address space '" + addressSpace + "' already exists.");
+            log.info("Address space '" + addressSpace + "' already exists.");
         }
     }
 
@@ -336,7 +338,7 @@ public abstract class TestBase extends SystemTestRunListener {
     protected String getConsoleRoute(AddressSpace addressSpace) {
         String consoleRoute = String.format("https://%s:%s@%s", username, password,
                 kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "console"));
-        Logging.log.info(consoleRoute);
+        log.info(consoleRoute);
         return consoleRoute;
     }
 
@@ -369,7 +371,7 @@ public abstract class TestBase extends SystemTestRunListener {
             int actualSubscribers = 0;
             do {
                 actualSubscribers = getSubscriberCount(queueClient, replyQueue, topic);
-                Logging.log.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
+                log.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
                 if (actualSubscribers != expectedCount) {
                     Thread.sleep(1000);
                 } else {
@@ -571,7 +573,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * stop all clients from list of Abstract clients
      */
     protected void stopClients(List<AbstractClient> clients) {
-        Logging.log.info("Stopping clients...");
+        log.info("Stopping clients...");
         clients.forEach(AbstractClient::stop);
     }
 
@@ -587,7 +589,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     public void assertSorted(Iterable list, boolean reverse) throws Exception {
-        Logging.log.info("Assert sort reverse: " + reverse);
+        log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.natural().isOrdered(list));
         else
@@ -595,7 +597,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     public void assertSorted(Iterable list, boolean reverse, Comparator comparator) throws Exception {
-        Logging.log.info("Assert sort reverse: " + reverse);
+        log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.from(comparator).isOrdered(list));
         else

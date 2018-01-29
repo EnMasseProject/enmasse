@@ -1,11 +1,12 @@
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.Logging;
+import io.enmasse.systemtest.CustomLogger;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
 
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
@@ -18,6 +19,7 @@ class Sender extends ClientHandlerBase<Integer> {
     private final Iterator<Message> messageQueue;
     private final CountDownLatch connectLatch;
     private final Predicate<Message> predicate;
+    private static Logger log = CustomLogger.getLogger();
 
     public Sender(AmqpConnectOptions clientOptions,
                   LinkOptions linkOptions,
@@ -37,7 +39,7 @@ class Sender extends ClientHandlerBase<Integer> {
         sender.setTarget(linkOptions.getTarget());
         sender.setQoS(clientOptions.getQos());
         sender.openHandler(result -> {
-            Logging.log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
+            log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
             connectLatch.countDown();
             sendNext(connection, sender);
         });

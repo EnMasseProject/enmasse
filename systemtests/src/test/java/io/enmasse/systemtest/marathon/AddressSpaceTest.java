@@ -2,17 +2,19 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AddressSpaceTest extends MarathonTestBase {
+    private static Logger log = CustomLogger.getLogger();
 
     @Test
     public void testCreateDeleteAddressSpaceLong() throws Exception {
@@ -22,13 +24,13 @@ public class AddressSpaceTest extends MarathonTestBase {
                     "test-create-delete-addrspace-brokered",
                     AddressSpaceType.BROKERED);
             createAddressSpace(addressSpace, "none");
-            Logging.log.info("Address space created");
+            log.info("Address space created");
 
             doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
                     "test-queue-createdelete-brokered-%d");
 
             deleteAddressSpace(addressSpace);
-            Logging.log.info("Address space removed");
+            log.info("Address space removed");
             Thread.sleep(10000);
         });
     }
@@ -49,7 +51,7 @@ public class AddressSpaceTest extends MarathonTestBase {
 
     @Test
     public void testCreateDeleteAddressesWithAuthLong() throws Exception {
-        Logging.log.info("test testCreateDeleteAddressesWithAuthLong");
+        log.info("test testCreateDeleteAddressesWithAuthLong");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-addresses-auth-brokered",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "standard");

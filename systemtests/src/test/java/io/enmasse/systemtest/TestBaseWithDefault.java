@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.Future;
@@ -33,6 +34,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public abstract class TestBaseWithDefault extends TestBase {
+    private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-default-";
     protected static AddressSpace defaultAddressSpace;
     protected static HashMap<String, AddressSpace> defaultAddressSpaces = new HashMap<>();
@@ -41,8 +43,8 @@ public abstract class TestBaseWithDefault extends TestBase {
     public TestWatcher watcher = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            Logging.log.info("test failed:" + description);
-            Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
+            log.info("test failed:" + description);
+            log.info("default address space '{}' will be removed", defaultAddressSpace);
             try {
                 deleteDefaultAddressSpace(defaultAddressSpace);
                 spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
@@ -67,7 +69,7 @@ public abstract class TestBaseWithDefault extends TestBase {
     public void setupDefault() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
         defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
-        Logging.log.info("Test is running in multitenant mode");
+        log.info("Test is running in multitenant mode");
         createDefaultAddressSpace(defaultAddressSpace, "standard");
 
         this.username = "test";
@@ -180,21 +182,21 @@ public abstract class TestBaseWithDefault extends TestBase {
         //queue1, queue2
         Future<List<String>> response = getAddresses(Optional.empty());
         assertThat(response.get(1, TimeUnit.MINUTES), is(destinationsNames));
-        Logging.log.info("addresses (" + destinationsNames.stream().collect(Collectors.joining(",")) + ") successfully created");
+        log.info("addresses (" + destinationsNames.stream().collect(Collectors.joining(",")) + ") successfully created");
 
         deleteAddresses(d1);
 
         //queue1
         response = getAddresses(Optional.empty());
         assertThat(response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-        Logging.log.info("address (" + d1.getAddress() + ") successfully deleted");
+        log.info("address (" + d1.getAddress() + ") successfully deleted");
 
         deleteAddresses(d2);
 
         //empty
         response = getAddresses(Optional.empty());
         assertThat(response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        Logging.log.info("addresses (" + d2.getAddress() + ") successfully deleted");
+        log.info("addresses (" + d2.getAddress() + ") successfully deleted");
     }
 
 }

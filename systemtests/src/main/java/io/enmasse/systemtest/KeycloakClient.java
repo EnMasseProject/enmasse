@@ -23,6 +23,7 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
 
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
@@ -39,6 +40,7 @@ public class KeycloakClient {
     private final Endpoint endpoint;
     private final KeycloakCredentials credentials;
     private final KeyStore trustStore;
+    private static Logger log = CustomLogger.getLogger();
 
     public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials, String keycloakCaCert) throws Exception {
         this.endpoint = endpoint;
@@ -56,7 +58,7 @@ public class KeycloakClient {
 
             return keyStore;
         } catch (Exception ignored) {
-            Logging.log.warn("Error creating keystore for authservice CA", ignored);
+            log.warn("Error creating keystore for authservice CA", ignored);
             throw ignored;
         }
     }
@@ -64,14 +66,14 @@ public class KeycloakClient {
     public void joinGroup(String realm, String groupName, String username) throws Exception {
         groupOperation(realm, groupName, username, 3, TimeUnit.MINUTES, (realmResource, clientId, groupId) -> {
             realmResource.users().get(clientId).joinGroup(groupId);
-            Logging.log.info("User '{}' successfully joined group '{}'", username, groupName);
+            log.info("User '{}' successfully joined group '{}'", username, groupName);
         });
     }
 
     public void leaveGroup(String realm, String groupName, String username) throws Exception {
         groupOperation(realm, groupName, username, 3, TimeUnit.MINUTES, (realmResource, clientId, groupId) -> {
             realmResource.users().get(clientId).leaveGroup(groupId);
-            Logging.log.info("User '{}' successfully removed from group '{}'", username, groupName);
+            log.info("User '{}' successfully removed from group '{}'", username, groupName);
         });
     }
 
@@ -94,7 +96,7 @@ public class KeycloakClient {
                             getGroupId(keycloak, realm, groupName));
                     break;
                 } catch (Exception e) {
-                    Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                    log.info("Exception querying keycloak ({}), retrying", e.getMessage());
                     Thread.sleep(2000);
                 }
             }
@@ -151,7 +153,7 @@ public class KeycloakClient {
                         }
                         break;
                     } catch (Exception e) {
-                        Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                        log.info("Exception querying keycloak ({}), retrying", e.getMessage());
                         Thread.sleep(2000);
                     }
                 }
@@ -201,11 +203,11 @@ public class KeycloakClient {
                             throw new RuntimeException("Unable to create user: " + response.getStatus());
                         }
                     } else {
-                        Logging.log.info("User " + userName + " already created, skipping");
+                        log.info("User " + userName + " already created, skipping");
                     }
                     break;
                 } catch (Exception e) {
-                    Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                    log.info("Exception querying keycloak ({}), retrying", e.getMessage());
                     Thread.sleep(2000);
                 }
             }
@@ -218,7 +220,7 @@ public class KeycloakClient {
     }
 
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, long timeout, TimeUnit timeUnit) throws Exception {
-        Logging.log.info("Waiting for realm {} to exist", realmName);
+        log.info("Waiting for realm {} to exist", realmName);
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
         RealmResource realmResource = null;
         while (System.currentTimeMillis() < endTime) {
@@ -268,7 +270,7 @@ public class KeycloakClient {
         private final Keycloak keycloak;
 
         private CloseableKeycloak(Endpoint endpoint, KeycloakCredentials credentials, KeyStore trustStore) {
-            Logging.log.info("Logging into keycloak with {}/{}", credentials.getUsername(), credentials.getPassword());
+            log.info("Logging into keycloak with {}/{}", credentials.getUsername(), credentials.getPassword());
             this.keycloak = KeycloakBuilder.builder()
                     .serverUrl("https://" + endpoint.getHost() + ":" + endpoint.getPort() + "/auth")
                     .realm("master")

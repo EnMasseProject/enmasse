@@ -16,13 +16,14 @@
 
 package io.enmasse.systemtest.mqtt;
 
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
 
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +35,7 @@ public class Publisher extends ClientHandlerBase<Integer> {
     private final AtomicInteger numSent = new AtomicInteger(0);
     private final Queue<MqttMessage> messageQueue;
     private final CountDownLatch connectLatch;
+    private static Logger log = CustomLogger.getLogger();
 
     public Publisher(Endpoint endpoint,
                      final MqttConnectOptions options,
@@ -49,7 +51,7 @@ public class Publisher extends ClientHandlerBase<Integer> {
     @Override
     protected void connectionOpened() {
 
-        Logging.log.info("Publisher on '{}' connected, publishing messages", this.getTopic());
+        log.info("Publisher on '{}' connected, publishing messages", this.getTopic());
 
         this.client.setCallback(new MqttCallback() {
 
@@ -66,7 +68,7 @@ public class Publisher extends ClientHandlerBase<Integer> {
             @Override
             public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
 
-                Logging.log.info("Delivered message-id {}", iMqttDeliveryToken.getMessageId());
+                log.info("Delivered message-id {}", iMqttDeliveryToken.getMessageId());
                 numSent.incrementAndGet();
                 sendNext();
             }
@@ -78,7 +80,7 @@ public class Publisher extends ClientHandlerBase<Integer> {
 
     @Override
     protected void connectionOpenFailed(Throwable throwable) {
-        Logging.log.info("Connection to " + getEndpoint().getHost() + ":" + getEndpoint().getPort() + " failed: " + throwable.getMessage());
+        log.info("Connection to " + getEndpoint().getHost() + ":" + getEndpoint().getPort() + " failed: " + throwable.getMessage());
         getPromise().completeExceptionally(throwable);
         this.connectLatch.countDown();
     }

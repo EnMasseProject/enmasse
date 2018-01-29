@@ -1,9 +1,10 @@
 package io.enmasse.systemtest.executor.client;
 
-import io.enmasse.systemtest.Logging;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.Executor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public abstract class AbstractClient {
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
+    private static Logger log = CustomLogger.getLogger();
 
     /**
      * Constructor of abstract client
@@ -74,7 +76,7 @@ public abstract class AbstractClient {
                     arguments.add(value);
                 }
             } else {
-                Logging.log.warn(String.format("Argument '%s' is not allowed for '%s'",
+                log.warn(String.format("Argument '%s' is not allowed for '%s'",
                         arg.command(),
                         this.getClass().getSimpleName()));
             }
@@ -125,12 +127,12 @@ public abstract class AbstractClient {
             executor = new Executor();
             int ret = executor.execute(prepareCommand(), timeout);
             synchronized (lock) {
-                Logging.log.info("Return code - " + ret);
+                log.info("Return code - " + ret);
                 if (ret == 0) {
-                    Logging.log.info(executor.getStdOut());
+                    log.info(executor.getStdOut());
                     parseToJson(executor.getStdOut());
                 } else {
-                    Logging.log.error(executor.getStdErr());
+                    log.error(executor.getStdErr());
                 }
             }
             return ret == 0;
@@ -188,7 +190,7 @@ public abstract class AbstractClient {
         try {
             executor.stop();
         } catch (Exception ex) {
-            Logging.log.warn("Client stop raise exception: " + ex.getMessage());
+            log.warn("Client stop raise exception: " + ex.getMessage());
         }
     }
 

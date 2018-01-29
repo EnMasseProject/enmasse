@@ -2,8 +2,8 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.web.ConsoleWebPage;
 import io.enmasse.systemtest.web.ISeleniumProvider;
 import io.enmasse.systemtest.web.SeleniumProvider;
@@ -13,13 +13,14 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 public abstract class WebConsoleTest extends MarathonTestBase implements ISeleniumProvider {
-
+    private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = new SeleniumProvider();
     AddressSpace addressSpace;
 
@@ -34,11 +35,11 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
 
     @Before
     public void setUpWebConsoleTests() throws Exception {
-        Logging.log.info("testCreateDeleteUsersLong start");
+        log.info("testCreateDeleteUsersLong start");
         addressSpace = new AddressSpace("brokered-marathon-web-console",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "standard");
-        Logging.log.info("Address space '{}'created", addressSpace);
+        log.info("Address space '{}'created", addressSpace);
 
         username = "test";
         password = "test";
@@ -63,7 +64,7 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
             consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
             Thread.sleep(5000);
         });
-        Logging.log.info("testCreateDeleteAddressesViaAgentLong finished");
+        log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
 
     @Override

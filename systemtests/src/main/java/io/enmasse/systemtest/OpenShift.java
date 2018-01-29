@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.slf4j.Logger;
 
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
  * Handles interaction with openshift cluster
  */
 public class OpenShift extends Kubernetes {
+    private static Logger log = CustomLogger.getLogger();
 
     public OpenShift(Environment environment, String globalNamespace) {
         super(environment, new DefaultOpenShiftClient(new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
@@ -48,7 +50,7 @@ public class OpenShift extends Kubernetes {
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
-            Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
+            log.info("Endpoint didn't resolve, falling back to service endpoint");
             return getEndpoint(globalNamespace, "address-controller", "https");
         }
     }
@@ -57,11 +59,11 @@ public class OpenShift extends Kubernetes {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Route route = openShift.routes().inNamespace(globalNamespace).withName("keycloak").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
-        Logging.log.info("Testing endpoint : " + endpoint);
+        log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
-            Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
+            log.info("Endpoint didn't resolve, falling back to service endpoint");
             return getEndpoint(globalNamespace, "standard-authservice", "https");
         }
     }
@@ -71,11 +73,11 @@ public class OpenShift extends Kubernetes {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Route route = openShift.routes().inNamespace(namespace).withName(endpointName).get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
-        Logging.log.info("Testing endpoint : " + endpoint);
+        log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
-            Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
+            log.info("Endpoint didn't resolve, falling back to service endpoint");
             return getEndpoint(namespace, endpointName, "https");
         }
     }

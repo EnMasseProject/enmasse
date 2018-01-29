@@ -10,6 +10,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
+import org.slf4j.Logger;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -25,6 +26,7 @@ public class AddressApiClient {
     private final String addressSpacesPath = "/apis/enmasse.io/v1/addressspaces";
     private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
+    private static Logger log = CustomLogger.getLogger();
 
     public AddressApiClient(Kubernetes kubernetes) {
         this.vertx = VertxFactory.create();
@@ -62,7 +64,7 @@ public class AddressApiClient {
         authService.put("type", authServiceType);
         spec.put("authenticationService", authService);
 
-        Logging.log.info("Following payload will be used in POST request: " + config.toString());
+        log.info("Following payload will be used in POST request: " + config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
         doRequestNTimes(initRetry, () -> {
@@ -74,7 +76,7 @@ public class AddressApiClient {
                         if (ar.succeeded()) {
                             responsePromise.complete(responseHandler(ar));
                         } else {
-                            Logging.log.warn("Error creating address space {}", addressSpace);
+                            log.warn("Error creating address space {}", addressSpace);
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
@@ -84,7 +86,7 @@ public class AddressApiClient {
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         String path = addressSpacesPath + "/" + addressSpace.getName();
-        Logging.log.info("Following HTTP request will be used for removing address space: '{}'", path);
+        log.info("Following HTTP request will be used for removing address space: '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
             client.delete(endpoint.getPort(), endpoint.getHost(), path)
@@ -95,7 +97,7 @@ public class AddressApiClient {
                         if (ar.succeeded()) {
                             responsePromise.complete(responseHandler(ar));
                         } else {
-                            Logging.log.warn("Error deleting address space {}", addressSpace);
+                            log.warn("Error deleting address space {}", addressSpace);
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
@@ -120,7 +122,7 @@ public class AddressApiClient {
                         if (ar.succeeded()) {
                             responsePromise.complete(responseHandler(ar));
                         } else {
-                            Logging.log.warn("Error when getting address space {}", name);
+                            log.warn("Error when getting address space {}", name);
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
@@ -129,7 +131,7 @@ public class AddressApiClient {
     }
 
     public Set<String> listAddressSpaces() throws Exception {
-        Logging.log.info("Following HTTP request will be used for getting address space:" + addressSpacesPath +
+        log.info("Following HTTP request will be used for getting address space:" + addressSpacesPath +
                 " with host: " + endpoint.getHost() + " with Port: " + endpoint.getPort());
 
         CompletableFuture<JsonObject> list = new CompletableFuture<>();
@@ -144,14 +146,14 @@ public class AddressApiClient {
                             JsonObject object = responseHandler(ar);
                             list.complete(object);
                         } else {
-                            Logging.log.warn("Failed listing address spaces", ar.cause());
+                            log.warn("Failed listing address spaces", ar.cause());
                             list.completeExceptionally(ar.cause());
                         }
                     });
             return list.get(30, TimeUnit.SECONDS);
         }).getJsonArray("items");
 
-        Logging.log.info("Following list of address spaces received" + items.toString());
+        log.info("Following list of address spaces received" + items.toString());
         if (items != null) {
             for (int i = 0; i < items.size(); i++) {
                 spaces.add(items.getJsonObject(i).getJsonObject("metadata").getString("name"));
@@ -172,7 +174,7 @@ public class AddressApiClient {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName());
         path.append(addressName.isPresent() ? addressName.get() : "");
-        Logging.log.info("Following HTTP request will be used for getting address: " + path);
+        log.info("Following HTTP request will be used for getting address: " + path);
 
         return doRequestNTimes(initRetry, () -> {
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -184,7 +186,7 @@ public class AddressApiClient {
                         if (ar.succeeded()) {
                             responsePromise.complete(responseHandler(ar));
                         } else {
-                            Logging.log.warn("Error when getting addresses");
+                            log.warn("Error when getting addresses");
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
@@ -217,10 +219,10 @@ public class AddressApiClient {
                     .as(BodyCodec.jsonObject())
                     .send(ar -> {
                         if (ar.succeeded()) {
-                            Logging.log.info("Address {} successfully removed", addressName);
+                            log.info("Address {} successfully removed", addressName);
                             responsePromise.complete(responseHandler(ar));
                         } else {
-                            Logging.log.warn("Error during deleting addresses");
+                            log.warn("Error during deleting addresses");
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
@@ -263,8 +265,8 @@ public class AddressApiClient {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName()).append("/");
 
-        Logging.log.info("Following HTTP request will be used for deploy: " + path);
-        Logging.log.info("Following payload will be used in request: " + config.toString());
+        log.info("Following HTTP request will be used for deploy: " + path);
+        log.info("Following payload will be used in request: " + config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
             client.request(httpMethod, endpoint.getPort(), endpoint.getHost(), path.toString())
@@ -275,7 +277,7 @@ public class AddressApiClient {
                         if (ar.succeeded()) {
                             responsePromise.complete(responseHandler(ar));
                         } else {
-                            Logging.log.warn("Error when deploying addresses");
+                            log.warn("Error when deploying addresses");
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
@@ -299,10 +301,10 @@ public class AddressApiClient {
             return ar.result().body();
         } catch (io.vertx.core.json.DecodeException decEx) {
             if (ar.result().bodyAsString().toLowerCase().contains("application is not available")) {
-                Logging.log.warn("Address-controller is not available.", ar.cause());
+                log.warn("Address-controller is not available.", ar.cause());
                 throw new IllegalStateException("Address-controller is not available.");
             } else {
-                Logging.log.warn("Unexpected object received", ar.cause());
+                log.warn("Unexpected object received", ar.cause());
                 throw new IllegalStateException("JsonObject expected, but following object was received: " + ar.result().bodyAsString());
             }
         }

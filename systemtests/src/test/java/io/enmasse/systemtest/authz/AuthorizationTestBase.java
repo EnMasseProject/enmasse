@@ -4,6 +4,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     private static final Destination anycast = Destination.anycast("authz-anycast");
     private static final Destination multicast = Destination.multicast("authz-multicast");
     private List<Destination> addresses;
+    private static Logger log = CustomLogger.getLogger();
 
     @Before
     public void initAddresses() throws Exception {
@@ -87,7 +89,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertSend(String username, String password) throws Exception {
-        Logging.log.info("Testing if client is authorized to send messages");
+        log.info("Testing if client is authorized to send messages");
         assertTrue(canSend(queue, username, password));
         assertTrue(canSend(topic, username, password));
 
@@ -98,7 +100,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertCannotSend(String username, String password) throws Exception {
-        Logging.log.info("Testing if client is NOT authorized to send messages");
+        log.info("Testing if client is NOT authorized to send messages");
         assertFalse(canSend(queue, username, password));
         assertFalse(canSend(topic, username, password));
 
@@ -109,7 +111,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertReceive(String username, String password) throws Exception {
-        Logging.log.info("Testing if client is authorized to receive messages");
+        log.info("Testing if client is authorized to receive messages");
         assertTrue(canReceive(queue, username, password));
         assertTrue(canReceive(topic, username, password));
 
@@ -120,7 +122,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertCannotReceive(String username, String password) throws Exception {
-        Logging.log.info("Testing if client is NOT authorized to receive messages");
+        log.info("Testing if client is NOT authorized to receive messages");
         assertFalse(canReceive(queue, username, password));
         assertFalse(canReceive(topic, username, password));
 
