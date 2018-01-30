@@ -24,6 +24,12 @@ pipeline {
     options {
         timeout(time: 3, unit: 'HOURS')
     }
+    environment {
+        DOCKER_REGISTRY = '172.30.1.1:5000'
+        DOCKER_ORG = 'enmasseci'
+        TAG = "${BUILD_TAG}"
+        COMMIT = "${BUILD_TAG}"
+    }
     stages {
         stage('clean') {
             steps {
@@ -42,19 +48,9 @@ pipeline {
         }
         stage('build') {
             steps {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" COMMIT=$BUILD_TAG make'
-                    sh 'cat templates/install/openshift/enmasse.yaml'
-                }
-            }
-        }
-        stage('push docker image') {
-            steps {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh 'TAG=$BUILD_TAG COMMIT=$BUILD_TAG make docker_tag'
-                    sh '$DOCKER login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
-                    sh 'TAG=$BUILD_TAG COMMIT=$BUILD_TAG make docker_push'
-                }
+                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
+                sh 'cat templates/install/openshift/enmasse.yaml'
+                sh 'make docker_tag'
             }
         }
         stage('start openshift') {
@@ -71,6 +67,14 @@ pipeline {
         stage('install webdrivers') {
             steps {
                 sh 'sudo make webdriver_install'
+            }
+        }
+        stage('push docker images') {
+            steps {
+                sh 'oc login -u test -p test'
+                sh 'oc new-project enmasseci'
+                sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
+                sh 'make docker_push'
             }
         }
         stage('system tests') {
