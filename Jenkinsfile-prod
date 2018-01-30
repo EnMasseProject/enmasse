@@ -33,6 +33,7 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
+                sh "git checkout tags/0.15.3"
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
