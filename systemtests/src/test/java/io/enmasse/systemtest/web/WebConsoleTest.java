@@ -442,8 +442,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewAddresses() throws Exception {
-        Destination allowedDestination = Destination.queue("test-view-queue", Optional.of("pooled-inmemory"));
-        Destination notAllowedDestination = Destination.queue("test-not-view-queue", Optional.of("pooled-inmemory"));
+        Destination allowedDestination = Destination.queue("test-view-queue");
+        Destination notAllowedDestination = Destination.queue("test-not-view-queue");
 
         prepareViewItemTest("view_user_addresses", "viewPa55", allowedDestination, notAllowedDestination);
 
@@ -475,10 +475,10 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewAddressesWildcards() throws Exception {
-        Destination queue = Destination.queue("queue_1234", Optional.of("pooled-inmemory"));
-        Destination queue2 = Destination.queue("queueABCD", Optional.of("pooled-inmemory"));
-        Destination topic = Destination.topic("topic_2345", Optional.of("pooled-inmemory"));
-        Destination topic2 = Destination.topic("topicABCD", Optional.of("pooled-inmemory"));
+        Destination queue = Destination.queue("queue_1234");
+        Destination queue2 = Destination.queue("queueABCD");
+        Destination topic = Destination.topic("topic_2345");
+        Destination topic2 = Destination.topic("topicABCD");
 
         setAddresses(queue, queue2, topic, topic2);
 
