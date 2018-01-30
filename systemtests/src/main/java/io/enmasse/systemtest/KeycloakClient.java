@@ -228,7 +228,7 @@ public class KeycloakClient {
             if (realmResource != null) {
                 return realmResource;
             }
-            Thread.sleep(5000);
+            Thread.sleep(10000);
         }
 
         if (realmResource == null) {
@@ -270,7 +270,6 @@ public class KeycloakClient {
         private final Keycloak keycloak;
 
         private CloseableKeycloak(Endpoint endpoint, KeycloakCredentials credentials, KeyStore trustStore) {
-            log.info("Logging into keycloak with {}/{}", credentials.getUsername(), credentials.getPassword());
             this.keycloak = KeycloakBuilder.builder()
                     .serverUrl("https://" + endpoint.getHost() + ":" + endpoint.getPort() + "/auth")
                     .realm("master")

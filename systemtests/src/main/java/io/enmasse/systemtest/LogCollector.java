@@ -72,7 +72,6 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
         if (logWatches.containsKey(pod.getMetadata().getName())) {
             return;
         }
-        log.info("Waiting for pod {} to start", pod.getMetadata().getName());
         while (!"Running".equals(pod.getStatus().getPhase())) {
             try {
                 Thread.sleep(1000);
@@ -88,7 +87,6 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
                 FileOutputStream outputFileStream = new FileOutputStream(outputFile);
 
                 synchronized (logWatches) {
-                    log.info("Starting watcher for container {} in pod {} and writing to {}", container.getName(), pod.getMetadata().getName(), outputFile.getAbsolutePath());
                     logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
