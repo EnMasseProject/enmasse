@@ -111,8 +111,8 @@ if [ $? -gt 0 ]; then
 fi
 
 runcmd "kubectl create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
-runcmd "kubectl apply -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
-runcmd "kubectl apply -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
+runcmd "kubectl apply -f $ADDONS/standard-plans.yaml -n $NAMESPACE" "Create standard address space plans"
+runcmd "kubectl apply -f $ADDONS/brokered-plans.yaml -n $NAMESPACE" "Create brokered address space plans"
 
 create_self_signed_cert "kubectl" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
