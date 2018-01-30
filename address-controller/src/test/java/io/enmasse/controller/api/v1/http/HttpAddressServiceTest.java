@@ -3,6 +3,7 @@ package io.enmasse.controller.api.v1.http;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.v1.Either;
 import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -124,7 +125,7 @@ public class HttpAddressServiceTest {
                 .build();
         AddressList list = new AddressList();
         list.add(a2);
-        Response response = invoke(() -> addressService.appendAddresses(securityContext,"myspace", list));
+        Response response = invoke(() -> addressService.appendAddress(securityContext,"myspace", Either.createRight(list)));
         assertThat(response.getStatus(), is(200));
 
         assertThat(addressApi.listAddresses(), hasItem(a2));
@@ -140,7 +141,7 @@ public class HttpAddressServiceTest {
                 .build();
         AddressList list = new AddressList();
         list.add(a2);
-        Response response = invoke(() -> addressService.appendAddresses(securityContext,"myspace", list));
+        Response response = invoke(() -> addressService.appendAddress(securityContext,"myspace", Either.createRight(list)));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -180,7 +181,7 @@ public class HttpAddressServiceTest {
                 .build();
         AddressList list = new AddressList();
         list.add(a2);
-        response = invoke(() -> addressService.appendAddresses(securityContext,"myspace", list));
+        response = invoke(() -> addressService.appendAddress(securityContext,"myspace", Either.createRight(list)));
         assertThat(response.getStatus(), is(401));
     }
 }
