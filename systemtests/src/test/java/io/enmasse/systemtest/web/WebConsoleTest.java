@@ -13,10 +13,7 @@ import org.junit.runner.Description;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.WebElement;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -572,8 +569,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private void prepareViewItemTest(String username, String password, Destination allowedAddress,
                                      Destination noAllowedAddress) throws Exception {
-        prepareAddress(allowedAddress);
-        prepareAddress(noAllowedAddress);
+        prepareAddress(allowedAddress, noAllowedAddress);
 
         KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
@@ -585,10 +581,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
                 addressApiClient, defaultAddressSpace);
     }
 
-    private void prepareAddress(Destination dest) throws Exception {
-        if (dest != null) {
-            appendAddresses(dest);
-        }
+    private void prepareAddress(Destination... dest) throws Exception {
+        setAddresses(Arrays.stream(dest).filter(Objects::nonNull).toArray(Destination[]::new));
     }
 
     private List<KeycloakCredentials> createUsersWildcard() throws Exception {
