@@ -491,9 +491,6 @@ public class ConsoleWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Destination destination) throws Exception {
-        log.info("Create address using web console");
-        //get console page
-        openConsolePageWebConsole();
         createAddressWebConsole(destination, true);
     }
 
@@ -541,10 +538,7 @@ public class ConsoleWebPage {
      * delete specific address
      */
     public void deleteAddressWebConsole(Destination destination) throws Exception {
-        log.info("Remove address using web console");
-        //open console webpage
-        openConsolePageWebConsole();
-        createAddressWebConsole(destination, true);
+        deleteAddressWebConsole(destination, true);
     }
 
     public void deleteAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
