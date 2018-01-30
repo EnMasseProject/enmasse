@@ -35,9 +35,9 @@ public class QueueTest extends StandardTestBase {
 
     @Test
     public void testColocatedQueues() throws Exception {
-        Destination q1 = Destination.queue("queue1", Optional.of("pooled-inmemory"));
-        Destination q2 = Destination.queue("queue2", Optional.of("pooled-inmemory"));
-        Destination q3 = Destination.queue("queue3", Optional.of("pooled-inmemory"));
+        Destination q1 = Destination.queue("queue1", Optional.of("pooled-queue"));
+        Destination q2 = Destination.queue("queue2", Optional.of("pooled-queue"));
+        Destination q3 = Destination.queue("queue3", Optional.of("pooled-queue"));
         setAddresses(q1, q2, q3);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -85,8 +85,8 @@ public class QueueTest extends StandardTestBase {
     @Test
     public void testRestApi() throws Exception {
         List<String> queues = Arrays.asList("queue1", "queue2");
-        Destination q1 = Destination.queue(queues.get(0), Optional.of("pooled-inmemory"));
-        Destination q2 = Destination.queue(queues.get(1), Optional.of("pooled-inmemory"));
+        Destination q1 = Destination.queue(queues.get(0), Optional.of("pooled-queue"));
+        Destination q2 = Destination.queue(queues.get(1), Optional.of("pooled-queue"));
 
         runRestApiTest(queues, q1, q2);
     }
@@ -94,10 +94,10 @@ public class QueueTest extends StandardTestBase {
     @Test
     public void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Destination destExtra = Destination.queue("ext-queue", Optional.of("pooled-inmemory"));
+        Destination destExtra = Destination.queue("ext-queue", Optional.of("pooled-queue"));
 
         List<Destination> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(Destination.queue(queue, Optional.of("pooled-inmemory"))));
+        queues.forEach(queue -> addresses.add(Destination.queue(queue, Optional.of("pooled-queue"))));
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         for (Destination address : addresses) {
