@@ -276,7 +276,11 @@ public class AddressApiClient {
                     .as(BodyCodec.jsonObject())
                     .sendJsonObject(config, ar -> {
                         if (ar.succeeded()) {
-                            responsePromise.complete(responseHandler(ar));
+                            if (ar.result().statusCode() < 200 || ar.result().statusCode() >= 300) {
+                                responsePromise.completeExceptionally(new RuntimeException("Got status " + ar.result().statusCode() + " in request"));
+                            } else {
+                                responsePromise.complete(responseHandler(ar));
+                            }
                         } else {
                             log.warn("Error when deploying addresses");
                             responsePromise.completeExceptionally(ar.cause());
