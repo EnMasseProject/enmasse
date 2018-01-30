@@ -1,3 +1,12 @@
+## 0.16.0 (January 30, 2017)
+* Support for authorization at address level. To enable this, create groups in keycloak on the form 'send_*' and 'recv_*', and have users join a particular group to allow sending or receiving from a particular address (wildcards if you want to allow on all addresses). More detailed docs will follow
+* Ability to deploy keycloak-controller standalone in order to automatically manage an  external keycloak instance
+* Enable hawtio console for brokers for easier debugging broker state. The console is authenticated against keycloak.
+* Configserv is removed from standard address space. This lowers the footprint and complexity.
+* Add prometheus and grafana addons that can be used to monitor the messaging cluster, including routers and brokers
+* Add prometheus endpoint to broker and remove hawkular support
+* Use statefulsets for brokers in standard address space
+
 ## 0.15.3 (December 8, 2017)
 * Bug fixes to most components found in testing
 * The router in the standard address space now rejects unknown addresses rather than defaulting to

@@ -6,7 +6,6 @@ This roadmap describes the features we expect to be available in the next releas
 * Support for plans to set resource limits for address spaces
 * Rework queue-scheduling to take resource limits into account, automatically scale colocated
   broker if allowed, and take previous placement into consideration
-* Use statefulsets for brokers
 
 0.18.0
 * Add support for colocated topics together with queues
