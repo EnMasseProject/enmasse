@@ -394,7 +394,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCannotCreateAddresses() throws Exception {
-        Destination destination = Destination.queue("authz-queue", Optional.of("pooled-inmemory"));
+        Destination destination = Destination.queue("authz-queue");
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
@@ -416,7 +416,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCannotDeleteAddresses() throws Exception {
-        Destination destination = Destination.queue("test-cannot-delete-address", Optional.of("pooled-inmemory"));
+        Destination destination = Destination.queue("test-cannot-delete-address");
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
