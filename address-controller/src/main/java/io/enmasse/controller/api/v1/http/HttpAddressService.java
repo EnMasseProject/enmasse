@@ -15,6 +15,7 @@
  */
 package io.enmasse.controller.api.v1.http;
 
+import io.enmasse.address.model.v1.Either;
 import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.v1.AddressApiHelper;
@@ -85,11 +86,21 @@ public class HttpAddressService {
     //    }
     //}
 
-
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response appendAddresses(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, @NotNull  AddressList list) throws Exception {
+    public Response appendAddress(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, @NotNull Either<Address, AddressList> body) throws Exception {
+        checkNotNull(body);
+        if (body.isLeft()) {
+            AddressList list = new AddressList();
+            list.add(body.getLeft());
+            return appendAddresses(securityContext, addressSpaceName, list);
+        } else {
+            return appendAddresses(securityContext, addressSpaceName, body.getRight());
+        }
+    }
+
+    private Response appendAddresses(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, @NotNull  AddressList list) throws Exception {
         checkNotNull(list);
         return doRequest("Error appending addresses", () -> {
             AddressList addressList = setAddressSpace(addressSpaceName, list);

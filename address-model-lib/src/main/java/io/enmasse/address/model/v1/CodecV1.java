@@ -64,6 +64,7 @@ public class CodecV1 {
         DecodeContext context = () -> defaultAuthServiceType;
 
         AddressV1Deserializer addressDeserializer = new AddressV1Deserializer();
+        AddressListV1Deserializer addressListDeserializer = new AddressListV1Deserializer(addressDeserializer);
         AddressSpaceV1Deserializer addressSpaceDeserializer = new AddressSpaceV1Deserializer(context);
 
         module.addDeserializer(Address.class, addressDeserializer);
@@ -71,7 +72,8 @@ public class CodecV1 {
         module.addDeserializer(AddressSpace.class, addressSpaceDeserializer);
         module.addSerializer(AddressSpace.class, new AddressSpaceV1Serializer());
 
-        module.addDeserializer(AddressList.class, new AddressListV1Deserializer(addressDeserializer));
+        module.addDeserializer(Either.class, new AddressAndAddressListDeserializer(addressDeserializer, addressListDeserializer));
+        module.addDeserializer(AddressList.class, addressListDeserializer);
         module.addSerializer(AddressList.class, new AddressListV1Serializer());
         module.addDeserializer(AddressSpaceList.class, new AddressSpaceListV1Deserializer(addressSpaceDeserializer));
         module.addSerializer(AddressSpaceList.class, new AddressSpaceListV1Serializer());
