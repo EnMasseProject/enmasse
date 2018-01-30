@@ -45,6 +45,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCreateDeleteAddress(Destination destination) throws Exception {
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressWebConsole(destination);
         consoleWebPage.deleteAddressWebConsole(destination);
     }
