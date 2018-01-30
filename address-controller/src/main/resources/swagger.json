@@ -420,7 +420,8 @@
         "AddressSpaceSpec": {
             "type": "object",
             "required": [
-                "type"
+                "type",
+                "plan"
             ],
             "properties": {
                 "type": {
@@ -562,7 +563,8 @@
         "AddressSpec": {
             "type": "object",
             "required": [
-                "type"
+                "type",
+                "plan"
             ],
             "properties": {
                 "type": {
@@ -645,10 +647,10 @@
             "type": "string",
             "description": "Type of address (queue, topic, ...)",
             "enum": [
-                "QUEUE",
-                "TOPIC",
-                "ANYCAST",
-                "MULTICAST"
+                "queue",
+                "topic",
+                "anycast",
+                "multicast"
             ]
         }
     },
