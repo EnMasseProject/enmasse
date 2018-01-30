@@ -94,14 +94,18 @@ public abstract class TestBase extends SystemTestRunListener {
 
     @After
     public void teardown() throws Exception {
-        mqttClientFactory.close();
-        amqpClientFactory.close();
+        try {
+            mqttClientFactory.close();
+            amqpClientFactory.close();
 
-        for (AddressSpace addressSpace : addressSpaceList) {
-            deleteAddressSpace(addressSpace);
+            for (AddressSpace addressSpace : addressSpaceList) {
+                deleteAddressSpace(addressSpace);
+            }
+
+            addressSpaceList.clear();
+        } catch (Exception e) {
+            log.error("Error tearing down test", e);
         }
-
-        addressSpaceList.clear();
     }
 
     protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
