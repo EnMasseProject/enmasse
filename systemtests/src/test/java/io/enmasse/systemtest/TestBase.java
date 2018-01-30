@@ -104,7 +104,8 @@ public abstract class TestBase extends SystemTestRunListener {
 
             addressSpaceList.clear();
         } catch (Exception e) {
-            log.error("Error tearing down test", e);
+            log.error("Error tearing down test: {}", e.getMessage());
+            throw e;
         }
     }
 
