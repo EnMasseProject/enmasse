@@ -181,6 +181,14 @@ oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
 oc policy add-role-to-user admin system:serviceaccount:enmasse:address-space-admin
 ----
 
+. Install default plan and resource configuration
++
+[options="nowrap"]
+----
+oc create -f ./openshift/addons/standard-plans.yaml
+oc create -f ./openshift/addons/brokered-plans.yaml
+----
+
 . Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
 +
 [options="nowrap"]

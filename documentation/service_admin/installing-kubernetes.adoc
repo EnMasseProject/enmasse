@@ -97,6 +97,14 @@ kubectl apply -f ./kubernetes/addons/standard-authservice.yaml
 kubectl create sa enmasse-admin
 ----
 
+. Install default plan and resource configuration
++
+[options="nowrap"]
+----
+kubectl apply -f ./kubernetes/addons/standard-plans.yaml
+kubectl apply -f ./kubernetes/addons/brokered-plans.yaml
+----
+
 . Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
 +
 [options="nowrap"]

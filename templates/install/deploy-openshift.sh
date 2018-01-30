@@ -25,8 +25,9 @@ fi
 
 SCRIPTDIR=`dirname $0`
 ENMASSE_TEMPLATE=$SCRIPTDIR/openshift/enmasse.yaml
-KEYCLOAK_TEMPLATE=$SCRIPTDIR/openshift/addons/standard-authservice.yaml
-NONE_TEMPLATE=$SCRIPTDIR/openshift/addons/none-authservice.yaml
+ADDONS=$SCRIPTDIR/openshift/addons
+KEYCLOAK_TEMPLATE=$ADDONS/standard-authservice.yaml
+NONE_TEMPLATE=$ADDONS/none-authservice.yaml
 CLUSTER_ROLES=$SCRIPTDIR/openshift/cluster-roles.yaml
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
@@ -164,6 +165,9 @@ runcmd "oc create sa enmasse-admin -n $NAMESPACE" "Create service account for ad
 
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
+
+runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
+runcmd "oc create -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
 
 create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 

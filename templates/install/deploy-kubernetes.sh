@@ -23,9 +23,10 @@ fi
 
 SCRIPTDIR=`dirname $0`
 TEMPLATE_PARAMS=""
+ADDONS=$SCRIPTDIR/kubernetes/addons
 ENMASSE_TEMPLATE=$SCRIPTDIR/kubernetes/enmasse.yaml
-KEYCLOAK_TEMPLATE=$SCRIPTDIR/kubernetes/addons/standard-authservice.yaml
-NONE_TEMPLATE=$SCRIPTDIR/kubernetes/addons/none-authservice.yaml
+KEYCLOAK_TEMPLATE=$ADDONS/standard-authservice.yaml
+NONE_TEMPLATE=$ADDONS/none-authservice.yaml
 DEFAULT_NAMESPACE=enmasse
 AUTH_SERVICES="none"
 GUIDE=false
@@ -110,6 +111,8 @@ if [ $? -gt 0 ]; then
 fi
 
 runcmd "kubectl create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
+runcmd "kubectl apply -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
+runcmd "kubectl apply -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
 
 create_self_signed_cert "kubectl" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
