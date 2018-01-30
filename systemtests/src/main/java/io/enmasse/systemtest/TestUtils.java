@@ -199,7 +199,7 @@ public class TestUtils {
             addressObject = apiClient.getAddressSpace(addressSpace);
             isReady = isAddressSpaceReady(addressObject);
             if (!isReady) {
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             }
             log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
         }
