@@ -58,6 +58,7 @@ public class AddressApiClient {
 
         JsonObject spec = new JsonObject();
         spec.put("type", addressSpace.getType().toString().toLowerCase());
+        spec.put("plan", "unlimited-" + addressSpace.getType().toString().toLowerCase());
         config.put("spec", spec);
 
         JsonObject authService = new JsonObject();
@@ -245,7 +246,7 @@ public class AddressApiClient {
             JsonObject spec = new JsonObject();
             spec.put("address", destination.getAddress());
             spec.put("type", destination.getType());
-            destination.getPlan().ifPresent(e -> spec.put("plan", e));
+            spec.put("plan", destination.getPlan());
             entry.put("spec", spec);
 
             items.add(entry);
