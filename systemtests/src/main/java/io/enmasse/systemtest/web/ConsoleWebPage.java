@@ -33,14 +33,14 @@ public class ConsoleWebPage {
     }
 
 
-    public void openConsolePageWebConsole() throws Exception {
+    public void openWebConsolePage() throws Exception {
         selenium.driver.get(consoleRoute);
         selenium.angularDriver.waitForAngularRequestsToFinish();
         log.info("Console page opened");
         selenium.takeScreenShot();
     }
 
-    public void openConsolePageWebConsole(String route) throws Exception {
+    public void openWebConsolePage(String route) throws Exception {
         selenium.driver.get(route);
         selenium.angularDriver.waitForAngularRequestsToFinish();
         log.info("Console page opened");
@@ -498,7 +498,7 @@ public class ConsoleWebPage {
         log.info("Create address using web console");
 
         if (openConsolePage)
-            openConsolePageWebConsole();
+            openWebConsolePage();
 
         //get addresses item from left panel view
         openAddressesPageWebConsole();
@@ -545,7 +545,7 @@ public class ConsoleWebPage {
         log.info("Remove address using web console");
 
         if (openConsolePage)
-            openConsolePageWebConsole();
+            openWebConsolePage();
 
         //open addresses
         openAddressesPageWebConsole();

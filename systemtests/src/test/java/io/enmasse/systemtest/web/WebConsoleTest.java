@@ -404,7 +404,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage = new ConsoleWebPage(selenium,
                 getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
                 addressApiClient, defaultAddressSpace);
-        consoleWebPage.openConsolePageWebConsole();
+        consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
         try {
@@ -427,7 +427,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage = new ConsoleWebPage(selenium,
                 getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
                 addressApiClient, defaultAddressSpace);
-        consoleWebPage.openConsolePageWebConsole();
+        consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
         try {
@@ -445,7 +445,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         prepareViewItemTest("view_user_addresses", "viewPa55", allowedDestination, notAllowedDestination);
 
-        consoleWebPage.openConsolePageWebConsole();
+        consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
         assertThat(consoleWebPage.getAddressItems().size(), is(1));
@@ -457,7 +457,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         prepareViewItemTest("view_user_connections", "viewPa55", destination, null);
 
-        consoleWebPage.openConsolePageWebConsole();
+        consoleWebPage.openWebConsolePage();
         consoleWebPage.openConnectionsPageWebConsole();
 
         AbstractClient noUsersConnections = attachConnector(destination, 5, 1, 0);
@@ -486,7 +486,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             consoleWebPage = new ConsoleWebPage(selenium,
                     getConsoleRoute(defaultAddressSpace, user.getUsername(), user.getPassword()),
                     addressApiClient, defaultAddressSpace);
-            consoleWebPage.openConsolePageWebConsole();
+            consoleWebPage.openWebConsolePage();
             consoleWebPage.openAddressesPageWebConsole();
 
             assertViewOnlyUsersAddresses(user.getUsername().replace("user_", ""), consoleWebPage.getAddressItems());
