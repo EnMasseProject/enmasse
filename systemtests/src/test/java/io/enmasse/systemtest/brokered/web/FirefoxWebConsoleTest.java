@@ -109,6 +109,11 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestViewConnections();
     }
 
+    //@Test
+    public void testViewAddressesWildcards() throws Exception {
+        doTestViewAddressesWildcards();
+    }
+
     @Override
     public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();

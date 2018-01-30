@@ -112,6 +112,11 @@ public class ChromeWebConsoleTest extends StandardWebConsoleTest {
         doTestViewConnections();
     }
 
+    //@Test
+    public void testViewAddressesWildcards() throws Exception {
+        doTestViewAddressesWildcards();
+    }
+
     @Override
     public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();

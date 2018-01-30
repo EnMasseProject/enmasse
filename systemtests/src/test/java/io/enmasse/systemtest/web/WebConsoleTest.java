@@ -14,14 +14,13 @@ import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -398,7 +397,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCannotCreateAddresses() throws Exception {
-        Destination destination = Destination.queue("authz-queue");
+        Destination destination = Destination.queue("authz-queue", Optional.of("pooled-inmemory"));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
@@ -414,13 +413,13 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             assertElementDisabled(consoleWebPage.getCreateButton());
             consoleWebPage.createAddressWebConsole(destination, false);
             fail("Create button is clickable");
-        }catch (Exception ex){
+        } catch (Exception ex) {
             assertTrue(ex instanceof InvalidElementStateException);
         }
     }
 
     public void doTestCannotDeleteAddresses() throws Exception {
-        Destination destination = Destination.queue("test-cannot-delete-address");
+        Destination destination = Destination.queue("test-cannot-delete-address", Optional.of("pooled-inmemory"));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
@@ -437,14 +436,16 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             assertElementDisabled(consoleWebPage.getRemoveButton());
             consoleWebPage.deleteAddressWebConsole(destination, false);
             fail("Remove button is clickable");
-        }catch (Exception ex){
+        } catch (Exception ex) {
             assertTrue(ex instanceof InvalidElementStateException);
         }
     }
 
     public void doTestViewAddresses() throws Exception {
-        List<Destination> dests = prepareViewItemTest("view_user_addresses", "viewPa55",
-                "test-view-queue", "test-not-view-queue");
+        Destination allowedDestination = Destination.queue("test-view-queue", Optional.of("pooled-inmemory"));
+        Destination notAllowedDestination = Destination.queue("test-not-view-queue", Optional.of("pooled-inmemory"));
+
+        prepareViewItemTest("view_user_addresses", "viewPa55", allowedDestination, notAllowedDestination);
 
         consoleWebPage.openConsolePageWebConsole();
         consoleWebPage.openAddressesPageWebConsole();
@@ -454,56 +455,44 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewConnections() throws Exception {
-        List<Destination> dests = prepareViewItemTest("view_user_connections", "viewPa55",
-                "test-view-queue-connections", null);
+        Destination destination = Destination.queue("test-queue-view-connections");
+
+        prepareViewItemTest("view_user_connections", "viewPa55", destination, null);
 
         consoleWebPage.openConsolePageWebConsole();
         consoleWebPage.openConnectionsPageWebConsole();
 
-        AbstractClient noUsersConnections = attachConnector(dests.get(0), 2, 1, 0);
-        AbstractClient usersConnections = attachConnector(defaultAddressSpace, dests.get(0),
-                2, 1, 0, "view_user_connections", "viewPa55");
+        AbstractClient noUsersConnections = attachConnector(destination, 5, 1, 0);
+        AbstractClient usersConnections = attachConnector(defaultAddressSpace, destination,
+                5, 1, 0, "view_user_connections", "viewPa55");
         selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
-        consoleWebPage.getConnectionItems();
 
+        assertEquals(5, consoleWebPage.getConnectionItems().size());
         assertViewOnlyUsersConnections("view_user_connections", consoleWebPage.getConnectionItems());
 
         noUsersConnections.stop();
         usersConnections.stop();
     }
 
-    private List<Destination> prepareViewItemTest(String username, String password,
-                                     String allowedAddressPattern, String noAllowedAddressPattern) throws Exception {
-        List<Destination> allowedAddresses = prepareAddresses(allowedAddressPattern);
-        List<Destination> notAllowedAddresses = prepareAddresses(noAllowedAddressPattern);
+    public void doTestViewAddressesWildcards() throws Exception {
+        Destination queue = Destination.queue("queue_1234", Optional.of("pooled-inmemory"));
+        Destination queue2 = Destination.queue("queueABCD", Optional.of("pooled-inmemory"));
+        Destination topic = Destination.topic("topic_2345", Optional.of("pooled-inmemory"));
+        Destination topic2 = Destination.topic("topicABCD", Optional.of("pooled-inmemory"));
 
-        KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
-        getKeycloakClient().createUser(defaultAddressSpace.getName(),
-                monitorUser.getUsername(), monitorUser.getPassword(),
-                "view_" + allowedAddressPattern, "send_*");
+        setAddresses(queue, queue2, topic, topic2);
 
-        setAddresses(Stream.concat(allowedAddresses.stream(), notAllowedAddresses.stream())
-                .collect(Collectors.toList()).toArray(new Destination[0]));
+        List<KeycloakCredentials> users = createUsersWildcard();
 
-        consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
-                addressApiClient, defaultAddressSpace);
+        for (KeycloakCredentials user : users) {
+            consoleWebPage = new ConsoleWebPage(selenium,
+                    getConsoleRoute(defaultAddressSpace, user.getUsername(), user.getPassword()),
+                    addressApiClient, defaultAddressSpace);
+            consoleWebPage.openConsolePageWebConsole();
+            consoleWebPage.openAddressesPageWebConsole();
 
-        return allowedAddresses;
-    }
-
-    private List<Destination> prepareAddresses(String pattern) {
-        List<Destination> dest = new ArrayList<>();
-        if(pattern != null && !pattern.equals("")){
-            if(pattern.contains("*")) {
-                for(int i = 0; i < 2; i++){
-                    dest.add(Destination.queue(pattern.replace("*", Integer.toString(i))));
-                }
-            }else{
-                dest.add(Destination.queue(pattern));
-            }
+            assertViewOnlyUsersAddresses(user.getUsername().replace("user_", ""), consoleWebPage.getAddressItems());
         }
-        return dest;
     }
 
     //============================================================================================
@@ -567,7 +556,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         for (AddressWebItem item : addresses) {
             if (group.contains("*")) {
                 assertTrue(item.getName().matches(group.replace("view_", "")));
-            }else{
+            } else {
                 assertTrue(item.getName().equals(group.replace("view_", "")));
             }
         }
@@ -579,5 +568,44 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         for (ConnectionWebItem conn : connections) {
             assertTrue(conn.getUser().equals(username));
         }
+    }
+
+    private void prepareViewItemTest(String username, String password, Destination allowedAddress,
+                                     Destination noAllowedAddress) throws Exception {
+        prepareAddress(allowedAddress);
+        prepareAddress(noAllowedAddress);
+
+        KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                monitorUser.getUsername(), monitorUser.getPassword(),
+                "view_" + allowedAddress.getAddress(), "send_*");
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, defaultAddressSpace);
+    }
+
+    private void prepareAddress(Destination dest) throws Exception {
+        if (dest != null) {
+            appendAddresses(dest);
+        }
+    }
+
+    private List<KeycloakCredentials> createUsersWildcard() throws Exception {
+        List<KeycloakCredentials> users = new ArrayList<>();
+        users.add(new KeycloakCredentials("user_view_*", "password"));
+        users.add(new KeycloakCredentials("user_view_queue*", "password"));
+        users.add(new KeycloakCredentials("user_view_topic*", "password"));
+        users.add(new KeycloakCredentials("user_view_queue_*", "password"));
+        users.add(new KeycloakCredentials("user_view_topic_*", "password"));
+        users.add(new KeycloakCredentials("user_view_queueA*", "password"));
+        users.add(new KeycloakCredentials("user_view_topicA*", "password"));
+
+        for (KeycloakCredentials cred : users) {
+            getKeycloakClient().createUser(defaultAddressSpace.getName(), cred.getUsername(), cred.getPassword(),
+                    cred.getUsername().replace("user_", ""));
+        }
+
+        return users;
     }
 }
