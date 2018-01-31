@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.brokered.clients;
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ClientTestBase;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.executor.client.AbstractClient;
@@ -23,7 +24,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
 
-        Destination dest = Destination.queue("message-basic", "brokered-queue");
+        Destination dest = Destination.queue("message-basic", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
@@ -42,7 +43,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
             throws Exception {
-        Destination dest = Destination.queue("receiver-round-robin", "brokered-queue");
+        Destination dest = Destination.queue("receiver-round-robin", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
@@ -72,7 +73,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
                                         boolean hasTopicPrefix) throws Exception {
-        Destination dest = Destination.topic("topic-subscribe", "brokered-topic");
+        Destination dest = Destination.topic("topic-subscribe", getDefaultPlan(AddressType.TOPIC));
         setAddresses(defaultAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
@@ -100,7 +101,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
             throws Exception {
-        Destination dest = Destination.queue("message-browse", "brokered-queue");
+        Destination dest = Destination.queue("message-browse", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
@@ -125,7 +126,7 @@ public class MsgPatternsTest extends ClientTestBase {
     }
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        Destination dest = Destination.queue("drain-queue", "brokered-queue");
+        Destination dest = Destination.queue("drain-queue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, dest);
 
         int count = 50;
@@ -147,7 +148,7 @@ public class MsgPatternsTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        Destination queue = Destination.queue("selector-queue", "brokered-queue");
+        Destination queue = Destination.queue("selector-queue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, queue);
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
@@ -196,7 +197,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
-        Destination topic = Destination.topic("selector-topic", "brokered-topic");
+        Destination topic = Destination.topic("selector-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(defaultAddressSpace, topic);
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
