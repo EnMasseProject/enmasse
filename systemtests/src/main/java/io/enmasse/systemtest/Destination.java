@@ -34,11 +34,11 @@ public class Destination {
     }
 
     public static Destination queue(String address, String plan) {
-        return new Destination(address, QUEUE, "sharded-queue");
+        return new Destination(address, QUEUE, plan);
     }
 
     public static Destination topic(String address, String plan) {
-        return new Destination(address, TOPIC, "sharded-topic");
+        return new Destination(address, TOPIC, plan);
     }
 
     public static Destination anycast(String address) {
