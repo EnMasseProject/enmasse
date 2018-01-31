@@ -21,6 +21,7 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+@Category(SharedAddressSpace.class)
 public abstract class TestBaseWithDefault extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-default-";
