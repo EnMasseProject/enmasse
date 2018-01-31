@@ -43,6 +43,10 @@ class AddressListV1Deserializer extends JsonDeserializer<AddressList> {
     @Override
     public AddressList deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
         ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
+        return deserialize(root);
+    }
+
+    AddressList deserialize(ObjectNode root) {
         AddressList retval = new AddressList();
         if (root.hasNonNull(Fields.ITEMS)) {
             ArrayNode items = (ArrayNode) root.get(Fields.ITEMS);
