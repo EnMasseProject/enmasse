@@ -138,6 +138,16 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
+    public void scaleDeployment(String deploymentName, int numReplicas) {
+        client.extensions().deployments().withName(deploymentName).scale(numReplicas);
+    }
+
+    @Override
+    public void scaleStatefulSet(String setName, int numReplicas) {
+        client.apps().statefulSets().withName(setName).scale(numReplicas);
+    }
+
+    @Override
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
         if (templateDir != null) {
             File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);

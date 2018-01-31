@@ -61,7 +61,7 @@ local forwarder = import "forwarder.jsonnet";
           },
           "spec": {
             "serviceName": "${NAME}",
-            "replicas": 1,
+            "replicas": "${REPLICAS}",
             "template": {
               "metadata": {
                 "labels": {
@@ -201,6 +201,11 @@ local forwarder = import "forwarder.jsonnet";
           "name": "BROKER_MEMORY_LIMIT",
           "description": "Memory limits for Artemis",
           "value": "512Mi"
+        },
+        {
+          "name": "REPLICAS",
+          "description": "Number of replicas to set by default",
+          "value": "1"
         }
       ]
     }

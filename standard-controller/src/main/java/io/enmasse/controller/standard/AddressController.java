@@ -15,17 +15,18 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.amqp.SyncRequestClient;
-import io.enmasse.address.model.Address;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.netty.util.concurrent.Promise;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
@@ -41,10 +42,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.address.model.Status.Phase.Pending;
+import static io.enmasse.address.model.Status.Phase.Terminating;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
-import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.*;
-import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 /**
@@ -55,20 +56,20 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private final String addressSpaceName;
     private final AddressApi addressApi;
     private final Kubernetes kubernetes;
-    private final AddressClusterGenerator clusterGenerator;
+    private final BrokerSetGenerator clusterGenerator;
     private Watch watch;
     private final String certDir;
     private final EventLogger eventLogger;
-    private final AddressResolver addressResolver;
+    private final SchemaProvider schemaProvider;
 
-    public AddressController(String addressSpaceName, AddressApi addressApi, AddressResolver addressResolver, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir, EventLogger eventLogger) {
+    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, String certDir, EventLogger eventLogger, SchemaProvider schemaProvider) {
         this.addressSpaceName = addressSpaceName;
         this.addressApi = addressApi;
-        this.addressResolver = addressResolver;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
         this.certDir = certDir;
         this.eventLogger = eventLogger;
+        this.schemaProvider = schemaProvider;
     }
 
     @Override
@@ -81,7 +82,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             }
         }, result -> {
             if (result.succeeded()) {
-                this.watch = result.result();
+                watch = result.result();
                 startPromise.complete();
             } else {
                 startPromise.fail(result.cause());
@@ -90,156 +91,76 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
-        vertx.executeBlocking(promise -> {
-            try {
-                if (watch != null) {
-                    watch.close();
+    public synchronized void resourcesUpdated(Set<Address> addressSet) throws Exception {
+        log.info("Check addresses in address space controller: " + addressSet.stream().map(Address::getAddress).collect(Collectors.toList()));
+
+        AddressSpaceType addressSpaceType = schemaProvider.getSchema().findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to start standard-controller: standard address space not found in schema!"));
+        AddressResolver addressResolver = new AddressResolver(schemaProvider, addressSpaceType);
+        AddressSpacePlan addressSpacePlan = addressSpaceType.getPlans().get(0);
+
+        AddressProvisioner provisioner = new AddressProvisioner(addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger);
+
+        Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
+        Map<Address, Map<String, Double>> neededMap = provisioner.checkQuota(usageMap, filterByPhases(addressSet, Arrays.asList(Pending)));
+
+        provisioner.provisionResources(usageMap, neededMap);
+
+        checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Active)), addressResolver);
+
+        deprovisionUnused(filterByNotPhases(addressSet, Arrays.asList(Terminating)), addressResolver);
+        garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
+
+    }
+
+    private void deprovisionUnused(Set<Address> addressSet, AddressResolver addressResolver) {
+        List<AddressCluster> clusters = kubernetes.listClusters();
+        for (AddressCluster cluster : clusters) {
+            int numFound = 0;
+            for (Address address : addressSet) {
+                String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
+                String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
+                if (brokerId == null && address.getName().equals(cluster.getClusterId())) {
+                    numFound++;
+                } else if (cluster.getClusterId().equals(clusterId)) {
+                    numFound++;
                 }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, result -> {
-            if (result.succeeded()) {
-                stopFuture.complete();
-            } else {
-                stopFuture.fail(result.cause());
-            }
-        });
-    }
-
-    // TODO: Put this constant somewhere appropriate
-    private static boolean isPooled(Address address) {
-        return address.getPlan().startsWith("pooled");
-    }
-
-    @Override
-    public synchronized void resourcesUpdated(Set<Address> newAddressSet) throws Exception {
-        log.info("Check addresses in address space controller: " + newAddressSet.stream().map(Address::getAddress).collect(Collectors.toList()));
-
-        Map<String, Set<Address>> addressByGroup = new LinkedHashMap<>();
-        for (Address address : newAddressSet) {
-            String key;
-            if (isPooled(address)) {
-                key = address.getPlan();
-            } else {
-                key = address.getName();
             }
 
-            if (!addressByGroup.containsKey(key)) {
-                addressByGroup.put(key, new LinkedHashSet<>());
-            }
-            addressByGroup.get(key).add(address);
-        }
-
-        try {
-            validateAddressGroups(addressByGroup);
-
-            List<AddressCluster> clusterList = kubernetes.listClusters();
-            log.debug("Current set of clusters: " + clusterList);
-            deleteBrokers(clusterList, addressByGroup);
-            createBrokers(clusterList, addressByGroup);
-            scheduleQueues(clusterList, addressByGroup);
-
-            // Perform status check
-            checkStatuses(newAddressSet);
-            for (Address address : newAddressSet) {
+            if (numFound == 0) {
                 try {
-                    addressApi.replaceAddress(address);
-                } catch (KubernetesClientException ex) {
-                    log.warn("Error syncing address {}", address, ex);
-                    eventLogger.log(AddressSyncFailed, "Error syncing address: " + ex.getMessage(), Warning, ControllerKind.Address, address.getName());
-                }
-            }
-        } catch (Exception ex) {
-            log.warn("Errror synchronizing addresses", ex);
-            eventLogger.log(AddressSyncFailed, ex.getMessage(), Warning, AddressSpace, addressSpaceName);
-        }
-    }
-
-    private void scheduleQueues(List<AddressCluster> clusterList, Map<String, Set<Address>> addressByClusterId) {
-        Map<String, AddressCluster> clusterById = new HashMap<>();
-        for (AddressCluster cluster : clusterList) {
-            clusterById.put(cluster.getClusterId(), cluster);
-        }
-
-        for (Map.Entry<String, Set<Address>> entry : addressByClusterId.entrySet()) {
-            Set<Address> addresses = entry.getValue();
-            Address first = addresses.iterator().next();
-            if (isPooled(first)) {
-                AddressCluster cluster = clusterById.get(entry.getKey());
-                cluster.scheduleAddresses(kubernetes, addresses);
-            }
-        }
-    }
-
-    /*
-     * Ensure that a address groups meet the criteria of all address sharing the same properties, until we can
-     * support a mix.
-     */
-    private void validateAddressGroups(Map<String, Set<Address>> addressByGroup) {
-        for (Map.Entry<String, Set<Address>> entry : addressByGroup.entrySet()) {
-            Iterator<Address> it = entry.getValue().iterator();
-            Address first = it.next();
-            while (it.hasNext()) {
-                Address current = it.next();
-                addressResolver.validate(current);
-                if (!first.getAddressSpace().equals(current.getAddressSpace()) ||
-                        !first.getType().equals(current.getType()) ||
-                        !first.getPlan().equals(current.getPlan())) {
-
-                    throw new IllegalArgumentException("All address in a shared group must share the same properties. Found: " + current + " and " + first);
-                }
-            }
-        }
-    }
-
-    private void createBrokers(List<AddressCluster> clusterList, Map<String, Set<Address>> newAddressGroups) {
-        for (Map.Entry<String, Set<Address>> group : newAddressGroups.entrySet()) {
-            if (!brokerExists(clusterList, group.getKey())) {
-                try {
-                    AddressCluster cluster = clusterGenerator.generateCluster(group.getKey(), group.getValue());
-                    if (!cluster.getResources().getItems().isEmpty()) {
-                        log.info("Creating broker cluster with id {}", cluster.getClusterId());
-                        kubernetes.create(cluster.getResources());
-                        eventLogger.log(BrokerCreated, "Created broker", Normal, Broker, cluster.getClusterId());
-                    }
+                    kubernetes.delete(cluster.getResources());
+                    eventLogger.log(ControllerReason.BrokerDeleted, "Deleted broker " + cluster.getClusterId(), EventLogger.Type.Normal, ControllerKind.Address, cluster.getClusterId());
                 } catch (Exception e) {
-                    log.error("Error creating broker", e);
-                    eventLogger.log(BrokerCreateFailed, "Error creating broker", Warning, Broker, group.getKey());
+                    log.warn("Error deleting cluster {}", cluster.getClusterId(), e);
+                    eventLogger.log(ControllerReason.BrokerDeleteFailed, "Error deleting broker cluster " + cluster.getClusterId(), EventLogger.Type.Warning, ControllerKind.Address, cluster.getClusterId());
                 }
             }
         }
     }
 
-    private boolean brokerExists(List<AddressCluster> clusterList, String clusterId) {
-        for (AddressCluster existing : clusterList) {
-            if (existing.getClusterId().equals(clusterId)) {
-                return true;
+    private Set<Address> filterByPhases(Set<Address> addressSet, List<Status.Phase> phases) {
+        return addressSet.stream()
+                .filter(address -> phases.contains(address.getStatus().getPhase()))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Address> filterByNotPhases(Set<Address> addressSet, List<Status.Phase> phases) {
+        return addressSet.stream()
+                .filter(address -> !phases.contains(address.getStatus().getPhase()))
+                .collect(Collectors.toSet());
+    }
+
+    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
+        Map<Address, Integer> okMap = checkStatuses(addresses, addressResolver);
+        for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
+            if (entry.getValue() == 0) {
+                addressApi.deleteAddress(entry.getKey());
             }
         }
-        return false;
     }
 
-    private void deleteBrokers(Collection<AddressCluster> clusterList, Map<String, Set<Address>> newAddressGroups) {
-        clusterList.stream()
-                .filter(cluster -> newAddressGroups.entrySet().stream()
-                        .noneMatch(addressGroup -> cluster.getClusterId().equals(addressGroup.getKey())))
-                .forEach(cluster -> {
-
-                    log.info("Deleting broker cluster with id {}", cluster.getClusterId());
-                    try {
-                        kubernetes.delete(cluster.getResources());
-                        eventLogger.log(BrokerDeleted, "Deleted broker", Normal, Broker, cluster.getClusterId());
-                    } catch (Exception e) {
-                        log.error("Error deleting broker", e);
-                        eventLogger.log(BrokerDeleteFailed, "Error deleting broker", Warning, Broker, cluster.getClusterId());
-                    }
-                });
-    }
-
-    private void checkStatuses(Set<Address> addresses) throws Exception {
+    private Map<Address, Integer> checkStatuses(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
+        Map<Address, Integer> numOk = new HashMap<>();
         for (Address address : addresses) {
             address.getStatus().setReady(true).clearMessages();
         }
@@ -247,26 +168,42 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         // router agent to do the check
         for (Pod router : kubernetes.listRouters()) {
             if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
-                checkRouterStatus(router, addresses);
+                checkRouterStatus(router, addresses, numOk, addressResolver);
             }
         }
 
         for (Address address : addresses) {
-            checkClusterStatus(address);
+            AddressType addressType = addressResolver.getType(address);
+            AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
+            numOk.put(address, checkClusterStatus(address, addressPlan) + numOk.getOrDefault(address, 0));
         }
+        return numOk;
     }
 
-    private void checkClusterStatus(Address address) {
-        String clusterName = isPooled(address) ? address.getPlan() : address.getName();
+    private int checkClusterStatus(Address address, AddressPlan addressPlan) {
+        int numOk = 0;
+        String clusterId = isPooled(addressPlan) ? "broker" : address.getName();
         String addressType = address.getType();
         // TODO: Get rid of references to queue and topic
-        if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterName)) {
+        if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterId)) {
             address.getStatus().setReady(false).appendMessage("Cluster is unavailable");
+        } else {
+            numOk++;
         }
+        return numOk;
+    }
+
+    private boolean isPooled(AddressPlan plan) {
+        for (ResourceRequest request : plan.getRequiredResources()) {
+            if ("broker".equals(request.getResourceName()) && request.getAmount() < 1.0) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
-    private void checkRouterStatus(Pod router, Set<Address> addressList) throws Exception {
+    private void checkRouterStatus(Pod router, Set<Address> addressList, Map<Address, Integer> okMap, AddressResolver addressResolver) throws Exception {
 
         int port = 0;
         for (Container container : router.getSpec().getContainers()) {
@@ -296,22 +233,30 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             List<String> linkRoutes = checkRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
 
             for (Address address : addressList) {
+                AddressType addressType = addressResolver.getType(address);
+                AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
                 // TODO: Move these checks to agent
                 if (!address.getType().equals("topic")) {
                     boolean found = addresses.contains(address.getAddress());
                     if (!found) {
                         address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
+                    } else {
+                        okMap.put(address, checkClusterStatus(address, addressPlan) + okMap.getOrDefault(address, 0));
                     }
                     if (address.getType().equals("queue")) {
                         found = autoLinks.contains(address.getAddress());
                         if (!found) {
                             address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());
+                        } else {
+                            okMap.put(address, checkClusterStatus(address, addressPlan) + okMap.getOrDefault(address, 0));
                         }
                     }
                 } else {
                     boolean found = linkRoutes.contains(address.getAddress());
                     if (!found) {
                         address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + router.getMetadata().getName());
+                    } else {
+                        okMap.put(address, checkClusterStatus(address, addressPlan) + okMap.getOrDefault(address, 0));
                     }
                 }
             }

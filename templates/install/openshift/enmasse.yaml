@@ -575,7 +575,7 @@ objects:
           app: enmasse
         name: ${NAME}
       spec:
-        replicas: 1
+        replicas: ${REPLICAS}
         serviceName: ${NAME}
         template:
           metadata:
@@ -719,6 +719,9 @@ objects:
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Number of replicas to set by default
+      name: REPLICAS
+      value: '1'
   - apiVersion: v1
     kind: Template
     metadata:
@@ -752,7 +755,7 @@ objects:
           app: enmasse
         name: ${NAME}
       spec:
-        replicas: 1
+        replicas: ${REPLICAS}
         serviceName: ${NAME}
         template:
           metadata:
@@ -910,6 +913,9 @@ objects:
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Number of replicas to set by default
+      name: REPLICAS
+      value: '1'
   - apiVersion: v1
     kind: Template
     metadata:
@@ -943,7 +949,7 @@ objects:
           app: enmasse
         name: ${NAME}
       spec:
-        replicas: 1
+        replicas: ${REPLICAS}
         serviceName: ${NAME}
         template:
           metadata:
@@ -1160,6 +1166,9 @@ objects:
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Number of replicas to set by default
+      name: REPLICAS
+      value: '1'
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1193,7 +1202,7 @@ objects:
           app: enmasse
         name: ${NAME}
       spec:
-        replicas: 1
+        replicas: ${REPLICAS}
         serviceName: ${NAME}
         template:
           metadata:
@@ -1424,6 +1433,9 @@ objects:
     - description: Memory limits for Artemis
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Number of replicas to set by default
+      name: REPLICAS
+      value: '1'
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST

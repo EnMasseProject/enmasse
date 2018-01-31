@@ -15,10 +15,7 @@
  */
 package io.enmasse.address.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class Schema {
     private final List<AddressSpaceType> addressSpaceTypes;
@@ -30,7 +27,7 @@ public class Schema {
     }
 
     public List<AddressSpaceType> getAddressSpaceTypes() {
-        return addressSpaceTypes;
+        return Collections.unmodifiableList(addressSpaceTypes);
     }
 
     public Optional<AddressSpaceType> findAddressSpaceType(String name) {
@@ -49,6 +46,10 @@ public class Schema {
             }
         }
         return Optional.empty();
+    }
+
+    public List<ResourceDefinition> getResourceDefinitions() {
+        return Collections.unmodifiableList(resourceDefinitions);
     }
 
     public static class Builder {
