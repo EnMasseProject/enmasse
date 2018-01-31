@@ -473,14 +473,10 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewAddressesWildcards() throws Exception {
-        Destination queue = Destination.queue("queue_1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queueABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic_2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topicABCD", getDefaultPlan(AddressType.TOPIC));
+        List<Destination> addresses = getAddressesWildcard();
+        setAddresses(addresses.toArray(new Destination[0]));
 
-        setAddresses(queue, queue2, topic, topic2);
-
-        List<KeycloakCredentials> users = createUsersWildcard();
+        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace,"view");
 
         for (KeycloakCredentials user : users) {
             consoleWebPage = new ConsoleWebPage(selenium,
@@ -584,23 +580,5 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private void prepareAddress(Destination... dest) throws Exception {
         setAddresses(Arrays.stream(dest).filter(Objects::nonNull).toArray(Destination[]::new));
-    }
-
-    private List<KeycloakCredentials> createUsersWildcard() throws Exception {
-        List<KeycloakCredentials> users = new ArrayList<>();
-        users.add(new KeycloakCredentials("user_view_*", "password"));
-        users.add(new KeycloakCredentials("user_view_queue*", "password"));
-        users.add(new KeycloakCredentials("user_view_topic*", "password"));
-        users.add(new KeycloakCredentials("user_view_queue_*", "password"));
-        users.add(new KeycloakCredentials("user_view_topic_*", "password"));
-        users.add(new KeycloakCredentials("user_view_queueA*", "password"));
-        users.add(new KeycloakCredentials("user_view_topicA*", "password"));
-
-        for (KeycloakCredentials cred : users) {
-            getKeycloakClient().createUser(defaultAddressSpace.getName(), cred.getUsername(), cred.getPassword(),
-                    cred.getUsername().replace("user_", ""));
-        }
-
-        return users;
     }
 }

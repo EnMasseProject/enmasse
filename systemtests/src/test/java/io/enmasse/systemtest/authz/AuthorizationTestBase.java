@@ -21,8 +21,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     private final Destination topic = Destination.topic("authz-topic", getDefaultPlan(AddressType.TOPIC));
     private final Destination anycast = Destination.anycast("authz-anycast");
     private final Destination multicast = Destination.multicast("authz-multicast");
-    private List<Destination> addresses;
     private static Logger log = CustomLogger.getLogger();
+    private List<Destination> addresses;
 
     @Before
     public void initAddresses() throws Exception {
@@ -86,6 +86,48 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         getKeycloakClient().createUser(defaultAddressSpace.getName(), user.getUsername(), user.getPassword(), "pepa_group");
         assertCannotReceive(user.getUsername(), user.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), user.getUsername());
+    }
+
+    protected void doTestSendAuthzWithWIldcards() throws Exception {
+        List<Destination> addresses = getAddressesWildcard();
+        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace, "send");
+
+        setAddresses(addresses.toArray(new Destination[0]));
+
+        for (KeycloakCredentials user : users) {
+            for (Destination destination : addresses) {
+                assertSendWildcard(user.getUsername(), user.getPassword(), destination);
+            }
+        }
+    }
+
+    protected void doTestReceiveAuthzWithWIldcards() throws Exception {
+        List<Destination> addresses = getAddressesWildcard();
+        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace, "recv");
+
+        setAddresses(addresses.toArray(new Destination[0]));
+
+        for (KeycloakCredentials user : users) {
+            for (Destination destination : addresses) {
+                assertReceiveWildcard(user.getUsername(), user.getPassword(), destination);
+            }
+        }
+    }
+
+    private void assertSendWildcard(String username, String password, Destination destination) throws Exception {
+        if (destination.getAddress().matches(username.replace("user_", ""))) {
+            assertTrue(canSend(destination, username, password));
+        } else {
+            assertFalse(canSend(destination, username, password));
+        }
+    }
+
+    private void assertReceiveWildcard(String username, String password, Destination destination) throws Exception {
+        if (destination.getAddress().matches(username.replace("user_", ""))) {
+            assertTrue(canReceive(destination, username, password));
+        } else {
+            assertFalse(canReceive(destination, username, password));
+        }
     }
 
     private void assertSend(String username, String password) throws Exception {

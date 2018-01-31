@@ -589,6 +589,36 @@ public abstract class TestBase extends SystemTestRunListener {
         clients.forEach(AbstractClient::stop);
     }
 
+    /**
+     * create users and groups for wildcard authz tests
+     */
+    protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws Exception {
+        List<KeycloakCredentials> users = new ArrayList<>();
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_*", "password"));
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue*", "password"));
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic*", "password"));
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue_*", "password"));
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic_*", "password"));
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_queueA*", "password"));
+        users.add(new KeycloakCredentials("user_" + groupPrefix + "_topicA*", "password"));
+
+        for (KeycloakCredentials cred : users) {
+            getKeycloakClient().createUser(addressSpace.getName(), cred.getUsername(), cred.getPassword(),
+                    cred.getUsername().replace("user_", ""));
+        }
+
+        return users;
+    }
+
+    protected List<Destination> getAddressesWildcard() throws Exception {
+        Destination queue = Destination.queue("queue_1234");
+        Destination queue2 = Destination.queue("queueABCD");
+        Destination topic = Destination.topic("topic_2345");
+        Destination topic2 = Destination.topic("topicABCD");
+
+        return Arrays.asList(queue, queue2, topic, topic2);
+    }
+
     //================================================================================================
     //==================================== Asserts methods ===========================================
     //================================================================================================
