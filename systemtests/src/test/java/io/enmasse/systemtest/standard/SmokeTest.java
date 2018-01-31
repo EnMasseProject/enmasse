@@ -41,9 +41,9 @@ import static org.junit.Assert.assertTrue;
  */
 public class SmokeTest extends StandardTestBase {
 
-    private Destination queue = Destination.queue("smokequeue");
-    private Destination topic = Destination.topic("smoketopic");
-    private Destination mqttTopic = Destination.topic("smokemqtt");
+    private Destination queue = Destination.queue("smokequeue", "sharded-queue");
+    private Destination topic = Destination.topic("smoketopic", "sharded-topic");
+    private Destination mqttTopic = Destination.topic("smokemqtt", "sharded-topic");
     private Destination anycast = Destination.anycast("smokeanycast");
     private Destination multicast = Destination.multicast("smokemulticast");
 

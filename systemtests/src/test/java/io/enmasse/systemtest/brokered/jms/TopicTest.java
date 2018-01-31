@@ -38,7 +38,7 @@ public class TopicTest extends JMSTestBase {
 
     @Before
     public void setUp() throws Exception {
-        addressTopic = Destination.topic(topic);
+        addressTopic = Destination.topic(topic, getDefaultPlan(AddressType.TOPIC));
         setAddresses(defaultAddressSpace, addressTopic);
 
         env = setUpEnv("amqps://" + getRouteEndpoint(defaultAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,

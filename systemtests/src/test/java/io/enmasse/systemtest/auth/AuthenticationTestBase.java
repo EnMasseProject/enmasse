@@ -24,9 +24,9 @@ import java.util.List;
 
 public abstract class AuthenticationTestBase extends TestBase {
 
-    protected static final List<Destination> amqpAddressList = Arrays.asList(
-            Destination.queue("auth-queue"),
-            Destination.topic("auth-topic"),
+    protected final List<Destination> amqpAddressList = Arrays.asList(
+            Destination.queue("auth-queue", getDefaultPlan(AddressType.QUEUE)),
+            Destination.topic("auth-topic", getDefaultPlan(AddressType.TOPIC)),
             Destination.anycast("auth-anycast"),
             Destination.multicast("auth-multicast"));
     protected static final String mqttAddress = "t1";

@@ -17,10 +17,10 @@ import static org.junit.Assert.assertTrue;
 
 public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
-    private static final Destination queue = Destination.queue("authz-queue");
-    private static final Destination topic = Destination.topic("authz-topic");
-    private static final Destination anycast = Destination.anycast("authz-anycast");
-    private static final Destination multicast = Destination.multicast("authz-multicast");
+    private final Destination queue = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
+    private final Destination topic = Destination.topic("authz-topic", getDefaultPlan(AddressType.TOPIC));
+    private final Destination anycast = Destination.anycast("authz-anycast");
+    private final Destination multicast = Destination.multicast("authz-multicast");
     private List<Destination> addresses;
     private static Logger log = CustomLogger.getLogger();
 

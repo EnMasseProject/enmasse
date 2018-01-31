@@ -41,16 +41,8 @@ import static org.junit.Assert.assertTrue;
 public class TopicTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
 
-    public void testInmemoryTopics() throws Exception {
-        Destination t1 = Destination.topic("inMemoryTopic", Optional.of("inmemory"));
-        setAddresses(t1);
-
-        AmqpClient topicClient = amqpClientFactory.createTopicClient();
-        runTopicTest(topicClient, t1, 2048);
-    }
-
     public void testPersistedTopics() throws Exception {
-        Destination t1 = Destination.topic("persistedTopic", Optional.of("persisted"));
+        Destination t1 = Destination.topic("persistedTopic", "sharded-topic");
         setAddresses(t1);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
@@ -69,14 +61,14 @@ public class TopicTest extends StandardTestBase {
     //@Test
     public void testRestApi() throws Exception {
         List<String> topics = Arrays.asList("topicRest1", "topicRest2");
-        Destination t1 = Destination.topic(topics.get(0), Optional.of("pooled-inmemory"));
-        Destination t2 = Destination.topic(topics.get(1), Optional.of("pooled-inmemory"));
+        Destination t1 = Destination.topic(topics.get(0), "sharded-topic");
+        Destination t2 = Destination.topic(topics.get(1), "sharded-topic");
 
         runRestApiTest(topics, t1, t2);
     }
 
     public void testMessageSelectorsAppProperty() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopicAppProp");
+        Destination selTopic = Destination.topic("selectorTopicAppProp", "sharded-topic");
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
 
@@ -173,7 +165,7 @@ public class TopicTest extends StandardTestBase {
 
 
     public void testMessageSelectorsProperty() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopicProp");
+        Destination selTopic = Destination.topic("selectorTopicProp", "sharded-topic");
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
@@ -216,8 +208,8 @@ public class TopicTest extends StandardTestBase {
     }
 
     public void testTopicWildcards() throws Exception {
-        Destination t1 = Destination.topic("topic/No1");
-        Destination t2 = Destination.topic("topic/No2");
+        Destination t1 = Destination.topic("topic/No1", "sharded-topic");
+        Destination t2 = Destination.topic("topic/No2", "sharded-topic");
 
         setAddresses(t1, t2);
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
@@ -237,7 +229,7 @@ public class TopicTest extends StandardTestBase {
     }
 
     public void testDurableLinkRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("lrtopic");
+        Destination dest = Destination.topic("lrtopic", "sharded-topic");
         String linkName = "systest-durable";
         setAddresses(dest);
         scale(dest, 4);
@@ -280,7 +272,7 @@ public class TopicTest extends StandardTestBase {
     }
 
     public void testDurableMessageRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("mrtopic");
+        Destination dest = Destination.topic("mrtopic", "sharded-topic");
         String address = "myaddress";
         log.info("Deploying");
         setAddresses(dest);

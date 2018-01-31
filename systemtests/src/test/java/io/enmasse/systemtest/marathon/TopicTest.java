@@ -1,9 +1,6 @@
 package io.enmasse.systemtest.marathon;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -33,7 +30,7 @@ public class TopicTest extends MarathonTestBase {
 
         //create queues
         for (int i = 0; i < recvCount; i++) {
-            topicList.add(Destination.topic(String.format("test-topic-pubsub-%d", i)));
+            topicList.add(Destination.topic(String.format("test-topic-pubsub-%d", i), getDefaultPlan(AddressType.TOPIC)));
         }
         setAddresses(addressSpace, topicList.toArray(new Destination[0]));
 

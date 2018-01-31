@@ -23,4 +23,14 @@ public abstract class BrokeredTestBase extends TestBaseWithDefault {
         return AddressSpaceType.BROKERED;
     }
 
+    @Override
+    protected String getDefaultPlan(AddressType addressType) {
+        switch (addressType) {
+            case QUEUE:
+                return "brokered-queue";
+            case TOPIC:
+                return "brokered-topic";
+        }
+        return null;
+    }
 }

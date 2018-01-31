@@ -1,9 +1,6 @@
 package io.enmasse.systemtest.marathon;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
@@ -76,8 +73,8 @@ public class AddressSpaceTest extends MarathonTestBase {
         int destinationCount = 20;
 
         for (int i = 0; i < destinationCount; i++) {
-            queueList.add(Destination.queue(String.format(queuePattern, i)));
-            topicList.add(Destination.topic(String.format(topicPattern, i)));
+            queueList.add(Destination.queue(String.format(queuePattern, i), getDefaultPlan(AddressType.QUEUE)));
+            topicList.add(Destination.topic(String.format(topicPattern, i), getDefaultPlan(AddressType.TOPIC)));
         }
 
         AmqpClient queueClient;

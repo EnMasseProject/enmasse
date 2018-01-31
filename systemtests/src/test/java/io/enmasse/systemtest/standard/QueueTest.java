@@ -35,9 +35,9 @@ public class QueueTest extends StandardTestBase {
 
     @Test
     public void testColocatedQueues() throws Exception {
-        Destination q1 = Destination.queue("queue1", Optional.of("pooled-queue"));
-        Destination q2 = Destination.queue("queue2", Optional.of("pooled-queue"));
-        Destination q3 = Destination.queue("queue3", Optional.of("pooled-queue"));
+        Destination q1 = Destination.queue("queue1", "pooled-queue");
+        Destination q2 = Destination.queue("queue2", "pooled-queue");
+        Destination q3 = Destination.queue("queue3", "pooled-queue");
         setAddresses(q1, q2, q3);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -46,34 +46,9 @@ public class QueueTest extends StandardTestBase {
         runQueueTest(client, q3);
     }
 
-
-    public void testInmemoryQueues() throws Exception {
-        Destination q1 = Destination.queue("inMemoryQueue1", Optional.of("inmemory"));
-        Destination q2 = Destination.queue("inMemoryQueue2", Optional.of("inmemory"));
-
-        setAddresses(q1, q2);
-
-        AmqpClient client = amqpClientFactory.createQueueClient();
-        runQueueTest(client, q1);
-        runQueueTest(client, q2);
-    }
-
-
-    public void testPersistedQueues() throws Exception {
-        Destination q1 = Destination.queue("persistedQueue1", Optional.of("persisted"));
-        Destination q2 = Destination.queue("persistedQueue2", Optional.of("persisted"));
-
-        setAddresses(q1, q2);
-
-        AmqpClient client = amqpClientFactory.createQueueClient();
-        runQueueTest(client, q1);
-        runQueueTest(client, q2);
-    }
-
-
-    public void testPooledPersistedQueues() throws Exception {
-        Destination q1 = Destination.queue("pooledPersistedQueue1", Optional.of("pooled-persisted"));
-        Destination q2 = Destination.queue("pooledPersistedQueue2", Optional.of("pooled-persisted"));
+    public void testShardedQueues() throws Exception {
+        Destination q1 = Destination.queue("persistedQueue1", "sharded-queue");
+        Destination q2 = Destination.queue("persistedQueue2", "sharded-queue");
 
         setAddresses(q1, q2);
 
@@ -85,8 +60,8 @@ public class QueueTest extends StandardTestBase {
     @Test
     public void testRestApi() throws Exception {
         List<String> queues = Arrays.asList("queue1", "queue2");
-        Destination q1 = Destination.queue(queues.get(0), Optional.of("pooled-queue"));
-        Destination q2 = Destination.queue(queues.get(1), Optional.of("pooled-queue"));
+        Destination q1 = Destination.queue(queues.get(0), "pooled-queue");
+        Destination q2 = Destination.queue(queues.get(1), "pooled-queue");
 
         runRestApiTest(queues, q1, q2);
     }
@@ -94,10 +69,10 @@ public class QueueTest extends StandardTestBase {
     @Test
     public void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Destination destExtra = Destination.queue("ext-queue", Optional.of("pooled-queue"));
+        Destination destExtra = Destination.queue("ext-queue", "pooled-queue");
 
         List<Destination> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(Destination.queue(queue, Optional.of("pooled-queue"))));
+        queues.forEach(queue -> addresses.add(Destination.queue(queue, "pooled-queue")));
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         for (Destination address : addresses) {
@@ -118,7 +93,7 @@ public class QueueTest extends StandardTestBase {
 
     @Test
     public void testMessagePriorities() throws Exception {
-        Destination dest = Destination.queue("messagePrioritiesQueue");
+        Destination dest = Destination.queue("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -152,7 +127,7 @@ public class QueueTest extends StandardTestBase {
     }
 
     public void testScaledown() throws Exception {
-        Destination dest = Destination.queue("scalequeue");
+        Destination dest = Destination.queue("scalequeue", "sharded-queue");
         setAddresses(dest);
         scale(dest, 4);
         AmqpClient client = amqpClientFactory.createQueueClient();

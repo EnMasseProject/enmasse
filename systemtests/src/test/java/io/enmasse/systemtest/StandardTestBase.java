@@ -15,9 +15,26 @@
  */
 package io.enmasse.systemtest;
 
+import java.util.Map;
+
 public abstract class StandardTestBase extends TestBaseWithDefault {
     @Override
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.STANDARD;
+    }
+
+    @Override
+    protected String getDefaultPlan(AddressType addressType) {
+        switch (addressType) {
+            case QUEUE:
+                return "sharded-queue";
+            case TOPIC:
+                return "sharded-topic";
+            case ANYCAST:
+                return "standard-anycast";
+            case MULTICAST:
+                return "standard-multicast";
+        }
+        return null;
     }
 }

@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.standard.web;
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -9,12 +10,12 @@ public class ChromeWebConsoleTest extends StandardWebConsoleTest {
 
     //@Test
     public void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue"));
+        doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     //@Test
     public void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic"));
+        doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     //@Test

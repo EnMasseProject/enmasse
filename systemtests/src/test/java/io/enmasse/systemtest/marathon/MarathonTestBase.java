@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.marathon;
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -14,6 +15,17 @@ import java.util.concurrent.TimeUnit;
 public class MarathonTestBase extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     ArrayList<AmqpClient> clients = new ArrayList<>();
+
+    @Override
+    protected String getDefaultPlan(AddressType addressType) {
+        switch (addressType) {
+            case QUEUE:
+                return "brokered-queue";
+            case TOPIC:
+                return "brokered-topic";
+        }
+        return null;
+    }
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();

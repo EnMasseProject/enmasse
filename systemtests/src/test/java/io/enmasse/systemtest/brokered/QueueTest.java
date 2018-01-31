@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.brokered;
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.BrokeredTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -22,7 +23,7 @@ public class QueueTest extends BrokeredTestBase {
      */
     @Test
     public void messageGroupTest() throws Exception {
-        Destination dest = Destination.queue("messageGroupQueue");
+        Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient(defaultAddressSpace);
