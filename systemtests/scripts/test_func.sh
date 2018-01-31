@@ -48,8 +48,8 @@ function run_test() {
     if [ -n "${TESTCASE}" ]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
-    mvn test -pl systemtests -Psystemtests-shared -Djava.net.preferIPv4Stack=true ${EXTRA_TEST_ARGS}
-    mvn test -pl systemtests -Psystemtests-isolated -Djava.net.preferIPv4Stack=true ${EXTRA_TEST_ARGS}
+    mvn test -pl systemtests -Psystemtests-shared -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false ${EXTRA_TEST_ARGS}
+    mvn test -pl systemtests -Psystemtests-isolated -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false ${EXTRA_TEST_ARGS}
 }
 
 function teardown_test() {
