@@ -25,7 +25,8 @@ ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
 STATS_PID=$!
 echo "process for checking system resources is running with PID: ${STATS_PID}"
 
-run_test ${TESTCASE} || failure=$(($failure + 1))
+run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))
+run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
 
 echo "process for checking system resources with PID: ${STATS_PID} will be killed"
 kill ${STATS_PID}
