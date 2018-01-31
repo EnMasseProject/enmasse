@@ -376,7 +376,7 @@ public abstract class TestBase extends SystemTestRunListener {
                     .setUsername(managementCredentials.getUsername())
                     .setPassword(managementCredentials.getPassword()));
             String replyQueueName = "reply-queue";
-            Destination replyQueue = Destination.queue(replyQueueName, null);
+            Destination replyQueue = Destination.queue(replyQueueName, getDefaultPlan(AddressType.QUEUE));
             appendAddresses(addressSpace, replyQueue);
 
             boolean done = false;
@@ -454,7 +454,7 @@ public abstract class TestBase extends SystemTestRunListener {
             if (i % 2 == 0) {
                 addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             } else {
-                addresses.add(Destination.queue(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
+                addresses.add(Destination.queue(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.QUEUE)));
             }
         });
         return addresses;
