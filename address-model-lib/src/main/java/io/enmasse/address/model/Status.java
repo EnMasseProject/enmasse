@@ -65,7 +65,7 @@ public class Status {
     public String toString() {
         return new StringBuilder()
                 .append("{isReady=").append(isReady)
-                .append(",").append("phase=").append("phase")
+                .append(",").append("phase=").append(phase)
                 .append("}")
                 .toString();
     }
@@ -90,6 +90,7 @@ public class Status {
 
     public enum Phase {
         Pending,
+        Configuring,
         Active,
         Failed,
         Terminating
