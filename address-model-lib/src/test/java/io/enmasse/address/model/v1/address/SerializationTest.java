@@ -40,6 +40,7 @@ public class SerializationTest {
                 .setType("queue")
                 .setPlan("inmemory")
                 .setUuid(uuid)
+                .putAnnotation("my", "annotation")
                 .build();
 
         byte [] serialized = CodecV1.getMapper().writeValueAsBytes(address);
@@ -53,6 +54,7 @@ public class SerializationTest {
         assertThat(deserialized.getUuid(), is(address.getUuid()));
         assertThat(deserialized.getPlan(), is(address.getPlan()));
         assertThat(deserialized.getAddress(), is(address.getAddress()));
+        assertThat(deserialized.getAnnotations(), is(address.getAnnotations()));
     }
 
     @Test
