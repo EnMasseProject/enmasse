@@ -43,13 +43,13 @@ function wait_until_up(){
 
 function run_test() {
     TESTCASE=$1
+    PROFILE=${2:-systemtests}
     wait_until_up 4 ${OPENSHIFT_PROJECT} || return 1
     # Run a single test case
     if [ -n "${TESTCASE}" ]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
-    mvn test -pl systemtests -Psystemtests-shared -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false ${EXTRA_TEST_ARGS}
-    mvn test -pl systemtests -Psystemtests-isolated -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false ${EXTRA_TEST_ARGS}
+    mvn test -pl systemtests -P${PROFILE} -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false ${EXTRA_TEST_ARGS}
 }
 
 function teardown_test() {
