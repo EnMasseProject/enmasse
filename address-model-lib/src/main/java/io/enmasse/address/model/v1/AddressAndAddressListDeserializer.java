@@ -41,9 +41,9 @@ public class AddressAndAddressListDeserializer extends JsonDeserializer<Either> 
         ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
         String kind = root.get(Fields.KIND).asText();
         if ("AddressList".equals(kind)) {
-            return Either.<Address, AddressList>createRight(addressListV1Deserializer.deserialize(jsonParser, deserializationContext));
+            return Either.<Address, AddressList>createRight(addressListV1Deserializer.deserialize(root));
         } else if ("Address".equals(kind)) {
-            return Either.<Address, AddressList>createLeft(addressV1Deserializer.deserialize(jsonParser, deserializationContext));
+            return Either.<Address, AddressList>createLeft(addressV1Deserializer.deserialize(root));
         } else {
             throw new DeserializeException("Unknown kind " + kind + ", expected Address or AddressList");
         }
