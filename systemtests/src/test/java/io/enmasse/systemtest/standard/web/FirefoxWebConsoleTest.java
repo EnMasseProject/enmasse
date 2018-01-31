@@ -114,12 +114,12 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestViewAddresses();
     }
 
-    @Test
+    //@Test disabled due to issue #818
     public void testViewConnections() throws Exception {
         doTestViewConnections();
     }
 
-    @Test
+    //@Test disabled due to issue #819
     public void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();
     }
