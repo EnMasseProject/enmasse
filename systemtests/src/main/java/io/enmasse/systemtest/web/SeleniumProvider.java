@@ -157,13 +157,23 @@ public class SeleniumProvider {
         int attempts = 0;
         while (attempts++ < timeInSeconds) {
             if (present) {
-                if (item.get() != null)
-                    break;
-                log.info("Element not present, go to next iteration: " + attempts);
+                try {
+                    boolean result = item.get() != null;
+                    if (result)
+                        break;
+                }catch (Exception ignored){
+                }finally {
+                    log.info("Element not present, go to next iteration: " + attempts);
+                }
             } else {
-                if (item.get() == null)
-                    break;
-                log.info("Element still present, go to next iteration: " + attempts);
+                try{
+                    boolean result = item.get() == null;
+                    if (result)
+                        break;
+                }catch (Exception ignored){
+                }finally {
+                    log.info("Element still present, go to next iteration: " + attempts);
+                }
             }
             Thread.sleep(1000);
         }

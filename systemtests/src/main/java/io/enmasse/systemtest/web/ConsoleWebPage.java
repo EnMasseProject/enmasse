@@ -33,8 +33,15 @@ public class ConsoleWebPage {
     }
 
 
-    public void openConsolePageWebConsole() throws Exception {
+    public void openWebConsolePage() throws Exception {
         selenium.driver.get(consoleRoute);
+        selenium.angularDriver.waitForAngularRequestsToFinish();
+        log.info("Console page opened");
+        selenium.takeScreenShot();
+    }
+
+    public void openWebConsolePage(String route) throws Exception {
+        selenium.driver.get(route);
         selenium.angularDriver.waitForAngularRequestsToFinish();
         log.info("Console page opened");
         selenium.takeScreenShot();
@@ -76,12 +83,20 @@ public class ConsoleWebPage {
         log.info("Connections page opened");
     }
 
+    public WebElement getCreateButton() throws Exception {
+        return selenium.driver.findElement(ByAngular.buttonText("Create"));
+    }
+
+    public WebElement getRemoveButton() throws Exception {
+        return selenium.driver.findElement(ByAngular.buttonText("Delete"));
+    }
+
     public void clickOnCreateButton() throws Exception {
-        selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Create")));
+        selenium.clickOnItem(getCreateButton());
     }
 
     public void clickOnRemoveButton() throws Exception {
-        selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Delete")));
+        selenium.clickOnItem(getRemoveButton());
     }
 
 
@@ -224,6 +239,10 @@ public class ConsoleWebPage {
      */
     private WebElement getAscDescButton() throws Exception {
         return getSortGroup().findElement(By.className("btn-link"));
+    }
+
+    public WebElement getCreateAddressModalWindow() throws Exception {
+        return selenium.driver.findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
     }
 
     /**
@@ -472,9 +491,14 @@ public class ConsoleWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Destination destination) throws Exception {
+        createAddressWebConsole(destination, true);
+    }
+
+    public void createAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
         log.info("Create address using web console");
-        //get console page
-        openConsolePageWebConsole();
+
+        if (openConsolePage)
+            openWebConsolePage();
 
         //get addresses item from left panel view
         openAddressesPageWebConsole();
@@ -514,9 +538,14 @@ public class ConsoleWebPage {
      * delete specific address
      */
     public void deleteAddressWebConsole(Destination destination) throws Exception {
+        deleteAddressWebConsole(destination, true);
+    }
+
+    public void deleteAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
         log.info("Remove address using web console");
-        //open console webpage
-        openConsolePageWebConsole();
+
+        if (openConsolePage)
+            openWebConsolePage();
 
         //open addresses
         openAddressesPageWebConsole();

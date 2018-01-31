@@ -89,6 +89,31 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestClientsMetrics();
     }
 
+    //@Test
+    public void testCannotCreateAddresses() throws Exception {
+        doTestCannotCreateAddresses();
+    }
+
+    //@Test
+    public void testCannotDeleteAddresses() throws Exception {
+        doTestCannotDeleteAddresses();
+    }
+
+    //@Test
+    public void testViewAddresses() throws Exception {
+        doTestViewAddresses();
+    }
+
+    //@Test
+    public void testViewConnections() throws Exception {
+        doTestViewConnections();
+    }
+
+    //@Test
+    public void testViewAddressesWildcards() throws Exception {
+        doTestViewAddressesWildcards();
+    }
+
     @Override
     public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();

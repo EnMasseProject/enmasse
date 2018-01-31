@@ -10,20 +10,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.openqa.selenium.WebDriver;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.openqa.selenium.InvalidElementStateException;
+import org.openqa.selenium.WebElement;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public abstract class WebConsoleTest extends TestBaseWithDefault implements ISeleniumProvider {
 
@@ -40,7 +37,6 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     @Before
     public void setUpWebConsoleTests() throws Exception {
         selenium.setupDriver(environment, kubernetes, buildDriver());
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
     }
 
     @After
@@ -49,6 +45,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCreateDeleteAddress(Destination destination) throws Exception {
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressWebConsole(destination);
         consoleWebPage.deleteAddressWebConsole(destination);
     }
@@ -57,6 +54,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
 
@@ -80,6 +78,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestFilterAddressesByName() throws Exception {
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         String subText = "web";
@@ -113,6 +113,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortAddressesByName() throws Exception {
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         consoleWebPage.sortItems(SortType.NAME, true);
@@ -125,8 +127,9 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortAddressesByClients() throws Exception {
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
-        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openAddressesPageWebConsole();
 
         List<AbstractClient> receivers = attachReceivers(addresses);
@@ -157,8 +160,9 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortConnectionsBySenders() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
-        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
         List<AbstractClient> senders = attachClients(addresses);
@@ -175,6 +179,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortConnectionsByReceivers() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -192,6 +198,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     public void doTestFilterConnectionsByEncrypted() throws Exception {
         Destination queue = Destination.queue("queue-via-web-connections-encrypted");
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -223,6 +230,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     public void doTestFilterConnectionsByUser() throws Exception {
         Destination queue = Destination.queue("queue-via-web-connections-users");
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -265,6 +273,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestFilterConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -284,6 +293,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -302,6 +312,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int connectionCount = 5;
 
         Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -323,6 +334,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int connectionCount = 5;
 
         Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -341,6 +353,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestMessagesMetrics() throws Exception {
         int msgCount = 19;
         Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -365,6 +378,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int senderCount = 5;
         int receiverCount = 10;
         Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -377,6 +391,105 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
         } finally {
             client.stop();
+        }
+    }
+
+    public void doTestCannotCreateAddresses() throws Exception {
+        Destination destination = Destination.queue("authz-queue");
+        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
+
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, defaultAddressSpace);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        try {
+            assertElementDisabled(consoleWebPage.getCreateButton());
+            consoleWebPage.createAddressWebConsole(destination, false);
+            fail("Create button is clickable");
+        } catch (Exception ex) {
+            assertTrue(ex instanceof InvalidElementStateException);
+        }
+    }
+
+    public void doTestCannotDeleteAddresses() throws Exception {
+        Destination destination = Destination.queue("test-cannot-delete-address");
+        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
+
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
+        setAddresses(destination);
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, defaultAddressSpace);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        try {
+            assertElementDisabled(consoleWebPage.getRemoveButton());
+            consoleWebPage.deleteAddressWebConsole(destination, false);
+            fail("Remove button is clickable");
+        } catch (Exception ex) {
+            assertTrue(ex instanceof InvalidElementStateException);
+        }
+    }
+
+    public void doTestViewAddresses() throws Exception {
+        Destination allowedDestination = Destination.queue("test-view-queue");
+        Destination notAllowedDestination = Destination.queue("test-not-view-queue");
+
+        prepareViewItemTest("view_user_addresses", "viewPa55", allowedDestination, notAllowedDestination);
+
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        assertThat(consoleWebPage.getAddressItems().size(), is(1));
+        assertViewOnlyUsersAddresses("view_test-view-queue", consoleWebPage.getAddressItems());
+    }
+
+    public void doTestViewConnections() throws Exception {
+        Destination destination = Destination.queue("test-queue-view-connections");
+
+        prepareViewItemTest("view_user_connections", "viewPa55", destination, null);
+
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        AbstractClient noUsersConnections = attachConnector(destination, 5, 1, 0);
+        AbstractClient usersConnections = attachConnector(defaultAddressSpace, destination,
+                5, 1, 0, "view_user_connections", "viewPa55");
+        selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
+
+        assertEquals(5, consoleWebPage.getConnectionItems().size());
+        assertViewOnlyUsersConnections("view_user_connections", consoleWebPage.getConnectionItems());
+
+        noUsersConnections.stop();
+        usersConnections.stop();
+    }
+
+    public void doTestViewAddressesWildcards() throws Exception {
+        Destination queue = Destination.queue("queue_1234");
+        Destination queue2 = Destination.queue("queueABCD");
+        Destination topic = Destination.topic("topic_2345");
+        Destination topic2 = Destination.topic("topicABCD");
+
+        setAddresses(queue, queue2, topic, topic2);
+
+        List<KeycloakCredentials> users = createUsersWildcard();
+
+        for (KeycloakCredentials user : users) {
+            consoleWebPage = new ConsoleWebPage(selenium,
+                    getConsoleRoute(defaultAddressSpace, user.getUsername(), user.getPassword()),
+                    addressApiClient, defaultAddressSpace);
+            consoleWebPage.openWebConsolePage();
+            consoleWebPage.openAddressesPageWebConsole();
+
+            assertViewOnlyUsersAddresses(user.getUsername().replace("user_", ""), consoleWebPage.getAddressItems());
         }
     }
 
@@ -425,5 +538,69 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private List<AddressWebItem> getAddressProperty(List<AddressWebItem> allItems, Predicate<AddressWebItem> f) {
         return allItems.stream().filter(f).collect(Collectors.toList());
+    }
+
+    private void assertElementDisabled(WebElement element) {
+        assertFalse(element.isEnabled());
+    }
+
+    private void assertElementEnabled(WebElement element) {
+        assertTrue(element.isEnabled());
+    }
+
+    private void assertViewOnlyUsersAddresses(String group, List<AddressWebItem> addresses) {
+        if (addresses == null || addresses.size() == 0)
+            fail("No address items in console for group " + group);
+        for (AddressWebItem item : addresses) {
+            if (group.contains("*")) {
+                assertTrue(item.getName().matches(group.replace("view_", "")));
+            } else {
+                assertTrue(item.getName().equals(group.replace("view_", "")));
+            }
+        }
+    }
+
+    private void assertViewOnlyUsersConnections(String username, List<ConnectionWebItem> connections) {
+        if (connections == null || connections.size() == 0)
+            fail("No connection items in console under user " + username);
+        for (ConnectionWebItem conn : connections) {
+            assertTrue(conn.getUser().equals(username));
+        }
+    }
+
+    private void prepareViewItemTest(String username, String password, Destination allowedAddress,
+                                     Destination noAllowedAddress) throws Exception {
+        prepareAddress(allowedAddress, noAllowedAddress);
+
+        KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                monitorUser.getUsername(), monitorUser.getPassword(),
+                "view_" + allowedAddress.getAddress(), "send_*");
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, defaultAddressSpace);
+    }
+
+    private void prepareAddress(Destination... dest) throws Exception {
+        setAddresses(Arrays.stream(dest).filter(Objects::nonNull).toArray(Destination[]::new));
+    }
+
+    private List<KeycloakCredentials> createUsersWildcard() throws Exception {
+        List<KeycloakCredentials> users = new ArrayList<>();
+        users.add(new KeycloakCredentials("user_view_*", "password"));
+        users.add(new KeycloakCredentials("user_view_queue*", "password"));
+        users.add(new KeycloakCredentials("user_view_topic*", "password"));
+        users.add(new KeycloakCredentials("user_view_queue_*", "password"));
+        users.add(new KeycloakCredentials("user_view_topic_*", "password"));
+        users.add(new KeycloakCredentials("user_view_queueA*", "password"));
+        users.add(new KeycloakCredentials("user_view_topicA*", "password"));
+
+        for (KeycloakCredentials cred : users) {
+            getKeycloakClient().createUser(defaultAddressSpace.getName(), cred.getUsername(), cred.getPassword(),
+                    cred.getUsername().replace("user_", ""));
+        }
+
+        return users;
     }
 }

@@ -335,11 +335,15 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
-    protected String getConsoleRoute(AddressSpace addressSpace) {
+    protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
         String consoleRoute = String.format("https://%s:%s@%s", username, password,
                 kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "console"));
         log.info(consoleRoute);
         return consoleRoute;
+    }
+
+    protected String getConsoleRoute(AddressSpace addressSpace) {
+        return getConsoleRoute(addressSpace, username, password);
     }
 
 
@@ -547,7 +551,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
-                                             int senderCount, int receiverCount) throws Exception {
+                                             int senderCount, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");

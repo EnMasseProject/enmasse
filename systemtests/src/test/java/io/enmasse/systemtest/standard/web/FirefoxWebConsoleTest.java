@@ -99,6 +99,31 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestClientsMetrics();
     }
 
+    @Test
+    public void testCannotCreateAddresses() throws Exception {
+        doTestCannotCreateAddresses();
+    }
+
+    @Test
+    public void testCannotDeleteAddresses() throws Exception {
+        doTestCannotDeleteAddresses();
+    }
+
+    @Test
+    public void testViewAddresses() throws Exception {
+        doTestViewAddresses();
+    }
+
+    //@Test disabled due to issue #818
+    public void testViewConnections() throws Exception {
+        doTestViewConnections();
+    }
+
+    //@Test disabled due to issue #819
+    public void testViewAddressesWildcards() throws Exception {
+        doTestViewAddressesWildcards();
+    }
+
     @Override
     public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();

@@ -169,7 +169,7 @@ public abstract class TestBaseWithDefault extends TestBase {
      */
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
-        return attachConnector(defaultAddressSpace, destination, connectionCount, senderCount, receiverCount);
+        return attachConnector(defaultAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
     }
 
     /**
