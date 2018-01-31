@@ -17,11 +17,13 @@ package io.enmasse.systemtest.auth;
 
 import io.enmasse.systemtest.*;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Category(IsolatedAddressSpace.class)
 public abstract class AuthenticationTestBase extends TestBase {
 
     protected final List<Destination> amqpAddressList = Arrays.asList(
