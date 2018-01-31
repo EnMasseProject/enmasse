@@ -22,7 +22,18 @@ import org.slf4j.Logger;
 
 public class AuthenticationTest extends AuthenticationTestBase {
     private static Logger log = CustomLogger.getLogger();
-    
+
+    @Override
+    protected String getDefaultPlan(AddressType addressType) {
+        switch (addressType) {
+            case QUEUE:
+                return "brokered-queue";
+            case TOPIC:
+                return "brokered-topic";
+        }
+        return null;
+    }
+
     /**
      * related github issue: #523
      */

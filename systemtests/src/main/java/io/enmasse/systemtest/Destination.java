@@ -33,20 +33,12 @@ public class Destination {
         this.plan = plan;
     }
 
-    public static Destination queue(String address) {
-        return queue(address, Optional.empty());
+    public static Destination queue(String address, String plan) {
+        return new Destination(address, QUEUE, "sharded-queue");
     }
 
-    public static Destination queue(String address, Optional<String> plan) {
-        return new Destination(address, QUEUE, plan.orElse("sharded-queue"));
-    }
-
-    public static Destination topic(String address) {
-        return topic(address, Optional.empty());
-    }
-
-    public static Destination topic(String address, Optional<String> plan) {
-        return new Destination(address, TOPIC, plan.orElse("sharded-topic"));
+    public static Destination topic(String address, String plan) {
+        return new Destination(address, TOPIC, "sharded-topic");
     }
 
     public static Destination anycast(String address) {

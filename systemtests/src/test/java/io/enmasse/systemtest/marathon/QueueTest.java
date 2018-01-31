@@ -30,7 +30,7 @@ public class QueueTest extends MarathonTestBase {
 
         //create queues
         for (int i = 0; i < queueCount; i++) {
-            queueList.add(Destination.queue(String.format("test-queue-sendreceive-%d", i)));
+            queueList.add(Destination.queue(String.format("test-queue-sendreceive-%d", i), getDefaultPlan(AddressType.QUEUE)));
         }
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
 

@@ -85,6 +85,9 @@ public abstract class TestBase extends SystemTestRunListener {
         return null;
     }
 
+    protected abstract String getDefaultPlan(AddressType addressType);
+
+
     @Before
     public void setup() {
         addressSpaceList = new ArrayList<>();
@@ -373,7 +376,7 @@ public abstract class TestBase extends SystemTestRunListener {
                     .setUsername(managementCredentials.getUsername())
                     .setPassword(managementCredentials.getPassword()));
             String replyQueueName = "reply-queue";
-            Destination replyQueue = Destination.queue(replyQueueName);
+            Destination replyQueue = Destination.queue(replyQueueName, null);
             appendAddresses(addressSpace, replyQueue);
 
             boolean done = false;
@@ -435,13 +438,13 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected ArrayList<Destination> generateTopicsList(String prefix, IntStream range) {
         ArrayList<Destination> addresses = new ArrayList<>();
-        range.forEach(i -> addresses.add(Destination.topic(prefix + i)));
+        range.forEach(i -> addresses.add(Destination.topic(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
     protected ArrayList<Destination> generateQueueList(String prefix, IntStream range) {
         ArrayList<Destination> addresses = new ArrayList<>();
-        range.forEach(i -> addresses.add(Destination.queue(prefix + i)));
+        range.forEach(i -> addresses.add(Destination.queue(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
@@ -449,9 +452,9 @@ public abstract class TestBase extends SystemTestRunListener {
         ArrayList<Destination> addresses = new ArrayList<>();
         range.forEach(i -> {
             if (i % 2 == 0) {
-                addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i)));
+                addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             } else {
-                addresses.add(Destination.queue(String.format("queue-%s-%d", infix, i)));
+                addresses.add(Destination.queue(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             }
         });
         return addresses;

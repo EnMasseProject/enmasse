@@ -20,8 +20,8 @@ public class AuthenticationTest extends MarathonTestBase {
         createAddressSpace(addressSpace, "standard");
         log.info("Address space '{}'created", addressSpace);
 
-        Destination queue = Destination.queue("test-create-delete-users-queue");
-        Destination topic = Destination.topic("test-create-delete-users-topic");
+        Destination queue = Destination.queue("test-create-delete-users-queue", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("test-create-delete-users-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
@@ -56,8 +56,8 @@ public class AuthenticationTest extends MarathonTestBase {
         createAddressSpace(addressSpace, "standard");
         log.info("Address space '{}'created", addressSpace);
 
-        Destination queue = Destination.queue("test-auth-send-receive-queue");
-        Destination topic = Destination.topic("test-auth-send-receive-topic");
+        Destination queue = Destination.queue("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("test-auth-send-receive-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
@@ -83,8 +83,8 @@ public class AuthenticationTest extends MarathonTestBase {
         createAddressSpace(addressSpace, "standard");
         log.info("Address space '{}'created", addressSpace);
 
-        Destination queue = Destination.queue("test-create-delete-users-restart-queue");
-        Destination topic = Destination.topic("test-create-delete-users-restart-topic");
+        Destination queue = Destination.queue("test-create-delete-users-restart-queue", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("test-create-delete-users-restart-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 

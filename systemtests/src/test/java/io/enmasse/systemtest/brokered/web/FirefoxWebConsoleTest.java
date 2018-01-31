@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.brokered.web;
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
@@ -11,12 +12,12 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
     @Test
     public void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue"));
+        doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
     public void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic"));
+        doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test

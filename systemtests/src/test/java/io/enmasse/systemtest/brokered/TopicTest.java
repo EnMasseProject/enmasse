@@ -29,8 +29,8 @@ public class TopicTest extends BrokeredTestBase {
 
         //create queues
         for(int i = 0; i < recvCount; i++){
-            topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 1)));
-            topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 2)));
+            topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 1), getDefaultPlan(AddressType.TOPIC)));
+            topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 2), getDefaultPlan(AddressType.TOPIC)));
         }
         setAddresses(defaultAddressSpace, topicList.toArray(new Destination[0]));
 

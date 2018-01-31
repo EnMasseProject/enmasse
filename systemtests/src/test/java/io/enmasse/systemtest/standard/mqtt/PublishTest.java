@@ -16,6 +16,7 @@
 
 package io.enmasse.systemtest.standard.mqtt;
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.StandardTestBase;
 import io.enmasse.systemtest.TestBase;
@@ -63,7 +64,7 @@ public class PublishTest extends StandardTestBase {
 
     private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic("mytopic");
+        Destination dest = Destination.topic("mytopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
         Thread.sleep(60_000);
 

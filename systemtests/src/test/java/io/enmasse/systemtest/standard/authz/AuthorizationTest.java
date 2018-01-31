@@ -1,6 +1,7 @@
 package io.enmasse.systemtest.standard.authz;
 
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.authz.AuthorizationTestBase;
 import org.junit.Test;
 
@@ -8,6 +9,21 @@ public class AuthorizationTest extends AuthorizationTestBase {
     @Override
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.STANDARD;
+    }
+
+    @Override
+    protected String getDefaultPlan(AddressType addressType) {
+        switch (addressType) {
+            case QUEUE:
+                return "sharded-queue";
+            case TOPIC:
+                return "sharded-topic";
+            case ANYCAST:
+                return "standard-anycast";
+            case MULTICAST:
+                return "standard-multicast";
+        }
+        return null;
     }
 
     @Test

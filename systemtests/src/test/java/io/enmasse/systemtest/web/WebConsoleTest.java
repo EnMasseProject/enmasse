@@ -197,8 +197,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
 
     public void doTestFilterConnectionsByEncrypted() throws Exception {
-        Destination queue = Destination.queue("queue-via-web-connections-encrypted");
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        Destination queue = Destination.queue("queue-via-web-connections-encrypted", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -229,8 +229,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestFilterConnectionsByUser() throws Exception {
-        Destination queue = Destination.queue("queue-via-web-connections-users");
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        Destination queue = Destination.queue("queue-via-web-connections-users", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -311,8 +311,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestFilterConnectionsByContainerId() throws Exception {
         int connectionCount = 5;
 
-        Destination dest = Destination.queue("queue-via-web");
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -333,8 +333,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortConnectionsByContainerId() throws Exception {
         int connectionCount = 5;
 
-        Destination dest = Destination.queue("queue-via-web");
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -352,8 +352,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     public void doTestMessagesMetrics() throws Exception {
         int msgCount = 19;
-        Destination dest = Destination.queue("queue-via-web");
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -377,8 +377,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestClientsMetrics() throws Exception {
         int senderCount = 5;
         int receiverCount = 10;
-        Destination dest = Destination.queue("queue-via-web");
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -395,7 +395,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCannotCreateAddresses() throws Exception {
-        Destination destination = Destination.queue("authz-queue");
+        Destination destination = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
@@ -417,7 +417,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCannotDeleteAddresses() throws Exception {
-        Destination destination = Destination.queue("test-cannot-delete-address");
+        Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(),
@@ -440,8 +440,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewAddresses() throws Exception {
-        Destination allowedDestination = Destination.queue("test-view-queue");
-        Destination notAllowedDestination = Destination.queue("test-not-view-queue");
+        Destination allowedDestination = Destination.queue("test-view-queue", getDefaultPlan(AddressType.QUEUE));
+        Destination notAllowedDestination = Destination.queue("test-not-view-queue", getDefaultPlan(AddressType.QUEUE));
 
         prepareViewItemTest("view_user_addresses", "viewPa55", allowedDestination, notAllowedDestination);
 
@@ -453,7 +453,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewConnections() throws Exception {
-        Destination destination = Destination.queue("test-queue-view-connections");
+        Destination destination = Destination.queue("test-queue-view-connections", getDefaultPlan(AddressType.QUEUE));
 
         prepareViewItemTest("view_user_connections", "viewPa55", destination, null);
 
@@ -473,10 +473,10 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestViewAddressesWildcards() throws Exception {
-        Destination queue = Destination.queue("queue_1234");
-        Destination queue2 = Destination.queue("queueABCD");
-        Destination topic = Destination.topic("topic_2345");
-        Destination topic2 = Destination.topic("topicABCD");
+        Destination queue = Destination.queue("queue_1234", getDefaultPlan(AddressType.QUEUE));
+        Destination queue2 = Destination.queue("queueABCD", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("topic_2345", getDefaultPlan(AddressType.TOPIC));
+        Destination topic2 = Destination.topic("topicABCD", getDefaultPlan(AddressType.TOPIC));
 
         setAddresses(queue, queue2, topic, topic2);
 

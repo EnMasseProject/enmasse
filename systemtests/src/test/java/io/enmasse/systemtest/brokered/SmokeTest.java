@@ -36,14 +36,14 @@ public class SmokeTest extends BrokeredTestBase {
      */
     @Test
     public void testAddressTypes() throws Exception {
-        Destination queueA = Destination.queue("brokeredQueueA");
+        Destination queueA = Destination.queue("brokeredQueueA", "brokered-queue");
         setAddresses(defaultAddressSpace, queueA);
 
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(defaultAddressSpace);
         amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
-        Destination topicB = Destination.topic("brokeredTopicB");
+        Destination topicB = Destination.topic("brokeredTopicB", "brokered-topic");
         setAddresses(defaultAddressSpace, topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(defaultAddressSpace);
@@ -72,7 +72,7 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-create-delete-a",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "none");
-        Destination queueB = Destination.queue("brokeredQueueB");
+        Destination queueB = Destination.queue("brokeredQueueB", "brokered-queue");
         setAddresses(addressSpaceA, queueB);
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
@@ -101,10 +101,10 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-a",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "none");
-        Destination queueA = Destination.queue("brokeredQueueA");
+        Destination queueA = Destination.queue("brokeredQueueA", "brokered-queue");
         setAddresses(addressSpaceA, queueA);
 
-        Destination topicA = Destination.topic("brokeredTopicA");
+        Destination topicA = Destination.topic("brokeredTopicA", "brokered-topic");
         setAddresses(addressSpaceA, topicA); //address already exist exception
     }
 }
