@@ -36,14 +36,14 @@ public class SmokeTest extends BrokeredTestBase {
      */
     @Test
     public void testAddressTypes() throws Exception {
-        Destination queueA = Destination.queue("brokeredQueueA", "brokered-queue");
+        Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(defaultAddressSpace, queueA);
 
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(defaultAddressSpace);
         amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
-        Destination topicB = Destination.topic("brokeredTopicB", "brokered-topic");
+        Destination topicB = Destination.topic("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
         setAddresses(defaultAddressSpace, topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(defaultAddressSpace);
@@ -72,7 +72,7 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-create-delete-a",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "none");
-        Destination queueB = Destination.queue("brokeredQueueB", "brokered-queue");
+        Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
@@ -101,10 +101,10 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-a",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "none");
-        Destination queueA = Destination.queue("brokeredQueueA", "brokered-queue");
+        Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueA);
 
-        Destination topicA = Destination.topic("brokeredTopicA", "brokered-topic");
+        Destination topicA = Destination.topic("brokeredTopicA", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpaceA, topicA); //address already exist exception
     }
 }
