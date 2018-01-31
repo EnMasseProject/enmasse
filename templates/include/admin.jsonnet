@@ -61,24 +61,6 @@ local common = import "common.jsonnet";
           "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
           "containers": [
             {
-              "image": "${QUEUE_SCHEDULER_IMAGE}",
-              "name": "queue-scheduler",
-              "env": [
-                common.env("CERT_DIR", "/etc/enmasse-certs"),
-                common.env("JAVA_OPTS", "-verbose:gc"),
-                common.env("LISTEN_PORT", "55667"),
-                common.env_field_ref("NAMESPACE", "metadata.namespace")
-              ],
-              "resources": common.memory_resources("128Mi", "128Mi"),
-              "ports": [
-                common.container_port("amqp", 55667)
-              ],
-              "livenessProbe": common.tcp_probe("amqp", 60),
-              "volumeMounts": [
-                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
-              ]
-            },
-            {
               "image": "${STANDARD_CONTROLLER_IMAGE}",
               "name": "standard-controller",
               "env": [
