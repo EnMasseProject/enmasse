@@ -75,7 +75,12 @@ public class AddressApiClient {
                     .as(BodyCodec.jsonObject())
                     .sendJsonObject(config, ar -> {
                         if (ar.succeeded()) {
-                            responsePromise.complete(responseHandler(ar));
+                            HttpResponse<JsonObject> response = ar.result();
+                            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                                responsePromise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
+                            } else {
+                                responsePromise.complete(responseHandler(ar));
+                            }
                         } else {
                             log.warn("Error creating address space {}", addressSpace);
                             responsePromise.completeExceptionally(ar.cause());
@@ -276,8 +281,9 @@ public class AddressApiClient {
                     .as(BodyCodec.jsonObject())
                     .sendJsonObject(config, ar -> {
                         if (ar.succeeded()) {
-                            if (ar.result().statusCode() < 200 || ar.result().statusCode() >= 300) {
-                                responsePromise.completeExceptionally(new RuntimeException("Got status " + ar.result().statusCode() + " in request"));
+                            HttpResponse<JsonObject> response = ar.result();
+                            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                                responsePromise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
                             } else {
                                 responsePromise.complete(responseHandler(ar));
                             }
