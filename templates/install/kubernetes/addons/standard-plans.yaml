@@ -10,7 +10,7 @@ data:
       "apiVersion": "enmasse.io/v1",
       "kind": "AddressSpacePlan",
       "metadata": {
-        "name": "unlimited",
+        "name": "unlimited-standard",
         "annotations": {
           "enmasse.io/defined-by": "standard-space"
         }
