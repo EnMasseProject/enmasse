@@ -39,7 +39,7 @@ public class AuthenticationTest extends AuthenticationTestBase {
 
         scaleKeycloak(0);
         scaleKeycloak(1);
-        Thread.sleep(60000);
+        Thread.sleep(160000);
 
         assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
     }
