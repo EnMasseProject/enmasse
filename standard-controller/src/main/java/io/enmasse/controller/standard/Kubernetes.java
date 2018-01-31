@@ -6,9 +6,7 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.time.Clock;
@@ -53,4 +51,5 @@ public interface Kubernetes {
 
     AddressApi createAddressApi();
 
+    List<EndpointAddress> listBrokers(String clusterId);
 }

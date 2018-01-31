@@ -7,6 +7,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.AddressResolver;
 import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.address.model.Address;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -128,6 +129,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             log.debug("Current set of clusters: " + clusterList);
             deleteBrokers(clusterList, addressByGroup);
             createBrokers(clusterList, addressByGroup);
+            scheduleQueues(clusterList, addressByGroup);
 
             // Perform status check
             checkStatuses(newAddressSet);
@@ -142,6 +144,22 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         } catch (Exception ex) {
             log.warn("Errror synchronizing addresses", ex);
             eventLogger.log(AddressSyncFailed, ex.getMessage(), Warning, AddressSpace, addressSpaceName);
+        }
+    }
+
+    private void scheduleQueues(List<AddressCluster> clusterList, Map<String, Set<Address>> addressByClusterId) {
+        Map<String, AddressCluster> clusterById = new HashMap<>();
+        for (AddressCluster cluster : clusterList) {
+            clusterById.put(cluster.getClusterId(), cluster);
+        }
+
+        for (Map.Entry<String, Set<Address>> entry : addressByClusterId.entrySet()) {
+            Set<Address> addresses = entry.getValue();
+            Address first = addresses.iterator().next();
+            if (isPooled(first)) {
+                AddressCluster cluster = clusterById.get(entry.getKey());
+                cluster.scheduleAddresses(kubernetes, addresses);
+            }
         }
     }
 
