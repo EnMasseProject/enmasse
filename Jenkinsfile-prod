@@ -64,7 +64,7 @@ pipeline {
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
                 DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
-                COMMIT = "latest"
+                COMMIT = "1.0"
                 ADDRESS_CONTROLLER_IMAGE = 'amqmaas10-addresscontroller-openshift'
                 ROUTER_IMAGE = 'amqmaas10-interconnect-openshift'
                 ARTEMIS_IMAGE = 'amqmaas10-broker-openshift'
