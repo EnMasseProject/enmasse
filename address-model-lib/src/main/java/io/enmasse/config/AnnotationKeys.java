@@ -13,4 +13,5 @@ public interface AnnotationKeys {
     String SERVICE_NAME = "io.enmasse.serviceName";
     String CREATED_BY = "io.enmasse.createdBy";
     String DEFINED_BY = "enmasse.io/defined-by";
+    String BROKER_ID = "enmasse.io/broker-id";
 }
