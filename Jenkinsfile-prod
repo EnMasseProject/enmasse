@@ -1,0 +1,116 @@
+#!/usr/bin/env groovy
+
+def storeArtifacts(buildStatus) {
+    if (buildStatus == 'ABORTED') {
+        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+    }
+}
+
+pipeline {
+    agent {
+        node {
+            label 'enmasse'
+        }
+    }
+    environment {
+        MAILING_LIST = credentials('MAILING_LIST')
+    }
+    parameters {
+        string(name: 'MAILING_LIST', defaultValue: '', description: '')
+    }
+    options {
+        timeout(time: 3, unit: 'HOURS')
+    }
+    stages {
+        stage('clean') {
+            steps {
+                cleanWs()
+                sh 'docker stop $(docker ps -q) || true'
+                sh 'docker rm $(docker ps -a -q) -f || true'
+                sh 'docker rmi $(docker images -q) -f || true'
+            }
+        }
+        stage('checkout') {
+            steps {
+                checkout scm
+                sh 'git submodule update --init --recursive'
+                sh 'rm -rf artifacts && mkdir -p artifacts'
+            }
+        }
+        stage('start openshift') {
+            steps {
+                sh './systemtests/scripts/setup-openshift.sh'
+                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+            }
+        }
+        stage('install clients') {
+            steps {
+                sh 'sudo PATH=$PATH make client_install'
+            }
+        }
+        stage('install webdrivers') {
+            steps {
+                sh 'sudo make webdriver_install'
+            }
+        }
+        stage('system tests') {
+            environment {
+                DISPLAY = ':10'
+                ARTIFACTS_DIR = 'artifacts'
+                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+                DOCKER_REGISTRY = credentials('docker-registry-host')
+                DOCKER_ORG = credentials('docker-project')
+                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
+                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
+                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
+                COMMIT = "1.0"
+                ADDRESS_CONTROLLER_IMAGE = 'amqmaas10-addresscontroller-openshift'
+                ROUTER_IMAGE = 'amqmaas10-interconnect-openshift'
+                ARTEMIS_IMAGE = 'amqmaas10-broker-openshift'
+                TOPIC_FORWARDER_IMAGE = 'amqmaas10-topicforwarder-openshift'
+                ROUTER_METRICS_IMAGE = 'amqmaas10-routermetrics-openshift'
+                CONFIGSERV_IMAGE = 'amqmaas10-configserv-openshift'
+                QUEUE_SCHEDULER_IMAGE = 'amqmaas10-queuescheduler-openshift'
+                RAGENT_IMAGE = 'amqmaas10-routeragent-openshift'
+                SUBSERV_IMAGE = 'amqmaas10-subscriptionservice-openshift'
+                AGENT_IMAGE = 'amqmaas10-agent-openshift'
+                MQTT_GATEWAY_IMAGE = 'amqmaas10-mqttgateway-openshift'
+                MQTT_LWT_IMAGE = 'amqmaas10-mqttlwt-openshift'
+                NONE_AUTHSERVICE_IMAGE = 'amqmaas10-noneauthservice-openshift'
+                KEYCLOAK_IMAGE = 'amqmaas10-auth-openshift'
+                KEYCLOAK_CONTROLLER_IMAGE = 'amqmaas10-auth-controller-openshift'
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    sh 'make -C templates || true'
+                    sh "git checkout tags/0.15.3 -- systemtests"
+                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
+                    sh 'Xvfb :10 -ac &'
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests"
+                }
+            }
+        }
+        stage('teardown openshift') {
+            steps {
+                sh './systemtests/scripts/teardown-openshift.sh'
+            }
+        }
+    }
+    post {
+        always {
+            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            //store test results from build and system tests
+            junit '**/TEST-*.xml'
+
+            //archive test results and openshift lofs
+            archive '**/TEST-*.xml'
+            archive 'artifacts/**'
+            archive 'templates/install/**'
+        }
+        failure {
+            echo "build failed"
+            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+        }
+    }
+}
