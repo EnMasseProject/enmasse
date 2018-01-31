@@ -5,8 +5,7 @@
 package io.enmasse.address.model;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * An EnMasse Address addressspace.
@@ -20,8 +19,9 @@ public class Address {
     private final String plan;
     private final Status status;
     private final String version;
+    private final Map<String, String> annotations;
 
-    private Address(String name, String uuid, String address, String addressSpace, String type, String plan, Status status, String version) {
+    private Address(String name, String uuid, String address, String addressSpace, String type, String plan, Status status, String version, Map<String, String> annotations) {
         this.name = name;
         this.uuid = uuid;
         this.address = address;
@@ -30,6 +30,7 @@ public class Address {
         this.plan = plan;
         this.status = status;
         this.version = version;
+        this.annotations = annotations;
     }
 
     public String getAddress() {
@@ -62,6 +63,10 @@ public class Address {
 
     public String getVersion() {
         return version;
+    }
+
+    public Map<String, String> getAnnotations() {
+        return annotations;
     }
 
     @Override
@@ -115,6 +120,7 @@ public class Address {
         private String plan;
         private Status status = new Status(false);
         private String version;
+        private Map<String, String> annotations = new HashMap<>();
 
         public Builder() {
         }
@@ -128,6 +134,7 @@ public class Address {
             this.plan = address.getPlan();
             this.status = new Status(address.getStatus());
             this.version = address.getVersion();
+            this.annotations = new HashMap<>(address.getAnnotations());
         }
 
         public Builder setUuid(String uuid) {
@@ -150,6 +157,16 @@ public class Address {
 
         public Builder setAddressSpace(String addressSpace) {
             this.addressSpace = addressSpace;
+            return this;
+        }
+
+        public Builder setAnnotations(Map<String, String> annotations) {
+            this.annotations = new HashMap<>(annotations);
+            return this;
+        }
+
+        public Builder putAnnotation(String key, String value) {
+            this.annotations.put(key, value);
             return this;
         }
 
@@ -178,10 +195,11 @@ public class Address {
             Objects.requireNonNull(address, "address not set");
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(status, "status not set");
+            Objects.requireNonNull(annotations, "annotations not set");
             if (uuid == null) {
                 uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
             }
-            return new Address(name, uuid, address, addressSpace, type, plan, status, version);
+            return new Address(name, uuid, address, addressSpace, type, plan, status, version, annotations);
         }
     }
 }
