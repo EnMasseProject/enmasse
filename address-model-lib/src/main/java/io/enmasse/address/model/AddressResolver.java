@@ -4,15 +4,18 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.address.model.v1.SchemaProvider;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AddressResolver {
-    private final Schema schema;
+    private final SchemaProvider schemaProvider;
     private final AddressSpaceType addressSpaceType;
 
-    public AddressResolver(Schema schema, AddressSpaceType addressSpaceType) {
-        this.schema = schema;
+    public AddressResolver(SchemaProvider schemaProvider, AddressSpaceType addressSpaceType) {
+        this.schemaProvider = schemaProvider;
         this.addressSpaceType = addressSpaceType;
     }
 
@@ -31,10 +34,18 @@ public class AddressResolver {
             if (plan.getAddressType().equals("topic")) {
                 resourceName = request.getResourceName() + "-topic";
             }
-            schema.findResourceDefinition(resourceName)
+            schemaProvider.getSchema().findResourceDefinition(resourceName)
                     .ifPresent(resourceDefinitions::add);
         }
         return resourceDefinitions;
+    }
+
+    public ResourceDefinition getResourceDefinition(AddressPlan addressPlan, String resourceName) {
+        if (addressPlan.getAddressType().equals("topic")) {
+            resourceName = resourceName + "-topic";
+        }
+        String finalResourceName = resourceName;
+        return schemaProvider.getSchema().findResourceDefinition(resourceName).orElseThrow(() -> new UnresolvedAddressException("Unknown resource definition " + finalResourceName));
     }
 
     public void validate(Address address) {

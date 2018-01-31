@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
+import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.*;
@@ -52,4 +53,7 @@ public interface Kubernetes {
     AddressApi createAddressApi();
 
     List<EndpointAddress> listBrokers(String clusterId);
+
+    void scaleDeployment(String deploymentName, int numReplicas);
+    void scaleStatefulSet(String setName, int numReplicas);
 }

@@ -16,22 +16,26 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.*;
 
+import static org.hamcrest.CoreMatchers.describedAs;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class TemplateAddressClusterGeneratorTest {
+public class TemplateBrokerSetGeneratorTest {
     private Kubernetes kubernetes;
-    private AddressClusterGenerator generator;
+    private BrokerSetGenerator generator;
+    private ResourceDefinition testResource;
 
     @Before
     public void setUp() {
         kubernetes = mock(Kubernetes.class);
         Map<String, String> env = new HashMap<>();
-        TestSchemaApi testSchemaApi = new TestSchemaApi();
-        AddressResolver resolver = new AddressResolver(testSchemaApi.getSchema(), testSchemaApi.getSchema().findAddressSpaceType("type1").get());
-        generator = new TemplateAddressClusterGenerator(kubernetes, resolver, new TemplateOptions(env));
+        testResource = new ResourceDefinition.Builder()
+                .setName("res1")
+                .setTemplateName("mytemplate")
+                .build();
+        generator = new TemplateBrokerSetGenerator(kubernetes, new TemplateOptions(env), "myspace");
     }
 
     @Test
@@ -40,9 +44,9 @@ public class TemplateAddressClusterGeneratorTest {
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         AddressCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
-        assertThat(resources.size(), is(0));
+        assertThat(resources.size(), is(1));
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(0));
+        assertThat(parameters.size(), is(11));
     }
 
     @Test
@@ -58,7 +62,7 @@ public class TemplateAddressClusterGeneratorTest {
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(10));
+        assertThat(parameters.size(), is(11));
     }
 
     private Address createAddress(String address, String type) {
@@ -86,7 +90,7 @@ public class TemplateAddressClusterGeneratorTest {
     private AddressCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
-        return generator.generateCluster(address.getName(), Collections.singleton(address));
+        return generator.generateCluster(address.getName(), testResource, 1, address);
     }
 
 }

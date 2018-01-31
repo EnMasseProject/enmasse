@@ -4,9 +4,6 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.AddressSpaceType;
-import io.enmasse.address.model.Schema;
 import io.enmasse.k8s.api.ConfigMapSchemaApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaApi;
@@ -42,12 +39,9 @@ public class Main {
         String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
         OpenShiftClient openShiftClient = new DefaultOpenShiftClient();
         SchemaApi schemaApi = new ConfigMapSchemaApi(openShiftClient, openShiftClient.getNamespace());
-        Schema schema = schemaApi.getSchema();
-        AddressSpaceType addressSpaceType = schema.findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to start standard-controller: standard address space not found in schema!"));
 
-        AddressResolver addressResolver = new AddressResolver(schema, addressSpaceType);
         Kubernetes kubernetes = new KubernetesHelper(new DefaultOpenShiftClient(), templateDir);
-        AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(kubernetes, addressResolver, templateOptions);
+        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace);
 
         EventLogger eventLogger = kubernetes.createEventLogger(Clock.systemUTC(), "standard-controller");
 
@@ -55,11 +49,11 @@ public class Main {
         AddressController addressController = new AddressController(
                 addressSpace,
                 kubernetes.createAddressApi(),
-                addressResolver,
                 kubernetes,
                 clusterGenerator,
                 certDir,
-                eventLogger);
+                eventLogger,
+                schemaApi);
 
         log.info("Deploying address space controller for " + addressSpace);
         Vertx vertx = Vertx.vertx();
