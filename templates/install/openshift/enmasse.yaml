@@ -236,9 +236,9 @@ objects:
               protocol: TCP
             resources:
               limits:
-                memory: 64Mi
+                memory: 128Mi
               requests:
-                memory: 64Mi
+                memory: 128Mi
             volumeMounts:
             - mountPath: /etc/enmasse-certs
               name: subserv-internal-cert
@@ -442,9 +442,9 @@ objects:
               initialDelaySeconds: 30
             resources:
               limits:
-                memory: 256Mi
+                memory: 512Mi
               requests:
-                memory: 256Mi
+                memory: 512Mi
             volumeMounts:
             - mountPath: /etc/enmasse-certs
               name: admin-internal-cert

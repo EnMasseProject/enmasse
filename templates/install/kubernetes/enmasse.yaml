@@ -180,7 +180,7 @@ items:
       ["node", "/opt/app-root/src/bin/subserv.js"], "image": "${AGENT_IMAGE}", "livenessProbe":
       {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}}, "name": "subserv",
       "ports": [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}], "resources":
-      {"limits": {"memory": "64Mi"}, "requests": {"memory": "64Mi"}}, "volumeMounts":
+      {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}, "volumeMounts":
       [{"mountPath": "/etc/enmasse-certs", "name": "subserv-internal-cert", "readOnly":
       true}]}], "volumes": [{"name": "subserv-internal-cert", "secret": {"secretName":
       "subserv-internal-cert"}}]}}}}, {"apiVersion": "extensions/v1beta1", "kind":
@@ -238,7 +238,7 @@ items:
       "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds": 30}, "name":
       "standard-controller", "ports": [{"containerPort": 8889, "name": "http"}], "readinessProbe":
       {"httpGet": {"path": "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds":
-      30}, "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}},
+      30}, "resources": {"limits": {"memory": "512Mi"}, "requests": {"memory": "512Mi"}},
       "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
       "readOnly": true}, {"mountPath": "/enmasse-templates", "name": "templates",
       "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},

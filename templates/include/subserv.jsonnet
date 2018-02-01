@@ -37,10 +37,10 @@ local common = import "common.jsonnet";
               "name": "subserv",
               "resources": {
                   "requests": {
-                      "memory": "64Mi"
+                      "memory": "128Mi"
                   },
                   "limits": {
-                      "memory": "64Mi"
+                      "memory": "128Mi"
                   }
               },
               "ports": [
