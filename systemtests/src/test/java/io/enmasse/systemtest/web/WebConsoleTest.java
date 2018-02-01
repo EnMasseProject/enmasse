@@ -549,7 +549,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             fail("No address items in console for group " + group);
         for (AddressWebItem item : addresses) {
             if (group.contains("*")) {
-                assertTrue(item.getName().matches(group.replace("view_", "")));
+                String rights = username.replace("user_view_", "").replace("*", "");
+                assertTrue(rights.equals("") || item.getName().contains(rights));
             } else {
                 assertTrue(item.getName().equals(group.replace("view_", "")));
             }
