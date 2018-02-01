@@ -11,7 +11,7 @@
     <artifactId>systemtests</artifactId>
     <properties>
         <testcase.groups></testcase.groups>
-        <exclude.tests>**/marathon/*</exclude.tests>
+        <exclude.tests.group></exclude.tests.group>
         <skip.tests>true</skip.tests>
     </properties>
     <dependencies>
@@ -105,9 +105,7 @@
                     </properties>
                     <skipTests>${skip.tests}</skipTests>
                     <groups>${testcase.groups}</groups>
-                    <excludes>
-                        <exclude>${exclude.tests}</exclude>
-                    </excludes>
+                    <excludedGroups>${exclude.tests.group}</excludedGroups>
                 </configuration>
             </plugin>
         </plugins>
@@ -123,6 +121,7 @@
             <id>systemtests-isolated</id>
             <properties>
                 <testcase.groups>io.enmasse.systemtest.IsolatedAddressSpace</testcase.groups>
+                <exclude.tests.group>io.enmasse.systemtest.MarathonTests</exclude.tests.group>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -130,6 +129,14 @@
             <id>systemtests-shared</id>
             <properties>
                 <testcase.groups>io.enmasse.systemtest.SharedAddressSpace</testcase.groups>
+                <exclude.tests.group>io.enmasse.systemtest.MarathonTests</exclude.tests.group>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-marathon</id>
+            <properties>
+                <testcase.groups>io.enmasse.systemtest.MarathonTests</testcase.groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

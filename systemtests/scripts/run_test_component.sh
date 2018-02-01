@@ -5,6 +5,7 @@ source ${CURDIR}/test_func.sh
 ENMASSE_DIR=$1
 KUBEADM=$2
 TESTCASE=${3:-"io.enmasse.**"}
+TEST_PROFILE=${4}
 failure=0
 
 SANITIZED_PROJECT=$OPENSHIFT_PROJECT
@@ -24,8 +25,13 @@ ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
 STATS_PID=$!
 echo "process for checking system resources is running with PID: ${STATS_PID}"
 
-run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))
-run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
+if [ "${TEST_PROFILE}" = "systemtests-marathon" ]; then
+    run_test ${TESTCASE} ${TEST_PROFILE} || failure=$(($failure + 1))
+else
+    run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))
+    run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
+fi
+
 
 echo "process for checking system resources with PID: ${STATS_PID} will be killed"
 kill ${STATS_PID}

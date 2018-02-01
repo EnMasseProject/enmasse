@@ -3,6 +3,7 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.IsolatedAddressSpace;
+import io.enmasse.systemtest.MarathonTests;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Rule;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-@Category(IsolatedAddressSpace.class)
+@Category({IsolatedAddressSpace.class, MarathonTests.class})
 public class MarathonTestBase extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     ArrayList<AmqpClient> clients = new ArrayList<>();
@@ -58,7 +59,7 @@ public class MarathonTestBase extends TestBase {
             try {
                 client.close();
                 log.info("Client is closed.");
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 collector.addError(ex);
             }
         }
