@@ -477,7 +477,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         List<Destination> addresses = getAddressesWildcard();
         setAddresses(addresses.toArray(new Destination[0]));
 
-        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace,"view");
+        List<KeycloakCredentials> users = createUsersWildcard(sharedAddressSpace,"view");
 
         for (KeycloakCredentials user : users) {
             consoleWebPage = new ConsoleWebPage(selenium,
