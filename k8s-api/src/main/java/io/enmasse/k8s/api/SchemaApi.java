@@ -15,6 +15,7 @@
  */
 package io.enmasse.k8s.api;
 
+import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.v1.SchemaProvider;
 
 /**
@@ -22,7 +23,7 @@ import io.enmasse.address.model.v1.SchemaProvider;
  */
 public interface SchemaApi extends SchemaProvider {
     /**
-     * Copy schema definitions into namespace;
+     * Copy address space plan and referenced address plans and resource definitions into namespace;
      */
-    void copyIntoNamespace(String otherNamespace);
+    void copyIntoNamespace(AddressSpacePlan addressSpacePlan, String otherNamespace);
 }

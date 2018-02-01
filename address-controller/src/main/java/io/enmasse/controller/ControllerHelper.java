@@ -79,7 +79,7 @@ public class ControllerHelper {
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
             kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
-            schemaApi.copyIntoNamespace(addressSpace.getNamespace());
+            schemaApi.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
