@@ -36,4 +36,14 @@ public class AuthorizationTest extends AuthorizationTestBase {
     public void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }
+
+    //@Test
+    public void testSendAuthzWithWIldcards() throws Exception {
+        doTestSendAuthzWithWIldcards();
+    }
+
+    //@Test
+    public void testReceiveAuthzWithWIldcards() throws Exception {
+        doTestReceiveAuthzWithWIldcards();
+    }
 }
