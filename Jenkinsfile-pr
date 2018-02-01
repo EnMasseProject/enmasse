@@ -103,6 +103,7 @@ pipeline {
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
+            archive '/tmp/cores/**'
             tearDownOpenshift()
         }
         failure {
