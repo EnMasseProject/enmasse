@@ -128,8 +128,8 @@ function get_docker_info() {
 function enable_core_dumps() {
     CORE_DUMPS_LOCATION=${1}
 
-    sudo ulimit -c unlimited
-    mkdir -p ${CORE_DUMPS_LOCATION}
-    chmod a+rwx ${CORE_DUMPS_LOCATION}
+    ulimit -c unlimited
+    sudo mkdir -p ${CORE_DUMPS_LOCATION}
+    sudo chmod a+rwx ${CORE_DUMPS_LOCATION}
     sudo echo "${CORE_DUMPS_LOCATION}/core.%e.%p.%h.%t" > /proc/sys/kernel/core_pattern
 }
