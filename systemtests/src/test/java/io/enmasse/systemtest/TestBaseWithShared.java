@@ -35,77 +35,77 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 @Category(SharedAddressSpace.class)
-public abstract class TestBaseWithDefault extends TestBase {
+public abstract class TestBaseWithShared extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-default-";
-    protected static AddressSpace defaultAddressSpace;
-    protected static HashMap<String, AddressSpace> defaultAddressSpaces = new HashMap<>();
+    protected static AddressSpace sharedAddressSpace;
+    protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     @Rule
     public TestWatcher watcher = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
             log.info("test failed:" + description);
-            log.info("default address space '{}' will be removed", defaultAddressSpace);
+            log.info("shared address space '{}' will be removed", sharedAddressSpace);
             try {
-                deleteDefaultAddressSpace(defaultAddressSpace);
-                spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
+                deleteSharedAddressSpace(sharedAddressSpace);
+                spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     };
 
-    protected static void deleteDefaultAddressSpace(AddressSpace addressSpace) throws Exception {
-        defaultAddressSpaces.remove(addressSpace.getName());
+    protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
+        sharedAddressSpaces.remove(addressSpace.getName());
         TestBase.deleteAddressSpace(addressSpace);
     }
 
     protected abstract AddressSpaceType getAddressSpaceType();
 
     public AddressSpace getSharedAddressSpace() {
-        return defaultAddressSpace;
+        return sharedAddressSpace;
     }
 
     @Before
-    public void setupDefault() throws Exception {
+    public void setupShared() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
-        defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
+        sharedAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
         log.info("Test is running in multitenant mode");
-        createDefaultAddressSpace(defaultAddressSpace, "standard");
+        createSharedAddressSpace(sharedAddressSpace, "standard");
 
         this.username = "test";
         this.password = "test";
-        getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
+        getKeycloakClient().createUser(sharedAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
 
         this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
-        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+        getKeycloakClient().createUser(sharedAddressSpace.getName(),
                 managementCredentials.getUsername(),
                 managementCredentials.getPassword());
 
-        createGroup(defaultAddressSpace, "admin");
-        joinGroup(defaultAddressSpace, "admin", managementCredentials.getUsername());
+        createGroup(sharedAddressSpace, "admin");
+        joinGroup(sharedAddressSpace, "admin", managementCredentials.getUsername());
 
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, defaultAddressSpace, username, password);
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, defaultAddressSpace, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
     }
 
     @After
-    public void teardownDefault() throws Exception {
-        setAddresses(defaultAddressSpace);
+    public void teardownShared() throws Exception {
+        setAddresses(sharedAddressSpace);
     }
 
-    protected void createDefaultAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        defaultAddressSpaces.put(addressSpace.getName(), addressSpace);
+    protected void createSharedAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        sharedAddressSpaces.put(addressSpace.getName(), addressSpace);
         super.createAddressSpace(addressSpace, authService);
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
-        scale(defaultAddressSpace, destination, numReplicas);
+        scale(sharedAddressSpace, destination, numReplicas);
     }
 
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return getAddresses(defaultAddressSpace, addressName);
+        return getAddresses(sharedAddressSpace, addressName);
     }
 
     /**
@@ -115,7 +115,7 @@ public abstract class TestBaseWithDefault extends TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        setAddresses(defaultAddressSpace, destinations);
+        setAddresses(sharedAddressSpace, destinations);
     }
 
     /**
@@ -125,7 +125,7 @@ public abstract class TestBaseWithDefault extends TestBase {
      * @throws Exception
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
-        appendAddresses(defaultAddressSpace, destinations);
+        appendAddresses(sharedAddressSpace, destinations);
     }
 
     /**
@@ -135,35 +135,35 @@ public abstract class TestBaseWithDefault extends TestBase {
      * @throws Exception
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
-        deleteAddresses(defaultAddressSpace, destinations);
+        deleteAddresses(sharedAddressSpace, destinations);
     }
 
     /**
      * attach N receivers into one address with default username/password
      */
     protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(defaultAddressSpace, destination, receiverCount, username, password);
+        return attachReceivers(sharedAddressSpace, destination, receiverCount, username, password);
     }
 
     /**
      * attach N receivers into one address with own username/password
      */
     protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
-        return attachReceivers(defaultAddressSpace, destination, receiverCount, username, password);
+        return attachReceivers(sharedAddressSpace, destination, receiverCount, username, password);
     }
 
     /**
      * attach senders to destinations
      */
     protected List<AbstractClient> attachSenders(List<Destination> destinations) throws Exception {
-        return attachSenders(defaultAddressSpace, destinations);
+        return attachSenders(sharedAddressSpace, destinations);
     }
 
     /**
      * attach receivers to destinations
      */
     protected List<AbstractClient> attachReceivers(List<Destination> destinations) throws Exception {
-        return attachReceivers(defaultAddressSpace, destinations);
+        return attachReceivers(sharedAddressSpace, destinations);
     }
 
     /**
@@ -171,7 +171,7 @@ public abstract class TestBaseWithDefault extends TestBase {
      */
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
-        return attachConnector(defaultAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
+        return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
     }
 
     /**
