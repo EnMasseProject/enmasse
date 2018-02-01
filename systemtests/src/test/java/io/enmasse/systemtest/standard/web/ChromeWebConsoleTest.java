@@ -2,10 +2,12 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import org.junit.Ignore;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+@Ignore
 public class ChromeWebConsoleTest extends StandardWebConsoleTest {
 
     //@Test

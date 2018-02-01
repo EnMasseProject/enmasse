@@ -3,8 +3,10 @@ package io.enmasse.systemtest.standard.authz;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.authz.AuthorizationTestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class AuthorizationTest extends AuthorizationTestBase {
     @Override
     protected AddressSpaceType getAddressSpaceType() {

@@ -2,11 +2,13 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
+@Ignore
 public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
 
 
