@@ -129,7 +129,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertReceiveWildcard(String username, String password, Destination destination) throws Exception {
-        String rights = username.replace("user_receive_", "").replace("*", "");
+        String rights = username.replace("user_recv_", "").replace("*", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
             assertTrue(canReceive(destination, username, password));
         } else {
