@@ -1,0 +1,161 @@
+== why
+
+The new plans introduced requires a new way of deploying the infrastructure and scheduling pooled
+queues based on the credits.
+
+== what/how
+
+The algorithm assumes that address phases are implemented.
+
+=== Decomposed algorithm overview
+
+There are 3 different 'types' of resources at present. Routers, sharded brokers, and pooled brokers.
+For the sake of simplicity, the algorithm for each of these resources are outlined first. The next
+section outlines the combined algorithm for these 3 resources.
+
+. Router part
++
+```
+usage = 0
+for a in addresses != Pending:
+    usage += a.plan.required_resources['router'].credit
+
+for a in addresses == Pending:
+    needed = a.plan.required_resources['router'].credit
+
+    if usage + needed > allowed['router']:
+        address.status.phase = Pending
+        address.status.message = "Quota exceeded"
+
+    scale_resource('router', ceil(usage + needed))
+```
+. Broker part
++
+```
+sharded_usage = 0
+pooled_usage = {}
+for a in addresses != Pending:
+    credit = a.plan.required_resources['broker'].credit
+    if credit < 1:
+        pooled_usage[a.broker_id] += credit
+    else:
+        sharded_usage += credit
+
+for a in addresses == Pending:
+    credit = a.plan.required_resources['broker'].credit
+    total_usage = sum(pooled_usage) + sharded_usage 
+    needed = 0
+    if credit < 1:
+        free = 1 - min(pooled_usage)
+        if credit < free:
+            needed = credit
+        else:
+            needed = 1
+    else:
+        needed = credit
+
+    if total_usage + needed > allowed['broker']
+        address.status.phase = Pending
+        address.status.message = "Quota exceeded"
+
+    if credit < 1:
+        create_or_scale_resource('broker', ceil(sum(pooled_usage) + needed))
+        schedule_address(a, pooled_usage, credit)
+    else:
+        create_or_scale_resource(a.name, ceil(sharded_usage + needed))
+```
+. Scheduling pooled addresses
++
+```
+schedule_address(address, usage, credit):
+    brokers = {}
+    // List all brokers (including newly created without addresses):
+    for b in listPooledBrokers():
+        if usage.exists(b):
+            brokers[b] = usage[b]
+        else
+            brokers[b] = 0
+
+    // Sort by usage
+    sorted_brokers = brokers.sort_by_highest_usage()
+    for b in sorted_brokers:
+        if brokers[b] + credit < 1:
+            address.assigned_to = b
+            return
+
+    // Should never come here (error)
+
+```
+
+=== Combined algorithm
+
+```
+usage = {}{}
+for a in addresses != Pending:
+    for r in a.plan.required_resources:
+        if a.broker_id != null and r == 'broker':
+            usage[r][a.broker_id] += credit
+        else:
+            usage[r]['all'] += credit
+
+for a in addresses == Pending:
+    needed = {}
+    for r in a.plan.required_resources:
+        if r == 'router': // Router
+            needed[r] = r.credit
+        else if r == 'broker' && r.credit < 1: // Pooled broker
+            free = 1 - min(usage[r])
+            if r.credit < free:
+                needed[r] = r.credit
+            else:
+                needed[r] = 1
+        else if r == 'broker': // Sharded broker
+            needed[r] = r.credit
+
+        if sum(usage[r]) + needed[r] > allowed[r]:
+            address.status.phase = Pending
+            address.status.message = "Quota exceeded"
+            skip to next address
+
+    if sum(usage) + sum(needed) > allowed['aggregate']:
+        address.status.phase = Pending
+        address.status.message = "Quota exceeded"
+        skip to next address
+
+    for r in a.plan.required_resources:
+        if r == 'router':
+            scale_resource(r, ceil(sum(usage[r]) + needed[r]))
+        else if r == 'broker' && r.credit < 1:
+            create_or_scale_resource(r, ceil(sum(usage[r]) - usage[r]['all'] + needed[r]))
+            schedule_address(a, pooled_usage, credit)
+        else if r == 'broker:
+            create_or_scale_resource(a.name, ceil(usage[r]['all'] + needed[r]))
+```
+
+== testing
+
+=== Test that quota limit cannot be exceeded
+
+. Create standard address space plan 'test1' with resources['router'] = 1, resources['broker'] = 2, resources['aggregate'] = 2
+. Create standard address plan 'anycast-test1' with requiredResources['Nouter'] = 0.3
+. Create standard address plan 'queue-test1' with and requiredResources['broker'] = 0.6
+. Create standard address plan 'queue-test2' with requiredResources['router'] = 0.2 and requiredResources['broker'] = 0.4
+. Create standard address space with plan 'test1' 
+
+==== Testcase 1: check router limits
+. Create addresses 'a1' and 'a2', type 'anycast', plan 'anycast-test1'. Verify that addresses work and that phase is Active
+. Create addresses 'a3' type 'anycast', plan 'anycast-test1'. Verify that address is not created and phase is Pending with an error message 
+
+==== Testcase 2: Check broker limits
+. Create addresses 'q1', 'q2' and 'q3', type 'queue', plan 'queue-test1'. Verify that addresses work and that phase is Active
+. Create addresses 'q4' type 'queue', plan 'queue-test1'. Verify that address is not created and phase is Pending with an error message 
+
+==== Testcase 3: Check aggregate limits
+. Create addresses 'q1', 'q2' type 'queue', plan 'queue-test2'. Verify that addresses work and that phase is Active
+. Create addresses 'q3' type 'queue', plan 'queue-test2'. Verify that address is not created and phase is Pending with an error message 
+
+What is the test plan for the feature/change?
+
+== documentation
+
+What documentation will be created for this feature?
