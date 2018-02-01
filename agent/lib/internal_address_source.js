@@ -28,25 +28,52 @@ function AddressSource(config) {
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
+    this.filter_on_phase = true;
 }
 
 util.inherits(AddressSource, events.EventEmitter);
 
-function extract_address_spec(object) {
+function extract_address(object) {
     try {
-        var def = JSON.parse(object.data['config.json']);
-        if (def.spec === undefined) {
-            console.error('no spec found on %j', def);
-        }
-        return def.spec;
+        return JSON.parse(object.data['config.json']);
     } catch (e) {
         console.error('Failed to parse config.json for address: %s %j', e, object);
     }
 }
 
+function extract_spec(def) {
+    try {
+        if (def.spec === undefined) {
+            console.error('no spec found on %j', def);
+        }
+        if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
+            var o = Object.create(def.spec);
+            o.allocated_to = def.metadata.annotations['enmasse.io/broker-id'];
+            return o;
+        } else {
+            return def.spec;
+        }
+    } catch (e) {
+        console.error('Failed to parse config.json for address: %s %j', e, object);
+    }
+}
+
+function extract_address_spec(object) {
+    try {
+        return JSON.parse(object.data['config.json']).spec;
+    } catch (e) {
+        console.error('Failed to parse config.json for address: %s %j', e, object);
+    }
+}
+
+function ready (addr) {
+    return addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
+}
+
 AddressSource.prototype.updated = function (objects) {
-    var addresses = objects.map(extract_address_spec);
+    var addresses = this.filter_on_phase ? objects.map(extract_address).filter(ready).map(extract_spec) : objects.map(extract_address_spec);
     log.debug('addresses updated: %j', addresses);
+    log.info('retrieved address definitions: %j -> %j', objects, addresses);
     var self = this;
     this.readiness = objects.reduce(function (map, configmap) {
         var address = extract_address_spec(configmap).address;

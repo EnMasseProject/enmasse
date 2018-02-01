@@ -142,6 +142,10 @@ MockBroker.prototype.listen = function (port) {
     return this.server;
 };
 
+MockBroker.prototype.connect = function (port) {
+    return this.container.connect({port:port, properties:{product:'apache-activemq-artemis'}});
+};
+
 MockBroker.prototype.close = function (callback) {
     if (this.server) this.server.close(callback);
 };
@@ -325,5 +329,51 @@ MockBroker.prototype.get_pod_definition = function () {
         }
     };
 };
+
+function remove(list, predicate) {
+    var removed = [];
+    for (var i = 0; i < list.length; ) {
+        if (predicate(list[i])) {
+            removed.push(list.splice(i, 1)[0]);
+        } else {
+            i++;
+        }
+    }
+    return removed;
+}
+
+MockBroker.prototype.verify_queue = function (addresses, queues, name) {
+    var results = remove(queues, function (o) { return o.name === name; });
+    assert.equal(results.length, 1, util.format('queue %s not found', name));
+    assert.equal(results[0].name, name);
+    results = remove(addresses, function (o) { return o.name === name; });
+    assert.equal(results.length, 1, util.format('address %s not found', name));
+    assert.equal(results[0].name, name);
+    assert.equal(results[0].routingTypesAsJSON[0], 'ANYCAST');
+    assert.equal(results[0].queueNames[0], name);
+    return results[0];
+};
+
+MockBroker.prototype.verify_topic = function (addresses, name) {
+    var results = remove(addresses, function (o) { return o.name === name; });
+    assert.equal(results.length, 1, util.format('address %s not found', name));
+    assert.equal(results[0].name, name);
+    assert.equal(results[0].routingTypesAsJSON[0], 'MULTICAST');
+    return results[0];
+};
+
+MockBroker.prototype.verify_addresses = function (expected) {
+    var addresses = this.list_addresses();
+    var queues = this.list_queues();
+    for (var i = 0; i < expected.length; i++) {
+        if (expected[i].type === 'queue') {
+            this.verify_queue(addresses, queues, expected[i].address);
+        } else if (expected[i].type === 'topic') {
+            this.verify_topic(addresses, expected[i].address);
+        }
+    }
+    assert.equal(addresses.length, 0);
+    assert.equal(queues.length, 0);
+}
 
 module.exports = MockBroker;
