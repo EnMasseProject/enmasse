@@ -223,11 +223,11 @@ public class KeycloakClient {
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
             keycloak.get().realm(realm).groups().groups().forEach(group -> {
                 if (group != null) {
-                    Logging.log.info("group '{}' within path: '{}'", group.getName(), group.getPath());
+                    log.info("group '{}' within path: '{}'", group.getName(), group.getPath());
 
                 }
             });
-            Logging.log.info("user pavel: '{}'", keycloak.get().realm(realm).users().get("Pavel").toString());
+            log.info("user pavel: '{}'", keycloak.get().realm(realm).users().get("Pavel").toString());
 
         }
     }
