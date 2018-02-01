@@ -92,7 +92,7 @@ local common = import "common.jsonnet";
                 common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
                 common.env("MESSAGING_SECRET", "${MESSAGING_SECRET}"),
               ] + (if template_config != "" then [ common.env("TEMPLATE_DIR", "/enmasse-templates") ] else []),
-              "resources": common.memory_resources("256Mi", "256Mi"),
+              "resources": common.memory_resources("512Mi", "512Mi"),
               "ports": [
                 common.container_port("http", 8889)
               ],
