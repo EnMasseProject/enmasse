@@ -84,7 +84,7 @@ pipeline {
                     sh 'make -C templates || true'
                     sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
                     sh 'Xvfb :10 -ac &'
-                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig ${params.TEST_CASE}"
                 }
             }
         }

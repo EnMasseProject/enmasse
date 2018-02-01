@@ -3,8 +3,7 @@ CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
 ENMASSE_DIR=$1
-SYSTEMTESTS=$2
-TESTCASE=$3
+TESTCASE=$2
 failure=0
 
 export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
