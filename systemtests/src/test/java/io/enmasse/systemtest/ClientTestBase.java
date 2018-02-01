@@ -18,7 +18,7 @@ public abstract class ClientTestBase extends BrokeredTestBase {
     }
 
     private String getAmqpsRoute(AddressSpace addressSpace){
-        return getRouteEndpoint(defaultAddressSpace).toString();
+        return getRouteEndpoint(sharedAddressSpace).toString();
     }
 
     private String getOpenwireRoute(AddressSpace addressSpace){

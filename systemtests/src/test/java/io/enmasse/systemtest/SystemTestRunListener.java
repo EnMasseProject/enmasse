@@ -27,8 +27,8 @@ public class SystemTestRunListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        TestBaseWithDefault.defaultAddressSpaces.forEach((name, addrSpace) -> {
-            log.info("default address space '{}' will be removed", addrSpace);
+        TestBaseWithShared.sharedAddressSpaces.forEach((name, addrSpace) -> {
+            log.info("shared address space '{}' will be removed", addrSpace);
             try {
                 TestBase.deleteAddressSpace(addrSpace);
             } catch (Exception e) {
