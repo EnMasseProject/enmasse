@@ -3,7 +3,6 @@ package io.enmasse.systemtest.brokered;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +31,11 @@ public class TopicTest extends BrokeredTestBase {
             topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 1), getDefaultPlan(AddressType.TOPIC)));
             topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 2), getDefaultPlan(AddressType.TOPIC)));
         }
-        setAddresses(defaultAddressSpace, topicList.toArray(new Destination[0]));
+        setAddresses(sharedAddressSpace, topicList.toArray(new Destination[0]));
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
-        AmqpClient client = amqpClientFactory.createTopicClient(defaultAddressSpace);
+        AmqpClient client = amqpClientFactory.createTopicClient(sharedAddressSpace);
         client.getConnectOptions().setUsername("test").setPassword("test");
 
         //attach subscibers

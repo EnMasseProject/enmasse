@@ -15,9 +15,7 @@
  */
 package io.enmasse.systemtest;
 
-import java.util.Map;
-
-public abstract class StandardTestBase extends TestBaseWithDefault {
+public abstract class StandardTestBase extends TestBaseWithShared {
     @Override
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.STANDARD;

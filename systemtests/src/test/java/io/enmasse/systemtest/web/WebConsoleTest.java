@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-public abstract class WebConsoleTest extends TestBaseWithDefault implements ISeleniumProvider {
+public abstract class WebConsoleTest extends TestBaseWithShared implements ISeleniumProvider {
 
     protected SeleniumProvider selenium = new SeleniumProvider();
     @Rule
@@ -37,6 +37,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     @Before
     public void setUpWebConsoleTests() throws Exception {
         selenium.setupDriver(environment, kubernetes, buildDriver());
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
     }
 
     @After
@@ -45,7 +46,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestCreateDeleteAddress(Destination destination) throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressWebConsole(destination);
         consoleWebPage.deleteAddressWebConsole(destination);
     }
@@ -54,7 +55,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
 
@@ -79,7 +80,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         String subText = "web";
@@ -114,7 +115,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         consoleWebPage.sortItems(SortType.NAME, true);
@@ -128,7 +129,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -161,7 +162,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -180,7 +181,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -197,7 +198,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
 
     public void doTestFilterConnectionsByEncrypted() throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         Destination queue = Destination.queue("queue-via-web-connections-encrypted", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
@@ -229,13 +230,13 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestFilterConnectionsByUser() throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         Destination queue = Destination.queue("queue-via-web-connections-users", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
         KeycloakCredentials pavel = new KeycloakCredentials("pavel", "enmasse");
-        createUser(defaultAddressSpace, pavel.getUsername(), pavel.getPassword());
+        createUser(sharedAddressSpace, pavel.getUsername(), pavel.getPassword());
         List<AbstractClient> receiversPavel = null;
         List<AbstractClient> receiversTest = null;
         try {
@@ -263,7 +264,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         } catch (Exception ex) {
             throw ex;
         } finally {
-            removeUser(defaultAddressSpace, pavel.getUsername());
+            removeUser(sharedAddressSpace, pavel.getUsername());
             stopClients(receiversTest);
             stopClients(receiversPavel);
         }
@@ -273,7 +274,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestFilterConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -293,7 +294,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
@@ -311,7 +312,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestFilterConnectionsByContainerId() throws Exception {
         int connectionCount = 5;
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
@@ -333,7 +334,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestSortConnectionsByContainerId() throws Exception {
         int connectionCount = 5;
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
@@ -352,12 +353,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     public void doTestMessagesMetrics() throws Exception {
         int msgCount = 19;
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
-        AmqpClient client = amqpClientFactory.createQueueClient(defaultAddressSpace);
+        AmqpClient client = amqpClientFactory.createQueueClient(sharedAddressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
@@ -377,7 +378,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestClientsMetrics() throws Exception {
         int senderCount = 5;
         int receiverCount = 10;
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
@@ -398,12 +399,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         Destination destination = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
-        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+        getKeycloakClient().createUser(sharedAddressSpace.getName(),
                 monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
 
         consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
-                addressApiClient, defaultAddressSpace);
+                getConsoleRoute(sharedAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, sharedAddressSpace);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -420,13 +421,13 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 
-        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+        getKeycloakClient().createUser(sharedAddressSpace.getName(),
                 monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
         setAddresses(destination);
 
         consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
-                addressApiClient, defaultAddressSpace);
+                getConsoleRoute(sharedAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, sharedAddressSpace);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
@@ -461,7 +462,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.openConnectionsPageWebConsole();
 
         AbstractClient noUsersConnections = attachConnector(destination, 5, 1, 0);
-        AbstractClient usersConnections = attachConnector(defaultAddressSpace, destination,
+        AbstractClient usersConnections = attachConnector(sharedAddressSpace, destination,
                 5, 1, 0, "view_user_connections", "viewPa55");
         selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
 
@@ -484,8 +485,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         for (KeycloakCredentials user : users) {
             consoleWebPage = new ConsoleWebPage(selenium,
-                    getConsoleRoute(defaultAddressSpace, user.getUsername(), user.getPassword()),
-                    addressApiClient, defaultAddressSpace);
+                    getConsoleRoute(sharedAddressSpace, user.getUsername(), user.getPassword()),
+                    addressApiClient, sharedAddressSpace);
             consoleWebPage.openWebConsolePage();
             consoleWebPage.openAddressesPageWebConsole();
 
@@ -573,13 +574,13 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         prepareAddress(allowedAddress, noAllowedAddress);
 
         KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
-        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+        getKeycloakClient().createUser(sharedAddressSpace.getName(),
                 monitorUser.getUsername(), monitorUser.getPassword(),
                 "view_" + allowedAddress.getAddress(), "send_*");
 
         consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(defaultAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
-                addressApiClient, defaultAddressSpace);
+                getConsoleRoute(sharedAddressSpace, monitorUser.getUsername(), monitorUser.getPassword()),
+                addressApiClient, sharedAddressSpace);
     }
 
     private void prepareAddress(Destination... dest) throws Exception {
@@ -597,7 +598,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         users.add(new KeycloakCredentials("user_view_topicA*", "password"));
 
         for (KeycloakCredentials cred : users) {
-            getKeycloakClient().createUser(defaultAddressSpace.getName(), cred.getUsername(), cred.getPassword(),
+            getKeycloakClient().createUser(sharedAddressSpace.getName(), cred.getUsername(), cred.getPassword(),
                     cred.getUsername().replace("user_", ""));
         }
 
