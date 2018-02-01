@@ -23,13 +23,8 @@ public class QueueTest extends BrokeredTestBase {
      */
     @Test
     public void messageGroupTest() throws Exception {
-<<<<<<< HEAD
         Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
-        setAddresses(defaultAddressSpace, dest);
-=======
-        Destination dest = Destination.queue("messageGroupQueue");
         setAddresses(sharedAddressSpace, dest);
->>>>>>> UPD TestBaseWithDefault - renamed to TestBaseWithShared
 
         AmqpClient client = amqpClientFactory.createQueueClient(sharedAddressSpace);
 
