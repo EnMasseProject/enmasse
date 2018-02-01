@@ -17,14 +17,12 @@ package io.enmasse.systemtest.standard.auth;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.auth.AuthenticationTestBase;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Ignore
 public class AuthenticationTest extends AuthenticationTestBase {
 
     @Override

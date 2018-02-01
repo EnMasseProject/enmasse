@@ -3,9 +3,7 @@ package io.enmasse.systemtest.standard.web;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.web.WebConsoleTest;
-import org.junit.Ignore;
 
-@Ignore
 public abstract class StandardWebConsoleTest extends WebConsoleTest {
     @Override
     protected AddressSpaceType getAddressSpaceType() {
