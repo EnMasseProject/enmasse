@@ -474,14 +474,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     public void doTestViewAddressesWildcards() throws Exception {
-        Destination queue = Destination.queue("queue_1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queueABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic_2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topicABCD", getDefaultPlan(AddressType.TOPIC));
+        List<Destination> addresses = getAddressesWildcard();
+        setAddresses(addresses.toArray(new Destination[0]));
 
-        setAddresses(queue, queue2, topic, topic2);
-
-        List<KeycloakCredentials> users = createUsersWildcard();
+        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace,"view");
 
         for (KeycloakCredentials user : users) {
             consoleWebPage = new ConsoleWebPage(selenium,
@@ -554,7 +550,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             fail("No address items in console for group " + group);
         for (AddressWebItem item : addresses) {
             if (group.contains("*")) {
-                assertTrue(item.getName().matches(group.replace("view_", "")));
+                String rights = username.replace("user_view_", "").replace("*", "");
+                assertTrue(rights.equals("") || item.getName().contains(rights));
             } else {
                 assertTrue(item.getName().equals(group.replace("view_", "")));
             }

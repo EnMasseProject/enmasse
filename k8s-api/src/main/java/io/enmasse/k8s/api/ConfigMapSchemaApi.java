@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ConfigMapSchemaApi implements SchemaApi {
@@ -84,26 +85,34 @@ public class ConfigMapSchemaApi implements SchemaApi {
     }
 
     @Override
-    public void copyIntoNamespace(String otherNamespace) {
+    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace) {
         KubernetesListBuilder listBuilder = new KubernetesListBuilder();
-        listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("resource-definition").getItems(), otherNamespace));
-        listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("address-space-plan").getItems(), otherNamespace));
-        listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("address-plan").getItems(), otherNamespace));
+        listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("resource-definition").getItems(), m -> true, otherNamespace));
+        listBuilder.addAllToConfigMapItems(copyMaps(
+                listConfigMaps("address-space-plan").getItems(),
+                m -> getResourceFromConfig(AddressSpacePlan.class, m).equals(plan),
+                otherNamespace));
+        listBuilder.addAllToConfigMapItems(copyMaps(
+                listConfigMaps("address-plan").getItems(),
+                m -> plan.getAddressPlans().contains(getResourceFromConfig(AddressPlan.class, m).getName()),
+                otherNamespace));
         client.lists().inNamespace(otherNamespace).create(listBuilder.build());
     }
 
-    private Collection<ConfigMap> copyMaps(List<ConfigMap> items, String otherNamespace) {
+    private Collection<ConfigMap> copyMaps(List<ConfigMap> items, Predicate<ConfigMap> filter, String otherNamespace) {
         List<ConfigMap> list = new ArrayList<>();
         for (ConfigMap map : items) {
-            list.add(new ConfigMapBuilder()
-                    .editOrNewMetadata()
-                    .withName(map.getMetadata().getName())
-                    .withNamespace(otherNamespace)
-                    .addToLabels(map.getMetadata().getLabels())
-                    .addToAnnotations(map.getMetadata().getAnnotations())
-                    .endMetadata()
-                    .addToData(map.getData())
-                    .build());
+            if (filter.test(map)) {
+                list.add(new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withName(map.getMetadata().getName())
+                        .withNamespace(otherNamespace)
+                        .addToLabels(map.getMetadata().getLabels())
+                        .addToAnnotations(map.getMetadata().getAnnotations())
+                        .endMetadata()
+                        .addToData(map.getData())
+                        .build());
+            }
         }
         return list;
     }
