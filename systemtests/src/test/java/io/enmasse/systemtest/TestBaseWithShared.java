@@ -37,7 +37,7 @@ import static org.junit.Assert.assertThat;
 @Category(SharedAddressSpace.class)
 public abstract class TestBaseWithShared extends TestBase {
     private static Logger log = CustomLogger.getLogger();
-    private static final String defaultAddressTemplate = "-default-";
+    private static final String defaultAddressTemplate = "-shared-";
     protected static AddressSpace sharedAddressSpace;
     protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
