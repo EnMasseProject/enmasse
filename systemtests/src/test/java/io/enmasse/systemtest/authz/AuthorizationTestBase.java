@@ -3,7 +3,6 @@ package io.enmasse.systemtest.authz;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Before;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -17,15 +16,14 @@ import static org.junit.Assert.assertTrue;
 
 public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
+    private static Logger log = CustomLogger.getLogger();
     private final Destination queue = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
     private final Destination topic = Destination.topic("authz-topic", getDefaultPlan(AddressType.TOPIC));
     private final Destination anycast = Destination.anycast("authz-anycast");
     private final Destination multicast = Destination.multicast("authz-multicast");
-    private static Logger log = CustomLogger.getLogger();
     private List<Destination> addresses;
 
-    @Before
-    public void initAddresses() throws Exception {
+    private void initAddresses() throws Exception {
         addresses = new ArrayList<>();
         addresses.add(queue);
         addresses.add(topic);
@@ -37,6 +35,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     protected void doTestSendAuthz() throws Exception {
+        initAddresses();
         KeycloakCredentials allowedUser = new KeycloakCredentials("sender", "senderPa55");
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedSender", "nobodyPa55");
 
@@ -59,6 +58,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     protected void doTestReceiveAuthz() throws Exception {
+        initAddresses();
         KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedReceiver", "nobodyPa55");
 
@@ -77,6 +77,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     protected void doTestUserPermissionAfterRemoveAuthz() throws Exception {
+        initAddresses();
         KeycloakCredentials user = new KeycloakCredentials("pepa", "pepaPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(), user.getUsername(), user.getPassword(), Group.RECV_ALL.toString());
@@ -114,8 +115,13 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         }
     }
 
+    //===========================================================================================================
+    // Help methods
+    //===========================================================================================================
+
     private void assertSendWildcard(String username, String password, Destination destination) throws Exception {
-        if (destination.getAddress().matches(username.replace("user_", ""))) {
+        String rights = username.replace("user_send_", "").replace("*", "");
+        if (rights.equals("") || destination.getAddress().contains(rights)) {
             assertTrue(canSend(destination, username, password));
         } else {
             assertFalse(canSend(destination, username, password));
@@ -123,7 +129,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertReceiveWildcard(String username, String password, Destination destination) throws Exception {
-        if (destination.getAddress().matches(username.replace("user_", ""))) {
+        String rights = username.replace("user_receive_", "").replace("*", "");
+        if (rights.equals("") || destination.getAddress().contains(rights)) {
             assertTrue(canReceive(destination, username, password));
         } else {
             assertFalse(canReceive(destination, username, password));
@@ -175,12 +182,14 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private boolean canSend(Destination destination, String username, String password) throws Exception {
+        log.info("Try send message under user {}", username);
         AmqpClient sender = createClient(destination, username, password);
         AmqpClient receiver = createClient(destination, this.username, this.password);
         return canAuth(sender, receiver, destination);
     }
 
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
+        log.info("Try receive message under user {}", username);
         AmqpClient sender = createClient(destination, this.username, this.password);
         AmqpClient receiver = createClient(destination, username, password);
         return canAuth(sender, receiver, destination);
