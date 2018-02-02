@@ -13,8 +13,6 @@ SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
 SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
 export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
-enable_core_dumps "/tmp/cores"
-
 setup_test ${ENMASSE_DIR} ${KUBEADM}
 
 #environment info before tests
