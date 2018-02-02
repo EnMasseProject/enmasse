@@ -21,9 +21,7 @@ import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.ConfigMapAddressApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.KubeEventLogger;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -118,6 +116,25 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public AddressApi createAddressApi() {
         return new ConfigMapAddressApi(client, client.getNamespace());
+    }
+
+    @Override
+    public List<EndpointAddress> listBrokers(String clusterId) {
+        for (Service service : client.services().list().getItems()) {
+            if (service.getMetadata().getAnnotations() != null &&
+                    clusterId.equals(service.getMetadata().getAnnotations().get(AnnotationKeys.CLUSTER_ID))) {
+                Endpoints endpoints = client.endpoints().withName(service.getMetadata().getName()).get();
+                if (endpoints != null) {
+                    List<EndpointAddress> addresses = new ArrayList<>();
+                    List<EndpointSubset> subsets = endpoints.getSubsets();
+                    for (EndpointSubset subset : subsets) {
+                        addresses.addAll(subset.getAddresses());
+                    }
+                    return addresses;
+                }
+            }
+        }
+        return Collections.emptyList();
     }
 
     @Override
