@@ -115,6 +115,9 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
+                <testcase.groups>io.enmasse.systemtest.SharedAddressSpace,io.enmasse.systemtest.IsolatedAddressSpace</testcase.groups>
+                <exclude.tests.group>io.enmasse.systemtest.MarathonTests</exclude.tests.group>
+                <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>

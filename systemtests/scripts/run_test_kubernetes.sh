@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
@@ -34,7 +35,7 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
-run_test ${TESTCASE} || failure=$(($failure + 1))
+run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}

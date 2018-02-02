@@ -91,7 +91,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     protected void doTestSendAuthzWithWIldcards() throws Exception {
         List<Destination> addresses = getAddressesWildcard();
-        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace, "send");
+        List<KeycloakCredentials> users = createUsersWildcard(sharedAddressSpace, "send");
 
         setAddresses(addresses.toArray(new Destination[0]));
 
@@ -104,7 +104,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     protected void doTestReceiveAuthzWithWIldcards() throws Exception {
         List<Destination> addresses = getAddressesWildcard();
-        List<KeycloakCredentials> users = createUsersWildcard(defaultAddressSpace, "recv");
+        List<KeycloakCredentials> users = createUsersWildcard(sharedAddressSpace, "recv");
 
         setAddresses(addresses.toArray(new Destination[0]));
 
