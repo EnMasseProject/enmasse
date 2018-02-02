@@ -115,7 +115,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     @Override
     public synchronized void resourcesUpdated(Set<Address> newAddressSet) throws Exception {
-        log.debug("Check address in address space controller: " + newAddressSet);
+        log.info("Check addresses in address space controller: " + newAddressSet.stream().map(Address::getAddress).collect(Collectors.toList()));
 
         Map<String, Set<Address>> addressByGroup = new LinkedHashMap<>();
         for (Address address : newAddressSet) {
