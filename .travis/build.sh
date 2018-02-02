@@ -40,4 +40,4 @@ echo "Pushing images to Docker Registry"
 make TAG=$COMMIT docker_push
 
 echo "Running systemtests"
-./systemtests/scripts/run_test_kubernetes.sh templates/install systemtests ${SYSTEMTEST_ARGS}
+./systemtests/scripts/run_test_kubernetes.sh templates/install ${SYSTEMTEST_ARGS}

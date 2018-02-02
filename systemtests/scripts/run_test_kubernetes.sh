@@ -35,7 +35,7 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
-run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))
+run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
