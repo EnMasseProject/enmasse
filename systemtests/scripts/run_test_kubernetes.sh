@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 

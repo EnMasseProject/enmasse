@@ -6,7 +6,7 @@ COMMIT=${COMMIT:-latest}
 VERSION=`cat release.version`
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
-SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-SmokeTest}
+SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}
 
 if [ "$TAG" != "latest" ]; then
     COMMIT=$TAG
