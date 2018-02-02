@@ -7,7 +7,8 @@
         "name": "MY_QUEUE"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -15,7 +16,8 @@
         "name": "MY_QUEUE2"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -23,7 +25,8 @@
         "name": "testQ0"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -31,7 +34,8 @@
         "name": "testQ1"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -39,7 +43,8 @@
         "name": "testQ2"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -47,7 +52,8 @@
         "name": "testQueue2"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -55,7 +61,8 @@
         "name": "Q2"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -63,7 +70,8 @@
         "name": "myQueue"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "brokered-queue"
       }
     },
     {
@@ -71,7 +79,8 @@
         "name": "MY_TOPIC"
       },
       "spec": {
-        "type": "topic"
+        "type": "topic",
+        "plan": "brokered-topic"
       }
     },
     {
@@ -79,7 +88,8 @@
         "name": "MY_TOPIC2"
       },
       "spec": {
-        "type": "topic"
+        "type": "topic",
+        "plan": "brokered-topic"
       }
     },
     {
@@ -87,7 +97,8 @@
         "name": "testT0"
       },
       "spec": {
-        "type": "topic"
+        "type": "topic",
+        "plan": "brokered-topic"
       }
     },
     {
@@ -95,7 +106,8 @@
         "name": "testT1"
       },
       "spec": {
-        "type": "topic"
+        "type": "topic",
+        "plan": "brokered-topic"
       }
     },
     {
