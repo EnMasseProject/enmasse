@@ -107,7 +107,7 @@ pipeline {
             archive 'templates/install/**'
             archive "${env.CORES_DIR}/**"
             tearDownOpenshift()
-            sh "check_and_clear_cores.sh ${env.CORES_DIR}"
+            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
         }
         failure {
             echo "build failed"
