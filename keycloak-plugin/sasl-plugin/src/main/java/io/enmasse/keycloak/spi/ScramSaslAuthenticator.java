@@ -22,6 +22,7 @@ import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.credential.CredentialModel;
 import org.keycloak.credential.PasswordCredentialProvider;
 import org.keycloak.credential.UserCredentialStoreManager;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -56,12 +58,12 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
     private String username;
     private String nonce;
     private String serverFirstMessage;
-    private RealmModel realm;
-    private UserModel user;
+    private UserData user;
     private final byte[] randomBytes;
     private final String digestName;
     private final String hmacName;
     private Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions;
+    private CredentialModel credentialModel;
 
     interface StoredAndServerKey {
         byte[] getStoredKey();
@@ -108,11 +110,21 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
         username = decodeUsername(parts[2].substring(2));
 
         keycloakSession.getTransactionManager().begin();
-        realm = keycloakSession.realms().getRealmByName(hostname);
-        keycloakSession.getTransactionManager().commit();
-        if(realm != null) {
-            user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
+        try {
+            RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
+            if (realm != null) {
+                UserModel userModel = keycloakSession.userStorageManager().getUserByUsername(username, realm);
+                if (userModel != null) {
+                    PasswordCredentialProvider passwordCredentialProvider = getPasswordCredentialProvider(realm, userModel);
+                    credentialModel = passwordCredentialProvider.getPassword(realm, userModel);
+
+                    user = new UserDataImpl(userModel.getId(), userModel.getUsername(), userModel.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                }
+            }
+        } finally {
+            keycloakSession.getTransactionManager().commit();
         }
+
 
         if(!parts[3].startsWith("r=")) {
             throw new IllegalArgumentException("Cannot parse client first message");
@@ -124,7 +136,6 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
     }
 
     private byte[] getSalt() {
-        CredentialModel credentialModel = getCredentialModel();
         if(credentialModel == null) {
             byte[] tmpSalt = new byte[16];
             byte[] hmac = computeHmac(this.hmacName, this.randomBytes, username);
@@ -147,7 +158,6 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
     }
 
     private int getIterations() {
-        CredentialModel credentialModel = getCredentialModel();
         if (credentialModel == null) {
             // TODO - should come from the policy
             return 20000;
@@ -213,8 +223,6 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
 
             StoredAndServerKey keys;
 
-            final CredentialModel credentialModel = getCredentialModel();
-
             if (credentialModel == null) {
                 keys = getStoredAndServerKeyFromPbkdf2Hash(null, hmacName, digestName);
             }  else {
@@ -235,7 +243,7 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
 
             final byte[] storedKeyFromClient = MessageDigest.getInstance(this.digestName).digest(proofBytes);
 
-            if(user == null || realm == null || !Arrays.equals(storedKeyFromClient, keys.getStoredKey())) {
+            if(user == null || !Arrays.equals(storedKeyFromClient, keys.getStoredKey())) {
                 authenticated = false;
                 state = State.COMPLETE;
                 return null;
@@ -317,16 +325,6 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
 
     }
 
-    private CredentialModel getCredentialModel() {
-        if(realm != null && user != null) {
-            PasswordCredentialProvider passwordCredentialProvider = getPasswordCredentialProvider(realm, user);
-
-            return passwordCredentialProvider.getPassword(realm, user);
-        } else {
-            return null;
-        }
-    }
-
     private PasswordCredentialProvider getPasswordCredentialProvider(final RealmModel realm, final UserModel user) {
         PasswordCredentialProvider passwordCredentialProvider = null;
 
@@ -395,7 +393,7 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
     }
 
     @Override
-    public UserModel getAuthenticatedUser() {
+    public UserData getAuthenticatedUser() {
         return user;
     }
 

@@ -27,9 +27,7 @@ import io.vertx.proton.ProtonServerOptions;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
-import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.models.UserModel;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -77,19 +75,18 @@ public class AmqpServer extends AbstractVerticle {
         String containerId = config.get("containerId", "keycloak-amqp");
         connection.setContainer(containerId);
         connection.openHandler(conn -> {
-            UserModel userModel = connection.attachments().get(SaslAuthenticator.USER_ATTACHMENT, UserModel.class);
-            if(userModel != null) {
+            UserData userData = connection.attachments().get(SaslAuthenticator.USER_ATTACHMENT, UserData.class);
+            if(userData != null) {
                 Map<Symbol, Object> props = new HashMap<>();
                 Map<String, Object> authUserMap = new HashMap<>();
-                authUserMap.put("sub", userModel.getId());
-                authUserMap.put("preferred_username", userModel.getUsername());
+                authUserMap.put("sub", userData.getId());
+                authUserMap.put("preferred_username", userData.getUsername());
                 props.put(Symbol.valueOf("authenticated-identity"), authUserMap);
-                Set<String> groups = userModel.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet());
-                props.put(Symbol.valueOf("groups"), new ArrayList<>(groups));
+                props.put(Symbol.valueOf("groups"), new ArrayList<>(userData.getGroups()));
                 // TODO - Access to connection capabilities requires vert.x proton >= 3.5.0
                 // if(connection.getRemoteDesiredCapabilities() != null && Arrays.asList(connection.getRemoteDesiredCapabilities()).contains(ADDRESS_AUTHZ_CAPABILITY)) {
                     // connection.setOfferedCapabilities(new Symbol[] { ADDRESS_AUTHZ_CAPABILITY });
-                props.put(ADDRESS_AUTHZ_PROPERTY, getPermissionsFromGroups(groups));
+                props.put(ADDRESS_AUTHZ_PROPERTY, getPermissionsFromGroups(userData.getGroups()));
                 // }
                 connection.setProperties(props);
             }

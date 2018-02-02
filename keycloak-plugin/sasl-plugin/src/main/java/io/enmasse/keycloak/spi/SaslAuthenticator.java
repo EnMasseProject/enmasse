@@ -29,7 +29,6 @@ import org.keycloak.credential.hash.Pbkdf2Sha256PasswordHashProviderFactory;
 import org.keycloak.credential.hash.Pbkdf2Sha512PasswordHashProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.models.UserModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,6 +37,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
 {
 
     static final Object USER_ATTACHMENT = new Object();
+
     private static Map<String, SaslServerMechanism> MECHANISMS = new LinkedHashMap<>();
 
     // TODO - load these dynamically
@@ -125,7 +125,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
                     done = true;
                     if (succeeded)
                     {
-                        connection.attachments().set(USER_ATTACHMENT, UserModel.class, saslMechanism.getAuthenticatedUser());
+                        connection.attachments().set(USER_ATTACHMENT, UserData.class, saslMechanism.getAuthenticatedUser());
                         sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
                     }
                     else
