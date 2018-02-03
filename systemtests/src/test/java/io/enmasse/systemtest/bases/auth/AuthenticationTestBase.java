@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.systemtest.TestCollection.auth;
+package io.enmasse.systemtest.bases.auth;
 
 import io.enmasse.systemtest.*;
 import org.junit.experimental.categories.Category;

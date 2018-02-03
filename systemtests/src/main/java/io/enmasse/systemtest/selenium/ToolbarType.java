@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.TestCollection.web;
+package io.enmasse.systemtest.selenium;
 
 public enum ToolbarType {
     ADDRESSES{

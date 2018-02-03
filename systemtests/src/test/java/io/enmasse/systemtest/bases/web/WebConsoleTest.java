@@ -1,8 +1,9 @@
-package io.enmasse.systemtest.TestCollection.web;
+package io.enmasse.systemtest.bases.web;
 
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.selenium.*;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;
 import org.junit.After;
@@ -387,7 +388,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         AbstractClient client = new RheaClientConnector();
         try {
             client = attachConnector(dest, 1, senderCount, receiverCount);
-            selenium.waitUntilPropertyPresent(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
+            selenium.waitUntilPropertyPresent(60, senderCount, consoleWebPage.getAddressItem(dest)::getSendersCount);
 
             assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
             assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());

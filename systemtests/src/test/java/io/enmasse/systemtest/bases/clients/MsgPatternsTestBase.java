@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.TestCollection.clients;
+package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;

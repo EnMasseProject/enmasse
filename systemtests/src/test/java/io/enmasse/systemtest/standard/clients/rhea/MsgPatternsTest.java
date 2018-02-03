@@ -17,7 +17,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doRoundRobinReceiverTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver(), false);
     }
@@ -37,7 +37,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doMessageSelectorQueueTest(new RheaClientSender(), new RheaClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new RheaClientSender(), new RheaClientReceiver(),
                 new RheaClientReceiver(), new RheaClientReceiver(), false);

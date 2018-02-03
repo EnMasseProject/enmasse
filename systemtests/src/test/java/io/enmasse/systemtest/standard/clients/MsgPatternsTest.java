@@ -1,7 +1,7 @@
 package io.enmasse.systemtest.standard.clients;
 
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.TestCollection.clients.MsgPatternsTestBase;
+import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
 
 public abstract class MsgPatternsTest extends MsgPatternsTestBase {
     @Override

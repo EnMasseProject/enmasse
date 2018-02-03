@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.TestCollection.authz;
+package io.enmasse.systemtest.bases.authz;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
