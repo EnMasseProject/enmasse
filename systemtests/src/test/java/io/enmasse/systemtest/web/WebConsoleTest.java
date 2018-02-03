@@ -36,6 +36,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     @Before
     public void setUpWebConsoleTests() throws Exception {
+        Thread.sleep(30000); //sleep before run test (until geckodriver will be fixed)
         selenium.setupDriver(environment, kubernetes, buildDriver());
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
     }
