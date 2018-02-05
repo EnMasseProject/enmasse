@@ -123,62 +123,70 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     private void assertSendWildcard(String username, String password, Destination destination) throws Exception {
         String rights = username.replace("user_send_", "").replace("*", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
-            assertTrue(canSend(destination, username, password));
+            assertTrue(String.format("Authz failed, user %s cannot send message", username),
+                    canSend(destination, username, password));
         } else {
-            assertFalse(canSend(destination, username, password));
+            assertFalse(String.format("Authz failed, user %s can send message", username),
+                    canSend(destination, username, password));
         }
     }
 
     private void assertReceiveWildcard(String username, String password, Destination destination) throws Exception {
         String rights = username.replace("user_recv_", "").replace("*", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
-            assertTrue(canReceive(destination, username, password));
+            assertTrue(String.format("Authz failed, user %s cannot receive message", username),
+                    canReceive(destination, username, password));
         } else {
-            assertFalse(canReceive(destination, username, password));
+            assertFalse(String.format("Authz failed, user %s can receive message", username),
+                    canReceive(destination, username, password));
         }
     }
 
     private void assertSend(String username, String password) throws Exception {
         log.info("Testing if client is authorized to send messages");
-        assertTrue(canSend(queue, username, password));
-        assertTrue(canSend(topic, username, password));
+        String message = String.format("Authz failed, user %s cannot send message", username);
+        assertTrue(message, canSend(queue, username, password));
+        assertTrue(message, canSend(topic, username, password));
 
         if (getAddressSpaceType() == AddressSpaceType.STANDARD) {
-            assertTrue(canSend(multicast, username, password));
-            assertTrue(canSend(anycast, username, password));
+            assertTrue(message, canSend(multicast, username, password));
+            assertTrue(message, canSend(anycast, username, password));
         }
     }
 
     private void assertCannotSend(String username, String password) throws Exception {
         log.info("Testing if client is NOT authorized to send messages");
-        assertFalse(canSend(queue, username, password));
-        assertFalse(canSend(topic, username, password));
+        String message = String.format("Authz failed, user %s can send message", username);
+        assertFalse(message, canSend(queue, username, password));
+        assertFalse(message, canSend(topic, username, password));
 
         if (getAddressSpaceType() == AddressSpaceType.STANDARD) {
-            assertFalse(canSend(multicast, username, password));
-            assertFalse(canSend(anycast, username, password));
+            assertFalse(message, canSend(multicast, username, password));
+            assertFalse(message, canSend(anycast, username, password));
         }
     }
 
     private void assertReceive(String username, String password) throws Exception {
         log.info("Testing if client is authorized to receive messages");
-        assertTrue(canReceive(queue, username, password));
-        assertTrue(canReceive(topic, username, password));
+        String message = String.format("Authz failed, user %s cannot receive message", username);
+        assertTrue(message, canReceive(queue, username, password));
+        assertTrue(message, canReceive(topic, username, password));
 
         if (getAddressSpaceType() == AddressSpaceType.STANDARD) {
-            assertTrue(canReceive(multicast, username, password));
-            assertTrue(canReceive(anycast, username, password));
+            assertTrue(message, canReceive(multicast, username, password));
+            assertTrue(message, canReceive(anycast, username, password));
         }
     }
 
     private void assertCannotReceive(String username, String password) throws Exception {
         log.info("Testing if client is NOT authorized to receive messages");
-        assertFalse(canReceive(queue, username, password));
-        assertFalse(canReceive(topic, username, password));
+        String message = String.format("Authz failed, user %s can receive message", username);
+        assertFalse(message, canReceive(queue, username, password));
+        assertFalse(message, canReceive(topic, username, password));
 
         if (getAddressSpaceType() == AddressSpaceType.STANDARD) {
-            assertFalse(canReceive(multicast, username, password));
-            assertFalse(canReceive(anycast, username, password));
+            assertFalse(message, canReceive(multicast, username, password));
+            assertFalse(message, canReceive(anycast, username, password));
         }
     }
 
