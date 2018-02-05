@@ -108,6 +108,7 @@ pipeline {
 //            archive 'templates/install/**'
             sh "ls -la ${env.CORES_DIR}"
             sh "sudo cp ${env.CORES_DIR}/* artifacts/"
+            sh 'ls -la artifacts/'
             sh "sleep 60"
             archive 'artifacts/**'
             tearDownOpenshift()
