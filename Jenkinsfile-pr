@@ -65,11 +65,11 @@ pipeline {
 //                sh 'sudo PATH=$PATH make client_install'
 //            }
 //        }
-//        stage('install webdrivers') {
-//            steps {
-//                sh 'sudo make webdriver_install'
-//            }
-//        }
+        stage('install webdrivers') {
+            steps {
+                sh 'sudo make webdriver_install'
+            }
+        }
 //        stage('push docker images') {
 //            steps {
 //                sh 'oc login -u test -p test'
@@ -107,7 +107,8 @@ pipeline {
 //            archive 'artifacts/**'
 //            archive 'templates/install/**'
             sh "ls -la ${env.CORES_DIR}"
-            sh "sudo cp ${env.CORES_DIR}/* artifacts/"
+            sh 'tar -czvf core-dumps.tar.gz ${env.CORES_DIR}'
+            sh "sudo mv core-dumps.tar.gz artifacts/"
             sh 'ls -la artifacts/'
             sh "sleep 60"
             archive 'artifacts/**'
