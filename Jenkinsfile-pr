@@ -107,7 +107,7 @@ pipeline {
 //            archive 'artifacts/**'
 //            archive 'templates/install/**'
             sh "ls -la ${env.CORES_DIR}"
-            sh "tar -czvf core-dumps.tar.gz ${env.CORES_DIR}"
+            sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}"
             sh "sudo mv core-dumps.tar.gz artifacts/"
             sh 'ls -la artifacts/'
             sh "sleep 60"
