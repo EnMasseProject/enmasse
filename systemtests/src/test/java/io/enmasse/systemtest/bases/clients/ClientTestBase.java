@@ -1,7 +1,7 @@
 package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.TestBaseWithShared;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import org.junit.After;

@@ -2,6 +2,7 @@ package io.enmasse.systemtest.bases.authz;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 

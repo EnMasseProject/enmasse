@@ -18,8 +18,7 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.StandardTestBase;
-import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.junit.Test;
 

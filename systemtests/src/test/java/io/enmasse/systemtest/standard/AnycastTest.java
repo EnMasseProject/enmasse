@@ -17,7 +17,7 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.StandardTestBase;
+import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;

@@ -16,6 +16,7 @@
 package io.enmasse.systemtest.bases.auth;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.bases.TestBase;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;

@@ -100,7 +100,7 @@
                     <properties>
                         <property>
                             <name>listener</name>
-                            <value>io.enmasse.systemtest.SystemTestRunListener</value>
+                            <value>io.enmasse.systemtest.bases.SystemTestRunListener</value>
                         </property>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>

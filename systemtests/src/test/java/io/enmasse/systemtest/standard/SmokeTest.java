@@ -16,12 +16,10 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.StandardTestBase;
-import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.mqtt.MqttClient;
-import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 import org.junit.Test;

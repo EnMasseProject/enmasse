@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Red Hat Inc.
+ * Copyright 2016 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.systemtest;
 
-public abstract class StandardTestBase extends TestBaseWithShared {
+package io.enmasse.systemtest.bases;
+
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+
+public abstract class BrokeredTestBase extends TestBaseWithShared {
+
     @Override
     protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.STANDARD;
+        return AddressSpaceType.BROKERED;
     }
 
     @Override
     protected String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return "sharded-queue";
+                return "brokered-queue";
             case TOPIC:
-                return "sharded-topic";
-            case ANYCAST:
-                return "standard-anycast";
-            case MULTICAST:
-                return "standard-multicast";
+                return "brokered-topic";
         }
         return null;
     }

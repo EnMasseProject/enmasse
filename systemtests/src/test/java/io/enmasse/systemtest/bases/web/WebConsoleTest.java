@@ -3,6 +3,7 @@ package io.enmasse.systemtest.bases.web;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.*;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;

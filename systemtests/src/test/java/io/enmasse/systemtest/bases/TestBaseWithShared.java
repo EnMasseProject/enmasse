@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.bases;
 
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
