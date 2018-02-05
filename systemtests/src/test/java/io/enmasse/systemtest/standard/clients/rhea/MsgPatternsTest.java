@@ -22,17 +22,17 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doTopicSubscribeTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver(), false);
     }
 
-    @Test
+    //@Test
     public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testDrainQueue() throws Exception {
         doDrainQueueTest(new RheaClientSender(), new RheaClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorQueue() throws Exception{
         doMessageSelectorQueueTest(new RheaClientSender(), new RheaClientReceiver());
     }

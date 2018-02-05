@@ -22,17 +22,17 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doTopicSubscribeTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver(), false);
     }
 
-    @Test
+    //@Test
     public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testDrainQueue() throws Exception {
         doDrainQueueTest(new PythonClientSender(), new PythonClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorQueue() throws Exception{
         doMessageSelectorQueueTest(new PythonClientSender(), new PythonClientReceiver());
     }

@@ -7,12 +7,12 @@ import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
-    @Test
+    //@Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new ProtonJMSClientSender(), new ProtonJMSClientSender());
     }
 
-    @Test
+    //@Test
     public void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
     }
@@ -22,17 +22,17 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doTopicSubscribeTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
     }
 
-    @Test
+    //@Test
     public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testDrainQueue() throws Exception {
         doDrainQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorQueue() throws Exception{
         doMessageSelectorQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
     }
