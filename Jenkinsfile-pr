@@ -111,6 +111,7 @@ pipeline {
             sh 'ls -la artifacts/'
             sh "sleep 60"
             archive 'artifacts/**'
+            sh "sleep 60"
             tearDownOpenshift()
             sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
         }
