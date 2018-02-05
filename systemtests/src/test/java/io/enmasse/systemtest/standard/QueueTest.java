@@ -129,6 +129,7 @@ public class QueueTest extends StandardTestBase {
         }
     }
 
+    @Test
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue", "sharded-queue");
         setAddresses(dest);
