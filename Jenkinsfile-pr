@@ -106,13 +106,9 @@ pipeline {
 //            archive '**/TEST-*.xml'
 //            archive 'artifacts/**'
 //            archive 'templates/install/**'
-            sh "ls -la ${env.CORES_DIR}"
-            sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}"
+            sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}/*"
             sh "sudo mv core-dumps.tar.gz artifacts/"
-            sh 'ls -la artifacts/'
-            sh "sleep 60"
             archive 'artifacts/**'
-            sh "sleep 60"
             tearDownOpenshift()
             sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
         }
