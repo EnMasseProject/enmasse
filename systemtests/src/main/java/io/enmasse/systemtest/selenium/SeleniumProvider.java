@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class SeleniumProvider {
 
+    private static Logger log = CustomLogger.getLogger();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
     public WebDriver driver;
     public NgWebDriver angularDriver;
@@ -32,8 +33,6 @@ public class SeleniumProvider {
     private String webconsoleFolder = "selenium_tests";
     private Environment environment;
     private Kubernetes kubernetes;
-    private static Logger log = CustomLogger.getLogger();
-
 
     public void onFailed(Throwable e, Description description) {
         try {
@@ -109,7 +108,7 @@ public class SeleniumProvider {
 
     protected void executeJavaScript(String script, String textToLog) throws Exception {
         takeScreenShot();
-        assertNotNull(script);
+        assertNotNull("Selenium provider failed, script to execute is null", script);
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
         ((JavascriptExecutor) driver).executeScript(script);
         angularDriver.waitForAngularRequestsToFinish();
@@ -118,7 +117,7 @@ public class SeleniumProvider {
 
     protected void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
-        assertNotNull(element);
+        assertNotNull("Selenium provider failed, element is null", element);
         log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
         element.click();
         angularDriver.waitForAngularRequestsToFinish();
@@ -128,7 +127,7 @@ public class SeleniumProvider {
 
     protected void fillInputItem(WebElement element, String text) throws Exception {
         takeScreenShot();
-        assertNotNull(element);
+        assertNotNull("Selenium provider failed, element is null", element);
         element.sendKeys(text);
         angularDriver.waitForAngularRequestsToFinish();
         log.info("Filled input with text: " + text);
@@ -137,7 +136,7 @@ public class SeleniumProvider {
 
     protected void pressEnter(WebElement element) throws Exception {
         takeScreenShot();
-        assertNotNull(element);
+        assertNotNull("Selenium provider failed, element is null", element);
         element.sendKeys(Keys.RETURN);
         angularDriver.waitForAngularRequestsToFinish();
         log.info("Enter pressed");
@@ -161,17 +160,17 @@ public class SeleniumProvider {
                     boolean result = item.get() != null;
                     if (result)
                         break;
-                }catch (Exception ignored){
-                }finally {
+                } catch (Exception ignored) {
+                } finally {
                     log.info("Element not present, go to next iteration: " + attempts);
                 }
             } else {
-                try{
+                try {
                     boolean result = item.get() == null;
                     if (result)
                         break;
-                }catch (Exception ignored){
-                }finally {
+                } catch (Exception ignored) {
+                } finally {
                     log.info("Element still present, go to next iteration: " + attempts);
                 }
             }

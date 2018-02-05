@@ -623,27 +623,27 @@ public abstract class TestBase extends SystemTestRunListener {
     //================================================================================================
     //==================================== Asserts methods ===========================================
     //================================================================================================
-    public void assertSorted(Iterable list) throws Exception {
-        assertSorted(list, false);
+    public void assertSorted(String message, Iterable list) throws Exception {
+        assertSorted(message, list, false);
     }
 
-    public void assertSorted(Iterable list, Comparator comparator) throws Exception {
-        assertSorted(list, false, comparator);
+    public void assertSorted(String message, Iterable list, Comparator comparator) throws Exception {
+        assertSorted(message, list, false, comparator);
     }
 
-    public void assertSorted(Iterable list, boolean reverse) throws Exception {
+    public void assertSorted(String message, Iterable list, boolean reverse) throws Exception {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
-            assertTrue(Ordering.natural().isOrdered(list));
+            assertTrue(message, Ordering.natural().isOrdered(list));
         else
-            assertTrue(Ordering.natural().reverse().isOrdered(list));
+            assertTrue(message, Ordering.natural().reverse().isOrdered(list));
     }
 
-    public void assertSorted(Iterable list, boolean reverse, Comparator comparator) throws Exception {
+    public void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) throws Exception {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
-            assertTrue(Ordering.from(comparator).isOrdered(list));
+            assertTrue(message, Ordering.from(comparator).isOrdered(list));
         else
-            assertTrue(Ordering.from(comparator).reverse().isOrdered(list));
+            assertTrue(message, Ordering.from(comparator).reverse().isOrdered(list));
     }
 }

@@ -17,12 +17,12 @@ import static org.junit.Assert.assertNull;
 
 public class ConsoleWebPage {
 
+    private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium;
     private String consoleRoute;
     private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
-    private static Logger log = CustomLogger.getLogger();
 
 
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
@@ -56,7 +56,7 @@ public class ConsoleWebPage {
         List<WebElement> items = getNavigateMenu()
                 .findElement(By.className("list-group"))
                 .findElements(ByAngular.repeater("item in items"));
-        assertNotNull(items);
+        assertNotNull("Console failed, does not contain left menu items", items);
         WebElement returnedItem = null;
         for (WebElement item : items) {
             log.info("Got item: " + item.getText());
@@ -519,7 +519,7 @@ public class ConsoleWebPage {
 
         selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
 
-        assertNotNull(getAddressItem(destination));
+        assertNotNull("Console failed, does not contain created address item", getAddressItem(destination));
 
         TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
@@ -561,6 +561,6 @@ public class ConsoleWebPage {
         selenium.waitUntilItemNotPresent(60, () -> getAddressItem(destination));
 
         //check if address deleted
-        assertNull(getAddressItem(destination));
+        assertNull("Console failed, still contains deleted address item ", getAddressItem(destination));
     }
 }
