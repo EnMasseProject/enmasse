@@ -42,9 +42,4 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doMessageSelectorTopicTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
-
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
-    }
 }

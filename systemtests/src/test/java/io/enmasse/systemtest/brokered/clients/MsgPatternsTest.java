@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.brokered.clients;
 
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
 
@@ -16,5 +17,10 @@ public abstract class MsgPatternsTest extends MsgPatternsTestBase {
                 return "brokered-topic";
         }
         return null;
+    }
+
+    @Override
+    protected AddressSpaceType getAddressSpaceType() {
+        return AddressSpaceType.BROKERED;
     }
 }

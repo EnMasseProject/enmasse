@@ -42,9 +42,4 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doMessageSelectorTopicTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(),
                 new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
     }
-
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.STANDARD;
-    }
 }

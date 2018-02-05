@@ -42,9 +42,4 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doMessageSelectorTopicTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(),
                 new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver(), true);
     }
-
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
-    }
 }

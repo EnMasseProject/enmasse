@@ -43,9 +43,4 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doMessageSelectorTopicTest(new PythonClientSender(), new PythonClientReceiver(),
                 new PythonClientReceiver(), new PythonClientReceiver(), false);
     }
-
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
-    }
 }

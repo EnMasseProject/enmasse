@@ -42,9 +42,4 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doMessageSelectorTopicTest(new RheaClientSender(), new RheaClientReceiver(),
                 new RheaClientReceiver(), new RheaClientReceiver(), false);
     }
-
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
-    }
 }
