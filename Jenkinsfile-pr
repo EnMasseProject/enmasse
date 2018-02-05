@@ -89,8 +89,8 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
 //                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
 //                    sh 'Xvfb :10 -ac &'
-                    sh "echo 'blah' > ${env.CORES_DIR}/cores.test-tkratky"
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
+                    sh "echo 'blah' > ${env.CORES_DIR}/cores.test-tkratky"
 //                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
             }
@@ -107,6 +107,7 @@ pipeline {
 //            archive 'artifacts/**'
 //            archive 'templates/install/**'
             sh "ls -la ${env.CORES_DIR}"
+            sh "cp ${env.CORES_DIR}/* artifacts/"
             archive "${env.CORES_DIR}/**"
             tearDownOpenshift()
             sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
