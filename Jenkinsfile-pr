@@ -108,6 +108,7 @@ pipeline {
 //            archive 'templates/install/**'
             sh "ls -la ${env.CORES_DIR}"
             sh "sudo cp ${env.CORES_DIR}/* artifacts/"
+            sh "sleep 10"
             archive 'artifacts/**'
             tearDownOpenshift()
             sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
