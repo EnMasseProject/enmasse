@@ -53,11 +53,11 @@ public class QueueTest extends BrokeredTestBase {
         assertThat(receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB));
 
         for (Message m : receivedGroupA.get()) {
-            assertEquals(m.getGroupId(), "group A");
+            assertEquals("Group id is different", m.getGroupId(), "group A");
         }
 
         for (Message m : receivedGroupB.get()) {
-            assertEquals(m.getGroupId(), "group B");
+            assertEquals("Group id is different", m.getGroupId(), "group B");
         }
     }
 }
