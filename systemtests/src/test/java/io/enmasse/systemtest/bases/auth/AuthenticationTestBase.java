@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.systemtest.auth;
+package io.enmasse.systemtest.bases.auth;
 
 import io.enmasse.systemtest.*;
-import org.junit.Test;
+import io.enmasse.systemtest.bases.TestBase;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;

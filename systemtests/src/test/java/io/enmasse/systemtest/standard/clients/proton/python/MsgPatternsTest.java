@@ -1,12 +1,11 @@
-package io.enmasse.systemtest.brokered.clients.proton.python;
+package io.enmasse.systemtest.standard.clients.proton.python;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.executor.client.proton.python.PythonClientSender;
-
 import org.junit.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
+public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
     @Test
     public void testBasicMessage() throws Exception {
@@ -18,27 +17,27 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doRoundRobinReceiverTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver(), false);
     }
 
-    @Test
+    //@Test
     public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testDrainQueue() throws Exception {
         doDrainQueueTest(new PythonClientSender(), new PythonClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorQueue() throws Exception{
         doMessageSelectorQueueTest(new PythonClientSender(), new PythonClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new PythonClientSender(), new PythonClientReceiver(),
                 new PythonClientReceiver(), new PythonClientReceiver(), false);

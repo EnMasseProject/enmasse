@@ -2,7 +2,7 @@ package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.BrokeredTestBase;
+import io.enmasse.systemtest.bases.BrokeredTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.bases;
 
 import com.google.common.collect.Ordering;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.executor.client.AbstractClient;

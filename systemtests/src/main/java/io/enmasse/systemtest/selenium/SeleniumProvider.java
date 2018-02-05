@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.web;
+package io.enmasse.systemtest.selenium;
 
 
 import com.paulhammant.ngwebdriver.NgWebDriver;
@@ -144,7 +144,7 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
-    protected void waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+    public void waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, true);
     }
 
@@ -180,7 +180,7 @@ public class SeleniumProvider {
         log.info("End of waiting");
     }
 
-    protected void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws Exception {
+    public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws Exception {
         log.info("Waiting until data will be present");
         int attempts = 0;
         while (attempts < timeoutInSeconds) {
@@ -190,9 +190,5 @@ public class SeleniumProvider {
             attempts++;
         }
         log.info("End of waiting");
-    }
-
-    protected interface IWebProperty<T> {
-        T get() throws Exception;
     }
 }

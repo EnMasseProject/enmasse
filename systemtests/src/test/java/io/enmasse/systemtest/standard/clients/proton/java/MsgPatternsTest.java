@@ -1,43 +1,43 @@
-package io.enmasse.systemtest.brokered.clients.proton.java;
+package io.enmasse.systemtest.standard.clients.proton.java;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientSender;
 import org.junit.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest{
+public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
-    @Test
+    //@Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new ProtonJMSClientSender(), new ProtonJMSClientSender());
     }
 
-    @Test
+    //@Test
     public void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
     }
 
-    @Test
+    //@Test
     public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testDrainQueue() throws Exception {
         doDrainQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorQueue() throws Exception{
         doMessageSelectorQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
     }
 
-    @Test
+    //@Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(),
                 new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);

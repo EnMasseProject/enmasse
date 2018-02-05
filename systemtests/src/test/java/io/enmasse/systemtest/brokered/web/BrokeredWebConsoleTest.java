@@ -2,7 +2,7 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.web.WebConsoleTest;
+import io.enmasse.systemtest.bases.web.WebConsoleTest;
 
 public abstract class BrokeredWebConsoleTest extends WebConsoleTest {
     @Override

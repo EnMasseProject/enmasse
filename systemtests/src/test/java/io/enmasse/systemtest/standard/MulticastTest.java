@@ -1,7 +1,7 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.StandardTestBase;
+import io.enmasse.systemtest.bases.StandardTestBase;
 import org.junit.Test;
 
 import java.util.Arrays;

@@ -2,6 +2,7 @@ package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.BrokeredTestBase;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;

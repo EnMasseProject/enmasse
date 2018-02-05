@@ -1,11 +1,13 @@
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.bases.clients;
 
+import io.enmasse.systemtest.AddressSpace;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import org.junit.After;
 
 
-public abstract class ClientTestBase extends BrokeredTestBase {
+public abstract class ClientTestBase extends TestBaseWithShared {
     protected ArgumentMap arguments = new ArgumentMap();
 
     @After

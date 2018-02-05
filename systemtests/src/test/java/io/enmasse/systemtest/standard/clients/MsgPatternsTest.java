@@ -1,26 +1,28 @@
-package io.enmasse.systemtest.brokered.clients;
+package io.enmasse.systemtest.standard.clients;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public abstract class MsgPatternsTest extends MsgPatternsTestBase {
     @Override
     protected String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return "brokered-queue";
+                return "sharded-queue";
             case TOPIC:
-                return "brokered-topic";
+                return "sharded-topic";
+            case ANYCAST:
+                return "standard-anycast";
+            case MULTICAST:
+                return "standard-multicast";
         }
         return null;
     }
 
     @Override
     protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
+        return AddressSpaceType.STANDARD;
     }
+
 }

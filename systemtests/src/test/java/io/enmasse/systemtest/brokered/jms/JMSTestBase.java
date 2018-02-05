@@ -1,6 +1,6 @@
 package io.enmasse.systemtest.brokered.jms;
 
-import io.enmasse.systemtest.BrokeredTestBase;
+import io.enmasse.systemtest.bases.BrokeredTestBase;
 import io.enmasse.systemtest.CustomLogger;
 import org.slf4j.Logger;
 

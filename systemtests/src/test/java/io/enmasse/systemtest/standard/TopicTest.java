@@ -20,11 +20,11 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 
+import io.enmasse.systemtest.bases.StandardTestBase;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.*;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.io.IOException;

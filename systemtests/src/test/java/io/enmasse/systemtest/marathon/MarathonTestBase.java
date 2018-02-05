@@ -4,7 +4,7 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.IsolatedAddressSpace;
 import io.enmasse.systemtest.MarathonTests;
-import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
