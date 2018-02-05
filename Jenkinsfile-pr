@@ -47,37 +47,37 @@ pipeline {
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
-        stage('build') {
-            steps {
-                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
-                sh 'cat templates/install/openshift/enmasse.yaml'
-                sh 'make docker_tag'
-            }
-        }
-        stage('start openshift') {
-            steps {
-                sh './systemtests/scripts/setup-openshift.sh'
-                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
-            }
-        }
-        stage('install clients') {
-            steps {
-                sh 'sudo PATH=$PATH make client_install'
-            }
-        }
-        stage('install webdrivers') {
-            steps {
-                sh 'sudo make webdriver_install'
-            }
-        }
-        stage('push docker images') {
-            steps {
-                sh 'oc login -u test -p test'
-                sh 'oc new-project enmasseci'
-                sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
-                sh 'make docker_push'
-            }
-        }
+//        stage('build') {
+//            steps {
+//                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
+//                sh 'cat templates/install/openshift/enmasse.yaml'
+//                sh 'make docker_tag'
+//            }
+//        }
+//        stage('start openshift') {
+//            steps {
+//                sh './systemtests/scripts/setup-openshift.sh'
+//                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+//            }
+//        }
+//        stage('install clients') {
+//            steps {
+//                sh 'sudo PATH=$PATH make client_install'
+//            }
+//        }
+//        stage('install webdrivers') {
+//            steps {
+//                sh 'sudo make webdriver_install'
+//            }
+//        }
+//        stage('push docker images') {
+//            steps {
+//                sh 'oc login -u test -p test'
+//                sh 'oc new-project enmasseci'
+//                sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
+//                sh 'make docker_push'
+//            }
+//        }
         stage('system tests') {
             environment {
                 DISPLAY = ':10'
@@ -87,8 +87,8 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
-                    sh 'Xvfb :10 -ac &'
+//                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
+//                    sh 'Xvfb :10 -ac &'
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
 //                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
@@ -105,6 +105,7 @@ pipeline {
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
+            sh "ls -la ${env.CORES_DIR}"
             archive "${env.CORES_DIR}/**"
             tearDownOpenshift()
             sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
