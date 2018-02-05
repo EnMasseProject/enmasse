@@ -89,6 +89,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
 //                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
 //                    sh 'Xvfb :10 -ac &'
+                    sh "echo 'blah' > ${env.CORES_DIR}/cores.test-tkratky"
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
 //                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
@@ -99,12 +100,12 @@ pipeline {
         always {
             storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
             //store test results from build and system tests
-            junit '**/TEST-*.xml'
+//            junit '**/TEST-*.xml'
 
             //archive test results and openshift logs
-            archive '**/TEST-*.xml'
-            archive 'artifacts/**'
-            archive 'templates/install/**'
+//            archive '**/TEST-*.xml'
+//            archive 'artifacts/**'
+//            archive 'templates/install/**'
             sh "ls -la ${env.CORES_DIR}"
             archive "${env.CORES_DIR}/**"
             tearDownOpenshift()
