@@ -14,6 +14,8 @@ To build EnMasse, you need
    * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
    * [Asciidoctor](http://asciidoc.org/) (optional, only required for docs)
    * [Python Pip](https://pypi.python.org/pypi/pip) (optional, only required for systemtests)
+   * [Xvfb](https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml) (optional, only required for systemtests)
+   * [Firefox](https://www.mozilla.org) (optional, only required for systemtests)
 
 The EnMasse java modules are built using maven. Node.js modules are built using make. All docker images
 are built using make.
@@ -81,9 +83,14 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
     make client_install
 
+#### Install web drivers
+
+    make webdriver_install
+
 #### Running the systemtests
 
-    make systemtests
+    Xvfb :10 -ac &
+    DISPLAY:=10 PATH=$PATH:(pwd)/systemtests/web_driver make systemtests
     
 #### Run single system test
 
