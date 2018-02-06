@@ -84,10 +84,12 @@ public class QueueTest extends StandardTestBase {
 
             deleteAddresses(address);
             Future<List<String>> response = getAddresses(Optional.empty());
-            assertThat(response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress())));
+            assertThat("Extra destination was not created ",
+                    response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress())));
             deleteAddresses(destExtra);
             response = getAddresses(Optional.empty());
-            assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
+            assertThat("No destinations are expected",
+                    response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
             Thread.sleep(20_000);
         }
     }
@@ -113,15 +115,15 @@ public class QueueTest extends StandardTestBase {
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(),
                 listOfMessages.toArray(new Message[listOfMessages.size()]));
-        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), msgsCount);
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgsCount));
+        assertThat("Wrong count of messages received", received.get(1, TimeUnit.MINUTES).size(), is(msgsCount));
 
         int sub = 1;
         for (Message m : received.get()) {
             for (Message mSub : received.get().subList(sub, received.get().size())) {
-                assertTrue(m.getPriority() >= mSub.getPriority());
+                assertTrue("Wrong order of messages", m.getPriority() >= mSub.getPriority());
             }
             sub++;
         }
@@ -138,19 +140,25 @@ public class QueueTest extends StandardTestBase {
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("baz", 1000)),
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("quux", 1000)));
 
-        assertThat(sent.get(0).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat(sent.get(1).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat("Wrong count of messages sent: sender" + 0,
+                sent.get(0).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat("Wrong count of messages sent: sender" + 1,
+                sent.get(1).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat("Wrong count of messages sent: sender" + 2,
+                sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat("Wrong count of messages sent: sender" + 3,
+                sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
 
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), 500);
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(500));
+        assertThat("Wrong count of messages received",
+                received.get(1, TimeUnit.MINUTES).size(), is(500));
 
         scale(dest, 1);
 
         received = client.recvMessages(dest.getAddress(), 3500);
 
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(3500));
+        assertThat("Wrong count of messages received",
+                received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
     public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
@@ -162,14 +170,14 @@ public class QueueTest extends StandardTestBase {
         Count<Message> predicate = new Count<>(msgs.size());
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
 
-        assertNotNull(numSent);
+        assertNotNull("Sending messages didn't start", numSent);
         int actual = 0;
         try {
             actual = numSent.get(1, TimeUnit.MINUTES);
         } catch (TimeoutException t) {
             fail("Sending messages timed out after sending " + predicate.actual());
         }
-        assertThat(actual, is(msgs.size()));
+        assertThat("Wrong count of messages sent", actual, is(msgs.size()));
 
         predicate = new Count<>(msgs.size());
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
@@ -180,7 +188,7 @@ public class QueueTest extends StandardTestBase {
             fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
         }
 
-        assertThat(actual, is(msgs.size()));
+        assertThat("Wrong count of messages received", actual, is(msgs.size()));
     }
 }
 

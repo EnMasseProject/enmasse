@@ -47,11 +47,14 @@ public class AnycastTest extends StandardTestBase {
         Future<List<Message>> recvResult3 = client3.recvMessages(dest.getAddress(), 1);
         Future<Integer> sendResult = client1.sendMessages(dest.getAddress(), msgs);
 
-        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertThat(recvResult1.get(1, TimeUnit.MINUTES).size(), is(1));
-        assertThat(recvResult2.get(1, TimeUnit.MINUTES).size(), is(1));
-        assertThat(recvResult3.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat("Wrong count of messages received: receiver1",
+                recvResult1.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat("Wrong count of messages received: receiver2",
+                recvResult2.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat("Wrong count of messages received: receiver3",
+                recvResult3.get(1, TimeUnit.MINUTES).size(), is(1));
     }
 
     @Test
