@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-def func = load("Jenkinsfile-lib")
+def func = load("./Jenkinsfile-lib")
 
 pipeline {
     agent {
