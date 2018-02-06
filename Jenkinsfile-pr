@@ -84,7 +84,9 @@ pipeline {
     }
     post {
         always {
-            load("Jenkinsfile-lib").storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            script {
+                load("Jenkinsfile-lib").storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            }
             //store test results from build and system tests
             junit '**/TEST-*.xml'
 
@@ -92,7 +94,9 @@ pipeline {
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
-            load("Jenkinsfile-lib").tearDownOpenshift()
+            script {
+                load("Jenkinsfile-lib").tearDownOpenshift()
+            }
         }
         failure {
             echo "build failed"
