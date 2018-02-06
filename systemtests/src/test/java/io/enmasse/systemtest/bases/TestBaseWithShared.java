@@ -184,21 +184,21 @@ public abstract class TestBaseWithShared extends TestBase {
 
         //queue1, queue2
         Future<List<String>> response = getAddresses(Optional.empty());
-        assertThat(response.get(1, TimeUnit.MINUTES), is(destinationsNames));
+        assertThat("Rest api does not return all addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames));
         log.info("addresses (" + destinationsNames.stream().collect(Collectors.joining(",")) + ") successfully created");
 
         deleteAddresses(d1);
 
         //queue1
         response = getAddresses(Optional.empty());
-        assertThat(response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
+        assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
         log.info("address (" + d1.getAddress() + ") successfully deleted");
 
         deleteAddresses(d2);
 
         //empty
         response = getAddresses(Optional.empty());
-        assertThat(response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
+        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
         log.info("addresses (" + d2.getAddress() + ") successfully deleted");
     }
 
