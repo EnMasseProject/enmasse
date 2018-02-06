@@ -1,15 +1,6 @@
 #!/usr/bin/env groovy
 
-def storeArtifacts(buildStatus) {
-    if (buildStatus == 'ABORTED') {
-        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
-    }
-}
-
-def tearDownOpenshift() {
-    echo "tear down openshift"
-    sh './systemtests/scripts/teardown-openshift.sh'
-}
+def func = load("Jenkinsfile-lib")
 
 pipeline {
     agent {
@@ -95,7 +86,7 @@ pipeline {
     }
     post {
         always {
-            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            func.storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
             //store test results from build and system tests
             junit '**/TEST-*.xml'
 
@@ -103,7 +94,7 @@ pipeline {
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
-            tearDownOpenshift()
+            func.tearDownOpenshift()
         }
         failure {
             echo "build failed"
