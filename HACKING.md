@@ -90,7 +90,7 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 #### Running the systemtests
 
     Xvfb :10 -ac &
-    DISPLAY:=10 PATH=$PATH:(pwd)/systemtests/web_driver make systemtests
+    DISPLAY=:10 PATH=$PATH:(pwd)/systemtests/web_driver make systemtests
     
 #### Run single system test
 
