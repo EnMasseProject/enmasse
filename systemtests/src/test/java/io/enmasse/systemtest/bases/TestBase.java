@@ -242,14 +242,16 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue(canConnectWithAmqp(addressSpace, username, password, destinations));
+        assertTrue("Client failed, cannot connect under user " + username,
+                canConnectWithAmqp(addressSpace, username, password, destinations));
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
     protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
         try {
-            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations));
+            assertFalse("Client failed, can connect under user " + username,
+                    canConnectWithAmqp(addressSpace, username, password, destinations));
             fail("Expected connection to timeout");
         } catch (ConnectTimeoutException e) {
         }
@@ -261,20 +263,21 @@ public abstract class TestBase extends SystemTestRunListener {
 
     private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), username);
             switch (destination.getType()) {
                 case "queue":
-                    assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(message, canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()));
                     break;
                 case "topic":
-                    assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(message, canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()));
                     break;
                 case "multicast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()));
+                        assertTrue(message, canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()));
                     break;
                 case "anycast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()));
+                        assertTrue(message, canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()));
                     break;
             }
         }
