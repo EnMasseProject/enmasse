@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-def func = load("Jenkinsfile-lib")
-
 pipeline {
     agent {
         node {
@@ -86,6 +84,7 @@ pipeline {
     }
     post {
         always {
+            def func = load("Jenkinsfile-lib")
             func.storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
             //store test results from build and system tests
             junit '**/TEST-*.xml'
