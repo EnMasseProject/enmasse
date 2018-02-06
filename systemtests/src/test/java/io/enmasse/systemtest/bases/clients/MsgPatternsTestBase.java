@@ -42,7 +42,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
                 expectedMsgCount, sender.getMessages().size());
         assertEquals(String.format("Expected %d received messages", expectedMsgCount),
-                receiver.getMessages().size());
+                expectedMsgCount, receiver.getMessages().size());
     }
 
     protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
