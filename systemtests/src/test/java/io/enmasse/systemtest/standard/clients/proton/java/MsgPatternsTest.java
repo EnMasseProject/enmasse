@@ -7,12 +7,12 @@ import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
-    //@Test
+    @Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new ProtonJMSClientSender(), new ProtonJMSClientSender());
     }
 
-    //@Test
+    @Test
     public void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
     }

@@ -291,6 +291,7 @@ public abstract class AbstractClient {
                 args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
             args.put(Argument.CONN_SSL_TRUST_ALL, "true");
             args.put(Argument.CONN_SSL_VERIFY_HOST, "false");
+            args.put(Argument.CONN_AUTH_MECHANISM, "PLAIN");
         }
         args.remove(Argument.CONN_SSL);
 
