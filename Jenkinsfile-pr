@@ -84,8 +84,7 @@ pipeline {
     }
     post {
         always {
-            def func = load("Jenkinsfile-lib")
-            func.storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            load("Jenkinsfile-lib").storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
             //store test results from build and system tests
             junit '**/TEST-*.xml'
 
@@ -93,7 +92,7 @@ pipeline {
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
-            func.tearDownOpenshift()
+            load("Jenkinsfile-lib").tearDownOpenshift()
         }
         failure {
             echo "build failed"
