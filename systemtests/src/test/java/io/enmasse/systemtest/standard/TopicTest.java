@@ -236,9 +236,9 @@ public class TopicTest extends StandardTestBase {
                 amqpClient.sendMessages(t1.getAddress(), msgs),
                 amqpClient.sendMessages(t2.getAddress(), msgs));
 
-        assertThat("Wrong count of messages sent: sender" + 0,
+        assertThat("Wrong count of messages sent: sender0",
                 sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Wrong count of messages sent: sender" + 1,
+        assertThat("Wrong count of messages sent: sender1",
                 sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));

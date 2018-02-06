@@ -83,17 +83,17 @@ public class SmokeTest extends StandardTestBase {
         assertThat("Wrong count of messages sent",
                 client.sendMessages(topic.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertThat("Wrong count of messages received: receiver" + 0,
+        assertThat("Wrong count of messages received: receiver0",
                 recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver" + 1,
+        assertThat("Wrong count of messages received: receiver1",
                 recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver" + 2,
+        assertThat("Wrong count of messages received: receiver2",
                 recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver" + 3,
+        assertThat("Wrong count of messages received: receiver3",
                 recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver" + 4,
+        assertThat("Wrong count of messages received: receiver4",
                 recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver" + 5,
+        assertThat("Wrong count of messages received: receiver5",
                 recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
@@ -138,11 +138,11 @@ public class SmokeTest extends StandardTestBase {
         assertThat("Wrong count of messages sent",
                 client.sendMessages(multicast.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertTrue("Wrong count of messages received: receiver" + 0,
+        assertTrue("Wrong count of messages received: receiver0",
                 recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue("Wrong count of messages received: receiver" + 1,
+        assertTrue("Wrong count of messages received: receiver1",
                 recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue("Wrong count of messages received: receiver" + 2,
+        assertTrue("Wrong count of messages received: receiver2",
                 recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size());
     }
 }

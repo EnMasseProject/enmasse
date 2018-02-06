@@ -140,13 +140,13 @@ public class QueueTest extends StandardTestBase {
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("baz", 1000)),
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("quux", 1000)));
 
-        assertThat("Wrong count of messages sent: sender" + 0,
+        assertThat("Wrong count of messages sent: sender0",
                 sent.get(0).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat("Wrong count of messages sent: sender" + 1,
+        assertThat("Wrong count of messages sent: sender1",
                 sent.get(1).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat("Wrong count of messages sent: sender" + 2,
+        assertThat("Wrong count of messages sent: sender2",
                 sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat("Wrong count of messages sent: sender" + 3,
+        assertThat("Wrong count of messages sent: sender3",
                 sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
 
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), 500);
