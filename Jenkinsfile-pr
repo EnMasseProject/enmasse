@@ -85,16 +85,17 @@ pipeline {
     }
     post {
         always {
-            script func.storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
-            
-            //store test results from build and system tests
-            junit '**/TEST-*.xml'
-
-            //archive test results and openshift lofs
-            archive '**/TEST-*.xml'
-            archive 'artifacts/**'
-            archive 'templates/install/**'
             script {
+                func.storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+
+                //store test results from build and system tests
+                junit '**/TEST-*.xml'
+
+                //archive test results and openshift lofs
+                archive '**/TEST-*.xml'
+                archive 'artifacts/**'
+                archive 'templates/install/**'
+
                 func.tearDownOpenshift()
             }
         }
