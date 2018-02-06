@@ -39,6 +39,8 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
+import static org.junit.Assert.assertNotNull;
+
 public class MqttClientFactory {
 
     private final Kubernetes kubernetes;
@@ -65,7 +67,7 @@ public class MqttClientFactory {
     }
 
     public MqttClient createClient() throws Exception {
-        assert(defaultAddressSpace != null);
+        assertNotNull("Address space is null", defaultAddressSpace);
         return createClient(defaultAddressSpace);
     }
 
