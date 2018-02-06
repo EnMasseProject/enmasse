@@ -48,16 +48,18 @@ public class QueueTest extends BrokeredTestBase {
         Future<Integer> sent = client.sendMessages(dest.getAddress(),
                 listOfMessages.toArray(new Message[listOfMessages.size()]));
 
-        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
-        assertThat(receivedGroupA.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupA));
-        assertThat(receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB));
+        assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat("Wrong count of messages received from group A",
+                receivedGroupA.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupA));
+        assertThat("Wrong count of messages received from group A",
+                receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB));
 
         for (Message m : receivedGroupA.get()) {
-            assertEquals(m.getGroupId(), "group A");
+            assertEquals("Group id is different", m.getGroupId(), "group A");
         }
 
         for (Message m : receivedGroupB.get()) {
-            assertEquals(m.getGroupId(), "group B");
+            assertEquals("Group id is different", m.getGroupId(), "group B");
         }
     }
 }

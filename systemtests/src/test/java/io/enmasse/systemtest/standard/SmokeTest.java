@@ -80,14 +80,21 @@ public class SmokeTest extends StandardTestBase {
 
         Thread.sleep(60_000);
 
-        assertThat(client.sendMessages(topic.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages sent",
+                client.sendMessages(topic.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages received: receiver0",
+                recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages received: receiver1",
+                recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages received: receiver2",
+                recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages received: receiver3",
+                recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages received: receiver4",
+                recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages received: receiver5",
+                recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     private void testMqtt() throws Exception {
@@ -99,8 +106,10 @@ public class SmokeTest extends StandardTestBase {
         Future<List<String>> recvResult = client.recvMessages(mqttTopic.getAddress(), messages.size(), 1);
         Future<Integer> sendResult = client.sendMessages(mqttTopic.getAddress(), messages, publisherQos);
 
-        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+        assertThat("Wrong count of messages sent",
+                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
+        assertThat("Wrong count of messages received",
+                recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
     }
 
     private void testAnycast() throws Exception {
@@ -111,8 +120,8 @@ public class SmokeTest extends StandardTestBase {
         Future<List<Message>> recvResult = client.recvMessages(anycast.getAddress(), msgs.size());
         Future<Integer> sendResult = client.sendMessages(anycast.getAddress(), msgs);
 
-        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     private void testMulticast() throws Exception {
@@ -126,10 +135,14 @@ public class SmokeTest extends StandardTestBase {
 
         Thread.sleep(60_000);
 
-        assertThat(client.sendMessages(multicast.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages sent",
+                client.sendMessages(multicast.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue(recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue(recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue("Wrong count of messages received: receiver0",
+                recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue("Wrong count of messages received: receiver1",
+                recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue("Wrong count of messages received: receiver2",
+                recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size());
     }
 }

@@ -36,11 +36,13 @@ public class ArtemisManagement extends BrokerManagement {
         requestMessage.setBody(new AmqpValue("[]"));
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
-        assertThat(sent.get(30, TimeUnit.SECONDS), is(1));
+        assertThat(String.format("Sender failed, expected %d messages", 1),
+                sent.get(30, TimeUnit.SECONDS), is(1));
         log.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
-        assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
+        assertThat(String.format("Receiver failed, expected %d messages", 1),
+                received.get(30, TimeUnit.SECONDS).size(), is(1));
 
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
@@ -64,11 +66,13 @@ public class ArtemisManagement extends BrokerManagement {
         requestMessage.setBody(new AmqpValue("[]"));
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
-        assertThat(sent.get(30, TimeUnit.SECONDS), is(1));
+        assertThat(String.format("Sender failed, expected %d messages", 1),
+                sent.get(30, TimeUnit.SECONDS), is(1));
         log.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
-        assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
+        assertThat(String.format("Receiver failed, expected %d messages", 1),
+                received.get(30, TimeUnit.SECONDS).size(), is(1));
 
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();

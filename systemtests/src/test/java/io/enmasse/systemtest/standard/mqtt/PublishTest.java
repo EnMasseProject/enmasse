@@ -72,7 +72,9 @@ public class PublishTest extends StandardTestBase {
         Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), messages.size(), subscriberQos);
         Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, publisherQos);
 
-        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+        assertThat("Wrong count of messages sent",
+                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
+        assertThat("Wrong count of messages received",
+                recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
     }
 }

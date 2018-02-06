@@ -53,8 +53,10 @@ public class TopicTest extends StandardTestBase {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
 
-        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat(recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Wrong count of messages sent",
+                client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received",
+                recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     //disabled due to issue: #693
@@ -153,14 +155,23 @@ public class TopicTest extends StandardTestBase {
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 
-        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat("Wrong count of messages sent",
+                sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat("Wrong count of messages received",
+                received.get(1, TimeUnit.MINUTES).size(), is(1));
 
         Map.Entry<String, Object> entry = appProperties.entrySet().iterator().next();
-        assertThat(received.get(1, TimeUnit.MINUTES).get(0).getApplicationProperties().getValue().get(entry.getKey()), is(entry.getValue()));
+        assertThat("Wrong application property",
+                received.get(1, TimeUnit.MINUTES)
+                        .get(0)
+                        .getApplicationProperties()
+                        .getValue()
+                        .get(entry.getKey()),
+                is(entry.getValue()));
 
         //receive rest of messages
-        assertThat(receivedWithoutSel.get(1, TimeUnit.MINUTES).size(), is(msgsCount - 1));
+        assertThat("Wrong count of messages received",
+                receivedWithoutSel.get(1, TimeUnit.MINUTES).size(), is(msgsCount - 1));
     }
 
 
@@ -201,10 +212,12 @@ public class TopicTest extends StandardTestBase {
 
         Future<Integer> sent = client.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 
-        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(1));
-        assertThat(received.get(1, TimeUnit.MINUTES).get(0).getGroupId(), is(groupID));
+        assertThat("Wrong count of messages received",
+                received.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat("Message with wrong groupID received",
+                received.get(1, TimeUnit.MINUTES).get(0).getGroupId(), is(groupID));
     }
 
     public void testTopicWildcards() throws Exception {
@@ -223,9 +236,12 @@ public class TopicTest extends StandardTestBase {
                 amqpClient.sendMessages(t1.getAddress(), msgs),
                 amqpClient.sendMessages(t2.getAddress(), msgs));
 
-        assertThat(sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat(sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat(recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
+        assertThat("Wrong count of messages sent: sender0",
+                sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages sent: sender1",
+                sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }
 
     public void testDurableLinkRoutedSubscription() throws Exception {
@@ -249,12 +265,15 @@ public class TopicTest extends StandardTestBase {
         Thread.sleep(30_000);
 
         log.info("Sending first batch");
-        assertThat(client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
-        assertThat(recvResults.get(1, TimeUnit.MINUTES), is(batch1));
+        assertThat("Wrong count of messages sent: batch1",
+                client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
+        assertThat("Wrong count of messages received: batch1",
+                recvResults.get(1, TimeUnit.MINUTES), is(batch1));
 
         log.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
-        assertThat(client.sendMessages(dest.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
+        assertThat("Wrong count of messages sent: batch2",
+                client.sendMessages(dest.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
         log.info("Done, waiting for 20 seconds");
         Thread.sleep(20_000);
@@ -268,7 +287,8 @@ public class TopicTest extends StandardTestBase {
             log.info("received " + body);
             return "twelve".equals(body);
         });
-        assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
+        assertTrue("Wrong count of messages received: batch2",
+                recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
     }
 
     public void testDurableMessageRoutedSubscription() throws Exception {
@@ -297,11 +317,13 @@ public class TopicTest extends StandardTestBase {
         log.info("Sending 12 messages");
 
         List<String> msgs = TestUtils.generateMessages(12);
-        assertThat(topicClient.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages sent",
+                topicClient.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         log.info("Receiving 6 messages");
         Future<List<Message>> recvResult = queueClient.recvMessages(address, 6);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
+        assertThat("Wrong count of messages received",
+                recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
         // Do scaledown and 'reconnect' receiver and verify that we got everything
 
@@ -317,7 +339,8 @@ public class TopicTest extends StandardTestBase {
 
         log.info("Receiving another 6 messages");
         recvResult = queueClient.recvMessages(address, 6);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
+        assertThat("Wrong count of messages received",
+                recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");

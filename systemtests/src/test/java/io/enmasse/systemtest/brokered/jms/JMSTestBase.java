@@ -125,7 +125,8 @@ public class JMSTestBase extends BrokeredTestBase {
     protected void assertMessageContent(List<Message> msgs, String content) {
         msgs.forEach(m -> {
             try {
-                assertTrue(((TextMessage) m).getText().contains(content));
+                assertTrue("Message compare failed, message doesn't contain content.",
+                        ((TextMessage) m).getText().contains(content));
             } catch (JMSException e) {
                 e.printStackTrace();
             }

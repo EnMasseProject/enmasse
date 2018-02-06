@@ -98,7 +98,7 @@ public class TopicTest extends JMSTestBase {
         sendMessages(messageProducer, listMsgs);
         log.info("messages sent");
 
-        assertThat(received.get(30, TimeUnit.SECONDS).size(), is(count));
+        assertThat("Wrong count of messages received", received.get(30, TimeUnit.SECONDS).size(), is(count));
         log.info("messages received");
 
         subscriber1.close();
@@ -126,11 +126,11 @@ public class TopicTest extends JMSTestBase {
         List<Message> recvd1 = receiveMessages(subscriber1, count);
         List<Message> recvd2 = receiveMessages(subscriber2, count);
 
-        assertThat(recvd1.size(), is(count));
+        assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
         assertMessageContent(recvd1, batchPrefix);
         log.info(sub1ID + " :First batch messages received");
 
-        assertThat(recvd2.size(), is(count));
+        assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
         assertMessageContent(recvd2, batchPrefix);
         log.info(sub2ID + " :First batch messages received");
 
@@ -144,7 +144,7 @@ public class TopicTest extends JMSTestBase {
         log.info("Second batch messages sent");
 
         recvd2 = receiveMessages(subscriber2, count);
-        assertThat(recvd2.size(), is(count));
+        assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
         assertMessageContent(recvd2, batchPrefix);
         log.info(sub2ID + " :Second batch messages received");
 
@@ -152,7 +152,7 @@ public class TopicTest extends JMSTestBase {
         log.info(sub1ID + " :connected");
 
         recvd1 = receiveMessages(subscriber1, count);
-        assertThat(recvd1.size(), is(count));
+        assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
         assertMessageContent(recvd1, batchPrefix);
         log.info(sub1ID + " :Second batch messages received");
 
@@ -189,8 +189,8 @@ public class TopicTest extends JMSTestBase {
         log.info(sub1ID + " :messages received");
         log.info(sub2ID + " :messages received");
 
-        assertThat(recvd1.size(), is(count));
-        assertThat(recvd2.size(), is(count));
+        assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
+        assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
 
         subscriber1.close();
         subscriber2.close();
@@ -219,11 +219,8 @@ public class TopicTest extends JMSTestBase {
 
         String subID = "sharedConsumerDurable123";
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
-        log.info("sub1 DONE");
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
-        log.info("sub1 DONE");
         MessageProducer messageProducer = session.createProducer(testTopic);
-        log.info("producer DONE");
         messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
         int count = 10;
@@ -235,10 +232,9 @@ public class TopicTest extends JMSTestBase {
         List<Message> recvd2 = receiveMessages(subscriber2, count, 1);
 
         log.info(subID + " :messages received");
-        log.info(subID + " :messages received");
 
-
-        assertThat(recvd1.size() + recvd2.size(), is(2 * count));
+        assertThat("Wrong count of messages received: by both receivers",
+                recvd1.size() + recvd2.size(), is(2 * count));
 
         subscriber1.close();
         subscriber2.close();

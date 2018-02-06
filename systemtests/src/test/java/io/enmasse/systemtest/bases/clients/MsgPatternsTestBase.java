@@ -22,34 +22,39 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+        int expectedMsgCount = 10;
 
         Destination dest = Destination.queue("message-basic", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
         arguments.remove(Argument.MSG_CONTENT);
         receiver.setArguments(arguments);
 
-        assertTrue(sender.run());
-        assertTrue(receiver.run());
+        assertTrue("Sender failed, expected return code 0", sender.run());
+        assertTrue("Receiver failed, expected return code 0", receiver.run());
 
-        assertEquals(10, sender.getMessages().size());
-        assertEquals(10, receiver.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
+        assertEquals(String.format("Expected %d received messages", expectedMsgCount),
+                expectedMsgCount, receiver.getMessages().size());
     }
 
     protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
             throws Exception {
+        int expectedMsgCount = 10;
+
         Destination dest = Destination.queue("receiver-round-robin", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, "5");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount / 2));
         arguments.put(Argument.TIMEOUT, "60");
 
 
@@ -59,28 +64,33 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         Future<Boolean> recResult = receiver.runAsync();
         Future<Boolean> rec2Result = receiver2.runAsync();
 
-        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
 
-        assertTrue(sender.run());
-        assertTrue(recResult.get());
-        assertTrue(rec2Result.get());
+        assertTrue("Sender failed, expected return code 0", sender.run());
+        assertTrue("Receiver failed, expected return code 0", recResult.get());
+        assertTrue("Receiver failed, expected return code 0", rec2Result.get());
 
-        assertEquals(10, sender.getMessages().size());
-        assertEquals(5, receiver.getMessages().size());
-        assertEquals(5, receiver.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
+        assertEquals(String.format("Expected %d received messages", expectedMsgCount / 2),
+                expectedMsgCount / 2, receiver.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount / 2),
+                expectedMsgCount / 2, receiver.getMessages().size());
     }
 
     protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
                                         boolean hasTopicPrefix) throws Exception {
+        int expectedMsgCount = 10;
+
         Destination dest = Destination.topic("topic-subscribe", getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
-        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
         arguments.put(Argument.TIMEOUT, "60");
 
@@ -94,23 +104,28 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         waitForSubscribers(sharedAddressSpace, dest.getAddress(), 2);
 
-        assertTrue(sender.run());
-        assertTrue(recResult.get());
-        assertTrue(recResult2.get());
+        assertTrue("Producer failed, expected return code 0", sender.run());
+        assertTrue("Subscriber failed, expected return code 0", recResult.get());
+        assertTrue("Subscriber failed, expected return code 0", recResult2.get());
 
-        assertEquals(10, sender.getMessages().size());
-        assertEquals(10, subscriber.getMessages().size());
-        assertEquals(10, subscriber2.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
+        assertEquals(String.format("Expected %d received messages", expectedMsgCount),
+                expectedMsgCount, subscriber.getMessages().size());
+        assertEquals(String.format("Expected %d received messages", expectedMsgCount),
+                expectedMsgCount, subscriber2.getMessages().size());
     }
 
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
             throws Exception {
+        int expectedMsgCount = 10;
+
         Destination dest = Destination.queue("message-browse", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
@@ -122,24 +137,27 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         arguments.put(Argument.RECV_BROWSE, "false");
         receiver_receive.setArguments(arguments);
 
-        assertTrue(sender.run());
-        assertTrue(receiver_browse.run());
-        assertTrue(receiver_receive.run());
+        assertTrue("Sender failed, expected return code 0", sender.run());
+        assertTrue("Browse receiver failed, expected return code 0", receiver_browse.run());
+        assertTrue("Receiver failed, expected return code 0",receiver_receive.run());
 
-        assertEquals(10, sender.getMessages().size());
-        assertEquals(10, receiver_browse.getMessages().size());
-        assertEquals(10, receiver_receive.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
+        assertEquals(String.format("Expected %d browsed messages", expectedMsgCount),
+                expectedMsgCount, receiver_browse.getMessages().size());
+        assertEquals(String.format("Expected %d received messages", expectedMsgCount),
+                expectedMsgCount, receiver_receive.getMessages().size());
     }
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Destination dest = Destination.queue("drain-queue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
-        int count = 50;
+        int expectedMsgCount = 50;
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(count));
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
@@ -148,19 +166,23 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         arguments.put(Argument.COUNT, "0");
         receiver.setArguments(arguments);
 
-        assertTrue(sender.run());
-        assertTrue(receiver.run());
+        assertTrue("Sender failed, expected return code 0", sender.run());
+        assertTrue("Drain receiver failed, expected return code 0", receiver.run());
 
-        assertEquals(count, sender.getMessages().size());
-        assertEquals(count, receiver.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
+        assertEquals(String.format("Expected %d received messages", expectedMsgCount),
+                expectedMsgCount, receiver.getMessages().size());
     }
 
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+        int expectedMsgCount = 50;
+
         Destination queue = Destination.queue("selector-queue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, queue);
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
-        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
@@ -170,8 +192,9 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         //send messages
         sender.setArguments(arguments);
-        assertTrue(sender.run());
-        assertEquals(10, sender.getMessages().size());
+        assertTrue("Sender failed, expected return code 0", sender.run());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
 
         arguments.remove(Argument.MSG_PROPERTY);
         arguments.remove(Argument.MSG_CONTENT);
@@ -181,37 +204,43 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         //receiver with selector colour = red
         arguments.put(Argument.SELECTOR, "colour = 'red'");
         receiver.setArguments(arguments);
-        assertTrue(receiver.run());
-        assertEquals(10, receiver.getMessages().size());
+        assertTrue("Receiver 'colour = red' failed, expected return code 0", receiver.run());
+        assertEquals(String.format("Expected %d received messages 'colour = red'", expectedMsgCount),
+                expectedMsgCount, receiver.getMessages().size());
 
         //receiver with selector number > 12.5
         arguments.put(Argument.SELECTOR, "number > 12.5");
         receiver.setArguments(arguments);
-        assertTrue(receiver.run());
-        assertEquals(10, receiver.getMessages().size());
+        assertTrue("Receiver 'number > 12.5' failed, expected return code 0", receiver.run());
+        assertEquals(String.format("Expected %d received messages 'colour = red'", expectedMsgCount),
+                expectedMsgCount, receiver.getMessages().size());
 
 
         //receiver with selector a AND b
         arguments.put(Argument.SELECTOR, "a AND b");
         receiver.setArguments(arguments);
-        assertTrue(receiver.run());
-        assertEquals(0, receiver.getMessages().size());
+        assertTrue("Receiver 'a AND b' failed, expected return code 0", receiver.run());
+        assertEquals(String.format("Expected %d received messages 'a AND b'", 0),
+                0, receiver.getMessages().size());
 
         //receiver with selector a OR b
         arguments.put(Argument.RECV_BROWSE, "false");
         arguments.put(Argument.SELECTOR, "a OR b");
         receiver.setArguments(arguments);
-        assertTrue(receiver.run());
-        assertEquals(10, receiver.getMessages().size());
+        assertTrue("Receiver 'a OR b' failed, expected return code 0", receiver.run());
+        assertEquals(String.format("Expected %d received messages 'a OR b'", expectedMsgCount),
+                expectedMsgCount, receiver.getMessages().size());
     }
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
+        int expectedMsgCount = 50;
+
         Destination topic = Destination.topic("selector-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, topic);
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
-        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
@@ -244,14 +273,18 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         waitForSubscribers(sharedAddressSpace, topic.getAddress(), 3);
 
-        assertTrue(sender.run());
-        assertTrue(result1.get());
-        assertTrue(result2.get());
-        assertTrue(result3.get());
+        assertTrue("Sender failed, expected return code 0", sender.run());
+        assertTrue("Receiver 'colour = red' failed, expected return code 0", result1.get());
+        assertTrue("Receiver 'number > 12.5' failed, expected return code 0", result2.get());
+        assertTrue("Receiver 'a AND b' failed, expected return code 0", result3.get());
 
-        assertEquals(10, sender.getMessages().size());
-        assertEquals(10, subscriber.getMessages().size());
-        assertEquals(10, subscriber2.getMessages().size());
-        assertEquals(0, subscriber3.getMessages().size());
+        assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
+                expectedMsgCount, sender.getMessages().size());
+        assertEquals(String.format("Expected %d received messages 'colour = red'", expectedMsgCount),
+                expectedMsgCount, subscriber.getMessages().size());
+        assertEquals(String.format("Expected %d received messages 'number > 12.5'", expectedMsgCount),
+                expectedMsgCount, subscriber2.getMessages().size());
+        assertEquals(String.format("Expected %d received messages 'a AND b'", 0),
+                0, subscriber3.getMessages().size());
     }
 }
