@@ -14,10 +14,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 public class QueueTest extends JMSTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -84,8 +82,8 @@ public class QueueTest extends JMSTestBase {
 
         //receive commit messages
         recvd = receiveMessages(receiver, count, 1000);
-        for (Message message : recvd){
-            assertNotNull(message);
+        for (Message message : recvd) {
+            assertNotNull("No message received", message);
         }
         session.commit();
         log.info("messages received commit");
@@ -97,7 +95,7 @@ public class QueueTest extends JMSTestBase {
 
         //check if queue is empty
         Message received = receiver.receive(1000);
-        assertNull(received);
+        assertNull("Queue should be empty", received);
         log.info("queue is empty");
 
         //send messages
@@ -108,8 +106,8 @@ public class QueueTest extends JMSTestBase {
         //receive messages rollback
         recvd.clear();
         recvd = receiveMessages(receiver, count, 1000);
-        for (Message message : recvd){
-            assertNotNull(message);
+        for (Message message : recvd) {
+            assertNotNull("No message received", message);
         }
         session.rollback();
         log.info("messages received rollback");
@@ -117,8 +115,8 @@ public class QueueTest extends JMSTestBase {
         //receive messages
         recvd.clear();
         recvd = receiveMessages(receiver, count, 1000);
-        for (Message message : recvd){
-            assertNotNull(message);
+        for (Message message : recvd) {
+            assertNotNull("No message received", message);
         }
         session.commit();
         log.info("messages received commit");

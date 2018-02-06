@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.*;
 
 
@@ -18,7 +19,7 @@ public class TopicTest extends BrokeredTestBase {
 
     //disable due to authorization exception with create queue on topic address with wildcards
     //@Test
-    public void testTopicPubSubWildcards() throws Exception{
+    public void testTopicPubSubWildcards() throws Exception {
 
         int msgCount = 1000;
         int topicCount = 10;
@@ -28,7 +29,7 @@ public class TopicTest extends BrokeredTestBase {
         List<Destination> topicList = new ArrayList<>();
 
         //create queues
-        for(int i = 0; i < recvCount; i++){
+        for (int i = 0; i < recvCount; i++) {
             topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 1), getDefaultPlan(AddressType.TOPIC)));
             topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 2), getDefaultPlan(AddressType.TOPIC)));
         }
@@ -46,14 +47,16 @@ public class TopicTest extends BrokeredTestBase {
         }
 
         //attach producers
-        for(int i = 0; i < senderCount; i++ ) {
-            assertThat(client.sendMessages(topicList.get(i).getAddress(), msgBatch,
-                    1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
+        for (int i = 0; i < senderCount; i++) {
+            assertThat("Wrong count of messages sent: sender" + i,
+                    client.sendMessages(topicList.get(i).getAddress(), msgBatch,
+                            1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
         }
 
         //check received messages
         for (int i = 0; i < recvCount; i++) {
-            assertThat(recvResults.get(i).get().size(), is(msgCount * 2));
+            assertThat("Wrong count of messages received: receiver" + i,
+                    recvResults.get(i).get().size(), is(msgCount * 2));
         }
 
         client.close();
