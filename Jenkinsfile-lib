@@ -1,0 +1,13 @@
+#!/usr/bin/env groovy
+
+def storeArtifacts(buildStatus) {
+    if (buildStatus == 'ABORTED') {
+        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+        sh 'rm -rf /tmp/testlogs'
+    }
+}
+
+def tearDownOpenshift() {
+    echo "tear down openshift"
+    sh './systemtests/scripts/teardown-openshift.sh'
+}
