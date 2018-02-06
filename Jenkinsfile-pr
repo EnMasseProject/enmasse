@@ -29,6 +29,7 @@ pipeline {
         DOCKER_ORG = 'enmasseci'
         TAG = "${BUILD_TAG}"
         COMMIT = "${BUILD_TAG}"
+        CORES_DIR = "/tmp/cores"
     }
     stages {
         stage('clean') {
@@ -88,6 +89,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
                     sh 'Xvfb :10 -ac &'
+                    sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
                     sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig ${params.TEST_CASE} ''"
                 }
             }
@@ -99,11 +101,15 @@ pipeline {
             //store test results from build and system tests
             junit '**/TEST-*.xml'
 
-            //archive test results and openshift lofs
+            //archive test results and openshift logs
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
+            sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}/"
+            sh "sudo mv core-dumps.tar.gz artifacts/"
+            archive 'artifacts/**'
             tearDownOpenshift()
+            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
         }
         failure {
             echo "build failed"
