@@ -32,9 +32,12 @@ import java.util.stream.IntStream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
-    
+
+    /**
+     * scale up/down specific destination (type: StatefulSet) in address space
+     */
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setDeploymentReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
+        kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
         waitForNReplicas(
                 kubernetes,
                 addressSpace.getNamespace(),
@@ -44,11 +47,14 @@ public class TestUtils {
                 budget);
     }
 
-    public static void setReplicas(Kubernetes kubernetes, String tenantNamespace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setDeploymentReplicas(tenantNamespace, deployment, numReplicas);
+    /**
+     * scale up/down specific pod (type: Deployment) in address space
+     */
+    public static void setReplicas(Kubernetes kubernetes, String addressSpace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        kubernetes.setDeploymentReplicas(addressSpace, deployment, numReplicas);
         waitForNReplicas(
                 kubernetes,
-                tenantNamespace,
+                addressSpace,
                 numReplicas,
                 Collections.singletonMap("name", deployment),
                 budget);

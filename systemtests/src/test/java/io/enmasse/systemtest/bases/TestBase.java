@@ -178,6 +178,9 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
 
+    /**
+     * scale up/down destination (StatefulSet) to count of replicas, includes waiting for expected replicas
+     */
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas, budget);
@@ -237,7 +240,7 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
-    protected boolean isBrokered(AddressSpace addressSpace) throws Exception {
+    protected boolean isBrokered(AddressSpace addressSpace) {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 

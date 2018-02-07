@@ -100,6 +100,10 @@ public abstract class Kubernetes {
         client.extensions().deployments().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
     }
 
+    public void setStatefulSetReplicas(String tenantNamespace, String name, int numReplicas) {
+        client.apps().statefulSets().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
+    }
+
     public List<Pod> listPods(String addressSpace) {
         return new ArrayList<>(client.pods().inNamespace(addressSpace).list().getItems());
     }
