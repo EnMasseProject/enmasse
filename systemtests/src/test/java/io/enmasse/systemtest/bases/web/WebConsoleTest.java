@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -551,17 +552,16 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCanOpenConsolePage(String username, String password, boolean canOpen) throws Exception {
-        String blankPage = "<html><head></head><body></body></html>";
         consoleWebPage = new ConsoleWebPage(selenium,
                 getConsoleRoute(sharedAddressSpace, username, password),
                 addressApiClient, sharedAddressSpace);
         consoleWebPage.openWebConsolePage();
         if (canOpen)
             assertNotEquals(String.format("Console failed, user %s cannot authenticate", username),
-                    blankPage, selenium.driver.getPageSource());
+                    "", selenium.driver.findElement(By.tagName("body")).getText());
         else
             assertEquals(String.format("Console failed, user %s can authenticate", username),
-                    blankPage, selenium.driver.getPageSource());
+                    "", selenium.driver.findElement(By.tagName("body")).getText());
     }
 
     //============================================================================================
