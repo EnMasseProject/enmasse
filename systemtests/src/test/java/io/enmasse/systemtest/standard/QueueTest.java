@@ -129,10 +129,13 @@ public class QueueTest extends StandardTestBase {
         }
     }
 
+    //@Test test disabled due to issue: #851
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue", "sharded-queue");
         setAddresses(dest);
         scale(dest, 4);
+
+        Thread.sleep(30000);
         AmqpClient client = amqpClientFactory.createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
@@ -154,6 +157,8 @@ public class QueueTest extends StandardTestBase {
                 received.get(1, TimeUnit.MINUTES).size(), is(500));
 
         scale(dest, 1);
+
+        Thread.sleep(30000);
 
         received = client.recvMessages(dest.getAddress(), 3500);
 

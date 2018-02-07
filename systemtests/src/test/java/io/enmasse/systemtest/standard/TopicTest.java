@@ -25,6 +25,7 @@ import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.*;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -41,8 +42,9 @@ import static org.junit.Assert.assertTrue;
 public class TopicTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
 
-    public void testPersistedTopics() throws Exception {
-        Destination t1 = Destination.topic("persistedTopic", "sharded-topic");
+    @Test
+    public void testShardedTopic() throws Exception {
+        Destination t1 = Destination.topic("shardedTopic", "sharded-topic");
         setAddresses(t1);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
@@ -69,6 +71,7 @@ public class TopicTest extends StandardTestBase {
         runRestApiTest(topics, t1, t2);
     }
 
+    @Test
     public void testMessageSelectorsAppProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicAppProp", "sharded-topic");
         String linkName = "linkSelectorTopicAppProp";
@@ -174,7 +177,7 @@ public class TopicTest extends StandardTestBase {
                 receivedWithoutSel.get(1, TimeUnit.MINUTES).size(), is(msgsCount - 1));
     }
 
-
+    @Test
     public void testMessageSelectorsProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicProp", "sharded-topic");
         String linkName = "linkSelectorTopicProp";
