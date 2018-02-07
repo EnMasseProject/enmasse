@@ -4,8 +4,6 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 
 public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
 
@@ -137,8 +135,6 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
 
     @Override
     public WebDriver buildDriver() {
-        FirefoxOptions opts = new FirefoxOptions();
-        opts.setHeadless(true);
-        return new FirefoxDriver(opts);
+        return getFirefoxDriver();
     }
 }

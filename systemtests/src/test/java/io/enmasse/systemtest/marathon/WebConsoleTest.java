@@ -67,8 +67,4 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
         log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
 
-    @Override
-    public WebDriver buildDriver() {
-        throw new NotImplementedException();
-    }
 }

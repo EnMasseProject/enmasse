@@ -1,6 +1,5 @@
 package io.enmasse.systemtest.standard.clients.proton.java;
 
-import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientSender;
 import org.junit.Test;
@@ -17,7 +16,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doRoundRobinReceiverTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
     }
@@ -37,7 +36,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doMessageSelectorQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(),
                 new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);

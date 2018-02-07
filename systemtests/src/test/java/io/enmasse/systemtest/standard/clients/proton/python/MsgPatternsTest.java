@@ -1,6 +1,5 @@
 package io.enmasse.systemtest.standard.clients.proton.python;
 
-import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.executor.client.proton.python.PythonClientSender;
 import org.junit.Test;
@@ -17,7 +16,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doRoundRobinReceiverTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver(), false);
     }
@@ -37,7 +36,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doMessageSelectorQueueTest(new PythonClientSender(), new PythonClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new PythonClientSender(), new PythonClientReceiver(),
                 new PythonClientReceiver(), new PythonClientReceiver(), false);
