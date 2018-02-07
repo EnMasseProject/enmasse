@@ -43,8 +43,8 @@ public class TopicTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
 
     @Test
-    public void testPersistedTopics() throws Exception {
-        Destination t1 = Destination.topic("persistedTopic", "sharded-topic");
+    public void testShardedTopic() throws Exception {
+        Destination t1 = Destination.topic("shardedTopic", "sharded-topic");
         setAddresses(t1);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
