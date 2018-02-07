@@ -102,7 +102,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         Future<Boolean> recResult = subscriber.runAsync();
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
-        waitForSubscribers(sharedAddressSpace, dest.getAddress(), 2);
+        if (isBrokered(sharedAddressSpace)) {
+            waitForSubscribers(sharedAddressSpace, dest.getAddress(), 2);
+        } else {
+            waitForSubscribersConsole(sharedAddressSpace, dest, 2);
+        }
 
         assertTrue("Producer failed, expected return code 0", sender.run());
         assertTrue("Subscriber failed, expected return code 0", recResult.get());
@@ -139,7 +143,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         assertTrue("Sender failed, expected return code 0", sender.run());
         assertTrue("Browse receiver failed, expected return code 0", receiver_browse.run());
-        assertTrue("Receiver failed, expected return code 0",receiver_receive.run());
+        assertTrue("Receiver failed, expected return code 0", receiver_receive.run());
 
         assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
                 expectedMsgCount, sender.getMessages().size());
@@ -271,7 +275,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         Future<Boolean> result2 = subscriber2.runAsync();
         Future<Boolean> result3 = subscriber3.runAsync();
 
-        waitForSubscribers(sharedAddressSpace, topic.getAddress(), 3);
+        if (isBrokered(sharedAddressSpace)) {
+            waitForSubscribers(sharedAddressSpace, topic.getAddress(), 3);
+        } else {
+            waitForSubscribersConsole(sharedAddressSpace, topic, 3);
+        }
 
         assertTrue("Sender failed, expected return code 0", sender.run());
         assertTrue("Receiver 'colour = red' failed, expected return code 0", result1.get());

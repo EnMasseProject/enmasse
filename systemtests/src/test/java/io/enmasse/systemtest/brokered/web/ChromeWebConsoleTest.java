@@ -3,8 +3,6 @@ package io.enmasse.systemtest.brokered.web;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 
 public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
 
@@ -110,9 +108,6 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
 
     @Override
     public WebDriver buildDriver() {
-        ChromeOptions opts = new ChromeOptions();
-        opts.setHeadless(true);
-        opts.addArguments("--no-sandbox");
-        return new ChromeDriver(opts);
+        return getChromeDriver();
     }
 }

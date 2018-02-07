@@ -28,12 +28,20 @@ import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.After;
 import org.junit.Before;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -358,9 +366,48 @@ public abstract class TestBase extends SystemTestRunListener {
         return getConsoleRoute(addressSpace, username, password);
     }
 
+    protected FirefoxDriver getFirefoxDriver() {
+        FirefoxOptions opts = new FirefoxOptions();
+        opts.setHeadless(true);
+        return new FirefoxDriver(opts);
+    }
+
+    protected ChromeDriver getChromeDriver() {
+        ChromeOptions opts = new ChromeOptions();
+        opts.setHeadless(true);
+        opts.addArguments("--no-sandbox");
+        return new ChromeDriver(opts);
+    }
 
     /**
-     * Waiting for expected count of subscribers is subscribed into topic
+     * selenium provider with Firefox webdriver
+     */
+    private SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
+        SeleniumProvider seleniumProvider = new SeleniumProvider();
+        seleniumProvider.setupDriver(environment, kubernetes, getFirefoxDriver());
+        return seleniumProvider;
+    }
+
+    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount) throws Exception {
+        int budget = 60; //seconds
+        waitForSubscribersConsole(addressSpace, destination, expectedCount, budget);
+    }
+
+    /**
+     * wait for expected count of subscribers on topic (check via console)
+     *
+     * @param budget timeout budget in seconds
+     */
+    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) throws Exception {
+        SeleniumProvider selenium = getFirefoxSeleniumProvider();
+        ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace);
+        console.openWebConsolePage();
+        console.openAddressesPageWebConsole();
+        selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
+    }
+
+    /**
+     * wait for expected count of subscribers on topic
      *
      * @param addressSpace
      * @param topic         name of topic
