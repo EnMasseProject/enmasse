@@ -108,6 +108,16 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
         doTestViewAddressesWildcards();
     }
 
+    //@Test
+    public void testCannotOpenConsolePage() throws Exception {
+        doTestCanOpenConsolePage("pepa", "pepaPa555", false);
+    }
+
+    //@Test
+    public void testCanOpenConsolePage() throws Exception {
+        doTestCanOpenConsolePage(username, password, true);
+    }
+
     @Override
     public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();
