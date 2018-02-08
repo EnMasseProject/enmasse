@@ -92,7 +92,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
-        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.TIMEOUT, "100");
 
         sender.setArguments(arguments);
         arguments.remove(Argument.MSG_CONTENT);
@@ -250,7 +250,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
         arguments.put(Argument.MSG_PROPERTY, "a~true");
         arguments.put(Argument.MSG_PROPERTY, "b~false");
-        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.TIMEOUT, "100");
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
 
         //set up sender
