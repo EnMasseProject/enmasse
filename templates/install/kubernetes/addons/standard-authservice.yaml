@@ -47,7 +47,7 @@ items:
               path: /auth
               port: https
               scheme: HTTPS
-            initialDelaySeconds: 120
+            initialDelaySeconds: 60
           name: keycloak
           ports:
           - containerPort: 5671
@@ -59,7 +59,7 @@ items:
               path: /auth
               port: https
               scheme: HTTPS
-            initialDelaySeconds: 120
+            initialDelaySeconds: 60
           resources:
             limits:
               memory: 2Gi
