@@ -35,7 +35,6 @@ items:
       "livenessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
       "initialDelaySeconds": 120}, "name": "broker", "ports": [{"containerPort": 5672,
       "name": "amqp"}, {"containerPort": 5671, "name": "amqps"}, {"containerPort":
-      61616, "name": "core"}, {"containerPort": 61613, "name": "openwire"}, {"containerPort":
       55671, "name": "amqps-normal"}, {"containerPort": 8161, "name": "jolokia"},
       {"containerPort": 8080, "name": "artemismetrics"}], "readinessProbe": {"exec":
       {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
@@ -56,30 +55,30 @@ items:
       {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps"}, "labels":
       {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp",
       "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671, "targetPort":
-      "amqps"}, {"name": "core", "port": 61616, "targetPort": "core"}, {"name": "openwire",
-      "port": 61613, "targetPort": "openwire"}], "selector": {"role": "broker"}}},
-      {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "agent-internal-cert"},
-      "labels": {"app": "enmasse", "role": "agent"}, "name": "agent"}, "spec": {"replicas":
-      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse", "name": "agent", "role": "agent"}}, "spec": {"containers":
-      [{"env": [{"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
-      "value": "brokered"}, {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
-      {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "CONSOLE_CERT_DIR",
-      "value": "/etc/console-certs"}, {"name": "ADDRESS_CONTROLLER_CA", "value": "/opt/agent/address-controller-ca/tls.crt"},
-      {"name": "MESSAGING_CERT", "value": "/opt/agent/messaging-cert/tls.crt"}, {"name":
-      "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name":
-      "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name":
-      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
-      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
-      "image": "${AGENT_IMAGE}", "livenessProbe": {"httpGet": {"path": "/probe", "port":
-      "https", "scheme": "HTTPS"}}, "name": "agent", "ports": [{"containerPort": 8080,
-      "name": "https"}], "readinessProbe": {"httpGet": {"path": "/probe", "port":
-      "https", "scheme": "HTTPS"}}, "volumeMounts": [{"mountPath": "/opt/agent/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/console-certs",
-      "name": "console-external-cert", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "agent-internal-cert", "readOnly": true}, {"mountPath": "/opt/agent/address-controller-ca",
-      "name": "address-controller-ca", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",
+      "amqps"}, {"name": "console", "port": 8161, "targetPort": "jolokia"}], "selector":
+      {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
+      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName":
+      "agent-internal-cert"}, "labels": {"app": "enmasse", "role": "agent"}, "name":
+      "agent"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "agent", "role": "agent"}},
+      "spec": {"containers": [{"env": [{"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"},
+      {"name": "ADDRESS_SPACE_TYPE", "value": "brokered"}, {"name": "ADDRESS_SPACE_SERVICE_HOST",
+      "value": "${ADDRESS_SPACE_SERVICE_HOST}"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "CONSOLE_CERT_DIR", "value": "/etc/console-certs"}, {"name": "ADDRESS_CONTROLLER_CA",
+      "value": "/opt/agent/address-controller-ca/tls.crt"}, {"name": "MESSAGING_CERT",
+      "value": "/opt/agent/messaging-cert/tls.crt"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
+      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
+      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${AGENT_IMAGE}",
+      "livenessProbe": {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}},
+      "name": "agent", "ports": [{"containerPort": 8080, "name": "https"}], "readinessProbe":
+      {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}}, "volumeMounts":
+      [{"mountPath": "/opt/agent/authservice-ca", "name": "authservice-ca", "readOnly":
+      true}, {"mountPath": "/etc/console-certs", "name": "console-external-cert",
+      "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name": "agent-internal-cert",
+      "readOnly": true}, {"mountPath": "/opt/agent/address-controller-ca", "name":
+      "address-controller-ca", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",
       "name": "messaging-cert", "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
       "volumes": [{"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
       {"name": "console-external-cert", "secret": {"secretName": "${CONSOLE_SECRET}"}},
