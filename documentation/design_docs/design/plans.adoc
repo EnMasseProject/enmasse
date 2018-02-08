@@ -12,7 +12,7 @@ config map.
 
 There would be a ConfigMap in the namespace of the address-controller
 for each defined AddressPlan and AddressSpacePlan. With type labels
-'address=plan' and 'address-space-plan' respectively.
+'address-plan' and 'address-space-plan' respectively.
 
 The address-controller would create (copy, effectively) the necessary
 ConfigMaps in the namespace of any deployed address-space. Each
