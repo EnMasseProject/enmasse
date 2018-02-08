@@ -113,10 +113,8 @@ under the License.
       -->
 
       <acceptors>
-         <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP;saslMechanisms=PLAIN</acceptor>
-         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
-         <acceptor name="openwire">tcp://0.0.0.0:61613?protocols=OPENWIRE;sslEnabled=true;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
-         <acceptor name="core">tcp://0.0.0.0:61616?protocols=CORE;sslEnabled=true;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
+         <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP,CORE,OPENWIRE,MQTT;saslMechanisms=PLAIN</acceptor>
+         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP,CORE,OPENWIRE,MQTT;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
          <!-- SASL Mechanism should be EXTERNAL not anonymous... but Artemis doesn't support EXTERNAL -->
          <acceptor name="amqps-normal">tcp://0.0.0.0:55671?protocols=AMQP;saslMechanisms=ANONYMOUS;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
       </acceptors>
