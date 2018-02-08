@@ -61,15 +61,10 @@ local prometheus = import "prometheus.jsonnet";
           "targetPort": "amqps"
         },
         {
-          "name": "core",
-          "port": 61616,
-          "targetPort": "core"
-        },
-        {
-          "name": "openwire",
-          "port": 61613,
-          "targetPort": "openwire"
-        },
+          "name": "console",
+          "port": 8161,
+          "targetPort": "jolokia"
+        }
       ],
       "selector": {
         "role": "broker"
@@ -158,8 +153,6 @@ local prometheus = import "prometheus.jsonnet";
               "ports": [
                 common.container_port("amqp", 5672),
                 common.container_port("amqps", 5671),
-                common.container_port("core", 61616),
-                common.container_port("openwire", 61613),
                 common.container_port("amqps-normal", 55671),
                 common.container_port("jolokia", 8161),
                 common.container_port("artemismetrics", 8080)

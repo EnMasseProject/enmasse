@@ -1618,10 +1618,6 @@ objects:
               name: amqp
             - containerPort: 5671
               name: amqps
-            - containerPort: 61616
-              name: core
-            - containerPort: 61613
-              name: openwire
             - containerPort: 55671
               name: amqps-normal
             - containerPort: 8161
@@ -1697,12 +1693,9 @@ objects:
       - name: amqps
         port: 5671
         targetPort: amqps
-      - name: core
-        port: 61616
-        targetPort: core
-      - name: openwire
-        port: 61613
-        targetPort: openwire
+      - name: console
+        port: 8161
+        targetPort: jolokia
       selector:
         role: broker
   - apiVersion: extensions/v1beta1
