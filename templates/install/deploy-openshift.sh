@@ -168,6 +168,7 @@ runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enma
 
 runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
 runcmd "oc create -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
+runcmd "oc create -f $ADDONS/tomas-plans.yaml" "Create brokered address space plans"
 
 create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
