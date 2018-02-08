@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: address
+objects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: address-${NAME}
+      labels:
+        type: address-config
+    data:
+      config.json: |-
+        {
+          "apiVersion": "enmasse.io/v1",
+          "kind": "Address",
+          "metadata": {
+            "name": "${NAME}",
+            "addressSpace": "${ADDRESS_SPACE}"
+          },
+          "spec": {
+            "type": "${TYPE}",
+            "plan": "${PLAN}"
+          }
+        }
+parameters:
+  - name: NAME
+    description: Name of address
+    required: true
+  - name: ADDRESS_SPACE
+    description: Address space of address
+    required: true
+  - name: TYPE
+    description: Type of address
+    required: true
+  - name: PLAN
+    description: Plan to use for address
+    required: true

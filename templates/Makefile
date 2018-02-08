@@ -55,6 +55,7 @@ prepare:
 	cp include/*.json build
 	cp -f include/*-plans.yaml install/kubernetes/addons/
 	cp -f include/*-plans.yaml install/openshift/addons/
+	cp -f include/address.yaml include/address-space.yaml install/openshift/
 
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
