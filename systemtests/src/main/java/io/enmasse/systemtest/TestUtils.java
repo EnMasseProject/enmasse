@@ -272,6 +272,7 @@ public class TestUtils {
             JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
             notReadyAddresses = checkAddressesReady(addressList, destinations);
             if (notReadyAddresses.isEmpty()) {
+                Thread.sleep(5000); //TODO: remove this sleep after fix for ready check will be available
                 break;
             }
             Thread.sleep(5000);
