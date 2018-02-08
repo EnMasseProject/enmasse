@@ -238,7 +238,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
-        int expectedMsgCount = 50;
+        int expectedMsgCount = 10;
 
         Destination topic = Destination.topic("selector-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, topic);
