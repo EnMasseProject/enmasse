@@ -62,9 +62,8 @@ public class SeleniumProvider {
     }
 
 
-    public void tearDownDrivers() throws Exception {
+    public void tearDownDrivers() {
         takeScreenShot();
-        Thread.sleep(3000);
         try {
             driver.quit();
         } catch (Exception ex) {

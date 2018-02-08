@@ -401,12 +401,21 @@ public abstract class TestBase extends SystemTestRunListener {
      *
      * @param budget timeout budget in seconds
      */
-    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) throws Exception {
-        SeleniumProvider selenium = getFirefoxSeleniumProvider();
-        ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace);
-        console.openWebConsolePage();
-        console.openAddressesPageWebConsole();
-        selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
+    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) {
+        SeleniumProvider selenium = null;
+        try {
+            selenium = getFirefoxSeleniumProvider();
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace);
+            console.openWebConsolePage();
+            console.openAddressesPageWebConsole();
+            selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (selenium != null) {
+                selenium.tearDownDrivers();
+            }
+        }
     }
 
     /**
