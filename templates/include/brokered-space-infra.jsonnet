@@ -59,7 +59,30 @@ local prometheus = import "prometheus.jsonnet";
           "name": "amqps",
           "port": 5671,
           "targetPort": "amqps"
-        },
+        }
+      ],
+      "selector": {
+        "role": "broker"
+      }
+    }
+  },
+
+  broker_console_service::
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "labels": {
+        "app": "enmasse"
+      },
+      "annotations": {
+        "addressSpace": "${ADDRESS_SPACE}",
+        "io.enmasse.endpointPort": "console"
+      },
+      "name": "brokerconsole"
+    },
+    "spec": {
+      "ports": [
         {
           "name": "console",
           "port": 8161,
