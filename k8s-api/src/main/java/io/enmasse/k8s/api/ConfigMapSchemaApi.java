@@ -219,7 +219,7 @@ public class ConfigMapSchemaApi implements SchemaApi {
         AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
         builder.setName("brokered");
         builder.setDescription("A brokered address space consists of a broker combined with a console for managing addresses.");
-        builder.setServiceNames(Arrays.asList("messaging", "console"));
+        builder.setServiceNames(Arrays.asList("messaging", "console", "brokerconsole"));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "brokered".equals(plan.getAddressSpaceType()))
