@@ -1,0 +1,41 @@
+- name: Check if standard authservice secret exists
+  shell: oc get secret -n {{ namespace }} standard-authservice-cert
+  register: secret_exists
+  ignore_errors: True
+- name: Create temp folder for standard authservice certificates
+  when: secret_exists.failed
+  register: cert_temp
+  tempfile:
+    state: directory
+- name: Create private key for standard authservice certificate
+  when: secret_exists.failed
+  openssl_privatekey:
+    path: "{{ cert_temp.path }}/tls.key"
+- name: Create a certificate signing request for standard authservice
+  when: secret_exists.failed
+  openssl_csr:
+    path: "{{ cert_temp.path }}/tls.csr"
+    common_name: standard-authservice.{{ namespace }}.svc.cluster.local
+    organization_name: enmasse.io
+    privatekey_path: "{{ cert_temp.path }}/tls.key"
+- name: Create a signed certificate to use for the standard authservice
+  when: secret_exists.failed
+  openssl_certificate:
+    path: "{{ cert_temp.path }}/tls.crt"
+    privatekey_path: "{{ cert_temp.path }}/tls.key"
+    csr_path: "{{ cert_temp.path }}/tls.csr"
+    provider: selfsigned
+- name: Create secret with the standard authentication service certificate
+  when: secret_exists.failed
+  shell: oc create secret tls -n {{ namespace }} standard-authservice-cert --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
+- name: Check if keycloak credentials secret exists
+  shell: oc get secret -n {{ namespace }} keycloak-credentials
+  register: secret_exists
+  ignore_errors: True
+- name: Create secret with the keycloak credentials
+  when: secret_exists.failed
+  shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
+- name: Give view permissions for the keycloak controller
+  shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
+- name: Create the standard authentication service
+  shell: oc process -f {{ playbook_dir }}/templates/addons/standard-authservice.yaml | oc apply -n {{ namespace }} -f -

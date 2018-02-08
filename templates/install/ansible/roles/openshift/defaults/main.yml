@@ -1,0 +1,6 @@
+---
+namespace: enmasse
+multitenant: true
+enable_rbac: true
+authentication_services:
+  - none

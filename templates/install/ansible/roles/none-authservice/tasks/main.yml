@@ -1,0 +1,32 @@
+- name: Check if none authservice secret exists
+  shell: oc get secret -n {{ namespace }} none-authservice-cert
+  register: secret_exists
+  ignore_errors: True
+- name: Create temp folder for none authservice certificates
+  when: secret_exists.failed
+  register: cert_temp
+  tempfile:
+    state: directory
+- name: Create private key for none authservice certificate
+  when: secret_exists.failed
+  openssl_privatekey:
+    path: "{{ cert_temp.path }}/tls.key"
+- name: Create a certificate signing request for none authservice
+  when: secret_exists.failed
+  openssl_csr:
+    path: "{{ cert_temp.path }}/tls.csr"
+    common_name: none-authservice.{{ namespace }}.svc.cluster.local
+    organization_name: enmasse.io
+    privatekey_path: "{{ cert_temp.path }}/tls.key"
+- name: Create a signed certificate to use for the none authservice
+  when: secret_exists.failed
+  openssl_certificate:
+    path: "{{ cert_temp.path }}/tls.crt"
+    privatekey_path: "{{ cert_temp.path }}/tls.key"
+    csr_path: "{{ cert_temp.path }}/tls.csr"
+    provider: selfsigned
+- name: Create secret with the none authentication service certificate
+  when: secret_exists.failed
+  shell: oc create secret tls -n {{ namespace }} none-authservice-cert --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
+- name: Create the none authentication service
+  shell: oc process -f {{ playbook_dir }}/templates/addons/none-authservice.yaml | oc apply -n {{ namespace }} -f -

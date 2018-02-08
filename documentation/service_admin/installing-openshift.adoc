@@ -8,8 +8,7 @@ include::common/prerequisites-openshift.adoc[leveloffset=+1]
 
 include::common/install-procedure.adoc[leveloffset+=1]
 
-To simplify deployment, have a look at the `deploy-openshift.sh` script which should work on Linux
-and Mac. You can invoke the deployment script with `-h` to view a list of options.
+To simplify deployment, have a look at the ansible playbooks in the `ansible/playbooks/openshift` folder.
 
 This guide will walk through the manual deployment procedure and should work on any platform
 supporting the OpenShift client.
@@ -84,7 +83,7 @@ oc create secret generic keycloak-credentials --from-literal=admin.username=admi
 +
 [options="nowrap"]
 ----
-oc adm add-role-to-user view system:serviceaccount:$(oc project -q):default
+oc adm policy add-role-to-user view system:serviceaccount:$(oc project -q):default
 ----
 
 . Create the standard authentication service:
