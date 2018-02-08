@@ -25,6 +25,7 @@ JAVA_OPTS=$(echo $JAVA_OPTS | sed -e "s/-XX:+UseParallelGC/ /")
 function configure_brokered() {
     cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
     cp $CONFIG_TEMPLATES/brokered/login.config /tmp/login.config
+    export HAWTIO_ROLE=admin
 }
 
 function configure_standard() {
@@ -38,6 +39,7 @@ function configure_standard() {
     fi
     cat $CONFIG_TEMPLATES/standard/broker_footer.xml >> /tmp/broker.xml
     cp $CONFIG_TEMPLATES/standard/login.config /tmp/login.config
+    export HAWTIO_ROLE=manage
 }
 
 # Parameters are

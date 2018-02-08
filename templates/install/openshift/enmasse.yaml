@@ -1693,9 +1693,6 @@ objects:
       - name: amqps
         port: 5671
         targetPort: amqps
-      - name: console
-        port: 8161
-        targetPort: jolokia
       selector:
         role: broker
   - apiVersion: extensions/v1beta1
