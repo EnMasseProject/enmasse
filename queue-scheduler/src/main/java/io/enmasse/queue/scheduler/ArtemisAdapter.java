@@ -16,6 +16,8 @@
 package io.enmasse.queue.scheduler;
 
 import io.enmasse.amqp.Artemis;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeoutException;
  * Adapts Artemis to the Broker interface used by the queue scheduler
  */
 public class ArtemisAdapter implements Broker {
+    private static final Logger log = LoggerFactory.getLogger(ArtemisAdapter.class);
     private final Artemis artemis;
     private static final String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
     private static final String messagingPort = System.getenv("MESSAGING_SERVICE_PORT_AMQPS_BROKER");
@@ -36,7 +39,11 @@ public class ArtemisAdapter implements Broker {
 
     @Override
     public Set<String> getQueueNames() throws TimeoutException {
-        return artemis.getQueueNames();
+        Set<String> queues = artemis.getQueueNames();
+        Set<String> connectors = artemis.getConnectorNames();
+
+        queues.retainAll(connectors);
+        return queues;
     }
 
     @Override
