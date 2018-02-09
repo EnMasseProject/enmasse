@@ -5,34 +5,46 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import org.junit.After;
+import org.junit.Before;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public abstract class ClientTestBase extends TestBaseWithShared {
     protected ArgumentMap arguments = new ArgumentMap();
+    protected List<AbstractClient> clients;
 
-    @After
-    public void teardownClient(){
-        arguments.clear();
+    @Before
+    public void setUpClientBase() {
+        clients = new ArrayList<>();
     }
 
-    protected String getTopicPrefix(boolean topicSwitch){
+    @After
+    public void teardownClient() {
+        arguments.clear();
+        clients.forEach(AbstractClient::stop);
+        clients.clear();
+    }
+
+    protected String getTopicPrefix(boolean topicSwitch) {
         return topicSwitch ? "topic://" : "";
     }
 
-    private String getAmqpsRoute(AddressSpace addressSpace){
+    private String getAmqpsRoute(AddressSpace addressSpace) {
         return getRouteEndpoint(sharedAddressSpace).toString();
     }
 
-    private String getOpenwireRoute(AddressSpace addressSpace){
+    private String getOpenwireRoute(AddressSpace addressSpace) {
         return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "openwire").toString();
     }
 
-    private String getCoreRoute(AddressSpace addressSpace){
+    private String getCoreRoute(AddressSpace addressSpace) {
         return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "core").toString();
     }
 
-    protected String getRoute(AddressSpace addressSpace, AbstractClient client){
-        switch (client.getClientType()){
+    protected String getRoute(AddressSpace addressSpace, AbstractClient client) {
+        switch (client.getClientType()) {
             case CLI_RHEA_SENDER:
                 return getAmqpsRoute(addressSpace);
             case CLI_RHEA_RECEIVER:

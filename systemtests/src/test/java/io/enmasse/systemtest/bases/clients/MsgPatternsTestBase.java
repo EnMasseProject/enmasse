@@ -6,6 +6,7 @@ import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
 
+import java.util.Arrays;
 import java.util.concurrent.Future;
 
 import static org.junit.Assert.assertEquals;
@@ -22,6 +23,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+        clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 10;
 
         Destination dest = Destination.queue("message-basic", getDefaultPlan(AddressType.QUEUE));
@@ -47,6 +49,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
     protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
             throws Exception {
+        clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
 
         Destination dest = Destination.queue("receiver-round-robin", getDefaultPlan(AddressType.QUEUE));
@@ -83,6 +86,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
     protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
                                         boolean hasTopicPrefix) throws Exception {
+        clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
         Destination dest = Destination.topic("topic-subscribe", getDefaultPlan(AddressType.TOPIC));
@@ -122,6 +126,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
             throws Exception {
+        clients.addAll(Arrays.asList(sender, receiver_browse, receiver_receive));
         int expectedMsgCount = 10;
 
         Destination dest = Destination.queue("message-browse", getDefaultPlan(AddressType.QUEUE));
@@ -157,6 +162,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         Destination dest = Destination.queue("drain-queue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
+        clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
         arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
@@ -182,6 +188,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         int expectedMsgCount = 50;
 
+        clients.addAll(Arrays.asList(sender, receiver));
         Destination queue = Destination.queue("selector-queue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, queue);
 
@@ -238,6 +245,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
+        clients.addAll(Arrays.asList(sender, subscriber, subscriber2, subscriber3));
         int expectedMsgCount = 10;
 
         Destination topic = Destination.topic("selector-topic", getDefaultPlan(AddressType.TOPIC));
