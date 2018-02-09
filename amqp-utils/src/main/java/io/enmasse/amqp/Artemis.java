@@ -334,4 +334,21 @@ public class Artemis implements AutoCloseable {
         doOperation("broker", "destroyDivert", divertName);
     }
 
+    public Set<String> getConnectorNames() throws TimeoutException {
+        log.info("Retrieving conector names for broker {}", brokerContainerId);
+        Message response = doOperation("broker", "getConnectorServices");
+
+        Set<String> connectors = new LinkedHashSet<>();
+        JsonArray payload = new JsonArray((String)((AmqpValue)response.getBody()).getValue());
+        for (int i = 0; i < payload.size(); i++) {
+            JsonArray inner = payload.getJsonArray(i);
+            for (int j = 0; j < inner.size(); j++) {
+                String connector = inner.getString(j);
+                if (!connector.equals("amqp-connector")) {
+                    connectors.add(connector);
+                }
+            }
+        }
+        return connectors;
+    }
 }
