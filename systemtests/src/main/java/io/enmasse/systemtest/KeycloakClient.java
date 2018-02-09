@@ -70,6 +70,13 @@ public class KeycloakClient {
         });
     }
 
+    private void joinGroupInternal(RealmResource realmResource, String groupName, String username) throws Exception {
+        groupOperationInternal(realmResource, groupName, username, (rr, clientId, groupId) -> {
+            rr.users().get(clientId).joinGroup(groupId);
+            log.info("User '{}' successfully joined group '{}'", username, groupName);
+        });
+    }
+
     public void leaveGroup(String realm, String groupName, String username) throws Exception {
         groupOperation(realm, groupName, username, 3, TimeUnit.MINUTES, (realmResource, clientId, groupId) -> {
             realmResource.users().get(clientId).leaveGroup(groupId);
@@ -85,35 +92,39 @@ public class KeycloakClient {
 
     public void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
                                GroupMethod<RealmResource, String, String> groupMethod) throws Exception {
-        int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
-            for (int retries = 0; retries < maxRetries; retries++) {
-                try {
-                    groupMethod.apply(
-                            realmResource,
-                            getClientId(keycloak, realm, username),
-                            getGroupId(keycloak, realm, groupName));
-                    break;
-                } catch (Exception e) {
-                    log.info("Exception querying keycloak ({}), retrying", e.getMessage());
-                    Thread.sleep(2000);
-                }
+            groupOperationInternal(realmResource, groupName, username, groupMethod);
+        }
+    }
+
+    private void groupOperationInternal(RealmResource realmResource, String groupName, String username, GroupMethod<RealmResource, String, String> groupMethod) throws InterruptedException {
+        int maxRetries = 10;
+        for (int retries = 0; retries < maxRetries; retries++) {
+            try {
+                groupMethod.apply(
+                    realmResource,
+                    getClientId(realmResource, username),
+                    getGroupId(realmResource, groupName));
+                break;
+            } catch (Exception e) {
+                log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                Thread.sleep(2000);
             }
         }
     }
 
-    private String getClientId(CloseableKeycloak keycloak, String realm, String username) {
-        List<UserRepresentation> users = keycloak.get().realm(realm).users().search(username);
+    private String getClientId(RealmResource realmResource, String username) {
+        List<UserRepresentation> users = realmResource.users().search(username);
         if (!users.isEmpty()) {
             return users.get(0).getId();
         }
         throw new RuntimeException("Unable to find user: " + username);
     }
 
-    private String getGroupId(CloseableKeycloak keycloak, String realm, String groupName) {
+    private String getGroupId(RealmResource realmResource, String groupName) {
         List<GroupRepresentation> groups =
-                keycloak.get().realm(realm).groups()
+                realmResource.groups()
                         .groups()
                         .stream()
                         .filter(group -> group.getName().equals(groupName))
@@ -124,9 +135,9 @@ public class KeycloakClient {
         throw new RuntimeException("Unable to find group: " + groupName);
     }
 
-    private boolean groupExist(CloseableKeycloak keycloak, String realm, String groupName) {
+    private boolean groupExist(RealmResource realmResource, String groupName) {
         List<GroupRepresentation> groups =
-                keycloak.get().realm(realm).groups()
+                realmResource.groups()
                         .groups()
                         .stream()
                         .filter(group -> group.getName().equals(groupName))
@@ -139,23 +150,27 @@ public class KeycloakClient {
     }
 
     public void createGroup(String realm, String groupName, long timeout, TimeUnit timeUnit) throws Exception {
-        int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
-            waitForRealm(keycloak.get(), realm, timeout, timeUnit);
-            if (!groupExist(keycloak, realm, groupName)) {
-                for (int retries = 0; retries < maxRetries; retries++) {
-                    try {
-                        GroupRepresentation groupRep = new GroupRepresentation();
-                        groupRep.setName(groupName);
-                        Response response = keycloak.get().realm(realm).groups().add(groupRep);
-                        if (response.getStatus() != 201) {
-                            throw new RuntimeException("Unable to create group: " + response.getStatus());
-                        }
-                        break;
-                    } catch (Exception e) {
-                        log.info("Exception querying keycloak ({}), retrying", e.getMessage());
-                        Thread.sleep(2000);
+            RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
+            createGroupInternal(realmResource, groupName);
+        }
+    }
+
+    private void createGroupInternal(RealmResource realm, String groupName) throws InterruptedException {
+        int maxRetries = 10;
+        if (!groupExist(realm, groupName)) {
+            for (int retries = 0; retries < maxRetries; retries++) {
+                try {
+                    GroupRepresentation groupRep = new GroupRepresentation();
+                    groupRep.setName(groupName);
+                    Response response = realm.groups().add(groupRep);
+                    if (response.getStatus() != 201) {
+                        throw new RuntimeException("Unable to create group: " + response.getStatus());
                     }
+                    break;
+                } catch (Exception e) {
+                    log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                    Thread.sleep(2000);
                 }
             }
         }
@@ -211,16 +226,15 @@ public class KeycloakClient {
                     Thread.sleep(2000);
                 }
             }
-        }
 
-        for (String group : groups) {
-            createGroup(realm, group);
-            joinGroup(realm, group, userName);
+            for (String group : groups) {
+                createGroupInternal(realmResource, group);
+                joinGroupInternal(realmResource, group, userName);
+            }
         }
     }
 
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, long timeout, TimeUnit timeUnit) throws Exception {
-        log.info("Waiting for realm {} to exist", realmName);
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
         RealmResource realmResource = null;
         while (System.currentTimeMillis() < endTime) {
@@ -228,6 +242,7 @@ public class KeycloakClient {
             if (realmResource != null) {
                 return realmResource;
             }
+            log.info("Waiting for realm {} to exist", realmName);
             Thread.sleep(10000);
         }
 

@@ -205,9 +205,9 @@ public class TestUtils {
             addressObject = apiClient.getAddressSpace(addressSpace);
             isReady = isAddressSpaceReady(addressObject);
             if (!isReady) {
+                log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
         }
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");

@@ -32,7 +32,6 @@ else
     run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
 fi
 
-
 echo "process for checking system resources with PID: ${STATS_PID} will be killed"
 kill ${STATS_PID}
 
