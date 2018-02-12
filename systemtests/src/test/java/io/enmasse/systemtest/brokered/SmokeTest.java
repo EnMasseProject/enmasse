@@ -76,9 +76,10 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-create-delete-a",
                 "brokered-create-delete-a",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpaceA, "none");
+        createAddressSpace(addressSpaceA, "standard");
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
+        getKeycloakClient().createUser(addressSpaceA.getName(), "test", "test");
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
@@ -88,8 +89,10 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-create-delete-c",
                 "brokered-create-delete-c",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpaceC, "none");
+        createAddressSpace(addressSpaceC, "standard");
         setAddresses(addressSpaceC, queueB);
+        getKeycloakClient().createUser(addressSpaceC.getName(), "test", "test");
+
         AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
@@ -105,7 +108,7 @@ public class SmokeTest extends BrokeredTestBase {
                 "brokered-a",
                 "brokered-a",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpaceA, "none");
+        createAddressSpace(addressSpaceA, "standard");
         Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueA);
 
