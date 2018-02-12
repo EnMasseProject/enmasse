@@ -17,7 +17,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doRoundRobinReceiverTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
     }
 
-    @Test
+    //@Test disabled due to issue #660
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
@@ -37,7 +37,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doMessageSelectorQueueTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver());
     }
 
-    @Test
+    //@Test disabled due to issue #660
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
