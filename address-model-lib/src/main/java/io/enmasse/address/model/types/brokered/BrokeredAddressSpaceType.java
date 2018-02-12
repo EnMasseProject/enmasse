@@ -35,7 +35,7 @@ public class BrokeredAddressSpaceType implements AddressSpaceType {
     static final List<io.enmasse.address.model.types.Plan> plans = Arrays.asList(
             new Plan("unlimited", "Unlimited", "No restrictions on resource usage", "09671470-61a7-11e7-8a6e-507b9def37d9",
                     new TemplateConfig("brokered-space-infra", Collections.emptyMap())));
-    static final List<String> serviceNames = Arrays.asList("messaging", "console");
+    static final List<String> serviceNames = Arrays.asList("messaging", "console", "brokerconsole");
 
     @Override
     public String getName() {
