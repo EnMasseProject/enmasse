@@ -28,6 +28,8 @@ import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -43,6 +45,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -174,17 +177,26 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     /**
-     * give you a list of all deployed addresses (or single deployed address)
+     * give you a list of names of all deployed addresses (or single deployed address)
      *
      * @param addressName name of single address
      * @return list of addresses
      * @throws Exception
      */
-
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         return TestUtils.getAddresses(addressApiClient, addressSpace, addressName);
     }
 
+    /**
+     * give you a list of objects of all deployed addresses (or single deployed address)
+     *
+     * @param addressName name of single address
+     * @return list of addresses
+     * @throws Exception
+     */
+    protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName);
+    }
 
     /**
      * scale up/down destination (StatefulSet) to count of replicas, includes waiting for expected replicas
@@ -681,6 +693,50 @@ public abstract class TestBase extends SystemTestRunListener {
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }
+
+    //================================================================================================
+    //==================================== Config maps operations ====================================
+    //================================================================================================
+
+    //===================
+    //Address config-maps
+    //===================
+    protected void createAddressPlanConfig(AddressPlan addressPlan) {
+        kubernetes.createAddressPlanConfig(addressPlan);
+    }
+
+    protected AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
+        throw new NotImplementedException();
+    }
+
+    protected boolean removeAddressPlanConfig(String configName) throws NotImplementedException {
+        throw new NotImplementedException();
+    }
+
+    protected void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        kubernetes.appendAddressPlan(addressPlan, addressSpacePlan);
+    }
+
+    protected boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        return kubernetes.removeAddressPlan(addressPlan, addressSpacePlan);
+    }
+
+    //=========================
+    //Address space config-maps
+    //=========================
+
+    protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
+        kubernetes.createAddressSpacePlanConfig(addressSpacePlan);
+    }
+
+    protected AddressSpacePlan getAddressSpacePlanConfig(String config) {
+        return kubernetes.getAddressSpacePlanConfig(config);
+    }
+
+    protected boolean removeAddressSpacePlanConfig(String config) {
+        throw new NotImplementedException();
+    }
+
 
     //================================================================================================
     //==================================== Asserts methods ===========================================

@@ -1,17 +1,24 @@
 package io.enmasse.systemtest.brokered;
 
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.BrokeredTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressResource;
+import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpaceResource;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -61,5 +68,83 @@ public class QueueTest extends BrokeredTestBase {
         for (Message m : receivedGroupB.get()) {
             assertEquals("Group id is different", m.getGroupId(), "group B");
         }
+    }
+
+    //@Test disabled because new address-space plans are not accepted yet
+    public void testCreateAddressSpacePlan() throws Exception {
+        AddressPlan weakQueue = null;
+        AddressPlan weakTopic = null;
+        AddressSpacePlan weakPlan = null;
+        try {
+            //define address plans
+            List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.0));
+            weakQueue = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
+            weakTopic = new AddressPlan("brokered-topic-weak", AddressType.TOPIC, addressResources);
+
+            createAddressPlanConfig(weakQueue);
+            createAddressPlanConfig(weakTopic);
+
+            //define address space plan
+            List<AddressSpaceResource> resources = Arrays.asList(new AddressSpaceResource("broker", 2.0, 9.0));
+            List<AddressPlan> addressPlans = Arrays.asList(weakQueue, weakTopic);
+            weakPlan = new AddressSpacePlan("weak-plan", "weak", "brokered-space", AddressSpaceType.BROKERED, resources, addressPlans);
+            createAddressSpacePlanConfig(weakPlan);
+
+            //create address space plan with new plan
+            AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.BROKERED, weakPlan.getName());
+            createAddressSpace(weakAddressSpace, AuthService.STANDARD.toString());
+
+            final String queueName = "weak-queue";
+            final String topicName = "weak-topic";
+            setAddresses(weakAddressSpace,
+                    Destination.queue(queueName, "brokered-queue-weak"),
+                    Destination.topic(topicName, "brokered-topic-weak"));
+
+            Future<List<Address>> getWeakQueue = getAddressesObjects(Optional.of(weakQueue.getName()));
+            Future<List<Address>> getWeakTopic = getAddressesObjects(Optional.of(weakTopic.getName()));
+
+            String assertMessage = "Queue plan wasn't set properly";
+
+            assertEquals(assertMessage, getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(), weakQueue.getName());
+            assertEquals(assertMessage, getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(), weakTopic.getName());
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            //TODO: create new test base for tests with newly defined plans with After method for removing all
+            // address(space) plans configs and appended plans from already existing address-space configs
+
+            //removeAddressPlanConfig(weakQueue.getName()); TODO not implemented yet
+            //removeAddressPlanConfig(weakTopic.getName()); TODO not implemented yet
+            //removeAddressSpacePlanConfig(weakPlan.getConfigName()); TODO not implemented yet
+        }
+
+    }
+
+    @Test
+    public void testAppendNewAddressPlan() throws Exception {
+        AddressPlan weakQueue = null;
+        AddressSpacePlan brokeredPlan = null;
+        try {
+            List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.0));
+            weakQueue = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
+
+            brokeredPlan = getAddressSpacePlanConfig("brokered");
+            appendAddressPlan(weakQueue, brokeredPlan);
+
+            setAddresses(Destination.queue("weak-queue", weakQueue.getName()));
+
+            Future<List<Address>> brokeredAddresses = getAddressesObjects(Optional.of(weakQueue.getName()));
+            assertThat("Queue plan wasn't set properly",
+                    brokeredAddresses.get(20, TimeUnit.SECONDS).get(0).getType(), is(weakQueue.getType()));
+
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            //TODO: create new test base for tests with newly defined plans with After method for removing all
+            // address(space) plans configs and appended plans from already existing address-space configs
+            removeAddressPlan(weakQueue, brokeredPlan);
+            //removeAddressPlanConfig(weakQueue.getName()); TODO! not implemented yet
+        }
+
     }
 }

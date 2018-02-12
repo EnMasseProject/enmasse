@@ -15,16 +15,23 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressResource;
+import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public abstract class Kubernetes {
@@ -166,5 +173,234 @@ public abstract class Kubernetes {
         } else {
             return new OpenShift(environment, environment.namespace());
         }
+    }
+
+    private ConfigMapList listConfigMaps(String type) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("type", type);
+        return client.configMaps().inNamespace(globalNamespace).withLabels(labels).list();
+    }
+
+
+    /**
+     * create new ConfigMap with new address space plan definition
+     */
+    public void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
+        ConfigMap addressPlanDefinition = new ConfigMap();
+
+        addressPlanDefinition.setApiVersion("v1"); // <apiVersion>
+        addressPlanDefinition.setKind("ConfigMap");         // <kind>
+
+        ObjectMeta metadata = new ObjectMeta(); // <metadata>
+        metadata.setName(String.format("address-space-plan-%s", addressSpacePlan.getConfigName()));
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("type", "address-space-plan");
+        metadata.setLabels(labels);
+        addressPlanDefinition.setMetadata(metadata); // </metadata>
+        addressPlanDefinition.setData(createAddressSpacePlanData(addressSpacePlan)); // <data></data>
+        client.configMaps().create(addressPlanDefinition);
+    }
+
+    /**
+     * create body for ConfigMap definition for new address space plan definition
+     */
+    private Map<String, String> createAddressSpacePlanData(AddressSpacePlan addressSpacePlan) {
+        Map<String, String> data = new LinkedHashMap<>();
+
+        //definition
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "enmasse.io/v1");
+        config.put("kind", "AddressSpacePlan");
+
+        JsonObject definitionMetadata = new JsonObject(); // <metadata>
+        definitionMetadata.put("name", addressSpacePlan.getName());
+
+        JsonObject annotations = new JsonObject();  // <annotations>
+        annotations.put("enmasse.io/defined-by", addressSpacePlan.getResourceDefName()); //"brokered-space", "standard-space", newly created...
+        definitionMetadata.put("annotations", annotations); // </annotations>
+
+        config.put("metadata", definitionMetadata); // </metadata>
+
+        config.put("displayName", addressSpacePlan.getName()); //not parameterized for now
+        config.put("displayOrder", "0");
+        config.put("shortDescription", "Newly defined address space plan.");
+        config.put("longDescription", "Newly defined address space plan.");
+        config.put("uuid", "677485a2-0d96-11e8-ba89-0ed5f89f718b");
+        config.put("addressSpaceType", addressSpacePlan.getType().toString()); // "standard", "brokered", newly created...
+
+        JsonArray defResources = new JsonArray(); // <resources>
+        JsonObject brokerResource;
+        for (AddressSpaceResource res : addressSpacePlan.getResources()) {
+            brokerResource = new JsonObject();
+            brokerResource.put("name", res.getName());
+            brokerResource.put("min", res.getMin());
+            brokerResource.put("max", res.getMax());
+            defResources.add(brokerResource);
+        }
+        config.put("resources", defResources); // </resources>
+
+        JsonArray defAddressPlan = new JsonArray(); // <addressPlans>
+        for (AddressPlan plan : addressSpacePlan.getAddressPlans()) {
+            defAddressPlan.add(plan.getName());
+        }
+        config.put("addressPlans", defAddressPlan); // </addressPlans>
+
+        data.put("definition", config.toString());
+
+        return data;
+    }
+
+    public AddressSpacePlan getAddressSpacePlanConfig(String configName) {
+        AtomicReference<AddressSpacePlan> requestedPlan = new AtomicReference<>();
+        listConfigMaps("address-space-plan").getItems().forEach(plan -> {
+            if (plan.getMetadata().getName().equals(String.format("address-space-plan-%s", configName))) {
+                Map<String, String> data = plan.getData();
+                JsonObject planDefinition = new JsonObject(data.get("definition"));
+                JsonObject metadataDef = planDefinition.getJsonObject("metadata");
+
+                String name = metadataDef.getString("name");
+                String resourceDefName = metadataDef.getJsonObject("annotations").getString("enmasse.io/defined-by");
+                AddressSpaceType type = AddressSpaceType.valueOf(planDefinition.getString("addressSpaceType").toUpperCase());
+
+                JsonArray resourcesDef = planDefinition.getJsonArray("resources");
+                List<AddressSpaceResource> resources = new ArrayList<>();
+
+                for (int i = 0; i < resourcesDef.size(); i++) {
+                    JsonObject resourceDef = resourcesDef.getJsonObject(i);
+                    AddressSpaceResource resource = new AddressSpaceResource(
+                            resourceDef.getString("name"),
+                            resourceDef.getDouble("min"),
+                            resourceDef.getDouble("max"));
+                    resources.add(resource);
+                }
+
+                JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
+                List<AddressPlan> addressPlans = new ArrayList<>();
+                for (int i = 0; i < addressPlansDef.size(); i++) {
+                    addressPlans.add(getAddressPlanConfig(addressPlansDef.getString(i)));
+                }
+                requestedPlan.set(new AddressSpacePlan(name, configName, resourceDefName, type, resources, addressPlans));
+            }
+        });
+        return requestedPlan.get();
+    }
+
+    public AddressPlan getAddressPlanConfig(String configName) {
+        AtomicReference<AddressPlan> requestedPlan = new AtomicReference<>();
+        listConfigMaps("address-plan").getItems().forEach(addressPlan -> {
+            if (addressPlan.getMetadata().getName().equals(String.format("address-plan-%s", configName))) {
+                Map<String, String> data = addressPlan.getData();
+                JsonObject planDefinition = new JsonObject(data.get("definition"));
+                JsonObject metadataDef = planDefinition.getJsonObject("metadata");
+
+
+                JsonArray requiredResourcesDef = planDefinition.getJsonArray("requiredResources");
+                List<AddressResource> requiredResources = new ArrayList<>();
+
+                for (int i = 0; i < requiredResourcesDef.size(); i++) {
+                    JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);
+                    AddressResource requiredResource = new AddressResource(
+                            resourceDef.getString("name"),
+                            resourceDef.getDouble("credit"));
+                    requiredResources.add(requiredResource);
+                }
+
+                requestedPlan.set(new AddressPlan(
+                        metadataDef.getString("name"),
+                        AddressType.valueOf(planDefinition.getString("addressType").toUpperCase()),
+                        requiredResources
+                ));
+            }
+        });
+        return requestedPlan.get();
+    }
+
+
+    /**
+     * create new ConfigMap with new address plan definition
+     */
+    public void createAddressPlanConfig(AddressPlan addressPlan) {
+        ConfigMap addressPlanDefinition = new ConfigMap();
+        addressPlanDefinition.setApiVersion("v1"); //apiVersion
+        addressPlanDefinition.setKind("ConfigMap"); //Kind
+
+        ObjectMeta metadata = new ObjectMeta(); // <metadata>
+        metadata.setName(String.format("address-plan-%s", addressPlan.getName()));
+        Map<String, String> labels = new LinkedHashMap<>(); // <labels>
+        labels.put("type", "address-plan");
+        metadata.setLabels(labels); // </labels>
+        addressPlanDefinition.setMetadata(metadata); //</metadata>
+
+        addressPlanDefinition.setData(createAddressPlanData(addressPlan)); // <data></data>
+
+        client.configMaps().create(addressPlanDefinition);
+    }
+
+    /**
+     * create body for ConfigMap definition for new address plan definition
+     */
+    private Map<String, String> createAddressPlanData(AddressPlan addressPlan) {
+        Map<String, String> data = new LinkedHashMap<>(); // <data>
+
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "enmasse.io/v1");
+        config.put("kind", "AddressPlan");
+
+        JsonObject definitionMetadata = new JsonObject(); // <metadata>
+        definitionMetadata.put("name", addressPlan.getName());
+        config.put("metadata", definitionMetadata);// </metadata>
+
+        config.put("displayName", addressPlan.getName()); // not parametrized now
+        config.put("displayOrder", "0");
+        config.put("shortDescription", "Newly defined address plan.");
+        config.put("longDescription", "Newly defined address plan.");
+        config.put("uuid", "f64cc30e-0d9e-11e8-ba89-0ed5f89f718b");
+        config.put("addressType", addressPlan.getType().toString());
+
+        JsonArray defRequiredResources = new JsonArray(); // <requiredResources>
+        JsonObject brokerResource;
+        for (AddressResource res : addressPlan.getAddressResources()) {
+            brokerResource = new JsonObject();
+            brokerResource.put("name", res.getName());
+            brokerResource.put("credit", res.getCredit());
+            defRequiredResources.add(brokerResource);
+        }
+        config.put("requiredResources", defRequiredResources); // </requiredResources>
+
+        data.put("definition", config.toString());
+        return data;
+    }
+
+
+    public void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        listConfigMaps("address-space-plan").getItems().forEach(plan -> {
+            if (plan.getMetadata().getName().equals(String.format("address-space-plan-%s", addressSpacePlan.getConfigName()))) {
+                Map<String, String> data = plan.getData();
+                JsonObject planDefinition = new JsonObject(data.get("definition"));
+                JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
+                addressPlansDef.add(addressPlan.getName());
+                planDefinition.put("addressPlans", addressPlansDef);
+                data.replace("definition", planDefinition.toString());
+                plan.setData(data);
+                client.configMaps().inNamespace(globalNamespace).withName(plan.getMetadata().getName()).replace(plan);
+            }
+        });
+    }
+
+    public boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        boolean removed = false;
+        for (ConfigMap plan : listConfigMaps("address-space-plan").getItems()) {
+            if (plan.getMetadata().getName().equals(String.format("address-space-plan-%s", addressSpacePlan.getConfigName()))) {
+                Map<String, String> data = plan.getData();
+                JsonObject planDefinition = new JsonObject(data.get("definition"));
+                JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
+                removed = addressPlansDef.remove(addressPlan.getName());
+                planDefinition.put("addressPlans", addressPlansDef);
+                data.replace("definition", planDefinition.toString());
+                plan.setData(data);
+                client.configMaps().inNamespace(globalNamespace).withName(plan.getMetadata().getName()).replace(plan);
+            }
+        }
+        return removed;
     }
 }

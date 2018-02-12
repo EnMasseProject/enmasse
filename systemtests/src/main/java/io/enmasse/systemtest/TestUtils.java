@@ -214,10 +214,23 @@ public class TestUtils {
         }
     }
 
+    /**
+     * get list of Address names
+     */
     public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToList(response));
+        listOfAddresses.complete(convertToListString(response));
+        return listOfAddresses;
+    }
+
+    /**
+     * get list of Address objects
+     */
+    public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        JsonObject response = apiClient.getAddresses(addressSpace, addressName);
+        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToListAddress(response));
         return listOfAddresses;
     }
 
@@ -232,10 +245,9 @@ public class TestUtils {
     /**
      * Pulling out names of queues from json object
      *
-     * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of address names
      */
-    private static List<String> convertToList(JsonObject htmlResponse) {
+    private static List<String> convertToListString(JsonObject htmlResponse) {
         String kind = htmlResponse.getString("kind");
         List<String> addresses = new ArrayList<>();
         switch (kind) {
@@ -254,6 +266,41 @@ public class TestUtils {
                 log.warn("Unspecified kind: " + kind);
         }
         return addresses;
+    }
+
+    /**
+     * Pulling out name,type and plan of addresses from json object
+     *
+     * @param htmlResponse JsonObject with specified structure returned from rest api
+     * @return list of addresses
+     */
+    private static List<Address> convertToListAddress(JsonObject htmlResponse) {
+        String kind = htmlResponse.getString("kind");
+        List<Address> addresses = new ArrayList<>();
+        switch (kind) {
+            case "Address":
+                addresses.add(getAddressObject(htmlResponse));
+                break;
+            case "AddressList":
+                JsonArray items = htmlResponse.getJsonArray("items");
+                if (items != null) {
+                    for (int i = 0; i < items.size(); i++) {
+                        addresses.add(getAddressObject(items.getJsonObject(i)));
+                    }
+                }
+                break;
+            default:
+                log.warn("Unspecified kind: " + kind);
+        }
+        return addresses;
+    }
+
+    private static Address getAddressObject(JsonObject addressJsonObject) {
+        String name = addressJsonObject.getJsonObject("metadata").getString("name");
+        JsonObject spec = addressJsonObject.getJsonObject("spec");
+        String type = spec.getString("type");
+        String plan = spec.getString("plan");
+        return new Address(name, type, plan);
     }
 
     /**

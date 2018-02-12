@@ -58,7 +58,11 @@ public class AddressApiClient {
 
         JsonObject spec = new JsonObject();
         spec.put("type", addressSpace.getType().toString().toLowerCase());
-        spec.put("plan", "unlimited-" + addressSpace.getType().toString().toLowerCase());
+        if (!addressSpace.hasPlan()) {
+            spec.put("plan", "unlimited-" + addressSpace.getType().toString().toLowerCase());
+        } else {
+            spec.put("plan", addressSpace.getPlan());
+        }
         config.put("spec", spec);
 
         JsonObject authService = new JsonObject();
