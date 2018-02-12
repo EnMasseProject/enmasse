@@ -289,6 +289,9 @@ public abstract class AbstractClient {
             if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
                     || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)
                 args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
+            if (clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER
+                    || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER)
+                args.put(Argument.BROKER, "ssl://" + args.getValues(Argument.BROKER).get(0));
             args.put(Argument.CONN_SSL_TRUST_ALL, "true");
             args.put(Argument.CONN_SSL_VERIFY_HOST, "false");
             args.put(Argument.CONN_AUTH_MECHANISM, "PLAIN");
