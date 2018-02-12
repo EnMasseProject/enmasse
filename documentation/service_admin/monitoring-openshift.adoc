@@ -1,6 +1,6 @@
 [[monitoring]]
 
-== Monitoring {ProductName}
+== Monitoring {ProductName} on OpenShift
 
 {ProductName} comes with addons for Prometheus and Grafana for monitoring the service. Cluster-admin
 privileges is required for Prometheus to monitor pods in the cluster.

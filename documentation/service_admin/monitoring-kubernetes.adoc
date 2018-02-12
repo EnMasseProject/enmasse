@@ -1,6 +1,6 @@
 [[monitoring]]
 
-== Monitoring {ProductName}
+== Monitoring {ProductName} on Kubernetes
 
 {ProductName} comes with addons for Prometheus and Grafana for monitoring the service.
 
