@@ -122,7 +122,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
 
                         LOG.debugv("Adding permissions for address {0} due to group {1}", address, group);
                         for(String encoded : knownAddresses.get(address)) {
-                            roles.add(new Role("send_" + encoded, true, false, false, false, false, false, false, false, false, false));
+                            roles.add(new Role("send_" + encoded, true, false, false, false, true, false, false, false, false, false));
                             roles.add(new Role("consume_" + encoded, false, true, false, false, true, true, false, true, false, false));
                             roles.add(new Role("browse_" + encoded, false, false, false, false, false, false, false, true, false, false));
                         }
