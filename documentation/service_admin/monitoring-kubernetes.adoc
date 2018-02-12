@@ -1,0 +1,36 @@
+[[monitoring]]
+
+== Monitoring {ProductName}
+
+{ProductName} comes with addons for Prometheus and Grafana for monitoring the service.
+
+=== Deploying Prometheus
+
+.Procedure
+
+. Create Prometheus deployment
++
+[options="nowrap"]
+----
+kubectl apply -f ./kubernetes/addons/prometheus.yaml -n enmasse
+----
+
+=== Deploying Grafana
+
+.Procedure
+
+. Create Grafana deployment
++
+[options="nowrap"]
+----
+oc create -f ./kubernetes/addons/grafana.yaml -n enmasse
+----
+
+. Expose Grafana service
++
+[options="nowrap"]
+----
+oc expose service grafana
+----
+
+Grafana accepts the username 'admin' and password 'admin' by default. See the link:https://prometheus.io/docs/visualization/grafana/#creating-a-prometheus-data-source[Prometheus Documentation] on how to connect Grafana to Prometheus. Use `prometheus.enmasse.svc.cluster.local` as the prometheus hostname.
