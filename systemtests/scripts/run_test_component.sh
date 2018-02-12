@@ -22,9 +22,11 @@ get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
 ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
-${CURDIR}/docker-logs.sh > ${ARTIFACTS_DIR}/docker-logs &
-
 STATS_PID=$!
+
+${CURDIR}/docker-logs.sh > ${ARTIFACTS_DIR}/docker-logs &
+LOGS_PID=$!
+
 echo "process for checking system resources is running with PID: ${STATS_PID}"
 
 if [ "${TEST_PROFILE}" = "systemtests-marathon" ]; then
@@ -37,6 +39,9 @@ fi
 
 echo "process for checking system resources with PID: ${STATS_PID} will be killed"
 kill ${STATS_PID}
+
+echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
+kill ${LOGS_PID}
 
 #environment info after tests
 ${CURDIR}/store_kubernetes_info.sh ${LOG_DIR} ${OPENSHIFT_PROJECT}
