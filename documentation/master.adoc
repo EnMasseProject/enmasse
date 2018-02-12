@@ -1,0 +1,50 @@
+:data-uri!:
+:doctype: article
+:experimental:
+:idprefix:
+:imagesdir: images
+:numbered:
+:sectanchors!:
+:sectnums:
+:source-highlighter: highlightjs
+:toc:
+:linkattrs:
+:toclevels: 2
+
+:ProductName: EnMasse
+:QpidJmsVersion: 0.20.0
+:ProtonVersion: 0.16.0
+:ExampleQueue: myqueue
+:ExampleAuthInstruction: Enable anonymous access.
+:ClientAmqpJmsName: Apache Qpid JMS
+:ClientAmqpCppName: Apache Qpid Proton C++
+:ClientAmqpPythonName: Apache Qpid Proton Python
+:ClientAmqpJavaScriptName: Rhea JavaScript Client
+:ClientAmqpDotNetName: AMQP.Net Lite
+
+= Documentation for {ProductName} master 
+
+== Installation and configuration
+
+include::service_admin/installing-openshift.adoc[leveloffset=+1]
+include::service_admin/monitoring-openshift.adoc[leveloffset=+1]
+include::service_admin/installing-kubernetes.adoc[leveloffset=+1]
+include::service_admin/monitoring-kubernetes.adoc[leveloffset=+1]
+
+== Managing address spaces and addresses
+
+include::common/address-model.adoc[leveloffset=+1]
+include::common/address-space.adoc[leveloffset=+1]
+include::common/configuring-using-restapi.adoc[leveloffset=+1]
+
+== Connecting applications to {ProductName}
+
+include::messaging_app_developer/connecting.adoc[leveloffset=+1]
+
+[appendix]
+
+== Quick start guides
+
+include::getting_started/openshift.adoc[leveloffset=+2]
+include::getting_started/kubernetes.adoc[leveloffset=+2]
+include::getting_started/aws.adoc[leveloffset=+2]
