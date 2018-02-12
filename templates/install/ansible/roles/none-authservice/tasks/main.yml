@@ -7,24 +7,9 @@
   register: cert_temp
   tempfile:
     state: directory
-- name: Create private key for none authservice certificate
+- name: Create self signed certificate for standard authservice
   when: secret_exists.failed
-  openssl_privatekey:
-    path: "{{ cert_temp.path }}/tls.key"
-- name: Create a certificate signing request for none authservice
-  when: secret_exists.failed
-  openssl_csr:
-    path: "{{ cert_temp.path }}/tls.csr"
-    common_name: none-authservice.{{ namespace }}.svc.cluster.local
-    organization_name: enmasse.io
-    privatekey_path: "{{ cert_temp.path }}/tls.key"
-- name: Create a signed certificate to use for the none authservice
-  when: secret_exists.failed
-  openssl_certificate:
-    path: "{{ cert_temp.path }}/tls.crt"
-    privatekey_path: "{{ cert_temp.path }}/tls.key"
-    csr_path: "{{ cert_temp.path }}/tls.csr"
-    provider: selfsigned
+  shell: openssl req -new -x509 -batch -nodes -days 11000 -out "{{ cert_temp.path }}/tls.crt" -keyout "{{ cert_temp.path }}/tls.key" -subj "/O=io.enmasse/CN=none-authservice.{{ namespace }}.svc.cluster.local"
 - name: Create secret with the none authentication service certificate
   when: secret_exists.failed
   shell: oc create secret tls -n {{ namespace }} none-authservice-cert --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
