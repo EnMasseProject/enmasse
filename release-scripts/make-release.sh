@@ -1,6 +1,6 @@
 #!/bin/sh
 VERSION=$1
-git checkout -b release-${VERSION}
+#git checkout -b release-${VERSION}
 mvn versions:set -DnewVersion=${VERSION}
 echo $VERSION > release.version
 git status
