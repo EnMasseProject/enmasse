@@ -22,6 +22,8 @@ get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
 ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
+${CURDIR}/docker-logs.sh > ${ARTIFACTS_DIR}/docker-logs &
+
 STATS_PID=$!
 echo "process for checking system resources is running with PID: ${STATS_PID}"
 
