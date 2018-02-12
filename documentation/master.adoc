@@ -22,7 +22,7 @@
 :ClientAmqpJavaScriptName: Rhea JavaScript Client
 :ClientAmqpDotNetName: AMQP.Net Lite
 
-= Documentation for {ProductName} master 
+= Documentation for {ProductName}
 
 == Installation and configuration
 
