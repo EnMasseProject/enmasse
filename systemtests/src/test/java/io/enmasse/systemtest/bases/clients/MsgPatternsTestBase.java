@@ -39,6 +39,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         receiver.setArguments(arguments);
 
         assertTrue("Sender failed, expected return code 0", sender.run());
+        Thread.sleep(1000);
         assertTrue("Receiver failed, expected return code 0", receiver.run());
 
         assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
@@ -62,6 +63,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
 
         receiver.setArguments(arguments);
+        Thread.sleep(1000);
         receiver2.setArguments(arguments);
 
         Future<Boolean> recResult = receiver.runAsync();
@@ -113,6 +115,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         }
 
         assertTrue("Producer failed, expected return code 0", sender.run());
+        Thread.sleep(1000);
         assertTrue("Subscriber failed, expected return code 0", recResult.get());
         assertTrue("Subscriber failed, expected return code 0", recResult2.get());
 
@@ -147,6 +150,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         receiver_receive.setArguments(arguments);
 
         assertTrue("Sender failed, expected return code 0", sender.run());
+        Thread.sleep(1000);
         assertTrue("Browse receiver failed, expected return code 0", receiver_browse.run());
         assertTrue("Receiver failed, expected return code 0", receiver_receive.run());
 
@@ -177,6 +181,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         receiver.setArguments(arguments);
 
         assertTrue("Sender failed, expected return code 0", sender.run());
+        Thread.sleep(1000);
         assertTrue("Drain receiver failed, expected return code 0", receiver.run());
 
         assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
@@ -204,6 +209,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         //send messages
         sender.setArguments(arguments);
         assertTrue("Sender failed, expected return code 0", sender.run());
+        Thread.sleep(1000);
         assertEquals(String.format("Expected %d sent messages", expectedMsgCount),
                 expectedMsgCount, sender.getMessages().size());
 
@@ -290,6 +296,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         }
 
         assertTrue("Sender failed, expected return code 0", sender.run());
+        Thread.sleep(1000);
         assertTrue("Receiver 'colour = red' failed, expected return code 0", result1.get());
         assertTrue("Receiver 'number > 12.5' failed, expected return code 0", result2.get());
         assertTrue("Receiver 'a AND b' failed, expected return code 0", result3.get());
