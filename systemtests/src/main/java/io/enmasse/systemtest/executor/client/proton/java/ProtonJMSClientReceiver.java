@@ -68,7 +68,7 @@ public class ProtonJMSClientReceiver extends AbstractClient {
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
-        args = javaBrokerTransformation(args, ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
+        args = javaBrokerTransformation(args);
         args = modifySelectorArg(args);
         return args;
     }

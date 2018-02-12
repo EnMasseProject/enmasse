@@ -284,7 +284,7 @@ public abstract class AbstractClient {
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap javaBrokerTransformation(ArgumentMap args, ClientType type) {
+    protected ArgumentMap javaBrokerTransformation(ArgumentMap args) {
         if (args.getValues(Argument.CONN_SSL) != null) {
             if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
                     || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)

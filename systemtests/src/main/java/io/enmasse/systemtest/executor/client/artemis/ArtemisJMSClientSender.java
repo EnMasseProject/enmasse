@@ -12,7 +12,7 @@ public class ArtemisJMSClientSender extends ProtonJMSClientSender {
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
-        args = javaBrokerTransformation(args, ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER);
+        args = javaBrokerTransformation(args);
         return args;
     }
 }

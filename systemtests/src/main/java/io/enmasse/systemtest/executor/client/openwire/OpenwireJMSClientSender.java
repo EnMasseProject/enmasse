@@ -12,7 +12,7 @@ public class OpenwireJMSClientSender extends ProtonJMSClientSender {
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
-        args = javaBrokerTransformation(args, ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER);
+        args = javaBrokerTransformation(args);
         return args;
     }
 }
