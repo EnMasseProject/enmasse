@@ -4,6 +4,7 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
+import io.enmasse.systemtest.executor.client.ClientType;
 import org.junit.Before;
 
 import java.util.Arrays;
@@ -26,10 +27,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("message-basic" + sender.getClientType(), getDefaultPlan(AddressType.QUEUE));
+        Destination dest = Destination.queue("message-basic" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -52,10 +54,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("receiver-round-robin" + sender.getClientType(), getDefaultPlan(AddressType.QUEUE));
+        Destination dest = Destination.queue("receiver-round-robin" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount / 2));
         arguments.put(Argument.TIMEOUT, "60");
@@ -89,10 +92,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.topic("topic-subscribe" + sender.getClientType(), getDefaultPlan(AddressType.TOPIC));
+        Destination dest = Destination.topic("topic-subscribe" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -129,10 +133,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, receiver_browse, receiver_receive));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("message-browse" + sender.getClientType(), getDefaultPlan(AddressType.QUEUE));
+        Destination dest = Destination.queue("message-browse" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -159,13 +164,14 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     }
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        Destination dest = Destination.queue("drain-queue" + sender.getClientType(), getDefaultPlan(AddressType.QUEUE));
+        Destination dest = Destination.queue("drain-queue" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, dest);
 
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -189,10 +195,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         int expectedMsgCount = 50;
 
         clients.addAll(Arrays.asList(sender, receiver));
-        Destination queue = Destination.queue("selector-queue" + sender.getClientType(), getDefaultPlan(AddressType.QUEUE));
+        Destination queue = Destination.queue("selector-queue" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.QUEUE));
         setAddresses(sharedAddressSpace, queue);
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
@@ -248,10 +255,11 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2, subscriber3));
         int expectedMsgCount = 10;
 
-        Destination topic = Destination.topic("selector-topic" + sender.getClientType(), getDefaultPlan(AddressType.TOPIC));
+        Destination topic = Destination.topic("selector-topic" + ClientType.getAddressName(sender),
+                getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, topic);
 
-        arguments.put(Argument.BROKER, getRoute(sharedAddressSpace, sender));
+        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");

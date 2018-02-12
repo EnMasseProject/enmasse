@@ -48,6 +48,29 @@ public enum ClientType {
         }
     }
 
+    public static String getAddressName(AbstractClient client){
+        switch (client.getClientType()) {
+            case CLI_RHEA_SENDER:
+            case CLI_RHEA_RECEIVER:
+            case CLI_RHEA_CONNECTOR:
+                return "cli_rhea";
+            case CLI_PROTON_PYTHON_SENDER:
+            case CLI_PROTON_PYTHON_RECEIVER:
+                return "cli_python";
+            case CLI_JAVA_PROTON_JMS_SENDER:
+            case CLI_JAVA_PROTON_JMS_RECEIVER:
+                return "cli_jms";
+            case CLI_JAVA_ARTEMIS_JMS_SENDER:
+            case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
+                return "cli_artemis";
+            case CLI_JAVA_OPENWIRE_JMS_SENDER:
+            case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
+                return "cli_openwire";
+            default:
+                return "";
+        }
+    }
+
     /**
      * Check os
      *
