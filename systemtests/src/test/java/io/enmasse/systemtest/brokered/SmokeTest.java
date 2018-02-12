@@ -72,10 +72,7 @@ public class SmokeTest extends BrokeredTestBase {
      */
     @Test
     public void testCreateDeleteAddressSpace() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace(
-                "brokered-create-delete-a",
-                "brokered-create-delete-a",
-                AddressSpaceType.BROKERED);
+        AddressSpace addressSpaceA = new AddressSpace("brokered-create-delete-a", AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "standard");
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
@@ -85,10 +82,7 @@ public class SmokeTest extends BrokeredTestBase {
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
-        AddressSpace addressSpaceC = new AddressSpace(
-                "brokered-create-delete-c",
-                "brokered-create-delete-c",
-                AddressSpaceType.BROKERED);
+        AddressSpace addressSpaceC = new AddressSpace("brokered-create-delete-c", AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceC, "standard");
         setAddresses(addressSpaceC, queueB);
         getKeycloakClient().createUser(addressSpaceC.getName(), "test", "test");
@@ -104,10 +98,7 @@ public class SmokeTest extends BrokeredTestBase {
 
     //@Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
     public void testCreateAlreadyExistingAddress() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace(
-                "brokered-a",
-                "brokered-a",
-                AddressSpaceType.BROKERED);
+        AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "standard");
         Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueA);
