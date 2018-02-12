@@ -19,12 +19,15 @@ package io.enmasse.keycloak.spi;
 
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakTransactionManager;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 public class PlainSaslServerMechanism implements SaslServerMechanism {
 
@@ -42,7 +45,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
     {
         return new Instance()
         {
-            public UserModel authenticatedUser;
+            public UserData authenticatedUser;
             private boolean complete;
             private boolean authenticated;
             private RuntimeException error;
@@ -71,30 +74,32 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                 String password = new String(response, authcidNullPosition + 1, passwordLen, StandardCharsets.UTF_8);
 
                 LOG.info("SASL hostname: " + hostname);
-                keycloakSession.getTransactionManager().begin();
-                final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
-                keycloakSession.getTransactionManager().commit();
-                if (realm == null) {
-                    LOG.info("Realm " + hostname + " not found");
-                    authenticated = false;
-                    complete = true;
-                    return null;
-                }
+                KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
+                transactionManager.begin();
+                try {
+                    final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
+                    if (realm == null) {
+                        LOG.info("Realm " + hostname + " not found");
+                        authenticated = false;
+                        complete = true;
+                        return null;
+                    }
 
-                final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
-                if (user != null && keycloakSession.userCredentialManager().isValid(realm,
-                                                                   user,
-                                                                   UserCredentialModel.password(password))) {
+                    final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
+                    if (user != null && keycloakSession.userCredentialManager().isValid(realm, user, UserCredentialModel.password(password))) {
 
-                    authenticatedUser = user;
-                    authenticated = true;
-                    complete = true;
-                    return null;
-                } else {
-                    LOG.info("Invalid password for " + username + " in realm " + hostname);
-                    authenticated = false;
-                    complete = true;
-                    return null;
+                        authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                        authenticated = true;
+                        complete = true;
+                        return null;
+                    } else {
+                        LOG.info("Invalid password for " + username + " in realm " + hostname);
+                        authenticated = false;
+                        complete = true;
+                        return null;
+                    }
+                } finally {
+                    transactionManager.commit();
                 }
             }
 
@@ -111,7 +116,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
             }
 
             @Override
-            public UserModel getAuthenticatedUser() {
+            public UserData getAuthenticatedUser() {
                 return authenticatedUser;
             }
 
@@ -128,4 +133,5 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
 
         };
     }
+
 }
