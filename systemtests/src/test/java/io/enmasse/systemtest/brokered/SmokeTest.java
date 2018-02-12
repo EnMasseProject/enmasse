@@ -43,6 +43,7 @@ public class SmokeTest extends BrokeredTestBase {
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(sharedAddressSpace);
         amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
+        amqpQueueCli.close();
 
         Destination topicB = Destination.topic("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, topicB);
@@ -65,6 +66,7 @@ public class SmokeTest extends BrokeredTestBase {
                 recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size()));
         assertThat("Wrong count of messages received",
                 recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size()));
+        amqpTopicCli.close();
     }
 
     /**
@@ -81,6 +83,7 @@ public class SmokeTest extends BrokeredTestBase {
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
+        amqpQueueCliA.close();
 
         AddressSpace addressSpaceC = new AddressSpace("brokered-create-delete-c", AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceC, "standard");
@@ -90,6 +93,7 @@ public class SmokeTest extends BrokeredTestBase {
         AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
+        amqpQueueCliC.close();
 
         deleteAddressSpace(addressSpaceA);
 
