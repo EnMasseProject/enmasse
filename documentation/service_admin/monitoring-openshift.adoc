@@ -1,0 +1,51 @@
+[[monitoring]]
+
+== Monitoring {ProductName}
+
+{ProductName} comes with addons for Prometheus and Grafana for monitoring the service. Cluster-admin
+privileges is required for Prometheus to monitor pods in the cluster.
+
+=== Deploying Prometheus
+
+.Procedure
+
+. Create cluster-reader role needed by Prometheus
++
+[options="nowrap"]
+----
+oc create -f ./openshift/addons/cluster-reader.yaml
+----
+
+. Create Prometheus deployment
++
+[options="nowrap"]
+----
+oc create -f ./openshift/addons/prometheus.yaml -n enmasse
+----
+
+. Grant cluster-reader privileges to Prometheus service account
++
+[options="nowrap"]
+----
+oc policy add-role-to-user cluster-reader system:serviceaccount:enmasse:prometheus-server
+----
+
+=== Deploying Grafana
+
+.Procedure
+
+. Create Grafana deployment
++
+[options="nowrap"]
+----
+oc create -f ./openshift/addons/grafana.yaml -n enmasse
+----
+
+. Expose Grafana service
++
+[options="nowrap"]
+----
+oc expose service grafana
+----
+
+Grafana accepts the username 'admin' and password 'admin' by default. See the link:https://prometheus.io/docs/visualization/grafana/#creating-a-prometheus-data-source[Prometheus Documentation] on how to connect Grafana to Prometheus. Use `prometheus.enmasse.svc.cluster.local` as the prometheus hostname.
