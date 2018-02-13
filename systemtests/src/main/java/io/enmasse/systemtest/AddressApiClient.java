@@ -183,7 +183,7 @@ public class AddressApiClient {
     public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName());
-        path.append(addressName.isPresent() ? addressName.get() : "");
+        path.append(addressName.isPresent() ? "/" + addressName.get() : "");
         log.info("Following HTTP request will be used for getting address: " + path);
 
         return doRequestNTimes(initRetry, () -> {
