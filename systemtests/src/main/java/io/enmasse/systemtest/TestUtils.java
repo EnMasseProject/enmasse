@@ -64,6 +64,17 @@ public class TestUtils {
         waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
+    /**
+     * Wait for expected count of replicas
+     *
+     * @param kubernetes         client for manipulation with kubernetes cluster
+     * @param tenantNamespace    name of AddressSpace
+     * @param expectedReplicas   count of expected replicas
+     * @param labelSelector      labels on scaled pod
+     * @param annotationSelector annotations on sclaed pod
+     * @param budget             timeout budget - throws Exception when timeout is reached
+     * @throws InterruptedException
+     */
     public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
@@ -88,6 +99,12 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Check ready status of all pods in list
+     *
+     * @param pods list of pods
+     * @return
+     */
     private static int numReady(List<Pod> pods) {
         int numReady = 0;
         for (Pod pod : pods) {
@@ -100,6 +117,15 @@ public class TestUtils {
         return numReady;
     }
 
+    /**
+     * Wait for expected count of pods within AddressSpace
+     *
+     * @param client       client for manipulation with kubernetes cluster
+     * @param addressSpace
+     * @param numExpected  count of expected pods
+     * @param budget       timeout budget - this method throws Exception when timeout is reached
+     * @throws InterruptedException
+     */
     public static void waitForExpectedPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         List<Pod> pods = listRunningPods(client, addressSpace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
@@ -111,25 +137,46 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Print name of all pods in list
+     *
+     * @param pods list of pods that should be printed
+     * @return
+     */
     public static String printPods(List<Pod> pods) {
         return pods.stream()
                 .map(pod -> pod.getMetadata().getName())
                 .collect(Collectors.joining(","));
     }
 
+    /**
+     * Get list of all running pods from specific AddressSpace
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param addressSpace
+     * @return
+     */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         return kubernetes.listPods(addressSpace.getNamespace()).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Wait until broker pod is ready
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param addressSpace AddressSpace where broker pod is present
+     * @param group        broker pod group
+     * @param budget       timeout for wait until broker pod is ready
+     * @throws InterruptedException
+     */
     public static void waitForBrokerPod(Kubernetes kubernetes, AddressSpace addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("role", "broker");
 
         Map<String, String> annotations = new LinkedHashMap<>();
         annotations.put("cluster_id", group);
-
 
         int numReady = 0;
         List<Pod> pods = null;
@@ -145,11 +192,29 @@ public class TestUtils {
         }
     }
 
-
+    /**
+     * Delete requested destinations(Addresses) from AddressSpace
+     *
+     * @param apiClient    client for http requests on address controller
+     * @param addressSpace from this AddressSpace will be removed required destinations
+     * @param destinations destinations requested to be removed
+     * @throws Exception
+     */
     public static void delete(AddressApiClient apiClient, AddressSpace addressSpace, Destination... destinations) throws Exception {
         apiClient.deleteAddresses(addressSpace, destinations);
     }
 
+    /**
+     * Deploy one or more destinations into requested AddressSpace
+     *
+     * @param apiClient    client for http requests on address controller
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param budget       timeout for deploy
+     * @param addressSpace AddressSpace for deploy destinations
+     * @param httpMethod   PUT, POST
+     * @param destinations
+     * @throws Exception
+     */
     public static void deploy(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
@@ -168,22 +233,42 @@ public class TestUtils {
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
+    /**
+     * Check if AddressSpace exists
+     *
+     * @param apiClient        client for http requests on address controller
+     * @param addressSpaceName name of AddressSpace
+     * @return true if AddressSpace exists, false otherwise
+     * @throws Exception
+     */
     public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws Exception {
         return apiClient.listAddressSpaces().contains(addressSpaceName);
     }
 
-    public static boolean isAddressSpaceReady(JsonObject address) {
+    /**
+     * Check if isReady attribute of AddressSpace(JsonObject) is set to true
+     *
+     * @param addressSpace address space object (usually received from AddressApiClient)
+     * @return true if AddressSpace is ready, false otherwise
+     */
+    public static boolean isAddressSpaceReady(JsonObject addressSpace) {
         boolean isReady = false;
-        if (address != null) {
-            isReady = address.getJsonObject("status").getBoolean("isReady");
+        if (addressSpace != null) {
+            isReady = addressSpace.getJsonObject("status").getBoolean("isReady");
         }
         return isReady;
     }
 
-    public static String getAddressSpaceType(JsonObject address) {
+    /**
+     * Get address space type from received AddressSpace(JsonObject) (usually received from AddressApiClient)
+     *
+     * @param addressSpace address space JsonObject
+     * @return
+     */
+    public static String getAddressSpaceType(JsonObject addressSpace) {
         String addrSpaceType = "";
-        if (address != null) {
-            addrSpaceType = address.getJsonObject("spec").getString("type");
+        if (addressSpace != null) {
+            addrSpaceType = addressSpace.getJsonObject("spec").getString("type");
         }
         return addrSpaceType;
     }
@@ -234,6 +319,12 @@ public class TestUtils {
         return listOfAddresses;
     }
 
+    /**
+     * Check if isReady attribute is set to true
+     *
+     * @param address JsonObject with address
+     * @return
+     */
     public static boolean isAddressReady(JsonObject address) {
         boolean isReady = false;
         if (address != null) {
@@ -295,6 +386,12 @@ public class TestUtils {
         return addresses;
     }
 
+    /**
+     * Create object of Address class from JsonObject
+     *
+     * @param addressJsonObject
+     * @return
+     */
     private static Address getAddressObject(JsonObject addressJsonObject) {
         String name = addressJsonObject.getJsonObject("metadata").getString("name");
         JsonObject spec = addressJsonObject.getJsonObject("spec");
@@ -304,7 +401,7 @@ public class TestUtils {
     }
 
     /**
-     * wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
+     * Wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
      *
      * @param apiClient    instance of AddressApiClient
      * @param addressSpace name of addressSpace
@@ -333,6 +430,13 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Go through all addresses in AddressList in JsonObject and check if all of them are in ready state
+     *
+     * @param addressList  received from AddressApiClient
+     * @param destinations required destinations which should be ready
+     * @return
+     */
     private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination... destinations) {
         log.info("Checking {} for ready state", destinations);
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
@@ -347,6 +451,13 @@ public class TestUtils {
         return notReadyAddresses;
     }
 
+    /**
+     * Get address(JsonObject) from AddressList(JsonObject) by address name
+     *
+     * @param addressList JsonObject received from AddressApiClient
+     * @param address     address name
+     * @return
+     */
     private static JsonObject lookupAddress(JsonObject addressList, String address) {
         JsonArray items = addressList.getJsonArray("items");
         for (int i = 0; i < items.size(); i++) {
@@ -358,14 +469,23 @@ public class TestUtils {
         return null;
     }
 
+    /**
+     * Generate message body with prefix
+     */
     public static List<String> generateMessages(String prefix, int numMessages) {
         return IntStream.range(0, numMessages).mapToObj(i -> prefix + i).collect(Collectors.toList());
     }
 
+    /**
+     * Generate message body with "testmessage" content and without prefix
+     */
     public static List<String> generateMessages(int numMessages) {
         return generateMessages("testmessage", numMessages);
     }
 
+    /**
+     * Check if endpoint is accessible
+     */
     public static boolean resolvable(Endpoint endpoint) {
         for (int i = 0; i < 10; i++) {
             try {
@@ -379,6 +499,12 @@ public class TestUtils {
         return false;
     }
 
+    /**
+     * Wait until AddressSpace will be removed
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param addressSpace AddressSpace that should be removed
+     */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
@@ -389,6 +515,13 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Repeat request n-times in a row
+     *
+     * @param retry count of remaining retries
+     * @param fn    request function
+     * @return
+     */
     public static <T> T doRequestNTimes(int retry, Callable<T> fn) throws Exception {
         try {
             return fn.call();
