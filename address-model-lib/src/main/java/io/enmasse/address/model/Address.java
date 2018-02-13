@@ -86,6 +86,7 @@ public class Address {
         sb.append("{address=").append(address).append(",");
         sb.append("name=").append(name).append(",");
         sb.append("uuid=").append(uuid).append(",");
+        sb.append("annotations=").append(annotations).append(",");
         sb.append("type=").append(type).append(",");
         sb.append("plan=").append(plan).append(",");
         sb.append("status=").append(status).append(",");

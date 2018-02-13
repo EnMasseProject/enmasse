@@ -63,7 +63,7 @@ public interface Kubernetes {
 
     AddressApi createAddressApi();
 
-    List<EndpointAddress> listBrokers(String clusterId);
+    List<String> listBrokers(String clusterId);
 
     void scaleDeployment(String deploymentName, int numReplicas);
     void scaleStatefulSet(String setName, int numReplicas);
