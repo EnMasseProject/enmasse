@@ -576,12 +576,13 @@ public class TestUtils {
     /**
      * Remove AddressPlan definition by name of the config file
      *
-     * @param configName name attribute within ConfigMap object
+     * @param kubernetes  client for manipulation with kubernetes cluster
+     * @param addressPlan AddressPlan object
      * @return true if AddressPlan was removed successfully
      * @throws NotImplementedException
      */
-    public static boolean removeAddressPlanConfig(String configName) throws NotImplementedException {
-        throw new NotImplementedException();
+    public static boolean removeAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan) throws NotImplementedException {
+        return kubernetes.removeAddressPlanConfig(addressPlan);
     }
 
     /**

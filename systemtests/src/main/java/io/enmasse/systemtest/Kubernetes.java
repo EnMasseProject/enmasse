@@ -348,6 +348,15 @@ public abstract class Kubernetes {
     }
 
     /**
+     * remove ConfigMap according to its name
+     */
+    public boolean removeAddressPlanConfig(AddressPlan addressPlan) {
+        String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
+        return client.configMaps().inNamespace(globalNamespace).withName(fullAddressPlanName).delete();
+    }
+
+
+    /**
      * create body for ConfigMap definition for new address plan definition
      */
     private Map<String, String> createAddressPlanData(AddressPlan addressPlan) {

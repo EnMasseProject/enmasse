@@ -709,8 +709,8 @@ public abstract class TestBase extends SystemTestRunListener {
         return TestUtils.getAddressPlanConfig(configName);
     }
 
-    protected boolean removeAddressPlanConfig(String configName) throws NotImplementedException {
-        return TestUtils.removeAddressPlanConfig(configName);
+    protected boolean removeAddressPlanConfig(AddressPlan addressPlan) throws NotImplementedException {
+        return TestUtils.removeAddressPlanConfig(kubernetes, addressPlan);
     }
 
     protected void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {

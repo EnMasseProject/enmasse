@@ -144,7 +144,7 @@ public class QueueTest extends BrokeredTestBase {
             // address(space) plans configs and appended plans from already existing address-space configs
             if (weakQueuePlan != null && brokeredPlan != null) {
                 removeAddressPlan(weakQueuePlan, brokeredPlan);
-                //removeAddressPlanConfig(weakQueuePlan.getName()); TODO! not implemented yet
+                removeAddressPlanConfig(weakQueuePlan);
             }
         }
 
