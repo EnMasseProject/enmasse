@@ -48,7 +48,7 @@ public class AddressProvisionerTest {
     public void setup() {
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
 
-        AddressResolver resolver = new AddressResolver(standardControllerSchema::getSchema, standardControllerSchema.getType());
+        AddressResolver resolver = new AddressResolver(standardControllerSchema.getSchema(), standardControllerSchema.getType());
 
         generator = mock(BrokerSetGenerator.class);
         kubernetes = mock(Kubernetes.class);
