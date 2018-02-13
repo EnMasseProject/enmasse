@@ -83,10 +83,10 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpAddressRootService(addressSpaceApi));
 
-        deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, kubernetes.getNamespace()));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, kubernetes.getNamespace()));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, kubernetes.getNamespace()));
-        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi, kubernetes.getNamespace()));
+        //deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, kubernetes.getNamespace()));
+        //deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, kubernetes.getNamespace()));
+        //deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, kubernetes.getNamespace()));
+        //deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi, kubernetes.getNamespace()));
 
         VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);
 
