@@ -31,6 +31,10 @@ data:
           "name": "broker",
           "min": 0.0,
           "max": 10000.0 
+        },
+        {
+          "name": "aggregate",
+          "max": 10000.0
         }
       ],
       "addressPlans": [
