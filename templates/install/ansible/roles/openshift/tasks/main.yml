@@ -12,10 +12,10 @@
   shell: oc new-project {{ namespace }}
   when: namespace_exists.failed
 - import_role:
-    name: none-authservice
+    name: none_authservice
   when: '"none" in authentication_services'
 - import_role:
-    name: standard-authservice
+    name: standard_authservice
   when: '"standard" in authentication_services'
 - import_role:
-    name: address-controller
+    name: address_controller
