@@ -4,7 +4,6 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.*;
 import io.enmasse.controller.common.ControllerKind;
@@ -37,7 +36,6 @@ public class ControllerHelper {
     private final AuthenticationServiceResolverFactory authResolverFactory;
     private final EventLogger eventLogger;
     private final SchemaApi schemaApi;
-    private final AddressSpaceResolver addressSpaceResolver;
 
     public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, EventLogger eventLogger, SchemaApi schemaApi) {
         this.kubernetes = kubernetes;
@@ -45,13 +43,12 @@ public class ControllerHelper {
         this.authResolverFactory = authResolverFactory;
         this.eventLogger = eventLogger;
         this.schemaApi = schemaApi;
-        Schema schema = schemaApi.getSchema();
-        this.addressSpaceResolver = new AddressSpaceResolver(schema);
     }
 
     public void create(AddressSpace addressSpace) {
         Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
 
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaApi.getSchema());
         addressSpaceResolver.validate(addressSpace);
 
         if (namespace.equals(addressSpace.getNamespace())) {
@@ -98,6 +95,7 @@ public class ControllerHelper {
         returnVal.resourceList = new KubernetesList();
         returnVal.routeEndpoints = new ArrayList<>();
 
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaApi.getSchema());
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace);
         AddressSpacePlan plan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace);
         ResourceDefinition resourceDefinition = addressSpaceResolver.getResourceDefinition(plan);
