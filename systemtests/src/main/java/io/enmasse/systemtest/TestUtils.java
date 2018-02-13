@@ -342,24 +342,27 @@ public class TestUtils {
      * @return list of address names
      */
     private static List<String> convertToListString(JsonObject htmlResponse) {
-        String kind = htmlResponse.getString("kind");
-        List<String> addresses = new ArrayList<>();
-        switch (kind) {
-            case "Address":
-                addresses.add(htmlResponse.getJsonObject("metadata").getString("name"));
-                break;
-            case "AddressList":
-                JsonArray items = htmlResponse.getJsonArray("items");
-                if (items != null) {
-                    items.forEach(address -> {
-                        addresses.add(((JsonObject) address).getJsonObject("metadata").getString("name"));
-                    });
-                }
-                break;
-            default:
-                log.warn("Unspecified kind: " + kind);
+        if (htmlResponse != null) {
+            String kind = htmlResponse.getString("kind");
+            List<String> addresses = new ArrayList<>();
+            switch (kind) {
+                case "Address":
+                    addresses.add(htmlResponse.getJsonObject("metadata").getString("name"));
+                    break;
+                case "AddressList":
+                    JsonArray items = htmlResponse.getJsonArray("items");
+                    if (items != null) {
+                        items.forEach(address -> {
+                            addresses.add(((JsonObject) address).getJsonObject("metadata").getString("name"));
+                        });
+                    }
+                    break;
+                default:
+                    log.warn("Unspecified kind: " + kind);
+            }
+            return addresses;
         }
-        return addresses;
+        throw new IllegalArgumentException("htmlResponse can't be null");
     }
 
     /**
@@ -369,24 +372,27 @@ public class TestUtils {
      * @return list of addresses
      */
     private static List<Address> convertToListAddress(JsonObject htmlResponse) {
-        String kind = htmlResponse.getString("kind");
-        List<Address> addresses = new ArrayList<>();
-        switch (kind) {
-            case "Address":
-                addresses.add(getAddressObject(htmlResponse));
-                break;
-            case "AddressList":
-                JsonArray items = htmlResponse.getJsonArray("items");
-                if (items != null) {
-                    for (int i = 0; i < items.size(); i++) {
-                        addresses.add(getAddressObject(items.getJsonObject(i)));
+        if (htmlResponse != null) {
+            String kind = htmlResponse.getString("kind");
+            List<Address> addresses = new ArrayList<>();
+            switch (kind) {
+                case "Address":
+                    addresses.add(getAddressObject(htmlResponse));
+                    break;
+                case "AddressList":
+                    JsonArray items = htmlResponse.getJsonArray("items");
+                    if (items != null) {
+                        for (int i = 0; i < items.size(); i++) {
+                            addresses.add(getAddressObject(items.getJsonObject(i)));
+                        }
                     }
-                }
-                break;
-            default:
-                log.warn("Unspecified kind: " + kind);
+                    break;
+                default:
+                    log.warn("Unspecified kind: " + kind);
+            }
+            return addresses;
         }
-        return addresses;
+        throw new IllegalArgumentException("htmlResponse can't be null");
     }
 
     /**

@@ -122,28 +122,30 @@ public class QueueTest extends BrokeredTestBase {
 
     @Test
     public void testAppendNewAddressPlan() throws Exception {
-        AddressPlan weakQueue = null;
+        AddressPlan weakQueuePlan = null;
         AddressSpacePlan brokeredPlan = null;
         try {
             List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.0));
-            weakQueue = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
+            weakQueuePlan = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
+            createAddressPlanConfig(weakQueuePlan);
 
             brokeredPlan = getAddressSpacePlanConfig("brokered");
-            appendAddressPlan(weakQueue, brokeredPlan);
+            appendAddressPlan(weakQueuePlan, brokeredPlan);
 
-            setAddresses(Destination.queue("weak-queue", weakQueue.getName()));
+            setAddresses(Destination.queue("weak-queue", weakQueuePlan.getName()));
 
-            Future<List<Address>> brokeredAddresses = getAddressesObjects(Optional.of(weakQueue.getName()));
+            Future<List<Address>> brokeredAddresses = getAddressesObjects(Optional.of("weak-queue"));
             assertThat("Queue plan wasn't set properly",
-                    brokeredAddresses.get(20, TimeUnit.SECONDS).get(0).getType(), is(weakQueue.getType()));
-
+                    brokeredAddresses.get(20, TimeUnit.SECONDS).get(0).getPlan(), is(weakQueuePlan.getName()));
         } catch (Exception ex) {
             throw ex;
         } finally {
             //TODO: create new test base for tests with newly defined plans with After method for removing all
             // address(space) plans configs and appended plans from already existing address-space configs
-            removeAddressPlan(weakQueue, brokeredPlan);
-            //removeAddressPlanConfig(weakQueue.getName()); TODO! not implemented yet
+            if (weakQueuePlan != null && brokeredPlan != null) {
+                removeAddressPlan(weakQueuePlan, brokeredPlan);
+                //removeAddressPlanConfig(weakQueuePlan.getName()); TODO! not implemented yet
+            }
         }
 
     }

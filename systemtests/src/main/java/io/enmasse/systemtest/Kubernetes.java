@@ -251,9 +251,12 @@ public abstract class Kubernetes {
     }
 
     public AddressSpacePlan getAddressSpacePlanConfig(String configName) {
+        String fullAddressSpacePlanName = String.format("address-space-plan-%s", configName);
+
         AtomicReference<AddressSpacePlan> requestedPlan = new AtomicReference<>();
         listConfigMaps("address-space-plan").getItems().forEach(plan -> {
-            if (plan.getMetadata().getName().equals(String.format("address-space-plan-%s", configName))) {
+            if (plan.getMetadata().getName().equals(fullAddressSpacePlanName)) {
+                log.info(String.format("AddressSpace plan '%s' found", fullAddressSpacePlanName));
                 Map<String, String> data = plan.getData();
                 JsonObject planDefinition = new JsonObject(data.get("definition"));
                 JsonObject metadataDef = planDefinition.getJsonObject("metadata");
@@ -286,13 +289,15 @@ public abstract class Kubernetes {
     }
 
     public AddressPlan getAddressPlanConfig(String configName) {
+        String fullAddressPlanName = String.format("address-plan-%s", configName);
         AtomicReference<AddressPlan> requestedPlan = new AtomicReference<>();
+
         listConfigMaps("address-plan").getItems().forEach(addressPlan -> {
-            if (addressPlan.getMetadata().getName().equals(String.format("address-plan-%s", configName))) {
+            if (addressPlan.getMetadata().getName().equals(fullAddressPlanName)) {
+                log.info(String.format("Address plan '%s' found", fullAddressPlanName));
                 Map<String, String> data = addressPlan.getData();
                 JsonObject planDefinition = new JsonObject(data.get("definition"));
                 JsonObject metadataDef = planDefinition.getJsonObject("metadata");
-
 
                 JsonArray requiredResourcesDef = planDefinition.getJsonArray("requiredResources");
                 List<AddressResource> requiredResources = new ArrayList<>();
@@ -320,12 +325,13 @@ public abstract class Kubernetes {
      * create new ConfigMap with new address plan definition
      */
     public void createAddressPlanConfig(AddressPlan addressPlan) {
+        String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
         ConfigMap addressPlanDefinition = new ConfigMap();
         addressPlanDefinition.setApiVersion("v1"); //apiVersion
         addressPlanDefinition.setKind("ConfigMap"); //Kind
 
         ObjectMeta metadata = new ObjectMeta(); // <metadata>
-        metadata.setName(String.format("address-plan-%s", addressPlan.getName()));
+        metadata.setName(fullAddressPlanName);
         Map<String, String> labels = new LinkedHashMap<>(); // <labels>
         labels.put("type", "address-plan");
         metadata.setLabels(labels); // </labels>
@@ -333,7 +339,12 @@ public abstract class Kubernetes {
 
         addressPlanDefinition.setData(createAddressPlanData(addressPlan)); // <data></data>
 
-        client.configMaps().create(addressPlanDefinition);
+        if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressPlanName) == null) {
+            client.configMaps().create(addressPlanDefinition);
+            log.info(String.format("AddressPlan '%s' successfully created", fullAddressPlanName));
+        } else {
+            log.warn(String.format("AddressPlan '%s' already exists", fullAddressPlanName));
+        }
     }
 
     /**
@@ -373,8 +384,12 @@ public abstract class Kubernetes {
 
 
     public void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
+        String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
+
         listConfigMaps("address-space-plan").getItems().forEach(plan -> {
-            if (plan.getMetadata().getName().equals(String.format("address-space-plan-%s", addressSpacePlan.getConfigName()))) {
+            if (plan.getMetadata().getName().equals(fullAddressSpacePlanName)) {
+                log.info(String.format("AddressSpace plan '%s' found", fullAddressSpacePlanName));
                 Map<String, String> data = plan.getData();
                 JsonObject planDefinition = new JsonObject(data.get("definition"));
                 JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
@@ -383,14 +398,20 @@ public abstract class Kubernetes {
                 data.replace("definition", planDefinition.toString());
                 plan.setData(data);
                 client.configMaps().inNamespace(globalNamespace).withName(plan.getMetadata().getName()).replace(plan);
+                log.info(String.format("AddressPlan '%s' successfully appended into AddressSpace plan '%s'.",
+                        fullAddressPlanName, fullAddressSpacePlanName));
             }
         });
     }
 
     public boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
         boolean removed = false;
+        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
+        String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
+
         for (ConfigMap plan : listConfigMaps("address-space-plan").getItems()) {
-            if (plan.getMetadata().getName().equals(String.format("address-space-plan-%s", addressSpacePlan.getConfigName()))) {
+            if (plan.getMetadata().getName().equals(fullAddressSpacePlanName)) {
+                log.info(String.format("AddressSpace plan '%s' found", fullAddressSpacePlanName));
                 Map<String, String> data = plan.getData();
                 JsonObject planDefinition = new JsonObject(data.get("definition"));
                 JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
@@ -399,6 +420,8 @@ public abstract class Kubernetes {
                 data.replace("definition", planDefinition.toString());
                 plan.setData(data);
                 client.configMaps().inNamespace(globalNamespace).withName(plan.getMetadata().getName()).replace(plan);
+                log.info(String.format("AddressPlan '%s' successfully removed from AddressSpace plan '%s'.",
+                        fullAddressPlanName, fullAddressSpacePlanName));
             }
         }
         return removed;
