@@ -14,6 +14,8 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Clock;
@@ -21,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class KubernetesHelper implements Kubernetes {
+    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
     private final File templateDir;
     private static final String TEMPLATE_SUFFIX = ".json";
     private final OpenShiftClient client;
@@ -108,22 +111,19 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public List<EndpointAddress> listBrokers(String clusterId) {
-        for (Service service : client.services().list().getItems()) {
-            if (service.getMetadata().getAnnotations() != null &&
-                    clusterId.equals(service.getMetadata().getAnnotations().get(AnnotationKeys.CLUSTER_ID))) {
-                Endpoints endpoints = client.endpoints().withName(service.getMetadata().getName()).get();
-                if (endpoints != null) {
-                    List<EndpointAddress> addresses = new ArrayList<>();
-                    List<EndpointSubset> subsets = endpoints.getSubsets();
-                    for (EndpointSubset subset : subsets) {
-                        addresses.addAll(subset.getAddresses());
-                    }
-                    return addresses;
-                }
+    public List<String> listBrokers(String clusterId) {
+        List<String> addresses = new ArrayList<>();
+        for (Pod pod : client.pods().list().getItems()) {
+            if (pod.getMetadata().getAnnotations() != null &&
+                    clusterId.equals(pod.getMetadata().getAnnotations().get(AnnotationKeys.CLUSTER_ID))) {
+
+
+                String host = pod.getMetadata().getName();
+                log.info("Found endpoints for {}: {}", clusterId, host);
+                addresses.add(host);
             }
         }
-        return Collections.emptyList();
+        return addresses;
     }
 
     @Override

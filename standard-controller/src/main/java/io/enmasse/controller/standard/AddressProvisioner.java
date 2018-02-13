@@ -187,12 +187,14 @@ public class AddressProvisioner {
                         sumMap(resourceUsage)
                         + neededMap.get(resourceRequest.getResourceName()));
 
+                log.info("Require {} routers", required);
                 success = provisionRouter(required);
             } else if ("broker".equals(resourceRequest.getResourceName()) && resourceRequest.getAmount() < 1) {
                 int required = (int) Math.ceil(sumMap(resourceUsage)
                         - resourceUsage.getOrDefault("all", 0.0)
                         + neededMap.get(resourceRequest.getResourceName()));
 
+                log.info("Require {} pooled brokers", required);
                 ResourceDefinition resourceDefinition = addressResolver.getResourceDefinition(addressPlan, resourceRequest.getResourceName());
                 success = provisionBroker(resourceRequest.getResourceName(), resourceDefinition, required, null);
                 if (success) {
@@ -202,6 +204,7 @@ public class AddressProvisioner {
                 int required = (int) Math.ceil(resourceUsage.getOrDefault("all", 0.0)
                         + neededMap.get(resourceRequest.getResourceName()));
 
+                log.info("Require {} sharded brokers", required);
                 ResourceDefinition resourceDefinition = addressResolver.getResourceDefinition(addressPlan, resourceRequest.getResourceName());
                 success = provisionBroker(address.getName(), resourceDefinition, required, address);
             }
@@ -223,9 +226,11 @@ public class AddressProvisioner {
 
         List<BrokerInfo> brokers = new ArrayList<>();
 
+        address.getAnnotations().put(AnnotationKeys.CLUSTER_ID, clusterId);
+
         // Add all brokers we know about
-        for (EndpointAddress endpoint : kubernetes.listBrokers(clusterId)) {
-            brokers.add(new BrokerInfo(endpoint.getHostname(), usageMap.getOrDefault(endpoint.getHostname(), 0.0)));
+        for (String host : kubernetes.listBrokers(clusterId)) {
+            brokers.add(new BrokerInfo(host, usageMap.getOrDefault(host, 0.0)));
         }
 
         brokers.sort(Comparator.comparingDouble(BrokerInfo::getCredit));
@@ -233,7 +238,6 @@ public class AddressProvisioner {
         for (BrokerInfo brokerInfo : brokers) {
             if (brokerInfo.getCredit() + credit < 1) {
                 address.getAnnotations().put(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
-                address.getAnnotations().put(AnnotationKeys.CLUSTER_ID, clusterId);
                 return true;
             }
         }

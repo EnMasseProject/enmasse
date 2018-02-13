@@ -97,7 +97,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Active)), addressResolver);
 
-        deprovisionUnused(filterByNotPhases(addressSet, Arrays.asList(Terminating)), addressResolver);
+        deprovisionUnused(filterByNotPhases(addressSet, Arrays.asList(Terminating)));
         for (Address address : addressSet) {
             addressApi.replaceAddress(address);
         }
@@ -105,11 +105,14 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     }
 
-    private void deprovisionUnused(Set<Address> addressSet, AddressResolver addressResolver) {
+    private void deprovisionUnused(Set<Address> addressSet) {
         List<AddressCluster> clusters = kubernetes.listClusters();
+        log.info("Deprovisioning unused addresses in {} clusters", clusters.size());
         for (AddressCluster cluster : clusters) {
             int numFound = 0;
+            log.info("Checking cluster with id {}", cluster.getClusterId());
             for (Address address : addressSet) {
+                log.info("Checking cluster {} against address {}", cluster.getClusterId(), address);
                 String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
                 String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
                 if (brokerId == null && address.getName().equals(cluster.getClusterId())) {

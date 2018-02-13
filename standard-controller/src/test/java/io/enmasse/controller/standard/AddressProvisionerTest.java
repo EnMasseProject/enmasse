@@ -170,7 +170,7 @@ public class AddressProvisionerTest {
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
         when(kubernetes.listClusters()).thenReturn(Arrays.asList(new AddressCluster("broker", new KubernetesList())));
-        when(kubernetes.listBrokers(eq("broker"))).thenReturn(Arrays.asList(new EndpointAddress("broker-0", "10.0.0.1", "node1", null)));
+        when(kubernetes.listBrokers(eq("broker"))).thenReturn(Arrays.asList("broker-0"));
         provisioner.provisionResources(usageMap, provisionMap);
 
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
@@ -210,7 +210,7 @@ public class AddressProvisionerTest {
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
         when(kubernetes.listClusters()).thenReturn(Arrays.asList(new AddressCluster("broker", new KubernetesList())));
-        when(kubernetes.listBrokers(eq("broker"))).thenReturn(Arrays.asList(new EndpointAddress("broker-0", "10.0.0.1", "node1", null), new EndpointAddress("broker-1", "10.0.0.1", "node2", null)));
+        when(kubernetes.listBrokers(eq("broker"))).thenReturn(Arrays.asList("broker-0", "broker-1"));
         provisioner.provisionResources(usageMap, provisionMap);
         verify(kubernetes).scaleStatefulSet(eq("broker"), eq(2));
 
