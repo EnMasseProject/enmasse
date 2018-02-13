@@ -9,8 +9,8 @@ To build EnMasse, you need
    * [Python](https://www.python.org/)
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
-   * [Node.js](https://nodejs.org/en/) >= 6 (only for node.js unit tests)
-   * [Npm >= 3](https://www.npmjs.com/) (only for node.js unit tests)
+   * [Node.js](https://nodejs.org/en/) >= 6
+   * [Npm >= 3](https://www.npmjs.com/)
    * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
    * [Asciidoctor](http://asciidoc.org/) (optional, only required for docs)
    * [Python Pip](https://pypi.python.org/pypi/pip) (optional, only required for systemtests)
@@ -20,9 +20,8 @@ To build EnMasse, you need
 The EnMasse java modules are built using maven. Node.js modules are built using make. All docker images
 are built using make.
 
-*Note*: asciidoctor, node.js and npm are optional. asciidoctor is only
-required to build the help pages for the console. node.js and npm are
-only required to run the unit tests for ragent, console and subserv.
+*Note*: asciidoctor is only required to build the help page for the
+console.
 
 ## Check out submodules
 
@@ -34,12 +33,6 @@ can be initialized:
 ## Building
 
 ### Pre-installation
-
-The following node.js modules are required for the ragent, agent and subserv unit tests to work:
-
-    npm install -g mocha-junit-reporter
-    npm install -g rhea
-    npm install -g debug
 
 *Note*: Make sure docker daemon is in running state.
 
