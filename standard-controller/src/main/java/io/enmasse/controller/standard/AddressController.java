@@ -83,8 +83,9 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     public synchronized void resourcesUpdated(Set<Address> addressSet) throws Exception {
         log.info("Check addresses in address space controller: " + addressSet.stream().map(Address::getAddress).collect(Collectors.toList()));
 
-        AddressSpaceType addressSpaceType = schemaProvider.getSchema().findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to start standard-controller: standard address space not found in schema!"));
-        AddressResolver addressResolver = new AddressResolver(schemaProvider, addressSpaceType);
+        Schema schema = schemaProvider.getSchema();
+        AddressSpaceType addressSpaceType = schema.findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to start standard-controller: standard address space not found in schema!"));
+        AddressResolver addressResolver = new AddressResolver(schema, addressSpaceType);
         AddressSpacePlan addressSpacePlan = addressSpaceType.getPlans().get(0);
 
         AddressProvisioner provisioner = new AddressProvisioner(addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger);
