@@ -20,21 +20,14 @@ function setup_test() {
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
 
-    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
-    oc project ${OPENSHIFT_PROJECT}
-
-    export OPENSHIFT_TOKEN=`oc whoami -t`
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
 
-    DEPLOY_ARGS=( "-y" "-n" "$OPENSHIFT_PROJECT" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" "-o" "multitenant" )
-    oc --config ${KUBEADM} create -f ${ENMASSE_DIR}/openshift/cluster-roles.yaml
-
-    ${ENMASSE_DIR}/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
-
-    oc adm --config ${KUBEADM} policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:$(oc project -q):enmasse-admin
+    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
+    ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/systemtests.yml
 }
+
 function wait_until_up(){
     POD_COUNT=$1
     ADDR_SPACE=$2
