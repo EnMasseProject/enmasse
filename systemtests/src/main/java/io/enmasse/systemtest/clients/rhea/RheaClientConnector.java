@@ -1,17 +1,17 @@
-package io.enmasse.systemtest.executor.client.rhea;
+package io.enmasse.systemtest.clients.rhea;
 
-import io.enmasse.systemtest.executor.client.AbstractClient;
-import io.enmasse.systemtest.executor.client.Argument;
-import io.enmasse.systemtest.executor.client.ArgumentMap;
-import io.enmasse.systemtest.executor.client.ClientType;
+import io.enmasse.systemtest.clients.AbstractClient;
+import io.enmasse.systemtest.clients.Argument;
+import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientType;
 
 import java.util.Arrays;
 import java.util.List;
 
 
-public class RheaClientSender extends AbstractClient {
-    public RheaClientSender(){
-        super(ClientType.CLI_RHEA_SENDER);
+public class RheaClientConnector extends AbstractClient {
+    public RheaClientConnector() {
+        super(ClientType.CLI_RHEA_CONNECTOR);
     }
 
     @Override
@@ -44,30 +44,11 @@ public class RheaClientSender extends AbstractClient {
 
         allowedArgs.add(Argument.BROKER);
         allowedArgs.add(Argument.ADDRESS);
-        allowedArgs.add(Argument.COUNT);
-        allowedArgs.add(Argument.CLOSE_SLEEP);
         allowedArgs.add(Argument.TIMEOUT);
-        allowedArgs.add(Argument.DURATION);
-
-        allowedArgs.add(Argument.MSG_ID);
-        allowedArgs.add(Argument.MSG_GROUP_ID);
-        allowedArgs.add(Argument.MSG_GROUP_SEQ);
-        allowedArgs.add(Argument.MSG_REPLY_TO_GROUP_ID);
-        allowedArgs.add(Argument.MSG_SUBJECT);
-        allowedArgs.add(Argument.MSG_REPLY_TO);
-        allowedArgs.add(Argument.MSG_PROPERTY);
-        allowedArgs.add(Argument.MSG_DURABLE);
-        allowedArgs.add(Argument.MSG_TTL);
-        allowedArgs.add(Argument.MSG_PRIORITY);
-        allowedArgs.add(Argument.MSG_CORRELATION_ID);
-        allowedArgs.add(Argument.MSG_USER_ID);
-        allowedArgs.add(Argument.MSG_CONTENT_TYPE);
-        allowedArgs.add(Argument.MSG_CONTENT);
-        allowedArgs.add(Argument.MSG_CONTENT_LIST_ITEM);
-        allowedArgs.add(Argument.MSG_CONTENT_MAP_ITEM);
-        allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
-        allowedArgs.add(Argument.MSG_ANNOTATION);
-        allowedArgs.add(Argument.ANONYMOUS);
+        allowedArgs.add(Argument.COUNT);
+        allowedArgs.add(Argument.OBJECT_CONTROL);
+        allowedArgs.add(Argument.SENDER_COUNT);
+        allowedArgs.add(Argument.RECEIVER_COUNT);
     }
 
     @Override

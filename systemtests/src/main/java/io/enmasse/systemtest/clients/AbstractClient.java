@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.executor.client;
+package io.enmasse.systemtest.clients;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.Executor;
@@ -16,6 +16,7 @@ import java.util.concurrent.Future;
  * Class represent abstract client which keeps common features of client
  */
 public abstract class AbstractClient {
+    private static Logger log = CustomLogger.getLogger();
     private final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
@@ -24,7 +25,6 @@ public abstract class AbstractClient {
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
-    private static Logger log = CustomLogger.getLogger();
 
     /**
      * Constructor of abstract client

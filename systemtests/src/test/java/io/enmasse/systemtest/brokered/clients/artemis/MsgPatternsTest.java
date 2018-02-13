@@ -1,8 +1,7 @@
 package io.enmasse.systemtest.brokered.clients.artemis;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.executor.client.artemis.ArtemisJMSClientReceiver;
-import io.enmasse.systemtest.executor.client.artemis.ArtemisJMSClientSender;
+import io.enmasse.systemtest.clients.artemis.ArtemisJMSClientReceiver;
+import io.enmasse.systemtest.clients.artemis.ArtemisJMSClientSender;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 

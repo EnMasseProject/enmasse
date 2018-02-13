@@ -11,15 +11,16 @@ import java.util.concurrent.*;
  * Class provide execution of external command
  */
 public class Executor {
+    private static Logger log = CustomLogger.getLogger();
     private Process process;
     private String stdOut;
     private String stdErr;
     private StreamGobbler stdOutReader;
     private StreamGobbler stdErrReader;
-    private static Logger log = CustomLogger.getLogger();
 
     /**
      * Getter for stdOutput
+     *
      * @return string stdOut
      */
     public String getStdOut() {
@@ -28,6 +29,7 @@ public class Executor {
 
     /**
      * Getter for stdErrorOutput
+     *
      * @return string stdErr
      */
     public String getStdErr() {
@@ -36,6 +38,7 @@ public class Executor {
 
     /**
      * Method executes external command
+     *
      * @param commands arguments for command
      * @return returns ecode of execution
      * @throws IOException
@@ -48,8 +51,9 @@ public class Executor {
 
     /**
      * Method executes external command
+     *
      * @param commands arguments for command
-     * @param timeout timeout in ms for kill
+     * @param timeout  timeout in ms for kill
      * @return returns ecode of execution
      * @throws IOException
      * @throws InterruptedException
@@ -66,26 +70,26 @@ public class Executor {
         Future<String> error = readStdError();
 
         int retCode = 1;
-        if(timeout > 0){
-            if (process.waitFor(timeout, TimeUnit.MILLISECONDS)){
+        if (timeout > 0) {
+            if (process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
                 retCode = process.exitValue();
-            }else{
+            } else {
                 process.destroyForcibly();
             }
-        }else{
+        } else {
             retCode = process.waitFor();
         }
 
         shutDownReaders();
         try {
             stdOut = output.get(500, TimeUnit.MILLISECONDS);
-        }catch (TimeoutException ex){
+        } catch (TimeoutException ex) {
             stdOut = stdOutReader.getData();
         }
 
         try {
             stdErr = error.get(500, TimeUnit.MILLISECONDS);
-        }catch (TimeoutException ex){
+        } catch (TimeoutException ex) {
             stdErr = stdErrReader.getData();
         }
 
@@ -95,7 +99,7 @@ public class Executor {
     /**
      * Method kills process
      */
-    public void stop(){
+    public void stop() {
         shutDownReaders();
         process.destroyForcibly();
         stdOut = stdOutReader.getData();
@@ -104,18 +108,20 @@ public class Executor {
 
     /**
      * Get standard output of execution
+     *
      * @return future string output
      */
-    private Future<String> readStdOutput(){
+    private Future<String> readStdOutput() {
         stdOutReader = new StreamGobbler(process.getInputStream());
         return stdOutReader.read();
     }
 
     /**
      * Get standard error output of execution
+     *
      * @return future string error output
      */
-    private Future<String> readStdError(){
+    private Future<String> readStdError() {
         stdErrReader = new StreamGobbler(process.getErrorStream());
         return stdErrReader.read();
     }
@@ -123,7 +129,7 @@ public class Executor {
     /**
      * Shutdown process output readers
      */
-    private void shutDownReaders(){
+    private void shutDownReaders() {
         stdOutReader.shutDownReader();
         stdErrReader.shutDownReader();
     }
@@ -138,6 +144,7 @@ public class Executor {
 
         /**
          * Constructor of StreamGobbler
+         *
          * @param is input stream for reading
          */
         StreamGobbler(InputStream is) {
@@ -147,20 +154,22 @@ public class Executor {
         /**
          * Shutdown executor service with reader
          */
-        public void shutDownReader(){
+        public void shutDownReader() {
             executorService.shutdownNow();
         }
 
         /**
          * Return data from stream sync
+         *
          * @return string of data
          */
-        public String getData(){
+        public String getData() {
             return data.toString();
         }
 
         /**
          * read method
+         *
          * @return return future string of output
          */
         public Future<String> read() {
@@ -168,7 +177,7 @@ public class Executor {
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);
                 String line;
-                while ( (line = br.readLine()) != null)
+                while ((line = br.readLine()) != null)
                     data.append(line).append(System.getProperty("line.separator"));
                 isr.close();
                 br.close();

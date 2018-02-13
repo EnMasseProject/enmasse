@@ -1,8 +1,7 @@
 package io.enmasse.systemtest.brokered.clients.proton.java;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientReceiver;
-import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientSender;
+import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientSender;
 import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest{
