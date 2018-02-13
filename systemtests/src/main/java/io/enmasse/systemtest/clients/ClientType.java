@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.executor.client;
+package io.enmasse.systemtest.clients;
 
 public enum ClientType {
     CLI_RHEA_SENDER,
@@ -48,7 +48,7 @@ public enum ClientType {
         }
     }
 
-    public static String getAddressName(AbstractClient client){
+    public static String getAddressName(AbstractClient client) {
         switch (client.getClientType()) {
             case CLI_RHEA_SENDER:
             case CLI_RHEA_RECEIVER:

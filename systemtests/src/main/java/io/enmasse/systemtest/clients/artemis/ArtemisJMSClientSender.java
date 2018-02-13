@@ -1,12 +1,12 @@
-package io.enmasse.systemtest.executor.client.artemis;
+package io.enmasse.systemtest.clients.artemis;
 
-import io.enmasse.systemtest.executor.client.ArgumentMap;
-import io.enmasse.systemtest.executor.client.ClientType;
-import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientSender;
+import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientType;
+import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientSender;
 
 
 public class ArtemisJMSClientSender extends ProtonJMSClientSender {
-    public ArtemisJMSClientSender(){
+    public ArtemisJMSClientSender() {
         this.setClientType(ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER);
     }
 

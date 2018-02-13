@@ -1,7 +1,7 @@
 package io.enmasse.systemtest.standard.clients.proton.python;
 
-import io.enmasse.systemtest.executor.client.proton.python.PythonClientReceiver;
-import io.enmasse.systemtest.executor.client.proton.python.PythonClientSender;
+import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
+import io.enmasse.systemtest.clients.proton.python.PythonClientSender;
 import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {

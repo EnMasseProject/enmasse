@@ -1,8 +1,7 @@
 package io.enmasse.systemtest.brokered.clients.openwire;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.executor.client.openwire.OpenwireJMSClientReceiver;
-import io.enmasse.systemtest.executor.client.openwire.OpenwireJMSClientSender;
+import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientReceiver;
+import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientSender;
 import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest{

@@ -1,16 +1,17 @@
-package io.enmasse.systemtest.executor.client.rhea;
+package io.enmasse.systemtest.clients.proton.python;
 
-import io.enmasse.systemtest.executor.client.AbstractClient;
-import io.enmasse.systemtest.executor.client.Argument;
-import io.enmasse.systemtest.executor.client.ArgumentMap;
-import io.enmasse.systemtest.executor.client.ClientType;
+import io.enmasse.systemtest.clients.AbstractClient;
+import io.enmasse.systemtest.clients.Argument;
+import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientType;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class RheaClientReceiver extends AbstractClient {
-    public RheaClientReceiver(){
-        super(ClientType.CLI_RHEA_RECEIVER);
+
+public class PythonClientSender extends AbstractClient {
+    public PythonClientSender() {
+        super(ClientType.CLI_PROTON_PYTHON_SENDER);
     }
 
     @Override
@@ -21,7 +22,6 @@ public class RheaClientReceiver extends AbstractClient {
         allowedArgs.add(Argument.CONN_RECONNECT_LIMIT);
         allowedArgs.add(Argument.CONN_RECONNECT_TIMEOUT);
         allowedArgs.add(Argument.CONN_HEARTBEAT);
-        allowedArgs.add(Argument.CONN_SSL);
         allowedArgs.add(Argument.CONN_SSL_CERTIFICATE);
         allowedArgs.add(Argument.CONN_SSL_PRIVATE_KEY);
         allowedArgs.add(Argument.CONN_SSL_PASSWORD);
@@ -29,36 +29,49 @@ public class RheaClientReceiver extends AbstractClient {
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER);
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER_NAME);
         allowedArgs.add(Argument.CONN_MAX_FRAME_SIZE);
-        allowedArgs.add(Argument.CONN_WEB_SOCKET);
-        allowedArgs.add(Argument.CONN_PROPERTY);
 
         allowedArgs.add(Argument.LINK_DURABLE);
         allowedArgs.add(Argument.LINK_AT_MOST_ONCE);
         allowedArgs.add(Argument.LINK_AT_LEAST_ONCE);
         allowedArgs.add(Argument.CAPACITY);
 
+        allowedArgs.add(Argument.TX_SIZE);
+        allowedArgs.add(Argument.TX_ACTION);
+        allowedArgs.add(Argument.TX_ENDLOOP_ACTION);
+
         allowedArgs.add(Argument.LOG_LIB);
         allowedArgs.add(Argument.LOG_STATS);
         allowedArgs.add(Argument.LOG_MESSAGES);
 
-        allowedArgs.add(Argument.BROKER);
-        allowedArgs.add(Argument.ADDRESS);
+        allowedArgs.add(Argument.BROKER_URL);
         allowedArgs.add(Argument.COUNT);
         allowedArgs.add(Argument.CLOSE_SLEEP);
         allowedArgs.add(Argument.TIMEOUT);
         allowedArgs.add(Argument.DURATION);
 
-        allowedArgs.add(Argument.SELECTOR);
-        allowedArgs.add(Argument.RECV_BROWSE);
-        allowedArgs.add(Argument.ACTION);
-        allowedArgs.add(Argument.PROCESS_REPLY_TO);
-        allowedArgs.add(Argument.RECV_LISTEN);
-        allowedArgs.add(Argument.RECV_LISTEN_PORT);
+        allowedArgs.add(Argument.MSG_ID);
+        allowedArgs.add(Argument.MSG_GROUP_ID);
+        allowedArgs.add(Argument.MSG_GROUP_SEQ);
+        allowedArgs.add(Argument.MSG_REPLY_TO_GROUP_ID);
+        allowedArgs.add(Argument.MSG_SUBJECT);
+        allowedArgs.add(Argument.MSG_REPLY_TO);
+        allowedArgs.add(Argument.MSG_PROPERTY);
+        allowedArgs.add(Argument.MSG_DURABLE);
+        allowedArgs.add(Argument.MSG_TTL);
+        allowedArgs.add(Argument.MSG_PRIORITY);
+        allowedArgs.add(Argument.MSG_CORRELATION_ID);
+        allowedArgs.add(Argument.MSG_USER_ID);
+        allowedArgs.add(Argument.MSG_CONTENT_TYPE);
+        allowedArgs.add(Argument.MSG_CONTENT);
+        allowedArgs.add(Argument.MSG_CONTENT_LIST_ITEM);
+        allowedArgs.add(Argument.MSG_CONTENT_MAP_ITEM);
+        allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
+        allowedArgs.add(Argument.MSG_ANNOTATION);
     }
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
-        args = basicBrokerTransformation(args);
+        args = brokerUrlTranformation(args);
         return args;
     }
 

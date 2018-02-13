@@ -2,9 +2,9 @@ package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.executor.client.AbstractClient;
-import io.enmasse.systemtest.executor.client.Argument;
-import io.enmasse.systemtest.executor.client.ClientType;
+import io.enmasse.systemtest.clients.AbstractClient;
+import io.enmasse.systemtest.clients.Argument;
+import io.enmasse.systemtest.clients.ClientType;
 import org.junit.Before;
 
 import java.util.Arrays;

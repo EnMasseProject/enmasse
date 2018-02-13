@@ -1,12 +1,12 @@
-package io.enmasse.systemtest.executor.client.openwire;
+package io.enmasse.systemtest.clients.openwire;
 
-import io.enmasse.systemtest.executor.client.ArgumentMap;
-import io.enmasse.systemtest.executor.client.ClientType;
-import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientSender;
+import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientType;
+import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientSender;
 
 
 public class OpenwireJMSClientSender extends ProtonJMSClientSender {
-    public OpenwireJMSClientSender(){
+    public OpenwireJMSClientSender() {
         this.setClientType(ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER);
     }
 

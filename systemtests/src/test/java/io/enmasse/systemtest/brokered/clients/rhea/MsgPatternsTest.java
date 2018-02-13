@@ -1,8 +1,7 @@
 package io.enmasse.systemtest.brokered.clients.rhea;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
-import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
+import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {

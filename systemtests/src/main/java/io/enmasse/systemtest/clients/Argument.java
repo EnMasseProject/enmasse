@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.executor.client;
+package io.enmasse.systemtest.clients;
 
 /**
  * Enum with argument for external clients
