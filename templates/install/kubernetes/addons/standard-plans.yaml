@@ -29,11 +29,12 @@ data:
         },
         {
           "name": "broker",
-          "min": 0.0,
+          "min": 1.0,
           "max": 10000.0 
         },
         {
           "name": "aggregate",
+          "min": 1.0,
           "max": 10000.0
         }
       ],
