@@ -1,0 +1,3 @@
+---
+dependencies:
+  - { role: openssl_certs, cert_secret: none-authservice-cert, cert_cn: "none-authservice.{{ namespace }}.svc.cluster.local" }

@@ -1,18 +1,3 @@
-- name: Check if standard authservice secret exists
-  shell: oc get secret -n {{ namespace }} standard-authservice-cert
-  register: secret_exists
-  ignore_errors: True
-- name: Create temp folder for standard authservice certificates
-  when: secret_exists.failed
-  register: cert_temp
-  tempfile:
-    state: directory
-- name: Create self signed certificate for standard authservice
-  when: secret_exists.failed
-  shell: openssl req -new -x509 -batch -nodes -days 11000 -out "{{ cert_temp.path }}/tls.crt" -keyout "{{ cert_temp.path }}/tls.key" -subj "/O=io.enmasse/CN=standard-authservice.{{ namespace }}.svc.cluster.local"
-- name: Create secret with the standard authentication service certificate
-  when: secret_exists.failed
-  shell: oc create secret tls -n {{ namespace }} standard-authservice-cert --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
 - name: Check if keycloak credentials secret exists
   shell: oc get secret -n {{ namespace }} keycloak-credentials
   register: secret_exists

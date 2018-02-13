@@ -1,0 +1,16 @@
+---
+- name: Check if secret exists
+  shell: oc get secret -n {{ namespace }} {{ cert_secret }}
+  register: secret_exists
+  ignore_errors: True
+- name: Create temp folder for address controller certificates
+  when: secret_exists.failed
+  register: cert_temp
+  tempfile:
+    state: directory
+- name: Create self signed certificate
+  when: secret_exists.failed
+  shell: openssl req -new -x509 -batch -nodes -days 11000 -out "{{ cert_temp.path }}/tls.crt" -keyout "{{ cert_temp.path }}/tls.key" -subj "/O=io.enmasse/CN={{ cert_cn }}"
+- name: Create a secret containing the address-controller certificate
+  shell: oc create secret tls {{ cert_secret }} -n {{ namespace }} --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
+  when: secret_exists.failed

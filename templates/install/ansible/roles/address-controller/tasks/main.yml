@@ -1,19 +1,4 @@
 ---
-- name: Check if address-controller secret exists
-  shell: oc get secret -n {{ namespace }} address-controller-cert
-  register: secret_exists
-  ignore_errors: True
-- name: Create temp folder for address controller certificates
-  when: secret_exists.failed
-  register: cert_temp
-  tempfile:
-    state: directory
-- name: Create self signed certificate for address controller
-  when: secret_exists.failed
-  shell: openssl req -new -x509 -batch -nodes -days 11000 -out "{{ cert_temp.path }}/tls.crt" -keyout "{{ cert_temp.path }}/tls.key" -subj "/O=io.enmasse/CN=address-controller.{{ namespace }}.svc.cluster.local"
-- name: Create a secret containing the address-controller certificate
-  shell: oc create secret tls address-controller-cert -n {{ namespace }} --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
-  when: secret_exists.failed
 - name: Check if enmasse-admin SA exists
   shell: oc get sa enmasse-admin
   register: sa_exists
