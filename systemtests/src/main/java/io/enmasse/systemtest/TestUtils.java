@@ -16,11 +16,14 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -542,5 +545,90 @@ public class TestUtils {
                 throw ex;
             }
         }
+    }
+
+    /**
+     * create new AddressPlanConfig
+     *
+     * @param kubernetes  client for manipulation with kubernetes cluster
+     * @param addressPlan definition of AddressPlan
+     */
+    public static void createAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan) {
+        kubernetes.createAddressPlanConfig(addressPlan);
+    }
+
+    /**
+     * Get AddressPlan definition by name of the config file
+     *
+     * @param configName name attribute within ConfigMap object
+     * @return AddressPlan definition
+     */
+    public static AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Remove AddressPlan definition by name of the config file
+     *
+     * @param configName name attribute within ConfigMap object
+     * @return true if AddressPlan was removed successfully
+     * @throws NotImplementedException
+     */
+    public static boolean removeAddressPlanConfig(String configName) throws NotImplementedException {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Append AddressPlan definition into already existing AddressSpacePlan config
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressPlan      AddressPlan definition
+     * @param addressSpacePlan AddressSpacePlan definition
+     */
+    public static void appendAddressPlan(Kubernetes kubernetes, AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        kubernetes.appendAddressPlan(addressPlan, addressSpacePlan);
+    }
+
+    /**
+     * Remove AddressPlan definition from already existing AddressSpacePlan config
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressPlan      AddressPlan definition
+     * @param addressSpacePlan AddressSpacePlan definition
+     * @return true if AddressPlan was removed successfully
+     */
+    public static boolean removeAddressPlan(Kubernetes kubernetes, AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        return kubernetes.removeAddressPlan(addressPlan, addressSpacePlan);
+    }
+
+    /**
+     * create new AddressSpacePlanConfig
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressSpacePlan definition of AddressSpacePlan
+     */
+    public static void createAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan) {
+        kubernetes.createAddressSpacePlanConfig(addressSpacePlan);
+    }
+
+    /**
+     * Get AddressSpacePlan definition by name of the config file
+     *
+     * @param config     name attribute within ConfigMap object
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return AddressPlan definition
+     */
+    public static AddressSpacePlan getAddressSpacePlanConfig(Kubernetes kubernetes, String config) {
+        return kubernetes.getAddressSpacePlanConfig(config);
+    }
+
+    /**
+     * Remove AddressSpacePlan definition by name of the config file
+     *
+     * @param config name attribute within ConfigMap object
+     * @return true if AddressSpacePlan was removed successfully
+     */
+    public static boolean removeAddressSpacePlanConfig(String config) {
+        throw new NotImplementedException();
     }
 }

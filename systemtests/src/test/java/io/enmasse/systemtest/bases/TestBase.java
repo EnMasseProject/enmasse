@@ -702,23 +702,23 @@ public abstract class TestBase extends SystemTestRunListener {
     //Address config-maps
     //===================
     protected void createAddressPlanConfig(AddressPlan addressPlan) {
-        kubernetes.createAddressPlanConfig(addressPlan);
+        TestUtils.createAddressPlanConfig(kubernetes, addressPlan);
     }
 
     protected AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
-        throw new NotImplementedException();
+        return TestUtils.getAddressPlanConfig(configName);
     }
 
     protected boolean removeAddressPlanConfig(String configName) throws NotImplementedException {
-        throw new NotImplementedException();
+        return TestUtils.removeAddressPlanConfig(configName);
     }
 
     protected void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        kubernetes.appendAddressPlan(addressPlan, addressSpacePlan);
+        TestUtils.appendAddressPlan(kubernetes, addressPlan, addressSpacePlan);
     }
 
     protected boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        return kubernetes.removeAddressPlan(addressPlan, addressSpacePlan);
+        return TestUtils.removeAddressPlan(kubernetes, addressPlan, addressSpacePlan);
     }
 
     //=========================
@@ -726,15 +726,15 @@ public abstract class TestBase extends SystemTestRunListener {
     //=========================
 
     protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        kubernetes.createAddressSpacePlanConfig(addressSpacePlan);
+        TestUtils.createAddressSpacePlanConfig(kubernetes, addressSpacePlan);
     }
 
     protected AddressSpacePlan getAddressSpacePlanConfig(String config) {
-        return kubernetes.getAddressSpacePlanConfig(config);
+        return TestUtils.getAddressSpacePlanConfig(kubernetes, config);
     }
 
     protected boolean removeAddressSpacePlanConfig(String config) {
-        throw new NotImplementedException();
+        return TestUtils.removeAddressSpacePlanConfig(config);
     }
 
 
