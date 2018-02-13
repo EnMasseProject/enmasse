@@ -98,6 +98,9 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Active)), addressResolver);
 
         deprovisionUnused(filterByNotPhases(addressSet, Arrays.asList(Terminating)), addressResolver);
+        for (Address address : addressSet) {
+            addressApi.replaceAddress(address);
+        }
         garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
 
     }
