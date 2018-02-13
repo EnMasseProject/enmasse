@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
   services(addressSpace)::
   [
     self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
-    self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
+    self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55671}]),
     self.service("console", addressSpace, [{"name": "https", "port": 8081, "targetPort": 8080}], "https")
   ],
 
@@ -60,24 +60,6 @@ local common = import "common.jsonnet";
         "spec": {
           "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
           "containers": [
-            {
-              "image": "${QUEUE_SCHEDULER_IMAGE}",
-              "name": "queue-scheduler",
-              "env": [
-                common.env("CERT_DIR", "/etc/enmasse-certs"),
-                common.env("JAVA_OPTS", "-verbose:gc"),
-                common.env("LISTEN_PORT", "55667"),
-                common.env_field_ref("NAMESPACE", "metadata.namespace")
-              ],
-              "resources": common.memory_resources("128Mi", "128Mi"),
-              "ports": [
-                common.container_port("amqp", 55667)
-              ],
-              "livenessProbe": common.tcp_probe("amqp", 60),
-              "volumeMounts": [
-                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
-              ]
-            },
             {
               "image": "${STANDARD_CONTROLLER_IMAGE}",
               "name": "standard-controller",

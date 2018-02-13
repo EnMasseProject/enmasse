@@ -50,6 +50,26 @@ describe('configmap backed address source', function() {
             done();
         });
     });
+    it('indicates allocation to broker', function(done) {
+        configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker-1'});
+        configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker-2'});
+        configmaps.add_address_definition({address:'baz', type:'anycast'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        source.watcher.close();//prevents watching
+        source.on('addresses_defined', function (addresses) {
+            assert.equal(addresses.length, 3);
+            assert.equal(addresses[0].address, 'foo');
+            assert.equal(addresses[0].type, 'queue');
+            assert.equal(addresses[0].allocated_to, 'broker-1');
+            assert.equal(addresses[1].address, 'bar');
+            assert.equal(addresses[1].type, 'topic');
+            assert.equal(addresses[1].allocated_to, 'broker-2');
+            assert.equal(addresses[2].address, 'baz');
+            assert.equal(addresses[2].type, 'anycast');
+            assert.equal(addresses[2].allocated_to, undefined);
+            done();
+        });
+    });
     it('watches for changes', function(done) {
         var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.once('addresses_defined', function () {

@@ -41,13 +41,13 @@ public class HttpAddressSpaceService {
     static final String BASE_URI = "/apis/enmasse.io/v1/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
-    private final AddressSpaceResolver addressSpaceResolver;
     private final String namespace;
+    private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
     public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String namespace) {
         this.addressSpaceApi = addressSpaceApi;
-        this.addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+        this.schemaProvider = schemaProvider;
         this.namespace = namespace;
     }
 
@@ -91,6 +91,7 @@ public class HttpAddressSpaceService {
     public Response createAddressSpace(@Context SecurityContext securityContext, @NotNull  AddressSpace input) throws Exception {
         return doRequest(securityContext, ResourceVerb.create, "Error creating address space " + input.getName(), () -> {
 
+            AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(input);
             AddressSpace addressSpace = input;
             if (securityContext.getUserPrincipal() != null) {

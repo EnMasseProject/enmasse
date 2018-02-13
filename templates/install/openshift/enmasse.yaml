@@ -378,35 +378,6 @@ objects:
           - env:
             - name: CERT_DIR
               value: /etc/enmasse-certs
-            - name: JAVA_OPTS
-              value: -verbose:gc
-            - name: LISTEN_PORT
-              value: '55667'
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            image: ${QUEUE_SCHEDULER_IMAGE}
-            livenessProbe:
-              initialDelaySeconds: 60
-              tcpSocket:
-                port: amqp
-            name: queue-scheduler
-            ports:
-            - containerPort: 55667
-              name: amqp
-            resources:
-              limits:
-                memory: 128Mi
-              requests:
-                memory: 128Mi
-            volumeMounts:
-            - mountPath: /etc/enmasse-certs
-              name: admin-internal-cert
-              readOnly: true
-          - env:
-            - name: CERT_DIR
-              value: /etc/enmasse-certs
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
             - name: AUTHENTICATION_SERVICE_HOST
@@ -552,7 +523,7 @@ objects:
       ports:
       - name: amqp
         port: 5672
-        targetPort: 55667
+        targetPort: 55671
       selector:
         name: admin
   - apiVersion: v1
@@ -1471,13 +1442,13 @@ objects:
     value: docker.io/enmasseproject/configserv:latest
   - description: The docker image to use for the queue scheduler
     name: QUEUE_SCHEDULER_IMAGE
-    value: docker.io/enmasseproject/queue-scheduler:latest
+    value: docker.io/gordons/queue-scheduler:latest
   - description: The docker image to use for the standard controller
     name: STANDARD_CONTROLLER_IMAGE
     value: docker.io/enmasseproject/standard-controller:latest
   - description: The image to use for the enmasse agent
     name: AGENT_IMAGE
-    value: docker.io/enmasseproject/agent:latest
+    value: docker.io/gordons/agent:latest
   - description: The hostname to use for the exposed route for messaging
     name: MESSAGING_HOSTNAME
   - description: The image to use for the MQTT gateway

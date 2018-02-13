@@ -22,11 +22,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.Plan;
 import io.enmasse.address.model.Status;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * Deserializer for Address V1 format
@@ -64,6 +63,17 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
             builder.setUuid(metadata.get(Fields.UUID).asText());
         }
 
+        if (metadata.hasNonNull(Fields.ANNOTATIONS)) {
+            ObjectNode annotationObject = metadata.with(Fields.ANNOTATIONS);
+            Iterator<String> annotationIt = annotationObject.fieldNames();
+            while (annotationIt.hasNext()) {
+                String key = annotationIt.next();
+                if (annotationObject.get(key).isTextual()) {
+                    builder.putAnnotation(key, annotationObject.get(key).asText());
+                }
+            }
+        }
+
         if (spec.hasNonNull(Fields.ADDRESS)) {
             builder.setAddress(spec.get(Fields.ADDRESS).asText());
         }
@@ -71,6 +81,10 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
         if (status != null) {
             boolean isReady = status.get(Fields.IS_READY).asBoolean();
             Status s = new Status(isReady);
+
+            if (status.hasNonNull(Fields.PHASE)) {
+                s.setPhase(Status.Phase.valueOf(status.get(Fields.PHASE).asText()));
+            }
             if (status.hasNonNull(Fields.MESSAGES)) {
                 ArrayNode messages = (ArrayNode) status.get(Fields.MESSAGES);
                 for (int i = 0; i < messages.size(); i++) {

@@ -29,8 +29,13 @@ data:
         },
         {
           "name": "broker",
-          "min": 0.0,
+          "min": 1.0,
           "max": 10000.0 
+        },
+        {
+          "name": "aggregate",
+          "min": 1.0,
+          "max": 10000.0
         }
       ],
       "addressPlans": [
@@ -82,7 +87,7 @@ data:
       "requiredResources": [
         {
           "name": "router",
-          "credit": 0.0
+          "credit": 0.01
         },
         {
           "name": "broker",
@@ -114,7 +119,7 @@ data:
       "requiredResources": [
         {
           "name": "router",
-          "credit": 0.0
+          "credit": 0.01
         },
         {
           "name": "broker",
@@ -146,7 +151,7 @@ data:
       "requiredResources": [
         {
           "name": "router",
-          "credit": 0.0
+          "credit": 0.01
         }
       ]
     }
@@ -174,7 +179,7 @@ data:
       "requiredResources": [
         {
           "name": "router",
-          "credit": 0.0
+          "credit": 0.01
         }
       ]
     }
@@ -202,7 +207,7 @@ data:
       "requiredResources": [
         {
           "name": "router",
-          "credit": 0.0
+          "credit": 0.01
         },
         {
           "name": "broker",

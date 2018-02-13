@@ -21,12 +21,12 @@ import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.ConfigMapAddressApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.KubeEventLogger;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Clock;
@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class KubernetesHelper implements Kubernetes {
+    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
     private final File templateDir;
     private static final String TEMPLATE_SUFFIX = ".json";
     private final OpenShiftClient client;
@@ -118,6 +119,32 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public AddressApi createAddressApi() {
         return new ConfigMapAddressApi(client, client.getNamespace());
+    }
+
+    @Override
+    public List<String> listBrokers(String clusterId) {
+        List<String> addresses = new ArrayList<>();
+        for (Pod pod : client.pods().list().getItems()) {
+            if (pod.getMetadata().getAnnotations() != null &&
+                    clusterId.equals(pod.getMetadata().getAnnotations().get(AnnotationKeys.CLUSTER_ID))) {
+
+
+                String host = pod.getMetadata().getName();
+                log.info("Found endpoints for {}: {}", clusterId, host);
+                addresses.add(host);
+            }
+        }
+        return addresses;
+    }
+
+    @Override
+    public void scaleDeployment(String deploymentName, int numReplicas) {
+        client.extensions().deployments().withName(deploymentName).scale(numReplicas);
+    }
+
+    @Override
+    public void scaleStatefulSet(String setName, int numReplicas) {
+        client.apps().statefulSets().withName(setName).scale(numReplicas);
     }
 
     @Override

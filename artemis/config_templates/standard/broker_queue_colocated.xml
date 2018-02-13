@@ -12,4 +12,11 @@
           <param key="containerId" value="$CONTAINER_ID" />
           <param key="clusterId" value="$CLUSTER_ID" />
         </connector-service>
+        <connector-service name="router-connector">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
+          <param key="containerId" value="$CONTAINER_ID" />
+          <param key="clusterId" value="$CLUSTER_ID" />
+        </connector-service>
       </connector-services>

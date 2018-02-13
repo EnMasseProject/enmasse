@@ -216,31 +216,23 @@ items:
       "labels": {"app": "enmasse", "name": "admin"}, "name": "admin"}, "spec": {"replicas":
       1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
-      [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "JAVA_OPTS",
-      "value": "-verbose:gc"}, {"name": "LISTEN_PORT", "value": "55667"}, {"name":
-      "NAMESPACE", "valueFrom": {"fieldRef": {"fieldPath": "metadata.namespace"}}}],
-      "image": "${QUEUE_SCHEDULER_IMAGE}", "livenessProbe": {"initialDelaySeconds":
-      60, "tcpSocket": {"port": "amqp"}}, "name": "queue-scheduler", "ports": [{"containerPort":
-      55667, "name": "amqp"}], "resources": {"limits": {"memory": "128Mi"}, "requests":
-      {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name":
-      "admin-internal-cert", "readOnly": true}]}, {"env": [{"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"},
-      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
-      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
-      {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
-      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
-      {"name": "JAVA_OPTS", "value": "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "MESSAGING_SECRET",
-      "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR", "value": "/enmasse-templates"}],
-      "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe": {"httpGet": {"path":
-      "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds": 30}, "name":
-      "standard-controller", "ports": [{"containerPort": 8889, "name": "http"}], "readinessProbe":
+      [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE",
+      "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
+      "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
+      "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
+      "value": "authservice-ca"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
+      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "JAVA_OPTS", "value":
+      "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
+      {"name": "MESSAGING_SECRET", "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR",
+      "value": "/enmasse-templates"}], "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe":
       {"httpGet": {"path": "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds":
-      30}, "resources": {"limits": {"memory": "512Mi"}, "requests": {"memory": "512Mi"}},
-      "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
-      "readOnly": true}, {"mountPath": "/enmasse-templates", "name": "templates",
-      "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
-      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      30}, "name": "standard-controller", "ports": [{"containerPort": 8889, "name":
+      "http"}], "readinessProbe": {"httpGet": {"path": "/health", "port": "http",
+      "scheme": "HTTP"}, "initialDelaySeconds": 30}, "resources": {"limits": {"memory":
+      "512Mi"}, "requests": {"memory": "512Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
+      "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/enmasse-templates",
+      "name": "templates", "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value":
+      "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
       {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
       {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
@@ -271,7 +263,7 @@ items:
       {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
       "queue-scheduler"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort":
-      55667}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
+      55671}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
       "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort":
       "https"}, "labels": {"app": "enmasse"}, "name": "console"}, "spec": {"ports":
       [{"name": "https", "port": 8081, "targetPort": 8080}], "selector": {"name":

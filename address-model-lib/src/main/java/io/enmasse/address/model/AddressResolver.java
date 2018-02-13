@@ -48,6 +48,14 @@ public class AddressResolver {
         return resourceDefinitions;
     }
 
+    public ResourceDefinition getResourceDefinition(AddressPlan addressPlan, String resourceName) {
+        if (addressPlan.getAddressType().equals("topic")) {
+            resourceName = resourceName + "-topic";
+        }
+        String finalResourceName = resourceName;
+        return schema.findResourceDefinition(resourceName).orElseThrow(() -> new UnresolvedAddressException("Unknown resource definition " + finalResourceName));
+    }
+
     public void validate(Address address) {
         getResourceDefinitions(getPlan(getType(address), address));
     }

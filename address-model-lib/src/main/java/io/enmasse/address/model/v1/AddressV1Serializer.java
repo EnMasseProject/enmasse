@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Serializer for Address V1 format
@@ -48,12 +49,19 @@ class AddressV1Serializer extends JsonSerializer<Address> {
         metadata.put(Fields.NAME, address.getName());
         metadata.put(Fields.ADDRESS_SPACE, address.getAddressSpace());
         metadata.put(Fields.UUID, address.getUuid());
+        if (!address.getAnnotations().isEmpty()) {
+            ObjectNode annotationObject = metadata.putObject(Fields.ANNOTATIONS);
+            for (Map.Entry<String, String> entry : address.getAnnotations().entrySet()) {
+                annotationObject.put(entry.getKey(), entry.getValue());
+            }
+        }
 
         spec.put(Fields.TYPE, address.getType());
         spec.put(Fields.PLAN, address.getPlan());
         spec.put(Fields.ADDRESS, address.getAddress());
 
         status.put(Fields.IS_READY, address.getStatus().isReady());
+        status.put(Fields.PHASE, address.getStatus().getPhase().name());
         if (!address.getStatus().getMessages().isEmpty()) {
             ArrayNode messages = status.putArray(Fields.MESSAGES);
             for (String message : address.getStatus().getMessages()) {
