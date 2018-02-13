@@ -46,7 +46,7 @@ public class TemplateBrokerSetGeneratorTest {
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(11));
+        assertThat(parameters.size(), is(10));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class TemplateBrokerSetGeneratorTest {
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(11));
+        assertThat(parameters.size(), is(10));
     }
 
     private Address createAddress(String address, String type) {
