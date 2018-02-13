@@ -25,6 +25,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.net.URI;
@@ -249,6 +250,7 @@ public class HTTPServerTest {
     */
 
     @Test
+    @Ignore
     public void testOpenServiceBrokerAPI(TestContext context) throws InterruptedException {
         HttpClientOptions options = new HttpClientOptions();
         HttpClient client = vertx.createHttpClient(options);
