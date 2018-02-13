@@ -19,8 +19,11 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.KubeUtil;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.*;
@@ -67,7 +70,6 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, templateOptions.getAuthenticationServiceCaSecret());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, templateOptions.getAuthenticationServiceClientSecret());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, templateOptions.getAuthenticationServiceSaslInitHost());
-        paramMap.put(TemplateParameter.REPLICAS, String.valueOf(numReplicas));
 
         if (address != null) {
             paramMap.put(TemplateParameter.ADDRESS, address.getAddress());
@@ -79,6 +81,15 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
 
         KubernetesList items = kubernetes.processTemplate(templateName, parameters);
 
+        for (HasMetadata item : items.getItems()) {
+            if (item instanceof StatefulSet) {
+                StatefulSet set = (StatefulSet) item;
+                set.getSpec().setReplicas(numReplicas);
+            } else if (item instanceof Deployment) {
+                Deployment deployment = (Deployment) item;
+                deployment.getSpec().setReplicas(numReplicas);
+            }
+        }
 
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
