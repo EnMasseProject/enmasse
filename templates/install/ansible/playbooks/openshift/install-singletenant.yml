@@ -2,4 +2,4 @@
   vars:
     multitenant: false
   roles:
-    - openshift
+    - enmasse

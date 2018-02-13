@@ -1,0 +1,5 @@
+---
+- name: Deploy standard address space plans
+  shell: oc apply -f {{ playbook_dir }}/templates/addons/standard-plans.yaml
+- name: Deploy brokered address space plans
+  shell: oc apply -f {{ playbook_dir }}/templates/addons/brokered-plans.yaml

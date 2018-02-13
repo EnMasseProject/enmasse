@@ -1,0 +1,8 @@
+---
+- name: Check if enmasse-admin SA exists
+  shell: oc get sa enmasse-admin
+  register: sa_exists
+  ignore_errors: True
+- name: Create enmasse-admin SA
+  shell: oc create sa enmasse-admin -n {{ namespace }}
+  when: sa_exists.failed

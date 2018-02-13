@@ -1,0 +1,9 @@
+---
+- name: Ensure user has cluster admin access
+  shell: oc policy can-i create clusterroles
+  register: is_admin
+  failed_when: is_admin.stdout == "no"
+- name: Create cluster wide roles used by enmasse-admin service account
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/templates/cluster-roles.yaml
+- name: Grant cluster admin privileges to service account
+  shell: oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:{{ namespace }}:enmasse-admin

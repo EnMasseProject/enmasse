@@ -1,0 +1,15 @@
+---
+- import_role:
+    name: address_controller_multitenant
+  when: multitenant
+- import_role:
+    name: address_controller_singletenant
+  when: not multitenant
+- import_role:
+    name: none_authservice
+  when: '"none" in authentication_services'
+- import_role:
+    name: standard_authservice
+  when: '"standard" in authentication_services'
+- import_role:
+    name: address_controller

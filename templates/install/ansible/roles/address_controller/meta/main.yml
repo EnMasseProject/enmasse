@@ -1,3 +1,4 @@
 ---
 dependencies:
   - { role: openssl_certs, cert_secret: address-controller-cert, cert_cn: "address-controller.{{ namespace }}.svc.cluster.local" }
+  - { role: plans }
