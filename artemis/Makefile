@@ -13,7 +13,7 @@ clean_modules:
 
 clean: clean_modules
 
-build_tar: build
+build_tar:
 	mkdir -p $(ARTEMIS_HOME)/bin
 	mkdir -p $(ARTEMIS_HOME)/lib
 	mkdir -p $(ARTIFACT_BASE)/usr/local
