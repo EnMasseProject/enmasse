@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: small-anycast-plan
+  labels:
+    type: address-plan
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "AddressPlan",
+      "metadata": {
+        "name": "small-anycast"
+      },
+      "displayName": "Small anycast plan",
+      "displayOrder": 0,
+      "shortDescription": "A plan for small anycast addresses",
+      "longDescription": "A plan for small anycast addresses that consume little resources",
+      "uuid": "cb61f440-1184-11e8-adda-507b9def37d9",
+      "addressType": "anycast",
+      "requiredResources": [
+        {
+          "name": "router",
+          "credit": 0.2
+        }
+      ]
+    }

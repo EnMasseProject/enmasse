@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restrictive-plan
+  labels:
+    type: address-space-plan
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "AddressSpacePlan",
+      "metadata": {
+        "name": "restrictive-plan"
+        "annotations": {
+          "defined-by": "standard-space"
+        }
+      },
+      "displayName": "Restrictive Plan",
+      "displayOrder": 0,
+      "shortDescription": "A plan with restrictive quotas",
+      "longDescription": "A plan with restrictive quotas for the standard address space",
+      "uuid": "74b9a40e-117e-11e8-b4e1-507b9def37d9",
+      "addressSpaceType": "standard",
+      "addressPlans": [
+        "small-queue",
+        "small-anycast"
+      ],
+      "resources": [
+        {
+          "name": "router",
+          "min": "0.0",
+          "max": "2.0"
+        },
+        {
+          "name": "broker",
+          "min": "0.0",
+          "max": "2.0"
+        },
+        {
+          "name": "aggregate",
+          "min": "0.0",
+          "max": "2.0"
+        }
+      ]
+    }
