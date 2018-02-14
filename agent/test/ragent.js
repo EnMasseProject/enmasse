@@ -26,6 +26,7 @@ var rhea = require('rhea');
 
 var Ragent = require('../lib/ragent.js');
 var tls_options = require('../lib/tls_options.js');
+var MockBroker = require('../testlib/mock_broker.js');
 var MockRouter = require('../testlib/mock_router.js');
 var match_source_address = require('../lib/utils.js').match_source_address;
 var mock_resource_server = require('../testlib/mock_resource_server.js');
@@ -45,11 +46,15 @@ function remove(list, predicate) {
     return removed;
 }
 
-function verify_topic(name, all_linkroutes) {
+function verify_topic(name, all_linkroutes, containerId) {
     var linkroutes = remove(all_linkroutes, function (o) { return o.prefix === name; });
     assert.equal(linkroutes.length, 2);
     assert.equal(linkroutes[0].prefix, name);
     assert.equal(linkroutes[1].prefix, name);
+    if (containerId) {
+        assert.equal(linkroutes[0].containerId, containerId);
+        assert.equal(linkroutes[1].containerId, containerId);
+    }
     if (linkroutes[0].dir === 'in') {
         assert.equal(linkroutes[1].dir, 'out');
     } else {
@@ -58,7 +63,7 @@ function verify_topic(name, all_linkroutes) {
     }
 }
 
-function verify_queue(name, all_addresses, all_autolinks) {
+function verify_queue(name, all_addresses, all_autolinks, containerId) {
     var addresses = remove(all_addresses, function (o) { return o.prefix === name; });
     assert.equal(addresses.length, 1);
     assert.equal(addresses[0].prefix, name);
@@ -69,6 +74,8 @@ function verify_queue(name, all_addresses, all_autolinks) {
     assert.equal(autolinks.length, 2);
     assert.equal(autolinks[0].addr, name);
     assert.equal(autolinks[1].addr, name);
+    assert.equal(autolinks[0].containerId, containerId || name);
+    assert.equal(autolinks[1].containerId, containerId || name);
     if (autolinks[0].dir === 'in') {
         assert.equal(autolinks[1].dir, 'out');
     } else {
@@ -103,9 +110,9 @@ function verify_addresses(inputs, router, verify_extra) {
         for (var i = 0; i < inputs.length; i++) {
             var a = inputs[i];
             if (a.type === 'queue') {
-                verify_queue(a.address, addresses, autolinks);
+                verify_queue(a.address, addresses, autolinks, a.allocated_to);
             } else if (a.type === 'topic') {
-                verify_topic(a.address, linkroutes);
+                verify_topic(a.address, linkroutes, a.allocated_to);
             } else if (a.type === 'anycast') {
                 verify_anycast(a.address, addresses);
             } else if (a.type === 'multicast') {
@@ -326,6 +333,8 @@ describe('basic router configuration', function() {
     it('configures multiple multicast addresses', simple_address_test([{address:'a',type:'multicast'}, {address:'b',type:'multicast'}, {address:'c',type:'multicast'}]));
     it('configures multiple topics', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic'}, {address:'c',type:'topic'}]));
     it('configures multiple queues', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'queue'}]));
+    it('configures queues based on allocation', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue', allocated_to:'broker-1'}, {address:'c',type:'queue', allocated_to:'broker-1'}]));
+    it('configures topic based on allocation', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic', allocated_to:'broker-1'}, {address:'c',type:'topic', allocated_to:'broker-1'}]));
     it('configures multiple different types of address', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('removes unwanted address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
@@ -597,6 +606,17 @@ describe('configuration from configmaps', function() {
                 done();
             }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         }, 100/*delay before changes*/);
+    });
+    it('ignores pending and terminating addresses', function (done) {
+        var router = routers.new_router();
+        address_source.add_address_definition({address:'a', type:'queue'});
+        address_source.add_address_definition({address:'b', type:'queue'}, undefined, undefined, {phase:'Pending'});
+        address_source.add_address_definition({address:'c', type:'topic'}, undefined, undefined, {phase:'Terminating'});
+        address_source.add_address_definition({address:'d', type:'topic'});
+        setTimeout(function () {
+            verify_addresses([{address:'a', type:'queue'}, {address:'d', type:'topic'}], router);
+            done();
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
     });
 });
 
@@ -911,6 +931,108 @@ describe('changing router configuration', function() {
                     client.close();
                 }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
             });
+        });
+    });
+});
+
+describe('broker configuration', function() {
+    this.timeout(5000);
+    var ragent;
+    var address_source;
+    var routers;
+    var port;
+    var connections;
+
+    beforeEach(function(done) {
+        address_source = new ConfigMapServer();
+        connections = [];
+        address_source.listen(0).on('listening', function () {
+            ragent = new Ragent();
+            ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
+            ragent.listen({port:0}).on('listening', function (){
+                port = ragent.server.address().port;
+                routers = new RouterList(ragent.server.address().port);
+                done();
+            });
+        });
+    });
+
+    afterEach(function(done) {
+        routers.close().then(function () {
+            ragent.server.close();
+            address_source.close();
+            connections.forEach(function (c) { c.close(); });
+            done();
+        });
+    });
+
+    function connect_broker(broker) {
+        var conn = broker.connect(port);
+        connections.push(conn);
+        return new Promise(function (resolve, reject) {
+            conn.once('connection_open', function () {
+                resolve();
+            });
+        });
+    }
+
+    it('creates queues on associated brokers', function (done) {
+        var router = routers.new_router();
+        var broker_a = new MockBroker('broker_a');
+        var broker_b = new MockBroker('broker_b');
+        Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
+            address_source.add_address_definition({address:'a', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'b', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            setTimeout(function () {
+                verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}], router);
+                //verify queues on respective brokers:
+                broker_a.verify_addresses([{address:'a', type:'queue'}]);
+                broker_b.verify_addresses([{address:'b', type:'queue'}]);
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        });
+    });
+
+    it('deletes queues from associated brokers', function (done) {
+        var router = routers.new_router();
+        var broker_a = new MockBroker('broker_a');
+        var broker_b = new MockBroker('broker_b');
+        Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
+            address_source.add_address_definition({address:'a', type:'queue'}, 'address-config-a', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', {'enmasse.io/broker-id':'broker_a'});
+            setTimeout(function () {
+                verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
+                //verify queues on respective brokers:
+                broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
+                broker_b.verify_addresses([{address:'b', type:'queue'}]);
+                //delete configmap
+                address_source.remove_resource_by_name('address-config-a');
+                setTimeout(function () {
+                    verify_addresses([{address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
+                    broker_a.verify_addresses([{address:'c', type:'queue'}]);
+                    broker_b.verify_addresses([{address:'b', type:'queue'}]);
+                    done();
+                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }, 500);
+        });
+    });
+
+    it('handles broker disconnection', function (done) {
+        var router = routers.new_router();
+        var broker_a = new MockBroker('broker_a');
+        var broker_b = new MockBroker('broker_b');
+        Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
+            assert(ragent.connected_brokers['broker_a'] !== undefined);
+            assert(ragent.connected_brokers['broker_b'] !== undefined);
+            setTimeout(function () {
+                connections[1].close();
+                setTimeout(function () {
+                    assert(ragent.connected_brokers['broker_a'] !== undefined, 'broker-a SHOULD be in connected_broker map');
+                    assert(ragent.connected_brokers['broker_b'] === undefined, 'broker-b should NOT be in connected_broker map');
+                    done();
+                }, 500);
+            }, 200);
         });
     });
 });

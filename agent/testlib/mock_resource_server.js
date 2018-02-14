@@ -138,6 +138,9 @@ ResourceServer.prototype.clear = function () {
 };
 
 ResourceServer.prototype.add_resource = function (resource) {
+    if (this.resource_initialiser) {
+        this.resource_initialiser(resource);
+    }
     this.resources.push(resource);
     this.emit('added', this.externalize(resource));
 };
@@ -260,7 +263,7 @@ ResourceServer.prototype.add_resource_if_not_exists = function (resource) {
             return false;
         }
     }
-    this.push(resource);
+    this.add_resource(resource);
     return true;
 };
 
@@ -332,8 +335,12 @@ function get_config_map(name, type, key, content) {
     return cm;
 }
 
-ConfigMapServer.prototype.add_address_definition = function (def, name) {
-    var address = {kind: 'Address', metadata: {name: def.address}, spec:def, status:{}};
+ConfigMapServer.prototype.add_address_definition = function (def, name, annotations, status) {
+    var address = {kind: 'Address', metadata: {name: def.address}, spec:def};
+    if (annotations) {
+        address.metadata.annotations = annotations;
+    }
+    address.status = status || { phase: 'Active' };
     this.add_resource(get_config_map(name || def.address, 'address-config', 'config.json', address));
 };
 
@@ -354,6 +361,27 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
         addressType: params.address_type
     };
     this.add_resource(get_config_map(plan.name, 'address-plan', 'definition', plan));
+};
+
+ConfigMapServer.prototype.resource_initialiser = function (resource) {
+    if (resource.data['config.json']) {
+        try {
+            var address = JSON.parse(resource.data['config.json']);
+            var changed = true;
+            if (address.status === undefined) {
+                address.status = {'phase': 'Active'};
+            } else if (address.status.phase === undefined) {
+                address.status.phase = 'Active';
+            } else {
+                changed = false;
+            }
+            if (changed) {
+                resource.data['config.json'] = JSON.stringify(address);
+            }
+        } catch (e) {
+            console.error('Failed to parse address for resource initialisation: %s', e);
+        }
+    }
 };
 
 module.exports.ResourceServer = ResourceServer;

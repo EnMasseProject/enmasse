@@ -127,3 +127,31 @@ module.exports.kubernetes_name = function (name) {
     }
     return clean;
 }
+
+module.exports.serialize = function (f) {
+    var in_progress = false;
+    var pending = 0;
+    function execute() {
+        f().then(function () {
+            if (pending) {
+                next();
+            } else {
+                in_progress = false;
+            }
+        }).catch(function() {
+            in_progress = false;
+        });
+    }
+    function next() {
+        pending--;
+        setImmediate(execute);
+    };
+    return function () {
+        if (in_progress) {
+            pending++;
+        } else {
+            in_progress = true;
+            execute();
+        }
+    };
+};
