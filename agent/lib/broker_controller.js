@@ -25,16 +25,20 @@ var myevents = require('./events.js');
 function BrokerController(event_sink) {
     events.EventEmitter.call(this);
     this.check_in_progress = false;
-    this.container = rhea.create_container();
-    this.container.on('connection_open', this.on_connection_open.bind(this));
     this.post_event = event_sink || function (event) { log.info('event: %j', event); };
-    setInterval(this.check_broker_addresses.bind(this), 5000);//poll broker stats every 5 secs
+    this.serial_sync = require('./utils.js').serialize(this._sync_broker_addresses.bind(this));
 };
 
 util.inherits(BrokerController, events.EventEmitter);
 
+BrokerController.prototype.start_polling = function (poll_frequency) {
+    setInterval(this.check_broker_addresses.bind(this), poll_frequency || 5000);//poll broker stats every 5 secs by default
+};
+
 BrokerController.prototype.connect = function (options) {
-    return this.container.connect(options);
+    var container = rhea.create_container();
+    container.on('connection_open', this.on_connection_open.bind(this));
+    return container.connect(options);
 };
 
 BrokerController.prototype.close = function () {
@@ -43,14 +47,26 @@ BrokerController.prototype.close = function () {
 
 BrokerController.prototype.on_connection_open = function (context) {
     this.broker = new artemis.Artemis(context.connection);
+    this.id = context.connection.container_id;
     log.info('connected to %s', context.connection.container_id);
     this.check_broker_addresses();
     this.emit('ready');
 };
 
+BrokerController.prototype.set_connection = function (connection) {
+    this.broker = new artemis.Artemis(connection);
+    log.info('connected to %s', connection.container_id);
+    this.id = connection.container_id;
+};
+
 BrokerController.prototype.addresses_defined = function (addresses) {
     this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
     return this.check_broker_addresses();
+};
+
+BrokerController.prototype.sync_addresses = function (addresses) {
+    this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
+    return this.serial_sync();
 };
 
 function transform_queue_stats(queue) {
@@ -316,23 +332,13 @@ BrokerController.prototype.check_broker_addresses = function () {
         if (!this.check_in_progress) {
             this.check_in_progress = true;
             var self = this;
-            return this.broker.listAddresses().then(function (results) {
-                var actual = translate(results, excluded_addresses)
-                var stale = values(difference(actual, self.addresses, same_address)).map(address_and_type);
-                var missing = values(difference(self.addresses, actual, same_address)).map(address_and_type);
-                log.debug('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses).map(address_and_type), values(actual), stale, missing);
-                return self.delete_addresses(stale).then(
-                    function () {
-                        return self.create_addresses(missing).then(function () {
-                            return self.retrieve_stats().then(function () {
-                                self.check_in_progress = false;
-                            }).catch( function (error) {
-                                log.error('error retrieving stats: %s', error);
-                                self.check_in_progress = false;
-                            });
-                        });
-                    }
-                );
+            return this._sync_broker_addresses().then(function () {
+                return self.retrieve_stats().then(function () {
+                    self.check_in_progress = false;
+                }).catch( function (error) {
+                    log.error('error retrieving stats: %s', error);
+                    self.check_in_progress = false;
+                });
             });
         } else {
             return Promise.resolve();
@@ -342,4 +348,28 @@ BrokerController.prototype.check_broker_addresses = function () {
     }
 };
 
-module.exports = BrokerController;
+BrokerController.prototype._sync_broker_addresses = function () {
+    var self = this;
+    return this.broker.listAddresses().then(function (results) {
+        var actual = translate(results, excluded_addresses)
+        var stale = values(difference(actual, self.addresses, same_address)).map(address_and_type);
+        var missing = values(difference(self.addresses, actual, same_address)).map(address_and_type);
+        log.debug('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses).map(address_and_type), values(actual), stale, missing);
+        return self.delete_addresses(stale).then(
+            function () {
+                return self.create_addresses(missing);
+            });
+    });
+};
+
+module.exports.create_controller = function (connection, event_sink) {
+    var bc = new BrokerController(event_sink);
+    bc.set_connection(connection);
+    return bc;
+};
+
+module.exports.create_agent = function (event_sink, polling_frequency) {
+    var bc = new BrokerController(event_sink);
+    bc.start_polling(polling_frequency);
+    return bc;
+};
