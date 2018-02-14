@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.address.model.Status.Phase.Active;
 import static io.enmasse.address.model.Status.Phase.Pending;
 import static io.enmasse.address.model.Status.Phase.Terminating;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
@@ -95,7 +96,12 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         provisioner.provisionResources(usageMap, neededMap);
 
-        checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Active)), addressResolver);
+        checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
+        for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
+            if (address.getStatus().isReady()) {
+                address.getStatus().setPhase(Active);
+            }
+        }
 
         deprovisionUnused(filterByNotPhases(addressSet, Arrays.asList(Terminating)));
         for (Address address : addressSet) {
@@ -173,6 +179,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
             numOk.put(address, checkClusterStatus(address, addressPlan) + numOk.getOrDefault(address, 0));
         }
+
         return numOk;
     }
 
