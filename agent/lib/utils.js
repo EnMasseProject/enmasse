@@ -105,3 +105,30 @@ module.exports.match_source_address = function (link, address) {
         && link.local.attach.source.value[0].toString() === address;
 }
 
+module.exports.serialize = function (f) {
+    var in_progress = false;
+    var pending = 0;
+    function execute() {
+        f().then(function () {
+            if (pending) {
+                next();
+            } else {
+                in_progress = false;
+            }
+        }).catch(function() {
+            in_progress = false;
+        });
+    }
+    function next() {
+        pending--;
+        setImmediate(execute);
+    };
+    return function () {
+        if (in_progress) {
+            pending++;
+        } else {
+            in_progress = true;
+            execute();
+        }
+    };
+};

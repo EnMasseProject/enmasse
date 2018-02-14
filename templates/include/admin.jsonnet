@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
   services(addressSpace)::
   [
     self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
-    self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
+    self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55671}]),
     self.service("console", addressSpace, [{"name": "https", "port": 8081, "targetPort": 8080}], "https")
   ],
 

@@ -20,39 +20,7 @@ var events = require('events');
 var util = require('util');
 var rhea = require('rhea');
 var MockBroker = require('../testlib/mock_broker.js');
-var BrokerController = require('../lib/broker_controller.js');
-
-function remove(list, predicate) {
-    var removed = [];
-    for (var i = 0; i < list.length; ) {
-        if (predicate(list[i])) {
-            removed.push(list.splice(i, 1)[0]);
-        } else {
-            i++;
-        }
-    }
-    return removed;
-}
-
-function verify_queue(addresses, queues, name) {
-    var results = remove(queues, function (o) { return o.name === name; });
-    assert.equal(results.length, 1, util.format('queue %s not found', name));
-    assert.equal(results[0].name, name);
-    results = remove(addresses, function (o) { return o.name === name; });
-    assert.equal(results.length, 1, util.format('address %s not found', name));
-    assert.equal(results[0].name, name);
-    assert.equal(results[0].routingTypesAsJSON[0], 'ANYCAST');
-    assert.equal(results[0].queueNames[0], name);
-    return results[0];
-}
-
-function verify_topic(addresses, name) {
-    var results = remove(addresses, function (o) { return o.name === name; });
-    assert.equal(results.length, 1, util.format('address %s not found', name));
-    assert.equal(results[0].name, name);
-    assert.equal(results[0].routingTypesAsJSON[0], 'MULTICAST');
-    return results[0];
-}
+var broker_controller = require('../lib/broker_controller.js');
 
 describe('broker controller', function() {
     var broker;
@@ -61,7 +29,7 @@ describe('broker controller', function() {
     beforeEach(function(done) {
         broker = new MockBroker('mybroker');
         broker.listen().on('listening', function () {
-            controller = new BrokerController();
+            controller = broker_controller.create_agent();
             controller.connect({port:broker.port});
             controller.on('ready', function () {
                 done();
@@ -78,7 +46,7 @@ describe('broker controller', function() {
         controller.addresses_defined([{address:'foo',type:'queue'}]).then(function () {
             var addresses = broker.list_addresses();
             var queues = broker.list_queues();
-            verify_queue(addresses, queues, 'foo');
+            broker.verify_queue(addresses, queues, 'foo');
             assert.equal(addresses.length, 0);
             assert.equal(queues.length, 0);
             done();
@@ -87,7 +55,7 @@ describe('broker controller', function() {
     it('creates a topic', function(done) {
         controller.addresses_defined([{address:'bar',type:'topic'}]).then(function () {
             var addresses = broker.list_addresses();
-            verify_topic(addresses, 'bar');
+            broker.verify_topic(addresses, 'bar');
             assert.equal(addresses.length, 0);
             done();
         });
@@ -96,14 +64,14 @@ describe('broker controller', function() {
         controller.addresses_defined([{address:'foo',type:'queue'}, {address:'bar',type:'topic'}]).then(function () {
             var addresses = broker.list_addresses();
             var queues = broker.list_queues();
-            verify_queue(addresses, queues, 'foo');
-            verify_topic(addresses, 'bar');
+            broker.verify_queue(addresses, queues, 'foo');
+            broker.verify_topic(addresses, 'bar');
             assert.equal(addresses.length, 0);
             assert.equal(queues.length, 0);
             controller.addresses_defined([{address:'bar',type:'topic'}]).then(function () {
                 var addresses = broker.list_addresses();
                 var queues = broker.list_queues();
-                verify_topic(addresses, 'bar');
+                broker.verify_topic(addresses, 'bar');
                 assert.equal(addresses.length, 0);
                 assert.equal(queues.length, 0);
                 done();
@@ -114,14 +82,14 @@ describe('broker controller', function() {
         controller.addresses_defined([{address:'foo',type:'queue'}, {address:'bar',type:'topic'}]).then(function () {
             var addresses = broker.list_addresses();
             var queues = broker.list_queues();
-            verify_queue(addresses, queues, 'foo');
-            verify_topic(addresses, 'bar');
+            broker.verify_queue(addresses, queues, 'foo');
+            broker.verify_topic(addresses, 'bar');
             assert.equal(addresses.length, 0);
             assert.equal(queues.length, 0);
             controller.addresses_defined([{address:'foo',type:'queue'}]).then(function () {
                 var addresses = broker.list_addresses();
                 var queues = broker.list_queues();
-                verify_queue(addresses, queues, 'foo');
+                broker.verify_queue(addresses, queues, 'foo');
                 assert.equal(addresses.length, 0);
                 assert.equal(queues.length, 0);
                 done();

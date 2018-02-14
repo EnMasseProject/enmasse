@@ -271,7 +271,7 @@ items:
       {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
       "queue-scheduler"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort":
-      55667}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
+      55671}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
       "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort":
       "https"}, "labels": {"app": "enmasse"}, "name": "console"}, "spec": {"ports":
       [{"name": "https", "port": 8081, "targetPort": 8080}], "selector": {"name":

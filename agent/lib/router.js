@@ -142,7 +142,7 @@ function is_topic(address) {
 }
 
 function to_link_route(direction, address) {
-    return {name:address.name + '_' + direction, prefix:address.name, dir:direction};
+    return {name:address.name + '_' + direction, prefix:address.name, dir:direction, containerId:address.allocated_to};
 }
 
 function to_in_link_route(address) {
@@ -278,7 +278,8 @@ ConnectedRouter.prototype.define_autolink = function (address, direction) {
     var future = futurejs.future(created);
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
     log.info('defining autolink for ' + address.name + ' in direction ' + direction + ' on router ' + this.container_id);
-    this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:address.name}, future.as_callback());
+    var brokerId = address.allocated_to || address.name;
+    this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:brokerId}, future.as_callback());
     return future;
 }
 
@@ -303,7 +304,9 @@ ConnectedRouter.prototype.delete_address_and_autolinks = function (address) {
 ConnectedRouter.prototype.define_link_route = function (route) {
     var future = futurejs.future(created);
     log.info('defining ' + route.dir + ' link route ' + route.prefix + ' on router ' + this.container_id);
-    this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, {'prefix':route.prefix, dir:route.dir}, future.as_callback());
+    var props = {'prefix':route.prefix, dir:route.dir};
+    if (route.containerId) props.containerId = route.containerId;
+    this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, props, future.as_callback());
     return future;
 };
 

@@ -121,6 +121,9 @@ ResourceServer.prototype.clear = function () {
 };
 
 ResourceServer.prototype.add_resource = function (resource) {
+    if (this.resource_initialiser) {
+        this.resource_initialiser(resource);
+    }
     this.resources.push(resource);
     this.emit('added', this.externalize(resource));
 };
@@ -238,14 +241,33 @@ function ConfigMapServer () {
 
 util.inherits(ConfigMapServer, ResourceServer);
 
-ConfigMapServer.prototype.add_address_definition = function (def, name) {
-    var address = {kind: 'Address', metadata: {name: def.address}, spec:def, status:{}};
+ConfigMapServer.prototype.add_address_definition = function (def, name, annotations, status) {
+    var address = {kind: 'Address', metadata: {name: def.address}, spec:def};
+    if (annotations) {
+        address.metadata.annotations = annotations;
+    }
+    address.status = status || { phase: 'Active' };
     this.add_resource({kind:'ConfigMap', metadata: {name: name || def.address}, data:{'config.json': JSON.stringify(address)}});
 };
 
 ConfigMapServer.prototype.add_address_definitions = function (defs) {
     for (var i in defs) {
         this.add_address_definition(defs[i]);
+    }
+};
+
+ConfigMapServer.prototype.resource_initialiser = function (resource) {
+    if (resource.data['config.json']) {
+        try {
+            var address = JSON.parse(resource.data['config.json']);
+            if (address.status === undefined) {
+                address.status = {'phase': 'Active'};
+            } else if (address.status.phase === undefined) {
+                address.status.phase = 'Active';
+            }
+        } catch (e) {
+            console.error('Failed to parse address for resource initialisation: %s', e);
+        }
     }
 };
 
