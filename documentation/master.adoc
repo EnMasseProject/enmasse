@@ -30,6 +30,7 @@ include::service_admin/installing-openshift.adoc[leveloffset=+1]
 include::service_admin/monitoring-openshift.adoc[leveloffset=+1]
 include::service_admin/installing-kubernetes.adoc[leveloffset=+1]
 include::service_admin/monitoring-kubernetes.adoc[leveloffset=+1]
+include::service_admin/plans.adoc[leveloffset=+1]
 
 == Managing address spaces and addresses
 

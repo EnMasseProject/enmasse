@@ -15,7 +15,7 @@ authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] 
 
 . Save the following JSON data to a file 'space.json':
 +
-[source,options="nowrap"]
+[source,json,options="nowrap"]
 ----
 {
     "apiVersion": "v1/enmasse",
@@ -24,7 +24,8 @@ authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] 
         "name": "myspace"
     },
     "spec": {
-        "type": "standard"
+        "type": "standard",
+        "plan": "unlimited-standard"
     }
 }
 ----
@@ -62,7 +63,7 @@ object.
 
 . To create addresses in the standard address space, save the following to a file:
 +
-[source,options="nowrap"]
+[source,json,options="nowrap"]
 ----
 {
   "apiVersion": "enmasse.io/v1",
@@ -73,7 +74,8 @@ object.
         "name": "myqueue"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "sharded-queue"
       }
     },
     {
@@ -81,7 +83,8 @@ object.
         "name": "mytopic"
       },
       "spec": {
-        "type": "topic"
+        "type": "topic",
+        "plan": "sharded-topic"
       }
     },
     {
@@ -89,7 +92,8 @@ object.
         "name": "myanycast"
       },
       "spec": {
-        "type": "anycast"
+        "type": "anycast",
+        "plan": "standard-anycast"
       }
     },
     {
@@ -97,7 +101,8 @@ object.
         "name": "mymulticast"
       },
       "spec": {
-        "type": "multicast"
+        "type": "multicast",
+        "plan": "standard-multicast"
       }
     }
   ]
@@ -106,7 +111,7 @@ object.
 
 . You can then create those addresses using the following REST API command. Replace `default` with the name of your address space:
 +
-[source,options="nowrap"]
+[source,bash,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
 curl -X PUT -T addresses.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addresses/default
@@ -118,7 +123,7 @@ curl -X PUT -T addresses.json -H "content-type: application/json" -H "Authorizat
 
 * To check which addresses are configured:
 +
-[source,options="nowrap"]
+[source,bash,options="nowrap"]
 ----
 curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addresses/default
 ----
