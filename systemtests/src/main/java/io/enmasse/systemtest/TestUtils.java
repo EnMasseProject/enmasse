@@ -559,8 +559,8 @@ public class TestUtils {
      * @param kubernetes  client for manipulation with kubernetes cluster
      * @param addressPlan definition of AddressPlan
      */
-    public static void createAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan) {
-        kubernetes.createAddressPlanConfig(addressPlan);
+    public static void createAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan, boolean replaceExisting) {
+        kubernetes.createAddressPlanConfig(addressPlan, replaceExisting);
     }
 
     /**
@@ -614,8 +614,8 @@ public class TestUtils {
      * @param kubernetes       client for manipulation with kubernetes cluster
      * @param addressSpacePlan definition of AddressSpacePlan
      */
-    public static void createAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan) {
-        kubernetes.createAddressSpacePlanConfig(addressSpacePlan);
+    public static void createAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
+        kubernetes.createAddressSpacePlanConfig(addressSpacePlan, replaceExisting);
     }
 
     /**
@@ -632,10 +632,11 @@ public class TestUtils {
     /**
      * Remove AddressSpacePlan definition by name of the config file
      *
-     * @param config name attribute within ConfigMap object
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressSpacePlan AddressSpacePlan object
      * @return true if AddressSpacePlan was removed successfully
      */
-    public static boolean removeAddressSpacePlanConfig(String config) {
-        throw new NotImplementedException();
+    public static boolean removeAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan) {
+        return kubernetes.removeAddressSpacePlanConfig(addressSpacePlan);
     }
 }

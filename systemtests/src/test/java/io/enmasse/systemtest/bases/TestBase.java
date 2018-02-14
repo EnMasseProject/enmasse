@@ -702,7 +702,11 @@ public abstract class TestBase extends SystemTestRunListener {
     //Address config-maps
     //===================
     protected void createAddressPlanConfig(AddressPlan addressPlan) {
-        TestUtils.createAddressPlanConfig(kubernetes, addressPlan);
+        createAddressPlanConfig(addressPlan, false);
+    }
+
+    protected void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
+        TestUtils.createAddressPlanConfig(kubernetes, addressPlan, replaceExisting);
     }
 
     protected AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
@@ -726,15 +730,19 @@ public abstract class TestBase extends SystemTestRunListener {
     //=========================
 
     protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        TestUtils.createAddressSpacePlanConfig(kubernetes, addressSpacePlan);
+        createAddressSpacePlanConfig(addressSpacePlan, false);
+    }
+
+    protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
+        TestUtils.createAddressSpacePlanConfig(kubernetes, addressSpacePlan, replaceExisting);
     }
 
     protected AddressSpacePlan getAddressSpacePlanConfig(String config) {
         return TestUtils.getAddressSpacePlanConfig(kubernetes, config);
     }
 
-    protected boolean removeAddressSpacePlanConfig(String config) {
-        return TestUtils.removeAddressSpacePlanConfig(config);
+    protected boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
+        return TestUtils.removeAddressSpacePlanConfig(kubernetes, addressSpacePlan);
     }
 
 

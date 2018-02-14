@@ -72,21 +72,21 @@ public class QueueTest extends BrokeredTestBase {
 
     //@Test disabled because new address-space plans are not accepted yet
     public void testCreateAddressSpacePlan() throws Exception {
-        AddressPlan weakQueue = null;
-        AddressPlan weakTopic = null;
+        AddressPlan weakQueuePlan = null;
+        AddressPlan weakTopicPlan = null;
         AddressSpacePlan weakPlan = null;
         try {
-            //define address plans
+            //define and create address plans
             List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.0));
-            weakQueue = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
-            weakTopic = new AddressPlan("brokered-topic-weak", AddressType.TOPIC, addressResources);
+            weakQueuePlan = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
+            weakTopicPlan = new AddressPlan("brokered-topic-weak", AddressType.TOPIC, addressResources);
 
-            createAddressPlanConfig(weakQueue);
-            createAddressPlanConfig(weakTopic);
+            createAddressPlanConfig(weakQueuePlan);
+            createAddressPlanConfig(weakTopicPlan);
 
-            //define address space plan
+            //define and create address space plan
             List<AddressSpaceResource> resources = Arrays.asList(new AddressSpaceResource("broker", 2.0, 9.0));
-            List<AddressPlan> addressPlans = Arrays.asList(weakQueue, weakTopic);
+            List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
             weakPlan = new AddressSpacePlan("weak-plan", "weak", "brokered-space", AddressSpaceType.BROKERED, resources, addressPlans);
             createAddressSpacePlanConfig(weakPlan);
 
@@ -94,28 +94,26 @@ public class QueueTest extends BrokeredTestBase {
             AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.BROKERED, weakPlan.getName());
             createAddressSpace(weakAddressSpace, AuthService.STANDARD.toString());
 
-            final String queueName = "weak-queue";
-            final String topicName = "weak-topic";
-            setAddresses(weakAddressSpace,
-                    Destination.queue(queueName, "brokered-queue-weak"),
-                    Destination.topic(topicName, "brokered-topic-weak"));
+            //deploy destinations
+            Destination weakQueueDest = Destination.queue("weak-queue", weakQueuePlan.getName());
+            Destination weakTopicDest = Destination.queue("weak-topic", weakTopicPlan.getName());
+            setAddresses(weakAddressSpace, weakQueueDest, weakTopicDest);
 
-            Future<List<Address>> getWeakQueue = getAddressesObjects(Optional.of(weakQueue.getName()));
-            Future<List<Address>> getWeakTopic = getAddressesObjects(Optional.of(weakTopic.getName()));
+            //get destinations
+            Future<List<Address>> getWeakQueue = getAddressesObjects(Optional.of(weakQueuePlan.getName()));
+            Future<List<Address>> getWeakTopic = getAddressesObjects(Optional.of(weakTopicPlan.getName()));
 
             String assertMessage = "Queue plan wasn't set properly";
-
-            assertEquals(assertMessage, getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(), weakQueue.getName());
-            assertEquals(assertMessage, getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(), weakTopic.getName());
+            assertEquals(assertMessage, getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(), weakQueuePlan.getName());
+            assertEquals(assertMessage, getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(), weakTopicPlan.getName());
         } catch (Exception ex) {
             throw ex;
         } finally {
             //TODO: create new test base for tests with newly defined plans with After method for removing all
             // address(space) plans configs and appended plans from already existing address-space configs
-
-            //removeAddressPlanConfig(weakQueue.getName()); TODO not implemented yet
-            //removeAddressPlanConfig(weakTopic.getName()); TODO not implemented yet
-            //removeAddressSpacePlanConfig(weakPlan.getConfigName()); TODO not implemented yet
+            removeAddressPlanConfig(weakQueuePlan);
+            removeAddressPlanConfig(weakTopicPlan);
+            removeAddressSpacePlanConfig(weakPlan);
         }
 
     }

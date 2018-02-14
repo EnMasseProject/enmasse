@@ -181,24 +181,42 @@ public abstract class Kubernetes {
         return client.configMaps().inNamespace(globalNamespace).withLabels(labels).list();
     }
 
-
     /**
      * create new ConfigMap with new address space plan definition
      */
-    public void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        ConfigMap addressPlanDefinition = new ConfigMap();
+    public void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
+        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
+        ConfigMap addressSpacePlanDefinition = new ConfigMap();
 
-        addressPlanDefinition.setApiVersion("v1"); // <apiVersion>
-        addressPlanDefinition.setKind("ConfigMap");         // <kind>
+        addressSpacePlanDefinition.setApiVersion("v1"); // <apiVersion>
+        addressSpacePlanDefinition.setKind("ConfigMap");         // <kind>
 
         ObjectMeta metadata = new ObjectMeta(); // <metadata>
-        metadata.setName(String.format("address-space-plan-%s", addressSpacePlan.getConfigName()));
+        metadata.setName(fullAddressSpacePlanName);
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("type", "address-space-plan");
         metadata.setLabels(labels);
-        addressPlanDefinition.setMetadata(metadata); // </metadata>
-        addressPlanDefinition.setData(createAddressSpacePlanData(addressSpacePlan)); // <data></data>
-        client.configMaps().create(addressPlanDefinition);
+        addressSpacePlanDefinition.setMetadata(metadata); // </metadata>
+        addressSpacePlanDefinition.setData(createAddressSpacePlanData(addressSpacePlan)); // <data></data>
+        client.configMaps().create(addressSpacePlanDefinition);
+
+        if (replaceExisting) {
+            client.configMaps().inNamespace(globalNamespace).createOrReplace(addressSpacePlanDefinition);
+        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName) == null) {
+            client.configMaps().create(addressSpacePlanDefinition);
+        } else {
+            throw new IllegalStateException(String.format("AddressSpacePlan '%s' already exists and replace is set to '%s'",
+                    fullAddressSpacePlanName, replaceExisting));
+        }
+        log.info(String.format("AddressSpacePlan '%s' successfully created/replaced", fullAddressSpacePlanName));
+    }
+
+    /**
+     * remove address-space-plan ConfigMap according to its name
+     */
+    public boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
+        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getName());
+        return client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName).delete();
     }
 
     /**
@@ -324,7 +342,7 @@ public abstract class Kubernetes {
     /**
      * create new ConfigMap with new address plan definition
      */
-    public void createAddressPlanConfig(AddressPlan addressPlan) {
+    public void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
         String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
         ConfigMap addressPlanDefinition = new ConfigMap();
         addressPlanDefinition.setApiVersion("v1"); //apiVersion
@@ -339,16 +357,19 @@ public abstract class Kubernetes {
 
         addressPlanDefinition.setData(createAddressPlanData(addressPlan)); // <data></data>
 
-        if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressPlanName) == null) {
+        if (replaceExisting) {
+            client.configMaps().inNamespace(globalNamespace).createOrReplace(addressPlanDefinition);
+        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressPlanName).get() == null) {
             client.configMaps().create(addressPlanDefinition);
-            log.info(String.format("AddressPlan '%s' successfully created", fullAddressPlanName));
         } else {
-            log.warn(String.format("AddressPlan '%s' already exists", fullAddressPlanName));
+            throw new IllegalStateException(String.format("AddressPlan '%s' already exists and replace is set to '%s'",
+                    fullAddressPlanName, replaceExisting));
         }
+        log.info(String.format("AddressPlan '%s' successfully created/replaced", fullAddressPlanName));
     }
 
     /**
-     * remove ConfigMap according to its name
+     * remove address-plan ConfigMap according to its name
      */
     public boolean removeAddressPlanConfig(AddressPlan addressPlan) {
         String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
@@ -391,7 +412,9 @@ public abstract class Kubernetes {
         return data;
     }
 
-
+    /**
+     * append
+     */
     public void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
         String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
         String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
