@@ -9,6 +9,7 @@ TAG             ?= latest
 VERSION         ?= $(shell cat $(TOPDIR)/release.version)
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 NPM             ?= $(shell command -v npm 2> /dev/null)
+SKIP_TESTS      ?= false
 
 all: init build test package docker_build
 
@@ -25,27 +26,19 @@ build_amqp_module:
 	cd $(TOPDIR)artemis/activemq-artemis/artemis-protocols/artemis-amqp-protocol && mvn -q install -DskipTests
 
 node_modules: package.json
-        ifeq ($(NPM),)
-		$(warning "npm not found, node tests will be skipped")
-        else
 		npm install
-        endif
 
 npm_install: node_modules
 
 npm_test: node_modules
-        ifeq ($(NPM),)
-		$(warning "npm not found, node tests will be skipped")
+        ifeq ($(SKIP_TESTS),true)
+		$(warning "node tests will be skipped")
         else
 	       MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
         endif
 
 npm_coverage: npm_install
-        ifeq ($(NPM),)
-		$(warning "npm not found, coverage cannot be generated")
-        else
-	       npm run coverage
-        endif
+	   npm run coverage
 
 docker_build: package
 	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) . ; fi
