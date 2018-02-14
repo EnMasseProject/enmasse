@@ -32,7 +32,8 @@ resources consumed by the API. Here is an example config with all 4 variants tha
         "name": "myqueue"
       },
       "spec": {
-        "type": "queue"
+        "type": "queue",
+        "plan": "sharded-queue"
       }
     },
     {
@@ -40,7 +41,8 @@ resources consumed by the API. Here is an example config with all 4 variants tha
         "name": "mytopic"
       },
       "spec": {
-        "type": "topic"
+        "type": "topic",
+        "plan": "sharded-topic"
       }
     },
     {
@@ -48,7 +50,8 @@ resources consumed by the API. Here is an example config with all 4 variants tha
         "name": "myanycast"
       },
       "spec": {
-        "type": "anycast"
+        "type": "anycast",
+        "plan": "standard-anycast"
       }
     },
     {
@@ -56,7 +59,8 @@ resources consumed by the API. Here is an example config with all 4 variants tha
         "name": "mymulticast"
       },
       "spec": {
-        "type": "multicast"
+        "type": "multicast",
+        "plan": "standard-multicast"
       }
     }
   ]
