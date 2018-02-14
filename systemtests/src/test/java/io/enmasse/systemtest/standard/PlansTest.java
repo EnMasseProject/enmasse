@@ -1,7 +1,7 @@
-package io.enmasse.systemtest.brokered;
+package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
@@ -19,7 +19,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-public class PlansTest extends BrokeredTestBase {
+public class PlansTest extends StandardTestBase {
 
     protected ArrayList<AddressPlan> addressPlans;
     protected ArrayList<AddressSpacePlan> addressSpacePlans;
@@ -95,23 +95,28 @@ public class PlansTest extends BrokeredTestBase {
     //@Test disabled because dynamically created address-space-plans are not accepted yet
     public void testCreateAddressSpacePlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.0));
-        AddressPlan weakQueuePlan = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
-        AddressPlan weakTopicPlan = new AddressPlan("brokered-topic-weak", AddressType.TOPIC, addressResources);
+        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesTopic = Arrays.asList(
+                new AddressResource("broker", 1.0),
+                new AddressResource("router", 1.0));
+        AddressPlan weakQueuePlan = new AddressPlan("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
+        AddressPlan weakTopicPlan = new AddressPlan("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
         createAddressPlanConfig(weakQueuePlan);
         createAddressPlanConfig(weakTopicPlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(new AddressSpaceResource("broker", 2.0, 9.0));
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 9.0),
+                new AddressSpaceResource("router", 1.0, 5.0));
         List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
-        AddressSpacePlan weakPlan = new AddressSpacePlan("weak-plan", "weak",
-                "brokered-space", AddressSpaceType.BROKERED, resources, addressPlans);
-        createAddressSpacePlanConfig(weakPlan);
+        AddressSpacePlan weakSpacePlan = new AddressSpacePlan("weak-plan", "weak",
+                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+        createAddressSpacePlanConfig(weakSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.BROKERED,
-                weakPlan.getName());
+        AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.STANDARD,
+                weakSpacePlan.getName());
         createAddressSpace(weakAddressSpace, AuthService.STANDARD.toString());
 
         //deploy destinations
@@ -132,17 +137,17 @@ public class PlansTest extends BrokeredTestBase {
 
     @Test
     public void testAppendAddressPlan() throws Exception {
-        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.0));
-        AddressPlan weakQueuePlan = new AddressPlan("brokered-queue-weak", AddressType.QUEUE, addressResources);
+        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 1.0));
+        AddressPlan weakQueuePlan = new AddressPlan("standard-queue-weak", AddressType.QUEUE, addressResources);
         createAddressPlanConfig(weakQueuePlan);
 
-        AddressSpacePlan brokeredPlan = getAddressSpacePlanConfig("brokered");
-        appendAddressPlan(weakQueuePlan, brokeredPlan);
+        AddressSpacePlan standardPlan = getAddressSpacePlanConfig("standard");
+        appendAddressPlan(weakQueuePlan, standardPlan);
 
         setAddresses(Destination.queue("weak-queue", weakQueuePlan.getName()));
 
-        Future<List<Address>> brokeredAddresses = getAddressesObjects(Optional.of("weak-queue"));
+        Future<List<Address>> standardAddresses = getAddressesObjects(Optional.of("weak-queue"));
         assertThat("Queue plan wasn't set properly",
-                brokeredAddresses.get(20, TimeUnit.SECONDS).get(0).getPlan(), is(weakQueuePlan.getName()));
+                standardAddresses.get(20, TimeUnit.SECONDS).get(0).getPlan(), is(weakQueuePlan.getName()));
     }
 }
