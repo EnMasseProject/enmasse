@@ -156,6 +156,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         Map<Address, Integer> okMap = checkStatuses(addresses, addressResolver);
         for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
             if (entry.getValue() == 0) {
+                log.info("Garbage collecting {}", entry.getKey());
                 addressApi.deleteAddress(entry.getKey());
             }
         }
