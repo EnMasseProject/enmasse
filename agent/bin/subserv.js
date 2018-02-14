@@ -19,6 +19,7 @@ var log = require('../lib/log.js').logger();
 var util = require('util');
 var amqp = require('rhea').create_container();
 var create_topic = require('../lib/topic.js');
+var topic_tracker = require('../lib/topic_tracker.js');
 var tls_options = require('../lib/tls_options.js');
 
 var topics = {};
@@ -126,11 +127,11 @@ function handle_control_message(context) {
     if (context.message.to === SUBCTRL || (context.receiver.target && context.receiver.target.address === SUBCTRL)) {
         var subscription_id = context.message.correlation_id;
         var accept = function () {
-            log.debug(request_string(context.message) + ' succeeded');
+            log.info(request_string(context.message) + ' succeeded');
             context.delivery.accept();
         };
         var reject = function (e, code) {
-            log.debug(request_string(context.message) + ' failed: ' + e);
+            log.info(request_string(context.message) + ' failed: ' + e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
         var reply = function (type, value) {
@@ -140,7 +141,7 @@ function handle_control_message(context) {
             accept();
         };
 
-        log.debug(request_string(context.message));
+        log.info(request_string(context.message));
         try {
             if (context.message.subject === 'list') {
                 Promise.all(Object.keys(topics).map(list.bind(null, subscription_id))).then(
@@ -233,34 +234,5 @@ if (process.env.MESSAGING_SERVICE_HOST) {
     });
 }
 
-
-function is_pod_ready(pod) {
-    return pod.ready === 'True' && pod.phase === 'Running';
-}
-
 var pod_watcher = require('../lib/pod_watcher.js').watch('role=broker,addresstype=topic');
-pod_watcher.on('updated', function (pods) {
-    var by_topic = {};
-    pods.filter(is_pod_ready).forEach(function (pod) {
-        var key = pod.annotations.cluster_id;
-        var list = by_topic[key];
-        if (list === undefined) {
-            list = [];
-            by_topic[key] = list;
-        }
-        list.push(pod);
-    });
-    for (var name in by_topic) {
-        var topic = topics[name];
-        if (topic === undefined) {
-            topic = create_topic(name);
-            topics[name] = topic;
-        }
-        topic.pods.update(by_topic[name]);
-    }
-    for (var name in topics) {
-        if (topics[name].empty()) {
-            delete topics[name];
-        }
-    }
-});
+pod_watcher.on('updated', topic_tracker(topics, create_topic));
