@@ -25,7 +25,7 @@ function setup_test() {
 
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
-    ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/systemtests.yml
+    ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/systemtests.yml --extra-vars "namespace=${OPENSHIFT_PROJECT}"
 }
 
 function wait_until_up(){
