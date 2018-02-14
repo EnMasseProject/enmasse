@@ -23,7 +23,8 @@ var log = require("./log.js").logger();
 var rtr = require('./router.js');
 var pod_watcher = require('./pod_watcher.js');
 var tls_options = require('./tls_options.js');
-
+var Artemis = require('./artemis.js');
+var broker_controller = require('./broker_controller.js');
 
 function wrap_known_routers (routers) {
     var data = {};
@@ -52,7 +53,9 @@ function get_product (connection) {
 function Ragent() {
     this.known_routers = {};
     this.connected_routers = {};
-    this.addresses = {};
+    this.connected_brokers = {};
+    this.addresses = {};//addresses indexed by address and transformed for router syncs
+    this.address_list = [];//original list as obtained from source
     this.subscribers = {};
     this.clients = {};
     this.container = amqp.create_container();
@@ -135,19 +138,21 @@ Ragent.prototype.addresses_updated = function () {
     }
 }
 
-function transform_address(addr) {
+function transform_address (addr) {
     if (addr.address === undefined || addr.type === undefined) {
         console.error('BAD ADDRESS: %j', addr);
     }
     return {
         name: addr.address,
         multicast: (addr.type === 'multicast' || addr.type === 'topic'),
-        store_and_forward: (addr.type === 'queue' || addr.type === 'topic')
+        store_and_forward: (addr.type === 'queue' || addr.type === 'topic'),
+        allocated_to: addr.allocated_to
     };
 }
 
 Ragent.prototype.sync_addresses = function (updated) {
-    this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.name] = a; return map; }, {});;
+    this.sync_brokers(updated);
+    this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.name] = a; return map; }, {});
     log.info('updating addresses: %j', this.addresses);
     this.addresses_updated();
 }
@@ -168,7 +173,31 @@ Ragent.prototype.verify_addresses = function (expected) {
 }
 
 Ragent.prototype.on_router_agent_disconnect = function (context) {
-    delete context.connection.connection_id;
+    delete this.known_routers[context.connection.container_id];
+}
+
+Ragent.prototype.on_broker_disconnect = function (context) {
+    log.info('broker disconnected: %s', context.connection.container_id);
+    delete this.connected_brokers[context.connection.container_id];
+}
+
+function if_allocated_to (id) {
+    return function (a) { return a.allocated_to === id; };
+}
+
+function get_address (a) { return a.address; }
+
+Ragent.prototype.sync_brokers = function (addresses) {
+    this.address_list = addresses;
+    for (var id in this.connected_brokers) {
+        this.sync_broker(this.connected_brokers[id], addresses);
+    }
+}
+
+Ragent.prototype.sync_broker = function (broker, addresses) {
+    var allocated = addresses.filter(if_allocated_to(broker.id));
+    log.info('syncing broker %s with %j', broker.id, allocated.map(get_address));
+    broker.sync_addresses(allocated);
 }
 
 var connection_properties = {product:'ragent', container_id:process.env.HOSTNAME};
@@ -239,6 +268,12 @@ Ragent.prototype.configure_handlers = function () {
                 router.on('connectors_updated', self.check_router_connectors.bind(self));
                 router.on('provisioned', self.check_router_connectors.bind(self));
             });
+        } else if (product === 'apache-activemq-artemis') {
+            var broker = broker_controller.create_controller(context.connection);
+            self.connected_brokers[broker.id] = broker;
+            self.sync_broker(broker, self.address_list);
+            context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
+            context.connection.on('connection_close', self.on_broker_disconnect.bind(self));
         } else {
             if (product === 'ragent') {
                 context.connection.on('disconnected', self.on_router_agent_disconnect.bind(self));

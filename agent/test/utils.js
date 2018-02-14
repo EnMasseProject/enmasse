@@ -96,3 +96,45 @@ describe('kubernetes_name', function () {
         done();
     });
 });
+
+describe('serialize', function () {
+    var in_use = false;
+    var calls = 0;
+    function one_at_a_time() {
+        assert.equal(in_use, false, 'function already in use');
+        in_use = true;
+        calls++;
+        return new Promise(function (resolve, reject) {
+            setTimeout(function () {
+                in_use = false;
+                resolve();
+            }, 10);
+        });
+    }
+
+    it ('ensures a new invocation is not made until the previous one has finished', function (done) {
+        calls = 0;
+        var f = myutils.serialize(one_at_a_time);
+        for (var i = 0; i < 10; i++) {
+            f();
+        }
+        setTimeout(function () {
+            assert.equal(calls, 10);
+            done();
+        }, 500);
+    });
+    it ('handles invocations at different times', function (done) {
+        calls = 0;
+        var f = myutils.serialize(one_at_a_time);
+        setTimeout(f, 5);
+        setTimeout(f, 15);
+        setTimeout(f, 16);
+        setTimeout(f, 20);
+        setTimeout(f, 28);
+
+        setTimeout(function () {
+            assert.equal(calls, 5);
+            done();
+        }, 100);
+    });
+});
