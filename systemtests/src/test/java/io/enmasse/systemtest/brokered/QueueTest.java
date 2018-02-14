@@ -132,6 +132,8 @@ public class QueueTest extends BrokeredTestBase {
             brokeredPlan = getAddressSpacePlanConfig("brokered");
             appendAddressPlan(weakQueuePlan, brokeredPlan);
 
+            Thread.sleep(5000); // wait until new address-plan will be synced
+
             setAddresses(Destination.queue("weak-queue", weakQueuePlan.getName()));
 
             Future<List<Address>> brokeredAddresses = getAddressesObjects(Optional.of("weak-queue"));
