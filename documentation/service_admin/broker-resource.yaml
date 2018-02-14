@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: broker-resource
+  labels:
+    type: resource-definition
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "ResourceDefinition",
+      "metadata": {
+        "name": "broker"
+      },
+      "template": "queue-persisted",
+      "parameters": [
+        {
+          "name": "BROKER_MEMORY_LIMIT",
+          "value": "2Gi"
+        }
+      ]
+    }
