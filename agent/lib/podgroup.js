@@ -110,14 +110,14 @@ PodGroup.prototype.broker_list = function () {
 };
 
 PodGroup.prototype.empty = function () {
-    return this.pods.length === 0;
+    return Object.keys(this.pods).length === 0;
 };
 
 PodGroup.prototype.close = function () {
-    for (var p in this.pods) {
-        this.pods[p].close();
-    }
-    this.pods = [];
+    var self = this;
+    Object.keys(this.pods).forEach(function (n) {
+        self.removed_by_name(n);
+    });
 };
 
 PodGroup.prototype.get_port_from_pod_definition = function (pod, container, port_name) {
