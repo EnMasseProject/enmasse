@@ -98,6 +98,11 @@ public abstract class TestBaseWithShared extends TestBase {
         return getAddresses(sharedAddressSpace, addressName);
     }
 
+    protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
+        return getAddressesObjects(sharedAddressSpace, addressName);
+    }
+
+
     /**
      * use PUT html method to replace all addresses
      *

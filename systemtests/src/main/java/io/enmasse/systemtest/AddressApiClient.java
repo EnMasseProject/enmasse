@@ -62,7 +62,11 @@ public class AddressApiClient {
 
         JsonObject spec = new JsonObject();
         spec.put("type", addressSpace.getType().toString().toLowerCase());
-        spec.put("plan", "unlimited-" + addressSpace.getType().toString().toLowerCase());
+        if (!addressSpace.hasPlan()) {
+            spec.put("plan", "unlimited-" + addressSpace.getType().toString().toLowerCase());
+        } else {
+            spec.put("plan", addressSpace.getPlan());
+        }
         config.put("spec", spec);
 
         JsonObject authService = new JsonObject();
@@ -183,7 +187,7 @@ public class AddressApiClient {
     public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName());
-        path.append(addressName.isPresent() ? addressName.get() : "");
+        path.append(addressName.isPresent() ? "/" + addressName.get() : "");
         log.info("Following HTTP request will be used for getting address: " + path);
 
         return doRequestNTimes(initRetry, () -> {

@@ -5,11 +5,14 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -53,6 +56,17 @@ public class TestUtils {
         waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
+    /**
+     * Wait for expected count of replicas
+     *
+     * @param kubernetes         client for manipulation with kubernetes cluster
+     * @param tenantNamespace    name of AddressSpace
+     * @param expectedReplicas   count of expected replicas
+     * @param labelSelector      labels on scaled pod
+     * @param annotationSelector annotations on sclaed pod
+     * @param budget             timeout budget - throws Exception when timeout is reached
+     * @throws InterruptedException
+     */
     public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
@@ -77,6 +91,12 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Check ready status of all pods in list
+     *
+     * @param pods list of pods
+     * @return
+     */
     private static int numReady(List<Pod> pods) {
         int numReady = 0;
         for (Pod pod : pods) {
@@ -89,6 +109,15 @@ public class TestUtils {
         return numReady;
     }
 
+    /**
+     * Wait for expected count of pods within AddressSpace
+     *
+     * @param client       client for manipulation with kubernetes cluster
+     * @param addressSpace
+     * @param numExpected  count of expected pods
+     * @param budget       timeout budget - this method throws Exception when timeout is reached
+     * @throws InterruptedException
+     */
     public static void waitForExpectedPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         List<Pod> pods = listRunningPods(client, addressSpace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
@@ -100,25 +129,46 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Print name of all pods in list
+     *
+     * @param pods list of pods that should be printed
+     * @return
+     */
     public static String printPods(List<Pod> pods) {
         return pods.stream()
                 .map(pod -> pod.getMetadata().getName())
                 .collect(Collectors.joining(","));
     }
 
+    /**
+     * Get list of all running pods from specific AddressSpace
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param addressSpace
+     * @return
+     */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         return kubernetes.listPods(addressSpace.getNamespace()).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Wait until broker pod is ready
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param addressSpace AddressSpace where broker pod is present
+     * @param group        broker pod group
+     * @param budget       timeout for wait until broker pod is ready
+     * @throws InterruptedException
+     */
     public static void waitForBrokerPod(Kubernetes kubernetes, AddressSpace addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("role", "broker");
 
         Map<String, String> annotations = new LinkedHashMap<>();
         annotations.put("cluster_id", group);
-
 
         int numReady = 0;
         List<Pod> pods = null;
@@ -134,11 +184,29 @@ public class TestUtils {
         }
     }
 
-
+    /**
+     * Delete requested destinations(Addresses) from AddressSpace
+     *
+     * @param apiClient    client for http requests on address controller
+     * @param addressSpace from this AddressSpace will be removed required destinations
+     * @param destinations destinations requested to be removed
+     * @throws Exception
+     */
     public static void delete(AddressApiClient apiClient, AddressSpace addressSpace, Destination... destinations) throws Exception {
         apiClient.deleteAddresses(addressSpace, destinations);
     }
 
+    /**
+     * Deploy one or more destinations into requested AddressSpace
+     *
+     * @param apiClient    client for http requests on address controller
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param budget       timeout for deploy
+     * @param addressSpace AddressSpace for deploy destinations
+     * @param httpMethod   PUT, POST
+     * @param destinations
+     * @throws Exception
+     */
     public static void deploy(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
@@ -157,22 +225,42 @@ public class TestUtils {
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
+    /**
+     * Check if AddressSpace exists
+     *
+     * @param apiClient        client for http requests on address controller
+     * @param addressSpaceName name of AddressSpace
+     * @return true if AddressSpace exists, false otherwise
+     * @throws Exception
+     */
     public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws Exception {
         return apiClient.listAddressSpaces().contains(addressSpaceName);
     }
 
-    public static boolean isAddressSpaceReady(JsonObject address) {
+    /**
+     * Check if isReady attribute of AddressSpace(JsonObject) is set to true
+     *
+     * @param addressSpace address space object (usually received from AddressApiClient)
+     * @return true if AddressSpace is ready, false otherwise
+     */
+    public static boolean isAddressSpaceReady(JsonObject addressSpace) {
         boolean isReady = false;
-        if (address != null) {
-            isReady = address.getJsonObject("status").getBoolean("isReady");
+        if (addressSpace != null) {
+            isReady = addressSpace.getJsonObject("status").getBoolean("isReady");
         }
         return isReady;
     }
 
-    public static String getAddressSpaceType(JsonObject address) {
+    /**
+     * Get address space type from received AddressSpace(JsonObject) (usually received from AddressApiClient)
+     *
+     * @param addressSpace address space JsonObject
+     * @return
+     */
+    public static String getAddressSpaceType(JsonObject addressSpace) {
         String addrSpaceType = "";
-        if (address != null) {
-            addrSpaceType = address.getJsonObject("spec").getString("type");
+        if (addressSpace != null) {
+            addrSpaceType = addressSpace.getJsonObject("spec").getString("type");
         }
         return addrSpaceType;
     }
@@ -203,13 +291,32 @@ public class TestUtils {
         }
     }
 
+    /**
+     * get list of Address names
+     */
     public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToList(response));
+        listOfAddresses.complete(convertToListString(response));
         return listOfAddresses;
     }
 
+    /**
+     * get list of Address objects
+     */
+    public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        JsonObject response = apiClient.getAddresses(addressSpace, addressName);
+        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToListAddress(response));
+        return listOfAddresses;
+    }
+
+    /**
+     * Check if isReady attribute is set to true
+     *
+     * @param address JsonObject with address
+     * @return
+     */
     public static boolean isAddressReady(JsonObject address) {
         boolean isReady = false;
         if (address != null) {
@@ -221,32 +328,78 @@ public class TestUtils {
     /**
      * Pulling out names of queues from json object
      *
-     * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of address names
      */
-    private static List<String> convertToList(JsonObject htmlResponse) {
-        String kind = htmlResponse.getString("kind");
-        List<String> addresses = new ArrayList<>();
-        switch (kind) {
-            case "Address":
-                addresses.add(htmlResponse.getJsonObject("metadata").getString("name"));
-                break;
-            case "AddressList":
-                JsonArray items = htmlResponse.getJsonArray("items");
-                if (items != null) {
-                    items.forEach(address -> {
-                        addresses.add(((JsonObject) address).getJsonObject("metadata").getString("name"));
-                    });
-                }
-                break;
-            default:
-                log.warn("Unspecified kind: " + kind);
+    private static List<String> convertToListString(JsonObject htmlResponse) {
+        if (htmlResponse != null) {
+            String kind = htmlResponse.getString("kind");
+            List<String> addresses = new ArrayList<>();
+            switch (kind) {
+                case "Address":
+                    addresses.add(htmlResponse.getJsonObject("metadata").getString("name"));
+                    break;
+                case "AddressList":
+                    JsonArray items = htmlResponse.getJsonArray("items");
+                    if (items != null) {
+                        items.forEach(address -> {
+                            addresses.add(((JsonObject) address).getJsonObject("metadata").getString("name"));
+                        });
+                    }
+                    break;
+                default:
+                    log.warn("Unspecified kind: " + kind);
+            }
+            return addresses;
         }
-        return addresses;
+        throw new IllegalArgumentException("htmlResponse can't be null");
     }
 
     /**
-     * wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
+     * Pulling out name,type and plan of addresses from json object
+     *
+     * @param htmlResponse JsonObject with specified structure returned from rest api
+     * @return list of addresses
+     */
+    private static List<Address> convertToListAddress(JsonObject htmlResponse) {
+        if (htmlResponse != null) {
+            String kind = htmlResponse.getString("kind");
+            List<Address> addresses = new ArrayList<>();
+            switch (kind) {
+                case "Address":
+                    addresses.add(getAddressObject(htmlResponse));
+                    break;
+                case "AddressList":
+                    JsonArray items = htmlResponse.getJsonArray("items");
+                    if (items != null) {
+                        for (int i = 0; i < items.size(); i++) {
+                            addresses.add(getAddressObject(items.getJsonObject(i)));
+                        }
+                    }
+                    break;
+                default:
+                    log.warn("Unspecified kind: " + kind);
+            }
+            return addresses;
+        }
+        throw new IllegalArgumentException("htmlResponse can't be null");
+    }
+
+    /**
+     * Create object of Address class from JsonObject
+     *
+     * @param addressJsonObject
+     * @return
+     */
+    private static Address getAddressObject(JsonObject addressJsonObject) {
+        String name = addressJsonObject.getJsonObject("metadata").getString("name");
+        JsonObject spec = addressJsonObject.getJsonObject("spec");
+        String type = spec.getString("type");
+        String plan = spec.getString("plan");
+        return new Address(name, type, plan);
+    }
+
+    /**
+     * Wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
      *
      * @param apiClient    instance of AddressApiClient
      * @param addressSpace name of addressSpace
@@ -275,6 +428,13 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Go through all addresses in AddressList in JsonObject and check if all of them are in ready state
+     *
+     * @param addressList  received from AddressApiClient
+     * @param destinations required destinations which should be ready
+     * @return
+     */
     private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination... destinations) {
         log.info("Checking {} for ready state", destinations);
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
@@ -289,6 +449,13 @@ public class TestUtils {
         return notReadyAddresses;
     }
 
+    /**
+     * Get address(JsonObject) from AddressList(JsonObject) by address name
+     *
+     * @param addressList JsonObject received from AddressApiClient
+     * @param address     address name
+     * @return
+     */
     private static JsonObject lookupAddress(JsonObject addressList, String address) {
         JsonArray items = addressList.getJsonArray("items");
         for (int i = 0; i < items.size(); i++) {
@@ -300,14 +467,23 @@ public class TestUtils {
         return null;
     }
 
+    /**
+     * Generate message body with prefix
+     */
     public static List<String> generateMessages(String prefix, int numMessages) {
         return IntStream.range(0, numMessages).mapToObj(i -> prefix + i).collect(Collectors.toList());
     }
 
+    /**
+     * Generate message body with "testmessage" content and without prefix
+     */
     public static List<String> generateMessages(int numMessages) {
         return generateMessages("testmessage", numMessages);
     }
 
+    /**
+     * Check if endpoint is accessible
+     */
     public static boolean resolvable(Endpoint endpoint) {
         for (int i = 0; i < 10; i++) {
             try {
@@ -321,6 +497,12 @@ public class TestUtils {
         return false;
     }
 
+    /**
+     * Wait until AddressSpace will be removed
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param addressSpace AddressSpace that should be removed
+     */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
@@ -331,6 +513,13 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Repeat request n-times in a row
+     *
+     * @param retry count of remaining retries
+     * @param fn    request function
+     * @return
+     */
     public static <T> T doRequestNTimes(int retry, Callable<T> fn) throws Exception {
         try {
             return fn.call();
@@ -351,5 +540,92 @@ public class TestUtils {
                 throw ex;
             }
         }
+    }
+
+    /**
+     * create new AddressPlanConfig
+     *
+     * @param kubernetes  client for manipulation with kubernetes cluster
+     * @param addressPlan definition of AddressPlan
+     */
+    public static void createAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan, boolean replaceExisting) {
+        kubernetes.createAddressPlanConfig(addressPlan, replaceExisting);
+    }
+
+    /**
+     * Get AddressPlan definition by name of the config file
+     *
+     * @param configName name attribute within ConfigMap object
+     * @return AddressPlan definition
+     */
+    public static AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Remove AddressPlan definition by name of the config file
+     *
+     * @param kubernetes  client for manipulation with kubernetes cluster
+     * @param addressPlan AddressPlan object
+     * @return true if AddressPlan was removed successfully
+     * @throws NotImplementedException
+     */
+    public static boolean removeAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan) throws NotImplementedException {
+        return kubernetes.removeAddressPlanConfig(addressPlan);
+    }
+
+    /**
+     * Append AddressPlan definition into already existing AddressSpacePlan config
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressPlan      AddressPlan definition
+     * @param addressSpacePlan AddressSpacePlan definition
+     */
+    public static void appendAddressPlan(Kubernetes kubernetes, AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        kubernetes.appendAddressPlan(addressPlan, addressSpacePlan);
+    }
+
+    /**
+     * Remove AddressPlan definition from already existing AddressSpacePlan config
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressPlan      AddressPlan definition
+     * @param addressSpacePlan AddressSpacePlan definition
+     * @return true if AddressPlan was removed successfully
+     */
+    public static boolean removeAddressPlan(Kubernetes kubernetes, AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
+        return kubernetes.removeAddressPlan(addressPlan, addressSpacePlan);
+    }
+
+    /**
+     * create new AddressSpacePlanConfig
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressSpacePlan definition of AddressSpacePlan
+     */
+    public static void createAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
+        kubernetes.createAddressSpacePlanConfig(addressSpacePlan, replaceExisting);
+    }
+
+    /**
+     * Get AddressSpacePlan definition by name of the config file
+     *
+     * @param config     name attribute within ConfigMap object
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return AddressPlan definition
+     */
+    public static AddressSpacePlan getAddressSpacePlanConfig(Kubernetes kubernetes, String config) {
+        return kubernetes.getAddressSpacePlanConfig(config);
+    }
+
+    /**
+     * Remove AddressSpacePlan definition by name of the config file
+     *
+     * @param kubernetes       client for manipulation with kubernetes cluster
+     * @param addressSpacePlan AddressSpacePlan object
+     * @return true if AddressSpacePlan was removed successfully
+     */
+    public static boolean removeAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan) {
+        return kubernetes.removeAddressSpacePlanConfig(addressSpacePlan);
     }
 }
