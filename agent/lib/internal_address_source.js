@@ -61,7 +61,10 @@ AddressSource.prototype.updated = function (objects) {
 
 AddressSource.prototype.update_status = function (record, ready) {
     function update(configmap) {
-        var def = JSON.parse(configmap.data['config.json'])
+        var def = JSON.parse(configmap.data['config.json']);
+        if (def.status === undefined) {
+            def.status = {};
+        }
         if (def.status.isReady !== ready) {
             def.status.isReady = ready;
             configmap.data['config.json'] = JSON.stringify(def);
