@@ -114,11 +114,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                     knownAddresses.putIfAbsent(address, new HashSet<>());
                     if(knownAddresses.get(address).add(encodedAddress)) {
 
-                        Set<Role> roles = new HashSet<>();
-
-                        if(address.equals("#")) {
-                            roles.addAll(standardRoles);
-                        }
+                        Set<Role> roles = new HashSet<>(standardRoles);
 
                         LOG.debugv("Adding permissions for address {0} due to group {1}", address, group);
                         for(String encoded : knownAddresses.get(address)) {
