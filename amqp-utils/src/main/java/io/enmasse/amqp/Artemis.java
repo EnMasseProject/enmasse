@@ -160,7 +160,7 @@ public class Artemis implements AutoCloseable {
 
     private Message createOperationMessage(String resource, String operation) {
         Message message = Message.Factory.create();
-        Map<String, String> properties = new LinkedHashMap<>();
+        Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("_AMQ_ResourceName", resource);
         properties.put("_AMQ_OperationName", operation);
         properties.put("JMSReplyTo", replyTo);
@@ -171,7 +171,7 @@ public class Artemis implements AutoCloseable {
 
     private Message createAttributeMessage(String resource, String attribute) {
         Message message = Message.Factory.create();
-        Map<String, String> properties = new LinkedHashMap<>();
+        Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("_AMQ_ResourceName", resource);
         properties.put("_AMQ_Attribute", attribute);
         properties.put("JMSReplyTo", replyTo);
