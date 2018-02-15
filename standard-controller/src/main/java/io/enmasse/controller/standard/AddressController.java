@@ -271,7 +271,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     private List<String> checkRouter(SyncRequestClient client, String entityType, String attributeName) {
-        Map<String, String> properties = new LinkedHashMap<>();
+        Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("operation", "QUERY");
         properties.put("entityType", entityType);
         Map body = new LinkedHashMap<>();
