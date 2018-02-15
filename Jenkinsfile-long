@@ -1,50 +1,110 @@
-node('enmasse') {
-    result = 'failure'
-    timeout(600) {
-        catchError {
-            stage ('checkout') {
+#!/usr/bin/env groovy
+
+def storeArtifacts(buildStatus) {
+    if (buildStatus == 'ABORTED') {
+        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+        sh 'rm -rf /tmp/testlogs'
+    }
+}
+
+def tearDownOpenshift() {
+    echo "tear down openshift"
+    sh './systemtests/scripts/teardown-openshift.sh'
+}
+
+pipeline {
+    agent {
+        node {
+            label 'enmasse'
+        }
+    }
+    parameters {
+        string(name: 'MAILING_LIST', defaultValue: '', description: '')
+        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
+    }
+    options {
+        timeout(time: 4, unit: 'HOURS')
+    }
+    environment {
+        CORES_DIR = "/tmp/cores"
+    }
+    stages {
+        stage('clean') {
+            steps {
+                cleanWs()
+                sh 'docker stop $(docker ps -q) || true'
+                sh 'docker rm $(docker ps -a -q) -f || true'
+                sh 'docker rmi $(docker images -q) -f || true'
+            }
+        }
+        stage ('checkout') {
+            steps {
                 checkout scm
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
-            stage('start openshift') {
+        }
+        stage('start openshift') {
+            steps {
                 sh './systemtests/scripts/setup-openshift.sh'
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
-            stage('deploy enmasse') {
+        }
+        stage('deploy enmasse') {
+            steps{
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh 'sudo chmod 777 -R ./systemtests/scripts/'
                     sh 'OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/deploy_enmasse.sh enmasse-latest /var/lib/origin/openshift.local.config/master/admin.kubeconfig'
                     sh './systemtests/scripts/wait_until_up.sh 4 $BUILD_TAG'
                 }
             }
-            stage('install webdrivers'){
+        }
+        stage('install clients') {
+            steps {
+                sh 'sudo PATH=$PATH make client_install'
+            }
+        }
+        stage('install webdrivers') {
+            steps {
                 sh 'sudo make webdriver_install'
             }
-            stage('run longtime test suite') {
+        }
+        stage('system tests') {
+            environment {
+                DISPLAY = ':10'
+                ARTIFACTS_DIR = 'artifacts'
+                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+            }
+            steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    try {
-                        sh 'Xvfb :10 -ac &'
-                        sh 'PATH=$PATH:$(pwd)/systemtests/web_driver DISPLAY=:10 ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig "" "systemtests-marathon"'
-                    } finally {
-                        junit '**/TEST-*.xml'
-                    }
+                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
+                    sh 'Xvfb :10 -ac &'
+                    sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests-marathon ''"
                 }
             }
-            result = 'success'
         }
-        stage('archive artifacts') {
+    }
+    post {
+        always {
+            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            //store test results from build and system tests
+            junit '**/TEST-*.xml'
+
+            //archive test results and openshift lofs
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
+            sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}/"
+            sh "sudo mv core-dumps.tar.gz artifacts/"
+            archive 'artifacts/**'
+            tearDownOpenshift()
+            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
         }
-        stage('teardown openshift') {
-            sh './systemtests/scripts/teardown-openshift.sh'
-        }
-        stage('notify mailing list') {
-            if (result.equals("failure")) {
-                mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
-            }
+        failure {
+            echo "build failed"
+            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
         }
     }
 }
