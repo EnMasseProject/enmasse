@@ -23,7 +23,7 @@ pipeline {
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
     }
     options {
-        timeout(time: 4, unit: 'HOURS')
+        timeout(time: 10, unit: 'HOURS')
     }
     environment {
         CORES_DIR = "/tmp/cores"
