@@ -1,6 +1,7 @@
 FROM enmasseproject/qdrouterd-base:1.0.0-fix5
 ARG version=latest
 
+RUN dnf -y install valgrind
 COPY ./run_qdr.sh ./qdrouterd.conf.template colocated-topic.snippet subscriptions.snippet amqp-kafka-bridge.snippet /etc/qpid-dispatch/
 
 ENV VERSION=${version}
