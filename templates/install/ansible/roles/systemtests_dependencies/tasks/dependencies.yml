@@ -8,7 +8,9 @@
   changed_when: false
 
 - name: download get-pip.py
-  get_url: url=https://bootstrap.pypa.io/get-pip.py  dest=/tmp
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: /tmp
   when: pip_is_installed.rc != 0
 
 - name: install pip
@@ -16,7 +18,9 @@
   when: pip_is_installed.rc != 0
 
 - name: delete get-pip.py
-  file: state=absent path=/tmp/get-pip.py
+  file:
+    state: absent
+    path: /tmp/get-pip.py
   when: pip_is_installed.rc != 0
 
 - include_tasks: epel.yml
