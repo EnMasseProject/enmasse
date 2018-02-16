@@ -9,4 +9,4 @@
       - none
   roles:
     - enmasse
-    - systemtests_dependencies
+    - { role: systemtests_dependencies, become: yes }

@@ -78,7 +78,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "sudo ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig ${params.TEST_CASE} ''"
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig ${params.TEST_CASE} ''"
                 }
             }
         }
