@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+CURDIR="$(readlink -f $(dirname $0))"
 
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/enmasse-latest.tgz | tar -zx
@@ -32,7 +33,7 @@ function setup_test() {
 function wait_until_up(){
     POD_COUNT=$1
     ADDR_SPACE=$2
-    $CURDIR/wait_until_up.sh ${POD_COUNT} ${ADDR_SPACE} || return 1
+    ${CURDIR}/wait_until_up.sh ${POD_COUNT} ${ADDR_SPACE} || return 1
 }
 
 function run_test() {
