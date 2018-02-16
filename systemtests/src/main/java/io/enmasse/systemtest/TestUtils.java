@@ -29,13 +29,13 @@ public class TestUtils {
      * scale up/down specific destination (type: StatefulSet) in address space
      */
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
+        kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
         waitForNReplicas(
                 kubernetes,
                 addressSpace.getNamespace(),
                 numReplicas,
                 Collections.singletonMap("role", "broker"),
-                Collections.singletonMap("cluster_id", destination.getGroup()),
+                Collections.singletonMap("cluster_id", destination.getDeployment()),
                 budget);
     }
 
@@ -214,8 +214,8 @@ public class TestUtils {
             Set<String> groups = new HashSet<>();
             for (Destination destination : destinations) {
                 if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
-                    waitForBrokerPod(kubernetes, addressSpace, destination.getGroup(), budget);
-                    groups.add(destination.getGroup());
+                    waitForBrokerPod(kubernetes, addressSpace, destination.getDeployment(), budget);
+                    groups.add(destination.getDeployment());
                 }
             }
             int expectedPods = kubernetes.getExpectedPods() + groups.size();

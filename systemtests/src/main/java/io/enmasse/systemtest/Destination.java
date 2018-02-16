@@ -64,9 +64,9 @@ public class Destination {
      * except for pooled queues in which case it is the name of the
      * plan.
      */
-    public String getGroup() {
+    public String getDeployment() {
         if (isQueue(this) && plan.startsWith("pooled")) {
-            return plan;
+            return "broker";
         } else {
             return address;
         }
