@@ -37,6 +37,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             addresses.add(multicast);
         }
         setAddresses(sharedAddressSpace, addresses.toArray(new Destination[0]));
+        Thread.sleep(60000);
     }
 
     protected void doTestSendAuthz() throws Exception {

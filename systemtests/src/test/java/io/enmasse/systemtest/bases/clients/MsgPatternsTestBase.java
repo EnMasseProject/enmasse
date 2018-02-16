@@ -99,6 +99,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         Destination dest = Destination.topic("topic-subscribe" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, dest);
+        Thread.sleep(60000); //temp fix for debug no-route-to-destination
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
@@ -196,7 +197,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     }
 
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        int expectedMsgCount = 50;
+        int expectedMsgCount = 10;
 
         clients.addAll(Arrays.asList(sender, receiver));
         Destination queue = Destination.queue("selector-queue" + ClientType.getAddressName(sender),
@@ -262,6 +263,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         Destination topic = Destination.topic("selector-topic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(sharedAddressSpace, topic);
+        Thread.sleep(60000); //temp fix for debug no-route-to-destination
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
