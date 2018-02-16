@@ -1,4 +1,5 @@
 ---
 # tasks file for dependencies
+- include_tasks: dependencies.yml
 - include_tasks: clients.yml
 - include_tasks: webdrivers.yml

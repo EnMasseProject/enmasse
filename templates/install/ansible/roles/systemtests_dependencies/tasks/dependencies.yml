@@ -1,0 +1,38 @@
+---
+# tasks file for install npm, pip etc...
+
+- name: check to see if pip is already installed
+  command: "pip --version"
+  ignore_errors: true
+  register: pip_is_installed
+  changed_when: false
+
+- name: download get-pip.py
+  get_url: url=https://bootstrap.pypa.io/get-pip.py  dest=/tmp
+  when: pip_is_installed.rc != 0
+
+- name: install pip
+  command: "python /tmp/get-pip.py"
+  when: pip_is_installed.rc != 0
+
+- name: delete get-pip.py
+  file: state=absent path=/tmp/get-pip.py
+  when: pip_is_installed.rc != 0
+
+- include_tasks: epel.yml
+
+- name: Install nodejs
+  yum:
+    name: "nodejs-{{ nodejs_version }}.*"
+    state: present
+    enablerepo: epel
+
+- name: install the Xvfb
+  yum:
+    name: xorg-x11-server-Xvfb
+    state: latest
+
+- name: install the firefox
+  yum:
+    name: firefox
+    state: latest
