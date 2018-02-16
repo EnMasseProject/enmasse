@@ -139,7 +139,7 @@ public class PlansTest extends StandardTestBase {
                 weakTopicPlan.getName());
     }
 
-    @Test
+    //@Test
     public void testAppendAddressPlan() throws Exception {
         List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 1.0));
         AddressPlan weakQueuePlan = new AddressPlan("standard-queue-weak", AddressType.QUEUE, addressResources);
