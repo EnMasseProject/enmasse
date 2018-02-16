@@ -1,5 +1,5 @@
 ---
-# tasks file for clients
+# tasks file for clients installation and compilation
 - name: delete clients executables
   file:
     path: "{{ client_executable_folder }}"

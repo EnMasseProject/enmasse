@@ -1,6 +1,5 @@
 ---
 # tasks file for install npm, pip etc...
-
 - name: check to see if pip is already installed
   command: "pip --version"
   ignore_errors: true
