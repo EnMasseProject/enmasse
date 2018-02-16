@@ -49,7 +49,7 @@
 
 - name: Download apache maven
   get_url:
-    url: http://mirror.dkm.cz/apache/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
+    url: https://archive.apache.org/dist/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
     dest: "{{ maven_root_path }}"
   when: mvn_is_installed.rc != 0
 
