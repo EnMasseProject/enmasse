@@ -58,7 +58,10 @@ public class AddressApiHelper {
 
         Set<Address> toRemove = new HashSet<>(addressApi.listAddresses());
         toRemove.removeAll(addressList);
-        toRemove.forEach(addressApi::deleteAddress);
+        toRemove.forEach(address -> {
+            address.getStatus().setPhase(Status.Phase.Terminating);
+            addressApi.replaceAddress(address);
+        });
         addressList.forEach(addressApi::createAddress);
         return new AddressList(addressApi.listAddresses());
     }
@@ -89,7 +92,10 @@ public class AddressApiHelper {
         AddressSpace addressSpace = getAddressSpace(addressSpaceId);
         verifyAuthorized(securityContext, addressSpace, ResourceVerb.delete);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
-        addressApi.getAddressWithName(name).ifPresent(addressApi::deleteAddress);
+        addressApi.getAddressWithName(name).ifPresent(address -> {
+            address.getStatus().setPhase(Status.Phase.Terminating);
+            addressApi.replaceAddress(address);
+        });
         return new AddressList(addressApi.listAddresses());
     }
 
