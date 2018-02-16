@@ -28,10 +28,6 @@ function setup_test() {
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
     ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/systemtests.yml --extra-vars "namespace=${OPENSHIFT_PROJECT}"
-    if [ $? -ne 0 ]; then
-        echo "DEPLOYMENT FAILED - tests won't be executed."
-        exit 1
-    fi
 }
 
 function wait_until_up(){

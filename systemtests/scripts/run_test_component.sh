@@ -14,6 +14,10 @@ SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
 export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
 setup_test ${ENMASSE_DIR} ${KUBEADM}
+if [ $? -ne 0 ]; then
+    echo "DEPLOYMENT FAILED - tests won't be executed."
+    exit 1
+fi
 
 #environment info before tests
 LOG_DIR="${ARTIFACTS_DIR}/openshift-info/"
