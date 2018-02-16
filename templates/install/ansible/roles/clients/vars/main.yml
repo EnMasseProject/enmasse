@@ -1,4 +1,0 @@
----
-# vars file for clients
-client_executable_folder: "{{ playbook_dir }}../../../../../../systemtests/client_executable"
-cli_java_git_path: "{{ playbook_dir }}../../../../../../systemtests/cli-java"
