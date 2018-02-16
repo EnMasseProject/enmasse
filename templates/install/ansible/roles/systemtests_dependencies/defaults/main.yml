@@ -3,6 +3,8 @@
 systemtests_dir: "{{ playbook_dir }}../../../../../../systemtests"
 client_executable_folder: "{{ systemtests_dir }}/client_executable"
 cli_java_git_path: "{{ systemtests_dir }}/cli-java"
+maven_root_path: /opt/
+maven_path: "{{ maven_root_path }}/apache-maven-3.5.2/bin"
 
 webdriver_folder: "{{ systemtests_dir }}/web_driver"
 geckodriver_version: '0.18.0'
