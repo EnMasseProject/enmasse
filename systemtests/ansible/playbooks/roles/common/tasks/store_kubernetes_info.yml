@@ -1,0 +1,6 @@
+---
+# store kubernetes logs
+# log_dir - path where logs will be stored
+# openshift_project - name of openshift project
+
+- name: Download enmasse-latest from bintray

@@ -1,0 +1,19 @@
+- hosts: localhost
+
+  tasks:
+  - name: "Download enmasse"
+    include_role:
+      name: common
+      tasks_from: download_enmasse
+    vars:
+        path: /tmp/
+
+  - name: "get kubernetes info"
+    include_role:
+      name: common
+      tasks_from: get_kubernetes_info
+    vars:
+      ARTIFACTS_DIR: /tmp
+      RESOURCE: pods
+      NAMESPACE: enmasseci
+      SUFIX: 555

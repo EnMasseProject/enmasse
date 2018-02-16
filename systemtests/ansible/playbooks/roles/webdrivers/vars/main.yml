@@ -1,0 +1,5 @@
+---
+# vars file for webdrivers
+webdriver_folder: "{{ playbook_dir }}../../../web_driver"
+geckodriver_version: '0.18.0'
+chromedriver_version: '2.33'
