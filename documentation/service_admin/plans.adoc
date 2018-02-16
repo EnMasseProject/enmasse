@@ -64,7 +64,7 @@ The 'small-anycast' plan does not consume any broker resources, and may provisio
 include::small-anycast-plan.yaml[]
 ----
 
-Up to 10 addresses with this plan may be created (5 per router).
+Up to 10 addresses with this plan may be created.
 
 [[resource-definitions]]
 === Resource definitions
