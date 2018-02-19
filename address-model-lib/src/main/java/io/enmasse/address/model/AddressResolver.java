@@ -38,11 +38,25 @@ public class AddressResolver {
     }
 
     public ResourceDefinition getResourceDefinition(AddressPlan addressPlan, String resourceName) {
-        if (addressPlan.getAddressType().equals("topic")) {
+        if (isShardedTopic(addressPlan)) {
             resourceName = resourceName + "-topic";
         }
         String finalResourceName = resourceName;
         return schema.findResourceDefinition(resourceName).orElseThrow(() -> new UnresolvedAddressException("Unknown resource definition " + finalResourceName));
+    }
+
+    private boolean isShardedTopic(AddressPlan addressPlan) {
+        if (addressPlan.getAddressType().equals("topic")) {
+            boolean isSharded = true;
+            for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
+                if (resourceRequest.getResourceName().equals("broker") && resourceRequest.getAmount() < 1) {
+                    isSharded = false;
+                    break;
+                }
+            }
+            return isSharded;
+        }
+        return false;
     }
 
     public void validate(Address address) {
