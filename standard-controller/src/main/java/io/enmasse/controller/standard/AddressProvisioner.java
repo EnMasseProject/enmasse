@@ -7,6 +7,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeUtil;
 import io.fabric8.kubernetes.api.model.EndpointAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -246,6 +247,7 @@ public class AddressProvisioner {
     }
 
     private boolean provisionBroker(String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address) {
+        clusterId = KubeUtil.sanitizeName(clusterId);
         try {
             List<AddressCluster> clusters = kubernetes.listClusters();
             for (AddressCluster cluster : clusters) {

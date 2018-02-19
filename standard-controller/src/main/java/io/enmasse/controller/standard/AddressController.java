@@ -186,7 +186,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private int checkClusterStatus(Address address, AddressPlan addressPlan) {
         int numOk = 0;
-        String clusterId = isPooled(addressPlan) ? "broker" : address.getName();
+        String clusterId = isPooled(addressPlan) ? "broker" : KubeUtil.sanitizeName(address.getName());
         String addressType = address.getType();
         // TODO: Get rid of references to queue and topic
         if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterId)) {
