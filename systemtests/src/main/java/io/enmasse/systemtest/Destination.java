@@ -68,8 +68,29 @@ public class Destination {
         if (isQueue(this) && plan.startsWith("pooled")) {
             return "broker";
         } else {
-            return address;
+            return sanitizeName(address);
         }
+    }
+
+    private static String sanitizeName(String name) {
+        String clean = name.toLowerCase().replaceAll("[^a-z0-9]", "");
+        if (clean.startsWith("-")) {
+            clean = clean.replaceFirst("-", "1");
+        }
+        if (clean.endsWith("-")) {
+            clean = clean.substring(0, clean.length() - 2) + "1";
+        }
+
+        if (!name.equals(clean)) {
+            String qualifier = Integer.toHexString(name.hashCode());
+            if (clean.length() + qualifier.length() > 63) {
+                clean = clean.substring(0, 63 - qualifier.length());
+            }
+            clean += qualifier;
+        } else if (clean.length() > 63) {
+            clean = clean.substring(0, 63);
+        }
+        return clean;
     }
 
     @Override
