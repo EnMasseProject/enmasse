@@ -62,19 +62,6 @@ public class HttpAddressService {
                         .build());
     }
 
-    //@POST
-    //@Produces({MediaType.APPLICATION_JSON})
-    //@Consumes({MediaType.APPLICATION_JSON})
-    //public Response appendAddress(@PathParam("addressSpace") String addressSpaceName, Address address) {
-    //    try {
-    //        AddressList addresses = apiHelper.appendAddress(addressSpaceName, address);
-    //        return Response.ok(addresses).build();
-    //    } catch (Exception e) {
-    //        log.error("Exception getting address", e);
-    //        return Response.serverError().build();
-    //    }
-    //}
-
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
