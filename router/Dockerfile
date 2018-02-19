@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.0.0-fix5
+FROM gordons/qdrouterd-base:DISPATCH-928
 ARG version=latest
 
 RUN dnf -y install valgrind
