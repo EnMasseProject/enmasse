@@ -166,9 +166,6 @@ runcmd "oc create sa enmasse-admin -n $NAMESPACE" "Create service account for ad
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 
-runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
-runcmd "oc create -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
-
 create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
 for auth_service in $AUTH_SERVICES
@@ -209,10 +206,14 @@ then
 fi
 
 if [ "$MODE" == "singletenant" ]; then
+    runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
     runcmd "oc create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
     runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
 
     create_address_space "oc" "default" $NAMESPACE
+else
+    runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
+    runcmd "oc create -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
