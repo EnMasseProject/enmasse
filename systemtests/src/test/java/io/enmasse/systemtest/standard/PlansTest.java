@@ -146,7 +146,7 @@ public class PlansTest extends StandardTestBase {
     @Test
     public void testAppendAddressPlan() throws Exception {
         List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.1));
-        String weakQueuePlanName = "standard-queue-weak";
+        String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
         createAddressPlanConfig(weakQueuePlan);
 
