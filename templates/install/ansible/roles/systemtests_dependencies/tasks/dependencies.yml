@@ -22,6 +22,11 @@
     path: /tmp/get-pip.py
   when: pip_is_installed.rc != 0
 
+- name: Install redhat-rpm-config
+  yum:
+    name: redhat-rpm-config
+    state: present
+
 - include_tasks: epel.yml
 
 - name: Install nodejs
