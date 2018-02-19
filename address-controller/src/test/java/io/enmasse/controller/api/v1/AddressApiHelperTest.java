@@ -62,6 +62,6 @@ public class AddressApiHelperTest {
 
     private Address createAddress(final String name)
     {
-        return new Address.Builder().setName(name).setAddressSpace("test").setType("queue").setPlan("plan1").build();
+        return new Address.Builder().setAddress(name).setAddressSpace("test").setType("queue").setPlan("plan1").build();
     }
 }

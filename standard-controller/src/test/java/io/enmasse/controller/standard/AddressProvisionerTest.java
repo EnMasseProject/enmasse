@@ -50,7 +50,7 @@ public class AddressProvisionerTest {
     public void testUsageCheck() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
-                .setName("a1")
+                .setAddress("a1")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
@@ -61,7 +61,7 @@ public class AddressProvisionerTest {
         assertEquals(0.2, usageMap.get("router").get("all"), 0.01);
 
         addresses.add(new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build());
@@ -75,7 +75,7 @@ public class AddressProvisionerTest {
         assertEquals(0.4, usageMap.get("broker").get("all"), 0.01);
 
         addresses.add(new Address.Builder()
-                .setName("q2")
+                .setAddress("q2")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build());
@@ -93,19 +93,19 @@ public class AddressProvisionerTest {
     public void testQuotaCheck() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "br1")
                 .build());
         addresses.add(new Address.Builder()
-                .setName("q2")
+                .setAddress("q2")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "br1")
                 .build());
         addresses.add(new Address.Builder()
-                .setName("q3")
+                .setAddress("q3")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "br2")
@@ -113,7 +113,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address largeQueue = new Address.Builder()
-                .setName("q4")
+                .setAddress("q4")
                 .setType("queue")
                 .setPlan("large-queue")
                 .build();
@@ -123,7 +123,7 @@ public class AddressProvisionerTest {
         assertThat(largeQueue.getStatus().getPhase(), is(Pending));
 
         Address smallQueue = new Address.Builder()
-                .setName("q4")
+                .setAddress("q4")
                 .setType("queue")
                 .setPlan("small-queue")
                 .build();
@@ -138,12 +138,12 @@ public class AddressProvisionerTest {
     public void testProvisioningColocated() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
-                .setName("a1")
+                .setAddress("a1")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
         addresses.add(new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build());
@@ -152,7 +152,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = new Address.Builder()
-                .setName("q2")
+                .setAddress("q2")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build();
@@ -171,18 +171,18 @@ public class AddressProvisionerTest {
     public void testScalingColocated() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
-                .setName("a1")
+                .setAddress("a1")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
         addresses.add(new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .build());
         addresses.add(new Address.Builder()
-                .setName("q2")
+                .setAddress("q2")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
@@ -192,7 +192,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = new Address.Builder()
-                .setName("q3")
+                .setAddress("q3")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build();
@@ -212,7 +212,7 @@ public class AddressProvisionerTest {
     public void testProvisioningSharded() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
-                .setName("a1")
+                .setAddress("a1")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
@@ -221,13 +221,13 @@ public class AddressProvisionerTest {
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setPlan("large-queue")
                 .setType("queue")
                 .build();
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
-        when(generator.generateCluster(eq("q1"), any(), eq(2), eq(queue))).thenReturn(new AddressCluster("q1", new KubernetesList()));
+        when(generator.generateCluster(eq(queue.getName()), any(), eq(2), eq(queue))).thenReturn(new AddressCluster(queue.getName(), new KubernetesList()));
         provisioner.provisionResources(usageMap, provisionMap);
 
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());

@@ -54,13 +54,13 @@ public class AddressControllerTest {
     @Test
     public void testAddressGarbageCollection() throws Exception {
         Address alive = new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setType("queue")
                 .setPlan("small-queue")
                 .setStatus(new Status(true).setPhase(Status.Phase.Active))
                 .build();
         Address terminating = new Address.Builder()
-                .setName("q2")
+                .setAddress("q2")
                 .setType("queue")
                 .setPlan("small-queue")
                 .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
@@ -73,7 +73,7 @@ public class AddressControllerTest {
     @Test
     public void testDeleteUnusedClusters() throws Exception {
         Address alive = new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setType("queue")
                 .setPlan("small-queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")

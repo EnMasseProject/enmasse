@@ -49,7 +49,7 @@ public class SerializationTest {
     @Test
     public void testSerializeAddressList() throws IOException {
         Address addr1 = new Address.Builder()
-                .setName("addr1")
+                .setAddress("addr1")
                 .setAddressSpace("a1")
                 .setType("queue")
                 .setPlan("myplan")

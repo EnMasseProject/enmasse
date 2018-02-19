@@ -5,6 +5,7 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.config.AnnotationKeys;
@@ -36,7 +37,7 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
 
     @Override
     public Optional<Address> getAddressWithName(String name) {
-        ConfigMap map = client.configMaps().inNamespace(namespace).withName(KubeUtil.sanitizeName("address-config-" + name)).get();
+        ConfigMap map = client.configMaps().inNamespace(namespace).withName(name).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -87,7 +88,7 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
 
     @Override
     public void createAddress(Address address) {
-        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
+        String name = address.getName();
         ConfigMap map = create(address);
         if (map != null) {
             client.configMaps().inNamespace(namespace).withName(name).create(map);
@@ -96,7 +97,7 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
 
     @Override
     public void replaceAddress(Address address) {
-        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
+        String name = address.getName();
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
             return;
@@ -108,7 +109,7 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
     }
 
     private ConfigMap create(Address address) {
-        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
+        String name = address.getName();
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .editOrNewMetadata()
                 .withName(name)
@@ -134,7 +135,7 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
 
     @Override
     public void deleteAddress(Address address) {
-        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
+        String name = address.getName();
         client.configMaps().inNamespace(namespace).withName(name).delete();
     }
 
