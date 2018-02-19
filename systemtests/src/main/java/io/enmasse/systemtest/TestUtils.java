@@ -26,17 +26,11 @@ public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
 
     /**
-     * scale up/down specific destination (type: StatefulSet) in address space
+     * scale up/down specific Destination (type: StatefulSet) in address space
      */
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
         kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
-        waitForNReplicas(
-                kubernetes,
-                addressSpace.getNamespace(),
-                numReplicas,
-                Collections.singletonMap("role", "broker"),
-                Collections.singletonMap("cluster_id", destination.getDeployment()),
-                budget);
+        waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, destination, budget);
     }
 
     /**
@@ -55,6 +49,19 @@ public class TestUtils {
     public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
         waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
+
+    /**
+     * wait for expected count of Destination replicas in address space
+     */
+    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(kubernetes,
+                tenantNamespace,
+                expectedReplicas,
+                Collections.singletonMap("role", "broker"),
+                Collections.singletonMap("cluster_id", destination.getDeployment()),
+                budget);
+    }
+
 
     /**
      * Wait for expected count of replicas

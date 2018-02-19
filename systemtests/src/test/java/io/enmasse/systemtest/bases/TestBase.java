@@ -462,6 +462,11 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws InterruptedException {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, destination, budget);
+    }
+
     /**
      * return list of queue names created for subscribers
      *

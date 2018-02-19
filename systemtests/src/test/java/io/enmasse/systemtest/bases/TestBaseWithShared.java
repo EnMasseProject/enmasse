@@ -8,6 +8,8 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -194,6 +196,15 @@ public abstract class TestBaseWithShared extends TestBase {
         response = getAddresses(Optional.empty());
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
         log.info("addresses (" + d2.getAddress() + ") successfully deleted");
+    }
+
+    private double getRequiredCreditFromResource(String addressResource, AddressPlan addressPlan) throws java.lang.IllegalStateException {
+        for (AddressResource res : addressPlan.getAddressResources()) {
+            if ("broker".equals(res.getName())) {
+                return res.getCredit();
+            }
+        }
+        throw new java.lang.IllegalStateException(String.format("address resource '%s' didn't found", addressResource));
     }
 
 }

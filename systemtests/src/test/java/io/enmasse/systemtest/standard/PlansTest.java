@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
@@ -13,6 +14,7 @@ import io.enmasse.systemtest.resources.AddressSpaceResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
@@ -28,6 +30,8 @@ public class PlansTest extends StandardTestBase {
     protected ArrayList<AddressPlan> addressPlans;
     protected ArrayList<AddressSpacePlan> addressSpacePlans;
     protected HashMap<AddressPlan, AddressSpacePlan> addressXSpaceBinding;
+
+    private static Logger log = CustomLogger.getLogger();
 
     @Before
     public void setUp() {
@@ -139,19 +143,35 @@ public class PlansTest extends StandardTestBase {
                 weakTopicPlan.getName());
     }
 
-    //@Test
+    @Test
     public void testAppendAddressPlan() throws Exception {
-        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 1.0));
-        AddressPlan weakQueuePlan = new AddressPlan("standard-queue-weak", AddressType.QUEUE, addressResources);
+        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.1));
+        String weakQueuePlanName = "standard-queue-weak";
+        AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
         createAddressPlanConfig(weakQueuePlan);
 
         AddressSpacePlan standardPlan = getAddressSpacePlanConfig("standard");
         appendAddressPlan(weakQueuePlan, standardPlan);
 
-        setAddresses(Destination.queue("weak-queue", weakQueuePlan.getName()));
+        ArrayList<Destination> dest = new ArrayList<>();
+        int destCount = 20;
+        for (int i = 0; i < destCount; i++) {
+            dest.add(Destination.queue("weak-queue-" + i, weakQueuePlan.getName()));
+        }
+        setAddresses(dest.toArray(new Destination[0]));
 
-        Future<List<Address>> standardAddresses = getAddressesObjects(Optional.of("weak-queue"));
-        assertThat("Queue plan wasn't set properly",
-                standardAddresses.get(20, TimeUnit.SECONDS).get(0).getPlan(), is(weakQueuePlan.getName()));
+        // TODO once getAddressPlanConfig() method will be implemented
+//        double requiredCredit = getRequiredCreditFromResource("broker", getAddressPlanConfig(weakQueuePlanName));
+//        int replicasCount = (int) (destCount * requiredCredit);
+//        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
+        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 2);
+
+        Future<List<Address>> standardAddresses = getAddressesObjects(Optional.empty()); //get all addresses
+        for (int i = 0; i < destCount; i++) {
+            assertThat("Queue plan wasn't set properly",
+                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getPlan(), is(weakQueuePlan.getName()));
+        }
     }
+
+
 }
