@@ -132,11 +132,12 @@ function get_configmap_name_for_address(address) {
 
 AddressSource.prototype.create_address = function (definition) {
     var configmap_name = get_configmap_name_for_address(definition.address);
+    var address_name  = configmap_name.substring(15);
     var address = {
         apiVersion: 'enmasse.io/v1',
         kind: 'Address',
         metadata: {
-            name: definition.address,
+            name: address_name,
             addressSpace: this.address_space
         },
         spec: {
@@ -155,7 +156,6 @@ AddressSource.prototype.create_address = function (definition) {
             },
             annotations: {
                 addressSpace: this.address_space,
-                cluster_id: definition.address
             },
         },
         data: {
