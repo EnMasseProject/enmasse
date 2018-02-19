@@ -246,7 +246,7 @@ data:
       "metadata": {
         "name": "broker-topic"
       },
-      "template": "topic-inmemory"
+      "template": "topic-persisted"
     }
 ---
 apiVersion: v1
@@ -263,5 +263,5 @@ data:
       "metadata": {
         "name": "broker"
       },
-      "template": "queue-inmemory"
+      "template": "queue-persisted"
     }
