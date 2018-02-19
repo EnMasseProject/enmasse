@@ -232,7 +232,7 @@ public abstract class Kubernetes {
         config.put("shortDescription", "Newly defined address space plan.");
         config.put("longDescription", "Newly defined address space plan.");
         config.put("uuid", "677485a2-0d96-11e8-ba89-0ed5f89f718b");
-        config.put("addressSpaceType", addressSpacePlan.getType().toString()); // "standard", "brokered", newly created...
+        config.put("addressSpaceType", addressSpacePlan.getType().toString().toLowerCase()); // "standard", "brokered", newly created...
 
         JsonArray defResources = new JsonArray(); // <resources>
         JsonObject brokerResource;
