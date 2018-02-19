@@ -191,7 +191,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         String addressType = address.getType();
         // TODO: Get rid of references to queue and topic
         if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterId)) {
-            address.getStatus().setReady(false).appendMessage("Cluster is unavailable");
+            address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
         } else {
             numOk++;
         }
