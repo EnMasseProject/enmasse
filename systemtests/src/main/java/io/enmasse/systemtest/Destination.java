@@ -65,7 +65,7 @@ public class Destination {
      * plan.
      */
     public String getDeployment() {
-        if (isQueue(this) && plan.startsWith("pooled")) {
+        if (plan.startsWith("pooled")) {
             return "broker";
         } else {
             return address;
