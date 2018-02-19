@@ -9,14 +9,24 @@ package io.enmasse.k8s.api;
  */
 public class KubeUtil {
     public static String sanitizeName(String name) {
-        String replaced = name.toLowerCase().replaceAll("[^a-z0-9]", "-");
-        if (replaced.startsWith("-")) {
-            replaced = replaced.replaceFirst("-", "1");
+        String clean = name.toLowerCase().replaceAll("[^a-z0-9]", "");
+        if (clean.startsWith("-")) {
+            clean = clean.replaceFirst("-", "1");
         }
-        if (replaced.endsWith("-")) {
-            replaced = replaced.substring(0, replaced.length() - 2) + "1";
+        if (clean.endsWith("-")) {
+            clean = clean.substring(0, clean.length() - 2) + "1";
         }
-        return replaced;
+
+        if (!name.equals(clean)) {
+            String qualifier = Integer.toHexString(name.hashCode());
+            if (clean.length() + qualifier.length() > 63) {
+                clean = clean.substring(0, 63 - qualifier.length());
+            }
+            clean += qualifier;
+        } else if (clean.length() > 63) {
+            clean = clean.substring(0, 63);
+        }
+        return clean;
     }
 
     public static String getAddressSpaceCaSecretName(String namespace) {
