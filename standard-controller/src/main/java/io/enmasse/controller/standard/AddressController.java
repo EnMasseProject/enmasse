@@ -121,7 +121,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 log.info("Checking cluster {} against address {}", cluster.getClusterId(), address);
                 String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
                 String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
-                if (brokerId == null && address.getName().equals(cluster.getClusterId())) {
+                String name = KubeUtil.sanitizeName(address.getName());
+                if (brokerId == null && name.equals(cluster.getClusterId())) {
                     numFound++;
                 } else if (cluster.getClusterId().equals(clusterId)) {
                     numFound++;
