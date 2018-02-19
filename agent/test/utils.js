@@ -43,20 +43,45 @@ describe('merge', function() {
 
 describe('kubernetes_name', function () {
     it ('does not affect names without special chars and under 64 chars of length', function (done) {
-        var valid = ['foo', 'foo-bar', 'abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-x'];
+        var valid = ['foo', 'foo-bar', 'abcdefghiklmnopqrstuvwxyz0123456789-x'];
         for (var i in valid) {
             assert.equal(valid[i], myutils.kubernetes_name(valid[i]));
         }
         done();
     });
     it ('removes invalid chars', function (done) {
-        var invalid = '!"£$%^&*()_?><~#@\':;`/\|';
+        var invalid = '!"£$%^&*()_?><~#@\':;`/\|ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         var input = 'a!b"c£d$e%f^g&h*i()j_?><k~#l@\'m:n;opq`/r\s|t';
         var output = myutils.kubernetes_name(input);
         assert.notEqual(output, input);
         for (var i = 0; i < invalid.length; i++) {
             assert(output.indexOf(invalid.charAt(i)) < 0, 'invalid char ' + invalid.charAt(i) + ' found in ' + output);
         }
+        done();
+    });
+    it ('removes uppercase chars', function (done) {
+        var invalid = '!"£$%^&*()_?><~#@\':;`/\|ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var input = 'myAddress';
+        var output = myutils.kubernetes_name(input);
+        assert.notEqual(output, input);
+        for (var i = 0; i < invalid.length; i++) {
+            assert(output.indexOf(invalid.charAt(i)) < 0, 'invalid char ' + invalid.charAt(i) + ' found in ' + output);
+        }
+        done();
+    });
+    it ('removes leading -', function (done) {
+        var input = '-my-address';
+        var output = myutils.kubernetes_name(input);
+        assert.notEqual(output, input);
+        assert.notEqual(output.charAt(0), '-');
+        done();
+    });
+    it ('removes trailing -', function (done) {
+        var input = 'my-address-';
+        var output = myutils.kubernetes_name(input);
+        assert.notEqual(output, input);
+        assert.equal(input.charAt(input.length-1), '-');
+        assert.notEqual(output.charAt(output.length-1), '-');
         done();
     });
     it ('differentiates modified names', function (done) {
