@@ -115,7 +115,9 @@ function hash(s) {
 module.exports.hash = hash;
 
 module.exports.kubernetes_name = function (name) {
-    var clean = name.replace(/[^a-zA-Z0-9\-]/g, '');
+    var clean = name.toLowerCase().replace(/[^a-z0-9\-]/g, '');
+    if (clean.charAt(0) === '-') clean = clean.substring(1);
+    if (clean.charAt(clean.length-1) === '-') clean = clean.substring(0,clean.length-1);
     if (clean !== name) {
         var qualifier = hash(name).toString(16);
         if (clean.length + qualifier.length > 63) {

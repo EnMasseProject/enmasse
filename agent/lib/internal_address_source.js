@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var http = require('http');
 var util = require('util');
 var events = require('events');
 var kubernetes = require('./kubernetes.js');
@@ -161,7 +162,13 @@ AddressSource.prototype.create_address = function (definition) {
             'config.json': JSON.stringify(address)
         }
     };
-    return kubernetes.post('configmaps', configmap, this.config);
+    return kubernetes.post('configmaps', configmap, this.config).then(function (result) {
+        if (result >= 300) {
+            return Promise.reject(new Error(util.format('Failed to created address %j: %d %s', definition, result, http.STATUS_CODES[result])));
+        } else {
+            return Promise.resolve();
+        }
+    });
 };
 
 AddressSource.prototype.delete_address = function (definition) {
