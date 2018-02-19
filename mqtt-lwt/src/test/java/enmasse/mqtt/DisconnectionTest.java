@@ -89,18 +89,21 @@ public class DisconnectionTest extends MqttLwtTestBase {
 
                 });
 
+                sender.openHandler(ar -> {
+                            context.assertTrue(ar.succeeded());
+
+                            // disconnect after some time
+                            this.vertx.setTimer(DETACH_TIMEOUT, t -> {
+
+                                if (isDetachForced) {
+                                    ErrorCondition errorCondition =
+                                            new ErrorCondition(LinkError.DETACH_FORCED, "Link detached due to a brute client disconnection");
+                                    sender.setCondition(errorCondition);
+                                }
+                                sender.close();
+                            });
+                        });
                 sender.open();
-
-                // disconnect after some time
-                this.vertx.setTimer(DETACH_TIMEOUT, t -> {
-
-                    if (isDetachForced) {
-                        ErrorCondition errorCondition =
-                                new ErrorCondition(LinkError.DETACH_FORCED, "Link detached due to a brute client disconnection");
-                        sender.setCondition(errorCondition);
-                    }
-                    sender.close();
-                });
 
             } else {
 
@@ -109,5 +112,7 @@ public class DisconnectionTest extends MqttLwtTestBase {
                 async.complete();
             }
         });
+
+        async.awaitSuccess(60_000);
     }
 }
