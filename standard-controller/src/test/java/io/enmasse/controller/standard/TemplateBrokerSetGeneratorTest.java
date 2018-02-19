@@ -67,7 +67,7 @@ public class TemplateBrokerSetGeneratorTest {
 
     private Address createAddress(String address, String type) {
         return new Address.Builder()
-                .setName(address)
+                .setAddress(address)
                 .setAddressSpace("myinstance")
                 .setType(type)
                 .setPlan("plan1")

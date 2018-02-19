@@ -7,7 +7,7 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.k8s.api.KubeUtil;
+import io.enmasse.address.model.KubeUtil;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -50,7 +50,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
     private KubernetesList processTemplate(String clusterId, int numReplicas, Address address, String templateName, Map<String, String> parameterMap) {
         Map<String, String> paramMap = new LinkedHashMap<>(parameterMap);
 
-        paramMap.put(TemplateParameter.NAME, KubeUtil.sanitizeName(clusterId));
+        paramMap.put(TemplateParameter.NAME, clusterId);
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
         paramMap.put(TemplateParameter.ADDRESS_SPACE, addressSpace);
         paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, templateOptions.getMessagingSecret());

@@ -12,10 +12,8 @@ import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.netty.util.concurrent.Promise;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
@@ -121,7 +119,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 log.info("Checking cluster {} against address {}", cluster.getClusterId(), address);
                 String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
                 String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
-                String name = KubeUtil.sanitizeName(address.getName());
+                String name = address.getName();
                 if (brokerId == null && name.equals(cluster.getClusterId())) {
                     numFound++;
                 } else if (cluster.getClusterId().equals(clusterId)) {
@@ -187,7 +185,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private int checkClusterStatus(Address address, AddressPlan addressPlan) {
         int numOk = 0;
-        String clusterId = isPooled(addressPlan) ? "broker" : KubeUtil.sanitizeName(address.getName());
+        String clusterId = isPooled(addressPlan) ? "broker" : address.getName();
         String addressType = address.getType();
         // TODO: Get rid of references to queue and topic
         if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterId)) {

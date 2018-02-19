@@ -5,6 +5,7 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
@@ -51,7 +52,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
+        String name = addressSpace.getName();
         ConfigMap previous = client.configMaps().withName(name).get();
         if (previous == null) {
             return;
@@ -65,7 +66,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     }
 
     private void create(DoneableConfigMap config, AddressSpace addressSpace) throws Exception {
-        String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
+        String name = addressSpace.getName();
             config.withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.TYPE, "address-space")
@@ -76,7 +77,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public void deleteAddressSpace(AddressSpace addressSpace) {
-        String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
+        String name = addressSpace.getName();
         client.configMaps().withName(name).delete();
     }
 
@@ -126,6 +127,6 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     }
 
     public static String getConfigMapName(String name) {
-        return KubeUtil.sanitizeName("address-space-" + name);
+        return name;
     }
 }

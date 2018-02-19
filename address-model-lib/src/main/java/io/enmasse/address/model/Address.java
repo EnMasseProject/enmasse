@@ -99,17 +99,12 @@ public class Address {
 
         Address address1 = (Address) o;
 
-        if (!name.equals(address1.name)) return false;
-        if (!uuid.equals(address1.uuid)) return false;
         return address.equals(address1.address);
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + uuid.hashCode();
-        result = 31 * result + address.hashCode();
-        return result;
+        return address.hashCode();
     }
 
     public static class Builder {
@@ -145,9 +140,6 @@ public class Address {
 
         public Builder setName(String name) {
             this.name = name;
-            if (this.address == null ) {
-                this.address = name;
-            }
             return this;
         }
 
@@ -192,13 +184,19 @@ public class Address {
         }
 
         public Address build() {
-            Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(address, "address not set");
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(status, "status not set");
             Objects.requireNonNull(annotations, "annotations not set");
             if (uuid == null) {
                 uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
+            }
+            if (name == null) {
+                name = KubeUtil.sanitizeName(address);
+                if (name.length() + uuid.length() > 62) {
+                    name = name.substring(0, 62 - uuid.length());
+                }
+                name += "-" + uuid;
             }
             return new Address(name, uuid, address, addressSpace, type, plan, status, version, annotations);
         }

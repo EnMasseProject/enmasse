@@ -55,11 +55,11 @@ public class HttpAddressServiceTest {
         addressSpaceApi.createAddressSpace(addressSpace);
         addressApi = (TestAddressApi) addressSpaceApi.withAddressSpace(addressSpace);
         q1 = new Address.Builder()
-                .setName("q1")
+                .setAddress("q1")
                 .setType("queue")
                 .build();
         a1 = new Address.Builder()
-                .setName("a1")
+                .setAddress("a1")
                 .setType("anycast")
                 .build();
         addressApi.createAddress(q1);
@@ -122,7 +122,7 @@ public class HttpAddressServiceTest {
     @Test
     public void testCreate() {
         Address a2 = new Address.Builder()
-                .setName("a2")
+                .setAddress("a2")
                 .setType("anycast")
                 .setPlan("plan1")
                 .setAddressSpace("myspace")
@@ -139,7 +139,7 @@ public class HttpAddressServiceTest {
     public void testCreateException() {
         addressApi.throwException = true;
         Address a2 = new Address.Builder()
-                .setName("a2")
+                .setAddress("a2")
                 .setPlan("plan1")
                 .setType("anycast")
                 .build();
@@ -178,7 +178,7 @@ public class HttpAddressServiceTest {
         assertThat(response.getStatus(), is(401));
 
         Address a2 = new Address.Builder()
-                .setName("a2")
+                .setAddress("a2")
                 .setType("anycast")
                 .setPlan("plan1")
                 .setAddressSpace("myspace")
