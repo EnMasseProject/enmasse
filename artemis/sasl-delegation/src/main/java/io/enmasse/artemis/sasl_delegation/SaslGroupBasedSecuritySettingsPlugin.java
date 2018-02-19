@@ -122,6 +122,9 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                             roles.add(new Role("consume_" + encoded, false, true, false, false, true, true, false, true, false, false));
                             roles.add(new Role("recv_" + encoded, false, true, false, false, true, true, false, true, false, false));
                             roles.add(new Role("browse_" + encoded, false, false, false, false, false, false, false, true, false, false));
+                            roles.add(new Role("create_" + encoded, false, false, true, false, true, false, false, false, true, false));
+                            roles.add(new Role("delete_" + encoded, false, false, false, true, false, true, false, false, false, true));
+
                         }
                         securityRepository.addMatch(address, roles);
 
