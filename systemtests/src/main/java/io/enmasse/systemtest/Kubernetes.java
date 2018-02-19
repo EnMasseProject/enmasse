@@ -187,11 +187,10 @@ public abstract class Kubernetes {
         metadata.setLabels(labels);
         addressSpacePlanDefinition.setMetadata(metadata); // </metadata>
         addressSpacePlanDefinition.setData(createAddressSpacePlanData(addressSpacePlan)); // <data></data>
-        client.configMaps().create(addressSpacePlanDefinition);
 
         if (replaceExisting) {
             client.configMaps().inNamespace(globalNamespace).createOrReplace(addressSpacePlanDefinition);
-        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName) == null) {
+        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName).get() == null) {
             client.configMaps().create(addressSpacePlanDefinition);
         } else {
             throw new IllegalStateException(String.format("AddressSpacePlan '%s' already exists and replace is set to '%s'",
