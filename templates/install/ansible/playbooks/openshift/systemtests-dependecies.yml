@@ -1,0 +1,3 @@
+- hosts: localhost
+  roles:
+    - { role: systemtests_dependencies, become: yes }

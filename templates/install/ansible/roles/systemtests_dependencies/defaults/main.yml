@@ -1,0 +1,18 @@
+---
+# vars for clients taska
+systemtests_dir: "{{ playbook_dir }}../../../../../../systemtests"
+client_executable_folder: "{{ systemtests_dir }}/client_executable"
+cli_java_git_path: "{{ systemtests_dir }}/cli-java"
+maven_root_path: /opt
+maven_path: "{{ maven_root_path }}/apache-maven-3.5.2/bin"
+
+# vars for webdriver taska
+webdriver_folder: "{{ systemtests_dir }}/web_driver"
+geckodriver_version: '0.18.0'
+chromedriver_version: '2.33'
+
+# vars for dependencies taska
+nodejs_version: "6"
+epel_repo_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+epel_repo_gpg_key_url: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"
+epel_repofile_path: "/etc/yum.repos.d/epel.repo"

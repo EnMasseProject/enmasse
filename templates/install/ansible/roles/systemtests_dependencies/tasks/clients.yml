@@ -1,0 +1,54 @@
+---
+# tasks file for clients installation and compilation
+- name: delete clients executables
+  file:
+    path: "{{ client_executable_folder }}"
+    state: absent
+
+- name: create client_executable folder
+  file:
+    path: "{{ client_executable_folder }}"
+    state: directory
+
+- name: Install cli-rhea client globally
+  npm:
+    name: cli-rhea
+    global: yes
+
+- name: Install openssl dependencies for proton-python
+  yum:
+    name: openssl
+    state: latest
+
+- name: Install openssl-devel dependencies for proton-python
+  yum:
+    name: openssl-devel
+    state: latest
+
+- name: Install cli-proton-python client globally
+  pip:
+    name: cli-proton-python
+
+- name: Clone cli-java repo
+  git:
+    repo: 'https://github.com/rh-messaging/cli-java.git'
+    dest: "{{ cli_java_git_path }}"
+    update: yes
+    clone: yes
+    force: yes
+
+- name: Compile cli-java clients
+  shell: 'mvn package -B -DskipTests=true'
+  args:
+    chdir: "{{ cli_java_git_path }}"
+  environment:
+      PATH: "{{ ansible_env.PATH }}:{{ maven_path }}"
+
+- name: Move cli-qpid-jms
+  shell: 'cp {{ cli_java_git_path }}/cli-qpid-jms/target/cli-qpid-jms-*.jar {{ client_executable_folder }}/cli-qpid-jms.jar'
+
+- name: Move cli-artemis-jms
+  shell: 'cp {{ cli_java_git_path }}/cli-artemis-jms/target/cli-artemis-jms-*.jar {{ client_executable_folder }}/cli-artemis-jms.jar'
+
+- name: Move cli-activemq
+  shell: 'cp {{ cli_java_git_path }}/cli-activemq/target/cli-activemq-*.jar {{ client_executable_folder }}/cli-activemq.jar'

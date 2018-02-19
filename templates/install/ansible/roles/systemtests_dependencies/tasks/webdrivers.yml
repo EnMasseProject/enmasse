@@ -1,0 +1,37 @@
+---
+# tasks file for webdrivers
+- name: delete webdriver folder executables
+  file:
+    path: "{{ webdriver_folder }}"
+    state: absent
+
+- name: create webdriver folder folder
+  file:
+    path: "{{ webdriver_folder }}"
+    state: directory
+
+- name: Download geckodriver for firefox
+  get_url:
+    url: "https://github.com/mozilla/geckodriver/releases/download/v{{ geckodriver_version }}/geckodriver-v{{ geckodriver_version }}-linux64.tar.gz"
+    dest: "{{ webdriver_folder }}"
+
+- name: Extract geckodriver archive
+  unarchive:
+    src: "{{ webdriver_folder }}/geckodriver-v{{ geckodriver_version }}-linux64.tar.gz"
+    dest: "{{ webdriver_folder }}"
+
+- name: Download chromedriver for chrome
+  get_url:
+    url: "https://chromedriver.storage.googleapis.com/{{ chromedriver_version }}/chromedriver_linux64.zip"
+    dest: "{{ webdriver_folder }}"
+
+- name: Extract chromedriver archive
+  unarchive:
+    src: "{{ webdriver_folder }}/chromedriver_linux64.zip"
+    dest: "{{ webdriver_folder }}"
+
+- name: Copy webdrivers to /usr/bin
+  shell: 'cp {{ webdriver_folder }}/* /usr/bin/'
+
+- name: run Xvfb
+  shell: 'Xvfb :10 -ac &'

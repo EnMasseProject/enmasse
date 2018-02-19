@@ -60,16 +60,6 @@ pipeline {
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
         }
-        stage('install clients') {
-            steps {
-                sh 'sudo PATH=$PATH make client_install'
-            }
-        }
-        stage('install webdrivers') {
-            steps {
-                sh 'sudo make webdriver_install'
-            }
-        }
         stage('push docker images') {
             steps {
                 sh 'oc login -u test -p test'
@@ -87,8 +77,6 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
-                    sh 'Xvfb :10 -ac &'
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
                     sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig ${params.TEST_CASE} ''"
                 }
