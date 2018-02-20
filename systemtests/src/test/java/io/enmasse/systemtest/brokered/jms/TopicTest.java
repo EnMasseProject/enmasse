@@ -72,6 +72,11 @@ public class TopicTest extends JMSTestBase {
         return new InitialContext(env2);
     }
 
+    private void addUserCreateDeleteQueuePermisions(String username, String subID) throws Exception {
+        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "create_" + subID, username);
+        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "delete_" + subID, username);
+    }
+
     @Test
     public void testMessageSubscription() throws Exception {
         log.info("testMessageSubscription");
@@ -113,6 +118,9 @@ public class TopicTest extends JMSTestBase {
 
         String sub1ID = "sub1DurSub";
         String sub2ID = "sub2DurSub";
+        addUserCreateDeleteQueuePermisions(sharedAddressSpace.getName(), sub1ID);
+        addUserCreateDeleteQueuePermisions(sharedAddressSpace.getName(), sub2ID);
+
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
         MessageProducer messageProducer = session.createProducer(testTopic);
@@ -171,6 +179,9 @@ public class TopicTest extends JMSTestBase {
 
         String sub1ID = "sub1DurSubTrans";
         String sub2ID = "sub2DurSubTrans";
+        addUserCreateDeleteQueuePermisions(sharedAddressSpace.getName(), sub1ID);
+        addUserCreateDeleteQueuePermisions(sharedAddressSpace.getName(), sub2ID);
+
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
         MessageProducer messageProducer = session.createProducer(testTopic);
@@ -200,7 +211,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     @Test
-    public void testSharedDurableSubscription() throws JMSException, NamingException {
+    public void testSharedDurableSubscription() throws Exception {
         log.info("testSharedDurableSubscription");
 
         Context context1 = createContextForShared();
@@ -218,6 +229,8 @@ public class TopicTest extends JMSTestBase {
         Topic testTopic = (Topic) context1.lookup(topic);
 
         String subID = "sharedConsumerDurable123";
+        addUserCreateDeleteQueuePermisions(sharedAddressSpace.getName(), subID);
+
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
         MessageProducer messageProducer = session.createProducer(testTopic);
