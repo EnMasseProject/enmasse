@@ -12,6 +12,7 @@ import io.enmasse.systemtest.resources.AddressSpaceResource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(IsolatedAddressSpace.class)
 public class PlansTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
