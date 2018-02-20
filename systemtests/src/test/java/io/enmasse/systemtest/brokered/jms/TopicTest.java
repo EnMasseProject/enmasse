@@ -32,10 +32,6 @@ public class TopicTest extends JMSTestBase {
     private String topic = "jmsTopic";
     private Destination addressTopic;
 
-    private String jmsUsername = username;
-    private String jmsPassword = password;
-    private String jmsClientID = "testClient";
-
     @Before
     public void setUp() throws Exception {
         addressTopic = Destination.topic(topic, getDefaultPlan(AddressType.TOPIC));
@@ -62,9 +58,10 @@ public class TopicTest extends JMSTestBase {
         if (connection != null) {
             connection.close();
         }
+
     }
 
-    protected Context createContextForShared() throws JMSException, NamingException {
+    private Context createContextForShared() throws JMSException, NamingException {
         Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(sharedAddressSpace).toString(), jmsUsername, jmsPassword,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
@@ -73,8 +70,10 @@ public class TopicTest extends JMSTestBase {
     }
 
     private void addUserCreateDeleteQueuePermisions(String username, String subID) throws Exception {
-        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "create_" + subID, username);
-        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "delete_" + subID, username);
+        getKeycloakClient().createGroup(sharedAddressSpace.getName(),"create_*");
+        getKeycloakClient().createGroup(sharedAddressSpace.getName(),"delete_*");
+        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "create_*", username);
+        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "delete_*", username);
     }
 
     @Test

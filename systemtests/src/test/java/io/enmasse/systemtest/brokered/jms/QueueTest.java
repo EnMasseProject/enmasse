@@ -28,10 +28,6 @@ public class QueueTest extends JMSTestBase {
     private String queue = "jmsQueue";
     private Destination addressQueue;
 
-    private String jmsUsername = "test";
-    private String jmsPassword = "test";
-    private String jmsClientID = "testClient";
-
     @Before
     public void setUp() throws Exception {
         addressQueue = Destination.queue(queue, getDefaultPlan(AddressType.QUEUE));
