@@ -106,7 +106,7 @@ public class KubernetesHelper implements Kubernetes {
         if (client.isAdaptable(OpenShiftClient.class)) {
             client.configMaps().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
-                    .withName(addressSpace.getNamespace())
+                    .withName("namespace-" + addressSpace.getName())
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "namespace")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
@@ -202,7 +202,7 @@ public class KubernetesHelper implements Kubernetes {
     public void deleteNamespace(NamespaceInfo namespaceInfo) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getCreatedBy());
-            client.configMaps().inNamespace(namespace).withName(namespaceInfo.getNamespace()).delete();
+            client.configMaps().inNamespace(namespace).withName("namespace-" + namespaceInfo.getNamespace()).delete();
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
         }
