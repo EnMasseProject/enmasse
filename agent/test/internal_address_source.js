@@ -198,7 +198,7 @@ describe('configmap backed address source', function() {
         configmaps.add_address_definition({address:'bar', type:'topic'}, 'address-config-bar');
         var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.on('addresses_defined', function () {
-            source.delete_address({address:'foo', type:'queue'}).then(
+            source.delete_address({address:'foo', type:'queue', name:'address-config-foo'}).then(
                 function () {
                     source.on('addresses_defined', function (addresses) {
                         assert.equal(addresses.length, 1);

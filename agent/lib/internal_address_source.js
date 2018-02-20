@@ -31,7 +31,6 @@ function AddressSource(address_space, config) {
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
-    this.filter_on_phase = true;
 }
 
 util.inherits(AddressSource, events.EventEmitter);
@@ -49,42 +48,51 @@ function extract_spec(def) {
         if (def.spec === undefined) {
             console.error('no spec found on %j', def);
         }
+        var o = myutils.merge(def.spec, {status:def.status});
+        o.name = def.metadata ? def.metadata.name : def.address;
         if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
-            var o = Object.create(def.spec);
             o.allocated_to = def.metadata.annotations['enmasse.io/broker-id'];
-            return o;
-        } else {
-            return def.spec;
         }
+        return o;
     } catch (e) {
         console.error('Failed to parse config.json for address: %s %j', e, object);
     }
 }
 
 function extract_address_spec(object) {
-    try {
-        return JSON.parse(object.data['config.json']).spec;
-    } catch (e) {
-        console.error('Failed to parse config.json for address: %s %j', e, object);
-    }
+    return extract_spec(extract_address(object));
+}
+
+function extract_address_field(object) {
+    var def = extract_address(object);
+    return def && def.spec ? def.spec.address : undefined;
 }
 
 function ready (addr) {
     return addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
-AddressSource.prototype.updated = function (objects) {
-    var addresses = this.filter_on_phase ? objects.map(extract_address).filter(ready).map(extract_spec) : objects.map(extract_address_spec);
-    log.debug('addresses updated: %j', addresses);
-    log.info('retrieved address definitions: %j -> %j', objects, addresses);
+AddressSource.prototype.dispatch = function (name, object) {
+    log.info('%s: %j', name, object);
+    this.emit(name, object);
+};
+
+
+AddressSource.prototype.update_readiness = function (objects) {
     var self = this;
     this.readiness = objects.reduce(function (map, configmap) {
-        var address = extract_address_spec(configmap).address;
+        var address = extract_address_field(configmap);
         map[address] = self.readiness[address] || {ready: false, address: address};
         map[address].name = configmap.metadata.name;
         return map;
     }, {});
-    this.emit('addresses_defined', addresses);
+};
+
+AddressSource.prototype.updated = function (objects) {
+    log.debug('addresses updated: %j', objects);
+    this.update_readiness(objects);
+    this.dispatch('addresses_defined', objects.map(extract_address_spec));
+    this.dispatch('addresses_ready', objects.map(extract_address).filter(ready).map(extract_spec));
 };
 
 AddressSource.prototype.update_status = function (record, ready) {
@@ -127,12 +135,12 @@ AddressSource.prototype.check_status = function (address_stats) {
 };
 
 function get_configmap_name_for_address(address) {
-    return myutils.kubernetes_name(util.format('address-config-%s', address));
+    return myutils.kubernetes_name(address);
 }
 
 AddressSource.prototype.create_address = function (definition) {
     var configmap_name = get_configmap_name_for_address(definition.address);
-    var address_name  = configmap_name.substring(15);
+    var address_name  = configmap_name;
     var address = {
         apiVersion: 'enmasse.io/v1',
         kind: 'Address',
@@ -172,8 +180,7 @@ AddressSource.prototype.create_address = function (definition) {
 };
 
 AddressSource.prototype.delete_address = function (definition) {
-    var configmap_name = get_configmap_name_for_address(definition.address);
-    return kubernetes.delete_resource('configmaps/' + configmap_name, this.config);
+    return kubernetes.delete_resource('configmaps/' + definition.name, this.config);
 };
 
 function extract_address_plan (object) {
