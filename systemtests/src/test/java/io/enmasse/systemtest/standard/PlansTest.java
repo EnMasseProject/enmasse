@@ -56,11 +56,9 @@ public class PlansTest extends StandardTestBase {
         }
         setAddresses(dest.toArray(new Destination[0]));
 
-        // TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getRequiredCreditFromResource("broker", getAddressPlanConfig(weakQueuePlanName));
-//        int replicasCount = (int) (destCount * requiredCredit);
-//        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
-        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 2);
+        double requiredCredit = weakQueuePlan.getRequiredCreditFromResource("broker");
+        int replicasCount = (int) (destCount * requiredCredit);
+        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
         Future<List<Address>> standardAddresses = getAddressesObjects(Optional.empty()); //get all addresses
         for (int i = 0; i < destCount; i++) {

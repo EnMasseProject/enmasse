@@ -185,7 +185,7 @@ public class QueueTest extends StandardTestBase {
         assertThat("Wrong count of messages received", actual, is(msgs.size()));
     }
 
-    @Test
+//    @Test // disabled due to issue: #903
     public void testScalePooledQueueAutomatically() throws Exception {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 2000;
@@ -195,7 +195,7 @@ public class QueueTest extends StandardTestBase {
         setAddresses(dest.toArray(new Destination[0]));
 
 //        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getRequiredCreditFromResource("broker", getAddressPlanConfig("pooled-queue"));
+//        double requiredCredit = getAddressPlanConfig("pooled-queue").getRequiredCreditFromResource("broker");
 //        int replicasCount = (int) (destCount * requiredCredit);
 //        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
         waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 20);

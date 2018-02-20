@@ -101,9 +101,5 @@ public class PlansTest extends TestBase {
         topicClient.getConnectOptions().setUsername(username);
         topicClient.getConnectOptions().setPassword(password);
         TopicTest.runTopicTest(topicClient, weakQueueDest, 42);
-
-
-
-
     }
 }
