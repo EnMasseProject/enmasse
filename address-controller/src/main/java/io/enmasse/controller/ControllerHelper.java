@@ -211,7 +211,7 @@ public class ControllerHelper {
         }
         Set<NamespaceInfo> actual = kubernetes.listAddressSpaces();
         Set<NamespaceInfo> desired = desiredAddressSpaces.stream()
-                .map(space -> new NamespaceInfo(space.getName(), space.getNamespace(), space.getCreatedBy()))
+                .map(space -> new NamespaceInfo(space.getUid(), space.getName(), space.getNamespace(), space.getCreatedBy()))
                 .collect(Collectors.toSet());
 
         actual.removeAll(desired);

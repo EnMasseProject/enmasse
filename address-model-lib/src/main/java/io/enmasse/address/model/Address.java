@@ -139,7 +139,7 @@ public class Address {
         }
 
         public Builder setName(String name) {
-            this.name = name;
+            this.name = KubeUtil.sanitizeName(name);
             return this;
         }
 

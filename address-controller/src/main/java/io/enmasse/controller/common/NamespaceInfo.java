@@ -5,11 +5,13 @@
 package io.enmasse.controller.common;
 
 final public class NamespaceInfo {
+    private final String configName;
     private final String addressSpace;
     private final String namespace;
     private final String createdBy;
 
-    public NamespaceInfo(String addressSpace, String namespace, String createdBy) {
+    public NamespaceInfo(String configName, String addressSpace, String namespace, String createdBy) {
+        this.configName = configName;
         this.addressSpace = addressSpace;
         this.namespace = namespace;
         this.createdBy = createdBy;
@@ -21,6 +23,10 @@ final public class NamespaceInfo {
 
     public String getAddressSpace() {
         return addressSpace;
+    }
+
+    public String getConfigName() {
+        return configName;
     }
 
     public String getNamespace() {
