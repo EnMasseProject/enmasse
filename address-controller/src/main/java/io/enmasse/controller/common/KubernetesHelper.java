@@ -11,10 +11,8 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.KubeEventLogger;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -106,11 +104,12 @@ public class KubernetesHelper implements Kubernetes {
         if (client.isAdaptable(OpenShiftClient.class)) {
             client.configMaps().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
-                    .withName("namespace-" + addressSpace.getName())
+                    .withName(addressSpace.getUid())
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "namespace")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
+                    .addToAnnotations(AnnotationKeys.NAMESPACE, addressSpace.getNamespace())
                     .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getCreatedBy())
                     .endMetadata()
                     .done();
@@ -133,13 +132,7 @@ public class KubernetesHelper implements Kubernetes {
                     .addToLabels(LabelKeys.TYPE, "namespace")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
-                    // We're leaking the underlying serialized form of the AddressSpace which is not ideal.
-                    .addNewOwnerReference()
-                    .withKind("ConfigMap")
-                    .withApiVersion("v1")
-                    .withName(ConfigMapAddressSpaceApi.getConfigMapName(addressSpace.getName()))
-                    .withUid(addressSpace.getUid())
-                    .endOwnerReference()
+                    .addToAnnotations(AnnotationKeys.UUID, addressSpace.getUid())
                     .endMetadata()
                     .done();
         }
@@ -202,7 +195,7 @@ public class KubernetesHelper implements Kubernetes {
     public void deleteNamespace(NamespaceInfo namespaceInfo) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getCreatedBy());
-            client.configMaps().inNamespace(namespace).withName("namespace-" + namespaceInfo.getNamespace()).delete();
+            client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
         }
@@ -310,13 +303,16 @@ public class KubernetesHelper implements Kubernetes {
         labels.put(LabelKeys.ENVIRONMENT, environment);
         if (client.isAdaptable(OpenShiftClient.class)) {
             return client.configMaps().inNamespace(namespace).withLabels(labels).list().getItems().stream()
-                    .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
-                            n.getMetadata().getName(),
+                    .map(n -> new NamespaceInfo(n.getMetadata().getName(),
+                            n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
+                            n.getMetadata().getAnnotations().get(AnnotationKeys.NAMESPACE),
                             n.getMetadata().getAnnotations().get(AnnotationKeys.CREATED_BY)))
                     .collect(Collectors.toSet());
         } else {
             return client.namespaces().withLabels(labels).list().getItems().stream()
-                    .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
+                    .map(n -> new NamespaceInfo(
+                            n.getMetadata().getAnnotations().get(AnnotationKeys.UUID),
+                            n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
                             n.getMetadata().getName(),
                             n.getMetadata().getAnnotations().get(AnnotationKeys.CREATED_BY)))
                     .collect(Collectors.toSet());
