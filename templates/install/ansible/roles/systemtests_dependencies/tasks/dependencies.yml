@@ -22,6 +22,26 @@
     path: /tmp/get-pip.py
   when: pip_is_installed.rc != 0
 
+- name: Install redhat-rpm-config
+  yum:
+    name: redhat-rpm-config
+    state: present
+
+- name: Install python-devel
+  yum:
+    name: python-devel
+    state: present
+
+- name: Install openssl
+  yum:
+    name: openssl
+    state: latest
+
+- name: Install openssl-devel
+  yum:
+    name: openssl-devel
+    state: latest
+
 - include_tasks: epel.yml
 
 - name: Install nodejs
