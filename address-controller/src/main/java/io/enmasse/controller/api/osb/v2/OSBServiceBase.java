@@ -12,6 +12,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
 import io.enmasse.address.model.AddressSpacePlan;
+import io.enmasse.address.model.Status;
 import io.enmasse.controller.api.RbacSecurityContext;
 import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.catalog.InputParameters;
@@ -89,7 +90,8 @@ public abstract class OSBServiceBase {
             if (d.isPresent()) {
                 log.info("Address found in addressspace {} (namespace {}). Deleting it now.",
                         i.getName(), i.getNamespace());
-                addressApi.deleteAddress(d.get());
+                d.get().getStatus().setPhase(Status.Phase.Terminating);
+                addressApi.replaceAddress(d.get());
                 return true;
             }
         }
