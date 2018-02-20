@@ -32,7 +32,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public Optional<AddressSpace> getAddressSpaceWithName(String name) {
-        ConfigMap map = client.configMaps().withName(getConfigMapName(name)).get();
+        ConfigMap map = client.configMaps().withName(name).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -124,9 +124,5 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
         return new ConfigMapAddressApi(client, addressSpace.getNamespace());
-    }
-
-    public static String getConfigMapName(String name) {
-        return name;
     }
 }

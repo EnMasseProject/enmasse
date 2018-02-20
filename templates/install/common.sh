@@ -42,7 +42,7 @@ function create_address_space() {
     \"apiVersion\": \"v1\",
     \"kind\": \"ConfigMap\",
     \"metadata\": {
-        \"name\": \"address-space-${name}\",
+        \"name\": \"${name}\",
         \"labels\": {
             \"type\": \"address-space\"
         }

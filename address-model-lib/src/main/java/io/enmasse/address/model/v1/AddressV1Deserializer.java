@@ -35,13 +35,13 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
 
         String type = spec.get(Fields.TYPE).asText();
 
-
         Address.Builder builder = new Address.Builder()
-                .setName(metadata.get(Fields.NAME).asText())
-                .setType(type);
+                .setAddress(spec.get(Fields.ADDRESS).asText())
+                .setType(type)
+                .setPlan(spec.get(Fields.PLAN).asText());
 
-        if (spec.hasNonNull(Fields.PLAN)) {
-            builder.setPlan(spec.get(Fields.PLAN).asText());
+        if (metadata.hasNonNull(Fields.NAME)) {
+            builder.setName(metadata.get(Fields.NAME).asText());
         }
 
         if (metadata.hasNonNull(Fields.ADDRESS_SPACE)) {
@@ -63,10 +63,6 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
             }
         }
 
-        if (spec.hasNonNull(Fields.ADDRESS)) {
-            builder.setAddress(spec.get(Fields.ADDRESS).asText());
-        }
-
         if (status != null) {
             boolean isReady = status.get(Fields.IS_READY).asBoolean();
             Status s = new Status(isReady);
@@ -85,24 +81,4 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
 
         return builder.build();
     }
-
-    // TODO: This is a more low-level generator to avoid re-encoding address payload into a list
-    /* Find a better way to fix this in the future
-    public byte[] encodeAddressList(List<byte[]> addressList) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        JsonGenerator generator = mapper.getFactory().createGenerator(baos);
-        generator.writeStartObject();
-        generator.writeStringField("kind", "AddressList");
-        generator.writeStringField("apiVersion", "enmasse.io/v1");
-        generator.writeArrayFieldStart("items");
-        for (byte[] address : addressList) {
-            generator.writeRawValue(new String(address, "UTF-8"));
-        }
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.close();
-        baos.close();
-        return baos.toByteArray();
-    }
-    */
 }
