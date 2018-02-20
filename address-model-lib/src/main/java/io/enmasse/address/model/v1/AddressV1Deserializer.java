@@ -40,25 +40,27 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
                 .setType(type)
                 .setPlan(spec.get(Fields.PLAN).asText());
 
-        if (metadata.hasNonNull(Fields.NAME)) {
-            builder.setName(metadata.get(Fields.NAME).asText());
-        }
+        if (metadata != null) {
+            if (metadata.hasNonNull(Fields.NAME)) {
+                builder.setName(metadata.get(Fields.NAME).asText());
+            }
 
-        if (metadata.hasNonNull(Fields.ADDRESS_SPACE)) {
-            builder.setAddressSpace(metadata.get(Fields.ADDRESS_SPACE).asText());
-        }
+            if (metadata.hasNonNull(Fields.ADDRESS_SPACE)) {
+                builder.setAddressSpace(metadata.get(Fields.ADDRESS_SPACE).asText());
+            }
 
-        if (metadata.hasNonNull(Fields.UUID)) {
-            builder.setUuid(metadata.get(Fields.UUID).asText());
-        }
+            if (metadata.hasNonNull(Fields.UUID)) {
+                builder.setUuid(metadata.get(Fields.UUID).asText());
+            }
 
-        if (metadata.hasNonNull(Fields.ANNOTATIONS)) {
-            ObjectNode annotationObject = metadata.with(Fields.ANNOTATIONS);
-            Iterator<String> annotationIt = annotationObject.fieldNames();
-            while (annotationIt.hasNext()) {
-                String key = annotationIt.next();
-                if (annotationObject.get(key).isTextual()) {
-                    builder.putAnnotation(key, annotationObject.get(key).asText());
+            if (metadata.hasNonNull(Fields.ANNOTATIONS)) {
+                ObjectNode annotationObject = metadata.with(Fields.ANNOTATIONS);
+                Iterator<String> annotationIt = annotationObject.fieldNames();
+                while (annotationIt.hasNext()) {
+                    String key = annotationIt.next();
+                    if (annotationObject.get(key).isTextual()) {
+                        builder.putAnnotation(key, annotationObject.get(key).asText());
+                    }
                 }
             }
         }
