@@ -155,36 +155,6 @@ public class TestUtils {
     }
 
     /**
-     * Wait until broker pod is ready
-     *
-     * @param kubernetes   client for manipulation with kubernetes cluster
-     * @param addressSpace AddressSpace where broker pod is present
-     * @param group        broker pod group
-     * @param budget       timeout for wait until broker pod is ready
-     * @throws InterruptedException
-     */
-    public static void waitForBrokerPod(Kubernetes kubernetes, AddressSpace addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("role", "broker");
-
-        Map<String, String> annotations = new LinkedHashMap<>();
-        annotations.put("cluster_id", group);
-
-        int numReady = 0;
-        List<Pod> pods = null;
-        while (budget.timeLeft() >= 0 && numReady != 1) {
-            pods = kubernetes.listPods(addressSpace.getNamespace(), labels, annotations);
-            numReady = numReady(pods);
-            if (numReady != 1) {
-                Thread.sleep(5000);
-            }
-        }
-        if (numReady != 1) {
-            throw new IllegalStateException("Unable to find broker pod for " + group + " within timeout. Found " + pods);
-        }
-    }
-
-    /**
      * Delete requested destinations(Addresses) from AddressSpace
      *
      * @param apiClient    client for http requests on address controller
@@ -214,7 +184,6 @@ public class TestUtils {
             Set<String> groups = new HashSet<>();
             for (Destination destination : destinations) {
                 if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
-                    waitForBrokerPod(kubernetes, addressSpace, destination.getDeployment(), budget);
                     groups.add(destination.getDeployment());
                 }
             }
