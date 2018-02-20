@@ -114,20 +114,58 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                     knownAddresses.putIfAbsent(address, new HashSet<>());
                     if(knownAddresses.get(address).add(encodedAddress)) {
 
-                        Set<Role> roles = new HashSet<>(standardRoles);
-
+                        Set<Role> roles = new HashSet<>();
                         LOG.debugv("Adding permissions for address {0} due to group {1}", address, group);
-                        for(String encoded : knownAddresses.get(address)) {
-                            roles.add(new Role("send_" + encoded, true, false, false, false, true, false, false, false, false, false));
-                            roles.add(new Role("consume_" + encoded, false, true, true, true, true, true, false, true, false, false));
-                            roles.add(new Role("recv_" + encoded, false, true, true, true, true, true, false, true, false, false));
-                            roles.add(new Role("browse_" + encoded, false, false, false, false, false, false, false, true, false, false));
-                            roles.add(new Role("create_" + encoded, false, false, true, false, true, false, false, false, true, false));
-                            roles.add(new Role("delete_" + encoded, false, false, false, true, false, true, false, false, false, true));
+                        roles.add(new Role("send_" + encodedAddress, true, false, false, false, true, false, false, false, false, false));
+                        roles.add(new Role("consume_" + encodedAddress, false, true, true, true, true, true, false, true, false, false));
+                        roles.add(new Role("recv_" + encodedAddress, false, true, true, true, true, true, false, true, false, false));
+                        roles.add(new Role("browse_" + encodedAddress, false, false, false, false, false, false, false, true, false, false));
+                        roles.add(new Role("create_" + encodedAddress, false, false, true, false, true, false, false, false, true, false));
+                        roles.add(new Role("delete_" + encodedAddress, false, false, false, true, false, true, false, false, false, true));
 
+                        Set<Role> allRoles = new HashSet<>(securityRepository.getMatch(address));
+                        allRoles.addAll(roles);
+                        securityRepository.addMatch(address, allRoles);
+
+                        if(address.equals("#")) {
+                            for(String existingAddress : knownAddresses.keySet()) {
+                                if(!existingAddress.equals(address)) {
+                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                    updatedRoles.addAll(roles);
+                                    securityRepository.addMatch(existingAddress, updatedRoles);
+                                }
+                            }
+                        } else if(address.equals("*")) {
+                          for(String existingAddress : knownAddresses.keySet()) {
+                              if(!existingAddress.equals(address) && !existingAddress.contains(".")) {
+                                  Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                  updatedRoles.addAll(roles);
+                                  securityRepository.addMatch(existingAddress, updatedRoles);
+                              }
+                          }
+                        } else if(address.endsWith(".*")) {
+                            String stem = address.substring(0, address.length()-2);
+                            for(String existingAddress : knownAddresses.keySet()) {
+                                if(!existingAddress.equals(address)
+                                    && existingAddress.startsWith(stem)
+                                    && !existingAddress.substring(stem.length()+1,existingAddress.length()).contains(".")
+                                    && !existingAddress.substring(stem.length()+1,existingAddress.length()).equals("#")) {
+                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                    updatedRoles.addAll(roles);
+                                    securityRepository.addMatch(existingAddress, updatedRoles);
+                                }
+                            }
+                        } else if(address.endsWith(".#")) {
+                            String stem = address.substring(0, address.length()-2);
+                            for(String existingAddress : knownAddresses.keySet()) {
+                                if(!existingAddress.equals(address)
+                                    && existingAddress.startsWith(stem)) {
+                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                    updatedRoles.addAll(roles);
+                                    securityRepository.addMatch(existingAddress, updatedRoles);
+                                }
+                            }
                         }
-                        securityRepository.addMatch(address, roles);
-
                     }
                 } catch (UnsupportedEncodingException | IllegalArgumentException e) {
                     LOG.infov("Unable to parse implied address from group {0}: {1}", group, e.getMessage());
