@@ -121,11 +121,10 @@ module.exports.kubernetes_name = function (name) {
     var clean = name.toLowerCase().replace(/[^a-z0-9\-]/g, '');
     if (clean.charAt(0) === '-') clean = clean.substring(1);
     if (clean.charAt(clean.length-1) === '-') clean = clean.substring(0,clean.length-1);
-    var qualifier = rhea.generate_uuid();
-    if (clean.length + qualifier.length > 63) {
-        clean = clean.substring(0, 63 - qualifier.length);
+    clean = clean + '-' + rhea.generate_uuid();
+    if (clean.length > 63) {
+        clean = clean.substring(0, 63);
     }
-    clean += qualifier;
     return clean;
 }
 
