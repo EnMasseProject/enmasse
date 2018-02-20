@@ -18,8 +18,11 @@
          items="items" config="listConfig">
       <div class="list-view-pf-description">
         <div class="list-view-pf-left">
-          <span class="fa fa-spinner" ng-if="item.propagated !== 100"></span>
-          <span class="fa pficon-ok" ng-if="item.propagated === 100"></span>
+          <span  data-toggle="tooltip" title="{{item.status.phase}}">
+            <span class="fa fa-spinner fa-spin" ng-if="(!item.status.isReady || (item.status.isReady && item.status.phase !== 'Active')) && item.status.phase !== 'Fail'"></span>
+            <span class="fa pficon-ok" ng-if="item.status.isReady && item.status.phase === 'Active'"></span>
+            <span class="fa pficon-error-circle-o" ng-if="item.status.phase === 'Fail'"></span>
+          </span>
         </div>
         <div class="list-group-item-heading">
           {{item.address}}
@@ -27,6 +30,11 @@
         <div class="list-group-item-text">
           {{item.type}} &nbsp &nbsp
           {{$parent.$parent.get_plan_display_name(item.type, item.plan)}}
+          <span ng-if="item.status.message">
+            &nbsp &nbsp
+            <span class="fa pficon-warning-triangle-o"></span>
+            {{item.status.message}}
+          </span>
         </div>
       </div>
       <div class="list-view-pf-additional-info">
