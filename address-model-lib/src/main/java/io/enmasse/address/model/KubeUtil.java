@@ -9,7 +9,7 @@ package io.enmasse.address.model;
  */
 public class KubeUtil {
     public static String sanitizeName(String name) {
-        String clean = name.toLowerCase().replaceAll("[^a-z0-9]-", "");
+        String clean = name.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }
