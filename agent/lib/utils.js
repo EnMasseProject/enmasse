@@ -117,7 +117,7 @@ function hash(s) {
 
 module.exports.hash = hash;
 
-const MAX_KUBE_NAME = 63;
+const MAX_KUBE_NAME = 63/*max allowed*/ - 3/*needed for kube to add stateful set qualifier*/;
 module.exports.kubernetes_name = function (name) {
     var clean = name.toLowerCase().replace(/[^a-z0-9\-]/g, '');
     if (clean.charAt(0) === '-') clean = clean.substring(1);
