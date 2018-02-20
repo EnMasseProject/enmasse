@@ -48,6 +48,8 @@ public class PlansTest extends TestBase {
         plansProvider.createAddressPlanConfig(weakQueuePlan);
         plansProvider.createAddressPlanConfig(weakTopicPlan);
 
+        Thread.sleep(3000); ///wait until ConfigMaps are created
+
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
                 new AddressSpaceResource("broker", 0.0, 9.0),
