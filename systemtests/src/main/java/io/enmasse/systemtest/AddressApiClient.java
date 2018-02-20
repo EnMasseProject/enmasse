@@ -252,7 +252,6 @@ public class AddressApiClient {
         for (Destination destination : destinations) {
             JsonObject entry = new JsonObject();
             JsonObject metadata = new JsonObject();
-            metadata.put("name", destination.getAddress());
             metadata.put("addressSpace", addressSpace.getName());
             entry.put("metadata", metadata);
 
