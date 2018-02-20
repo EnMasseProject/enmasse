@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+'use strict';
+
+var rhea = require('rhea');
 
 module.exports.remove = function (list, predicate) {
     var count = 0;
@@ -118,15 +121,11 @@ module.exports.kubernetes_name = function (name) {
     var clean = name.toLowerCase().replace(/[^a-z0-9\-]/g, '');
     if (clean.charAt(0) === '-') clean = clean.substring(1);
     if (clean.charAt(clean.length-1) === '-') clean = clean.substring(0,clean.length-1);
-    if (clean !== name) {
-        var qualifier = hash(name).toString(16);
-        if (clean.length + qualifier.length > 63) {
-            clean = clean.substring(0, 63 - qualifier.length);
-        }
-        clean += qualifier;
-    } else if (clean.length > 63) {
-        clean = clean.substring(0, 63);
+    var qualifier = rhea.generate_uuid();
+    if (clean.length + qualifier.length > 63) {
+        clean = clean.substring(0, 63 - qualifier.length);
     }
+    clean += qualifier;
     return clean;
 }
 

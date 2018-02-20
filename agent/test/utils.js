@@ -42,13 +42,6 @@ describe('merge', function() {
 });
 
 describe('kubernetes_name', function () {
-    it ('does not affect names without special chars and under 64 chars of length', function (done) {
-        var valid = ['foo', 'foo-bar', 'abcdefghiklmnopqrstuvwxyz0123456789-x'];
-        for (var i in valid) {
-            assert.equal(valid[i], myutils.kubernetes_name(valid[i]));
-        }
-        done();
-    });
     it ('removes invalid chars', function (done) {
         var invalid = '!"£$%^&*()_?><~#@\':;`/\|ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         var input = 'a!b"c£d$e%f^g&h*i()j_?><k~#l@\'m:n;opq`/r\s|t';
@@ -91,15 +84,6 @@ describe('kubernetes_name', function () {
         assert.notEqual(a, b);
         assert.notEqual(a, c);
         assert.notEqual(b, c);
-        done();
-    });
-    it ('gives same output for same input', function (done) {
-        var a = myutils.kubernetes_name('foo@bar');
-        var b = myutils.kubernetes_name('foo~bar');
-        var c = myutils.kubernetes_name('foo/bar/baz');
-        assert.equal(a, myutils.kubernetes_name('foo@bar'));
-        assert.equal(b, myutils.kubernetes_name('foo~bar'));
-        assert.equal(c, myutils.kubernetes_name('foo/bar/baz'));
         done();
     });
     it ('truncates names without special chars over 64 chars of length', function (done) {
