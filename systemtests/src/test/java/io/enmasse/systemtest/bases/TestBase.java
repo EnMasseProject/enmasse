@@ -58,6 +58,7 @@ public abstract class TestBase extends SystemTestRunListener {
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
+    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     protected String username;
     protected String password;
