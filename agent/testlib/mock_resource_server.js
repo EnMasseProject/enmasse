@@ -336,7 +336,7 @@ function get_config_map(name, type, key, content) {
 }
 
 ConfigMapServer.prototype.add_address_definition = function (def, name, annotations, status) {
-    var address = {kind: 'Address', metadata: {name: def.address}, spec:def};
+    var address = {kind: 'Address', metadata: {name: name}, spec:def};
     if (annotations) {
         address.metadata.annotations = annotations;
     }
