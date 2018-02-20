@@ -30,7 +30,8 @@ public class JMSTestBase extends BrokeredTestBase {
         urlParam.append("?transport.trustAll=true")
                 .append("&jms.password=").append(username)
                 .append("&jms.username=").append(password)
-                .append("&transport.verifyHost=false");
+                .append("&transport.verifyHost=false")
+                .append("&amqp.saslMechanisms=PLAIN");
         urlParam.append(clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
 
         env.put("connectionfactory.qpidConnectionFactory", url + urlParam);
