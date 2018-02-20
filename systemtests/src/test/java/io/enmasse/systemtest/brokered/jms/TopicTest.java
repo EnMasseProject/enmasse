@@ -69,13 +69,6 @@ public class TopicTest extends JMSTestBase {
         return new InitialContext(env2);
     }
 
-    private void addUserCreateDeleteQueuePermisions(String username, String subID) throws Exception {
-        getKeycloakClient().createGroup(sharedAddressSpace.getName(),"create_*");
-        getKeycloakClient().createGroup(sharedAddressSpace.getName(),"delete_*");
-        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "create_*", username);
-        getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "delete_*", username);
-    }
-
     @Test
     public void testMessageSubscription() throws Exception {
         log.info("testMessageSubscription");
@@ -117,9 +110,6 @@ public class TopicTest extends JMSTestBase {
 
         String sub1ID = "sub1DurSub";
         String sub2ID = "sub2DurSub";
-        addUserCreateDeleteQueuePermisions(jmsUsername, sub1ID);
-        addUserCreateDeleteQueuePermisions(jmsUsername, sub2ID);
-
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
         MessageProducer messageProducer = session.createProducer(testTopic);
@@ -178,8 +168,6 @@ public class TopicTest extends JMSTestBase {
 
         String sub1ID = "sub1DurSubTrans";
         String sub2ID = "sub2DurSubTrans";
-        addUserCreateDeleteQueuePermisions(jmsUsername, sub1ID);
-        addUserCreateDeleteQueuePermisions(jmsUsername, sub2ID);
 
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
@@ -228,7 +216,6 @@ public class TopicTest extends JMSTestBase {
         Topic testTopic = (Topic) context1.lookup(topic);
 
         String subID = "sharedConsumerDurable123";
-        addUserCreateDeleteQueuePermisions(jmsUsername, subID);
 
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
