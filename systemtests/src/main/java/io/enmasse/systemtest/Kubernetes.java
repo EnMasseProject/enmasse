@@ -196,7 +196,8 @@ public abstract class Kubernetes {
             throw new IllegalStateException(String.format("AddressSpacePlan '%s' already exists and replace is set to '%s'",
                     fullAddressSpacePlanName, replaceExisting));
         }
-        log.info(String.format("AddressSpacePlan '%s' successfully created/replaced", fullAddressSpacePlanName));
+        log.info(String.format("AddressSpacePlan '%s' successfully '%s'", fullAddressSpacePlanName,
+                replaceExisting ? "replaced" : "created"));
     }
 
     /**
@@ -353,7 +354,8 @@ public abstract class Kubernetes {
             throw new IllegalStateException(String.format("AddressPlan '%s' already exists and replace is set to '%s'",
                     fullAddressPlanName, replaceExisting));
         }
-        log.info(String.format("AddressPlan '%s' successfully created/replaced", fullAddressPlanName));
+        log.info(String.format("AddressPlan '%s' successfully '%s'", fullAddressPlanName,
+                replaceExisting ? "replaced" : "created"));
     }
 
     /**
