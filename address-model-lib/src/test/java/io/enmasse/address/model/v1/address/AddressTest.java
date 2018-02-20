@@ -36,4 +36,24 @@ public class AddressTest {
         assertThat(a1.getType(), is(a2.getType()));
         assertThat(a1.getUuid(), is(a2.getUuid()));
     }
+
+    @Test
+    public void testSanitizer() {
+        Address b1 = new Address.Builder()
+                .setAddress("a1")
+                .setPlan("p1")
+                .setType("t1")
+                .build();
+
+        Address b2 = new Address.Builder()
+                .setAddress(b1.getAddress())
+                .setName(b1.getName())
+                .setPlan(b1.getPlan())
+                .setType(b1.getType())
+                .build();
+        assertThat(b1.getName(), is(b2.getName()));
+        assertThat(b1.getAddress(), is(b2.getAddress()));
+        assertThat(b1.getPlan(), is(b2.getPlan()));
+        assertThat(b1.getType(), is(b2.getType()));
+    }
 }
