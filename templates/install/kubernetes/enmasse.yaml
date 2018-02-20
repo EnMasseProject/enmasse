@@ -274,29 +274,30 @@ items:
       \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
       \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
       \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\":
-      \"true\"}, \"labels\": {\"addresstype\": \"queue\", \"app\": \"enmasse\", \"name\":
-      \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\":
-      \"QUEUE_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\":
-      \"${CLUSTER_ID}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
-      \"image\": \"${BROKER_IMAGE}\", \"lifecycle\": {\"preStop\": {\"exec\": {\"command\":
-      [\"/shutdown-hook/shutdown-hook.sh\"]}}}, \"livenessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      120}, \"name\": \"broker\", \"ports\": [{\"containerPort\": 5673, \"name\":
-      \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"}, {\"containerPort\":
-      8080, \"name\": \"artemismetrics\"}], \"readinessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}, \"requests\":
-      {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
+      \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
+      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
+      \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
+      {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
+      \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
+      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
+      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
+      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
+      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
+      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
+      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
+      \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
       \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
@@ -339,29 +340,30 @@ items:
       \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
       \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\":
-      \"true\"}, \"labels\": {\"addresstype\": \"queue\", \"app\": \"enmasse\", \"name\":
-      \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\":
-      \"QUEUE_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\":
-      \"${CLUSTER_ID}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
-      \"image\": \"${BROKER_IMAGE}\", \"lifecycle\": {\"preStop\": {\"exec\": {\"command\":
-      [\"/shutdown-hook/shutdown-hook.sh\"]}}}, \"livenessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      120}, \"name\": \"broker\", \"ports\": [{\"containerPort\": 5673, \"name\":
-      \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"}, {\"containerPort\":
-      8080, \"name\": \"artemismetrics\"}], \"readinessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}, \"requests\":
-      {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
+      \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
+      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
+      \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
+      {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
+      \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
+      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
+      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
+      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
+      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
+      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
+      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
+      \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
       \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
@@ -408,29 +410,29 @@ items:
       \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"clusterIP\":
       \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
       \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
-      {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
-      1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
-      {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\":
-      \"true\"}, \"labels\": {\"addresstype\": \"topic\", \"app\": \"enmasse\", \"name\":
-      \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\":
-      \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\":
-      \"${CLUSTER_ID}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
-      \"image\": \"${BROKER_IMAGE}\", \"lifecycle\": {\"preStop\": {\"exec\": {\"command\":
-      [\"/shutdown-hook/shutdown-hook.sh\"]}}}, \"livenessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      120}, \"name\": \"broker\", \"ports\": [{\"containerPort\": 5673, \"name\":
-      \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"}, {\"containerPort\":
-      8080, \"name\": \"artemismetrics\"}], \"readinessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}, \"requests\":
-      {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
+      {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
+      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
+      {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
+      \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
+      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
+      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
+      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
+      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
+      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
+      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
+      \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
       \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
@@ -496,29 +498,30 @@ items:
       \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
       \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\":
-      \"true\"}, \"labels\": {\"addresstype\": \"topic\", \"app\": \"enmasse\", \"name\":
-      \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\":
-      \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\":
-      \"${CLUSTER_ID}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
-      \"image\": \"${BROKER_IMAGE}\", \"lifecycle\": {\"preStop\": {\"exec\": {\"command\":
-      [\"/shutdown-hook/shutdown-hook.sh\"]}}}, \"livenessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      120}, \"name\": \"broker\", \"ports\": [{\"containerPort\": 5673, \"name\":
-      \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"}, {\"containerPort\":
-      8080, \"name\": \"artemismetrics\"}], \"readinessProbe\": {\"exec\": {\"command\":
-      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
-      10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}, \"requests\":
-      {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
+      \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
+      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
+      \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
+      {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
+      \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
+      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
+      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
+      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
+      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
+      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
+      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
+      \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
       \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":

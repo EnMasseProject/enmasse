@@ -42,7 +42,7 @@ describe('topic tracker', function() {
     it('adds new pods', function(done) {
         var topics = {};
         var tracker = topic_tracker(topics, create_topic);
-        tracker([{name:'foo', value:'bar', annotations:{cluster_id:'a'}, ready:'True', phase:'Running'}]);
+        tracker([{name:'foo', value:'bar', annotations:{address:'a'}, ready:'True', phase:'Running'}]);
         assert(topics.a);
         assert.equal(topics.a.pods.pods.foo.name, 'foo');
         assert.equal(topics.a.pods.pods.foo.value, 'bar');
@@ -51,14 +51,14 @@ describe('topic tracker', function() {
     it('removes deleted pods from the same topic', function(done) {
         var topics = {};
         var tracker = topic_tracker(topics, create_topic);
-        tracker([{name:'foo', value:'bar', annotations:{cluster_id:'a'}, ready:'True', phase:'Running'},
-                {name:'baz', value:'boo', annotations:{cluster_id:'a'}, ready:'True', phase:'Running'}]);
+        tracker([{name:'foo', value:'bar', annotations:{address:'a'}, ready:'True', phase:'Running'},
+                {name:'baz', value:'boo', annotations:{address:'a'}, ready:'True', phase:'Running'}]);
         assert(topics.a);
         assert.equal(topics.a.pods.pods.foo.name, 'foo');
         assert.equal(topics.a.pods.pods.foo.value, 'bar');
         assert.equal(topics.a.pods.pods.baz.name, 'baz');
         assert.equal(topics.a.pods.pods.baz.value, 'boo');
-        tracker([{name:'baz', value:'boo', annotations:{cluster_id:'a'}, ready:'True', phase:'Running'}]);
+        tracker([{name:'baz', value:'boo', annotations:{address:'a'}, ready:'True', phase:'Running'}]);
         assert(topics.a);
         assert.equal(topics.a.pods.pods.foo, undefined);
         assert.equal(topics.a.pods.pods.baz.name, 'baz');
@@ -68,15 +68,15 @@ describe('topic tracker', function() {
     it('removes deleted pods from different topics', function(done) {
         var topics = {};
         var tracker = topic_tracker(topics, create_topic);
-        tracker([{name:'foo', value:'bar', annotations:{cluster_id:'a'}, ready:'True', phase:'Running'},
-                {name:'baz', value:'boo', annotations:{cluster_id:'b'}, ready:'True', phase:'Running'}]);
+        tracker([{name:'foo', value:'bar', annotations:{address:'a'}, ready:'True', phase:'Running'},
+                {name:'baz', value:'boo', annotations:{address:'b'}, ready:'True', phase:'Running'}]);
         assert(topics.a);
         assert.equal(topics.a.pods.pods.foo.name, 'foo');
         assert.equal(topics.a.pods.pods.foo.value, 'bar');
         assert(topics.b);
         assert.equal(topics.b.pods.pods.baz.name, 'baz');
         assert.equal(topics.b.pods.pods.baz.value, 'boo');
-        tracker([{name:'baz', value:'boo', annotations:{cluster_id:'b'}, ready:'True', phase:'Running'}]);
+        tracker([{name:'baz', value:'boo', annotations:{address:'b'}, ready:'True', phase:'Running'}]);
         assert(topics.a === undefined);
         assert(topics.b);
         assert.equal(topics.b.pods.pods.baz.name, 'baz');

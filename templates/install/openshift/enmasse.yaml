@@ -567,6 +567,7 @@ objects:
       kind: StatefulSet
       metadata:
         annotations:
+          address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
           io.enmasse.certCn: broker
@@ -580,6 +581,7 @@ objects:
         template:
           metadata:
             annotations:
+              address: ${ADDRESS}
               addressSpace: ${ADDRESS_SPACE}
               cluster_id: ${CLUSTER_ID}
               prometheus.io/path: /metrics
@@ -744,6 +746,7 @@ objects:
       kind: StatefulSet
       metadata:
         annotations:
+          address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
           io.enmasse.certCn: broker
@@ -757,6 +760,7 @@ objects:
         template:
           metadata:
             annotations:
+              address: ${ADDRESS}
               addressSpace: ${ADDRESS_SPACE}
               cluster_id: ${CLUSTER_ID}
               prometheus.io/path: /metrics
@@ -935,6 +939,7 @@ objects:
       kind: StatefulSet
       metadata:
         annotations:
+          address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
           io.enmasse.certCn: broker
@@ -948,6 +953,7 @@ objects:
         template:
           metadata:
             annotations:
+              address: ${ADDRESS}
               addressSpace: ${ADDRESS_SPACE}
               cluster_id: ${CLUSTER_ID}
               prometheus.io/path: /metrics
@@ -1185,6 +1191,7 @@ objects:
       kind: StatefulSet
       metadata:
         annotations:
+          address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
           io.enmasse.certCn: broker
@@ -1198,6 +1205,7 @@ objects:
         template:
           metadata:
             annotations:
+              address: ${ADDRESS}
               addressSpace: ${ADDRESS_SPACE}
               cluster_id: ${CLUSTER_ID}
               prometheus.io/path: /metrics

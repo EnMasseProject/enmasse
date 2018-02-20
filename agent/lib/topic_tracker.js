@@ -23,7 +23,7 @@ module.exports = function (topics, create_topic) {
     return function (pods) {
         var by_topic = {};
         pods.filter(is_pod_ready).forEach(function (pod) {
-            var key = pod.annotations.cluster_id;
+            var key = pod.annotations.address;
             var list = by_topic[key];
             if (list === undefined) {
                 list = [];
