@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class AddressTest {
     @Test
@@ -40,7 +41,7 @@ public class AddressTest {
     @Test
     public void testSanitizer() {
         Address b1 = new Address.Builder()
-                .setAddress("a1")
+                .setAddress("myAddr_1")
                 .setPlan("p1")
                 .setType("t1")
                 .build();
@@ -51,6 +52,8 @@ public class AddressTest {
                 .setPlan(b1.getPlan())
                 .setType(b1.getType())
                 .build();
+        System.out.println(b1.getName());
+        assertTrue(b1.getName().startsWith("myaddr1-"));
         assertThat(b1.getName(), is(b2.getName()));
         assertThat(b1.getAddress(), is(b2.getAddress()));
         assertThat(b1.getPlan(), is(b2.getPlan()));
