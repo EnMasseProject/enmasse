@@ -193,8 +193,8 @@ public class Address {
             }
             if (name == null) {
                 name = KubeUtil.sanitizeName(address);
-                if (name.length() + uuid.length() > 62) {
-                    name = name.substring(0, 62 - uuid.length());
+                if (name.length() + uuid.length() > 60) {
+                    name = name.substring(0, 60 - uuid.length());
                 }
                 name += "-" + uuid;
             }

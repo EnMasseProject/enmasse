@@ -14,8 +14,8 @@ public class KubeUtil {
             clean = clean.replaceFirst("-", "1");
         }
 
-        if (clean.length() > 63) {
-            clean = clean.substring(0, 63);
+        if (clean.length() > 60) {
+            clean = clean.substring(0, 60);
         }
 
         if (clean.endsWith("-")) {
