@@ -10,7 +10,7 @@ local forwarder = import "forwarder.jsonnet";
   template(multicast, persistence)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
-    local volumeName = "vol-${NAME}";
+    local volumeName = "${NAME}";
     local templateName = "%s-%s" % [addrtype, (if persistence then "persisted" else "inmemory")];
     {
       "apiVersion": "v1",
