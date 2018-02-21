@@ -49,7 +49,7 @@ public class AuthenticationTest extends AuthenticationTestBase {
         testStandardAuthenticationServiceGeneral(AddressSpaceType.BROKERED);
     }
 
-    @Test
+    //@Test disabled due to enabled authz
     public void testNoneAuthenticationServiceBrokered() throws Exception {
         testNoneAuthenticationServiceGeneral(AddressSpaceType.BROKERED, anonymousUser, anonymousPswd);
     }

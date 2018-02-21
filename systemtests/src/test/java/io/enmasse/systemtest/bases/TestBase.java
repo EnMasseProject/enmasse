@@ -656,13 +656,23 @@ public abstract class TestBase extends SystemTestRunListener {
      */
     protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws Exception {
         List<KeycloakCredentials> users = new ArrayList<>();
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_*", "password"));
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue*", "password"));
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic*", "password"));
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue_*", "password"));
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic_*", "password"));
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_queueA*", "password"));
-        users.add(new KeycloakCredentials("user_" + groupPrefix + "_topicA*", "password"));
+        if(addressSpace.getType() == AddressSpaceType.BROKERED) {
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_#", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.#", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.#", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queueA*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topicA*", "password"));
+        }else {
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.A*", "password"));
+            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.A*", "password"));
+        }
 
         for (KeycloakCredentials cred : users) {
             getKeycloakClient().createUser(addressSpace.getName(), cred.getUsername(), cred.getPassword(),
@@ -673,10 +683,10 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected List<Destination> getAddressesWildcard() throws Exception {
-        Destination queue = Destination.queue("queue_1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queueABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic_2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topicABCD", getDefaultPlan(AddressType.TOPIC));
+        Destination queue = Destination.queue("queue.1234", getDefaultPlan(AddressType.QUEUE));
+        Destination queue2 = Destination.queue("queue.ABCD", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("topic.2345", getDefaultPlan(AddressType.TOPIC));
+        Destination topic2 = Destination.topic("topic.ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }

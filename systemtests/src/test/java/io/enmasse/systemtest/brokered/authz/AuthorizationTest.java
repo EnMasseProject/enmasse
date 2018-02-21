@@ -41,12 +41,12 @@ public class AuthorizationTest extends AuthorizationTestBase {
         doTestUserPermissionAfterRemoveAuthz();
     }
 
-    //@Test
+    @Test
     public void testSendAuthzWithWIldcards() throws Exception {
         doTestSendAuthzWithWIldcards();
     }
 
-    //@Test
+    @Test
     public void testReceiveAuthzWithWIldcards() throws Exception {
         doTestReceiveAuthzWithWIldcards();
     }
