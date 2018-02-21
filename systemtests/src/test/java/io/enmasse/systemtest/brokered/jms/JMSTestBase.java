@@ -22,19 +22,23 @@ import static org.junit.Assert.assertTrue;
 
 public class JMSTestBase extends BrokeredTestBase {
     private static Logger log = CustomLogger.getLogger();
+    protected String jmsUsername = "test";
+    protected String jmsPassword = "test";
+    protected String jmsClientID = "testClient";
 
     protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
         return setUpEnv(url, username, password, "", prop);
     }
 
     protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, String clientID, Map<String, String> prop) {
-        Hashtable env = new Hashtable<Object, Object>();
+        Hashtable<Object, Object> env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
         StringBuilder urlParam = new StringBuilder();
         urlParam.append("?transport.trustAll=true")
                 .append("&jms.password=").append(username)
                 .append("&jms.username=").append(password)
-                .append("&transport.verifyHost=false");
+                .append("&transport.verifyHost=false")
+                .append("&amqp.saslMechanisms=PLAIN");
         urlParam.append(clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
 
         env.put("connectionfactory.qpidConnectionFactory", url + urlParam);

@@ -196,14 +196,18 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private boolean canSend(Destination destination, String username, String password) throws Exception {
         log.info("Try send message under user {}", username);
+        log.info("Try to open sender client under user {}", username);
         AmqpClient sender = createClient(destination, username, password);
+        log.info("Try to open receiver client under user {}", this.username);
         AmqpClient receiver = createClient(destination, this.username, this.password);
         return canAuth(sender, receiver, destination);
     }
 
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
         log.info("Try receive message under user {}", username);
+        log.info("Try to open sender client under user {}", this.username);
         AmqpClient sender = createClient(destination, this.username, this.password);
+        log.info("Try to open receiver client under user {}", username);
         AmqpClient receiver = createClient(destination, username, password);
         return canAuth(sender, receiver, destination);
     }

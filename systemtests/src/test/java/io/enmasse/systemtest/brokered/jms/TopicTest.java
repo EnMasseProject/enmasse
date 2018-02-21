@@ -36,10 +36,6 @@ public class TopicTest extends JMSTestBase {
     private String topic = "jmsTopic";
     private Destination addressTopic;
 
-    private String jmsUsername = "test";
-    private String jmsPassword = "test";
-    private String jmsClientID = "testClient";
-
     @Before
     public void setUp() throws Exception {
         addressTopic = Destination.topic(topic, getDefaultPlan(AddressType.TOPIC));
@@ -66,9 +62,10 @@ public class TopicTest extends JMSTestBase {
         if (connection != null) {
             connection.close();
         }
+
     }
 
-    protected Context createContextForShared() throws JMSException, NamingException {
+    private Context createContextForShared() throws JMSException, NamingException {
         Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(sharedAddressSpace).toString(), jmsUsername, jmsPassword,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
@@ -175,6 +172,7 @@ public class TopicTest extends JMSTestBase {
 
         String sub1ID = "sub1DurSubTrans";
         String sub2ID = "sub2DurSubTrans";
+
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
         MessageProducer messageProducer = session.createProducer(testTopic);
@@ -204,7 +202,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     @Test
-    public void testSharedDurableSubscription() throws JMSException, NamingException {
+    public void testSharedDurableSubscription() throws Exception {
         log.info("testSharedDurableSubscription");
 
         Context context1 = createContextForShared();
@@ -222,6 +220,7 @@ public class TopicTest extends JMSTestBase {
         Topic testTopic = (Topic) context1.lookup(topic);
 
         String subID = "sharedConsumerDurable123";
+
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
         MessageProducer messageProducer = session.createProducer(testTopic);
