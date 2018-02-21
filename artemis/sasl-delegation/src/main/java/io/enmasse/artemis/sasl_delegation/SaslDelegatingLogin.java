@@ -64,7 +64,8 @@ public class SaslDelegatingLogin implements LoginModule {
     private static final Symbol AUTHENTICATED_IDENTITY = Symbol.valueOf("authenticated-identity");
     public static final String PREFERRED_USERNAME = "preferred_username";
     public static final String SUB = "sub";
-    public static final String GROUPS = "groups";
+    public static final String PROP_ADDRESS_AUTHZ = "address-authz";
+    public static final Symbol CAPABILITY_ADDRESS_AUTHZ = Symbol.valueOf("ADDRESS-AUTHZ");
 
     private final Set<Principal> principals = new HashSet<>();
     private final Set<String> roles = new HashSet<>();
@@ -291,6 +292,8 @@ public class SaslDelegatingLogin implements LoginModule {
 
     private void getUserAndRolesFromConnection(Connection connection) {
         final Map<Symbol, Object> remoteProperties = connection.getRemoteProperties();
+        Symbol[] supportedCapabilities = connection.getRemoteOfferedCapabilities();
+        boolean supportsAuthz = supportedCapabilities != null && Arrays.asList(supportedCapabilities).contains(CAPABILITY_ADDRESS_AUTHZ);
         if (remoteProperties != null && remoteProperties.get(AUTHENTICATED_IDENTITY) instanceof Map) {
             Map identity = (Map) remoteProperties.get(AUTHENTICATED_IDENTITY);
             if (identity.containsKey(PREFERRED_USERNAME)) {
@@ -298,8 +301,19 @@ public class SaslDelegatingLogin implements LoginModule {
             } else {
                 user = String.valueOf(identity.get(SUB)).trim();
             }
-            if (remoteProperties.get(Symbol.valueOf(GROUPS)) instanceof List) {
-                List<String> groups = (List<String>) remoteProperties.get(Symbol.valueOf(GROUPS));
+            roles.add("all");
+
+        }
+
+        if(supportsAuthz) {
+            if (remoteProperties != null && remoteProperties.get(Symbol.valueOf(PROP_ADDRESS_AUTHZ)) instanceof Map) {
+                Map<String, String[]> authz = (Map<String, String[]>) remoteProperties.get(Symbol.valueOf(PROP_ADDRESS_AUTHZ));
+                List<String> groups = new ArrayList<>();
+                for(Map.Entry<String, String[]> entry : authz.entrySet()) {
+                    for(String permission : entry.getValue()) {
+                        groups.add(permission + "_" + entry.getKey());
+                    }
+                }
                 roles.addAll(groups);
                 if(this.securitySettings != null) {
                     SaslGroupBasedSecuritySettingsPlugin securitySettingPlugin = SaslGroupBasedSecuritySettingsPlugin.getInstance(this.securitySettings);
@@ -308,14 +322,23 @@ public class SaslDelegatingLogin implements LoginModule {
                     }
                 }
             }
-            roles.add("all");
 
+        } else {
+            if(this.securitySettings != null) {
+                SaslGroupBasedSecuritySettingsPlugin securitySettingPlugin = SaslGroupBasedSecuritySettingsPlugin.getInstance(this.securitySettings);
+                if(securitySettingPlugin != null) {
+                    LOG.infov("Using sasl delegation for authz, but delegate does offer support, adding admin role to : {0}", user);
+                    roles.add("admin");
+                }
+            }
         }
+
     }
 
     private void performConnectionOpen(Connection connection, InputStream in, OutputStream out) throws IOException, LoginException {
         connection.setHostname(saslHostname);
         connection.setContainer(container);
+        connection.setDesiredCapabilities(new Symbol[] {CAPABILITY_ADDRESS_AUTHZ});
         connection.open();
         writeToNetwork(connection, out);
         readFromNetwork(connection, in, () -> connection.getRemoteState() == EndpointState.UNINITIALIZED);

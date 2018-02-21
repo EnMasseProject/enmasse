@@ -14,6 +14,9 @@ import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import io.vertx.proton.sasl.impl.ProtonSaslPlainImpl;
+import org.apache.activemq.artemis.core.security.Role;
+import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
+import org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository;
 import org.apache.activemq.artemis.spi.core.security.jaas.CertificateCallback;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.activemq.artemis.spi.core.security.jaas.UserPrincipal;
@@ -32,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -60,11 +64,21 @@ public class SaslDelegatingLoginTest {
     private Vertx vertx;
     private String verticleId;
     private String mechName;
+    private SaslGroupBasedSecuritySettingsPlugin securityPlugin = new SaslGroupBasedSecuritySettingsPlugin();
 
     @Before
     public void setup() throws ExecutionException, InterruptedException {
         options.clear();
         loginModule = new SaslDelegatingLogin();
+
+        Map<String, String> initMap = new HashMap<>();
+        initMap.put("name", "test");
+        initMap.put("useGroupsFromSaslDelegation", "true");
+        securityPlugin.init(initMap);
+        HierarchicalRepository<Set<Role>> repo = new HierarchicalObjectRepository<>();
+        repo.setDefault(Collections.emptySet());
+        securityPlugin.setSecurityRepository(repo);
+
         CompletableFuture<Integer> portFuture = new CompletableFuture<>();
         mechName = ProtonSaslPlainImpl.MECH_NAME;
         authServer = new AuthServer(portFuture);
@@ -81,6 +95,7 @@ public class SaslDelegatingLoginTest {
         port = portFuture.get();
         options.put("hostname", "127.0.0.1");
         options.put("port", port);
+        options.put("security_settings", "test");
     }
 
     @After
@@ -93,13 +108,13 @@ public class SaslDelegatingLoginTest {
     public void testSuccessfulCredentialLogin() throws Exception {
         Subject subject = new Subject();
         validLogins.put("user", "password");
-        groups.put("user", Arrays.asList("a","b"));
+        groups.put("user", Arrays.asList("send_a","recv_b"));
         loginModule.initialize(subject, createCallbackHandler("user", "password".toCharArray()), Collections.emptyMap(), options);
         assertTrue("Login unexpectedly failed", loginModule.login());
         assertEquals("No principals should be added until after the commit", 0, subject.getPrincipals().size());
         assertTrue("Commit unexpectedly failed", loginModule.commit());
         assertEquals("Unexpected user principal names", Collections.singleton("user"), subject.getPrincipals(UserPrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()));
-        assertEquals("Unexpected role principal names", new HashSet<>(Arrays.asList("a","b","all")), subject.getPrincipals(RolePrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()));
+        assertEquals("Unexpected role principal names", new HashSet<>(Arrays.asList("send_a","recv_b","all")), subject.getPrincipals(RolePrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()));
     }
 
     // unsuccessful credentials login
@@ -196,7 +211,11 @@ public class SaslDelegatingLoginTest {
         return X509Certificate.getInstance(cert.getBytes(StandardCharsets.US_ASCII));
     }
 
+    private static final Symbol ADDRESS_AUTHZ_CAPABILITY = Symbol.valueOf("ADDRESS-AUTHZ");
+    private static final Symbol ADDRESS_AUTHZ_PROPERTY = Symbol.valueOf("address-authz");
+
     private final class AuthServer extends AbstractVerticle {
+
 
 
         private ProtonServer server;
@@ -217,6 +236,12 @@ public class SaslDelegatingLoginTest {
                 claims.put("sub", saslAuthenticator.getUser());
                 claims.put("preferred_username", saslAuthenticator.getUser());
                 props.put(Symbol.valueOf("authenticated-identity"),claims);
+                if(connection.getRemoteDesiredCapabilities() != null && Arrays.asList(connection.getRemoteDesiredCapabilities()).contains(ADDRESS_AUTHZ_CAPABILITY)) {
+                    connection.setOfferedCapabilities(new Symbol[] { ADDRESS_AUTHZ_CAPABILITY });
+                    if(groups.containsKey(saslAuthenticator.getUser())) {
+                        props.put(ADDRESS_AUTHZ_PROPERTY, getPermissionsFromGroups(groups.get(saslAuthenticator.getUser())));
+                    }
+                }
 
                 if(groups.containsKey(saslAuthenticator.getUser())) {
                     props.put(Symbol.valueOf("groups"), groups.get(saslAuthenticator.getUser()));
@@ -232,6 +257,19 @@ public class SaslDelegatingLoginTest {
             });
 
         }
+
+        Map<String, String[]> getPermissionsFromGroups(List<String> groups) {
+            Map<String, Set<String>> authMap = new HashMap<>();
+            for(String group : groups) {
+                String[] parts = group.split("_", 2);
+                if(parts[0] != null) {
+                    Set<String> permissions = authMap.computeIfAbsent(parts[1], a -> new HashSet<>());
+                    permissions.add(parts[0]);
+                }
+            }
+            return authMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toArray(new String[e.getValue().size()])));
+        }
+
 
         @Override
         public void start() {
