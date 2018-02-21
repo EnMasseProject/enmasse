@@ -41,7 +41,7 @@ public class AddressTest {
     @Test
     public void testSanitizer() {
         Address b1 = new Address.Builder()
-                .setAddress("myAddr_1")
+                .setAddress("myAddr_-")
                 .setPlan("p1")
                 .setType("t1")
                 .build();

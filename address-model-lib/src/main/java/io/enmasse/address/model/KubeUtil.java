@@ -8,20 +8,31 @@ package io.enmasse.address.model;
  * Varioius static utilities that don't belong in a specific place
  */
 public class KubeUtil {
+    private static int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
     public static String sanitizeName(String name) {
         String clean = name.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
+        System.out.println(clean);
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }
 
-        if (clean.length() > 60) {
-            clean = clean.substring(0, 60);
+        if (clean.length() > MAX_KUBE_NAME) {
+            clean = clean.substring(0, MAX_KUBE_NAME);
         }
 
         if (clean.endsWith("-")) {
-            clean = clean.substring(0, clean.length() - 2) + "1";
+            clean = clean.substring(0, clean.length() - 1) + "1";
         }
         return clean;
+    }
+
+    public static String sanitizeWithUuid(String name, String uuid) {
+        name = sanitizeName(name);
+        if (name.length() + uuid.length() > MAX_KUBE_NAME) {
+            name = name.substring(0, MAX_KUBE_NAME - uuid.length());
+        }
+        name += "-" + uuid;
+        return name;
     }
 
     public static String getAddressSpaceCaSecretName(String namespace) {

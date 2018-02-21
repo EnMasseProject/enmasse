@@ -192,11 +192,7 @@ public class Address {
                 uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
             }
             if (name == null) {
-                name = KubeUtil.sanitizeName(address);
-                if (name.length() + uuid.length() > 60) {
-                    name = name.substring(0, 60 - uuid.length());
-                }
-                name += "-" + uuid;
+                name = KubeUtil.sanitizeWithUuid(address, uuid);
             }
             return new Address(name, uuid, address, addressSpace, type, plan, status, version, annotations);
         }
