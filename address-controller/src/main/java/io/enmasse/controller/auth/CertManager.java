@@ -4,14 +4,14 @@
  */
 package io.enmasse.controller.auth;
 
+import io.fabric8.kubernetes.api.model.Secret;
+
 import java.util.Collection;
 
 /**
  * Interface for certificate managers
  */
 public interface CertManager {
-    void issueRouteCert(String secretName, String namespace, String... hostnames) throws Exception;
-
     Collection<CertComponent> listComponents(String namespace);
     boolean certExists(CertComponent component);
     boolean certExists(String namespace, String name);
@@ -20,4 +20,6 @@ public interface CertManager {
     void createSecret(Cert cert, final String caSecretName);
 
     void createSelfSignedCertSecret(String namespace, String secretName);
+
+    void grantServiceAccountAccess(Secret secret, String saName, String saNamespace);
 }

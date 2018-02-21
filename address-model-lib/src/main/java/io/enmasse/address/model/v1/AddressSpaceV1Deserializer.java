@@ -76,9 +76,18 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
 
                 if (endpoint.hasNonNull(Fields.CERT_PROVIDER)) {
                     ObjectNode certProvider = (ObjectNode) endpoint.get(Fields.CERT_PROVIDER);
-                    b.setCertProvider(new CertProvider(
-                            certProvider.get(Fields.NAME).asText(),
-                            certProvider.get(Fields.SECRET_NAME).asText()));
+                    String name = certProvider.get(Fields.NAME).asText();
+                    String secretName = certProvider.get(Fields.SECRET_NAME).asText();
+                    Map<String, String> parameters = new HashMap<>();
+
+                    Iterator<String> it = certProvider.fieldNames();
+                    while (it.hasNext()) {
+                        String field = it.next();
+                        if (!field.equals(Fields.NAME) && !field.equals(Fields.SECRET_NAME)) {
+                            parameters.put(field, certProvider.get(field).asText());
+                        }
+                    }
+                    b.setCertProviderSpec(new CertProviderSpec(name, secretName, parameters));
                 }
                 builder.appendEndpoint(b.build());
             }

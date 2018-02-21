@@ -30,37 +30,6 @@ public class OpenSSLCertManager implements CertManager {
         this.certDir = certDir;
     }
 
-    @Override
-    public void issueRouteCert(String secretName, String namespace, String ... hostnames) throws Exception {
-        Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
-        if (secret == null) {
-            String keyKey = "tls.key";
-            String certKey = "tls.crt";
-
-            log.info("Creating self-signed certificates for {}", secretName);
-            File key = File.createTempFile("tls", "key");
-            File cert = File.createTempFile("tls", "crt");
-
-            createSelfSignedCert(key, cert);
-            secret = createSecretFromCertAndKeyFiles(secretName, namespace, keyKey, certKey, key, cert, client);
-        }
-
-        ServiceAccount defaultAccount = client.serviceAccounts().inNamespace(namespace).withName("default").get();
-        for (ObjectReference reference : defaultAccount.getSecrets()) {
-            if (reference.getName().equals(secretName)) {
-                return;
-            }
-        }
-
-        client.serviceAccounts().inNamespace(namespace).withName("default").edit()
-                .addToSecrets(new ObjectReferenceBuilder()
-                        .withKind(secret.getKind())
-                        .withName(secret.getMetadata().getName())
-                        .withApiVersion(secret.getApiVersion())
-                        .build())
-                .done();
-    }
-
     private static void createSelfSignedCert(final File keyFile, final File certFile) {
         runCommand("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
                 "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath());
@@ -95,7 +64,7 @@ public class OpenSSLCertManager implements CertManager {
                 .done();
     }
 
-    private static void runCommand(String ... cmd) {
+    private static void runCommand(String... cmd) {
         ProcessBuilder keyGenBuilder = new ProcessBuilder(cmd).redirectErrorStream(true);
 
         log.info("Running command '{}'", keyGenBuilder.command());
@@ -164,19 +133,19 @@ public class OpenSSLCertManager implements CertManager {
 
         try {
             runCommand("openssl",
-                       "x509",
-                       "-req",
-                       "-days",
-                       "11000",
-                       "-in",
-                       request.getCsrFile().getAbsolutePath(),
-                       "-CA",
-                       caCert.getAbsolutePath(),
-                       "-CAkey",
-                       caKey.getAbsolutePath(),
-                       "-CAcreateserial",
-                       "-out",
-                       crtFile.getAbsolutePath());
+                    "x509",
+                    "-req",
+                    "-days",
+                    "11000",
+                    "-in",
+                    request.getCsrFile().getAbsolutePath(),
+                    "-CA",
+                    caCert.getAbsolutePath(),
+                    "-CAkey",
+                    caKey.getAbsolutePath(),
+                    "-CAcreateserial",
+                    "-out",
+                    crtFile.getAbsolutePath());
             return new Cert(request.getCertComponent(), request.getKeyFile(), crtFile);
         } finally {
             caKey.delete();
@@ -236,6 +205,24 @@ public class OpenSSLCertManager implements CertManager {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    @Override
+    public void grantServiceAccountAccess(Secret secret, String saName, String saNamespace) {
+        ServiceAccount defaultAccount = client.serviceAccounts().inNamespace(saNamespace).withName(saName).get();
+        for (ObjectReference reference : defaultAccount.getSecrets()) {
+            if (reference.getName().equals(secret.getMetadata().getName())) {
+                return;
+            }
+        }
+
+        client.serviceAccounts().inNamespace(saNamespace).withName(saName).edit()
+                .addToSecrets(new ObjectReferenceBuilder()
+                        .withKind(secret.getKind())
+                        .withName(secret.getMetadata().getName())
+                        .withApiVersion(secret.getApiVersion())
+                        .build())
+                .done();
     }
 
     public static OpenSSLCertManager create(OpenShiftClient controllerClient) {

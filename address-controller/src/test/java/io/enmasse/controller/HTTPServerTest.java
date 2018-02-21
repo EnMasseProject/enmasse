@@ -10,7 +10,6 @@ import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.SubjectAccessReview;
 import io.enmasse.controller.common.TokenReview;
-import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.api.TestSchemaApi;
 import io.vertx.core.Vertx;
@@ -29,7 +28,6 @@ import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.Matchers.any;
@@ -75,7 +73,6 @@ public class HTTPServerTest {
                 .appendEndpoint(new Endpoint.Builder()
                         .setName("foo")
                         .setService("messaging")
-                        .setCertProvider(new SecretCertProvider("mysecret"))
                         .build())
                 .build();
     }

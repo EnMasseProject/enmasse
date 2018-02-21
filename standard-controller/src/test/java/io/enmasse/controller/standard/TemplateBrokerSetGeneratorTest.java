@@ -7,7 +7,6 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.*;
-import io.enmasse.k8s.api.TestSchemaApi;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.ParameterValue;
 import org.junit.Before;
@@ -16,7 +15,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.*;
 
-import static org.hamcrest.CoreMatchers.describedAs;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -82,7 +80,7 @@ public class TemplateBrokerSetGeneratorTest {
                 .appendEndpoint(new Endpoint.Builder()
                         .setName("foo")
                         .setService("messaging")
-                        .setCertProvider(new SecretCertProvider("mysecret"))
+                        .setCertProviderSpec(new CertProviderSpec("mysecret", Collections.emptyMap()))
                         .build())
                 .build();
     }

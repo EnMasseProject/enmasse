@@ -1093,6 +1093,8 @@ items:
             value: enmasse-admin
           - name: ADDRESS_SPACE_ADMIN_SA
             value: address-space-admin
+          - name: WILDCARD_ENDPOINT_CERT_SECRET
+            value: ''
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             httpGet:

@@ -30,9 +30,11 @@ public final class ControllerOptions {
     private final String addressControllerSa;
     private final String addressSpaceAdminSa;
 
+    private final String wildcardCertSecret;
+
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File templateDir, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment, String addressControllerSa, String addressSpaceAdminSa) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -44,6 +46,7 @@ public final class ControllerOptions {
         this.environment = environment;
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
+        this.wildcardCertSecret = wildcardCertSecret;
     }
 
     public String getMasterUrl() {
@@ -90,6 +93,10 @@ public final class ControllerOptions {
         return addressSpaceAdminSa;
     }
 
+    public String getWildcardCertSecret() {
+        return wildcardCertSecret;
+    }
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
@@ -122,6 +129,8 @@ public final class ControllerOptions {
 
         String addressSpaceAdminSa = getEnv(env, "ADDRESS_SPACE_ADMIN_SA").orElse("address-space-admin");
 
+        String wildcardCertSecret = getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null);
+
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
@@ -132,7 +141,8 @@ public final class ControllerOptions {
                 enableRbac,
                 environment,
                 addressControllerSa,
-                addressSpaceAdminSa);
+                addressSpaceAdminSa,
+                wildcardCertSecret);
     }
 
 

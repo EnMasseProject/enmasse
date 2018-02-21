@@ -36,13 +36,15 @@ public class ControllerHelper {
     private final AuthenticationServiceResolverFactory authResolverFactory;
     private final EventLogger eventLogger;
     private final SchemaApi schemaApi;
+    private final String defaultCertProvider;
 
-    public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, EventLogger eventLogger, SchemaApi schemaApi) {
+    public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, EventLogger eventLogger, SchemaApi schemaApi, String defaultCertProvider) {
         this.kubernetes = kubernetes;
         this.namespace = kubernetes.getNamespace();
         this.authResolverFactory = authResolverFactory;
         this.eventLogger = eventLogger;
         this.schemaApi = schemaApi;
+        this.defaultCertProvider = defaultCertProvider;
     }
 
     public void create(AddressSpace addressSpace) {
@@ -115,7 +117,7 @@ public class ControllerHelper {
 
             // Step 1: Validate endpoints and remove unknown
             List<String> availableServices = addressSpaceType.getServiceNames();
-            Map<String, CertProvider> serviceCertProviders = new HashMap<>();
+            Map<String, CertProviderSpec> serviceCertProviders = new HashMap<>();
 
             List<Endpoint> endpoints = null;
             if (addressSpace.getEndpoints() != null) {
@@ -127,7 +129,7 @@ public class ControllerHelper {
                         log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
                         it.remove();
                     } else {
-                        endpoint.getCertProvider().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
+                        endpoint.getCertProviderSpec().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
                     }
                 }
             } else {
@@ -139,20 +141,17 @@ public class ControllerHelper {
 
             // Step 3: Create missing secrets if not specified
             for (String service : availableServices) {
-                String secretName = getSecretName(service);
-
                 if (!serviceCertProviders.containsKey(service)) {
-                    CertProvider certProvider = new SecretCertProvider(secretName);
-                    serviceCertProviders.put(service, certProvider);
+                    serviceCertProviders.put(service, new CertProviderSpec(defaultCertProvider, "external-certs-" + service));
                 }
             }
 
             // Step 3: Ensure all endpoints have their certProviders set
             returnVal.routeEndpoints = endpoints.stream()
                     .map(endpoint -> {
-                        if (!endpoint.getCertProvider().isPresent()) {
+                        if (!endpoint.getCertProviderSpec().isPresent()) {
                             return new Endpoint.Builder(endpoint)
-                                    .setCertProvider(serviceCertProviders.get(endpoint.getService()))
+                                    .setCertProviderSpec(serviceCertProviders.get(endpoint.getService()))
                                     .build();
                         } else {
                             return endpoint;
@@ -180,10 +179,6 @@ public class ControllerHelper {
             returnVal.resourceList = kubernetes.processTemplate(resourceDefinition.getTemplateName().get(), parameterValues.toArray(new ParameterValue[0]));
         }
         return returnVal;
-    }
-
-    private static String getSecretName(String serviceName) {
-        return "external-certs-" + serviceName;
     }
 
     public boolean isReady(AddressSpace addressSpace) {
