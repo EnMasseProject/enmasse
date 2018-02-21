@@ -106,12 +106,10 @@ public class ControllerHelper {
             AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
             parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
-            parameters.put(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer());
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
 
             authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
-            kubernetes.getSecret("address-controller-cert").ifPresent(secret -> parameters.put(TemplateParameter.ADDRESS_CONTROLLER_CA_CERT, secret.getData().get("tls.crt")));
             authResolver.getClientSecretName(authService).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
             authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));
 
@@ -186,10 +184,6 @@ public class ControllerHelper {
 
     private static String getSecretName(String serviceName) {
         return "external-certs-" + serviceName;
-    }
-
-    private String getApiServer() {
-        return "address-controller." + namespace + ".svc.cluster.local";
     }
 
     public boolean isReady(AddressSpace addressSpace) {
