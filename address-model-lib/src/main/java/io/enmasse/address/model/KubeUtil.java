@@ -11,7 +11,6 @@ public class KubeUtil {
     private static int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
     public static String sanitizeName(String name) {
         String clean = name.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
-        System.out.println(clean);
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }
