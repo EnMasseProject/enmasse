@@ -298,7 +298,7 @@ items:
       {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
       \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
-      \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
+      \"/var/run/artemis\", \"name\": \"${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
@@ -308,7 +308,7 @@ items:
       \"secret\": {\"secretName\": \"address-controller-ca\"}}, {\"name\": \"broker-internal-cert\",
       \"secret\": {\"secretName\": \"broker-internal-cert\"}}, {\"configMap\": {\"name\":
       \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}, {\"emptyDir\":
-      { }, \"name\": \"vol-${NAME}\"}]}}}}], \"parameters\": [{\"description\": \"Storage
+      { }, \"name\": \"${NAME}\"}]}}}}], \"parameters\": [{\"description\": \"Storage
       capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\", \"value\":
       \"2Gi\"}, {\"description\": \"The docker image to use for the message broker\",
       \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
@@ -364,7 +364,7 @@ items:
       {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
       \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
-      \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
+      \"/var/run/artemis\", \"name\": \"${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
@@ -376,7 +376,7 @@ items:
       \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}, \"volumeClaimTemplates\":
       [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"vol-${NAME}\"}, \"spec\": {\"accessModes\":
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"accessModes\":
       [\"ReadWriteOnce\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}],
       \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
       \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
@@ -433,7 +433,7 @@ items:
       {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
       \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
-      \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
+      \"/var/run/artemis\", \"name\": \"${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
@@ -466,7 +466,7 @@ items:
       {\"name\": \"address-controller-ca\", \"secret\": {\"secretName\": \"address-controller-ca\"}},
       {\"name\": \"broker-internal-cert\", \"secret\": {\"secretName\": \"broker-internal-cert\"}},
       {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"},
-      {\"emptyDir\": { }, \"name\": \"vol-${NAME}\"}]}}}}], \"parameters\": [{\"description\":
+      {\"emptyDir\": { }, \"name\": \"${NAME}\"}]}}}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
       \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
       broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
@@ -522,7 +522,7 @@ items:
       {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 10}, \"resources\": {\"limits\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"},
       \"requests\": {\"memory\": \"${BROKER_MEMORY_LIMIT}\"}}, \"volumeMounts\": [{\"mountPath\":
-      \"/var/run/artemis\", \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\":
+      \"/var/run/artemis\", \"name\": \"${NAME}\", \"readOnly\": false}, {\"mountPath\":
       \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\", \"readOnly\": true},
       {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\", \"readOnly\":
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
@@ -557,7 +557,7 @@ items:
       {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}},
       \"volumeClaimTemplates\": [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\",
       \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"vol-${NAME}\"},
+      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"accessModes\": [\"ReadWriteOnce\"], \"resources\": {\"requests\":
       {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",

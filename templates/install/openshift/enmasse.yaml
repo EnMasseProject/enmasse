@@ -644,7 +644,7 @@ objects:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
-                name: vol-${NAME}
+                name: ${NAME}
                 readOnly: false
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
@@ -672,7 +672,7 @@ objects:
                 name: broker-prometheus-config
               name: broker-prometheus-config
             - emptyDir: {}
-              name: vol-${NAME}
+              name: ${NAME}
     parameters:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
@@ -823,7 +823,7 @@ objects:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
-                name: vol-${NAME}
+                name: ${NAME}
                 readOnly: false
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
@@ -859,7 +859,7 @@ objects:
               cluster_id: ${CLUSTER_ID}
             labels:
               app: enmasse
-            name: vol-${NAME}
+            name: ${NAME}
           spec:
             accessModes:
             - ReadWriteOnce
@@ -1016,7 +1016,7 @@ objects:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
-                name: vol-${NAME}
+                name: ${NAME}
                 readOnly: false
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
@@ -1117,7 +1117,7 @@ objects:
                 name: broker-prometheus-config
               name: broker-prometheus-config
             - emptyDir: {}
-              name: vol-${NAME}
+              name: ${NAME}
     parameters:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
@@ -1268,7 +1268,7 @@ objects:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
-                name: vol-${NAME}
+                name: ${NAME}
                 readOnly: false
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
@@ -1377,7 +1377,7 @@ objects:
               cluster_id: ${CLUSTER_ID}
             labels:
               app: enmasse
-            name: vol-${NAME}
+            name: ${NAME}
           spec:
             accessModes:
             - ReadWriteOnce
