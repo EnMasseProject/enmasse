@@ -92,22 +92,22 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestClientsMetrics();
     }
 
-    //@Test
+    @Test
     public void testCannotCreateAddresses() throws Exception {
         doTestCannotCreateAddresses();
     }
 
-    //@Test
+    @Test
     public void testCannotDeleteAddresses() throws Exception {
         doTestCannotDeleteAddresses();
     }
 
-    //@Test
+    @Test
     public void testViewAddresses() throws Exception {
         doTestViewAddresses();
     }
 
-    //@Test
+    @Test
     public void testViewConnections() throws Exception {
         doTestViewConnections();
     }

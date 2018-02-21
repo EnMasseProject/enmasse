@@ -8,6 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Before;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -37,6 +38,16 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             addresses.add(multicast);
         }
         setAddresses(sharedAddressSpace, addresses.toArray(new Destination[0]));
+    }
+
+    @Before
+    public void initAuthzTest() throws Exception {
+        if (getAddressSpaceType() == AddressSpaceType.BROKERED) {
+            getKeycloakClient().createGroup(sharedAddressSpace.getName(), "send_#");
+            getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "send_#", username);
+            getKeycloakClient().createGroup(sharedAddressSpace.getName(), "recv_#");
+            getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "recv_#", username);
+        }
     }
 
     protected void doTestSendAuthz() throws Exception {
@@ -125,7 +136,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     //===========================================================================================================
 
     private void assertSendWildcard(String username, String password, Destination destination) throws Exception {
-        String rights = username.replace("user_send_", "").replace("*", "");
+        String rights = username.replace("user_send_", "")
+                .replace("*", "")
+                .replace("#", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
             assertTrue(String.format("Authz failed, user %s cannot send message", username),
                     canSend(destination, username, password));
@@ -136,7 +149,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     }
 
     private void assertReceiveWildcard(String username, String password, Destination destination) throws Exception {
-        String rights = username.replace("user_recv_", "").replace("*", "");
+        String rights = username.replace("user_recv_", "")
+                .replace("*", "")
+                .replace("#", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
             assertTrue(String.format("Authz failed, user %s cannot receive message", username),
                     canReceive(destination, username, password));
@@ -195,20 +210,24 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     }
 
     private boolean canSend(Destination destination, String username, String password) throws Exception {
-        log.info("Try send message under user {}", username);
-        log.info("Try to open sender client under user {}", username);
+        log.info("---------------------------------------------------");
+        log.info("Try send message under user {} from {} {}", username, destination.getType(), destination.getAddress());
+        log.info("***** Try to open sender client under user {}", username);
+        log.info("***** Try to open receiver client under user {}", this.username);
         AmqpClient sender = createClient(destination, username, password);
-        log.info("Try to open receiver client under user {}", this.username);
         AmqpClient receiver = createClient(destination, this.username, this.password);
+        log.info("---------------------------------------------------");
         return canAuth(sender, receiver, destination);
     }
 
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
-        log.info("Try receive message under user {}", username);
-        log.info("Try to open sender client under user {}", this.username);
+        log.info("---------------------------------------------------");
+        log.info("Try receive message under user {} from {} {}", username, destination.getType(), destination.getAddress());
+        log.info("***** Try to open sender client under user {}", this.username);
+        log.info("***** Try to open receiver client under user {}", username);
         AmqpClient sender = createClient(destination, this.username, this.password);
-        log.info("Try to open receiver client under user {}", username);
         AmqpClient receiver = createClient(destination, username, password);
+        log.info("---------------------------------------------------");
         return canAuth(sender, receiver, destination);
     }
 
