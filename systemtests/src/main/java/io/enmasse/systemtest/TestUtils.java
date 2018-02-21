@@ -305,13 +305,13 @@ public class TestUtils {
             List<String> addresses = new ArrayList<>();
             switch (kind) {
                 case "Address":
-                    addresses.add(htmlResponse.getJsonObject("metadata").getString("name"));
+                    addresses.add(htmlResponse.getJsonObject("spec").getString("address"));
                     break;
                 case "AddressList":
                     JsonArray items = htmlResponse.getJsonArray("items");
                     if (items != null) {
                         items.forEach(address -> {
-                            addresses.add(((JsonObject) address).getJsonObject("metadata").getString("name"));
+                            addresses.add(((JsonObject) address).getJsonObject("spec").getString("address"));
                         });
                     }
                     break;
@@ -360,11 +360,11 @@ public class TestUtils {
      * @return
      */
     private static Address getAddressObject(JsonObject addressJsonObject) {
-        String name = addressJsonObject.getJsonObject("metadata").getString("name");
         JsonObject spec = addressJsonObject.getJsonObject("spec");
+        String address = spec.getString("address");
         String type = spec.getString("type");
         String plan = spec.getString("plan");
-        return new Address(name, type, plan);
+        return new Address(address, type, plan);
     }
 
     /**
