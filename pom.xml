@@ -122,6 +122,7 @@
             <ENV_VAR_EXISTS_BOOLEAN>true</ENV_VAR_EXISTS_BOOLEAN>
           </environmentVariables>
         </configuration>
+        <!--
         <dependencies>
           <dependency>
             <groupId>org.junit.platform</groupId>
@@ -129,6 +130,7 @@
             <version>${junit.platform.version}</version>
           </dependency>
         </dependencies>
+        -->
       </plugin>
       <plugin>
         <groupId>com.mycila</groupId>
