@@ -226,7 +226,6 @@ local prometheus = import "prometheus.jsonnet";
             common.secret_volume("authservice-ca", "authservice-ca"),
             common.secret_volume("console-external-cert", "${CONSOLE_SECRET}"),
             common.secret_volume("agent-internal-cert", "agent-internal-cert"),
-            common.secret_volume("address-controller-ca", "address-controller-ca"),
             common.secret_volume("messaging-cert", "external-certs-messaging")
           ],
           "containers": [
@@ -236,17 +235,14 @@ local prometheus = import "prometheus.jsonnet";
               "env": [
                 common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
                 common.env("ADDRESS_SPACE_TYPE", "brokered"),
-                common.env("ADDRESS_SPACE_SERVICE_HOST", "${ADDRESS_SPACE_SERVICE_HOST}"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("CONSOLE_CERT_DIR", "/etc/console-certs"),
-                common.env("ADDRESS_CONTROLLER_CA", "/opt/agent/address-controller-ca/tls.crt"),
                 common.env("MESSAGING_CERT", "/opt/agent/messaging-cert/tls.crt"),
               ] + auth_service.envVars,
               "volumeMounts": [
                 common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),
                 common.volume_mount("console-external-cert", "/etc/console-certs", true),
                 common.volume_mount("agent-internal-cert", "/etc/enmasse-certs", true),
-                common.volume_mount("address-controller-ca", "/opt/agent/address-controller-ca", true),
                 common.volume_mount("messaging-cert", "/opt/agent/messaging-cert", true)
               ],
               "ports": [
@@ -301,7 +297,6 @@ local prometheus = import "prometheus.jsonnet";
     },
     "objects": [
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
-      common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       prometheus.brokered_broker_config("broker-prometheus-config"),
       me.pvc("broker-data"),
       me.broker_deployment("broker"),
@@ -311,11 +306,6 @@ local prometheus = import "prometheus.jsonnet";
       me.console_service
     ],
     "parameters": [
-      {
-        "name": "ADDRESS_SPACE_SERVICE_HOST",
-        "description": "Hostname where API server can be reached",
-        "value": ""
-      },
       {
         "name": "BROKER_IMAGE",
         "description": "The docker image to use for the message broker",
@@ -368,10 +358,6 @@ local prometheus = import "prometheus.jsonnet";
       {
         "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
         "description": "The hostname to use in sasl init",
-      },
-      {
-        "name": "ADDRESS_CONTROLLER_CA_CERT",
-        "description": "The CA cert to use for validating address controller identity"
       },
       {
         "name": "ADDRESS_SPACE_ADMIN_SA",
