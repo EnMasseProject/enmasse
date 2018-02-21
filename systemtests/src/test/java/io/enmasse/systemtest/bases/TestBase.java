@@ -58,6 +58,7 @@ public abstract class TestBase extends SystemTestRunListener {
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
+    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     protected String username;
     protected String password;
@@ -460,6 +461,11 @@ public abstract class TestBase extends SystemTestRunListener {
         } finally {
             queueClient.close();
         }
+    }
+
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws InterruptedException {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, destination, budget);
     }
 
     /**

@@ -31,4 +31,13 @@ public class AddressPlan {
     public List<AddressResource> getAddressResources() {
         return addressResources;
     }
+
+    public double getRequiredCreditFromResource(String addressResource) throws java.lang.IllegalStateException {
+        for (AddressResource res : this.getAddressResources()) {
+            if (addressResource.equals(res.getName())) {
+                return res.getCredit();
+            }
+        }
+        throw new java.lang.IllegalStateException(String.format("address resource '%s' didn't found", addressResource));
+    }
 }

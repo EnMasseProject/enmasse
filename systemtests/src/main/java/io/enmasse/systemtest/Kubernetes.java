@@ -187,17 +187,17 @@ public abstract class Kubernetes {
         metadata.setLabels(labels);
         addressSpacePlanDefinition.setMetadata(metadata); // </metadata>
         addressSpacePlanDefinition.setData(createAddressSpacePlanData(addressSpacePlan)); // <data></data>
-        client.configMaps().create(addressSpacePlanDefinition);
 
         if (replaceExisting) {
             client.configMaps().inNamespace(globalNamespace).createOrReplace(addressSpacePlanDefinition);
-        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName) == null) {
+        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName).get() == null) {
             client.configMaps().create(addressSpacePlanDefinition);
         } else {
             throw new IllegalStateException(String.format("AddressSpacePlan '%s' already exists and replace is set to '%s'",
                     fullAddressSpacePlanName, replaceExisting));
         }
-        log.info(String.format("AddressSpacePlan '%s' successfully created/replaced", fullAddressSpacePlanName));
+        log.info(String.format("AddressSpacePlan '%s' successfully '%s'", fullAddressSpacePlanName,
+                replaceExisting ? "replaced" : "created"));
     }
 
     /**
@@ -233,7 +233,7 @@ public abstract class Kubernetes {
         config.put("shortDescription", "Newly defined address space plan.");
         config.put("longDescription", "Newly defined address space plan.");
         config.put("uuid", "677485a2-0d96-11e8-ba89-0ed5f89f718b");
-        config.put("addressSpaceType", addressSpacePlan.getType().toString()); // "standard", "brokered", newly created...
+        config.put("addressSpaceType", addressSpacePlan.getType().toString().toLowerCase()); // "standard", "brokered", newly created...
 
         JsonArray defResources = new JsonArray(); // <resources>
         JsonObject brokerResource;
@@ -354,7 +354,8 @@ public abstract class Kubernetes {
             throw new IllegalStateException(String.format("AddressPlan '%s' already exists and replace is set to '%s'",
                     fullAddressPlanName, replaceExisting));
         }
-        log.info(String.format("AddressPlan '%s' successfully created/replaced", fullAddressPlanName));
+        log.info(String.format("AddressPlan '%s' successfully '%s'", fullAddressPlanName,
+                replaceExisting ? "replaced" : "created"));
     }
 
     /**

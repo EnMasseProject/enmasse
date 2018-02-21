@@ -195,6 +195,4 @@ public abstract class TestBaseWithShared extends TestBase {
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
         log.info("addresses (" + d2.getAddress() + ") successfully deleted");
     }
-
 }
-
