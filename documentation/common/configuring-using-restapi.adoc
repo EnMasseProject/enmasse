@@ -70,37 +70,29 @@ object.
   "kind": "AddressList",
   "items": [
     {
-      "metadata": {
-        "name": "myqueue"
-      },
       "spec": {
+        "address": "myqueue",
         "type": "queue",
         "plan": "sharded-queue"
       }
     },
     {
-      "metadata": {
-        "name": "mytopic"
-      },
       "spec": {
+        "address": "mytopic",
         "type": "topic",
         "plan": "sharded-topic"
       }
     },
     {
-      "metadata": {
-        "name": "myanycast"
-      },
       "spec": {
+        "address": "myanycast",
         "type": "anycast",
         "plan": "standard-anycast"
       }
     },
     {
-      "metadata": {
-        "name": "mymulticast"
-      },
       "spec": {
+        "address": "mymulticast",
         "type": "multicast",
         "plan": "standard-multicast"
       }
