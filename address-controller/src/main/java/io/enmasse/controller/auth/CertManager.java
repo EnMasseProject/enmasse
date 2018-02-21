@@ -14,10 +14,10 @@ public interface CertManager {
 
     Collection<CertComponent> listComponents(String namespace);
     boolean certExists(CertComponent component);
-    boolean certExists(String name);
+    boolean certExists(String namespace, String name);
     CertSigningRequest createCsr(CertComponent component);
     Cert signCsr(CertSigningRequest request, String secretName);
     void createSecret(Cert cert, final String caSecretName);
 
-    void createSelfSignedCertSecret(String secretName);
+    void createSelfSignedCertSecret(String namespace, String secretName);
 }

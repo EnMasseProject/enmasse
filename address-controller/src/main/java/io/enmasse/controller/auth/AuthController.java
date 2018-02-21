@@ -51,9 +51,9 @@ public class AuthController {
     public void issueAddressSpaceCert(final AddressSpace addressSpace)
     {
         try {
-            final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace.getNamespace());
-            if(!certManager.certExists(addressSpaceCaSecretName)) {
-                certManager.createSelfSignedCertSecret(addressSpaceCaSecretName);
+            final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
+            if(!certManager.certExists(addressSpace.getNamespace(), addressSpaceCaSecretName)) {
+                certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
                 //put crt into address space
                 log.info("Issued addressspace ca certificates for {}", addressSpace.getName());
                 eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
@@ -66,7 +66,7 @@ public class AuthController {
 
     public void issueComponentCertificates(AddressSpace addressSpace) {
         try {
-            final String caSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace.getNamespace());
+            final String caSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
             List<Cert> certs = certManager.listComponents(addressSpace.getNamespace()).stream()
                     .filter(component -> !certManager.certExists(component))
                     .map(certManager::createCsr)
