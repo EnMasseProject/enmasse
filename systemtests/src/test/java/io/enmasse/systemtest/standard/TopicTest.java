@@ -32,6 +32,19 @@ public class TopicTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
 
     @Test
+    public void testColocatedTopics() throws Exception {
+        Destination t1 = Destination.topic("col-topic1", "pooled-topic");
+        Destination t2 = Destination.topic("col-topic2", "pooled-topic");
+        Destination t3 = Destination.topic("col-topic3", "pooled-topic");
+        setAddresses(t1, t2, t3);
+
+        AmqpClient client = amqpClientFactory.createTopicClient();
+        runTopicTest(client, t1);
+        runTopicTest(client, t2);
+        runTopicTest(client, t3);
+    }
+
+    @Test
     public void testShardedTopic() throws Exception {
         Destination t1 = Destination.topic("shardedTopic", "sharded-topic");
         setAddresses(t1);
@@ -40,7 +53,13 @@ public class TopicTest extends StandardTestBase {
         runTopicTest(topicClient, t1, 2048);
     }
 
-    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount) throws InterruptedException, IOException, TimeoutException, ExecutionException, IOException, TimeoutException, ExecutionException {
+    public static void runTopicTest(AmqpClient client, Destination dest)
+            throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runTopicTest(client, dest, 1024);
+    }
+
+    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount)
+            throws InterruptedException, IOException, TimeoutException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
 
