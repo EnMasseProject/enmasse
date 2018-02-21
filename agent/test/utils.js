@@ -90,7 +90,7 @@ describe('kubernetes_name', function () {
         var too_long = 'abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-xxxxxxx';
         assert(too_long.length > 63);
         var name = myutils.kubernetes_name(too_long);
-        assert(name.length < 63);
+        assert(name.length <= 63);
         done();
     });
     it ('ensures names for similar input over 63 chars are unique', function (done) {
@@ -100,8 +100,8 @@ describe('kubernetes_name', function () {
         assert(long_b.length > 63);
         var name_a = myutils.kubernetes_name(long_a);
         var name_b = myutils.kubernetes_name(long_b);
-        assert(name_a.length < 63);
-        assert(name_b.length < 63);
+        assert(name_a.length <= 63);
+        assert(name_b.length <= 63);
         assert.notEqual(name_a, name_b);
         done();
     });
@@ -109,10 +109,10 @@ describe('kubernetes_name', function () {
         var too_long = 'a!"£$%^&*()_+=-bcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
         assert(too_long.length > 63);
         var name = myutils.kubernetes_name(too_long);
-        assert(name.length < 63);
+        assert(name.length <= 63);
         var also_too_long = 'a!"£$%^&*()_+==bcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
         var another_name = myutils.kubernetes_name(also_too_long);
-        assert(another_name.length < 63);
+        assert(another_name.length <= 63);
         assert.notEqual(name, another_name);
         done();
     });
