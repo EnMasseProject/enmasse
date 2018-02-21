@@ -84,7 +84,6 @@ local forwarder = import "forwarder.jsonnet";
                 "volumes": [
                   common.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
                   common.secret_volume("authservice-ca", "authservice-ca"),
-                  common.secret_volume("address-controller-ca", "address-controller-ca"),
                   common.secret_volume("broker-internal-cert", "broker-internal-cert"),
                   common.configmap_volume("broker-prometheus-config", "broker-prometheus-config")
                 ] + (if !persistence then [common.empty_volume(volumeName)] else []),

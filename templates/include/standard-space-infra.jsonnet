@@ -56,18 +56,12 @@ local storage = import "storage-template.jsonnet";
       prometheus.standard_broker_config("broker-prometheus-config"),
       qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_IMAGE}", "${ROUTER_METRICS_IMAGE}", "${MESSAGING_SECRET}", "authservice-ca"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
-      common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
-      admin.deployment("authservice-ca", "address-controller-ca", template_config)
+      admin.deployment("authservice-ca", template_config)
     ] + admin.services("${ADDRESS_SPACE}")
       + (if use_template_configmap then storage_template_configmap else storage_templates)
       + (if with_mqtt then mqtt_components else []),
 
     "parameters": [
-      {
-        "name": "ADDRESS_SPACE_SERVICE_HOST",
-        "description": "Hostname where API server can be reached",
-        "value": ""
-      },
       {
         "name": "ROUTER_IMAGE",
         "description": "The image to use for the router",
@@ -167,10 +161,6 @@ local storage = import "storage-template.jsonnet";
       {
         "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
         "description": "The hostname to use in sasl init",
-      },
-      {
-        "name": "ADDRESS_CONTROLLER_CA_CERT",
-        "description": "The CA cert to use for validating address controller identity"
       },
       {
         "name": "ADDRESS_SPACE_ADMIN_SA",

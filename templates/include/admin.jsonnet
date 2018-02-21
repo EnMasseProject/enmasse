@@ -30,7 +30,7 @@ local common = import "common.jsonnet";
   ],
 
 
-  deployment(auth_service_ca_secret, address_controller_ca_secret, template_config)::
+  deployment(auth_service_ca_secret, template_config)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -98,8 +98,6 @@ local common = import "common.jsonnet";
                 common.env("AUTHENTICATION_SERVICE_CLIENT_SECRET", "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"),
                 common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
                 common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
-                common.env("ADDRESS_SPACE_SERVICE_HOST", "${ADDRESS_SPACE_SERVICE_HOST}"),
-                common.env("ADDRESS_CONTROLLER_CA", "/opt/agent/address-controller-ca/tls.crt"),
                 common.env("MESSAGING_CERT", "/opt/agent/messaging-cert/tls.crt")
               ],
               "resources": common.memory_resources("128Mi", "128Mi"),
@@ -113,7 +111,6 @@ local common = import "common.jsonnet";
                 common.volume_mount("console-secret", "/etc/console-certs", true),
                 common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),
                 common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true),
-                common.volume_mount("address-controller-ca", "/opt/agent/address-controller-ca", true),
                 common.volume_mount("messaging-cert", "/opt/agent/messaging-cert", true)
               ]
             },
@@ -121,7 +118,6 @@ local common = import "common.jsonnet";
           "volumes": [
             common.secret_volume("console-secret", "${CONSOLE_SECRET}"),
             common.secret_volume("authservice-ca", auth_service_ca_secret),
-            common.secret_volume("address-controller-ca", address_controller_ca_secret),
             common.secret_volume("admin-internal-cert", "admin-internal-cert"),
             common.secret_volume("messaging-cert", "${MESSAGING_SECRET}")
           ] + (if template_config != "" then [ common.configmap_volume("templates", template_config) ] else []),
