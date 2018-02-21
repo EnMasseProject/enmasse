@@ -29,7 +29,7 @@ public class KubeUtil {
     public static String sanitizeWithUuid(String name, String uuid) {
         name = sanitizeName(name);
         if (name.length() + uuid.length() > MAX_KUBE_NAME) {
-            name = name.substring(0, MAX_KUBE_NAME - uuid.length());
+            name = name.substring(0, MAX_KUBE_NAME - uuid.length() - 1);
         }
         name += "-" + uuid;
         return name;
