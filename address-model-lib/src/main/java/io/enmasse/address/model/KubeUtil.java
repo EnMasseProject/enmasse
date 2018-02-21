@@ -34,7 +34,7 @@ public class KubeUtil {
         return name;
     }
 
-    public static String getAddressSpaceCaSecretName(String namespace) {
-        return "addressspace-" + namespace + "-ca";
+    public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {
+        return "ca-" + addressSpace.getName();
     }
 }

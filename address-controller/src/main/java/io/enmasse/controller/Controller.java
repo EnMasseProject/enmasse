@@ -5,8 +5,8 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.CertProviderSpec;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.auth.AuthController;
@@ -52,7 +52,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                       EventLogger eventLogger,
                       AuthController authController,
                       SchemaApi schemaApi) {
-        this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger, schemaApi);
+        this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger, schemaApi, authController.getDefaultCertProvider());
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.eventLogger = eventLogger;
@@ -137,7 +137,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
         }
     }
 
-    private void updateEndpoints(AddressSpace.Builder builder) throws IOException {
+    private void updateEndpoints(AddressSpace.Builder builder) {
 
         Map<String, String> annotations = new HashMap<>();
         annotations.put(AnnotationKeys.ADDRESS_SPACE, builder.getName());
@@ -165,6 +165,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
     }
 
     private Endpoint routeToEndpoint(Route route) {
+        String providerName = route.getMetadata().getAnnotations().get(AnnotationKeys.CERT_PROVIDER);
         String secretName = route.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
         Endpoint.Builder builder = new Endpoint.Builder()
                 .setName(route.getMetadata().getName())
@@ -173,13 +174,14 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                 .setService(route.getSpec().getTo().getName());
 
         if (secretName != null) {
-            builder.setCertProvider(new SecretCertProvider(secretName));
+            builder.setCertProviderSpec(new CertProviderSpec(providerName, secretName));
         }
 
         return builder.build();
     }
 
     private Endpoint serviceToEndpoint(Service service) {
+        String providerName = service.getMetadata().getAnnotations().get(AnnotationKeys.CERT_PROVIDER);
         String secretName = service.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
         String serviceName = service.getMetadata().getAnnotations().get(AnnotationKeys.SERVICE_NAME);
         Endpoint.Builder builder = new Endpoint.Builder()
@@ -187,7 +189,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                 .setService(serviceName);
 
         if (secretName != null) {
-            builder.setCertProvider(new SecretCertProvider(secretName));
+            builder.setCertProviderSpec(new CertProviderSpec(providerName, secretName));
         }
 
         if (service.getSpec().getPorts().size() > 0) {

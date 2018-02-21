@@ -41,7 +41,7 @@ public class ControllerHelperTest {
         EventLogger eventLogger = mock(EventLogger.class);
 
         SchemaApi testSchema = new TestSchemaApi();
-        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger, testSchema);
+        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger, testSchema, "unknown");
         helper.create(addressSpace);
         ArgumentCaptor<AddressSpace> addressSpaceArgumentCaptor = ArgumentCaptor.forClass(AddressSpace.class);
         verify(kubernetes).createNamespace(addressSpaceArgumentCaptor.capture());

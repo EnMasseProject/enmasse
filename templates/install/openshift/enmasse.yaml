@@ -3101,6 +3101,8 @@ objects:
             value: ${ADDRESS_CONTROLLER_SA}
           - name: ADDRESS_SPACE_ADMIN_SA
             value: ${ADDRESS_SPACE_ADMIN_SA}
+          - name: WILDCARD_ENDPOINT_CERT_SECRET
+            value: ${WILDCARD_ENDPOINT_CERT_SECRET}
           image: ${ADDRESS_CONTROLLER_IMAGE}
           livenessProbe:
             httpGet:

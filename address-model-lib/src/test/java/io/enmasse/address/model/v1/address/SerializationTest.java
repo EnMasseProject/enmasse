@@ -98,7 +98,7 @@ public class SerializationTest {
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
-                        .setCertProvider(new CertProvider("secret", "mysecret"))
+                        .setCertProviderSpec(new CertProviderSpec("secret", "secret", Collections.singletonMap("secretName", "mysecret")))
                         .build()))
                 .setAuthenticationService(new AuthenticationService.Builder()
                         .setType(AuthenticationServiceType.EXTERNAL)
@@ -124,8 +124,8 @@ public class SerializationTest {
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
         assertThat(deserialized.getEndpoints().get(0).getName(), is(addressSpace.getEndpoints().get(0).getName()));
         assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
-        assertThat(deserialized.getEndpoints().get(0).getCertProvider().get().getName(), is(addressSpace.getEndpoints().get(0).getCertProvider().get().getName()));
-        assertThat(deserialized.getEndpoints().get(0).getCertProvider().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertProvider().get().getSecretName()));
+        assertThat(deserialized.getEndpoints().get(0).getCertProviderSpec().get().getName(), is(addressSpace.getEndpoints().get(0).getCertProviderSpec().get().getName()));
+        assertThat(deserialized.getEndpoints().get(0).getCertProviderSpec().get().getParameters().size(), is(1));
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
         assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
@@ -384,7 +384,7 @@ public class SerializationTest {
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("bestendpoint")
                         .setService("mqtt")
-                        .setCertProvider(new SecretCertProvider("mysecret"))
+                        .setCertProviderSpec(new CertProviderSpec("mysecret", "secret", Collections.emptyMap()))
                         .build()))
                 .build();
 

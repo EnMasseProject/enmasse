@@ -240,9 +240,10 @@ public class KubernetesHelper implements Kubernetes {
                     .endPort()
                     .endSpec();
 
-            if (endpoint.getCertProvider().isPresent()) {
+            if (endpoint.getCertProviderSpec().isPresent()) {
                 route.editOrNewMetadata()
-                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                        .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertProviderSpec().get().getName())
+                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProviderSpec().get().getSecretName())
                         .endMetadata()
                         .editOrNewSpec()
                         .withNewTls()
@@ -275,9 +276,10 @@ public class KubernetesHelper implements Kubernetes {
                         .withSelector(service.getSpec().getSelector())
                         .withType("LoadBalancer")
                         .endSpec();
-                if (endpoint.getCertProvider().isPresent()) {
+                if (endpoint.getCertProviderSpec().isPresent()) {
                     svc.editOrNewMetadata()
-                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                            .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertProviderSpec().get().getName())
+                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProviderSpec().get().getSecretName())
                             .endMetadata();
                 }
                 svc.done();

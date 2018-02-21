@@ -46,12 +46,31 @@ public class Main extends AbstractVerticle {
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
         EventLogger authEventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "auth-controller");
-        AuthController authController = new AuthController(certManager, authEventLogger);
+        CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
+        AuthController authController = new AuthController(certManager, authEventLogger, certProviderFactory);
 
         deployVerticles(startPromise,
                 new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, eventLogger, authController, schemaApi)),
-//                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, schemaApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
+    }
+
+    private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {
+        return new CertProviderFactory() {
+            @Override
+            public CertProvider createProvider(CertProviderSpec certProviderSpec) {
+                if ("wildcard".equals(certProviderSpec.getName())) {
+                    String secretName = options.getWildcardCertSecret();
+                    return new WildcardCertProvider(controllerClient, certProviderSpec, secretName);
+                } else {
+                    return new SelfsignedCertProvider(controllerClient, certProviderSpec, certManager);
+                }
+            }
+
+            @Override
+            public String getDefaultProviderName() {
+                return "selfsigned";
+            }
+        };
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {
@@ -74,15 +93,6 @@ public class Main extends AbstractVerticle {
             }
             return resolver;
         };
-    }
-
-    private Endpoint appendEndpoint(CertProvider certProvider, String name, String service, String host) {
-        return new Endpoint.Builder()
-                .setCertProvider(certProvider)
-                .setName(name)
-                .setService(service)
-                .setHost(host)
-                .build();
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {

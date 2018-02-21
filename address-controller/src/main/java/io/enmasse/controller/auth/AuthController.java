@@ -10,8 +10,10 @@ import java.util.stream.Collectors;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.controller.CertProviderFactory;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.*;
+import io.fabric8.kubernetes.api.model.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,20 +30,28 @@ public class AuthController {
 
     private final CertManager certManager;
     private final EventLogger eventLogger;
+    private final CertProviderFactory certProviderFactory;
 
     public AuthController(CertManager certManager,
-                          EventLogger eventLogger) {
+                          EventLogger eventLogger,
+                          CertProviderFactory certProviderFactory) {
         this.certManager = certManager;
         this.eventLogger = eventLogger;
+        this.certProviderFactory = certProviderFactory;
     }
 
     public void issueExternalCertificates(AddressSpace addressSpace) throws Exception {
         List<Endpoint> endpoints = addressSpace.getEndpoints();
         if (endpoints != null) {
             for (Endpoint endpoint : endpoints) {
-                if (endpoint.getCertProvider().isPresent()) {
-                    String secretName = endpoint.getCertProvider().get().getSecretName();
-                    certManager.issueRouteCert(secretName, addressSpace.getNamespace());
+                if (endpoint.getCertProviderSpec().isPresent()) {
+                    try {
+                        CertProvider certProvider = certProviderFactory.createProvider(endpoint.getCertProviderSpec().get());
+                        Secret secret = certProvider.provideCert(addressSpace, endpoint);
+                        certManager.grantServiceAccountAccess(secret, "default", addressSpace.getNamespace());
+                    } catch (Exception e) {
+                        log.warn("Error providing certificate for {}: {}", endpoint, e.getMessage());
+                    }
                 }
             }
         }
@@ -85,5 +95,9 @@ public class AuthController {
             log.warn("Error issuing component certificates", e);
             eventLogger.log(CertCreateFailed, "Error creating component certificates", Warning, ControllerKind.AddressSpace, addressSpace.getName());
         }
+    }
+
+    public String getDefaultCertProvider() {
+        return certProviderFactory.getDefaultProviderName();
     }
 }
