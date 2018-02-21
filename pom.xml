@@ -18,6 +18,9 @@
     <resteasy.version>3.1.0.Final</resteasy.version>
     <mockito.version>2.0.52-beta</mockito.version>
     <junit.version>4.12</junit.version>
+    <junit.jupiter.version>5.1.0</junit.jupiter.version>
+    <junit.vintage.version>5.1.0</junit.vintage.version>
+    <junit.platform.version>1.1.0</junit.platform.version>
     <artemis.version>2.4.0</artemis.version>
     <maven.assembly.version>3.1.0</maven.assembly.version>
     <maven.shade.version>3.1.0</maven.shade.version>
@@ -119,6 +122,13 @@
             <ENV_VAR_EXISTS_BOOLEAN>true</ENV_VAR_EXISTS_BOOLEAN>
           </environmentVariables>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-surefire-provider</artifactId>
+            <version>${junit.platform.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>com.mycila</groupId>
