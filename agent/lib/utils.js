@@ -124,9 +124,9 @@ module.exports.kubernetes_name = function (name) {
     if (clean.charAt(clean.length-1) === '-') clean = clean.substring(0,clean.length-1);
     var qualifier = rhea.generate_uuid();
     if (clean.length + 1/*separator*/ + qualifier.length > MAX_KUBE_NAME) {
-        clean = clean.substring(0, 63 - (qualifier.length+1));
+        clean = clean.substring(0, MAX_KUBE_NAME - (qualifier.length+1));
     }
-    clean += qualifier;
+    clean += '-' + qualifier;
     return clean;
 }
 
