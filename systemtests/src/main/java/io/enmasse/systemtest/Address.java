@@ -6,18 +6,18 @@ package io.enmasse.systemtest;
 
 public class Address {
 
-    private String name;
+    private String address;
     private String type;
     private String plan;
 
-    public Address(String name, String type, String plan) {
-        this.name = name;
+    public Address(String address, String type, String plan) {
+        this.address = address;
         this.type = type;
         this.plan = plan;
     }
 
-    public String getName() {
-        return name;
+    public String getAddress() {
+        return address;
     }
 
     public String getType() {
