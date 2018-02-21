@@ -8,6 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Before;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -37,6 +38,16 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             addresses.add(multicast);
         }
         setAddresses(sharedAddressSpace, addresses.toArray(new Destination[0]));
+    }
+
+    @Before
+    public void initAuthzTest() throws Exception {
+        if (getAddressSpaceType() == AddressSpaceType.BROKERED) {
+            getKeycloakClient().createGroup(sharedAddressSpace.getName(), "send_#");
+            getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "send_#", username);
+            getKeycloakClient().createGroup(sharedAddressSpace.getName(), "recv_#");
+            getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "recv_#", username);
+        }
     }
 
     protected void doTestSendAuthz() throws Exception {
