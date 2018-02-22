@@ -278,7 +278,7 @@ public class AddressApiClient {
             JsonObject entry = new JsonObject();
             JsonObject metadata = new JsonObject();
             metadata.put("addressSpace", addressSpace.getName());
-            metadata.put("name", getAddressResourceName(destination, addresses, httpMethod.equals(HttpMethod.PUT));
+            metadata.put("name", getAddressResourceName(destination, addresses, false));
             entry.put("metadata", metadata);
 
             JsonObject spec = new JsonObject();
