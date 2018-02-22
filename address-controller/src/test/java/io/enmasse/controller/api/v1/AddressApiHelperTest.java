@@ -5,6 +5,9 @@
 
 package io.enmasse.controller.api.v1;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -26,7 +29,9 @@ import io.enmasse.k8s.api.TestSchemaApi;
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.util.collections.Sets;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.SecurityContext;
 
 public class AddressApiHelperTest {
@@ -60,8 +65,42 @@ public class AddressApiHelperTest {
         verify(addressApi).createAddress(eq(createAddress("q2")));
     }
 
-    private Address createAddress(final String name)
+    @Test
+    public void testDuplicateAddresses() throws Exception {
+        when(addressApi.listAddresses()).thenReturn(Sets.newSet(createAddress("q1"), createAddress("q2")));
+
+        AddressList newAddresses = new AddressList();
+        newAddresses.add(createAddress("q3", "q1"));
+        try {
+            helper.putAddresses(securityContext, "test", newAddresses);
+            fail("Expected exception for duplicate address");
+        } catch (BadRequestException e) {
+            assertThat(e.getMessage(), is("Address 'q1' already exists with resource name 'q1'"));
+        }
+    }
+
+    @Test
+    public void testDuplicateAddressesInRequest() throws Exception {
+        when(addressApi.listAddresses()).thenReturn(Collections.emptySet());
+
+        AddressList newAddresses = new AddressList();
+        newAddresses.add(createAddress("q1", "q1"));
+        newAddresses.add(createAddress("q2", "q1"));
+        try {
+            helper.putAddresses(securityContext, "test", newAddresses);
+            fail("Expected exception for duplicate address");
+        } catch (BadRequestException e) {
+            assertThat(e.getMessage(), is("Address 'q1' defined in resource names 'q1' and 'q2'"));
+        }
+    }
+
+    private Address createAddress(String name, String address)
     {
-        return new Address.Builder().setAddress(name).setAddressSpace("test").setType("queue").setPlan("plan1").build();
+        return new Address.Builder().setName(name).setAddress(address).setAddressSpace("test").setType("queue").setPlan("plan1").build();
+    }
+
+    private Address createAddress(String address)
+    {
+        return createAddress(address, address);
     }
 }
