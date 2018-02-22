@@ -141,6 +141,8 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
     public void testAddressStatus() throws Exception {
         doTestAddressStatus(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
         doTestAddressStatus(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestAddressStatus(Destination.anycast("test-anycast"));
+        doTestAddressStatus(Destination.multicast("test-multicast"));
     }
 
     @Override
