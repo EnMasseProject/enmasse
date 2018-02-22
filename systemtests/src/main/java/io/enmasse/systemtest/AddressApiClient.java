@@ -218,16 +218,7 @@ public class AddressApiClient {
         List<Address> addresses = TestUtils.convertToListAddress(getAddresses(addressSpace, Optional.empty()));
         String addressResourceName;
         for (Destination destination : destinations) {
-            if (destination.getResourceName().isPresent()) {
-                addressResourceName = destination.getAddress();
-            } else {
-                Address destAddress = addresses.stream().filter(address -> address.getAddress().equals(destination.getAddress()))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException(
-                                String.format("Address related to destination '%s' wasn't found",
-                                        destination.getAddress())));
-                addressResourceName = destAddress.getName();
-            }
+            addressResourceName = getAddressResourceName(destination, addresses);
             path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(addressResourceName);
             doDelete(path.toString(), destination.getAddress());
             path.setLength(0);
@@ -254,15 +245,31 @@ public class AddressApiClient {
         });
     }
 
+    /**
+     * return Address resource name of destination
+     */
+    private String getAddressResourceName(Destination destination, List<Address> addresses) {
+        return destination.getResourceName().orElse(addresses.stream().filter(address -> address.getAddress().equals(destination.getAddress()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        String.format("Address related to destination '%s' wasn't found",
+                                destination.getAddress())))
+                .getName());
+    }
+
     public void deploy(AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressList");
         JsonArray items = new JsonArray();
+
+        List<Address> addresses = TestUtils.convertToListAddress(getAddresses(addressSpace, Optional.empty()));
+
         for (Destination destination : destinations) {
             JsonObject entry = new JsonObject();
             JsonObject metadata = new JsonObject();
             metadata.put("addressSpace", addressSpace.getName());
+            metadata.put("name", getAddressResourceName(destination, addresses));
             entry.put("metadata", metadata);
 
             JsonObject spec = new JsonObject();
