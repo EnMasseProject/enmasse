@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
 
@@ -19,6 +20,7 @@ import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,8 +70,20 @@ public class AddressApiHelper {
         AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getType()));
 
         AddressResolver addressResolver = new AddressResolver(schema, type);
+        Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses();
         for (Address address : addressList) {
             addressResolver.validate(address);
+            for (Address existing : existingAddresses) {
+                if (address.getAddress().equals(existing.getAddress()) && !address.getName().equals(existing.getName())) {
+                    throw new BadRequestException("Address '" + address.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
+                }
+            }
+
+            for (Address b : addressList) {
+                if (address.getAddress().equals(b.getAddress()) && !address.getName().equals(b.getName())) {
+                    throw new BadRequestException("Address '" + address.getAddress() + "' defined in resource names '" + address.getName() + "' and '" + b.getName() + "'");
+                }
+            }
         }
     }
 
