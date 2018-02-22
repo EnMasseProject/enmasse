@@ -12,14 +12,20 @@ public class Destination {
     private static final String TOPIC = "topic";
     private static final String ANYCAST = "anycast";
     private static final String MULTICAST = "multicast";
+    private final String name;
     private final String address;
     private final String type;
     private final String plan;
 
-    public Destination(String address, String type, String plan) {
+    public Destination(String name, String address, String type, String plan) {
+        this.name = name;
         this.address = address;
         this.type = type;
         this.plan = plan;
+    }
+
+    public Destination(String address, String type, String plan) {
+        this(TestUtils.sanitizeAddress(address), address, type, plan);
     }
 
     public static Destination queue(String address, String plan) {
@@ -48,6 +54,10 @@ public class Destination {
 
     public String getType() {
         return type;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getAddress() {
