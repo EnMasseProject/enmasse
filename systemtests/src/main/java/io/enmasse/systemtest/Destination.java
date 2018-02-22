@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest;
 
+
 import java.util.Optional;
 
 public class Destination {
@@ -12,11 +13,21 @@ public class Destination {
     private static final String TOPIC = "topic";
     private static final String ANYCAST = "anycast";
     private static final String MULTICAST = "multicast";
+    private final Optional<String> resourceName;
     private final String address;
     private final String type;
     private final String plan;
 
+
+    public Destination(Optional<String> resourceName, String address, String type, String plan) {
+        this.resourceName = resourceName;
+        this.address = address;
+        this.type = type;
+        this.plan = plan;
+    }
+
     public Destination(String address, String type, String plan) {
+        this.resourceName = Optional.empty();
         this.address = address;
         this.type = type;
         this.plan = plan;
@@ -26,16 +37,32 @@ public class Destination {
         return new Destination(address, QUEUE, plan);
     }
 
+    public static Destination queue(Optional<String> resourceName, String address, String plan) {
+        return new Destination(resourceName, address, QUEUE, plan);
+    }
+
     public static Destination topic(String address, String plan) {
         return new Destination(address, TOPIC, plan);
+    }
+
+    public static Destination topic(Optional<String> resourceName, String address, String plan) {
+        return new Destination(resourceName, address, TOPIC, plan);
     }
 
     public static Destination anycast(String address) {
         return new Destination(address, ANYCAST, "standard-anycast");
     }
 
+    public static Destination anycast(Optional<String> resourceName, String address) {
+        return new Destination(resourceName, address, ANYCAST, "standard-anycast");
+    }
+
     public static Destination multicast(String address) {
         return new Destination(address, MULTICAST, "standard-multicast");
+    }
+
+    public static Destination multicast(Optional<String> resourceName, String address) {
+        return new Destination(resourceName, address, MULTICAST, "standard-multicast");
     }
 
     public static boolean isQueue(Destination d) {
@@ -56,6 +83,10 @@ public class Destination {
 
     public String getPlan() {
         return plan;
+    }
+
+    public Optional<String> getResourceName() {
+        return resourceName;
     }
 
     /**

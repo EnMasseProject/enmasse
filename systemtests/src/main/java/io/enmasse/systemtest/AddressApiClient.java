@@ -16,9 +16,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class AddressApiClient {
@@ -217,8 +215,11 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         StringBuilder path = new StringBuilder();
+        List<Address> addresses = TestUtils.convertToListAddress(getAddresses(addressSpace, Optional.empty()));
+        String addressResourceName;
         for (Destination destination : destinations) {
-            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getAddress());
+            addressResourceName = getAddressResourceName(destination, addresses, true);
+            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(addressResourceName);
             doDelete(path.toString(), destination.getAddress());
             path.setLength(0);
         }
@@ -244,15 +245,40 @@ public class AddressApiClient {
         });
     }
 
+    /**
+     * return Address resource name of destination
+     */
+    private String getAddressResourceName(Destination destination, List<Address> addresses, boolean required) {
+        String resourceName = "";
+        try {
+            resourceName = destination.getResourceName()
+                    .orElse(addresses.stream().filter(address -> address.getAddress().equals(destination.getAddress()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException(
+                                    String.format("Address related to destination '%s' wasn't found",
+                                            destination.getAddress())))
+                            .getName());
+        } catch (IllegalStateException ex) {
+            if (required) {
+                throw ex;
+            }
+        }
+        return resourceName;
+    }
+
     public void deploy(AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressList");
         JsonArray items = new JsonArray();
+
+        List<Address> addresses = TestUtils.convertToListAddress(getAddresses(addressSpace, Optional.empty()));
+
         for (Destination destination : destinations) {
             JsonObject entry = new JsonObject();
             JsonObject metadata = new JsonObject();
             metadata.put("addressSpace", addressSpace.getName());
+            metadata.put("name", getAddressResourceName(destination, addresses, false));
             entry.put("metadata", metadata);
 
             JsonObject spec = new JsonObject();

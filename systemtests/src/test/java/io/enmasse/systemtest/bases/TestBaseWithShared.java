@@ -92,12 +92,12 @@ public abstract class TestBaseWithShared extends TestBase {
         scale(sharedAddressSpace, destination, numReplicas);
     }
 
-    protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return getAddresses(sharedAddressSpace, addressName);
+    protected Future<List<String>> getAddresses(Optional<String> addressResourceName) throws Exception {
+        return getAddresses(sharedAddressSpace, addressResourceName);
     }
 
-    protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return getAddressesObjects(sharedAddressSpace, addressName);
+    protected Future<List<Address>> getAddressesObjects(Optional<String> addressResourceName) throws Exception {
+        return getAddressesObjects(sharedAddressSpace, addressResourceName);
     }
 
 
