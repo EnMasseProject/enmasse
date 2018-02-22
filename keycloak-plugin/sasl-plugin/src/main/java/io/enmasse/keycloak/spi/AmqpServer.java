@@ -60,6 +60,8 @@ public class AmqpServer extends AbstractVerticle {
         PERMISSIONS.put("create", "create");
         PERMISSIONS.put("delete", "delete");
         PERMISSIONS.put("view", "view");
+        PERMISSIONS.put("manage", "manage");
+
     }
 
     private final String hostname;

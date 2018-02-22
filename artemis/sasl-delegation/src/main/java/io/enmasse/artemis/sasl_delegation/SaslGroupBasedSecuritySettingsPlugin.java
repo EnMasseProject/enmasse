@@ -100,11 +100,11 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                         Set<Role> roles = new HashSet<>();
                         LOG.debugv("Adding permissions for address {0} due to group {1}", address, group);
                         roles.add(new Role("send_" + address, true, false, false, false, true, false, false, false, false, false));
-                        roles.add(new Role("consume_" + address, false, true, true, true, true, true, false, true, false, false));
                         roles.add(new Role("recv_" + address, false, true, true, true, true, true, false, true, false, false));
                         roles.add(new Role("browse_" + address, false, false, false, false, false, false, false, true, false, false));
                         roles.add(new Role("create_" + address, false, false, true, false, true, false, false, false, true, false));
                         roles.add(new Role("delete_" + address, false, false, false, true, false, true, false, false, false, true));
+                        roles.add(new Role("manage_" + address, false, false, false, false, false, false, true, false, false, false));
 
                         Set<Role> allRoles = new HashSet<>(securityRepository.getMatch(address));
                         allRoles.addAll(roles);
