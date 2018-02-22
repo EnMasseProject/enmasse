@@ -37,6 +37,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -59,6 +60,8 @@ public class AmqpServer extends AbstractVerticle {
         PERMISSIONS.put("create", "create");
         PERMISSIONS.put("delete", "delete");
         PERMISSIONS.put("view", "view");
+        PERMISSIONS.put("manage", "manage");
+
     }
 
     private final String hostname;
@@ -87,11 +90,10 @@ public class AmqpServer extends AbstractVerticle {
                 authUserMap.put("preferred_username", userData.getUsername());
                 props.put(Symbol.valueOf("authenticated-identity"), authUserMap);
                 props.put(Symbol.valueOf("groups"), new ArrayList<>(userData.getGroups()));
-                // TODO - Access to connection capabilities requires vert.x proton >= 3.5.0
-                // if(connection.getRemoteDesiredCapabilities() != null && Arrays.asList(connection.getRemoteDesiredCapabilities()).contains(ADDRESS_AUTHZ_CAPABILITY)) {
-                    // connection.setOfferedCapabilities(new Symbol[] { ADDRESS_AUTHZ_CAPABILITY });
-                props.put(ADDRESS_AUTHZ_PROPERTY, getPermissionsFromGroups(userData.getGroups()));
-                // }
+                if(connection.getRemoteDesiredCapabilities() != null && Arrays.asList(connection.getRemoteDesiredCapabilities()).contains(ADDRESS_AUTHZ_CAPABILITY)) {
+                    connection.setOfferedCapabilities(new Symbol[] { ADDRESS_AUTHZ_CAPABILITY });
+                    props.put(ADDRESS_AUTHZ_PROPERTY, getPermissionsFromGroups(userData.getGroups()));
+                }
                 connection.setProperties(props);
             }
             connection.open();
