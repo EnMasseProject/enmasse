@@ -1,4 +1,4 @@
-FROM gordons/qdrouterd-base:DISPATCH-928
+FROM gordons/qdrouterd-base:DISPATCH-928-v2
 ARG version=latest
 
 RUN dnf -y install valgrind
