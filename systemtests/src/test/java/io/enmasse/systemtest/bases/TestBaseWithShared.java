@@ -75,6 +75,9 @@ public abstract class TestBaseWithShared extends TestBase {
 
         createGroup(sharedAddressSpace, "admin");
         joinGroup(sharedAddressSpace, "admin", managementCredentials.getUsername());
+        joinGroup(sharedAddressSpace, "send_#", managementCredentials.getUsername());
+        joinGroup(sharedAddressSpace, "recv_#", managementCredentials.getUsername());
+        joinGroup(sharedAddressSpace, "view_#", managementCredentials.getUsername());
 
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
