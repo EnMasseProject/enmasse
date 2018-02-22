@@ -218,7 +218,7 @@ public class AddressApiClient {
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         StringBuilder path = new StringBuilder();
         for (Destination destination : destinations) {
-            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getAddress());
+            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
             doDelete(path.toString(), destination.getAddress());
             path.setLength(0);
         }
@@ -252,6 +252,9 @@ public class AddressApiClient {
         for (Destination destination : destinations) {
             JsonObject entry = new JsonObject();
             JsonObject metadata = new JsonObject();
+            if (destination.getName() != null) {
+                metadata.put("name", destination.getName());
+            }
             metadata.put("addressSpace", addressSpace.getName());
             entry.put("metadata", metadata);
 
@@ -278,8 +281,7 @@ public class AddressApiClient {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName()).append("/");
 
-        log.info("Following HTTP request will be used for deploy: " + path);
-        log.info("Following payload will be used in request: " + config.toString());
+        log.info("Deploying using path {} and body: {}", path, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
             client.request(httpMethod, endpoint.getPort(), endpoint.getHost(), path.toString())

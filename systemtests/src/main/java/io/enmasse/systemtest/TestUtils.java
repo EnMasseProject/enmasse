@@ -604,4 +604,8 @@ public class TestUtils {
     public static boolean removeAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan) {
         return kubernetes.removeAddressSpacePlanConfig(addressSpacePlan);
     }
+
+    public static String sanitizeAddress(String address) {
+        return address.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
+    }
 }
