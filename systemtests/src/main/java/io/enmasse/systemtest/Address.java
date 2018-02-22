@@ -6,18 +6,36 @@ package io.enmasse.systemtest;
 
 public class Address {
 
+
+    private String addressSpace;
     private String address;
+    private String name;
     private String type;
     private String plan;
+    private String phase;
+    private boolean isReady;
 
-    public Address(String address, String type, String plan) {
+
+    public Address(String addressSpace, String address, String name, String type, String plan, String phase, boolean isReady) {
+        this.addressSpace = addressSpace;
         this.address = address;
+        this.name = name;
         this.type = type;
         this.plan = plan;
+        this.phase = phase;
+        this.isReady = isReady;
+    }
+
+    public String getAddressSpace() {
+        return addressSpace;
     }
 
     public String getAddress() {
         return address;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getType() {
@@ -26,5 +44,13 @@ public class Address {
 
     public String getPlan() {
         return plan;
+    }
+
+    public String getPhase() {
+        return phase;
+    }
+
+    public boolean isReady() {
+        return isReady;
     }
 }

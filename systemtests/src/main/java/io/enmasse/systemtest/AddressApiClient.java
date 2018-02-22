@@ -16,9 +16,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class AddressApiClient {
@@ -217,8 +215,20 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         StringBuilder path = new StringBuilder();
+        List<Address> addresses = TestUtils.convertToListAddress(getAddresses(addressSpace, Optional.empty()));
+        String addressResourceName;
         for (Destination destination : destinations) {
-            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getAddress());
+            if (destination.getResourceName().isPresent()) {
+                addressResourceName = destination.getAddress();
+            } else {
+                Address destAddress = addresses.stream().filter(address -> address.getAddress().equals(destination.getAddress()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException(
+                                String.format("Address related to destination '%s' wasn't found",
+                                        destination.getAddress())));
+                addressResourceName = destAddress.getName();
+            }
+            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(addressResourceName);
             doDelete(path.toString(), destination.getAddress());
             path.setLength(0);
         }
