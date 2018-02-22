@@ -8,6 +8,7 @@ import io.enmasse.address.model.*;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -58,5 +59,22 @@ public class AddressTest {
         assertThat(b1.getAddress(), is(b2.getAddress()));
         assertThat(b1.getPlan(), is(b2.getPlan()));
         assertThat(b1.getType(), is(b2.getType()));
+    }
+    
+    @Test
+    public void testCopy() {
+        Address a = new Address.Builder()
+                .setAddress("a1")
+                .setPlan("p1")
+                .setType("t1")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
+                .build();
+        
+        Address b = new Address.Builder(a).build();
+        
+        assertThat(a, is(b));
+        assertTrue(b.getStatus().isReady());
+        assertThat(b.getStatus().getPhase(), is(Status.Phase.Active));
+        assertThat(b.getStatus().getMessages(), hasItem("foo"));
     }
 }
