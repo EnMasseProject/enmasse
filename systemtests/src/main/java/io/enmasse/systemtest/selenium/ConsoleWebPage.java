@@ -495,10 +495,14 @@ public class ConsoleWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Destination destination) throws Exception {
-        createAddressWebConsole(destination, true);
+        createAddressWebConsole(destination, true, true);
     }
 
-    public void createAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
+    public void createAddressWebConsole(Destination destination, boolean waitForReady) throws Exception {
+        createAddressWebConsole(destination, true, waitForReady);
+    }
+
+    public void createAddressWebConsole(Destination destination, boolean openConsolePage, boolean waitForReady) throws Exception {
         log.info("Create address using web console");
 
         if (openConsolePage)
@@ -525,8 +529,9 @@ public class ConsoleWebPage {
 
         assertNotNull("Console failed, does not contain created address item", getAddressItem(destination));
 
-        TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
-                new TimeoutBudget(5, TimeUnit.MINUTES), destination);
+        if(waitForReady)
+            TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
+                    new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }
 
     /**

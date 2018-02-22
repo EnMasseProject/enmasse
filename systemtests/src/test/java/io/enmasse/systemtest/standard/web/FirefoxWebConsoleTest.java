@@ -137,6 +137,12 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestCanOpenConsolePage(username, password, true);
     }
 
+    @Test
+    public void testAddressStatus() throws Exception {
+        doTestAddressStatus(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestAddressStatus(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+    }
+
     @Override
     public WebDriver buildDriver() {
         return getFirefoxDriver();

@@ -18,7 +18,6 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         };
 
         $scope.get_plan_display_name = function (type, plan) {
-            console.log('get_plan_display_name(%s, %s)', type, plan);
             return address_service.get_plan_display_name(type, plan);
         };
 

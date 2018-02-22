@@ -4,8 +4,11 @@
  */
 package io.enmasse.systemtest.selenium;
 
+import io.enmasse.systemtest.AddressStatus;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+
+import java.util.Arrays;
 
 public class AddressWebItem extends WebItem implements Comparable<AddressWebItem> {
 
@@ -14,6 +17,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     private boolean isReady;
     private String name;
     private String type;
+    private String plan;
+    private AddressStatus status;
     private int sendersCount;
     private int receiversCount;
     private int messagesIn;
@@ -24,20 +29,15 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.webItem = item;
         this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
-        this.type = item.findElement(By.className("list-group-item-text")).getText();
+        setTypeAndPlan();
+        this.status = this.setStatus();
         this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
         this.messagesIn = getCountOfAdditionalInfoItem("Messages In");
         this.messagesOut = getCountOfAdditionalInfoItem("Messages Out");
         this.messagesStored = getCountOfAdditionalInfoItem("Stored");
-
-        try {
-            item.findElement(By.className("pficon-ok"));
-            isReady = true;
-        } catch (Exception ex) {
-            isReady = false;
-        }
+        this.isReady = AddressStatus.READY == this.status;
     }
 
     public WebElement getAddressItem() {
@@ -80,6 +80,33 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         return messagesStored;
     }
 
+    public AddressStatus getStatus() {
+        return status;
+    }
+
+
+    private AddressStatus setStatus() {
+        WebElement statusElement = this.webItem.findElement(By.className("list-view-pf-left"));
+        String iconStatus = statusElement.findElement(By.className("fa")).getAttribute("class");
+        if (iconStatus.contains("pficon-ok"))
+            return AddressStatus.READY;
+        if (iconStatus.contains("pficon-error-circle-o"))
+            return AddressStatus.ERROR;
+        if (iconStatus.contains("fa-spinner"))
+            return AddressStatus.PENDING;
+        if (iconStatus.contains("pficon-warning-triangle-o"))
+            return AddressStatus.WARNING;
+
+        return AddressStatus.UNKNOWN;
+    }
+
+    private void setTypeAndPlan() {
+        String[] tmp = this.webItem.findElement(By.className("list-group-item-text")).getText()
+                .split("(\\s|&nbsp;){2,}");
+        this.type = tmp[0];
+        this.plan = tmp[1];
+    }
+
     @Override
     public int compareTo(AddressWebItem o) {
         return name.compareTo(o.name);
@@ -87,7 +114,15 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
 
     @Override
     public String toString() {
-        return String.format("name: %s, senders: %d, receivers: %d, Messages In: %d, Messages Out: %d, Messages stored: %d",
-                this.name, this.sendersCount, this.receiversCount, this.messagesIn, this.messagesOut, this.messagesStored);
+        return String.format("name: %s, status: %s, type: %s, plan: %s, senders: %d, receivers: %d, Messages In: %d, Messages Out: %d, Messages stored: %d",
+                this.name,
+                this.status,
+                this.type,
+                this.plan,
+                this.sendersCount,
+                this.receiversCount,
+                this.messagesIn,
+                this.messagesOut,
+                this.messagesStored);
     }
 }

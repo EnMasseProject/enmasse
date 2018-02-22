@@ -103,6 +103,7 @@ AddressSource.prototype.update_status = function (record, ready) {
         }
         if (def.status.isReady !== ready) {
             def.status.isReady = ready;
+            def.status.phase = ready ? 'Active' : 'Pending';
             configmap.data['config.json'] = JSON.stringify(def);
             return configmap;
         } else {
