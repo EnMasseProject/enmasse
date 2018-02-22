@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -63,6 +64,20 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
         consoleWebPage.createAddressWebConsole(destination);
         consoleWebPage.deleteAddressWebConsole(destination);
+    }
+
+    protected void doTestAddressStatus(Destination destination) throws Exception {
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
+        consoleWebPage.createAddressWebConsole(destination, false);
+        assertThat("Console failed, expected PENDING or READY state",
+                consoleWebPage.getAddressItem(destination).getStatus(),
+                either(is(AddressStatus.PENDING)).or(is(AddressStatus.READY)));
+
+        TestUtils.waitForDestinationsReady(addressApiClient, sharedAddressSpace,
+                new TimeoutBudget(5, TimeUnit.MINUTES), destination);
+
+        assertEquals("Console failed, expected READY state",
+                AddressStatus.READY, consoleWebPage.getAddressItem(destination).getStatus());
     }
 
     protected void doTestFilterAddressesByType() throws Exception {
@@ -466,7 +481,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         try {
             assertElementDisabled("Console failed, create button is enabled for user " + monitorUser.getUsername(),
                     consoleWebPage.getCreateButton());
-            consoleWebPage.createAddressWebConsole(destination, false);
+            consoleWebPage.createAddressWebConsole(destination, false, true);
             fail("Create button is clickable");
         } catch (Exception ex) {
             assertTrue("Console failed, bad exception throws", ex instanceof InvalidElementStateException);
