@@ -8,11 +8,11 @@ This roadmap describes the features we expect to be available in the next releas
   broker if allowed, and take previous placement into consideration
 * Add support for colocated topics together with queues
 * Change address model to require address field and make name field optional
+* Support viewing status of addresses in console
 
 0.18.0
 * Support using wildcard certificates for external routes
 * Change service broker to operate on address spaces and support binding
-* Support viewing status of addresses in console
 * Allow deploying without mqtt components
 
 0.19.0

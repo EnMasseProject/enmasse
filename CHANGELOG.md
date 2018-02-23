@@ -1,3 +1,14 @@
+## 0.17.0 (February 22, 2017)
+* Add support for address space plans, which provides a way to configure address space quotas.
+* Add support for address plans, which provides a way to configure resources requirements for a
+  given address.
+* Automatically scale router and broker based on address resource requirements (in standard address
+  space only)
+* Add resource definitions, which allows a higher degree of configurability of routers and brokers
+* Add support for colocated topics (allows a minimum footprint of 1 router and 1 broker handling many queues and topics)
+* Change address model to require 'address' and 'plan' fields to be set, and make 'name' field optional
+* Expose status of addresses in console
+
 ## 0.16.0 (January 30, 2017)
 * Support for authorization at address level. To enable this, create groups in keycloak on the form 'send_*' and 'recv_*', and have users join a particular group to allow sending or receiving from a particular address (wildcards if you want to allow on all addresses). More detailed docs will follow
 * Ability to deploy keycloak-controller standalone in order to automatically manage an  external keycloak instance
