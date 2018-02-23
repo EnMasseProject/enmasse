@@ -11,6 +11,7 @@ import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestSchemaApi;
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -21,10 +22,10 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-public class ControllerHelperTest {
+public class CreateControllerTest {
 
     @Test
-    public void testAddressSpaceCreate() {
+    public void testAddressSpaceCreate() throws Exception {
         Kubernetes kubernetes = mock(Kubernetes.class);
         when(kubernetes.withNamespace(any())).thenReturn(kubernetes);
         when(kubernetes.hasService(any())).thenReturn(false);
@@ -39,10 +40,14 @@ public class ControllerHelperTest {
 
 
         EventLogger eventLogger = mock(EventLogger.class);
+        InfraResourceFactory mockResourceFactory = mock(InfraResourceFactory.class);
+        when(mockResourceFactory.createResourceList(eq(addressSpace))).thenReturn(new KubernetesList());
 
         SchemaApi testSchema = new TestSchemaApi();
-        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger, testSchema, "unknown");
-        helper.create(addressSpace);
+        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, "test", eventLogger);
+
+        createController.handle(addressSpace);
+
         ArgumentCaptor<AddressSpace> addressSpaceArgumentCaptor = ArgumentCaptor.forClass(AddressSpace.class);
         verify(kubernetes).createNamespace(addressSpaceArgumentCaptor.capture());
         AddressSpace value = addressSpaceArgumentCaptor.getValue();

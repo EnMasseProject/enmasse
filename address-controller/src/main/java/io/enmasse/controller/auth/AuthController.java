@@ -11,6 +11,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.controller.CertProviderFactory;
+import io.enmasse.controller.Controller;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -25,7 +26,7 @@ import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 /**
  * Manages certificates issuing, revoking etc. for EnMasse services
  */
-public class AuthController {
+public class AuthController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class.getName());
 
     private final CertManager certManager;
@@ -99,5 +100,13 @@ public class AuthController {
 
     public String getDefaultCertProvider() {
         return certProviderFactory.getDefaultProviderName();
+    }
+
+    @Override
+    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+        issueAddressSpaceCert(addressSpace);
+        issueComponentCertificates(addressSpace);
+        issueExternalCertificates(addressSpace);
+        return addressSpace;
     }
 }

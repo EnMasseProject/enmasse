@@ -37,7 +37,7 @@ public interface Kubernetes {
 
     boolean hasService(String service);
 
-    void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace);
+    HasMetadata createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace);
 
     Set<Deployment> getReadyDeployments();
 

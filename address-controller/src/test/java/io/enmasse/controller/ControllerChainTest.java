@@ -5,15 +5,10 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Schema;
 import io.enmasse.address.model.Status;
 import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
 import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.k8s.api.TestSchemaApi;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -23,23 +18,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.internal.util.collections.Sets;
 
-import java.util.Collections;
-
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 @RunWith(VertxUnitRunner.class)
-public class ControllerTest {
+public class ControllerChainTest {
     private Vertx vertx;
     private TestAddressSpaceApi testApi;
     private Kubernetes kubernetes;
-    private OpenShiftClient client;
 
     @Before
     public void setup() {
         vertx = Vertx.vertx();
-        client = mock(OpenShiftClient.class);
         kubernetes = mock(Kubernetes.class);
         testApi = new TestAddressSpaceApi();
 
@@ -56,10 +46,11 @@ public class ControllerTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        SchemaApi schemaApi = new TestSchemaApi();
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), testLogger, null, schemaApi);
+        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, testLogger);
+        Controller mockController = mock(Controller.class);
+        controllerChain.addController(mockController);
 
-        vertx.deployVerticle(controller, context.asyncAssertSuccess());
+        vertx.deployVerticle(controllerChain, context.asyncAssertSuccess());
 
         AddressSpace a1 = new AddressSpace.Builder()
                 .setName("myspace")
@@ -75,11 +66,14 @@ public class ControllerTest {
                 .setStatus(new Status(false))
                 .build();
 
-        controller.resourcesUpdated(Sets.newSet(a1, a2));
+        when(mockController.handle(eq(a1))).thenReturn(a1);
+        when(mockController.handle(eq(a2))).thenReturn(a2);
 
-        for (AddressSpace space : testApi.listAddressSpaces()) {
-            assertTrue(space.getStatus().isReady());
-        }
+        controllerChain.resourcesUpdated(Sets.newSet(a1, a2));
+
+        verify(mockController, times(2)).handle(any());
+        verify(mockController).handle(eq(a1));
+        verify(mockController).handle(eq(a2));
     }
 
 }
