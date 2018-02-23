@@ -3,6 +3,12 @@
     name: address_controller_multitenant
   when: multitenant
 - import_role:
+    name: plans_standard
+  when: not multitenant and address_space_type == "standard"
+- import_role:
+    name: plans_brokered
+  when: not multitenant and address_space_type == "brokered"
+- import_role:
     name: address_controller_singletenant
   when: not multitenant
 - import_role:

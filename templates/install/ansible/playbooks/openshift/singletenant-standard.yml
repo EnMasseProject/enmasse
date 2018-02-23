@@ -1,0 +1,7 @@
+- hosts: localhost
+  vars:
+    multitenant: false
+    address_space_type: standard
+    address_space_plan: unlimited-standard
+  roles:
+    - enmasse
