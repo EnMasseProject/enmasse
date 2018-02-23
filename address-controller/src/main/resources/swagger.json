@@ -584,6 +584,16 @@
                 "isReady": {
                     "type": "boolean"
                 },
+                "phase": {
+                    "type": "string",
+                    "enum": [
+                        "Pending",
+                        "Configuring",
+                        "Active",
+                        "Failed",
+                        "Terminating"
+                    ]
+                },
                 "messages": {
                     "type": "array",
                     "items": {

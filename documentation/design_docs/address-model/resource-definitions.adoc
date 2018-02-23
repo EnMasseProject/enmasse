@@ -47,7 +47,7 @@ endpoint for connecting.
     },
     "spec": {
         "type": "standard", // Required. Default is 'standard', potentially configurable
-        "plan": "small", // Optional. This is the aggregate 'size' of the address space (i.e. controls how
+        "plan": "small", // Required. This is the aggregate 'size' of the address space (i.e. controls how
                          // many addresses and how many resources each address may consume
 
         "endpoints": [ // Optional. If not provided, the default generated hostnames will be provided. 
@@ -56,7 +56,7 @@ endpoint for connecting.
                 "service": "messaging",          // Required. 
                 "host": "messaging.example.com", // Optional. The host name for this endpoint to use for routing by the load balancer
                 "cert": {                        // Optional. Self-signed certificates are generated if not specified
-                    "provider": "secret",        // Provider of certs may be through secrets or ACME. For 'secret', the secret name must be passed
+                    "provider": "selfSigned",    // Provider may be selfsigned or 'wildcard'
                     "secretName": "mysecret"
                 }
             }
@@ -114,14 +114,14 @@ address
     "apiVersion": "enmasse.io/v1", // Required
     "kind": "Address", // Required
     "metadata": {
-        "name": "myqueue", // Required
-        "uuid": "4bfe49c2-60b5-11e7-a5d0-507b9def37d9", // Optional
+        "name": "myqueue", // optional, assigned by API. Default would be set to 'myqueue-4bfe49c2-60b5-11e7-a5d0-507b9def37d9'
+        "uuid": "4bfe49c2-60b5-11e7-a5d0-507b9def37d9", // Optional, assigned by API
         "addressSpace": "myspace" // Optional. Defaults to 'default' address space
     },
     "spec": {
-        "address": "my_queue",  // Optional. Default is .metadata.name
+        "address": "my_queue",  // Required. Default is .metadata.name
         "type": "queue",        // Required. Valid types are defined by the AddressSpace
-        "plan": "medium"        // Optional
+        "plan": "medium"        // Required. Valid plans can be found using /apis/enmasse.io/v1/schema
     }
 }
 ....
@@ -183,8 +183,4 @@ GET /v1/schema
 [[configserv]]
 == Configserv
 
-Allow components to subscribe over AMQP with "v1/addresses" as source. A
-messages will be sent out whenever the addresses have changed. The body
-of these messages will contain an AddressList JSON object as defined
-above. The subject will contain the string 'enmasse.io/v1/AddressList'
-(i.e. the value of the apiVersion concatenated with the value of kind).
+Configserv has been removed
