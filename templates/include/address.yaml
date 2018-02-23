@@ -6,7 +6,7 @@ objects:
   - apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: address-${NAME}
+      name: ${NAME}
       labels:
         type: address-config
     data:
@@ -15,17 +15,20 @@ objects:
           "apiVersion": "enmasse.io/v1",
           "kind": "Address",
           "metadata": {
-            "name": "${NAME}",
             "addressSpace": "${ADDRESS_SPACE}"
           },
           "spec": {
+            "address": "${ADDRESS}",
             "type": "${TYPE}",
             "plan": "${PLAN}"
           }
         }
 parameters:
   - name: NAME
-    description: Name of address
+    description: Name of configmap
+    required: true
+  - name: ADDRESS
+    description: Address
     required: true
   - name: ADDRESS_SPACE
     description: Address space of address
