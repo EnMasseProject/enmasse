@@ -212,15 +212,14 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace) {
+    public HasMetadata createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace) {
         if (service == null || service.getMetadata().getAnnotations() == null) {
             log.info("Skipping creating endpoint for unknown service {}", endpoint.getService());
-            return;
+            return null;
         }
 
         String defaultPort = service.getMetadata().getAnnotations().get(AnnotationKeys.ENDPOINT_PORT);
 
-        // TODO: Add labels
         if (client.isAdaptable(OpenShiftClient.class)) {
             DoneableRoute route = client.routes().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
@@ -251,10 +250,10 @@ public class KubernetesHelper implements Kubernetes {
                         .endTls()
                         .endSpec();
             }
-            route.done();
+            return route.done();
         } else {
             if (service.getSpec().getPorts().isEmpty()) {
-                return;
+                return null;
             }
             ServicePort servicePort = null;
             for (ServicePort port : service.getSpec().getPorts()) {
@@ -282,9 +281,10 @@ public class KubernetesHelper implements Kubernetes {
                             .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProviderSpec().get().getSecretName())
                             .endMetadata();
                 }
-                svc.done();
+                return svc.done();
             }
         }
+        return null;
     }
 
     public Set<Deployment> getReadyDeployments() {

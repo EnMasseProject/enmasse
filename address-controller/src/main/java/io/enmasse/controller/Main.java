@@ -27,7 +27,7 @@ public class Main extends AbstractVerticle {
     private final ControllerOptions options;
     private final Kubernetes kubernetes;
 
-    private Main(ControllerOptions options) throws Exception {
+    private Main(ControllerOptions options) {
         this.controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
                 .withMasterUrl(options.getMasterUrl())
                 .withOauthToken(options.getToken())
@@ -45,12 +45,19 @@ public class Main extends AbstractVerticle {
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
-        EventLogger authEventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "auth-controller");
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
-        AuthController authController = new AuthController(certManager, authEventLogger, certProviderFactory);
+        AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
+
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaApi, resolverFactory, authController.getDefaultCertProvider());
+
+        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, eventLogger);
+        controllerChain.addController(new CreateController(kubernetes, schemaApi, infraResourceFactory, kubernetes.getNamespace(), eventLogger));
+        controllerChain.addController(new StatusController(kubernetes, infraResourceFactory));
+        controllerChain.addController(new EndpointController(controllerClient));
+        controllerChain.addController(authController);
 
         deployVerticles(startPromise,
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, eventLogger, authController, schemaApi)),
+                new Deployment(controllerChain),
                 new Deployment(new HTTPServer(addressSpaceApi, schemaApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }
 

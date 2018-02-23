@@ -125,7 +125,7 @@ public class SerializationTest {
         assertThat(deserialized.getEndpoints().get(0).getName(), is(addressSpace.getEndpoints().get(0).getName()));
         assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
         assertThat(deserialized.getEndpoints().get(0).getCertProviderSpec().get().getName(), is(addressSpace.getEndpoints().get(0).getCertProviderSpec().get().getName()));
-        assertThat(deserialized.getEndpoints().get(0).getCertProviderSpec().get().getParameters().size(), is(1));
+        assertThat(deserialized.getEndpoints().get(0).getCertProviderSpec().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertProviderSpec().get().getSecretName()));
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
         assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
