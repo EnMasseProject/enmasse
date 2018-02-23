@@ -1,4 +1,5 @@
 ## 0.17.0 (February 22, 2017)
+* Support for deploying EnMasse on OpenShift using Ansible
 * Add support for address space plans, which provides a way to configure address space quotas.
 * Add support for address plans, which provides a way to configure resources requirements for a
   given address.
