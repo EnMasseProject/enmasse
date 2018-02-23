@@ -117,14 +117,14 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestViewAddressesWildcards();
     }
 
-    @Test
-    public void testCannotOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage("pepa", "pepaPa555", false);
+    @Test(expected = IllegalStateException.class)
+    public void testCannotOpenConsolePage() throws IllegalStateException {
+        doTestCanOpenConsolePage("pepa", "pepaPa555");
     }
 
     @Test
     public void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(username, password, true);
+        doTestCanOpenConsolePage(username, password);
     }
 
     @Test

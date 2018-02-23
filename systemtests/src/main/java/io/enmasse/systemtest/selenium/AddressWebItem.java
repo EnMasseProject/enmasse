@@ -60,6 +60,10 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         return type;
     }
 
+    public String getPlan() {
+        return plan;
+    }
+
     public int getSendersCount() {
         return sendersCount;
     }
