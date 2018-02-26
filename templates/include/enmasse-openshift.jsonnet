@@ -29,7 +29,8 @@ local roles = import "roles.jsonnet";
       },
       "name": "enmasse"
     },
-    "objects": [ standardInfra.template(false),
+    "objects": [ standardInfra.template(false, false),
+                 standardInfra.template(false, true),
                  brokeredInfra.template,
                  addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}"),
                  addressController.internal_service,

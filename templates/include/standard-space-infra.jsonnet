@@ -19,7 +19,7 @@ local prometheus = import "prometheus.jsonnet";
 local storage = import "storage-template.jsonnet";
 
 {
-  template(use_template_configmap)::
+  template(use_template_configmap, with_mqtt)::
   {
     "apiVersion": "v1",
     "kind": "Template",
@@ -27,7 +27,7 @@ local storage = import "storage-template.jsonnet";
       "labels": {
         "app": "enmasse"
       },
-      "name": "standard-space-infra"
+      "name": if (with_mqtt) then "standard-space-infra" else "standard-space-infra-without-mqtt",
     },
 
     local storage_templates = [
@@ -43,20 +43,24 @@ local storage = import "storage-template.jsonnet";
 
     local template_config = (if use_template_configmap then "enmasse-storage-templates" else ""),
 
+    local mqtt_components = [
+      subserv.deployment("${ADDRESS_SPACE}", "${AGENT_IMAGE}"),
+      mqttService.internal("${ADDRESS_SPACE}"),
+      mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_IMAGE}", "${MQTT_SECRET}"),
+      mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_IMAGE}"),
+    ],
+
     "objects": [
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.service("${ADDRESS_SPACE}"),
       prometheus.standard_broker_config("broker-prometheus-config"),
-      mqttService.internal("${ADDRESS_SPACE}"),
       qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_IMAGE}", "${ROUTER_METRICS_IMAGE}", "${MESSAGING_SECRET}", "authservice-ca"),
-      subserv.deployment("${ADDRESS_SPACE}", "${AGENT_IMAGE}"),
-      mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_IMAGE}", "${MQTT_SECRET}"),
-      mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_IMAGE}"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       admin.deployment("authservice-ca", "address-controller-ca", template_config)
     ] + admin.services("${ADDRESS_SPACE}")
-      + (if use_template_configmap then storage_template_configmap else storage_templates),
+      + (if use_template_configmap then storage_template_configmap else storage_templates)
+      + (if with_mqtt then mqtt_components else []),
 
     "parameters": [
       {

@@ -13,7 +13,8 @@ local brokeredInfra = import "brokered-space-infra.jsonnet";
       }
     },
     "data": {
-      "standard-space-infra.json": std.toString(standardInfra.template(true)),
+      "standard-space-infra.json": std.toString(standardInfra.template(true, true)),
+      "standard-space-infra-without-mqtt.json": std.toString(standardInfra.template(true, false)),
       "brokered-space-infra.json": std.toString(brokeredInfra.template),
     }
   },
