@@ -14,12 +14,12 @@ import java.util.Collection;
 public interface CertManager {
     Collection<CertComponent> listComponents(String namespace);
     boolean certExists(CertComponent component);
-    boolean certExists(String namespace, String name);
+    Secret getCertSecret(String namespace, String name);
     CertSigningRequest createCsr(CertComponent component);
-    Cert signCsr(CertSigningRequest request, String secretName);
-    void createSecret(Cert cert, final String caSecretName);
+    Cert signCsr(CertSigningRequest request, Secret secret);
+    void createSecret(Cert cert, final Secret caSecret);
 
-    void createSelfSignedCertSecret(String namespace, String secretName);
+    Secret createSelfSignedCertSecret(String namespace, String secretName);
 
     void grantServiceAccountAccess(Secret secret, String saName, String saNamespace);
 }

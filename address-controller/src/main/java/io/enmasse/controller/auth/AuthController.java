@@ -59,32 +59,33 @@ public class AuthController implements Controller {
     }
 
 
-    public void issueAddressSpaceCert(final AddressSpace addressSpace)
+    public Secret issueAddressSpaceCert(final AddressSpace addressSpace)
     {
         try {
             final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
-            if(!certManager.certExists(addressSpace.getNamespace(), addressSpaceCaSecretName)) {
-                certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
+            Secret secret = certManager.getCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
+            if (secret == null) {
+                secret = certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
                 //put crt into address space
                 log.info("Issued addressspace ca certificates for {}", addressSpace.getName());
                 eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             }
+            return secret;
         } catch (Exception e) {
             log.warn("Error issuing addressspace ca certificate", e);
             eventLogger.log(CertCreateFailed, "Error creating certificate",Warning, ControllerKind.AddressSpace, addressSpace.getName());
+            return null;
         }
     }
 
-    public void issueComponentCertificates(AddressSpace addressSpace) {
+    public void issueComponentCertificates(AddressSpace addressSpace, Secret addressSpaceCaSecret) {
         try {
-            final String caSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
             List<Cert> certs = certManager.listComponents(addressSpace.getNamespace()).stream()
                     .filter(component -> !certManager.certExists(component))
                     .map(certManager::createCsr)
-                    .map(request -> certManager.signCsr(request,
-                                                        caSecretName))
+                    .map(request -> certManager.signCsr(request, addressSpaceCaSecret))
                     .map(cert -> {
-                        certManager.createSecret(cert, caSecretName);
+                        certManager.createSecret(cert, addressSpaceCaSecret);
                         return cert; })
                     .collect(Collectors.toList());
 
@@ -104,8 +105,10 @@ public class AuthController implements Controller {
 
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
-        issueAddressSpaceCert(addressSpace);
-        issueComponentCertificates(addressSpace);
+        Secret addressSpaceCa = issueAddressSpaceCert(addressSpace);
+        if (addressSpaceCa != null) {
+            issueComponentCertificates(addressSpace, addressSpaceCa);
+        }
         issueExternalCertificates(addressSpace);
         return addressSpace;
     }
