@@ -39,9 +39,10 @@ public abstract class TestBaseWithShared extends TestBase {
             log.info("shared address space '{}' will be removed", sharedAddressSpace);
             try {
                 deleteSharedAddressSpace(sharedAddressSpace);
-                spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
             } catch (Exception ex) {
                 ex.printStackTrace();
+            } finally {
+                spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
             }
         }
 
