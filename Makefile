@@ -32,7 +32,7 @@ docker_build: build_java
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
 
-java_coverage: build_amqp_module
+java_coverage:
 	mvn test -Pcoverage package -B $(MAVEN_ARGS)
 	mvn jacoco:report-aggregate
 
