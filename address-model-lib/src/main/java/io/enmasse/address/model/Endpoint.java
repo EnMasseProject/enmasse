@@ -45,6 +45,17 @@ public class Endpoint {
         return Optional.ofNullable(certProviderSpec);
     }
 
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("{name=").append(name).append(",")
+                .append("host=").append(host).append(",")
+                .append("service=").append(service).append(",")
+                .append("port=").append(port).append(",")
+                .append("certProviderSpec").append(certProviderSpec).append("}")
+                .toString();
+    }
+
     public static class Builder {
         private String name;
         private String service;
@@ -56,6 +67,7 @@ public class Endpoint {
 
         public Builder(io.enmasse.address.model.Endpoint endpoint) {
             this.name = endpoint.getName();
+            this.port = endpoint.getPort();
             this.service = endpoint.getService();
             this.host = endpoint.getHost().orElse(null);
             this.certProviderSpec = endpoint.getCertProviderSpec().orElse(null);

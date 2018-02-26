@@ -33,4 +33,12 @@ public class CertProviderSpec {
     public Map<String, String> getParameters() {
         return Collections.unmodifiableMap(parameters);
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("{name=").append(name).append(",")
+                .append("secretName").append(secretName).append("}")
+                .toString();
+    }
 }

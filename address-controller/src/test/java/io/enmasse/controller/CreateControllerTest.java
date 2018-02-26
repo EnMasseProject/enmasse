@@ -5,13 +5,10 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Schema;
 import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestSchemaApi;
-import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -41,7 +38,7 @@ public class CreateControllerTest {
 
         EventLogger eventLogger = mock(EventLogger.class);
         InfraResourceFactory mockResourceFactory = mock(InfraResourceFactory.class);
-        when(mockResourceFactory.createResourceList(eq(addressSpace))).thenReturn(new KubernetesList());
+        when(mockResourceFactory.createResourceList(eq(addressSpace))).thenReturn(Collections.emptyList());
 
         SchemaApi testSchema = new TestSchemaApi();
         CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, "test", eventLogger);

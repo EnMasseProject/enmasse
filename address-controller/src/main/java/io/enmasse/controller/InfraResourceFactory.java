@@ -5,8 +5,10 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+
+import java.util.List;
 
 public interface InfraResourceFactory {
-    KubernetesList createResourceList(AddressSpace addressSpace);
+    List<HasMetadata> createResourceList(AddressSpace addressSpace);
 }
