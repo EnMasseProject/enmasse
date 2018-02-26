@@ -140,10 +140,12 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .replace("*", "")
                 .replace("#", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
-            assertTrue(String.format("Authz failed, user %s cannot send message", username),
+            assertTrue(String.format("Authz failed, user %s cannot send message to destination %s", username,
+                    destination.getAddress()),
                     canSend(destination, username, password));
         } else {
-            assertFalse(String.format("Authz failed, user %s can send message", username),
+            assertFalse(String.format("Authz failed, user %s can send message to destination %s", username,
+                    destination.getAddress()),
                     canSend(destination, username, password));
         }
     }
@@ -153,10 +155,12 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .replace("*", "")
                 .replace("#", "");
         if (rights.equals("") || destination.getAddress().contains(rights)) {
-            assertTrue(String.format("Authz failed, user %s cannot receive message", username),
+            assertTrue(String.format("Authz failed, user %s cannot receive message from destination %s", username,
+                    destination.getAddress()),
                     canReceive(destination, username, password));
         } else {
-            assertFalse(String.format("Authz failed, user %s can receive message", username),
+            assertFalse(String.format("Authz failed, user %s can receive message from destination %s", username,
+                    destination.getAddress()),
                     canReceive(destination, username, password));
         }
     }
