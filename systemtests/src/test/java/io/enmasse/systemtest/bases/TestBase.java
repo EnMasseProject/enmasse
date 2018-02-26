@@ -89,7 +89,7 @@ public abstract class TestBase extends SystemTestRunListener {
 
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);
@@ -113,6 +113,10 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        createAddressSpace(addressSpace, authService, addressSpace.getType().equals(AddressSpaceType.STANDARD));
+    }
+
+    protected void createAddressSpace(AddressSpace addressSpace, String authService, boolean extraWait) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService);
@@ -123,7 +127,7 @@ public abstract class TestBase extends SystemTestRunListener {
                 addressSpaceList.add(addressSpace);
             }
 
-            if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
+            if (extraWait) {
                 log.info("Waiting for 2 minutes before starting tests");
                 Thread.sleep(120_000);
             }
