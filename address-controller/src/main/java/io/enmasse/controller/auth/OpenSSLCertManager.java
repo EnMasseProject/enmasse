@@ -35,13 +35,13 @@ public class OpenSSLCertManager implements CertManager {
                 "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath());
     }
 
-    private static void createSecretFromCertAndKeyFiles(final String secretName,
+    private static Secret createSecretFromCertAndKeyFiles(final String secretName,
                                                         final String namespace,
                                                         final File keyFile,
                                                         final File certFile,
                                                         final OpenShiftClient client)
             throws IOException {
-        createSecretFromCertAndKeyFiles(secretName, namespace, "tls.key", "tls.crt", keyFile, certFile, client);
+        return createSecretFromCertAndKeyFiles(secretName, namespace, "tls.key", "tls.crt", keyFile, certFile, client);
     }
 
     private static Secret createSecretFromCertAndKeyFiles(final String secretName,
@@ -110,8 +110,8 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public boolean certExists(String namespace, String name) {
-        return client.secrets().inNamespace(namespace).withName(name).get() != null;
+    public Secret getCertSecret(String namespace, String name) {
+        return client.secrets().inNamespace(namespace).withName(name).get();
     }
 
 
@@ -124,9 +124,8 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public Cert signCsr(CertSigningRequest request, String secretName) {
+    public Cert signCsr(CertSigningRequest request, Secret secret) {
         File crtFile = new File(certDir, request.getCertComponent().getNamespace() + "." + request.getCertComponent().getName() + ".crt");
-        final Secret secret = client.secrets().withName(secretName).get();
 
         File caKey = createTempFileFromSecret(secret, "tls.key");
         File caCert = createTempFileFromSecret(secret, "tls.crt");
@@ -169,13 +168,12 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public void createSecret(Cert cert, final String caSecretName) {
+    public void createSecret(Cert cert, Secret caSecret) {
         try {
             Map<String, String> data = new LinkedHashMap<>();
             Base64.Encoder encoder = Base64.getEncoder();
             data.put("tls.key", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getKeyFile())));
             data.put("tls.crt", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getCertFile())));
-            Secret caSecret = client.secrets().inNamespace(cert.getComponent().getNamespace()).withName(caSecretName).get();
             data.put("ca.crt", caSecret.getData().get("tls.crt"));
 
             client.secrets().inNamespace(cert.getComponent().getNamespace()).createNew()
@@ -191,13 +189,13 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public void createSelfSignedCertSecret(String namespace, final String secretName) {
+    public Secret createSelfSignedCertSecret(String namespace, final String secretName) {
         try {
             File key = File.createTempFile("tls", "key");
             File cert = File.createTempFile("tls", "crt");
             try {
                 createSelfSignedCert(key, cert);
-                createSecretFromCertAndKeyFiles(secretName, namespace, key, cert, this.client);
+                return createSecretFromCertAndKeyFiles(secretName, namespace, key, cert, this.client);
             } finally {
                 key.delete();
                 cert.delete();
