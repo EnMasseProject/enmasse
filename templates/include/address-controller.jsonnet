@@ -47,6 +47,9 @@ local common = import "common.jsonnet";
       },
       "spec": {
         "replicas": 1,
+        "strategy": {
+          "type": "Recreate"
+        },
         "template": {
           "metadata": {
             "labels": {
