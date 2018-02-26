@@ -221,9 +221,10 @@ public class KubernetesHelper implements Kubernetes {
         String defaultPort = service.getMetadata().getAnnotations().get(AnnotationKeys.ENDPOINT_PORT);
 
         if (client.isAdaptable(OpenShiftClient.class)) {
-            DoneableRoute route = client.routes().inNamespace(namespace).createNew()
+            RouteBuilder route = new RouteBuilder()
                     .editOrNewMetadata()
                     .withName(endpoint.getName())
+                    .withNamespace(namespace)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
                     .endMetadata()
                     .editOrNewSpec()
@@ -250,7 +251,7 @@ public class KubernetesHelper implements Kubernetes {
                         .endTls()
                         .endSpec();
             }
-            return route.done();
+            return route.build();
         } else {
             if (service.getSpec().getPorts().isEmpty()) {
                 return null;
@@ -263,9 +264,10 @@ public class KubernetesHelper implements Kubernetes {
                 }
             }
             if (servicePort != null) {
-                DoneableService svc = client.services().inNamespace(namespace).createNew()
+                ServiceBuilder svc = new ServiceBuilder()
                         .editOrNewMetadata()
                         .withName(endpoint.getName() + "-external")
+                        .withNamespace(namespace)
                         .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
                         .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
                         .addToLabels(LabelKeys.TYPE, "loadbalancer")
@@ -281,7 +283,7 @@ public class KubernetesHelper implements Kubernetes {
                             .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProviderSpec().get().getSecretName())
                             .endMetadata();
                 }
-                return svc.done();
+                return svc.build();
             }
         }
         return null;
