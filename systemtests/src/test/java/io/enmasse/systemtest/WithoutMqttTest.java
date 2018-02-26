@@ -5,8 +5,11 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -20,6 +23,21 @@ import static org.junit.Assert.assertThat;
 
 @Category(IsolatedAddressSpace.class)
 public class WithoutMqttTest extends TestBase {
+    private AddressSpace addressSpace;
+
+    @Before
+    public void setupSpace() throws Exception {
+        addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
+        createAddressSpace(addressSpace, "standard", false);
+        createUser(addressSpace, "test", "test");
+        setAddresses(addressSpace, Destination.anycast("a1"));
+    }
+
+    @After
+    public void teardownSpace() throws Exception {
+        deleteAddressSpace(addressSpace);
+    }
+
     @Override
     protected String getDefaultPlan(AddressType addressType) {
         return "standard-anycast";
@@ -27,24 +45,19 @@ public class WithoutMqttTest extends TestBase {
 
     @Test
     public void testNoMqttDeployed() throws Exception {
-        AddressSpace addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
-        try {
-            createAddressSpace(addressSpace, "standard");
-            setAddresses(addressSpace, Destination.anycast("a1"));
+        assertThat(kubernetes.listPods(addressSpace.getNamespace()).size(), is(2));
 
-            assertThat(kubernetes.listPods(addressSpace.getNamespace()).size(), is(2));
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions()
+                    .setUsername("test")
+                    .setPassword("test");
 
-            AmqpClient client = amqpClientFactory.createQueueClient();
+        List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
-            List<String> msgs = Arrays.asList("foo", "bar", "baz");
+        Future<List<Message>> recvResult = client.recvMessages("a1", msgs.size());
+        Future<Integer> sendResult = client.sendMessages("a1", msgs);
 
-            Future<List<Message>> recvResult = client.recvMessages("a1", msgs.size());
-            Future<Integer> sendResult = client.sendMessages("a1", msgs);
-
-            assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
-            assertThat("Wrong count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        } finally {
-            deleteAddressSpace(addressSpace);
-        }
+        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 }
