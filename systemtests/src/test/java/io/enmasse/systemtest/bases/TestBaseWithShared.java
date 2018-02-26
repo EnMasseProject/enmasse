@@ -44,6 +44,15 @@ public abstract class TestBaseWithShared extends TestBase {
                 ex.printStackTrace();
             }
         }
+
+        @Override
+        protected void succeeded(Description description) {
+            try {
+                setAddresses(sharedAddressSpace);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     };
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -76,11 +85,6 @@ public abstract class TestBaseWithShared extends TestBase {
 
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
-    }
-
-    @After
-    public void teardownShared() throws Exception {
-        setAddresses(sharedAddressSpace);
     }
 
     protected void createSharedAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
