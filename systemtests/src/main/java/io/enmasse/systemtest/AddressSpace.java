@@ -5,54 +5,69 @@
 package io.enmasse.systemtest;
 
 public class AddressSpace {
-    private final String name;
-    private final String namespace;
+    private String name;
+    private String namespace;
     private String plan;
     private AddressSpaceType type;
 
     public AddressSpace(String name) {
-        this.name = name;
-        this.namespace = name;
-        this.type = AddressSpaceType.STANDARD;
+        this(name, name, AddressSpaceType.STANDARD);
     }
 
     public AddressSpace(String name, String namespace) {
-        this.name = name;
-        this.namespace = namespace;
-        this.type = AddressSpaceType.STANDARD;
+        this(name, namespace, AddressSpaceType.STANDARD);
     }
 
     public AddressSpace(String name, String namespace, String plan) {
-        this.name = name;
-        this.namespace = namespace;
-        this.plan = plan;
-        this.type = AddressSpaceType.STANDARD;
+        this(name, name, AddressSpaceType.STANDARD, plan);
     }
 
     public AddressSpace(String name, AddressSpaceType type) {
-        this.name = name;
-        this.namespace = name;
-        this.type = type;
+        this(name, name, type);
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan) {
-        this.name = name;
-        this.namespace = name;
-        this.type = type;
-        this.plan = plan;
+        this(name, name, type, plan);
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type) {
-        this.name = name;
-        this.namespace = namespace;
-        this.type = type;
+        setName(name);
+        setNamespace(namespace);
+        setType(type);
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type, String plan) {
+        setName(name);
+        setNamespace(namespace);
+        setType(type);
+        setPlan(plan);
+    }
+
+    public AddressSpace setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public AddressSpace setNamespace(String namespace) {
         this.namespace = namespace;
-        this.type = type;
+        return this;
+    }
+
+    public AddressSpace setPlan(String plan) {
         this.plan = plan;
+        return this;
+    }
+
+    public AddressSpace setType(AddressSpaceType type) {
+        this.type = type;
+        if (plan == null) {
+            if (type.equals(AddressSpaceType.BROKERED)) {
+                plan = "unlimited-brokered";
+            } else {
+                plan = "unlimited-standard";
+            }
+        }
+        return this;
     }
 
     public String getName() {
@@ -67,10 +82,6 @@ public class AddressSpace {
         return plan;
     }
 
-    public boolean hasPlan() {
-        return !(plan == null || plan.isEmpty());
-    }
-
     public AddressSpaceType getType() {
         return type;
     }
@@ -80,7 +91,8 @@ public class AddressSpace {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
                 .append("namespace=").append(namespace).append(",")
-                .append("type=").append(type.toString().toLowerCase()).append("}")
+                .append("type=").append(type.toString().toLowerCase()).append(",")
+                .append("plan=").append(plan).append("}")
                 .toString();
     }
 }
