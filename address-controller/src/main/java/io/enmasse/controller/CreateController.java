@@ -11,6 +11,7 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaApi;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +59,17 @@ public class CreateController implements Controller {
             schemaApi.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
         }
 
-        KubernetesList resourceList = infraResourceFactory.createResourceList(addressSpace);
+        KubernetesList resourceList = new KubernetesListBuilder()
+                .addAllToItems(infraResourceFactory.createResourceList(addressSpace))
+                .build();
 
         kubernetes.create(resourceList, addressSpace.getNamespace());
         eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
         return addressSpace;
+    }
+
+    @Override
+    public String toString() {
+        return "CreateController";
     }
 }

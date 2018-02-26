@@ -35,8 +35,8 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     }
 
     @Override
-    public KubernetesList createResourceList(AddressSpace addressSpace) {
-        KubernetesList resourceList = new KubernetesList();
+    public List<HasMetadata> createResourceList(AddressSpace addressSpace) {
+        List<HasMetadata> resourceList = new ArrayList<>();
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaApi.getSchema());
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace);
@@ -117,11 +117,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
 
             // Step 5: Create infrastructure
-            resourceList = kubernetes.processTemplate(resourceDefinition.getTemplateName().get(), parameterValues.toArray(new ParameterValue[0]));
+            resourceList.addAll(kubernetes.processTemplate(resourceDefinition.getTemplateName().get(), parameterValues.toArray(new ParameterValue[0])).getItems());
 
             for (Endpoint endpoint : endpoints) {
                 Service service = null;
-                for (HasMetadata resource : resourceList.getItems()) {
+                for (HasMetadata resource : resourceList) {
                     if (resource.getKind().equals("Service") && resource.getMetadata().getName().equals(endpoint.getService())) {
                         service = (Service) resource;
                         break;
@@ -129,7 +129,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                 }
                 HasMetadata item = kubernetes.createEndpoint(endpoint, service, addressSpace.getName(), addressSpace.getNamespace());
                 if (item != null) {
-                    resourceList.getItems().add(item);
+                    resourceList.add(item);
                 }
             }
         }

@@ -34,11 +34,16 @@ public class StatusController implements Controller {
                 .map(deployment -> deployment.getMetadata().getName())
                 .collect(Collectors.toSet());
 
-        Set<String> requiredDeployments = infraResourceFactory.createResourceList(addressSpace).getItems().stream()
+        Set<String> requiredDeployments = infraResourceFactory.createResourceList(addressSpace).stream()
                 .filter(KubernetesHelper::isDeployment)
                 .map(item -> item.getMetadata().getName())
                 .collect(Collectors.toSet());
 
         return readyDeployments.containsAll(requiredDeployments);
+    }
+
+    @Override
+    public String toString() {
+        return "EndpointController";
     }
 }

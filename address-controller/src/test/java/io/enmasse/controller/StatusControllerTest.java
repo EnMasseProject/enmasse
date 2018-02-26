@@ -6,12 +6,10 @@ package io.enmasse.controller;
 
 
 import io.enmasse.address.model.AddressSpace;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.enmasse.controller.common.Kubernetes;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import org.junit.Test;
-
-import io.enmasse.controller.common.Kubernetes;
 
 import java.util.Collections;
 
@@ -49,9 +47,7 @@ public class StatusControllerTest {
                 .setPlan("myplan")
                 .build();
 
-        when(infraResourceFactory.createResourceList(eq(addressSpace))).thenReturn(new KubernetesListBuilder()
-                .addToDeploymentItems(deployment)
-                .build());
+        when(infraResourceFactory.createResourceList(eq(addressSpace))).thenReturn(Collections.singletonList(deployment));
 
         assertFalse(addressSpace.getStatus().isReady());
         controller.handle(addressSpace);
@@ -85,9 +81,7 @@ public class StatusControllerTest {
                 .setPlan("myplan")
                 .build();
 
-        when(infraResourceFactory.createResourceList(eq(addressSpace))).thenReturn(new KubernetesListBuilder()
-                .addToDeploymentItems(deployment)
-                .build());
+        when(infraResourceFactory.createResourceList(eq(addressSpace))).thenReturn(Collections.singletonList(deployment));
 
         assertFalse(addressSpace.getStatus().isReady());
         controller.handle(addressSpace);

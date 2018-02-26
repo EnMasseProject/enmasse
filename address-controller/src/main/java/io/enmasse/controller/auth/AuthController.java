@@ -51,7 +51,7 @@ public class AuthController implements Controller {
                         Secret secret = certProvider.provideCert(addressSpace, endpoint);
                         certManager.grantServiceAccountAccess(secret, "default", addressSpace.getNamespace());
                     } catch (Exception e) {
-                        log.warn("Error providing certificate for {}: {}", endpoint, e.getMessage());
+                        log.warn("Error providing certificate for {}: {}", endpoint, e.getMessage(), e);
                     }
                 }
             }
@@ -111,5 +111,10 @@ public class AuthController implements Controller {
         }
         issueExternalCertificates(addressSpace);
         return addressSpace;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthController";
     }
 }

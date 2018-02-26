@@ -106,4 +106,9 @@ public class EndpointController implements Controller {
 
         return builder.build();
     }
+
+    @Override
+    public String toString() {
+        return "EndpointController";
+    }
 }

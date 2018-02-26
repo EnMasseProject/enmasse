@@ -29,7 +29,7 @@ public class SelfsignedCertProvider implements CertProvider {
         Secret secret = client.secrets().inNamespace(addressSpace.getNamespace()).withName(certProviderSpec.getSecretName()).get();
         if (secret == null) {
             log.info("Creating self-signed certificates for {}", endpoint);
-            certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), certProviderSpec.getSecretName());
+            secret = certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), certProviderSpec.getSecretName());
         }
         return secret;
     }
