@@ -41,7 +41,7 @@ local common = import "common.jsonnet";
       },
       "annotations": {
         "addressSpace": "${ADDRESS_SPACE}",
-        "io.enmasse.certSecretName": "admin-internal-cert"
+        "enmasse.io/cert-secret": "admin-internal-cert"
       },
       "name": "admin"
     },

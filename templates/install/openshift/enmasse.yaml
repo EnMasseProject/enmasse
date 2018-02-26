@@ -81,8 +81,8 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certCn: router
-        io.enmasse.certSecretName: router-internal-cert
+        enmasse.io/cert-cn: router
+        enmasse.io/cert-secret: router-internal-cert
         prometheus.io/path: /metrics
         prometheus.io/port: '8080'
         prometheus.io/scrape: 'true'
@@ -189,7 +189,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certSecretName: admin-internal-cert
+        enmasse.io/cert-secret: admin-internal-cert
       labels:
         app: enmasse
         name: admin
@@ -392,8 +392,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -568,8 +568,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -758,8 +758,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -1007,8 +1007,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -1380,8 +1380,8 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certCn: router
-        io.enmasse.certSecretName: router-internal-cert
+        enmasse.io/cert-cn: router
+        enmasse.io/cert-secret: router-internal-cert
         prometheus.io/path: /metrics
         prometheus.io/port: '8080'
         prometheus.io/scrape: 'true'
@@ -1488,7 +1488,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certSecretName: admin-internal-cert
+        enmasse.io/cert-secret: admin-internal-cert
       labels:
         app: enmasse
         name: admin
@@ -1691,8 +1691,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -1867,8 +1867,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -2057,8 +2057,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -2306,8 +2306,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          io.enmasse.certCn: broker
-          io.enmasse.certSecretName: broker-internal-cert
+          enmasse.io/cert-cn: broker
+          enmasse.io/cert-secret: broker-internal-cert
         labels:
           app: enmasse
         name: ${NAME}
@@ -2546,7 +2546,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certSecretName: subserv-internal-cert
+        enmasse.io/cert-secret: subserv-internal-cert
       labels:
         app: enmasse
         name: subserv
@@ -2672,7 +2672,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certSecretName: mqtt-lwt-internal-cert
+        enmasse.io/cert-secret: mqtt-lwt-internal-cert
       labels:
         app: enmasse
         name: mqtt-lwt
@@ -2812,7 +2812,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certSecretName: broker-internal-cert
+        enmasse.io/cert-secret: broker-internal-cert
       labels:
         app: enmasse
         role: broker
@@ -2941,7 +2941,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.certSecretName: agent-internal-cert
+        enmasse.io/cert-secret: agent-internal-cert
       labels:
         app: enmasse
         role: agent

@@ -7,9 +7,9 @@ package io.enmasse.config;
 public interface AnnotationKeys {
     String CLUSTER_ID = "cluster_id";
     String ADDRESS_SPACE = "addressSpace";
-    String CERT_PROVIDER = "io.enmasse/cert-provider";
-    String CERT_SECRET_NAME = "io.enmasse/cert-secret";
-    String CERT_CN = "io.enmasse.certCn";
+    String CERT_PROVIDER = "enmasse.io/cert-provider";
+    String CERT_SECRET_NAME = "enmasse.io/cert-secret";
+    String CERT_CN = "enmasse.io/cert-cn";
     String ENDPOINT_PORT = "io.enmasse.endpointPort";
     String SERVICE_NAME = "io.enmasse.serviceName";
     String CREATED_BY = "io.enmasse.createdBy";

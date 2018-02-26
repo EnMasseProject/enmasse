@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
         },
         "annotations": {
           "addressSpace": addressSpace,
-          "io.enmasse.certSecretName": certSecretName
+          "enmasse.io/cert-secret": certSecretName
         },
         "name": "amqp-kafka-bridge"
       },
