@@ -122,8 +122,12 @@ public abstract class Kubernetes {
         }).collect(Collectors.toList());
     }
 
-    public int getExpectedPods() {
-        return 5;
+    public int getExpectedPods(String plan) {
+        if (plan.endsWith("without-mqtt")) {
+            return 2;
+        } else {
+            return 5;
+        }
     }
 
     public Watch watchPods(String namespace, Watcher<Pod> podWatcher) {
