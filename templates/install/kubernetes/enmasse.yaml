@@ -58,10 +58,10 @@ items:
       "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
       "io.enmasse.certSecretName": "agent-internal-cert"}, "labels": {"app": "enmasse",
-      "role": "agent"}, "name": "agent"}, "spec": {"replicas": 1, "template": {"metadata":
-      {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
-      "name": "agent", "role": "agent"}}, "spec": {"containers": [{"env": [{"name":
-      "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
+      "role": "agent"}, "name": "agent"}, "spec": {"replicas": 1, "strategy": {"type":
+      "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse", "name": "agent", "role": "agent"}}, "spec": {"containers":
+      [{"env": [{"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
       "value": "brokered"}, {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
       {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "CONSOLE_CERT_DIR",
       "value": "/etc/console-certs"}, {"name": "ADDRESS_CONTROLLER_CA", "value": "/opt/agent/address-controller-ca/tls.crt"},
@@ -171,12 +171,12 @@ items:
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "admin-internal-cert"},
       "labels": {"app": "enmasse", "name": "admin"}, "name": "admin"}, "spec": {"replicas":
-      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
-      [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE",
-      "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
-      "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
-      "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
+      1, "strategy": {"type": "Recreate"}, "template": {"metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "admin"}},
+      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
+      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
       "value": "authservice-ca"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "JAVA_OPTS", "value":
       "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
@@ -642,12 +642,12 @@ items:
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "admin-internal-cert"},
       "labels": {"app": "enmasse", "name": "admin"}, "name": "admin"}, "spec": {"replicas":
-      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
-      [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE",
-      "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
-      "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
-      "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
+      1, "strategy": {"type": "Recreate"}, "template": {"metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "admin"}},
+      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
+      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
       "value": "authservice-ca"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "JAVA_OPTS", "value":
       "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
@@ -1110,6 +1110,8 @@ items:
     name: address-controller
   spec:
     replicas: 1
+    strategy:
+      type: Recreate
     template:
       metadata:
         labels:

@@ -202,6 +202,8 @@ objects:
       name: admin
     spec:
       replicas: 1
+      strategy:
+        type: Recreate
       template:
         metadata:
           annotations:
@@ -1532,6 +1534,8 @@ objects:
       name: admin
     spec:
       replicas: 1
+      strategy:
+        type: Recreate
       template:
         metadata:
           annotations:
@@ -3016,6 +3020,8 @@ objects:
       name: agent
     spec:
       replicas: 1
+      strategy:
+        type: Recreate
       template:
         metadata:
           annotations:
@@ -3163,6 +3169,8 @@ objects:
     name: address-controller
   spec:
     replicas: 1
+    strategy:
+      type: Recreate
     template:
       metadata:
         labels:

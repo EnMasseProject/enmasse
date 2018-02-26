@@ -206,6 +206,9 @@ local prometheus = import "prometheus.jsonnet";
     },
     "spec": {
       "replicas": 1,
+      "strategy": {
+        "type": "Recreate"
+      },
       "template": {
         "metadata": {
           "labels": {
