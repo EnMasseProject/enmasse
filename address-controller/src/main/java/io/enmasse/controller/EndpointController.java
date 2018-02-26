@@ -11,6 +11,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
@@ -23,14 +24,14 @@ import java.util.stream.Collectors;
 
 public class EndpointController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(EndpointController.class.getName());
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
 
-    public EndpointController(OpenShiftClient client) {
+    public EndpointController(KubernetesClient client) {
         this.client = client;
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+    public AddressSpace handle(AddressSpace addressSpace) {
         AddressSpace.Builder builder = new AddressSpace.Builder(addressSpace);
         updateEndpoints(builder);
         return builder.build();
@@ -44,7 +45,8 @@ public class EndpointController implements Controller {
         List<Endpoint> endpoints;
         /* Watch for routes and lb services */
         if (client.isAdaptable(OpenShiftClient.class)) {
-            endpoints = client.routes().inNamespace(builder.getNamespace()).list().getItems().stream()
+            OpenShiftClient openShiftClient = client.adapt(OpenShiftClient.class);
+            endpoints = openShiftClient.routes().inNamespace(builder.getNamespace()).list().getItems().stream()
                     .filter(route -> isPartOfAddressSpace(builder.getName(), route))
                     .map(this::routeToEndpoint)
                     .collect(Collectors.toList());
