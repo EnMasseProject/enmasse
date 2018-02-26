@@ -131,7 +131,7 @@ local prometheus = import "prometheus.jsonnet";
       },
       "annotations": {
         "addressSpace": "${ADDRESS_SPACE}",
-        "io.enmasse.certSecretName" : "broker-internal-cert"
+        "enmasse.io/cert-secret" : "broker-internal-cert"
       }
     },
     "spec": {
@@ -201,7 +201,7 @@ local prometheus = import "prometheus.jsonnet";
       },
       "annotations": {
         "addressSpace": "${ADDRESS_SPACE}",
-        "io.enmasse.certSecretName" : "agent-internal-cert"
+        "enmasse.io/cert-secret" : "agent-internal-cert"
       }
     },
     "spec": {

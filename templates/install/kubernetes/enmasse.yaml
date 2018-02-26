@@ -19,7 +19,7 @@ items:
       "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "broker-data"}, "spec":
       {"accessModes": ["ReadWriteOnce"], "resources": {"requests": {"storage": "${STORAGE_CAPACITY}"}}}},
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "broker-internal-cert"},
+      {"addressSpace": "${ADDRESS_SPACE}", "enmasse.io/cert-secret": "broker-internal-cert"},
       "labels": {"app": "enmasse", "role": "broker"}, "name": "broker"}, "spec": {"replicas":
       1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
       "prometheus.io/path": "/metrics", "prometheus.io/port": "8080", "prometheus.io/scrape":
@@ -55,7 +55,7 @@ items:
       "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671, "targetPort":
       "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "agent-internal-cert"}, "labels": {"app": "enmasse",
+      "enmasse.io/cert-secret": "agent-internal-cert"}, "labels": {"app": "enmasse",
       "role": "agent"}, "name": "agent"}, "spec": {"replicas": 1, "strategy": {"type":
       "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "agent", "role": "agent"}}, "spec": {"containers":
@@ -128,7 +128,7 @@ items:
       address=\\\"(.+)\\\".*><>MessageCount\", \"type\": \"GAUGE\"}], \"ssl\": true}"},
       "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}}, {"apiVersion":
       "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}", "io.enmasse.certCn": "router", "io.enmasse.certSecretName":
+      "${ADDRESS_SPACE}", "enmasse.io/cert-cn": "router", "enmasse.io/cert-secret":
       "router-internal-cert", "prometheus.io/path": "/metrics", "prometheus.io/port":
       "8080", "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name":
       "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template": {"metadata":
@@ -160,7 +160,7 @@ items:
       "data": {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"}, "kind": "Secret",
       "metadata": {"name": "authservice-ca"}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "admin-internal-cert"}, "labels": {"app": "enmasse",
+      "enmasse.io/cert-secret": "admin-internal-cert"}, "labels": {"app": "enmasse",
       "name": "admin"}, "name": "admin"}, "spec": {"replicas": 1, "strategy": {"type":
       "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
@@ -219,7 +219,7 @@ items:
       \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
       \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\": \"broker\", \"enmasse.io/cert-secret\":
       \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
       {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
@@ -283,8 +283,8 @@ items:
       \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
       \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
-      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
+      \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
       {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
       \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
@@ -352,7 +352,7 @@ items:
       \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
       \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\": \"broker\", \"enmasse.io/cert-secret\":
       \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
       {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
@@ -439,8 +439,8 @@ items:
       \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
       \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
-      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
+      \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
       {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
       \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
@@ -585,7 +585,7 @@ items:
       address=\\\"(.+)\\\".*><>MessageCount\", \"type\": \"GAUGE\"}], \"ssl\": true}"},
       "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}}, {"apiVersion":
       "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}", "io.enmasse.certCn": "router", "io.enmasse.certSecretName":
+      "${ADDRESS_SPACE}", "enmasse.io/cert-cn": "router", "enmasse.io/cert-secret":
       "router-internal-cert", "prometheus.io/path": "/metrics", "prometheus.io/port":
       "8080", "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name":
       "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template": {"metadata":
@@ -617,7 +617,7 @@ items:
       "data": {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"}, "kind": "Secret",
       "metadata": {"name": "authservice-ca"}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "admin-internal-cert"}, "labels": {"app": "enmasse",
+      "enmasse.io/cert-secret": "admin-internal-cert"}, "labels": {"app": "enmasse",
       "name": "admin"}, "name": "admin"}, "spec": {"replicas": 1, "strategy": {"type":
       "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
@@ -676,7 +676,7 @@ items:
       \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
       \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\": \"broker\", \"enmasse.io/cert-secret\":
       \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
       {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
@@ -740,8 +740,8 @@ items:
       \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
       \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
-      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
+      \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
       {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
       \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
@@ -809,7 +809,7 @@ items:
       \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
       \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\":
+      \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\": \"broker\", \"enmasse.io/cert-secret\":
       \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
       \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
       {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
@@ -896,8 +896,8 @@ items:
       \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
       \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
-      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
+      \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
       {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
       \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
@@ -983,7 +983,7 @@ items:
       \"value\": \"512Mi\"}]}"}, "kind": "ConfigMap", "metadata": {"labels": {"app":
       "enmasse"}, "name": "enmasse-storage-templates"}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "subserv-internal-cert"}, "labels": {"app": "enmasse",
+      "enmasse.io/cert-secret": "subserv-internal-cert"}, "labels": {"app": "enmasse",
       "name": "subserv"}, "name": "subserv"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
       {"app": "enmasse", "name": "subserv"}}, "spec": {"containers": [{"command":
@@ -1015,7 +1015,7 @@ items:
       "name": "mqtt-gateway", "ports": [{"containerPort": 1883, "name": "mqtt", "protocol":
       "TCP"}]}], "volumes": [{"name": "ssl-certs", "secret": {"secretName": "${MQTT_SECRET}"}}]}}}},
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "mqtt-lwt-internal-cert"},
+      {"addressSpace": "${ADDRESS_SPACE}", "enmasse.io/cert-secret": "mqtt-lwt-internal-cert"},
       "labels": {"app": "enmasse", "name": "mqtt-lwt"}, "name": "mqtt-lwt"}, "spec":
       {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "mqtt-lwt"}}, "spec": {"containers": [{"env":

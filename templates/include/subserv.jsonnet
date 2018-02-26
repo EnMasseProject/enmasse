@@ -13,7 +13,7 @@ local common = import "common.jsonnet";
       },
       "annotations": {
         "addressSpace": addressSpace,
-        "io.enmasse.certSecretName": "subserv-internal-cert"
+        "enmasse.io/cert-secret": "subserv-internal-cert"
       },
       "name": "subserv"
     },

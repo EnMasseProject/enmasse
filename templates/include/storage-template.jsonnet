@@ -56,8 +56,8 @@ local forwarder = import "forwarder.jsonnet";
               "cluster_id": "${CLUSTER_ID}",
               "address": "${ADDRESS}",
               "addressSpace": "${ADDRESS_SPACE}",
-              "io.enmasse.certCn": "broker",
-              "io.enmasse.certSecretName" : "broker-internal-cert"
+              "enmasse.io/cert-cn": "broker",
+              "enmasse.io/cert-secret" : "broker-internal-cert"
             }
           },
           "spec": {
