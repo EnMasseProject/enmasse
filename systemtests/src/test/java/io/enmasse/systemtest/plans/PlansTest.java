@@ -152,11 +152,10 @@ public class PlansTest extends TestBase {
         checkLimits(addressSpace,
                 Arrays.asList(
                         Destination.queue("q1", queuePlan.getName()),
-                        Destination.queue("q2", queuePlan.getName()),
-                        Destination.queue("q3", queuePlan.getName())
+                        Destination.queue("q2", queuePlan.getName())
                 ),
                 Collections.singletonList(
-                        Destination.queue("q4", queuePlan.getName())
+                        Destination.queue("q3", queuePlan.getName())
                 ));
 
         //check aggregate limits
@@ -189,7 +188,7 @@ public class PlansTest extends TestBase {
         try {
             appendAddresses(addressSpace, notAllowedDest.toArray(new Destination[0]));
         } catch (IllegalStateException ex) {
-            if (!ex.getMessage().contains("addresses are not ready")) {
+            if (!ex.getMessage().contains("addresses are not ready") && !ex.getMessage().contains("Unable to find")) {
                 throw ex;
             }
         }
