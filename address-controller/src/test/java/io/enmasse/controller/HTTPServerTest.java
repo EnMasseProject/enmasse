@@ -83,14 +83,14 @@ public class HTTPServerTest {
             new Address.Builder()
                     .setAddressSpace("myinstance")
                 .setName("addr1")
-                .setAddress("addr1")
+                .setAddress("addR1")
                 .setType("queue")
                 .setPlan("myplan")
                 .setUuid(UUID.randomUUID().toString())
                 .build());
 
         HttpClient client = vertx.createHttpClient();
-        Async async = context.async(3);
+        Async async = context.async(4);
         try {
             HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance", response -> {
                 context.assertEquals(200, response.statusCode());
@@ -107,6 +107,7 @@ public class HTTPServerTest {
             HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance/addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
+                    System.out.println(data);
                     context.assertTrue(data.containsKey("metadata"));
                     context.assertEquals("addr1", data.getJsonObject("metadata").getString("name"));
                     async.complete();
@@ -126,6 +127,17 @@ public class HTTPServerTest {
             });
             putAuthzToken(r3);
             r3.end("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
+
+            HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance?address=addr1", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    context.assertTrue(data.containsKey("metadata"));
+                    context.assertEquals("addR1", data.getJsonObject("spec").getString("address"));
+                    async.complete();
+                });
+            });
+            putAuthzToken(r4);
+            r4.end();
             async.awaitSuccess(60_000);
         } finally {
             client.close();

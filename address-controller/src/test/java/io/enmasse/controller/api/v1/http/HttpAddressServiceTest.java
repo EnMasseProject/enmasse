@@ -55,11 +55,13 @@ public class HttpAddressServiceTest {
         addressSpaceApi.createAddressSpace(addressSpace);
         addressApi = (TestAddressApi) addressSpaceApi.withAddressSpace(addressSpace);
         q1 = new Address.Builder()
-                .setAddress("q1")
+                .setName("q1")
+                .setAddress("Q1")
                 .setType("queue")
                 .build();
         a1 = new Address.Builder()
-                .setAddress("a1")
+                .setName("a1")
+                .setAddress("A1")
                 .setType("anycast")
                 .build();
         addressApi.createAddress(q1);
@@ -76,7 +78,7 @@ public class HttpAddressServiceTest {
 
     @Test
     public void testList() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace"));
+        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace", null));
 
         assertThat(response.getStatus(), is(200));
         AddressList list = (AddressList) response.getEntity();
@@ -87,9 +89,26 @@ public class HttpAddressServiceTest {
     }
 
     @Test
+    public void testGetByAddress() {
+        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace", "A1"));
+
+        assertThat(response.getStatus(), is(200));
+        Address address = (Address) response.getEntity();
+
+        assertThat(address, is(a1));
+    }
+
+    @Test
+    public void testGetByAddressNotFound() {
+        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace", "b1"));
+
+        assertThat(response.getStatus(), is(404));
+    }
+
+    @Test
     public void testListException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace"));
+        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace", null));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -171,7 +190,7 @@ public class HttpAddressServiceTest {
         Response response = invoke(() -> addressService.deleteAddress(securityContext,"myspace", "a1"));
         assertThat(response.getStatus(), is(401));
 
-        response = invoke(() -> addressService.getAddressList(securityContext,"myspace"));
+        response = invoke(() -> addressService.getAddressList(securityContext,"myspace", null));
         assertThat(response.getStatus(), is(401));
 
         response = invoke(() -> addressService.getAddress(securityContext,"myspace", "q1"));
