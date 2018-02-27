@@ -103,4 +103,107 @@ public class PlansTest extends TestBase {
         topicClient.getConnectOptions().setPassword(password);
         TopicTest.runTopicTest(topicClient, weakQueueDest, 42);
     }
+
+    @Test
+    public void testQuotaLimits() throws Exception {
+        //define and create address plans
+        AddressPlan queuePlan = new AddressPlan("queue-test1", AddressType.QUEUE,
+                Collections.singletonList(new AddressResource("broker", 0.6)));
+
+        AddressPlan topicPlan = new AddressPlan("queue-test2", AddressType.TOPIC,
+                Arrays.asList(
+                        new AddressResource("broker", 0.4),
+                        new AddressResource("router", 0.2)));
+
+        AddressPlan anycastPlan = new AddressPlan("anycast-test1", AddressType.ANYCAST,
+                Collections.singletonList(new AddressResource("router", 0.3)));
+
+        plansProvider.createAddressPlanConfig(queuePlan);
+        plansProvider.createAddressPlanConfig(topicPlan);
+        plansProvider.createAddressPlanConfig(anycastPlan);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 2.0),
+                new AddressSpaceResource("router", 1.0, 1.0),
+                new AddressSpaceResource("aggregate", 0.0, 2.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan, anycastPlan);
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("test1", "test",
+                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
+
+        //create address space with new plan
+        AddressSpace addressSpace = new AddressSpace("test1", AddressSpaceType.STANDARD,
+                addressSpacePlan.getName());
+        createAddressSpace(addressSpace, AuthService.STANDARD.toString());
+
+        //check router limits
+        checkLimits(addressSpace,
+                Arrays.asList(
+                        Destination.anycast("a1", anycastPlan.getName()),
+                        Destination.anycast("a2", anycastPlan.getName()),
+                        Destination.anycast("a3", anycastPlan.getName())
+                ),
+                Collections.singletonList(
+                        Destination.anycast("a4", anycastPlan.getName())
+                ));
+
+        //check broker limits
+        checkLimits(addressSpace,
+                Arrays.asList(
+                        Destination.queue("q1", queuePlan.getName()),
+                        Destination.queue("q2", queuePlan.getName()),
+                        Destination.queue("q3", queuePlan.getName())
+                ),
+                Collections.singletonList(
+                        Destination.queue("q4", queuePlan.getName())
+                ));
+
+        //check aggregate limits
+        checkLimits(addressSpace,
+                Arrays.asList(
+                        Destination.topic("t1", topicPlan.getName()),
+                        Destination.topic("t2", topicPlan.getName())
+                ),
+                Collections.singletonList(
+                        Destination.topic("t3", topicPlan.getName())
+                ));
+    }
+
+    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest)
+            throws Exception {
+
+        setAddresses(addressSpace, allowedDest.toArray(new Destination[0]));
+        List<Future<List<Address>>> getAddresses = new ArrayList<>();
+        for (Destination dest : allowedDest) {
+            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getAddress())));
+        }
+
+        for (Future<List<Address>> getAddress : getAddresses) {
+            List<Address> address = getAddress.get(20, TimeUnit.SECONDS);
+            String assertMessage = String.format("Address from notAllowed %s is not ready", address.get(0).getName());
+            assertEquals(assertMessage, "Active", address.get(0).getPhase());
+        }
+
+        getAddresses.clear();
+        try {
+            appendAddresses(addressSpace, notAllowedDest.toArray(new Destination[0]));
+        } catch (IllegalStateException ex) {
+            if (!ex.getMessage().contains("addresses are not ready")) {
+                throw ex;
+            }
+        }
+
+        for (Destination dest : notAllowedDest) {
+            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getAddress())));
+        }
+
+        for (Future<List<Address>> getAddress : getAddresses) {
+            List<Address> address = getAddress.get(20, TimeUnit.SECONDS);
+            String assertMessage = String.format("Address from notAllowed %s is ready", address.get(0).getName());
+            assertEquals(assertMessage, "Pending", address.get(0).getPhase());
+        }
+
+        setAddresses(addressSpace);
+    }
 }

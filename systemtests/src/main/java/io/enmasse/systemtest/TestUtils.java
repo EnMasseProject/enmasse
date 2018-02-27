@@ -336,7 +336,7 @@ public class TestUtils {
      * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of addresses
      */
-    private static List<Address> convertToListAddress(JsonObject htmlResponse) {
+    public static List<Address> convertToListAddress(JsonObject htmlResponse) {
         if (htmlResponse != null) {
             String kind = htmlResponse.getString("kind");
             List<Address> addresses = new ArrayList<>();
@@ -371,7 +371,15 @@ public class TestUtils {
         String address = spec.getString("address");
         String type = spec.getString("type");
         String plan = spec.getString("plan");
-        return new Address(address, type, plan);
+
+        JsonObject metadata = addressJsonObject.getJsonObject("metadata");
+        String name = metadata.getString("name");
+        String addressSpaceName = metadata.getString("addressSpace");
+
+        JsonObject status = addressJsonObject.getJsonObject("status");
+        boolean isReady = status.getBoolean("isReady");
+        String phase = status.getString("phase");
+        return new Address(addressSpaceName, address, name, type, plan, phase, isReady);
     }
 
     /**
