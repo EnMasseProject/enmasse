@@ -493,6 +493,11 @@ public abstract class TestBase extends SystemTestRunListener {
         TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, destination, budget);
     }
 
+    protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws InterruptedException {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        TestUtils.waitForNReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, Collections.singletonMap("name", "qdrouterd"), budget);
+    }
+
     /**
      * return list of queue names created for subscribers
      *
