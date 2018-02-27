@@ -78,6 +78,20 @@ pipeline {
                         ]
             }
         }
+        stage('execute plans') {
+            environment {
+                ACTUAL_COMMIT = readFile('actual-commit.file')
+            }
+            steps {
+                build job: env.STANDARD_JOB_NAME, wait: false, parameters:
+                        [
+                                [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
+                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
+                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'plans.**'],
+                                [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
+                        ]
+            }
+        }
     }
     post {
         always {
