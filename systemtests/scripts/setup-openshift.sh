@@ -15,9 +15,21 @@ sudo rm -rf /var/log/pods/*
 
 oc cluster up $OC_CLUSTER_ARGS
 oc login -u system:admin
+
+TIMEOUT=300
+NOW=$(date +%s)
+END=$(($NOW + $TIMEOUT))
+echo "Now: $(date -d@${NOW} -u +%F:%H:%M:%S)"
+echo "Waiting ${TIMEOUT} seconds until: $(date -d@${END} -u +%F:%H:%M:%S)"
+
 oc cluster status
 while [ $? -gt 0 ]
 do
+    NOW=$(date +%s)
+    if [ ${NOW} -gt ${END} ]; then
+        echo "ERROR: Timed out waiting for openshift cluster to come up!"
+        exit 1
+    fi
     sleep 5
     oc cluster status
 done
