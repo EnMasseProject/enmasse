@@ -28,7 +28,6 @@ public class ConsoleWebPage {
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
 
-
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
         this.selenium = selenium;
         this.consoleRoute = consoleRoute;
@@ -36,19 +35,19 @@ public class ConsoleWebPage {
         this.defaultAddressSpace = defaultAddressSpace;
     }
 
-
-    public void openWebConsolePage() throws Exception {
-        selenium.driver.get(consoleRoute);
-        selenium.angularDriver.waitForAngularRequestsToFinish();
-        log.info("Console page opened");
-        selenium.takeScreenShot();
+    public void openWebConsolePage() {
+        openWebConsolePage(consoleRoute);
     }
 
-    public void openWebConsolePage(String route) throws Exception {
+    public void openWebConsolePage(String route) throws IllegalStateException {
         selenium.driver.get(route);
         selenium.angularDriver.waitForAngularRequestsToFinish();
-        log.info("Console page opened");
         selenium.takeScreenShot();
+        if (!selenium.driver.findElement(By.tagName("body")).getText().isEmpty()) {
+            log.info("Console page opened");
+        } else {
+            throw new IllegalStateException("Console web page wasn't opened!");
+        }
     }
 
     private WebElement getNavigateMenu() throws Exception {
@@ -533,7 +532,12 @@ public class ConsoleWebPage {
         selenium.clickOnItem(selenium.driver.findElement(By.id(destination.getType())), "Radio button " + destination.getType());
 
         WebElement nextButton = selenium.driver.findElement(By.id("nextButton"));
+
         selenium.clickOnItem(nextButton);
+
+        //select address plan
+        selenium.clickOnItem(selenium.driver.findElement(By.id(destination.getPlan())), "Radio button " + destination.getPlan());
+
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
 
