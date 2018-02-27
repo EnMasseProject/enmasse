@@ -149,6 +149,7 @@ public class SeleniumProvider {
     public void refreshPage() {
         takeScreenShot();
         driver.navigate().refresh();
+        angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }
 
