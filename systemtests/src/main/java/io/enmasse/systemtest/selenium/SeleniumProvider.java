@@ -146,6 +146,13 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
+    public void refreshPage() {
+        takeScreenShot();
+        driver.navigate().refresh();
+        angularDriver.waitForAngularRequestsToFinish();
+        takeScreenShot();
+    }
+
     public void waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, true);
     }

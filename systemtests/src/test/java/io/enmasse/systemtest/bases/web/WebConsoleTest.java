@@ -523,6 +523,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
+        assertEquals("Incorrect results value", 1, consoleWebPage.getResultsCount());
+        selenium.refreshPage();
+        assertEquals("Incorrect results value", 1, consoleWebPage.getResultsCount());
+
         assertThat(String.format("Console failed, does not contain %d addresses", 1),
                 consoleWebPage.getAddressItems().size(), is(1));
         assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", username),
@@ -538,13 +542,18 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openConnectionsPageWebConsole();
 
-        AbstractClient noUsersConnections = attachConnector(destination, 5, 1, 0);
+        int connections = 5;
+        AbstractClient noUsersConnections = attachConnector(destination, connections, 1, 0);
         AbstractClient usersConnections = attachConnector(sharedAddressSpace, destination,
-                5, 1, 0, "view_user_connections", "viewPa55");
+                connections, 1, 0, "view_user_connections", "viewPa55");
         selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
 
-        assertEquals(String.format("Console failed, does not contain %d connections", 5),
-                5, consoleWebPage.getConnectionItems().size());
+        assertEquals("Incorrect results value", connections, consoleWebPage.getResultsCount());
+        selenium.refreshPage();
+        assertEquals("Incorrect results value", connections, consoleWebPage.getResultsCount());
+
+        assertEquals(String.format("Console failed, does not contain %d connections", connections),
+                connections, consoleWebPage.getConnectionItems().size());
         assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", username),
                 "view_user_connections", consoleWebPage.getConnectionItems());
 
