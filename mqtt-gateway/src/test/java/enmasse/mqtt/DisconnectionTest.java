@@ -74,7 +74,7 @@ public class DisconnectionTest extends MockMqttGatewayTestBase {
 
             context.assertTrue(true);
 
-        } catch (MqttException e) {
+        } catch (Exception e) {
 
             context.assertTrue(false);
             e.printStackTrace();

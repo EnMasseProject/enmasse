@@ -197,7 +197,7 @@ public class PublishTest extends MockMqttGatewayTestBase {
             });
             connected.complete();
 
-        } catch (MqttException e) {
+        } catch (Exception e) {
 
             context.assertTrue(false);
             e.printStackTrace();
