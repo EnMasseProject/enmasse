@@ -5,13 +5,12 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-@Category(IsolatedAddressSpace.class)
+@Tag("isolated")
 public class WithoutMqttTest extends TestBase {
     private AddressSpace addressSpace;
 

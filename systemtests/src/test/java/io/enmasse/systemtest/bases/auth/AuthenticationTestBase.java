@@ -7,12 +7,13 @@ package io.enmasse.systemtest.bases.auth;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Category(IsolatedAddressSpace.class)
+@Tag("isolated")
 public abstract class AuthenticationTestBase extends TestBase {
 
     protected final List<Destination> amqpAddressList = Arrays.asList(

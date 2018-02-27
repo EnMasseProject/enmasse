@@ -11,6 +11,7 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-@Category(SharedAddressSpace.class)
+@Tag("shared")
 public abstract class TestBaseWithShared extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-shared-";

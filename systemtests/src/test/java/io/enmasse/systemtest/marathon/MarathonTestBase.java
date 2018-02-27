@@ -4,9 +4,11 @@
  */
 package io.enmasse.systemtest.marathon;
 
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -14,7 +16,7 @@ import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Rule;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -32,7 +34,7 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 
-@Category({IsolatedAddressSpace.class, MarathonTests.class})
+@Tag("marathon")
 public abstract class MarathonTestBase extends TestBase implements ISeleniumProvider {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();

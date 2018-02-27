@@ -79,7 +79,7 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit.jupiter.version}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -91,19 +91,25 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.jupiter.version}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <version>${junit.vintage.version}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
             <version>${junit.platform.version}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-runner</artifactId>
+            <version>${junit.platform.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -121,6 +127,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
                 <configuration>
                     <properties>
                         <property>
@@ -129,9 +136,19 @@
                         </property>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>
-                    <groups>${testcase.groups}</groups>
-                    <excludedGroups>${exclude.tests.group}</excludedGroups>
                 </configuration>
+                <dependencies>
+                  <dependency>
+                    <groupId>org.junit.platform</groupId>
+                    <artifactId>junit-platform-surefire-provider</artifactId>
+                    <version>${junit.platform.version}</version>
+                  </dependency>
+                  <dependency>
+                    <groupId>org.junit.jupiter</groupId>
+                    <artifactId>junit-jupiter-engine</artifactId>
+                    <version>${junit.jupiter.version}</version>
+                  </dependency>
+              </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -140,31 +157,27 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <testcase.groups>io.enmasse.systemtest.SharedAddressSpace,io.enmasse.systemtest.IsolatedAddressSpace</testcase.groups>
-                <exclude.tests.group>io.enmasse.systemtest.MarathonTests</exclude.tests.group>
-                <skip.tests>false</skip.tests>
+                <tests>mytest</tests>
             </properties>
         </profile>
         <profile>
             <id>systemtests-isolated</id>
             <properties>
-                <testcase.groups>io.enmasse.systemtest.IsolatedAddressSpace</testcase.groups>
-                <exclude.tests.group>io.enmasse.systemtest.MarathonTests</exclude.tests.group>
+                <tests>isolated</tests>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>systemtests-shared</id>
             <properties>
-                <testcase.groups>io.enmasse.systemtest.SharedAddressSpace</testcase.groups>
-                <exclude.tests.group>io.enmasse.systemtest.MarathonTests</exclude.tests.group>
+                <tests>shared</tests>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>systemtests-marathon</id>
             <properties>
-                <testcase.groups>io.enmasse.systemtest.MarathonTests</testcase.groups>
+                <tests>marathon</tests>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
