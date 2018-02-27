@@ -35,6 +35,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium = new SeleniumProvider();
+    private List<AbstractClient> clientsList;
+
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
@@ -54,6 +56,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     @After
     public void tearDownDrivers() throws Exception {
         selenium.tearDownDrivers();
+        if (clientsList != null) {
+            stopClients(clientsList);
+            clientsList.clear();
+        }
     }
 
     //============================================================================================
@@ -174,7 +180,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openAddressesPageWebConsole();
 
-        List<AbstractClient> receivers = attachReceivers(addresses);
+        clientsList = attachReceivers(addresses);
 
         Thread.sleep(15000);
 
@@ -186,9 +192,9 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         assertSorted("Console failed, items are not sorted by count of receivers desc",
                 consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
 
-        stopClients(receivers);
+        stopClients(clientsList);
 
-        List<AbstractClient> senders = attachSenders(addresses);
+        clientsList = attachSenders(addresses);
 
         Thread.sleep(15000);
 
@@ -200,7 +206,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         assertSorted("Console failed, items are not sorted by count of senders desc",
                 consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
 
-        stopClients(senders);
+        stopClients(clientsList);
     }
 
     protected void doTestSortConnectionsBySenders() throws Exception {
@@ -211,7 +217,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> senders = attachClients(addresses);
+        clientsList = attachClients(addresses);
 
         consoleWebPage.sortItems(SortType.SENDERS, true);
         assertSorted("Console failed, items are not sorted by count of senders asc",
@@ -220,8 +226,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.sortItems(SortType.SENDERS, false);
         assertSorted("Console failed, items are not sorted by count of senders desc",
                 consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getSendersCount));
-
-        stopClients(senders);
     }
 
     protected void doTestSortConnectionsByReceivers() throws Exception {
@@ -232,7 +236,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> clients = attachClients(addresses);
+        clientsList = attachClients(addresses);
 
         consoleWebPage.sortItems(SortType.RECEIVERS, true);
         assertSorted("Console failed, items are not sorted by count of receivers asc",
@@ -241,8 +245,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.sortItems(SortType.RECEIVERS, false);
         assertSorted("Console failed, items are not sorted by count of receivers desc",
                 consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getReceiversCount));
-
-        stopClients(clients);
     }
 
 
@@ -252,31 +254,23 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> receivers = null;
         int receiverCount = 5;
-        try {
-            receivers = attachReceivers(queue, receiverCount);
+        clientsList = attachReceivers(queue, receiverCount);
 
-            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
-            List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
-            assertThat(String.format("Console failed, does not contain %d connections", receiverCount),
-                    items.size(), is(receiverCount));
-            assertConnectionUnencrypted("Console failed, does not show only Encrypted connections", items);
+        consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
+        List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
+        assertThat(String.format("Console failed, does not contain %d connections", receiverCount),
+                items.size(), is(receiverCount));
+        assertConnectionUnencrypted("Console failed, does not show only Encrypted connections", items);
 
-            consoleWebPage.clearAllFilters();
-            assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
+        consoleWebPage.clearAllFilters();
+        assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
 
-            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
-            items = consoleWebPage.getConnectionItems();
-            assertThat(String.format("Console failed, does not contain %d connections", 0),
-                    items.size(), is(0));
-            assertConnectionEncrypted("Console failed, does not show only Encrypted connections", items);
-
-        } catch (Exception ex) {
-            throw ex;
-        } finally {
-            stopClients(receivers);
-        }
+        consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
+        items = consoleWebPage.getConnectionItems();
+        assertThat(String.format("Console failed, does not contain %d connections", 0),
+                items.size(), is(0));
+        assertConnectionEncrypted("Console failed, does not show only Encrypted connections", items);
     }
 
     protected void doTestFilterConnectionsByUser() throws Exception {
@@ -335,7 +329,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> clients = attachClients(addresses);
+        clientsList = attachClients(addresses);
 
         String hostname = consoleWebPage.getConnectionItems().get(0).getName();
 
@@ -346,8 +340,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.clearAllFilters();
         assertThat(String.format("Console failed, does not contain %d connections", 6),
                 consoleWebPage.getConnectionItems().size(), is(6));
-
-        stopClients(clients);
     }
 
     protected void doTestSortConnectionsByHostname() throws Exception {
@@ -357,7 +349,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> clients = attachClients(addresses);
+        clientsList = attachClients(addresses);
 
         consoleWebPage.sortItems(SortType.HOSTNAME, true);
         assertSorted("Console failed, items are not sorted by hostname asc",
@@ -366,8 +358,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.sortItems(SortType.HOSTNAME, false);
         assertSorted("Console failed, items are not sorted by hostname desc",
                 consoleWebPage.getConnectionItems(), true, Comparator.comparing(ConnectionWebItem::getName));
-
-        stopClients(clients);
     }
 
     protected void doTestFilterConnectionsByContainerId() throws Exception {
@@ -378,7 +368,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
 
-        AbstractClient client = attachConnector(dest, connectionCount, 1, 1);
+        clientsList = new ArrayList<>();
+        clientsList.add(attachConnector(dest, connectionCount, 1, 1));
         selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
 
         String containerID = consoleWebPage.getConnectionItems().get(0).getContainerID();
@@ -390,8 +381,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.clearAllFilters();
         assertThat(String.format("Console failed, does not contain %d connections", 5),
                 consoleWebPage.getConnectionItems().size(), is(5));
-
-        client.stop();
     }
 
     protected void doTestSortConnectionsByContainerId() throws Exception {
@@ -402,7 +391,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openConnectionsPageWebConsole();
 
-        AbstractClient client = attachConnector(dest, connectionCount, 1, 1);
+        clientsList = new ArrayList<>();
+        clientsList.add(attachConnector(dest, connectionCount, 1, 1));
         selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
 
         consoleWebPage.sortItems(SortType.CONTAINER_ID, true);
@@ -412,8 +402,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.sortItems(SortType.CONTAINER_ID, false);
         assertSorted("Console failed, items are not sorted by containerID desc",
                 consoleWebPage.getConnectionItems(), true, Comparator.comparing(ConnectionWebItem::getContainerID));
-
-        client.stop();
     }
 
     protected void doTestMessagesMetrics() throws Exception {
