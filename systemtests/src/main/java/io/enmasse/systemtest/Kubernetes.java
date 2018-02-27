@@ -208,7 +208,7 @@ public abstract class Kubernetes {
      * remove address-space-plan ConfigMap according to its name
      */
     public boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getName());
+        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
         return client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName).delete();
     }
 
