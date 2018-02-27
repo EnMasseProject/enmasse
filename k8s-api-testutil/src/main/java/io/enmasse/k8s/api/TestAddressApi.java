@@ -54,7 +54,7 @@ public class TestAddressApi implements AddressApi {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        return addresses.stream().filter(d -> d.getAddress().equals(address)).findAny();
+        return addresses.stream().filter(d -> d.getName().equals(address)).findAny();
     }
 
     @Override

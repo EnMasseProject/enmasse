@@ -46,9 +46,20 @@ public class HttpAddressService {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response getAddressList(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpace) throws Exception {
-        return doRequest("Error listing addresses",
-                () -> Response.ok(apiHelper.getAddresses(securityContext, addressSpace)).build());
+    public Response getAddressList(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpace, @QueryParam("address") String address) throws Exception {
+        return doRequest("Error listing addresses",() -> {
+            AddressList list = apiHelper.getAddresses(securityContext, addressSpace);
+            if (address == null) {
+                return Response.ok(list).build();
+            } else {
+                for (Address entity : list) {
+                    if (entity.getAddress().equals(address)) {
+                        return Response.ok(entity).build();
+                    }
+                }
+                throw new NotFoundException("Address " + address + " not found");
+            }
+        });
     }
 
     @GET
