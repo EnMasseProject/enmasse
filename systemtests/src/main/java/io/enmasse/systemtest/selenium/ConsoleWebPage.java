@@ -394,6 +394,18 @@ public class ConsoleWebPage {
         }
     }
 
+    public int getResultsCount() throws Exception {
+        String resultsString = getFilterResultsToolbar()
+                .findElement(By.className("col-sm-12"))
+                .findElement(By.className("ng-binding"))
+                .getText();
+        String[] split = resultsString.split(" ");
+        if (split.length == 2) {
+            return Integer.valueOf(split[0]);
+        }
+        throw new IllegalStateException("Incorrect format of results count, Expected: \"Integer 'Results''\"");
+    }
+
     /**
      * remove 'type' filter element by (Name: Value)
      */
@@ -529,7 +541,7 @@ public class ConsoleWebPage {
 
         assertNotNull("Console failed, does not contain created address item", getAddressItem(destination));
 
-        if(waitForReady)
+        if (waitForReady)
             TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
                     new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }

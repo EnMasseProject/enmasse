@@ -523,6 +523,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
+        assertEquals("Incorrect results value", 1, consoleWebPage.getResultsCount());
+        selenium.refreshPage();
+        assertEquals("Incorrect results value", 1, consoleWebPage.getResultsCount());
+
         assertThat(String.format("Console failed, does not contain %d addresses", 1),
                 consoleWebPage.getAddressItems().size(), is(1));
         assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", username),
