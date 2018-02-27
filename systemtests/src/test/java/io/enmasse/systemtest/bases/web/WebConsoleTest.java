@@ -199,11 +199,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Thread.sleep(15000);
 
         consoleWebPage.sortItems(SortType.SENDERS, true);
-        assertSorted("Console failed, items are not sorted by count of clientsList asc",
+        assertSorted("Console failed, items are not sorted by count of senders asc",
                 consoleWebPage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
 
         consoleWebPage.sortItems(SortType.SENDERS, false);
-        assertSorted("Console failed, items are not sorted by count of clientsList desc",
+        assertSorted("Console failed, items are not sorted by count of senders desc",
                 consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
 
         stopClients(clientsList);
@@ -220,11 +220,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         clientsList = attachClients(addresses);
 
         consoleWebPage.sortItems(SortType.SENDERS, true);
-        assertSorted("Console failed, items are not sorted by count of clientsList asc",
+        assertSorted("Console failed, items are not sorted by count of senders asc",
                 consoleWebPage.getConnectionItems(), Comparator.comparingInt(ConnectionWebItem::getSendersCount));
 
         consoleWebPage.sortItems(SortType.SENDERS, false);
-        assertSorted("Console failed, items are not sorted by count of clientsList desc",
+        assertSorted("Console failed, items are not sorted by count of senders desc",
                 consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getSendersCount));
     }
 
@@ -446,7 +446,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
             assertEquals(String.format("Console failed, does not contain %d receivers", 10),
                     10, consoleWebPage.getAddressItem(dest).getReceiversCount());
-            assertEquals(String.format("Console failed, does not contain %d clientsList", 5),
+            assertEquals(String.format("Console failed, does not contain %d senders", 5),
                     5, consoleWebPage.getAddressItem(dest).getSendersCount());
         } finally {
             client.stop();
