@@ -48,10 +48,11 @@ public class AnycastTest extends StandardTestBase {
 
     @Test
     public void testScaleRouterAutomatically() throws Exception {
+        //deploy addresses
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 210;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 200 * 0.01 = 2 pods
+            dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 200 * 0.01 = 2.1 pods
         }
         setAddresses(dest.toArray(new Destination[0]));
 //        TODO once getAddressPlanConfig() method will be implemented
@@ -59,16 +60,33 @@ public class AnycastTest extends StandardTestBase {
 //        int replicasCount = (int) (destCount * requiredCredit);
 //        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
-        waitForRouterReplicas(sharedAddressSpace, 2);
+        waitForRouterReplicas(sharedAddressSpace, 3);
 
+        //simple send/receive
         AmqpClient client1 = amqpClientFactory.createQueueClient();
         AmqpClient client2 = amqpClientFactory.createQueueClient();
-        for (int i = 0; i < destCount; i++) {
-            if (i % 5 == 0) {
-                runAnycastTest(dest.get(i), client1, client2);
-                Thread.sleep(2000);
-            }
+        for (int i = 0; i < destCount; i = i + 5) {
+            runAnycastTest(dest.get(i), client1, client2);
         }
+
+        //remove part of destinations
+        int removeCount = 111;
+        deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.11 => 0.99 pods
+        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 10);
+
+        //simple send/receive
+        waitForRouterReplicas(sharedAddressSpace, 1);
+        for (int i = 0; i < destCount - removeCount; i = i + 3) {
+            runAnycastTest(dest.get(i), client1, client2);
+        }
+
+        //append due to scale to 2 replicas
+        appendAddresses(Destination.anycast("small-anycast-"), Destination.anycast("small-anycast-"));
+        waitForRouterReplicas(sharedAddressSpace, 2);
+
+        //remove all destinations
+        setAddresses();
+        waitForRouterReplicas(sharedAddressSpace, 1);
     }
 
     public static void runAnycastTest(Destination dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
