@@ -50,7 +50,7 @@ public class AnycastTest extends StandardTestBase {
     public void testScaleRouterAutomatically() throws Exception {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 210;
-        for (int i = 0; i < destCount; i = i + 5) {
+        for (int i = 0; i < destCount; i++) {
             dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 200 * 0.01 = 2 pods
         }
         setAddresses(dest.toArray(new Destination[0]));
