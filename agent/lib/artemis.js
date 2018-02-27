@@ -21,27 +21,39 @@ var log = require('./log.js').logger();
 var Artemis = function (connection) {
     this.connection = connection;
     this.sender = connection.open_sender('activemq.management');
+    this.sender.on('sendable', this._send_pending_requests.bind(this));
     connection.open_receiver({source:{dynamic:true}});
     connection.on('receiver_open', this.ready.bind(this));
     connection.on('message', this.incoming.bind(this));
     connection.on('receiver_error', this.on_receiver_error.bind(this));
     connection.on('sender_error', this.on_sender_error.bind(this));
-    var self;
+    var self = this;
     connection.on('connection_open', function (context) {
-        log.info('[' + context.connection.container_id + '] connection opened');
+        let previous = self.id;
+        self.id = context.connection.container_id;
+        if (previous !== undefined && previous !== self.id) {
+            log.info('[%s] connection opened (was %s)', self.id, previous);
+        } else {
+            log.info('[%s] connection opened', self.id);
+        }
     });
     connection.on('connection_error', this.on_connection_error.bind(this));
     connection.on('connection_close', this.on_connection_close.bind(this));
     connection.on('disconnected', this.disconnected.bind(this));
     this.handlers = [];
     this.requests = [];
-    this.outstanding_requests = []; //requests that have been sent bit
-                                    //for which response has not yet
-                                    //been received
+    this.pushed = 0;
+    this.popped = 0;
+};
+
+Artemis.prototype.log_info = function (context) {
+    if (this.id) {
+        log.info('[%s] artemis requests pending: %d, made:%d, completed: %d, ready: %d', this.id, this.handlers.length, this.pushed, this.popped, this.address !== undefined);
+    }
 };
 
 Artemis.prototype.ready = function (context) {
-    log.info('[' + this.connection.container_id + '] ready to send requests');
+    log.info('[%s] ready to send requests', this.connection.container_id);
     this.address = context.receiver.remote.attach.source.address;
     this._send_pending_requests();
 };
@@ -54,7 +66,7 @@ function as_handler(resolve, reject) {
                 if (message.body) resolve(JSON.parse(message.body)[0]);
                 else resolve(true);
             } catch (e) {
-                log.info('[' + this.connection.container_id + '] Error parsing message body: ' + message + ': ' + e);
+                log.info('[%s] Error parsing message body: %s: %s' + this.connection.container_id, message, e);
             }
         } else {
             reject(message.body);
@@ -64,25 +76,25 @@ function as_handler(resolve, reject) {
 
 Artemis.prototype.incoming = function (context) {
     var message = context.message;
-    log.debug('[' + this.connection.container_id + '] recv: ' + message);
-    this.outstanding_requests.shift();
+    log.debug('[%s] recv: ', this.id, message);
     var handler = this.handlers.shift();
     if (handler) {
+        this.popped++;
         handler(context);
     }
 };
 
 Artemis.prototype.disconnected = function (context) {
-    log.info('[' + this.connection.container_id + '] disconnected');
+    log.info('[%s] disconnected', this.id || context.connection.container_id);
     this.address = undefined;
-    //fail all outstanding requests? or keep them and retry on reconnection? currently do the latter...
-    this.requests = this.outstanding_requests;
+    this.abort_requests('disconnected');
 };
 
 Artemis.prototype.abort_requests = function (error) {
     while (this.handlers.length > 0) {
         var handler = this.handlers.shift();
         if (handler) {
+            this.popped++;
             handler(error);
         }
     }
@@ -113,31 +125,36 @@ Artemis.prototype.on_connection_close = function (context) {
 };
 
 Artemis.prototype._send_pending_requests = function () {
-    for (var i = 0; i < this.requests.length; i++) {
-        this._send_request(this.requests[i]);
+    if (this.address === undefined) return false;
+
+    var i = 0;
+    while (i < this.requests.length && this.sender.sendable()) {
+        this._send_request(this.requests[i++]);
     }
-    this.outstanding_requests = this.requests;
-    this.requests = [];
+    this.requests.splice(0, i);
+    return this.requests.length === 0 && this.sender.sendable();
 }
 
 Artemis.prototype._send_request = function (request) {
     request.application_properties.JMSReplyTo = this.address;
     request.reply_to = this.address;
     this.sender.send(request);
-    log.debug('[' + this.connection.container_id + '] sent: ' + JSON.stringify(request));
+    log.debug('[%s] sent: %j', this.id, request);
 }
 
 Artemis.prototype._request = function (resource, operation, parameters) {
     var request = {application_properties:{'_AMQ_ResourceName':resource, '_AMQ_OperationName':operation}};
     request.body = JSON.stringify(parameters);
-    if (this.address) {
-        this._send_pending_requests();
+
+    if (this._send_pending_requests()) {
         this._send_request(request);
     } else {
         this.requests.push(request);
     }
     var stack = this.handlers;
+    var self = this;
     return new Promise(function (resolve, reject) {
+        self.pushed++;
         stack.push(as_handler(resolve, reject));
     });
 }
@@ -197,7 +214,7 @@ Artemis.prototype.listQueues = function (attribute_list) {
     return new Promise(function (resolve, reject) {
         agent.getQueueNames().then(function (results) {
             if (results && !util.isArray(results)) {
-                log.info('unexpected result for queue names: %j', results);
+                log.info('[%s] unexpected result for queue names: %j', agent.id, results);
             }
             var allnames = util.isArray(results) ? results : [];
             var names = allnames.filter(function (n) { return n !== agent.address; } );
@@ -265,7 +282,7 @@ Artemis.prototype.listAddresses = function () {
     var attributes = Object.keys(address_attributes);
     var agent = this;
     return agent.getAddressNames().then(function (allnames) {
-        var names = allnames.filter(function (n) { return n !== agent.address; } );
+        var names = allnames.filter(function (n) { return n && n !== agent.address; } );
         return Promise.all(
             names.map(function (name) {
                 return Promise.all(

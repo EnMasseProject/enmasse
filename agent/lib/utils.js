@@ -16,6 +16,7 @@
 'use strict';
 
 var rhea = require('rhea');
+var util = require('util');
 
 module.exports.remove = function (list, predicate) {
     var count = 0;
@@ -156,4 +157,69 @@ module.exports.serialize = function (f) {
             execute();
         }
     };
+};
+
+module.exports.string_compare = function (a, b) {
+    if (a === b) return 0;
+    else if (a < b) return -1;
+    else return 1;
+};
+
+//return changes between two sorted lists
+module.exports.changes = function (last, current, compare, unchanged, stringify) {
+    let description = stringify || JSON.stringify;
+    if (last === undefined) {
+        return {
+            added: current,
+            removed: [],
+            modified: [],
+            decription: util.format('initial %s', description(current))
+        };
+    } else {
+        let d = {
+            added: [],
+            removed: [],
+            modified: []
+        };
+        let i = 0, j = 0;
+        while (i < last.length && j < current.length) {
+            switch (compare(last[i], current[j])) {
+            case 0:
+                //same address, has it changed?
+                if (!unchanged(last[i], current[j])) {
+                    d.modified.push(current[j]);
+                }
+                i++; j++;
+                break;
+            case 1:
+                //current[j] comes before last[i], therefore it is not in last
+                d.added.push(current[j++]);
+                break;
+            case -1:
+                //last[i] comes before current[j], therefore it is not in current
+                d.removed.push(last[i++]);
+                break;
+            }
+        }
+        while (i < last.length) {
+            //remaining items were in last but not in current
+            d.removed.push(last[i++]);
+        }
+        while (j < current.length) {
+            //remaining items are in current but not in last
+            d.added.push(current[j++]);
+        }
+        if (d.added.length || d.removed.length || d.modified.length) {
+            var parts = [];
+            for (let k in d) {
+                if (d[k].length) {
+                    parts.push(util.format('%s %s', k, description(d[k])));
+                }
+            }
+            d.description = parts.join(', ');
+            return d;
+        } else {
+            return undefined;
+        }
+    }
 };

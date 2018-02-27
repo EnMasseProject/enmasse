@@ -101,13 +101,30 @@ local common = import "common.jsonnet";
                 common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
                 common.env("MESSAGING_CERT", "/opt/agent/messaging-cert/tls.crt")
               ],
-              "resources": common.memory_resources("128Mi", "128Mi"),
+              "resources": common.memory_resources("128Mi", "512Mi"),
               "ports": [
+                common.container_port("http", 8888),
                 common.container_port("https", 8080),
                 common.container_port("amqp-ws", 56720)
               ],
-              "livenessProbe": common.http_probe("https", "/probe", "HTTPS"),
-              "readinessProbe": common.http_probe("https", "/probe", "HTTPS"),
+              "livenessProbe": {
+                  "httpGet": {
+                      "port": "http",
+                      "path": "/probe",
+                      "scheme": "HTTP"
+                  },
+                  "periodSeconds": 30,
+                  "timeoutSeconds": 5
+              },
+              "readinessProbe": {
+                  "httpGet": {
+                      "port": "http",
+                      "path": "/probe",
+                      "scheme": "HTTP"
+                  },
+                  "periodSeconds": 30,
+                  "timeoutSeconds": 5
+              },
               "volumeMounts": [
                 common.volume_mount("console-secret", "/etc/console-certs", true),
                 common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),

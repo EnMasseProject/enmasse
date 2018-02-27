@@ -25,10 +25,12 @@ var Router = function (connection, router, agent) {
         this.handlers = router.handlers;
         this.requests = router.requests;
         this.address = router.address;
-        this.sender = this.connection.open_sender(agent);
+        this.sender = router.sender;
+        this.tracking = router.tracking;
     } else {
         this.target = '$management';
-        this.sender = connection.open_sender('$management');
+        this.sender = connection.open_sender();
+        this.sender.on('sendable', this._send_pending_requests.bind(this));
         this.connection = connection;
         this.counter = 0;
         this.handlers = {};
@@ -36,25 +38,34 @@ var Router = function (connection, router, agent) {
         connection.open_receiver({source:{dynamic:true}});
         connection.on('message', this.incoming.bind(this));
         connection.on('connection_close', this.closed.bind(this));
+        this.tracking = {
+            sent: 0,
+            recv: 0,
+            unexpected_responses: 0
+        }
     }
     this.connection.on('receiver_open', this.ready.bind(this));
     this.connection.on('disconnected', this.disconnected.bind(this));
     this.connection.on('sender_error', this.on_sender_error.bind(this));
 };
 
+Router.prototype.log_info = function () {
+    log.info('[%s] qdr handlers: %d, requests pending: %d, requests sent: %d, responses received: %d, unexpected response: %d, ready: %s',
+             this.connection.container_id, Object.keys(this.handlers).length, this.requests.length,
+             this.tracking.sent, this.tracking.recv, this.tracking.unexpected_responses, (this.address !== undefined));
+};
+
 Router.prototype.closed = function (context) {
     if (context.connection.error) {
-        log.error('ERROR: router closed connection with ' + context.connection.error.description);
+        log.error('[%s] ERROR: router closed connection with %s', context.connection.container_id, context.connection.error.description);
     }
-    log.info('router closed ' + this.target);
-    this.connection = undefined;
-    this.sender = undefined;
+    log.info('[%s] router closed ', this.connection.container_id, this.target);
     this.address = undefined;
     this._abort_requests('closed');
 };
 
 Router.prototype._abort_requests = function (error) {
-    log.info('aborting pending requests: ' + error);
+    log.info('[%s] aborting pending requests: %s', this.connection.container_id, error);
     for (var h in this.handlers) {
         this.handlers[h](error);
         delete this.handlers[h];
@@ -63,8 +74,7 @@ Router.prototype._abort_requests = function (error) {
 }
 
 Router.prototype.on_sender_error = function (context) {
-    var error = this.connection.container_id + ' sender error ' + JSON.stringify(context.sender.error);
-    log.info('[' + this.connection.container_id + '] ' + error);
+    log.info('[%s] sender error %s', this.connection.container_id, error);
 };
 
 Router.prototype.disconnected = function (context) {
@@ -73,7 +83,7 @@ Router.prototype.disconnected = function (context) {
 }
 
 Router.prototype.ready = function (context) {
-    log.info('router ready');
+    log.info('[%s] router ready', this.connection.container_id);
     this.address = context.receiver.source.address;
     this._send_pending_requests();
 };
@@ -93,9 +103,13 @@ function extract_records(body) {
 function as_handler(resolve, reject) {
     return function (context) {
         var message = context.message === undefined ? context : context.message;
-        if (message.application_properties && message.application_properties.statusCode >= 200 && message.application_properties.statusCode < 300) {
-            if (message.body) resolve(extract_records(message.body));
-            else resolve({code:message.statusCode, description:message.application_properties.statusDescription});
+        if (message.application_properties) {
+            if (message.application_properties.statusCode >= 200 && message.application_properties.statusCode < 300) {
+                if (message.body) resolve(extract_records(message.body));
+                else resolve({code:message.application_properties.statusCode, description:message.application_properties.statusDescription});
+            } else {
+                reject({code:message.application_properties.statusCode, description:message.application_properties.statusDescription});
+            }
         } else {
             reject(message.toString());
         }
@@ -103,32 +117,32 @@ function as_handler(resolve, reject) {
 }
 
 Router.prototype._send_pending_requests = function () {
-    for (var i = 0; i < this.requests.length; i++) {
-        this._send_request(this.requests[i]);
+    if (this.address === undefined) return false;
+
+    var i = 0;
+    while (i < this.requests.length && this.sender.sendable()) {
+        this._send_request(this.requests[i++]);
     }
-    this.requests = [];
+    this.requests.splice(0, i);
+    return this.requests.length === 0 && this.sender.sendable();
 }
 
 Router.prototype._send_request = function (request) {
-    if (this.sender) {
-        request.reply_to = this.address;
-        this.sender.send(request);
-        log.debug('sent: ' + JSON.stringify(request));
-    } else {
-        log.info('router agent has no sender!');
-    }
+    request.reply_to = this.address;
+    this.sender.send(request);
+    this.tracking.sent++;
+    log.debug('sent: %j', request);
 }
 
 Router.prototype.request = function (operation, properties, body) {
     var id = this.target + this.counter.toString();
     this.counter++;
-    var req = {correlation_id:id};
+    var req = {correlation_id:id, to:this.target};
     req.application_properties = properties || {};
     req.application_properties.operation = operation;
     req.body = body;
 
-    if (this.address) {
-        this._send_pending_requests();
+    if (this._send_pending_requests()) {
         this._send_request(req);
     } else {
         this.requests.push(req);
@@ -187,13 +201,15 @@ Router.prototype.get_all_routers = function (current) {
 };
 
 Router.prototype.incoming = function (context) {
-    log.debug('recv: ' + JSON.stringify(context.message));
+    log.debug('recv: %j', context.message);
+    this.tracking.recv++
     var message = context.message;
     var handler = this.handlers[message.correlation_id];
     if (handler) {
-        handler(context);
         delete this.handlers[message.correlation_id];
+        handler(context);
     } else {
+        this.tracking.unexpected_responses++;
         log.warn('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }
 };

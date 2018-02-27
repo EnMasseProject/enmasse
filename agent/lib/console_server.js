@@ -40,14 +40,14 @@ function ConsoleServer (address_ctrl) {
         self.publish({subject:'address',body:address});
     });
     this.addresses.on('deleted', function (address) {
-        log.info('address ' + address.address + ' has been deleted, notifying clients...');
+        log.debug('address %s has been deleted, notifying clients...', address.address);
         self.publish({subject:'address_deleted',body:address.address});
     });
     this.connections.on('updated', function (conn) {
         self.publish({subject:'connection',body:conn});
     });
     this.connections.on('deleted', function (conn) {
-        log.info('connection ' + conn.host + ' has been deleted, notifying clients...');
+        log.debug('connection %s has been deleted, notifying clients...', conn.host);
         self.publish({subject:'connection_deleted',body:conn.id});
     });
     this.amqp_container = rhea.create_container({autoaccept:false});
@@ -66,21 +66,21 @@ function ConsoleServer (address_ctrl) {
     this.amqp_container.on('disconnected', unsubscribe);
     this.amqp_container.on('message', function (context) {
         var accept = function () {
-            log.info(context.message.subject + ' succeeded');
+            log.info('%s request succeeded', context.message.subject);
             context.delivery.accept();
         };
         var reject = function (e, code) {
-            log.info(context.message.subject + ' failed: ' + e);
+            log.info('%s request failed: %s', context.message.subject, e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
 
         if (!self.authz.is_admin(context.connection)) {
             reject(context, 'amqp:unauthorized-access', 'not authorized');
         } else if (context.message.subject === 'create_address') {
-            log.info('creating address ' + JSON.stringify(context.message.body));
+            log.info('creating address definition ' + JSON.stringify(context.message.body));
             self.address_ctrl.create_address(context.message.body).then(accept).catch(reject);
         } else if (context.message.subject === 'delete_address') {
-            log.info('deleting address ' + context.message.body.address);
+            log.info('deleting address definition ' + context.message.body.address);
             self.address_ctrl.delete_address(context.message.body).then(accept).catch(reject);
         } else {
             reject('ignoring message: ' + context.message);
@@ -218,6 +218,7 @@ ConsoleServer.prototype.listen = function (env, callback) {
     this.authz = require('./authz.js').policy(env);
     this.server = get_create_server(env)(function (request, response) {
         if (request.method === 'GET' && request.url === '/probe') {
+            response.statusCode = 200;
             response.end('OK');
         } else if (request.method === 'GET') {
             try {

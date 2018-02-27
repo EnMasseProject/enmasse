@@ -17,6 +17,7 @@
 
 var RouterStats = require('../lib/router_stats.js');
 var BrokerStats = require('../lib/broker_stats.js');
+var log = require("./log.js").logger();
 
 function StandardStats () {
     this.router_stats = new RouterStats();
@@ -26,12 +27,16 @@ function StandardStats () {
 StandardStats.prototype.init = function (console_server) {
     var self = this;
     setInterval(function () {
+        log.info('triggering router stats retrieval');
         self.router_stats.retrieve(console_server.addresses, console_server.connections);
-    }, 5000);//poll router stats every 5 secs
+        log.info('router stats retrieval triggered');
+    }, 10000);
 
     setInterval(function () {
+        log.info('triggering broker stats retrieval');
         self.broker_stats.retrieve(console_server.addresses);
-    }, 5000);//poll broker stats every 5 secs
+        log.info('broker stats retrieval triggered');
+    }, 10000);
 };
 
 module.exports = StandardStats;

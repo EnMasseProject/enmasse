@@ -151,19 +151,21 @@ function transform_address (addr) {
 }
 
 Ragent.prototype.sync_addresses = function (updated) {
+    log.info('triggering address configuration check');
     this.sync_brokers(updated);
     this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.name] = a; return map; }, {});
-    log.info('updating addresses: %j', this.addresses);
+    log.debug('updating addresses: %j', this.addresses);
     this.addresses_updated();
+    log.info('address configuration check triggered');
 }
 
 Ragent.prototype.sync_router_addresses = function (router) {
-    log.info('updating addresses for ' + router.container_id);
+    log.debug('updating addresses for %s', router.container_id);
     router.sync_addresses(this.addresses);
 }
 
 Ragent.prototype.verify_addresses = function (expected) {
-    log.debug('verifying addresses to match: ' + JSON.stringify(expected));
+    log.debug('verifying addresses to match: %j', expected);
     for (var r in this.connected_routers) {
         if (!this.connected_routers[r].verify_addresses(expected)) {
             return false;
@@ -178,7 +180,10 @@ Ragent.prototype.on_router_agent_disconnect = function (context) {
 
 Ragent.prototype.on_broker_disconnect = function (context) {
     log.info('broker disconnected: %s', context.connection.container_id);
-    delete this.connected_brokers[context.connection.container_id];
+    if (this.connected_brokers[context.connection.container_id]) {
+        this.connected_brokers[context.connection.container_id].close();
+        delete this.connected_brokers[context.connection.container_id];
+    }
 }
 
 function if_allocated_to (id) {
@@ -196,7 +201,7 @@ Ragent.prototype.sync_brokers = function (addresses) {
 
 Ragent.prototype.sync_broker = function (broker, addresses) {
     var allocated = addresses.filter(if_allocated_to(broker.id));
-    log.info('syncing broker %s with %j', broker.id, allocated.map(get_address));
+    log.debug('syncing broker %s with %j', broker.id, allocated.map(get_address));
     broker.sync_addresses(allocated);
 }
 
@@ -317,11 +322,13 @@ Ragent.prototype.listen = function (options) {
 Ragent.prototype.subscribe_to_addresses = function (env) {
     var address_source = new AddressSource('foo', env);
     address_source.on('addresses_ready', this.sync_addresses.bind(this));
+    return address_source.watcher;
 };
 
 Ragent.prototype.listen_probe = function (env) {
     if (env.PROBE_PORT !== undefined) {
         var probe = http.createServer(function (req, res) {
+            log.info('probe request: %s', req.url);
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end('OK');
         });
@@ -347,8 +354,9 @@ Ragent.prototype.start_listening = function (env, callback) {
 
 Ragent.prototype.run = function (env, callback) {
     this.start_listening(env, callback);
-    this.subscribe_to_addresses(env);
+    var watcher = this.subscribe_to_addresses(env);
     this.listen_probe(env);
+    return watcher;
 };
 
 if (require.main === module) {

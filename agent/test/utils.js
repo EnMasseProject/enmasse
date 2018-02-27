@@ -159,3 +159,136 @@ describe('serialize', function () {
         }, 100);
     });
 });
+
+describe('changes', function () {
+    function compare_by_name (a, b) {
+        return myutils.string_compare(a.name, b.name);
+    }
+    function equal_properties (a, b) {
+        for (let k in a) {
+            if (a[k] !== b[k]) return false;
+        }
+        for (let k in b) {
+            if (b[k] !== a[k]) return false;
+        }
+        return true;
+    }
+
+    it('returns undefined for identical lists', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'c',type:'foo'}], compare_by_name, equal_properties);
+        assert(c === undefined);
+        done();
+    });
+    it('detected when single item added in middle', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 1);
+        assert.equal(c.added[0].name, 'b');
+        assert.equal(c.removed.length, 0);
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when multiple items added in middle', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'bar',type:'foo'},{name:'c',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 2);
+        assert.equal(c.added[0].name, 'b');
+        assert.equal(c.added[1].name, 'bar');
+        assert.equal(c.removed.length, 0);
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when multiple items added in middle and at end', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'bar',type:'foo'},{name:'c',type:'foo'},{name:'d',type:'foo'},{name:'e',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 4);
+        assert.equal(c.added[0].name, 'b');
+        assert.equal(c.added[1].name, 'bar');
+        assert.equal(c.added[2].name, 'd');
+        assert.equal(c.added[3].name, 'e');
+        assert.equal(c.removed.length, 0);
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when single item deleted from middle', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'c',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 0);
+        assert.equal(c.removed.length, 1);
+        assert.equal(c.removed[0].name, 'b');
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when single item deleted from start', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'}], [{name:'b',type:'foo'},{name:'c',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 0);
+        assert.equal(c.removed.length, 1);
+        assert.equal(c.removed[0].name, 'a');
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when single item deleted from end', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'b',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 0);
+        assert.equal(c.removed.length, 1);
+        assert.equal(c.removed[0].name, 'c');
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when multiple items deleted', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'},{name:'d',type:'foo'},{name:'e',type:'foo'},{name:'f',type:'foo'}], [{name:'b',type:'foo'},{name:'d',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 0);
+        assert.equal(c.removed.length, 4);
+        assert.equal(c.removed[0].name, 'a');
+        assert.equal(c.removed[1].name, 'c');
+        assert.equal(c.removed[2].name, 'e');
+        assert.equal(c.removed[3].name, 'f');
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when multiple items deleted and added', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'},{name:'d',type:'foo'},{name:'e',type:'foo'},{name:'f',type:'foo'}], [{name:'b',type:'foo'},{name:'bar',type:'foo'},{name:'baz',type:'foo'},{name:'d',type:'foo'},{name:'egg',type:'foo'},{name:'h',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 4);
+        assert.equal(c.added[0].name, 'bar');
+        assert.equal(c.added[1].name, 'baz');
+        assert.equal(c.added[2].name, 'egg');
+        assert.equal(c.added[3].name, 'h');
+        assert.equal(c.removed.length, 4);
+        assert.equal(c.removed[0].name, 'a');
+        assert.equal(c.removed[1].name, 'c');
+        assert.equal(c.removed[2].name, 'e');
+        assert.equal(c.removed[3].name, 'f');
+        assert.equal(c.modified.length, 0);
+        done();
+    });
+    it('detected when single item modified', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'}], [{name:'a',type:'foo'},{name:'b',type:'bar'},{name:'c',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.modified.length, 1);
+        assert.equal(c.modified[0].name, 'b');
+        assert.equal(c.modified[0].type, 'bar');
+        done();
+    });
+    it('detects additions, deletions and modifications', function(done) {
+        let c = myutils.changes([{name:'a',type:'foo'},{name:'b',type:'foo'},{name:'c',type:'foo'},{name:'d',type:'foo'},{name:'e',type:'foo'},{name:'f',type:'foo'}], [{name:'b',type:'bar'},{name:'bar',type:'foo'},{name:'baz',type:'foo'},{name:'d',type:'foo'},{name:'egg',type:'foo'},{name:'h',type:'foo'}], compare_by_name, equal_properties);
+        assert(c !== undefined);
+        assert.equal(c.added.length, 4);
+        assert.equal(c.added[0].name, 'bar');
+        assert.equal(c.added[1].name, 'baz');
+        assert.equal(c.added[2].name, 'egg');
+        assert.equal(c.added[3].name, 'h');
+        assert.equal(c.removed.length, 4);
+        assert.equal(c.removed[0].name, 'a');
+        assert.equal(c.removed[1].name, 'c');
+        assert.equal(c.removed[2].name, 'e');
+        assert.equal(c.removed[3].name, 'f');
+        assert.equal(c.modified.length, 1);
+        assert.equal(c.modified[0].name, 'b');
+        assert.equal(c.modified[0].type, 'bar');
+        done();
+    });
+});

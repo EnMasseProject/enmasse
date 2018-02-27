@@ -44,10 +44,11 @@ describe('configmap backed address source', function() {
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
             assert.equal(addresses.length, 2);
-            assert.equal(addresses[0].address, 'foo');
-            assert.equal(addresses[0].type, 'queue');
-            assert.equal(addresses[1].address, 'bar');
-            assert.equal(addresses[1].type, 'topic');
+            //relies on sorted order (TODO: avoid relying on any order)
+            assert.equal(addresses[0].address, 'bar');
+            assert.equal(addresses[0].type, 'topic');
+            assert.equal(addresses[1].address, 'foo');
+            assert.equal(addresses[1].type, 'queue');
             done();
         });
     });
@@ -59,15 +60,16 @@ describe('configmap backed address source', function() {
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
             assert.equal(addresses.length, 3);
-            assert.equal(addresses[0].address, 'foo');
-            assert.equal(addresses[0].type, 'queue');
-            assert.equal(addresses[0].allocated_to, 'broker-1');
-            assert.equal(addresses[1].address, 'bar');
-            assert.equal(addresses[1].type, 'topic');
-            assert.equal(addresses[1].allocated_to, 'broker-2');
-            assert.equal(addresses[2].address, 'baz');
-            assert.equal(addresses[2].type, 'anycast');
-            assert.equal(addresses[2].allocated_to, undefined);
+            //relies on sorted order (TODO: avoid relying on any order)
+            assert.equal(addresses[0].address, 'bar');
+            assert.equal(addresses[0].type, 'topic');
+            assert.equal(addresses[0].allocated_to, 'broker-2');
+            assert.equal(addresses[1].address, 'baz');
+            assert.equal(addresses[1].type, 'anycast');
+            assert.equal(addresses[1].allocated_to, undefined);
+            assert.equal(addresses[2].address, 'foo');
+            assert.equal(addresses[2].type, 'queue');
+            assert.equal(addresses[2].allocated_to, 'broker-1');
             done();
         });
     });
@@ -83,12 +85,14 @@ describe('configmap backed address source', function() {
                 });
                 setTimeout(function () {
                     assert.equal(addresses.length, 2);
-                    assert.equal(addresses[0].address, 'foo');
-                    assert.equal(addresses[0].type, 'queue');
-                    assert.equal(addresses[1].address, 'bar');
-                    assert.equal(addresses[1].type, 'topic');
-                    source.watcher.close();
-                    done();
+                    //relies on sorted order (TODO: avoid relying on any order)
+                    assert.equal(addresses[0].address, 'bar');
+                    assert.equal(addresses[0].type, 'topic');
+                    assert.equal(addresses[1].address, 'foo');
+                    assert.equal(addresses[1].type, 'queue');
+                    source.watcher.close().then(function () {
+                        done();
+                    });
                 }, 100);
             }, 100);
         });
@@ -103,6 +107,27 @@ describe('configmap backed address source', function() {
                 var address = JSON.parse(configmaps.find_resource('foo').data['config.json']);
                 assert.equal(address.status.isReady, true);
                 done();
+            }).catch(done);
+        });
+    });
+    it('updates readiness after recreation', function(done) {
+        configmaps.add_address_definition({address:'foo', type:'queue'});
+        configmaps.add_address_definition({address:'bar', type:'topic'});
+        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function () {
+                configmaps.remove_resource_by_name('foo');
+                source.once('addresses_defined', function (addresses) {
+                    configmaps.add_address_definition({address:'foo', type:'queue'});
+                    source.once('addresses_defined', function (addresses) {
+                        source.watcher.close();
+                        source.check_status({foo:{propagated:100}}).then(function () {
+                            var address = JSON.parse(configmaps.find_resource('foo').data['config.json']);
+                            assert.equal(address.status.isReady, true);
+                            done();
+                        }).catch(done);
+                    });
+                });
             });
         });
     });
@@ -220,10 +245,10 @@ describe('configmap backed address source', function() {
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
             assert.equal(addresses.length, 2);
-            assert.equal(addresses[0].address, 'foo');
-            assert.equal(addresses[0].type, 'queue');
-            assert.equal(addresses[1].address, 'bar');
-            assert.equal(addresses[1].type, 'topic');
+            assert.equal(addresses[0].address, 'bar');
+            assert.equal(addresses[0].type, 'topic');
+            assert.equal(addresses[1].address, 'foo');
+            assert.equal(addresses[1].type, 'queue');
             done();
         });
     });

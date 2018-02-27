@@ -162,7 +162,7 @@ Watcher.prototype.list = function () {
         self.objects = result.items;
         self.notify();
         if (!self.closed) {
-            log.info('list retrieved; watching...');
+            log.debug('list retrieved; watching...');
             self.watch();
         } else {
             self.emit('closed');
@@ -179,7 +179,7 @@ Watcher.prototype.watch = function () {
         response.on('data', watch_handler(self));
         response.on('end', function () {
             if (!self.closed) {
-                log.info('response ended; reconnecting...');
+                log.debug('response ended; reconnecting...');
                 self.list();
             } else {
                 self.emit('closed');

@@ -189,16 +189,18 @@ items:
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
       {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "MESSAGING_CERT",
       "value": "/opt/agent/messaging-cert/tls.crt"}], "image": "${AGENT_IMAGE}", "livenessProbe":
-      {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}}, "name":
-      "agent", "ports": [{"containerPort": 8080, "name": "https"}, {"containerPort":
+      {"httpGet": {"path": "/probe", "port": "http", "scheme": "HTTP"}, "periodSeconds":
+      30, "timeoutSeconds": 5}, "name": "agent", "ports": [{"containerPort": 8888,
+      "name": "http"}, {"containerPort": 8080, "name": "https"}, {"containerPort":
       56720, "name": "amqp-ws"}], "readinessProbe": {"httpGet": {"path": "/probe",
-      "port": "https", "scheme": "HTTPS"}}, "resources": {"limits": {"memory": "128Mi"},
-      "requests": {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/console-certs",
-      "name": "console-secret", "readOnly": true}, {"mountPath": "/opt/agent/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",
-      "name": "messaging-cert", "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
-      "volumes": [{"name": "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}},
+      "port": "http", "scheme": "HTTP"}, "periodSeconds": 30, "timeoutSeconds": 5},
+      "resources": {"limits": {"memory": "512Mi"}, "requests": {"memory": "128Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/console-certs", "name": "console-secret",
+      "readOnly": true}, {"mountPath": "/opt/agent/authservice-ca", "name": "authservice-ca",
+      "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
+      "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert", "name": "messaging-cert",
+      "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}", "volumes":
+      [{"name": "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}},
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
       "admin-internal-cert", "secret": {"secretName": "admin-internal-cert"}}, {"name":
       "messaging-cert", "secret": {"secretName": "${MESSAGING_SECRET}"}}, {"configMap":
@@ -648,16 +650,18 @@ items:
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
       {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "MESSAGING_CERT",
       "value": "/opt/agent/messaging-cert/tls.crt"}], "image": "${AGENT_IMAGE}", "livenessProbe":
-      {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}}, "name":
-      "agent", "ports": [{"containerPort": 8080, "name": "https"}, {"containerPort":
+      {"httpGet": {"path": "/probe", "port": "http", "scheme": "HTTP"}, "periodSeconds":
+      30, "timeoutSeconds": 5}, "name": "agent", "ports": [{"containerPort": 8888,
+      "name": "http"}, {"containerPort": 8080, "name": "https"}, {"containerPort":
       56720, "name": "amqp-ws"}], "readinessProbe": {"httpGet": {"path": "/probe",
-      "port": "https", "scheme": "HTTPS"}}, "resources": {"limits": {"memory": "128Mi"},
-      "requests": {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/console-certs",
-      "name": "console-secret", "readOnly": true}, {"mountPath": "/opt/agent/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",
-      "name": "messaging-cert", "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
-      "volumes": [{"name": "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}},
+      "port": "http", "scheme": "HTTP"}, "periodSeconds": 30, "timeoutSeconds": 5},
+      "resources": {"limits": {"memory": "512Mi"}, "requests": {"memory": "128Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/console-certs", "name": "console-secret",
+      "readOnly": true}, {"mountPath": "/opt/agent/authservice-ca", "name": "authservice-ca",
+      "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
+      "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert", "name": "messaging-cert",
+      "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}", "volumes":
+      [{"name": "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}},
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
       "admin-internal-cert", "secret": {"secretName": "admin-internal-cert"}}, {"name":
       "messaging-cert", "secret": {"secretName": "${MESSAGING_SECRET}"}}, {"configMap":

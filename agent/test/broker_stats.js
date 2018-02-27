@@ -296,6 +296,7 @@ describe('broker stats', function() {
                     stats._retrieve().then(function (new_results) {
                         assert.equal(new_results.myqueue.depth, 10);
                         assert.equal(new_results.myqueue.shards.length, 1);
+                        stats.watcher.close();
                         done();
                     });
                 });
