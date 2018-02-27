@@ -8,6 +8,7 @@ pipeline {
     environment {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
+        PLANS_JOB_NAME = 'enmasse-master-plans'
         MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
@@ -83,7 +84,7 @@ pipeline {
                 ACTUAL_COMMIT = readFile('actual-commit.file')
             }
             steps {
-                build job: env.STANDARD_JOB_NAME, wait: false, parameters:
+                build job: env.PLANS_JOB_NAME, wait: false, parameters:
                         [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
