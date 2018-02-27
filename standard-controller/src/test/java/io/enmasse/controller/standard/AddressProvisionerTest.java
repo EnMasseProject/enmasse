@@ -4,9 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.EndpointAddress;
@@ -15,10 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static io.enmasse.address.model.Status.Phase.Pending;
 import static junit.framework.TestCase.assertTrue;
@@ -29,21 +24,29 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class AddressProvisionerTest {
-    private AddressProvisioner provisioner;
     private BrokerSetGenerator generator;
     private Kubernetes kubernetes;
 
     @Before
     public void setup() {
-        StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
-
-        AddressResolver resolver = new AddressResolver(standardControllerSchema.getSchema(), standardControllerSchema.getType());
-
         generator = mock(BrokerSetGenerator.class);
         kubernetes = mock(Kubernetes.class);
+    }
+
+    private AddressProvisioner createProvisioner() {
+        StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
+        AddressResolver resolver = new AddressResolver(standardControllerSchema.getSchema(), standardControllerSchema.getType());
         EventLogger logger = mock(EventLogger.class);
 
-        provisioner = new AddressProvisioner(resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger);
+        return new AddressProvisioner(resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger);
+    }
+
+    private AddressProvisioner createProvisioner(List<ResourceAllowance> resourceAllowances) {
+        StandardControllerSchema standardControllerSchema = new StandardControllerSchema(resourceAllowances);
+        AddressResolver resolver = new AddressResolver(standardControllerSchema.getSchema(), standardControllerSchema.getType());
+        EventLogger logger = mock(EventLogger.class);
+
+        return new AddressProvisioner(resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger);
     }
 
     @Test
@@ -54,6 +57,7 @@ public class AddressProvisionerTest {
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
+        AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         assertThat(usageMap.size(), is(1));
@@ -110,6 +114,8 @@ public class AddressProvisionerTest {
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "br2")
                 .build());
+
+        AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address largeQueue = new Address.Builder()
@@ -127,11 +133,30 @@ public class AddressProvisionerTest {
                 .setType("queue")
                 .setPlan("small-queue")
                 .build();
-        System.out.println(usageMap);
         provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(smallQueue));
 
 
         assertThat(provisionMap.size(), is(1));
+    }
+
+    @Test
+    public void testQuotaCheckMany() {
+        Set<Address> addresses = new HashSet<>();
+        for (int i = 0; i < 200; i++) {
+            addresses.add(new Address.Builder()
+                    .setAddress("a" + i)
+                    .setPlan("small-anycast")
+                    .setType("anycast")
+                    .build());
+        }
+
+
+        AddressProvisioner provisioner = createProvisioner();
+
+        Map<String, Map<String, Double>> usageMap = new HashMap<>();
+        Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, addresses);
+
+        assertThat(provisionMap.size(), is(5));
     }
 
     @Test
@@ -149,6 +174,7 @@ public class AddressProvisionerTest {
                 .build());
 
 
+        AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = new Address.Builder()
@@ -189,6 +215,7 @@ public class AddressProvisionerTest {
                 .build());
 
 
+        AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = new Address.Builder()
@@ -218,6 +245,7 @@ public class AddressProvisionerTest {
                 .build());
 
 
+        AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = new Address.Builder()
@@ -233,5 +261,33 @@ public class AddressProvisionerTest {
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(queue.getAnnotations().get(AnnotationKeys.BROKER_ID));
+    }
+
+    @Test
+    public void testScalingRouter() {
+        Set<Address> addresses = new HashSet<>();
+        for (int i = 0; i < 199; i++) {
+            addresses.add(new Address.Builder()
+                    .setAddress("a" + i)
+                    .setPlan("small-anycast")
+                    .setType("anycast")
+                    .build());
+        }
+
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 0, 0),
+                new ResourceAllowance("router", 0, 100000),
+                new ResourceAllowance("aggregate", 0, 100000)));
+
+        Map<String, Map<String, Double>> usageMap = new HashMap<>();
+        Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, addresses);
+
+        System.out.println(provisionMap);
+
+        provisioner.provisionResources(usageMap, provisionMap);
+
+        verify(kubernetes, atLeast(1)).scaleDeployment(eq("qdrouterd"), eq(40));
+        verify(kubernetes, never()).scaleDeployment(eq("qdrouterd"), eq(41));
     }
 }

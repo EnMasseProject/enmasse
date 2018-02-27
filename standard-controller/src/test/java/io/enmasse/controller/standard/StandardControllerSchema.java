@@ -7,6 +7,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class StandardControllerSchema {
 
@@ -15,12 +16,16 @@ public class StandardControllerSchema {
     private Schema schema;
 
     public StandardControllerSchema() {
+        this(Arrays.asList(new ResourceAllowance("router", 0.0, 1.0),
+                new ResourceAllowance("broker", 0.0, 3.0),
+                new ResourceAllowance("aggregate", 0.0, 3.0)));
+
+    }
+
+    public StandardControllerSchema(List<ResourceAllowance> resourceAllowanceList) {
         plan = new AddressSpacePlan.Builder()
                 .setName("plan1")
-                .setResources(Arrays.asList(
-                        new ResourceAllowance("router", 0.0, 1.0),
-                        new ResourceAllowance("broker", 0.0, 3.0),
-                        new ResourceAllowance("aggregate", 0.0, 3.0)))
+                .setResources(resourceAllowanceList)
                 .setAddressSpaceType("standard")
                 .setAddressPlans(Arrays.asList(
                         "small-anycast",
@@ -42,7 +47,7 @@ public class StandardControllerSchema {
                                         .setName("small-anycast")
                                         .setAddressType("anycast")
                                         .setRequestedResources(Arrays.asList(
-                                                new ResourceRequest("router", 0.2)))
+                                                new ResourceRequest("router", 0.2000000000)))
                                         .build()))
                                 .build(),
                         new AddressType.Builder()

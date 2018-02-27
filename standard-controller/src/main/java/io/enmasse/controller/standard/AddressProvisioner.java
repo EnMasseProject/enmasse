@@ -7,7 +7,6 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.address.model.KubeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,37 +37,53 @@ public class AddressProvisioner {
     /**
      * Computes the resource usage for a set of addresses
      */
-    public Map<String,Map<String, Double>> checkUsage(Set<Address> addressSet) {
+    public Map<String, Map<String, Double>> checkUsage(Set<Address> addressSet) {
         Map<String, Map<String, Double>> usageMap = new HashMap<>();
 
         for (Address address : addressSet) {
-            AddressType addressType = addressResolver.getType(address);
-            AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
-
-            for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-                String brokerId = getBrokerId(address).orElse("all");
-                if (resourceRequest.getResourceName().equals("router")) {
-                    brokerId = "all";
-                }
-                Map<String, Double> resourceUsage = usageMap.computeIfAbsent(resourceRequest.getResourceName(), k -> new HashMap<>());
-                double current = resourceUsage.getOrDefault(brokerId, 0.0);
-                resourceUsage.put(brokerId, current + resourceRequest.getAmount());
-            }
+            addToUsage(usageMap, address);
         }
         return usageMap;
+    }
+
+    private void addToUsage(Map<String, Map<String, Double>> usageMap, Address address) {
+        AddressType addressType = addressResolver.getType(address);
+        AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
+
+        for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
+            String brokerId = getBrokerId(address).orElse("all");
+            if (resourceRequest.getResourceName().equals("router")) {
+                brokerId = "all";
+            }
+            Map<String, Double> resourceUsage = usageMap.computeIfAbsent(resourceRequest.getResourceName(), k -> new HashMap<>());
+            double current = resourceUsage.getOrDefault(brokerId, 0.0);
+            resourceUsage.put(brokerId, current + resourceRequest.getAmount());
+        }
     }
 
     public Map<Address, Map<String, Double>> checkQuota(Map<String, Map<String, Double>> usageMap, Set<Address> addressSet) {
         Map<Address, Map<String, Double>> neededPerAddressMap = new HashMap<>();
         Map<String, Double> limits = computeLimits();
+        Map<String, Map<String, Double>> newUsageMap = copyUsageMap(usageMap);
         for (Address address : addressSet) {
-            Map<String, Double> neededMap = checkQuotaForAddress(limits, usageMap, address);
-            if (neededMap == null) {
-                continue;
+            Map<String, Double> neededMap = checkQuotaForAddress(limits, newUsageMap, address);
+            if (neededMap != null) {
+                addToUsage(newUsageMap, address);
+                neededPerAddressMap.put(address, neededMap);
             }
-            neededPerAddressMap.put(address, neededMap);
         }
         return neededPerAddressMap;
+    }
+
+    private static Map<String, Map<String, Double>> copyUsageMap(Map<String, Map<String, Double>> usageMap) {
+        Map<String, Map<String, Double>> newUsageMap = new HashMap<>();
+        for (Map.Entry<String, Map<String, Double>> entry : usageMap.entrySet()) {
+            newUsageMap.put(entry.getKey(), new HashMap<>());
+            for (Map.Entry<String, Double> innerEntry : entry.getValue().entrySet()) {
+                newUsageMap.get(entry.getKey()).put(innerEntry.getKey(), innerEntry.getValue());
+            }
+        }
+        return newUsageMap;
     }
 
     private Map<String, Double> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, Double>> usageMap, Address address) {
@@ -101,7 +116,7 @@ public class AddressProvisioner {
             }
         }
 
-        log.info("usage: {}, needed: {}, aggregate: {}", usageMap, neededMap, limits);
+        log.info("address: {}, usage: {}, needed: {}, aggregate: {}", address.getAddress(), usageMap, neededMap, limits);
         if (sumTotal(usageMap) + sumMap(neededMap) > limits.get("aggregate")) {
             address.getStatus().setPhase(Status.Phase.Pending);
             address.getStatus().appendMessage("Quota exceeded");
@@ -117,7 +132,6 @@ public class AddressProvisioner {
                 totalUsage += value;
             }
         }
-        log.info("Total usage: {}", totalUsage);
         return totalUsage;
     }
 
@@ -126,7 +140,6 @@ public class AddressProvisioner {
         for (double value : resourceUsage.values()) {
             used += value;
         }
-        log.info("Sum map: {}", used);
         return used;
     }
 
@@ -135,7 +148,6 @@ public class AddressProvisioner {
         for (double value : resourceUsage.values()) {
             minUsed = Math.min(minUsed, value);
         }
-        log.info("Min used: {}", minUsed);
         return minUsed;
     }
 
@@ -156,13 +168,19 @@ public class AddressProvisioner {
     }
 
     public void provisionResources(Map<String, Map<String, Double>> usageMap, Map<Address, Map<String, Double>> neededMap) {
+        Map<String, Map<String, Double>> newUsageMap = copyUsageMap(usageMap);
+
         for (Map.Entry<Address, Map<String, Double>> entry : neededMap.entrySet()) {
-            provisionResources(usageMap, entry.getValue(), entry.getKey());
+            Address address = entry.getKey();
+            // Update usage map if provisioning was successful
+            if (provisionResources(newUsageMap, entry.getValue(), address)) {
+                addToUsage(newUsageMap, address);
+            }
         }
 
     }
 
-    private void provisionResources(Map<String, Map<String, Double>> usageMap, Map<String, Double> neededMap, Address address) {
+    private boolean provisionResources(Map<String, Map<String, Double>> usageMap, Map<String, Double> neededMap, Address address) {
 
         AddressType addressType = addressResolver.getType(address);
         AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
@@ -172,28 +190,36 @@ public class AddressProvisioner {
             Map<String, Double> resourceUsage = usageMap.getOrDefault(resourceRequest.getResourceName(), new HashMap<>());
             boolean success = false;
             if ("router".equals(resourceRequest.getResourceName())) {
+                double sumUsage = sumMap(resourceUsage);
+                double needed = neededMap.get(resourceRequest.getResourceName());
                 int required = (int) Math.ceil(
-                        sumMap(resourceUsage)
-                        + neededMap.get(resourceRequest.getResourceName()));
+                        sumUsage
+                        + needed);
 
-                log.info("Require {} routers", required);
+                log.info("Require ceil(usage({}) + needed({})) = {} routers", sumUsage, needed, required);
                 success = provisionRouter(required);
             } else if ("broker".equals(resourceRequest.getResourceName()) && resourceRequest.getAmount() < 1) {
-                int required = (int) Math.ceil(sumMap(resourceUsage)
-                        - resourceUsage.getOrDefault("all", 0.0)
-                        + neededMap.get(resourceRequest.getResourceName()));
+                double sumUsage = sumMap(resourceUsage);
+                double shardedUsage = resourceUsage.getOrDefault("all", 0.0);
+                double needed = neededMap.get(resourceRequest.getResourceName());
+                int required = (int) Math.ceil(sumUsage
+                        - shardedUsage
+                        + needed);
 
-                log.info("Require {} pooled brokers", required);
+                log.info("Require ceil(usage({}) - sharded({}) + needed({})) = {} pooled brokers", sumUsage, shardedUsage, needed, required);
                 ResourceDefinition resourceDefinition = addressResolver.getResourceDefinition(addressPlan, resourceRequest.getResourceName());
                 success = provisionBroker(resourceRequest.getResourceName(), resourceDefinition, required, null);
                 if (success) {
                     success = scheduleAddress(resourceRequest.getResourceName(), address, resourceUsage, resourceRequest.getAmount());
                 }
             } else if ("broker".equals(resourceRequest.getResourceName())) {
-                int required = (int) Math.ceil(resourceUsage.getOrDefault("all", 0.0)
-                        + neededMap.get(resourceRequest.getResourceName()));
+                double sumUsage = resourceUsage.getOrDefault("all", 0.0);
+                double needed = neededMap.get(resourceRequest.getResourceName());
+                int required = (int) Math.ceil(
+                        sumUsage
+                        + needed);
 
-                log.info("Require {} sharded brokers", required);
+                log.info("Require ceil(usage({}) + needed({})) = {} sharded brokers", sumUsage, needed, required);
                 ResourceDefinition resourceDefinition = addressResolver.getResourceDefinition(addressPlan, resourceRequest.getResourceName());
                 success = provisionBroker(address.getName(), resourceDefinition, required, address);
             }
@@ -205,8 +231,10 @@ public class AddressProvisioner {
 
         if (numOk < addressPlan.getRequiredResources().size()) {
             log.warn("Error provisioning resources for {}", address);
+            return false;
         } else {
             address.getStatus().setPhase(Status.Phase.Configuring);
+            return true;
         }
     }
 
