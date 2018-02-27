@@ -281,10 +281,14 @@ objects:
             livenessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
+              periodSeconds: 30
+              timeoutSeconds: 5
             name: agent
             ports:
+            - containerPort: 8888
+              name: http
             - containerPort: 8080
               name: https
             - containerPort: 56720
@@ -292,11 +296,13 @@ objects:
             readinessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
+              periodSeconds: 30
+              timeoutSeconds: 5
             resources:
               limits:
-                memory: 128Mi
+                memory: 512Mi
               requests:
                 memory: 128Mi
             volumeMounts:
@@ -1600,10 +1606,14 @@ objects:
             livenessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
+              periodSeconds: 30
+              timeoutSeconds: 5
             name: agent
             ports:
+            - containerPort: 8888
+              name: http
             - containerPort: 8080
               name: https
             - containerPort: 56720
@@ -1611,11 +1621,13 @@ objects:
             readinessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
+              periodSeconds: 30
+              timeoutSeconds: 5
             resources:
               limits:
-                memory: 128Mi
+                memory: 512Mi
               requests:
                 memory: 128Mi
             volumeMounts:

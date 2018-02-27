@@ -17,19 +17,33 @@
 
 var util = require("util");
 var events = require("events");
-var futurejs = require("./future.js");
+var qdr = require("./qdr.js");
 var myutils = require("./utils.js");
 var log = require("./log.js").logger();
 
-/**
- * A KnownRouter instance represents routers this process knows about
- * but is not directly connected to (or responsible for).
- */
-var KnownRouter = function (container_id, listeners) {
-    this.container_id = container_id;
-    this.listeners = listeners;
-};
+function create_record(names, values) {
+    var record = {};
+    for (var j = 0; j < names.length; j++) {
+        record[names[j]] = values[j];
+    }
+    return record;
+}
 
+function has_inter_router_role (record) {
+    return record.role === 'inter-router';
+}
+
+function to_host_port (record) {
+    return record.host + ':' + record.port;
+}
+
+function by_name (o) {
+    return o.name;
+}
+
+function not_overridden (o) {
+    return o.name.indexOf('override') !== 0;
+}
 
 function address_equivalence(a, b) {
     if (a === undefined) return b === undefined;
@@ -42,32 +56,36 @@ function link_route_equivalence(a, b) {
 }
 
 /**
+ * A KnownRouter instance represents routers this process knows about
+ * but is not directly connected to (or responsible for).
+ */
+var KnownRouter = function (container_id, listeners) {
+    this.container_id = container_id;
+    this.listeners = listeners;
+};
+
+/**
  * A ConnectedRouter represents a router this process is connected to
- * and is therefore resonsbile for configuring.
+ * and is therefore resonsible for configuring.
  */
 var ConnectedRouter = function (connection) {
     events.EventEmitter.call(this);
-    this.connection = connection;
     this.container_id = connection.container_id;
     this.listeners = undefined;
     this.connectors = undefined;
     this.addresses = {};
     this.initial_provisioning_completed = false;
+    this.addresses_synchronized = false;
 
-    //management client:
-    this.sender = connection.open_sender('$management');
-    this.counter = 0;
-    this.requests = {};
-    connection.open_receiver({source:{dynamic:true}});
-    connection.on('receiver_open', this.init.bind(this));
-    connection.on('message', this.incoming.bind(this));
-    connection.on('disconnected', this.closed.bind(this));
-    connection.on('connection_close', this.closed.bind(this));
-
+    this.router_mgmt = new qdr.Router(connection);
     this.update_types = {
         address: {add: this.define_address_and_autolinks.bind(this), remove: this.delete_address_and_autolinks.bind(this), equivalence: address_equivalence},
         link_route: {add: this.define_link_route.bind(this), remove: this.delete_link_route.bind(this), equivalence: link_route_equivalence}
     };
+    var self = this;
+    connection.on('receiver_open', function () {
+        self.emit('ready', self);
+    });
 };
 
 util.inherits(ConnectedRouter, events.EventEmitter);
@@ -81,15 +99,6 @@ function remove_current(set) {
 function has_listener(host_port) {
     return this.listeners && this.listeners.indexOf(host_port) !== -1;
 }
-
-ConnectedRouter.prototype.closed = function (context) {
-    var e = context.connection.get_error();
-    if (e) {
-        log.info('ERROR: connection with router lost due to: ' + e);
-    }
-    this.connection = undefined;
-    this.sender = undefined;
-};
 
 ConnectedRouter.prototype.has_connector_to = function (router) {
     return this.connectors && this.connectors.some(has_listener.bind(router));
@@ -119,7 +128,6 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
         remove_current.call(router, stale);
     }
     stale = Object.keys(stale);
-    log.info('checking connectors on router ' + this.container_id + ', missing=' + missing + ', stale=' + stale);
 
     var num_connectors = 1;
     if (process.env.ROUTER_NUM_CONNECTORS) {
@@ -128,12 +136,21 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
     var do_create = this.forall_connectors.bind(this, num_connectors, this.create_connector.bind(this));
     var do_delete = this.forall_connectors.bind(this, num_connectors, this.delete_connector.bind(this));
     var work = missing.map(do_create).concat(stale.map(do_delete));
+    var self = this;
     if (work.length) {
+        log.info('[%s] checking connectors on router, missing=%j, stale=%j', this.container_id, missing, stale);
         //if made changes, requery when they are complete
-        work.reduce(futurejs.and).then(this.on_connectors_updated.bind(this));
+        Promise.all(work).then(function () {
+            self.retrieve_connectors();
+        }).catch(function (error) {
+            log.warn('[%s] error on updating connectors: %s', self.container_id, error);
+            self.retrieve_connectors();
+        });
         //prevent any updates to connectors until we have re-retrieved
         //them from router after updates:
         this.connectors = undefined;
+    } else {
+        log.info('[%s] fully connected', this.container_id);
     }
 };
 
@@ -182,7 +199,7 @@ ConnectedRouter.prototype.verify_addresses = function (expected) {
 
 ConnectedRouter.prototype.sync_addresses = function (desired) {
     if (this.addresses === undefined || this.link_routes === undefined) {
-        log.info('router ' + this.container_id + ' is not ready for address check');
+        log.info('[%s] router is not ready for address check', this.container_id);
         return;
     }
     var topics = {};
@@ -192,9 +209,18 @@ ConnectedRouter.prototype.sync_addresses = function (desired) {
     var work = update(this.addresses, others, this.update_types.address);
     work = work.concat(update(this.link_routes, to_link_routes(myutils.values(topics)), this.update_types.link_route));
 
+    var self = this;
     if (work.length) {
+        this.addresses_synchronized = false;
+        log.info('[%s] updating addresses...', self.container_id);
         //if made changes, requery when they are complete
-        work.reduce(futurejs.and).then(this.on_addresses_updated.bind(this));
+        Promise.all(work).then(function () {
+            log.info('[%s] addresses updated', self.container_id);
+            self.retrieve_addresses();
+        }).catch(function (error) {
+            log.warn('[%s] error on updating addresses: %s', self.container_id, error);
+            self.retrieve_addresses();
+        });
         //prevent any updates to addresses until we have re-retrieved
         //them from router after updates:
         this.addresses = undefined;
@@ -204,17 +230,12 @@ ConnectedRouter.prototype.sync_addresses = function (desired) {
             this.initial_provisioning_completed = true;
             this.emit('provisioned', this);
         }
+        if (!this.addresses_synchronized) {
+            this.addresses_synchronized = true;
+            log.info('[%s] addresses synchronized', self.container_id);
+        }
     }
 };
-
-ConnectedRouter.prototype.init = function (context) {
-    this.address = context.receiver.remote.attach.source.address;
-    this.emit('ready', this);
-};
-
-function created(message) { if (message.application_properties.statusCode !== 201) return message.application_properties.statusDescription; };
-
-function deleted(message) { if (message.application_properties.statusCode !== 204) return message.application_properties.statusDescription; };
 
 ConnectedRouter.prototype.forall_connectors = function (num_connectors, connector_operation, host_port) {
     var futures = [];
@@ -222,23 +243,19 @@ ConnectedRouter.prototype.forall_connectors = function (num_connectors, connecto
         var connector_name = host_port + "-" + i;
         futures.push(connector_operation(host_port, connector_name));
     }
-    return futures.reduce(futurejs.and)
+    return Promise.all(futures);
 }
 
 ConnectedRouter.prototype.create_connector = function (host_port, connector_name) {
-    var future = futurejs.future(created);
+    log.info('[%s] creating connector %s to %s', this.container_id, connector_name, host_port);
     var parts = host_port.split(':');
-    log.info('creating connector ' + connector_name + ' to ' + host_port + ' on router ' + this.container_id);
-    this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1],
-                                                     sslProfile:'ssl_internal_details', verifyHostName:'no'}, future.as_callback());
-    return future;
+    return this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1],
+                                                            sslProfile:'ssl_internal_details', verifyHostName:'no'});
 };
 
 ConnectedRouter.prototype.delete_connector = function (host_port, connector_name) {
-    var future = futurejs.future(deleted);
-    log.info('deleting connector to ' + connector_name + ' on router ' + this.container_id);
-    this.delete_entity('connector', connector_name, future.as_callback());
-    return future;
+    log.info('[%s] deleting connector %s to %s', this.container_id, connector_name, host_port);
+    return this.delete_entity('connector', connector_name);
 };
 
 function actual_distribution(address) {
@@ -251,214 +268,115 @@ function from_router_address(address) {
 
 ConnectedRouter.prototype.define_address_and_autolinks = function (address) {
     if (address.store_and_forward) {
-        return futurejs.and(this.define_address(address),
-                            futurejs.and(this.define_autolink(address, "in"),
-                                         this.define_autolink(address, "out")));
+        return Promise.all([this.define_address(address), this.define_autolink(address, "in"), this.define_autolink(address, "out")]);
     } else {
         return this.define_address(address);
     }
 }
 
-ConnectedRouter.prototype.define_address = function (address) {
-    var future = futurejs.future(created);
-    var dist = address.multicast ? "multicast" : "balanced";
-    log.info('defining address ' + address.name + ' on router ' + this.container_id);
-    this.create_entity('org.apache.qpid.dispatch.router.config.address', address.name, {prefix:address.name, distribution:dist, waypoint:address.store_and_forward}, future.as_callback());
-    return future;
-};
-
-ConnectedRouter.prototype.delete_address = function (address) {
-    var future = futurejs.future(deleted);
-    log.info('deleting address ' + address.name + ' on router ' + this.container_id);
-    this.delete_entity('org.apache.qpid.dispatch.router.config.address', address.name, future.as_callback());
-    return future;
-};
-
-ConnectedRouter.prototype.define_autolink = function (address, direction) {
-    var future = futurejs.future(created);
-    var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
-    log.info('defining autolink for ' + address.name + ' in direction ' + direction + ' on router ' + this.container_id);
-    var brokerId = address.allocated_to || address.name;
-    this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:brokerId}, future.as_callback());
-    return future;
-}
-
-ConnectedRouter.prototype.delete_autolink = function (address, direction) {
-    var future = futurejs.future(created);
-    var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
-    log.info('deleting autolink for ' + address.name + ' in direction ' + direction + ' on router ' + this.container_id);
-    this.delete_entity('org.apache.qpid.dispatch.router.config.autoLink', name, future.as_callback());
-    return future;
-}
-
 ConnectedRouter.prototype.delete_address_and_autolinks = function (address) {
     if (address.store_and_forward) {
-        return futurejs.and(this.delete_address(address),
-                            futurejs.and(this.delete_autolink(address, "in"),
-                                         this.delete_autolink(address, "out")));
+        return Promise.all([this.delete_address(address), this.delete_autolink(address, "in"), this.delete_autolink(address, "out")]);
     } else {
         return this.delete_address(address);
     }
 }
 
+ConnectedRouter.prototype.define_address = function (address) {
+    var dist = address.multicast ? "multicast" : "balanced";
+    log.info('[%s] defining address %s', this.container_id, address.name);
+    return this.router_mgmt.create_address({name:address.name, prefix:address.name, distribution:dist, waypoint:address.store_and_forward});
+};
+
+ConnectedRouter.prototype.delete_address = function (address) {
+    log.info('[%s] deleting address %s', this.container_id, address.name);
+    return this.router_mgmt.delete_address(address);
+};
+
+ConnectedRouter.prototype.define_autolink = function (address, direction) {
+    var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
+    log.info('[%s] defining %s autolink for %s', this.container_id, direction, address.name);
+    var brokerId = address.allocated_to || address.name;
+    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:brokerId});
+}
+
+ConnectedRouter.prototype.delete_autolink = function (address, direction) {
+    var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
+    log.info('[%s] deleting %s autolink for %s', this.container_id, direction, address.name);
+    return this.delete_entity('org.apache.qpid.dispatch.router.config.autoLink', name);
+}
+
 ConnectedRouter.prototype.define_link_route = function (route) {
-    var future = futurejs.future(created);
-    log.info('defining ' + route.dir + ' link route ' + route.prefix + ' on router ' + this.container_id);
+    log.info('[%s] defining %s link route %s', this.container_id, route.dir, route.prefix);
     var props = {'prefix':route.prefix, dir:route.dir};
     if (route.containerId) props.containerId = route.containerId;
-    this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, props, future.as_callback());
-    return future;
+    return this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, props);
 };
 
 ConnectedRouter.prototype.delete_link_route = function (route) {
-    var future = futurejs.future(deleted);
-    log.info('deleting ' + route.dir + ' link route ' + route.prefix + ' on router ' + this.container_id);
-    this.delete_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, future.as_callback());
-    return future;
+    log.info('[%s] deleting %s link route %s', this.container_id, route.dir, route.prefix);
+    return this.delete_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name);
 };
 
 ConnectedRouter.prototype.retrieve_listeners = function () {
-    this.query('listener', {attributeNames:['identity', 'name', 'host', 'port', 'role']});
+    var self = this;
+    return this.query('listener', {attributeNames:['identity', 'name', 'host', 'port', 'role']}).then(function (results) {
+        self.listeners = results.filter(has_inter_router_role).map(to_host_port);
+        log.debug('[%s] retrieved listeners: %j', self.container_id, self.listeners);
+        self.emit('listeners_updated', self);
+    }).catch(function (error) {
+        log.warn('[%s] failed to retrieve listeners: %s', self.container_id, error);
+        return self.retrieve_listeners();
+    });
 };
 
 ConnectedRouter.prototype.retrieve_connectors = function () {
-    this.query('connector', {attributeNames:['identity', 'name', 'host', 'port', 'role']});
+    var self = this;
+    return this.query('connector', {attributeNames:['identity', 'name', 'host', 'port', 'role']}).then(function (results) {
+        self.connectors = results.filter(has_inter_router_role).map(to_host_port);
+        log.debug('[%s] retrieved connectors: %j', self.container_id, self.connectors);
+        self.emit('connectors_updated', self);
+    }).catch(function (error) {
+        log.warn('[%s] failed to retrieve connectors: %s', self.container_id, error);
+        return self.retrieve_connectors();
+    });
 };
 
 ConnectedRouter.prototype.retrieve_addresses = function () {
-    this.query('org.apache.qpid.dispatch.router.config.address', {attributeNames:[]}, this.on_query_address_response.bind(this));
+    var self = this;
+    return this.query('org.apache.qpid.dispatch.router.config.address', {attributeNames:[]}).then(function (results) {
+        self.addresses = myutils.index(results.filter(not_overridden), by_name, from_router_address);
+        log.debug('[%s] retrieved addresses: %j', self.container_id, self.addresses);
+        return self.retrieve_link_routes();
+    }).catch(function (error) {
+        log.warn('[%s] failed to retrieve addresses: %s', self.container_id, error);
+        return self.retrieve_addresses();
+    });
+
 };
 
 ConnectedRouter.prototype.retrieve_link_routes = function () {
-    this.query('org.apache.qpid.dispatch.router.config.linkRoute', undefined, this.on_query_link_route_response.bind(this));
-};
-
-ConnectedRouter.prototype.on_connectors_updated = function (error) {
-    if (error) log.info('error on updating connectors for ' + this.container_id + ': ' + error);
-    this.retrieve_connectors();
-};
-
-ConnectedRouter.prototype.on_addresses_updated = function (error) {
-    if (error) log.info('error on updating addresses for ' + this.container_id + ': ' + error);
-    else log.info('addresses updated for ' + this.container_id);
-    this.retrieve_addresses();
-};
-
-ConnectedRouter.prototype.request = function (operation, properties, body, callback) {
-    if (this.sender) {
-        this.counter++;
-        var id = this.counter.toString();
-        var req = {reply_to:this.address, correlation_id:id};
-        req.application_properties = properties || {};
-        req.application_properties.operation = operation;
-        req.body = body;
-        this.requests[id] = callback;
-        this.sender.send(req);
-    }
-};
-
-ConnectedRouter.prototype._get_callback = function (operation, type) {
-    return this['on_' + operation + '_' + type + '_response'].bind(this);
-};
-
-ConnectedRouter.prototype.query = function (type, options, callback) {
-    this.request('QUERY', {entityType:type}, options || {attributeNames:[]}, callback || this._get_callback('query', type));
-};
-
-ConnectedRouter.prototype.create_entity = function (type, name, attributes, callback) {
-    this.request('CREATE', {'type':type, 'name':name}, attributes, callback);
-};
-
-ConnectedRouter.prototype.delete_entity = function (type, name, callback) {
-    this.request('DELETE', {'type':type, 'name':name}, {}, callback);
-};
-
-function create_record(names, values) {
-    var record = {};
-    for (var j = 0; j < names.length; j++) {
-        record[names[j]] = values[j];
-    }
-    return record;
-}
-
-function extract_records(body) {
-    return (body && body.results) ? body.results.map(create_record.bind(null, body.attributeNames)) : [];
-}
-
-function has_inter_router_role (record) {
-    return record.role === 'inter-router';
-}
-
-function to_host_port (record) {
-    return record.host + ':' + record.port;
-}
-
-ConnectedRouter.prototype.on_query_connector_response = function (message) {
-    if (message.application_properties.statusCode == 200) {
-        this.connectors = extract_records(message.body).filter(has_inter_router_role).map(to_host_port);
-        log.info('retrieved connectors for ' + this.container_id + ': ' + this.connectors);
-        this.emit('connectors_updated', this);
-    } else {
-        log.info('failed to retrieve connectors for ' + this.container_id + ': ' + message.statusDescription);
-        this.retrieve_connectors();
-    }
-};
-
-ConnectedRouter.prototype.on_query_listener_response = function (message) {
-    if (message.application_properties.statusCode == 200) {
-        this.listeners = extract_records(message.body).filter(has_inter_router_role).map(to_host_port);
-        log.info('retrieved listeners for ' + this.container_id + ': ' + this.listeners);
-        this.emit('listeners_updated', this);
-    } else {
-        log.info('failed to retrieve listeners for ' + this.container_id + ': ' + message.statusDescription);
-        this.retrieve_listeners();
-    }
-};
-
-function by_name (o) {
-    return o.name;
-}
-
-ConnectedRouter.prototype.on_query_address_response = function (message) {
-    if (message.application_properties.statusCode == 200) {
-        var address_records = extract_records(message.body).filter(not_overridden);
-        this.addresses = myutils.index(address_records, by_name, from_router_address);
-        log.info('retrieved addresses for ' + this.container_id + ': ' + JSON.stringify(this.addresses));
+    var self = this;
+    return this.query('org.apache.qpid.dispatch.router.config.linkRoute').then(function (records) {
+        self.link_routes = myutils.index(records.filter(not_overridden), by_name);
+        log.debug('[%s] retrieved link routes: %j', self.container_id, self.link_routes);
+        self.emit('addresses_updated', self);
+    }).catch(function (error) {
+        log.warn('[%s] failed to retrieve link routes: %s', self.container_id, error);
         this.retrieve_link_routes();
-    } else {
-        log.info('failed to retrieve addresses for ' + this.container_id + ': ' + message.statusDescription);
-        this.retrieve_addresses();
-    }
+    });
 };
 
-function not_overridden (o) {
-    return o.name.indexOf('override') !== 0;
-}
-
-ConnectedRouter.prototype.on_query_link_route_response = function (message) {
-    if (message.application_properties.statusCode == 200) {
-        var records = extract_records(message.body);
-        log.info('retrieved link routes for ' + this.container_id + ': raw-> ' + JSON.stringify(records));
-        this.link_routes = myutils.index(records.filter(not_overridden), by_name);
-        //this.link_routes = myutils.index(extract_records(message.body).filter(not_overridden), by_name);
-        log.info('retrieved link routes for ' + this.container_id + ': ' + JSON.stringify(this.link_routes));
-        this.emit('addresses_updated', this);
-    } else {
-        log.info('failed to retrieve link routes for ' + this.container_id + ': ' + message.statusDescription);
-        this.retrieve_link_routes();
-    }
+ConnectedRouter.prototype.query = function (type, options) {
+    return this.router_mgmt.query(type, options);
 };
 
-ConnectedRouter.prototype.incoming = function (context) {
-    //log.info('Got message: ' + JSON.stringify(context.message));
-    var message = context.message;
-    var handler = this.requests[message.correlation_id];
-    if (handler) {
-        delete this.requests[message.correlation_id];
-        handler(message);
-    } else {
-        log.info('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
-    }
+ConnectedRouter.prototype.create_entity = function (type, name, attributes) {
+    return this.router_mgmt.create_entity(type, name, attributes);
+};
+
+ConnectedRouter.prototype.delete_entity = function (type, name) {
+    return this.router_mgmt.delete_entity(type, name);
 };
 
 module.exports = {

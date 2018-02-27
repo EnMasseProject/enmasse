@@ -116,6 +116,42 @@ describe('broker controller', function() {
             controller.retrieve_stats()
         ]).then(function () {
             done();
-        });
+        }).catch(done);
+    });
+    function generate_address_list(count, allowed_types) {
+        var types = allowed_types || ['anycast', 'multicast', 'queue', 'topic'];
+        var list = [];
+        for (var i = 0; i < count; i++) {
+            list.push({address:util.format('address-%s', (i+1)), type:types[i % types.length]});
+        }
+        return list;
+    }
+
+    it('creates lots of queues', function(done) {
+        this.timeout(15000);
+        var desired = generate_address_list(2000, ['queue']);
+        controller._sync_addresses(desired).then(function () {
+            controller.close();
+            broker.verify_addresses(desired);
+            done();
+        }).catch(done);
+    });
+    it('creates lots of topics', function(done) {
+        this.timeout(15000);
+        var desired = generate_address_list(2000, ['topic']);
+        controller._sync_addresses(desired).then(function () {
+            controller.close();
+            broker.verify_addresses(desired);
+            done();
+        }).catch(done);
+    });
+    it('creates lots of queues and topics', function(done) {
+        this.timeout(15000);
+        var desired = generate_address_list(2000, ['queue', 'topic']);
+        controller._sync_addresses(desired).then(function () {
+            controller.close();
+            broker.verify_addresses(desired);
+            done();
+        }).catch(done);
     });
 });

@@ -52,6 +52,7 @@ MockRouter.prototype.create_object = function (type, name, attributes)
     this.objects[type][name] = (attributes === undefined) ? {} : attributes;
     this.objects[type][name].name = name;
     this.objects[type][name].id = name;
+    //console.log('[%s] create_object(%s, %s, %j)', this.name, type, name, attributes);
 };
 
 MockRouter.prototype.delete_object = function (type, name)

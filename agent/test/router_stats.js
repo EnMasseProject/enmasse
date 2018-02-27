@@ -47,8 +47,8 @@ DummyConn.prototype.receiver = function (address, details, phase) {
 };
 
 function StatsBuilder (router) {
-    this.conn_names = new NameGenerator('conn');
-    this.link_names = new NameGenerator('link');
+    this.conn_names = new NameGenerator(router.name + '-conn');
+    this.link_names = new NameGenerator(router.name + '-link');
     this.router = router;
 }
 
@@ -193,7 +193,7 @@ MockRouter.prototype.on_message = function (context)
 {
     var request = context.message;
     var node = this;
-    var target = context.receiver.remote.attach.target.address;
+    var target = context.message.to || context.receiver.remote.attach.target.address;
     if (target !== '$management' && this.nodes[target]) {
         node = this.nodes[target];
     }
@@ -367,7 +367,7 @@ describe('router stats', function() {
             assert.equal(results.addresses.foo.outcomes.egress.links.length, 4);
 
             done();
-        });
+        }).catch(done);
     });
     it('retrieves stats for a queue from multiple routers', function(done) {
         add_router_nodes(2);
@@ -397,7 +397,7 @@ describe('router stats', function() {
             assert.equal(results.addresses.foo.messages_in, 90);
             assert.equal(results.addresses.foo.messages_out, 55);
             done();
-        });
+        }).catch(done);
     });
     it('retrieves propagation for a topic from a single router', function(done) {
         //populate router:

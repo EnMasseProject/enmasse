@@ -27,12 +27,16 @@ function BrokerController(event_sink) {
     this.check_in_progress = false;
     this.post_event = event_sink || function (event) { log.info('event: %j', event); };
     this.serial_sync = require('./utils.js').serialize(this._sync_broker_addresses.bind(this));
+    this.addresses_synchronized = false;
+    this.busy_count = 0;
+    this.retrieve_count = 0;
+    this.last_retrieval = undefined;
 };
 
 util.inherits(BrokerController, events.EventEmitter);
 
 BrokerController.prototype.start_polling = function (poll_frequency) {
-    setInterval(this.check_broker_addresses.bind(this), poll_frequency || 5000);//poll broker stats every 5 secs by default
+    this.polling = setInterval(this.check_broker_addresses.bind(this), poll_frequency || 5000);//poll broker stats every 5 secs by default
 };
 
 BrokerController.prototype.connect = function (options) {
@@ -42,21 +46,25 @@ BrokerController.prototype.connect = function (options) {
 };
 
 BrokerController.prototype.close = function () {
+    if (this.polling) {
+        clearInterval(this.polling);
+        this.polling = undefined;
+    }
     return this.broker.close();
 };
 
 BrokerController.prototype.on_connection_open = function (context) {
     this.broker = new artemis.Artemis(context.connection);
     this.id = context.connection.container_id;
-    log.info('connected to %s', context.connection.container_id);
+    log.info('[%s] broker controller ready', this.id);
     this.check_broker_addresses();
     this.emit('ready');
 };
 
 BrokerController.prototype.set_connection = function (connection) {
     this.broker = new artemis.Artemis(connection);
-    log.info('connected to %s', connection.container_id);
     this.id = connection.container_id;
+    log.info('[%s] broker controller ready', this.id);
 };
 
 BrokerController.prototype.addresses_defined = function (addresses) {
@@ -218,12 +226,24 @@ BrokerController.prototype.retrieve_stats = function () {
                     connection_stats[c].messages_in = connection_stats[c].senders.reduce(function (total, sender) { return total + sender.deliveries; }, 0);
                 }
 
+                self.retrieve_count++;
+                var now = Date.now();
+                if (self.last_retrieval === undefined) {
+                    log.info('[%s] broker stats retrieved (%d)', self.id, self.retrieve_count);
+                } else {
+                    var interval = now - self.last_retrieval;
+                    if (interval >= 60000) {
+                        log.info('[%s] broker stats retrieved %d times in last %d secs', self.id, self.retrieve_count, Math.round(interval/1000));
+                        self.retrieve_count = 0;
+                    }
+                }
                 self.emit('address_stats_retrieved', address_stats);
                 self.emit('connection_stats_retrieved', connection_stats);
             }).catch(function (error) {
-                log.error('error retrieving stats: %s', error);
+                log.error('[%s] error retrieving stats: %s', self.id, error);
             });
     } else {
+        log.info('Unable to retrieve stats, no broker object');
         return Promise.resolve();
     }
 };
@@ -271,7 +291,11 @@ function translate(addresses_in, exclude) {
             log.debug('ignoring temp queue %s', a.name);
             continue;
         }
-        addresses_out[name] = {address:a.name, type: a.multicast ? 'topic' : 'queue'};
+        if (a.name) {
+            addresses_out[name] = {address:a.name, type: a.multicast ? 'topic' : 'queue'};
+        } else {
+            log.warn('Skipping address with no name: %j', a);
+        }
     }
     return addresses_out;
 }
@@ -280,24 +304,26 @@ BrokerController.prototype.delete_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         if (a.type === 'queue') {
+            log.info('[%s] Deleting queue "%s"...', self.id, a.address);
             return self.broker.destroyQueue(a.address).then(function () {
-                log.info('Deleted queue %s', a.address);
+                log.info('[%s] Deleted queue "%s"', self.id, a.address);
                 self.post_event(myevents.address_delete(a));
             }).catch(function (error) {
-                log.error('Failed to delete queue %s: %s', a.address, error);
+                log.error('[%s] Failed to delete queue %s: %s', self.id, a.address, error);
                 self.broker.deleteAddress(a.address).then(function () {
-                    log.info('Deleted anycast address %s', a.address);
+                    log.info('[%s] Deleted anycast address %s', self.id, a.address);
                 }).catch(function (error) {
-                    log.error('Failed to delete queue address %s: %s', a.address, error);
+                    log.error('[%s] Failed to delete queue address %s: %s', self.id, a.address, error);
                     self.post_event(myevents.address_failed_delete(a, error));
                 });
             });
         } else {
+            log.info('[%s] Deleting topic "%s"...', self.id, a.address);
             return self.broker.deleteAddressAndBindings(a.address).then(function () {
-                log.info('Deleted topic %s', a.address);
+                log.info('[%s] Deleted topic "%s"', self.id, a.address);
                 self.post_event(myevents.address_delete(a));
             }).catch(function (error) {
-                log.error('Failed to delete topic %s: %s', a.address, error);
+                log.error('[%s] Failed to delete topic %s: %s', self.id, a.address, error);
                 self.post_event(myevents.address_failed_delete(a, error));
             });
         }
@@ -308,19 +334,21 @@ BrokerController.prototype.create_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         if (a.type === 'queue') {
+            log.info('[%s] Creating queue "%s"...', self.id, a.address);
             return self.broker.createQueue(a.address).then(function () {
-                log.info('Created queue %s', a.address);
+                log.info('[%s] Created queue "%s"', self.id, a.address);
                 self.post_event(myevents.address_create(a));
             }).catch(function (error) {
-                log.error('Failed to create queue %s: %s', a.address, error);
+                log.error('[%s] Failed to create queue "%s": %s', self.id, a.address, error);
                 self.post_event(myevents.address_failed_create(a, error));
             });
         } else {
+            log.info('[%s] Creating topic "%s"', self.id, a.address);
             return self.broker.createAddress(a.address, {multicast:true}).then(function () {
-                log.info('Created topic %s', a.address);
+                log.info('[%s] Created topic "%s"', self.id, a.address);
                 self.post_event(myevents.address_create(a));
             }).catch(function (error) {
-                log.error('Failed to create topic %s: %s', a.address, error);
+                log.error('[%s] Failed to create topic "%s": %s', self.id, a.address, error);
                 self.post_event(myevents.address_failed_create(a, error));
             });
         }
@@ -330,23 +358,45 @@ BrokerController.prototype.create_addresses = function (addresses) {
 BrokerController.prototype.check_broker_addresses = function () {
     if (this.broker !== undefined && this.addresses !== undefined) {
         if (!this.check_in_progress) {
+            this.busy_count = 0;
             this.check_in_progress = true;
             var self = this;
             return this._sync_broker_addresses().then(function () {
                 return self.retrieve_stats().then(function () {
                     self.check_in_progress = false;
                 }).catch( function (error) {
-                    log.error('error retrieving stats: %s', error);
+                    log.error('[%s] error retrieving stats: %s', self.id, error);
                     self.check_in_progress = false;
                 });
+            }).catch (function (error) {
+                log.error('[%s] error syncing addresses: %s', self.id, error);
+                self.check_in_progress = false;
             });
         } else {
+            if (++(this.busy_count) % 10 === 0) {
+                log.info('Unable to check broker, check already in progress (%d)', this.busy_count);
+            }
             return Promise.resolve();
         }
     } else {
+        log.info('Unable to check broker (broker %s defined, addresses %s defined)', this.broker === undefined ? 'is not' : 'is', this.addresses === undefined ? 'is not' : 'is');
         return Promise.resolve();
     }
 };
+
+BrokerController.prototype._sync_addresses = function (addresses) {
+    this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
+    return this._sync_broker_addresses();
+};
+
+BrokerController.prototype._set_sync_status = function (stale, missing) {
+    var b = (stale === 0 && missing === 0);
+    if (this.addresses_synchronized !== b) {
+        if (b) log.info('[%s] addresses are synchronized', this.id);
+        else log.info('[%s] addresses synchronizing (%d to delete, %d to create)', this.id, stale, missing);
+    }
+    this.addresses_synchronized = b;
+}
 
 BrokerController.prototype._sync_broker_addresses = function () {
     var self = this;
@@ -354,11 +404,15 @@ BrokerController.prototype._sync_broker_addresses = function () {
         var actual = translate(results, excluded_addresses)
         var stale = values(difference(actual, self.addresses, same_address)).map(address_and_type);
         var missing = values(difference(self.addresses, actual, same_address)).map(address_and_type);
-        log.debug('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses).map(address_and_type), values(actual), stale, missing);
+        log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual), stale, missing);
+        self._set_sync_status(stale.length, missing.length);
         return self.delete_addresses(stale).then(
             function () {
                 return self.create_addresses(missing);
             });
+    }).catch(function (e) {
+        console.log('[%s] failed to retrieve addresses: %s', self.id, e);
+        log.error('[%s] failed to retrieve addresses: %s', self.id, e);
     });
 };
 

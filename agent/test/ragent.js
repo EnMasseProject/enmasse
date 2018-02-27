@@ -48,7 +48,7 @@ function remove(list, predicate) {
 
 function verify_topic(name, all_linkroutes, containerId) {
     var linkroutes = remove(all_linkroutes, function (o) { return o.prefix === name; });
-    assert.equal(linkroutes.length, 2);
+    assert.equal(linkroutes.length, 2, 'no link routes found for topic ' + name);
     assert.equal(linkroutes[0].prefix, name);
     assert.equal(linkroutes[1].prefix, name);
     if (containerId) {
@@ -71,7 +71,7 @@ function verify_queue(name, all_addresses, all_autolinks, containerId) {
     assert.equal(addresses[0].waypoint, true);
 
     var autolinks = remove(all_autolinks, function (o) { return o.addr === name; });
-    assert.equal(autolinks.length, 2);
+    assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
     assert.equal(autolinks[0].addr, name);
     assert.equal(autolinks[1].addr, name);
     assert.equal(autolinks[0].containerId, containerId || name);
@@ -278,6 +278,15 @@ HealthChecker.prototype._send_request = function (request) {
     }
 };
 
+function generate_address_list(count, allowed_types) {
+    var types = allowed_types || ['anycast', 'multicast', 'queue', 'topic'];
+    var list = [];
+    for (var i = 0; i < count; i++) {
+        list.push({address:util.format('address-%s', (i+1)), type:types[i % types.length]});
+    }
+    return list;
+}
+
 describe('basic router configuration', function() {
     this.timeout(5000);
     var ragent;
@@ -302,7 +311,7 @@ describe('basic router configuration', function() {
         return routers.new_router(name);
     }
 
-    function multi_router_address_test(count, address_list, verification, initial_config) {
+    function multi_router_address_test(count, address_list, verification, initial_config, propagation_wait) {
         return function(done) {
             var routers = [];
             for (var i = 0; i < count; i++) {
@@ -313,16 +322,16 @@ describe('basic router configuration', function() {
             setTimeout(function () {
                 verification ? verification(routers, address_list) : verify_addresses(address_list, routers);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }, propagation_wait || 1000);//TODO: add ability to be notified of propagation in some way
         };
     }
 
-    function simple_address_test(address_list, verification, initial_config) {
+    function simple_address_test(address_list, verification, initial_config, propagation_wait) {
         return multi_router_address_test(1, address_list, function (routers, address_list) {
             verification ? verification(routers[0], address_list) : verify_addresses(address_list, routers[0]);
         }, function (routers) {
             if (initial_config) initial_config(routers[0]);
-        });
+        }, propagation_wait);
     }
 
     it('configures a single anycast address', simple_address_test([{address:'foo',type:'anycast'}]));
@@ -540,6 +549,11 @@ describe('basic router configuration', function() {
         };
         router.special = f.bind(router);
     }));
+    it('configures large number of anycast addresses', simple_address_test(generate_address_list(2000, ['anycast']), undefined, undefined, 2000));
+    it('configures large number of multicast addresses', simple_address_test(generate_address_list(2000, ['multicast']), undefined, undefined, 2000));
+    it('configures large number of queues', simple_address_test(generate_address_list(2000, ['queue']), undefined, undefined, 4000));
+    it('configures large number of topics', simple_address_test(generate_address_list(2000, ['topic']), undefined, undefined, 4000));
+    it('configures large number of mixed addresses', simple_address_test(generate_address_list(2000), undefined, undefined, 4000));
 });
 
 function localpath(name) {
@@ -551,12 +565,13 @@ describe('configuration from configmaps', function() {
     var ragent;
     var address_source;
     var routers;
+    var watcher;
 
     beforeEach(function(done) {
         address_source = new ConfigMapServer();
         address_source.listen(0).on('listening', function () {
             ragent = new Ragent();
-            ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
+            watcher = ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
             ragent.listen({port:0}).on('listening', function (){
                 routers = new RouterList(ragent.server.address().port);
                 done();
@@ -565,10 +580,12 @@ describe('configuration from configmaps', function() {
     });
 
     afterEach(function(done) {
-        routers.close().then(function () {
-            ragent.server.close();
-            address_source.close();
-            done();
+        watcher.close().then(function () {
+            routers.close().then(function () {
+                ragent.server.close();
+                address_source.close();
+                done();
+            });
         });
     });
 
@@ -640,6 +657,7 @@ RouterGroup.prototype.listen = function () {
 RouterGroup.prototype.close = function () {
     var self = this;
     return this.routers.close().then(function () {
+        if (self.ragent.watcher) self.ragent.watcher.close();
         self.ragent.server.close();
     });
 };
@@ -850,12 +868,13 @@ describe('run method', function() {
     var ragent;
     var address_source = mock_address_source([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
     var routers;
+    var watcher;
 
     beforeEach(function(done) {
         address_source.listen(0).on('listening', function() {
             var env =  {'AMQP_PORT':0, 'port':address_source.port, token:'foo', namespace:'default'};
             ragent = new Ragent();
-            ragent.run(env, function (port) {
+            watcher = ragent.run(env, function (port) {
                 routers = new RouterList(port);
                 done();
             });
@@ -863,6 +882,7 @@ describe('run method', function() {
     });
 
     afterEach(function(done) {
+        watcher.close();
         ragent.server.close();
         address_source.close();
         done();
@@ -942,13 +962,14 @@ describe('broker configuration', function() {
     var routers;
     var port;
     var connections;
+    var watcher;
 
     beforeEach(function(done) {
         address_source = new ConfigMapServer();
         connections = [];
         address_source.listen(0).on('listening', function () {
             ragent = new Ragent();
-            ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
+            watcher = ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
             ragent.listen({port:0}).on('listening', function (){
                 port = ragent.server.address().port;
                 routers = new RouterList(ragent.server.address().port);
@@ -958,10 +979,11 @@ describe('broker configuration', function() {
     });
 
     afterEach(function(done) {
+        watcher.close();
+        connections.forEach(function (c) { c.close(); });
         routers.close().then(function () {
             ragent.server.close();
             address_source.close();
-            connections.forEach(function (c) { c.close(); });
             done();
         });
     });
@@ -990,7 +1012,7 @@ describe('broker configuration', function() {
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 done();
             }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        });
+        }).catch(done);
     });
 
     it('deletes queues from associated brokers', function (done) {
@@ -1034,5 +1056,26 @@ describe('broker configuration', function() {
                 }, 500);
             }, 200);
         });
+    });
+
+    it('creates lots of queues on associated brokers', function (done) {
+        this.timeout(15000);
+        var router = routers.new_router();
+        var broker_a = new MockBroker('broker_a');
+        var broker_b = new MockBroker('broker_b');
+        Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
+            var desired = generate_address_list(2000, ['queue']);
+            desired.forEach(function (a, i) {
+                a.allocated_to = i % 2 ? 'broker_a' : 'broker_b';
+                address_source.add_address_definition(a, undefined, {'enmasse.io/broker-id': a.allocated_to});
+            });
+            setTimeout(function () {
+                verify_addresses(desired, router);
+                //verify queues on respective brokers:
+                broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_a'; }));
+                broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_b'; }));
+                done();
+            }, 12000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
 });

@@ -22,18 +22,6 @@ var kubernetes = require('./kubernetes.js');
 var log = require('./log.js').logger();
 var myutils = require('./utils.js');
 
-function AddressSource(address_space, config) {
-    this.address_space = address_space;
-    this.config = config || {};
-    var options = myutils.merge({selector: 'type=address-config'}, this.config);
-    events.EventEmitter.call(this);
-    this.watcher = kubernetes.watch('configmaps', options);
-    this.watcher.on('updated', this.updated.bind(this));
-    this.readiness = {};
-}
-
-util.inherits(AddressSource, events.EventEmitter);
-
 function extract_address(object) {
     try {
         return JSON.parse(object.data['config.json']);
@@ -67,27 +55,102 @@ function ready (addr) {
     return addr && addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
-AddressSource.prototype.dispatch = function (name, object) {
-    log.info('%s: %j', name, object);
-    this.emit(name, object);
+function same_address_definition(a, b) {
+    return a.address === b.address && a.type === b.type && a.allocated_to === b.allocated_to;
+}
+
+function same_address_status(a, b) {
+    if (a === undefined) return b === undefined;
+    return a.isReady === b.isReady && a.phase === b.phase && a.message === b.message;
+}
+
+function same_address_definition_and_status(a, b) {
+    return same_address_definition(a, b) && same_address_status(a.status, b.status);
+}
+
+function address_compare(a, b) {
+    return myutils.string_compare(a.address, b.address);
+}
+
+function configmap_compare(a, b) {
+    return myutils.string_compare(a.metadata.name, b.metadata.name);
+}
+
+function by_address(a) {
+    return a.address;
+}
+
+function description(list) {
+    const max = 5;
+    if (list.length > max) {
+        return list.slice(0, max).map(by_address).join(', ') + ' and ' + (list.length - max) + ' more';
+    } else {
+        return JSON.stringify(list.map(by_address));
+    }
+}
+
+function AddressSource(address_space, config) {
+    this.address_space = address_space;
+    this.config = config || {};
+    var options = myutils.merge({selector: 'type=address-config'}, this.config);
+    events.EventEmitter.call(this);
+    this.watcher = kubernetes.watch('configmaps', options);
+    this.watcher.on('updated', this.updated.bind(this));
+    this.readiness = {};
+    this.last = {};
+}
+
+util.inherits(AddressSource, events.EventEmitter);
+
+AddressSource.prototype.get_changes = function (name, addresses, unchanged) {
+    var c = myutils.changes(this.last[name], addresses, address_compare, unchanged, description);
+    this.last[name] = addresses;
+    return c;
 };
 
+AddressSource.prototype.dispatch = function (name, addresses, description) {
+    log.info('%s: %s', name, description);
+    this.emit(name, addresses);
+};
 
-AddressSource.prototype.update_readiness = function (objects) {
-    var self = this;
-    this.readiness = objects.reduce(function (map, configmap) {
-        var address = extract_address_field(configmap);
-        map[address] = self.readiness[address] || {ready: false, address: address};
-        map[address].name = configmap.metadata.name;
-        return map;
-    }, {});
+AddressSource.prototype.dispatch_if_changed = function (name, addresses, unchanged) {
+    var changes = this.get_changes(name, addresses, unchanged);
+    if (changes) {
+        this.dispatch(name, addresses, changes.description);
+    }
+};
+
+AddressSource.prototype.add_readiness_record = function (definition) {
+    var record = this.readiness[definition.address];
+    if (record === undefined) {
+        record = {ready: false, address: definition.address, name: definition.name};
+        this.readiness[definition.address] = record;
+    }
+};
+
+AddressSource.prototype.delete_readiness_record = function (definition) {
+    delete this.readiness[definition.address];
+};
+
+AddressSource.prototype.update_readiness = function (changes) {
+    if (changes.added.length > 0) {
+        changes.added.forEach(this.add_readiness_record.bind(this));
+    }
+    if (changes.removed.length > 0) {
+        changes.removed.forEach(this.delete_readiness_record.bind(this));
+    }
 };
 
 AddressSource.prototype.updated = function (objects) {
+    objects.sort(configmap_compare);
     log.debug('addresses updated: %j', objects);
-    this.update_readiness(objects);
-    this.dispatch('addresses_defined', objects.map(extract_address).filter(is_defined).map(extract_spec));
-    this.dispatch('addresses_ready', objects.map(extract_address).filter(ready).map(extract_spec));
+    var addresses = objects.map(extract_address).filter(is_defined).map(extract_spec);
+    var changes = this.get_changes('addresses_defined', addresses, same_address_definition_and_status);
+    if (changes) {
+        this.update_readiness(changes);
+        this.dispatch('addresses_defined', addresses, changes.description);
+        this.dispatch_if_changed('addresses_ready', objects.map(extract_address).filter(ready).map(extract_spec), same_address_definition);
+    }
 };
 
 AddressSource.prototype.update_status = function (record, ready) {
@@ -108,7 +171,7 @@ AddressSource.prototype.update_status = function (record, ready) {
     return kubernetes.update('configmaps/' + record.name, update, this.config).then(function (result) {
         if (result === 200) {
             record.ready = ready;
-            log.info('updated status for %j: %s', record, result);
+            log.info('updated status for %s to %s: %s', record.address, record.ready, result);
         } else if (result === 304) {
             record.ready = ready;
             log.debug('no need to update status for %j: %s', record, result);
@@ -121,13 +184,27 @@ AddressSource.prototype.update_status = function (record, ready) {
 };
 
 AddressSource.prototype.check_status = function (address_stats) {
-    for (var address in address_stats) {
+    var results = [];
+    for (var address in this.readiness) {
         var record = this.readiness[address];
-        var ready = address_stats[address].propagated === 100;
-        if (record !== undefined && ready !== record.ready) {
-            return this.update_status(record, ready);
+        var stats = address_stats[address];
+        if (stats === undefined) {
+            log.info('no stats supplied for %s (%s)', address, record.ready);
+        } else {
+            if (!record.ready) {
+                if (stats.propagated === 100) {
+                    log.info('%s is now ready', address);
+                    results.push(this.update_status(record, true));
+                }
+            } else {
+                if (stats.propagated !== 100) {
+                    log.info('%s is no longer ready', address);
+                    results.push(this.update_status(record, false));
+                }
+            }
         }
     }
+    return Promise.all(results);
 };
 
 function get_configmap_name_for_address(address) {
