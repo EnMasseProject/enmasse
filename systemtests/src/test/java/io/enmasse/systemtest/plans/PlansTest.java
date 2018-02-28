@@ -186,7 +186,7 @@ public class PlansTest extends TestBase {
 
         getAddresses.clear();
         try {
-            appendAddresses(addressSpace, notAllowedDest.toArray(new Destination[0]));
+            appendAddresses(addressSpace, new TimeoutBudget(2, TimeUnit.MINUTES), notAllowedDest.toArray(new Destination[0]));
         } catch (IllegalStateException ex) {
             if (!ex.getMessage().contains("addresses are not ready") && !ex.getMessage().contains("Unable to find")) {
                 throw ex;
