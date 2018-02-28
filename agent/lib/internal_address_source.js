@@ -44,23 +44,15 @@ function extract_address(object) {
 }
 
 function extract_spec(def) {
-    try {
-        if (def.spec === undefined) {
-            console.error('no spec found on %j', def);
-        }
-        var o = myutils.merge(def.spec, {status:def.status});
-        o.name = def.metadata ? def.metadata.name : def.address;
-        if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
-            o.allocated_to = def.metadata.annotations['enmasse.io/broker-id'];
-        }
-        return o;
-    } catch (e) {
-        console.error('Failed to parse config.json for address: %s %j', e, object);
+    if (def.spec === undefined) {
+        console.error('no spec found on %j', def);
     }
-}
-
-function extract_address_spec(object) {
-    return extract_spec(extract_address(object));
+    var o = myutils.merge(def.spec, {status:def.status});
+    o.name = def.metadata ? def.metadata.name : def.address;
+    if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
+        o.allocated_to = def.metadata.annotations['enmasse.io/broker-id'];
+    }
+    return o;
 }
 
 function extract_address_field(object) {
@@ -68,8 +60,12 @@ function extract_address_field(object) {
     return def && def.spec ? def.spec.address : undefined;
 }
 
+function is_defined (addr) {
+    return addr !== undefined;
+}
+
 function ready (addr) {
-    return addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
+    return addr && addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
 AddressSource.prototype.dispatch = function (name, object) {
@@ -91,7 +87,7 @@ AddressSource.prototype.update_readiness = function (objects) {
 AddressSource.prototype.updated = function (objects) {
     log.debug('addresses updated: %j', objects);
     this.update_readiness(objects);
-    this.dispatch('addresses_defined', objects.map(extract_address_spec));
+    this.dispatch('addresses_defined', objects.map(extract_address).filter(is_defined).map(extract_spec));
     this.dispatch('addresses_ready', objects.map(extract_address).filter(ready).map(extract_spec));
 };
 

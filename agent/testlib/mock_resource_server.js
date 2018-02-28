@@ -320,8 +320,8 @@ function ConfigMapServer () {
 
 util.inherits(ConfigMapServer, ResourceServer);
 
-function get_config_map(name, type, key, content) {
-    var cm = {
+function get_empty_config_map(name, type) {
+    return {
         kind:'ConfigMap',
         metadata: {
             name: name,
@@ -331,6 +331,10 @@ function get_config_map(name, type, key, content) {
         },
         data:{}
     };
+}
+
+function get_config_map(name, type, key, content) {
+    var cm = get_empty_config_map(name, type);
     cm.data[key] = JSON.stringify(content);
     return cm;
 }
@@ -342,6 +346,12 @@ ConfigMapServer.prototype.add_address_definition = function (def, name, annotati
     }
     address.status = status || { phase: 'Active' };
     this.add_resource(get_config_map(name || def.address, 'address-config', 'config.json', address));
+};
+
+ConfigMapServer.prototype.add_config_map = function (name, type, data) {
+    var cm = get_empty_config_map(name, type);
+    cm.data = data;
+    this.add_resource(cm);
 };
 
 ConfigMapServer.prototype.add_address_definitions = function (defs) {
