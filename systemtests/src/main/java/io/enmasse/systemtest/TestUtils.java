@@ -194,9 +194,6 @@ public class TestUtils {
                     groups.add(destination.getDeployment());
                 }
             }
-            int expectedPods = kubernetes.getExpectedPods(addressSpace.getPlan()) + groups.size();
-            log.info("Waiting for " + expectedPods + " pods");
-            waitForExpectedPods(kubernetes, addressSpace, expectedPods, budget);
         }
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }

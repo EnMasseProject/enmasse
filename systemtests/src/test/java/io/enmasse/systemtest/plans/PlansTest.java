@@ -172,6 +172,10 @@ public class PlansTest extends TestBase {
     private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest)
             throws Exception {
 
+        log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
+                Arrays.toString(allowedDest.stream().map(Destination::getName).toArray(String[]::new)),
+                Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)));
+
         setAddresses(addressSpace, allowedDest.toArray(new Destination[0]));
         List<Future<List<Address>>> getAddresses = new ArrayList<>();
         for (Destination dest : allowedDest) {
@@ -179,9 +183,10 @@ public class PlansTest extends TestBase {
         }
 
         for (Future<List<Address>> getAddress : getAddresses) {
-            List<Address> address = getAddress.get(20, TimeUnit.SECONDS);
-            String assertMessage = String.format("Address from notAllowed %s is not ready", address.get(0).getName());
-            assertEquals(assertMessage, "Active", address.get(0).getPhase());
+            Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
+            log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
+            String assertMessage = String.format("Address from notAllowed %s is not ready", address.getName());
+            assertEquals(assertMessage, "Active", address.getPhase());
         }
 
         getAddresses.clear();
@@ -198,9 +203,10 @@ public class PlansTest extends TestBase {
         }
 
         for (Future<List<Address>> getAddress : getAddresses) {
-            List<Address> address = getAddress.get(20, TimeUnit.SECONDS);
-            String assertMessage = String.format("Address from notAllowed %s is ready", address.get(0).getName());
-            assertEquals(assertMessage, "Pending", address.get(0).getPhase());
+            Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
+            log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
+            String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
+            assertEquals(assertMessage, "Pending", address.getPhase());
         }
 
         setAddresses(addressSpace);
