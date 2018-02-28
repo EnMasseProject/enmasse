@@ -185,7 +185,7 @@ public class PlansTest extends TestBase {
         for (Future<List<Address>> getAddress : getAddresses) {
             Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
             log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
-            String assertMessage = String.format("Address from notAllowed %s is not ready", address.getName());
+            String assertMessage = String.format("Address from allowed %s is not ready", address.getName());
             assertEquals(assertMessage, "Active", address.getPhase());
         }
 
@@ -193,7 +193,7 @@ public class PlansTest extends TestBase {
         try {
             appendAddresses(addressSpace, new TimeoutBudget(2, TimeUnit.MINUTES), notAllowedDest.toArray(new Destination[0]));
         } catch (IllegalStateException ex) {
-            if (!ex.getMessage().contains("addresses are not ready") && !ex.getMessage().contains("Unable to find")) {
+            if (!ex.getMessage().contains("addresses are not ready")) {
                 throw ex;
             }
         }
