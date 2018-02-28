@@ -379,9 +379,10 @@ public class TestUtils {
         String phase = status.getString("phase");
         List<String> messages = new ArrayList<>();
         try {
-            JsonArray jsonMessages = spec.getJsonArray("messages");
-            for (int i = 0; i < jsonMessages.size(); i++)
-                messages.add(jsonMessages.getString(i));
+            JsonArray jsonMessages = status.getJsonArray("messages");
+            for (int i = 0; i < jsonMessages.size(); i++) {
+                messages.add(jsonMessages.getValue(i).toString());
+            }
         } catch (Exception ignored) {
         }
         return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages);
