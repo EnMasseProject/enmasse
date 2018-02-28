@@ -69,8 +69,9 @@ public class SeleniumProvider {
     public void tearDownDrivers() {
         takeScreenShot();
         try {
-            driver.quit();
+            driver.close();
         } catch (Exception ex) {
+            driver.quit();
             log.warn("Raise warning on quit: " + ex.getMessage());
         }
         log.info("Driver is closed");

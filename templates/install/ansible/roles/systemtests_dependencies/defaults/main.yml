@@ -8,7 +8,7 @@ maven_path: "{{ maven_root_path }}/apache-maven-3.5.2/bin"
 
 # vars for webdriver taska
 webdriver_folder: "{{ systemtests_dir }}/web_driver"
-geckodriver_version: '0.18.0'
+geckodriver_version: '0.19.1'
 chromedriver_version: '2.33'
 
 # vars for dependencies taska
