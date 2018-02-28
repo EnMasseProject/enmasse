@@ -69,7 +69,7 @@ public class AddressApiClient {
         authService.put("type", authServiceType);
         spec.put("authenticationService", authService);
 
-        log.info("Following payload will be used in POST request: " + config.toString());
+        log.info("POST-address-space: path {}; body {}", addressSpacesPath, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
         doRequestNTimes(initRetry, () -> {
@@ -77,40 +77,25 @@ public class AddressApiClient {
                     .timeout(20_000)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
-                    .sendJsonObject(config, ar -> {
-                        if (ar.succeeded()) {
-                            HttpResponse<JsonObject> response = ar.result();
-                            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                                responsePromise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
-                            } else {
-                                responsePromise.complete(responseHandler(ar));
-                            }
-                        } else {
-                            log.warn("Error creating address space {}", addressSpace);
-                            responsePromise.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .sendJsonObject(config, ar -> responseHandler(ar,
+                            responsePromise,
+                            String.format("Error: create address space '%s'", addressSpace)));
             return responsePromise.get(30, TimeUnit.SECONDS);
         });
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         String path = addressSpacesPath + "/" + addressSpace.getName();
-        log.info("Following HTTP request will be used for removing address space: '{}'", path);
+        log.info("DELETE-address-space: path '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
             client.delete(endpoint.getPort(), endpoint.getHost(), path)
                     .as(BodyCodec.jsonObject())
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .timeout(20_000)
-                    .send(ar -> {
-                        if (ar.succeeded()) {
-                            responsePromise.complete(responseHandler(ar));
-                        } else {
-                            log.warn("Error deleting address space {}", addressSpace);
-                            responsePromise.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .send(ar -> responseHandler(ar,
+                            responsePromise,
+                            String.format("Error: delete address space '%s'", addressSpace)));
             return responsePromise.get(2, TimeUnit.MINUTES);
         });
     }
@@ -123,26 +108,22 @@ public class AddressApiClient {
      * @throws InterruptedException
      */
     public JsonObject getAddressSpace(String name) throws Exception {
+        String path = addressSpacesPath + "/" + name;
+        log.info("GET-address-space: path '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         return doRequestNTimes(initRetry, () -> {
-            client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath + "/" + name)
+            client.get(endpoint.getPort(), endpoint.getHost(), path)
                     .as(BodyCodec.jsonObject())
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .send(ar -> {
-                        if (ar.succeeded()) {
-                            responsePromise.complete(responseHandler(ar));
-                        } else {
-                            log.warn("Error when getting address space {}", name);
-                            responsePromise.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .send(ar -> responseHandler(ar,
+                            responsePromise,
+                            String.format("Error: get address space {}", name)));
             return responsePromise.get(30, TimeUnit.SECONDS);
         });
     }
 
     public Set<String> listAddressSpaces() throws Exception {
-        log.info("Following HTTP request will be used for getting address space:" + addressSpacesPath +
-                " with host: " + endpoint.getHost() + " with Port: " + endpoint.getPort());
+        log.info("GET-address-spaces: path {}; endpoint {}; ", addressSpacesPath, endpoint.toString());
 
         CompletableFuture<JsonObject> list = new CompletableFuture<>();
         Set<String> spaces = new HashSet<>();
@@ -151,15 +132,7 @@ public class AddressApiClient {
                     .as(BodyCodec.jsonObject())
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .timeout(20_000)
-                    .send(ar -> {
-                        if (ar.succeeded()) {
-                            JsonObject object = responseHandler(ar);
-                            list.complete(object);
-                        } else {
-                            log.warn("Failed listing address spaces", ar.cause());
-                            list.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .send(ar -> responseHandler(ar, list, "Error: get address spaces"));
             return list.get(30, TimeUnit.SECONDS);
         }).getJsonArray("items");
 
@@ -184,7 +157,7 @@ public class AddressApiClient {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName());
         path.append(addressName.isPresent() ? "/" + addressName.get() : "");
-        log.info("Following HTTP request will be used for getting address: " + path);
+        log.info("GET-addresses: path {}; ", path);
 
         return doRequestNTimes(initRetry, () -> {
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -192,14 +165,7 @@ public class AddressApiClient {
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .timeout(20_000)
-                    .send(ar -> {
-                        if (ar.succeeded()) {
-                            responsePromise.complete(responseHandler(ar));
-                        } else {
-                            log.warn("Error when getting addresses");
-                            responsePromise.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
             return responsePromise.get(30, TimeUnit.SECONDS);
         });
     }
@@ -215,27 +181,20 @@ public class AddressApiClient {
         StringBuilder path = new StringBuilder();
         for (Destination destination : destinations) {
             path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
-            doDelete(path.toString(), destination.getAddress());
+            doDelete(path.toString());
             path.setLength(0);
         }
     }
 
-    private void doDelete(String path, String addressName) throws Exception {
+    private void doDelete(String path) throws Exception {
+        log.info("DELETE-address: path {}", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
             client.delete(endpoint.getPort(), endpoint.getHost(), path)
                     .timeout(20_000)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
-                    .send(ar -> {
-                        if (ar.succeeded()) {
-                            log.info("Address {} successfully removed", addressName);
-                            responsePromise.complete(responseHandler(ar));
-                        } else {
-                            log.warn("Error during deleting addresses");
-                            responsePromise.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .send(ar -> responseHandler(ar, responsePromise, "Error: delete address"));
             return responsePromise.get(30, TimeUnit.SECONDS);
         });
     }
@@ -276,27 +235,17 @@ public class AddressApiClient {
     private void deploy(AddressSpace addressSpace, HttpMethod httpMethod, JsonObject config) throws Exception {
         StringBuilder path = new StringBuilder();
         path.append(addressPath).append("/").append(addressSpace.getName()).append("/");
+        log.info("{}-address: path {}; body: {}", httpMethod, path, config.toString());
 
-        log.info("Deploying using path {} and body: {}", path, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
             client.request(httpMethod, endpoint.getPort(), endpoint.getHost(), path.toString())
                     .timeout(20_000)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
-                    .sendJsonObject(config, ar -> {
-                        if (ar.succeeded()) {
-                            HttpResponse<JsonObject> response = ar.result();
-                            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                                responsePromise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
-                            } else {
-                                responsePromise.complete(responseHandler(ar));
-                            }
-                        } else {
-                            log.warn("Error when deploying addresses");
-                            responsePromise.completeExceptionally(ar.cause());
-                        }
-                    });
+                    .sendJsonObject(config, ar -> responseHandler(ar,
+                            responsePromise,
+                            "Error: deploy addresses"));
             return responsePromise.get(30, TimeUnit.SECONDS);
         });
     }
@@ -312,9 +261,20 @@ public class AddressApiClient {
         return responseData;
     }
 
-    private JsonObject responseHandler(AsyncResult<HttpResponse<JsonObject>> ar) {
+    private void responseHandler(AsyncResult<HttpResponse<JsonObject>> ar, CompletableFuture<JsonObject> promise,
+                                 String warnMessage) {
         try {
-            return ar.result().body();
+            if (ar.succeeded()) {
+                HttpResponse<JsonObject> response = ar.result();
+                if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                    promise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
+                } else {
+                    promise.complete(ar.result().body());
+                }
+            } else {
+                log.warn(warnMessage);
+                promise.completeExceptionally(ar.cause());
+            }
         } catch (io.vertx.core.json.DecodeException decEx) {
             if (ar.result().bodyAsString().toLowerCase().contains("application is not available")) {
                 log.warn("Address-controller is not available.", ar.cause());
