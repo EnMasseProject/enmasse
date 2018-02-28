@@ -40,6 +40,26 @@ public class GlobalLogCollector {
         collectorMap.remove(namespace);
     }
 
+    public void collectConfigMaps(String namespace) {
+        log.info("Store ConfigMaps from namespace '{}'", namespace);
+        kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
+            try {
+                Path path = Paths.get(logDir.getPath(), namespace);
+                File confMapFile = new File(
+                        Files.createDirectories(path).toFile(),
+                        configMap.getMetadata().getName());
+                log.info("log of ConfigMap '{}' will be archived with path: '{}'",
+                        configMap.getMetadata().getName(),
+                        path.toString());
+                try (BufferedWriter bf = Files.newBufferedWriter(confMapFile.toPath())) {
+                    bf.write(configMap.toString());
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
     /**
      * Collect logs from terminated pods in namespace
      */

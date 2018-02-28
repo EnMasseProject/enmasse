@@ -73,6 +73,7 @@ public abstract class TestBase extends SystemTestRunListener {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             logCollector.collectEvents(addressSpace.getNamespace());
             logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
+            logCollector.collectConfigMaps(addressSpace.getNamespace());
             addressApiClient.deleteAddressSpace(addressSpace);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
             logCollector.stopCollecting(addressSpace.getNamespace());
@@ -675,7 +676,7 @@ public abstract class TestBase extends SystemTestRunListener {
      */
     protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws Exception {
         List<KeycloakCredentials> users = new ArrayList<>();
-        if(addressSpace.getType() == AddressSpaceType.BROKERED) {
+        if (addressSpace.getType() == AddressSpaceType.BROKERED) {
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_#", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.#", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.#", "password"));
@@ -683,7 +684,7 @@ public abstract class TestBase extends SystemTestRunListener {
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.*", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_queueA*", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_topicA*", "password"));
-        }else {
+        } else {
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_*", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue*", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic*", "password"));
