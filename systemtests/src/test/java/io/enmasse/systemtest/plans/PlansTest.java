@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Category(IsolatedAddressSpace.class)
 public class PlansTest extends TestBase {
@@ -101,11 +102,13 @@ public class PlansTest extends TestBase {
         AmqpClient topicClient = amqpClientFactory.createTopicClient(weakAddressSpace);
         topicClient.getConnectOptions().setUsername(username);
         topicClient.getConnectOptions().setPassword(password);
-        TopicTest.runTopicTest(topicClient, weakQueueDest, 42);
+        TopicTest.runTopicTest(topicClient, weakTopicDest, 42);
     }
 
     @Test
     public void testQuotaLimits() throws Exception {
+        String username = "quota_user";
+        String password = "quotaPa55";
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-test1", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 0.6)));
@@ -137,6 +140,8 @@ public class PlansTest extends TestBase {
                 addressSpacePlan.getName());
         createAddressSpace(addressSpace, AuthService.STANDARD.toString());
 
+        getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
+
         //check router limits
         checkLimits(addressSpace,
                 Arrays.asList(
@@ -146,7 +151,7 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.anycast("a4", anycastPlan.getName())
-                ));
+                ), username, password);
 
         //check broker limits
         checkLimits(addressSpace,
@@ -156,7 +161,7 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.queue("q3", queuePlan.getName())
-                ));
+                ), username, password);
 
         //check aggregate limits
         checkLimits(addressSpace,
@@ -166,10 +171,10 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.topic("t3", topicPlan.getName())
-                ));
+                ), username, password);
     }
 
-    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest)
+    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, String username, String password)
             throws Exception {
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
@@ -189,6 +194,9 @@ public class PlansTest extends TestBase {
             assertEquals(assertMessage, "Active", address.getPhase());
         }
 
+        Thread.sleep(60000);
+        assertCanConnect(addressSpace, username, password, allowedDest);
+
         getAddresses.clear();
         try {
             appendAddresses(addressSpace, new TimeoutBudget(2, TimeUnit.MINUTES), notAllowedDest.toArray(new Destination[0]));
@@ -207,6 +215,7 @@ public class PlansTest extends TestBase {
             log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
             String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
             assertEquals(assertMessage, "Pending", address.getPhase());
+            assertTrue("No status message is present", address.getStatusMessages().contains("Quota exceeded"));
         }
 
         setAddresses(addressSpace);

@@ -364,6 +364,7 @@ public class TestUtils {
      * @return
      */
     private static Address getAddressObject(JsonObject addressJsonObject) {
+        log.info("Got address object: {}", addressJsonObject.toString());
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         String address = spec.getString("address");
         String type = spec.getString("type");
@@ -376,7 +377,14 @@ public class TestUtils {
         JsonObject status = addressJsonObject.getJsonObject("status");
         boolean isReady = status.getBoolean("isReady");
         String phase = status.getString("phase");
-        return new Address(addressSpaceName, address, name, type, plan, phase, isReady);
+        List<String> messages = new ArrayList<>();
+        try {
+            JsonArray jsonMessages = spec.getJsonArray("messages");
+            for (int i = 0; i < jsonMessages.size(); i++)
+                messages.add(jsonMessages.getString(i));
+        } catch (Exception ignored) {
+        }
+        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages);
     }
 
     /**

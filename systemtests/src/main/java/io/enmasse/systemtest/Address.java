@@ -4,8 +4,9 @@
  */
 package io.enmasse.systemtest;
 
-public class Address {
+import java.util.List;
 
+public class Address {
 
     private String addressSpace;
     private String address;
@@ -14,9 +15,10 @@ public class Address {
     private String plan;
     private String phase;
     private boolean isReady;
+    private List<String> statusMessages;
 
 
-    public Address(String addressSpace, String address, String name, String type, String plan, String phase, boolean isReady) {
+    public Address(String addressSpace, String address, String name, String type, String plan, String phase, boolean isReady, List<String> statusMessages) {
         this.addressSpace = addressSpace;
         this.address = address;
         this.name = name;
@@ -24,6 +26,7 @@ public class Address {
         this.plan = plan;
         this.phase = phase;
         this.isReady = isReady;
+        this.statusMessages = statusMessages;
     }
 
     public String getAddressSpace() {
@@ -52,5 +55,9 @@ public class Address {
 
     public boolean isReady() {
         return isReady;
+    }
+
+    public List<String> getStatusMessages() {
+        return statusMessages;
     }
 }
