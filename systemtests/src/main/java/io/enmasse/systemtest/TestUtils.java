@@ -194,9 +194,6 @@ public class TestUtils {
                     groups.add(destination.getDeployment());
                 }
             }
-            int expectedPods = kubernetes.getExpectedPods(addressSpace.getPlan()) + groups.size();
-            log.info("Waiting for " + expectedPods + " pods");
-            waitForExpectedPods(kubernetes, addressSpace, expectedPods, budget);
         }
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
@@ -336,7 +333,7 @@ public class TestUtils {
      * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of addresses
      */
-    private static List<Address> convertToListAddress(JsonObject htmlResponse) {
+    public static List<Address> convertToListAddress(JsonObject htmlResponse) {
         if (htmlResponse != null) {
             String kind = htmlResponse.getString("kind");
             List<Address> addresses = new ArrayList<>();
@@ -367,11 +364,28 @@ public class TestUtils {
      * @return
      */
     private static Address getAddressObject(JsonObject addressJsonObject) {
+        log.info("Got address object: {}", addressJsonObject.toString());
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         String address = spec.getString("address");
         String type = spec.getString("type");
         String plan = spec.getString("plan");
-        return new Address(address, type, plan);
+
+        JsonObject metadata = addressJsonObject.getJsonObject("metadata");
+        String name = metadata.getString("name");
+        String addressSpaceName = metadata.getString("addressSpace");
+
+        JsonObject status = addressJsonObject.getJsonObject("status");
+        boolean isReady = status.getBoolean("isReady");
+        String phase = status.getString("phase");
+        List<String> messages = new ArrayList<>();
+        try {
+            JsonArray jsonMessages = status.getJsonArray("messages");
+            for (int i = 0; i < jsonMessages.size(); i++) {
+                messages.add(jsonMessages.getValue(i).toString());
+            }
+        } catch (Exception ignored) {
+        }
+        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages);
     }
 
     /**

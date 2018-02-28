@@ -5,8 +5,6 @@
 
 package io.enmasse.systemtest;
 
-import java.util.Optional;
-
 public class Destination {
     private static final String QUEUE = "queue";
     private static final String TOPIC = "topic";
@@ -42,6 +40,14 @@ public class Destination {
 
     public static Destination multicast(String address) {
         return new Destination(address, MULTICAST, "standard-multicast");
+    }
+
+    public static Destination anycast(String address, String plan) {
+        return new Destination(address, ANYCAST, plan);
+    }
+
+    public static Destination multicast(String address, String plan) {
+        return new Destination(address, MULTICAST, plan);
     }
 
     public static boolean isQueue(Destination d) {
