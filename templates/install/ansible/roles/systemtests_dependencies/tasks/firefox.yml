@@ -1,0 +1,47 @@
+---
+# tasks file for install firefox
+- name: Check if Firefox is present
+  command: which firefox
+  register: firefox_status
+  changed_when: false
+  ignore_errors: true
+
+- name: Check to see firefox version
+  shell: 'firefox --version | grep Firefox | cut -d" " -f 3'
+  register: get_firefox_version
+  changed_when: false
+  when: (not (firefox_status|failed))
+
+- name: Set install fact
+  set_fact: firefox_needs_install=true
+  when: ((firefox_status|failed) or ((get_firefox_version.stdout is defined) and (get_firefox_version.stdout|version_compare(firefox_version,"<"))))
+
+- name: Uninstall firefox rhel
+  yum:
+    name: firefox
+    state: absent
+  ignore_errors: true
+  changed_when: false
+  when: firefox_needs_install is defined
+
+- name: Remove link for firefox
+  shell: 'unlink /usr/bin/firefox || rm -f /usr/bin/firefox'
+  ignore_errors: true
+  changed_when: false
+  when: firefox_needs_install is defined
+
+- name: download firefox
+  get_url:
+    url: "http://ftp.mozilla.org/pub/firefox/releases/{{ firefox_version }}/linux-x86_64/en-US/firefox-{{ firefox_version }}.tar.bz2"
+    dest: /usr/local
+  when: firefox_needs_install is defined
+
+- name: Extract firefox archive
+  unarchive:
+    src: "/usr/local/firefox-{{ firefox_version }}.tar.bz2"
+    dest: "/usr/local"
+  when: firefox_needs_install is defined
+
+- name: Copy firefox to /usr/bin
+  shell: 'ln -s /usr/local/firefox/firefox /usr/bin/firefox'
+  when: firefox_needs_install is defined
