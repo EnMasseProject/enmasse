@@ -112,12 +112,12 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestCannotDeleteAddresses();
     }
 
-    @Test
+    //@Test disabled due to issue: #949
     public void testViewAddresses() throws Exception {
         doTestViewAddresses();
     }
 
-    //@Test disabled due to issue #818
+    //@Test disabled due to issue #818 && #949
     public void testViewConnections() throws Exception {
         doTestViewConnections();
     }
