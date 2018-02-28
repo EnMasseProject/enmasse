@@ -27,6 +27,11 @@
     name: redhat-rpm-config
     state: present
 
+- name: Install bzip2
+  yum:
+    name: bzip2
+    state: present
+
 - name: Install python-devel
   yum:
     name: python-devel
