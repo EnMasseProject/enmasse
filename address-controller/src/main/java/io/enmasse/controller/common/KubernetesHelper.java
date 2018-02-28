@@ -102,6 +102,17 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void createNamespace(AddressSpace addressSpace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
+            JsonObject projectrequest = new JsonObject();
+            projectrequest.put("apiVersion", "v1");
+            projectrequest.put("kind", "ProjectRequest");
+
+            JsonObject metadata = new JsonObject();
+            metadata.put("name", addressSpace.getNamespace());
+            projectrequest.put("metadata", metadata);
+
+            doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getCreatedBy());
+            deleteRoleBindingRestrictions(addressSpace);
+
             client.configMaps().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(addressSpace.getUid())
@@ -114,16 +125,6 @@ public class KubernetesHelper implements Kubernetes {
                     .endMetadata()
                     .done();
 
-            JsonObject projectrequest = new JsonObject();
-            projectrequest.put("apiVersion", "v1");
-            projectrequest.put("kind", "ProjectRequest");
-
-            JsonObject metadata = new JsonObject();
-            metadata.put("name", addressSpace.getNamespace());
-            projectrequest.put("metadata", metadata);
-
-            doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getCreatedBy());
-            deleteRoleBindingRestrictions(addressSpace);
         } else {
             client.namespaces().createNew()
                     .editOrNewMetadata()
@@ -194,8 +195,8 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void deleteNamespace(NamespaceInfo namespaceInfo) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getCreatedBy());
             client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
+            doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getCreatedBy());
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
         }
