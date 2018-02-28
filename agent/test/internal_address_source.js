@@ -212,4 +212,19 @@ describe('configmap backed address source', function() {
             ).catch(done);
         });
     });
+    it('handles invalid address syntax', function(done) {
+        configmaps.add_address_definition({address:'foo', type:'queue'});
+        configmaps.add_config_map('baz', 'address-config', {'config.json': '{bad:x[!'});
+        configmaps.add_address_definition({address:'bar', type:'topic'});
+        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        source.watcher.close();//prevents watching
+        source.on('addresses_defined', function (addresses) {
+            assert.equal(addresses.length, 2);
+            assert.equal(addresses[0].address, 'foo');
+            assert.equal(addresses[0].type, 'queue');
+            assert.equal(addresses[1].address, 'bar');
+            assert.equal(addresses[1].type, 'topic');
+            done();
+        });
+    });
 });
