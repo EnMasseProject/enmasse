@@ -155,18 +155,21 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
         TestUtils.delete(addressApiClient, addressSpace, destinations);
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.deploy(addressApiClient, kubernetes, budget, addressSpace, HttpMethod.POST, destinations);
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.deploy(addressApiClient, kubernetes, budget, addressSpace, HttpMethod.PUT, destinations);
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
     protected void appendAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
