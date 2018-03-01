@@ -67,17 +67,19 @@ public class SeleniumProvider {
 
 
     public void tearDownDrivers() {
-        takeScreenShot();
-        try {
-            driver.close();
-        } catch (Exception ex) {
-            driver.quit();
-            log.warn("Raise warning on quit: " + ex.getMessage());
+        if (driver != null) {
+            takeScreenShot();
+            try {
+                driver.close();
+            } catch (Exception ex) {
+                driver.quit();
+                log.warn("Raise warning on quit: " + ex.getMessage());
+            }
+            log.info("Driver is closed");
+            driver = null;
+            angularDriver = null;
+            driverWait = null;
         }
-        log.info("Driver is closed");
-        driver = null;
-        angularDriver = null;
-        driverWait = null;
     }
 
     protected WebDriver getDriver() {
