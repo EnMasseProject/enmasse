@@ -14,7 +14,7 @@
 
 - name: Set install fact
   set_fact: firefox_needs_install=true
-  when: ((firefox_status|failed) or ((get_firefox_version.stdout is defined) and (get_firefox_version.stdout|version_compare(firefox_version,"<"))))
+  when: ((firefox_status|failed) or ((get_firefox_version.stdout is defined) and (get_firefox_version.stdout < firefox_version)))
 
 - name: Uninstall firefox rhel
   yum:
