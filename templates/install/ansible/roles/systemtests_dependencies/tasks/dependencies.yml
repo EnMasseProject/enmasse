@@ -60,6 +60,11 @@
     name: xorg-x11-server-Xvfb
     state: latest
 
+- name: install gtk
+  yum:
+    name: gtk3
+    state: latest
+
 - name: Chceck if maven is present
   command: "mvn --version || cd {{ maven_path }}"
   ignore_errors: true
