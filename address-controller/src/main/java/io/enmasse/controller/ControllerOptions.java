@@ -25,6 +25,7 @@ public final class ControllerOptions {
     private final AuthServiceInfo noneAuthService;
     private final AuthServiceInfo standardAuthService;
     private final boolean enableRbac;
+    private final boolean enableEventLogger;
 
     private final String environment;
     private final String addressControllerSa;
@@ -34,7 +35,7 @@ public final class ControllerOptions {
 
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File templateDir, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -43,6 +44,7 @@ public final class ControllerOptions {
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
         this.enableRbac = enableRbac;
+        this.enableEventLogger = enableEventLogger;
         this.environment = environment;
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
@@ -79,6 +81,10 @@ public final class ControllerOptions {
 
     public boolean isEnableRbac() {
         return enableRbac;
+    }
+
+    public boolean isEnableEventLogger() {
+        return enableEventLogger;
     }
 
     public String getEnvironment() {
@@ -123,6 +129,8 @@ public final class ControllerOptions {
 
         boolean enableRbac = getEnv(env, "ENABLE_RBAC").map(Boolean::parseBoolean).orElse(false);
 
+        boolean enableEventLogger = getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false);
+
         String environment = getEnv(env, "ENVIRONMENT").orElse("development");
 
         String addressControllerSa = getEnv(env, "ADDRESS_CONTROLLER_SA").orElse("enmasse-admin");
@@ -139,7 +147,7 @@ public final class ControllerOptions {
                 noneAuthService,
                 standardAuthService,
                 enableRbac,
-                environment,
+                enableEventLogger, environment,
                 addressControllerSa,
                 addressSpaceAdminSa,
                 wildcardCertSecret);

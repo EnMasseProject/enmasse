@@ -234,6 +234,7 @@ local prometheus = import "prometheus.jsonnet";
               "image": "${AGENT_IMAGE}",
               "env": [
                 common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
+                common.env("ENABLE_EVENT_LOGGER", "${ENABLE_EVENT_LOGGER}"),
                 common.env("ADDRESS_SPACE_TYPE", "brokered"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("CONSOLE_CERT_DIR", "/etc/console-certs"),
@@ -358,6 +359,11 @@ local prometheus = import "prometheus.jsonnet";
       {
         "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
         "description": "The hostname to use in sasl init",
+      },
+      {
+        "name": "ENABLE_EVENT_LOGGER",
+        "description": "Enable logging of kubernetes events",
+        "value": "false"
       },
       {
         "name": "ADDRESS_SPACE_ADMIN_SA",

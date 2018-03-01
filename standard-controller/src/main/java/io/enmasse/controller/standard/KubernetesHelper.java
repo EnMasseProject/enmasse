@@ -8,9 +8,9 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.ConfigMapAddressApi;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.KubeEventLogger;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -18,8 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class KubernetesHelper implements Kubernetes {
@@ -98,11 +100,6 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void delete(KubernetesList resources) {
         client.lists().delete(resources);
-    }
-
-    @Override
-    public EventLogger createEventLogger(Clock clock, String componentName) {
-        return new KubeEventLogger(client, client.getNamespace(), clock, componentName);
     }
 
     @Override

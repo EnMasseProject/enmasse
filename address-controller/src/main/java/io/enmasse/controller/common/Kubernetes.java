@@ -51,8 +51,6 @@ public interface Kubernetes {
     void addAddressSpaceRoleBindings(AddressSpace namespace);
     void addSystemImagePullerPolicy(String namespace, AddressSpace tenantNamespace);
 
-    EventLogger createEventLogger(Clock clock, String componentName);
-
     void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace);
 
     String getAddressSpaceAdminSa();

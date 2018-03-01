@@ -111,12 +111,9 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private void deprovisionUnused(Set<Address> addressSet) {
         List<AddressCluster> clusters = kubernetes.listClusters();
-        log.info("Deprovisioning unused addresses in {} clusters", clusters.size());
         for (AddressCluster cluster : clusters) {
             int numFound = 0;
-            log.info("Checking cluster with id {}", cluster.getClusterId());
             for (Address address : addressSet) {
-                log.info("Checking cluster {} against address {}", cluster.getClusterId(), address);
                 String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
                 String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
                 String name = address.getName();
@@ -133,7 +130,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     eventLogger.log(ControllerReason.BrokerDeleted, "Deleted broker " + cluster.getClusterId(), EventLogger.Type.Normal, ControllerKind.Address, cluster.getClusterId());
                 } catch (Exception e) {
                     log.warn("Error deleting cluster {}", cluster.getClusterId(), e);
-                    eventLogger.log(ControllerReason.BrokerDeleteFailed, "Error deleting broker cluster " + cluster.getClusterId(), EventLogger.Type.Warning, ControllerKind.Address, cluster.getClusterId());
+                    eventLogger.log(ControllerReason.BrokerDeleteFailed, "Error deleting broker cluster " + cluster.getClusterId() + ": " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.Address, cluster.getClusterId());
                 }
             }
         }

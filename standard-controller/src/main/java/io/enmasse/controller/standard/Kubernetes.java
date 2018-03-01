@@ -4,13 +4,12 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.k8s.api.AddressApi;
-import io.enmasse.k8s.api.EventLogger;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.time.Clock;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,6 @@ public interface Kubernetes {
     void delete(KubernetesList resources);
 
     KubernetesList processTemplate(String templateName, ParameterValue... parameterValues);
-    EventLogger createEventLogger(Clock clock, String componentName);
 
     AddressApi createAddressApi();
 

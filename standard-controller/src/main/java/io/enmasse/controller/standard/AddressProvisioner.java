@@ -287,14 +287,13 @@ public class AddressProvisioner {
             // Needs to be created
             AddressCluster cluster = clusterGenerator.generateCluster(clusterId, resourceDefinition, numReplicas, address);
             if (!cluster.getResources().getItems().isEmpty()) {
-                log.info("Creating broker set with id {} and {} replicas", cluster.getClusterId(), numReplicas);
                 kubernetes.create(cluster.getResources());
-                eventLogger.log(BrokerCreated, "Created broker", Normal, Broker, cluster.getClusterId());
+                eventLogger.log(BrokerCreated, "Created broker " + cluster.getClusterId() + " with " + numReplicas + " replicas", Normal, Broker, cluster.getClusterId());
             }
             return true;
         } catch (Exception e) {
-            log.error("Error creating broker", e);
-            eventLogger.log(BrokerCreateFailed, "Error creating broker", Warning, Broker, clusterId);
+            log.warn("Error creating broker", e);
+            eventLogger.log(BrokerCreateFailed, "Error creating broker: " + e.getMessage(), Warning, Broker, clusterId);
             address.getStatus().setPhase(Status.Phase.Failed);
             address.getStatus().appendMessage("Error creating broker: " + e.getMessage());
         }

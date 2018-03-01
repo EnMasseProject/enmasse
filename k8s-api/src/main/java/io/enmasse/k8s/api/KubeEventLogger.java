@@ -60,8 +60,9 @@ public class KubeEventLogger implements EventLogger {
                         .build();
                 kubeClient.events().inNamespace(namespace).withName(eventName).create(newEvent);
             }
+            LogEventLogger.log(log, reason, message, type, objectKind, objectName);
         } catch (KubernetesClientException e) {
-            log.warn("Error reporting event", e);
+            log.warn("Error reporting event: {}", e.getMessage());
         }
     }
 }

@@ -163,6 +163,11 @@ local storage = import "storage-template.jsonnet";
         "description": "The hostname to use in sasl init",
       },
       {
+        "name": "ENABLE_EVENT_LOGGER",
+        "description": "Enable logging of kubernetes events",
+        "value": "false"
+      },
+      {
         "name": "ADDRESS_SPACE_ADMIN_SA",
         "description": "The service account with address space admin privileges",
         "value": "address-space-admin"

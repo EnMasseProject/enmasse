@@ -32,7 +32,7 @@ local roles = import "roles.jsonnet";
     "objects": [ standardInfra.template(false, false),
                  standardInfra.template(false, true),
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [

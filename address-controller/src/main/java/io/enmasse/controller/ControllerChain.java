@@ -126,12 +126,10 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
 
         for (NamespaceInfo toRemove : actual) {
             try {
-                log.info("Deleting address space {}", toRemove);
                 kubernetes.deleteNamespace(toRemove);
                 eventLogger.log(AddressSpaceDeleted, "Deleted address space", Normal, ControllerKind.AddressSpace, toRemove.getAddressSpace());
             } catch (KubernetesClientException e) {
-                eventLogger.log(AddressSpaceDeleteFailed, e.getMessage(), Warning, ControllerKind.AddressSpace, toRemove.getAddressSpace());
-                log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
+                eventLogger.log(AddressSpaceDeleteFailed, "Error deleting namespace (may already be in progress): " + e.getMessage(), Warning, ControllerKind.AddressSpace, toRemove.getAddressSpace());
             }
         }
     }
