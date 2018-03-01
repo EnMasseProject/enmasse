@@ -1,0 +1,62 @@
+= Mapping plans to broker resource limits
+
+== Broker configuration options for both brokered and standard address space
+
+The broker supports 2 levels of configuring the amount of data stored:
+
+* global-max-size - this is specified in bytes and restricts how many bytes can be used by all addresses in sum. If not specified, the default is _half_ of the Java heap (Xmx). 
+* max-size-bytes  - this is a limit per address. If set to -1, it will be the same as global-max-size.
+
+When using the FAIL policy, the max disk usage by the broker will be proportional to the global-max-size limit. A simple experiment with sending lots of small messages show that the disk usage is approximately 1.5 times the global-max-size limit.
+
+There is a problem around a global-max-size blocking management messages. This prevents us from doing any sort of cleanup of the broker if this limit is reached. An [issue](https://issues.apache.org/jira/browse/ARTEMIS-1710) has been created for Artemis.
+
+Therefore, we need leave some headroom for the activemq.management address so that we can perform operations on the broker even if the limit is reached. 
+
+## Mapping addresses to credits
+
+The broker credits used by plans needs to correspond to some amount of bytes that can be 'reserved'
+on a broker. This means that 1 credit == global-max-size bytes. 
+
+I.e. given a global-max-size of 100Mb, we can support 10 queues (actually 9 if we want headroom for management) with credit 0.1.
+
+If we say that a broker should be able to handle 10000 addresses, that would mean the smallest queue would get a credit of 0.0001 which would correspond to a max-size-bytes of 10kB (assuming max-size-bytes 100Mb).
+
+=== Topics
+
+For topics/multicast, the broker only stores a reference for each subscription to a topic. Except for very small message sizes, the same mapping as for queues makes sense. An experiment shows that topics behave as expected:
+
+```
+msg size: 32k
+address limit: 10Mb
+
+#subscribers #messages sizeondisk (kb)
+1 316 32796
+2 315 32792
+4 314 32796
+8 311 32792
+```
+
+We could increase the credits used by a topic address slightly compared to a queue to take the extra reference bookkeeping into account just to be on the safe side.
+
+==== Durable subscriptions
+
+The space occupied on the broker will be shared among all durable subscriptions. Depending on how we model this, if we require the topic address to be created, we can charge the 'initial' cost of the queue in the topic plan. The cost of the subscription would then only be the cost of maintaining the queue with references, which is very low. 
+
+== Detecting issues
+
+Artemis supports checking the size used by a given address using management. The console can use this to provide a warning when getting close to the max limit.
+
+== Connection limits
+
+In the brokered address space, it also makes sense to limit the connection and consumer count of the broker. Connections can be limited by setting 'connectionsAllowed' in the acceptor configuration. 
+
+Some experimentation suggests that 10k connections increases the broker heap to ~1GB. The brokered address space plans are able to configure the broker memory limit, and the startup scripts of the broker can then set the connection limit based on the memory made available to the broker.
+
+== Tasks
+
+* Allow global-max-size-bytes to be configured via broker template/resource definition
+* Change agent to configure address-settings for each queue it creates and set max-size-bytes as (global-max-size * credit) - C (where C is the constant giving us headroom for management)
+* Configure address plans so that they make 'sense'
+* Configure broker address space plans to take connection limit into account.
+* Configure broker connectionsAllowed based on memory size.
