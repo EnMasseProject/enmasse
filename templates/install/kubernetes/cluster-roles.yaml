@@ -31,6 +31,7 @@ items:
     - impersonate
   - apiGroups:
     - ''
+    - apps
     - extensions
     - authorization.openshift.io
     - route.openshift.io
@@ -40,6 +41,7 @@ items:
     - events
     - policybindings
     - deployments
+    - statefulsets
     - pods
     - configmaps
     - routes

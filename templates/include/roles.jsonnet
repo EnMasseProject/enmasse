@@ -52,6 +52,7 @@
         {
           "apiGroups": [
             "",
+            "apps",
             "extensions",
             "authorization.openshift.io",
             "route.openshift.io"
@@ -62,6 +63,7 @@
             "events",
             "policybindings",
             "deployments",
+            "statefulsets",
             "pods",
             "configmaps",
             "routes",
