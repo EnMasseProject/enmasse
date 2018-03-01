@@ -59,26 +59,26 @@ items:
       "role": "agent"}, "name": "agent"}, "spec": {"replicas": 1, "strategy": {"type":
       "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "agent", "role": "agent"}}, "spec": {"containers":
-      [{"env": [{"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
-      "value": "brokered"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name":
-      "CONSOLE_CERT_DIR", "value": "/etc/console-certs"}, {"name": "MESSAGING_CERT",
-      "value": "/opt/agent/messaging-cert/tls.crt"}, {"name": "AUTHENTICATION_SERVICE_HOST",
-      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
-      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${AGENT_IMAGE}",
-      "livenessProbe": {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}},
-      "name": "agent", "ports": [{"containerPort": 8080, "name": "https"}], "readinessProbe":
-      {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}}, "volumeMounts":
-      [{"mountPath": "/opt/agent/authservice-ca", "name": "authservice-ca", "readOnly":
-      true}, {"mountPath": "/etc/console-certs", "name": "console-external-cert",
-      "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name": "agent-internal-cert",
-      "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert", "name": "messaging-cert",
-      "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}", "volumes":
-      [{"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
-      "console-external-cert", "secret": {"secretName": "${CONSOLE_SECRET}"}}, {"name":
-      "agent-internal-cert", "secret": {"secretName": "agent-internal-cert"}}, {"name":
-      "messaging-cert", "secret": {"secretName": "external-certs-messaging"}}]}}}},
+      [{"env": [{"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ENABLE_EVENT_LOGGER",
+      "value": "${ENABLE_EVENT_LOGGER}"}, {"name": "ADDRESS_SPACE_TYPE", "value":
+      "brokered"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "CONSOLE_CERT_DIR",
+      "value": "/etc/console-certs"}, {"name": "MESSAGING_CERT", "value": "/opt/agent/messaging-cert/tls.crt"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
+      "image": "${AGENT_IMAGE}", "livenessProbe": {"httpGet": {"path": "/probe", "port":
+      "https", "scheme": "HTTPS"}}, "name": "agent", "ports": [{"containerPort": 8080,
+      "name": "https"}], "readinessProbe": {"httpGet": {"path": "/probe", "port":
+      "https", "scheme": "HTTPS"}}, "volumeMounts": [{"mountPath": "/opt/agent/authservice-ca",
+      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/console-certs",
+      "name": "console-external-cert", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
+      "name": "agent-internal-cert", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",
+      "name": "messaging-cert", "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
+      "volumes": [{"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
+      {"name": "console-external-cert", "secret": {"secretName": "${CONSOLE_SECRET}"}},
+      {"name": "agent-internal-cert", "secret": {"secretName": "agent-internal-cert"}},
+      {"name": "messaging-cert", "secret": {"secretName": "external-certs-messaging"}}]}}}},
       {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
       "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "https"}, "labels": {"app": "enmasse"},
       "name": "console"}, "spec": {"ports": [{"name": "https", "port": 8081, "targetPort":
@@ -100,8 +100,9 @@ items:
       "The client cert to use as identity against authentication service", "name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname to use
       in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}, {"description":
-      "The service account with address space admin privileges", "name": "ADDRESS_SPACE_ADMIN_SA",
-      "value": "address-space-admin"}]}'
+      "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER", "value":
+      "false"}, {"description": "The service account with address space admin privileges",
+      "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
     standard-space-infra-without-mqtt.json: '{"apiVersion": "v1", "kind": "Template",
       "metadata": {"labels": {"app": "enmasse"}, "name": "standard-space-infra-without-mqtt"},
       "objects": [{"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
@@ -165,22 +166,23 @@ items:
       "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
       [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE",
-      "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
-      "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
-      "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
-      "value": "authservice-ca"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "JAVA_OPTS", "value":
-      "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
-      {"name": "MESSAGING_SECRET", "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR",
-      "value": "/enmasse-templates"}], "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe":
+      "value": "${ADDRESS_SPACE}"}, {"name": "ENABLE_EVENT_LOGGER", "value": "${ENABLE_EVENT_LOGGER}"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
+      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "JAVA_OPTS", "value": "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "MESSAGING_SECRET",
+      "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR", "value": "/enmasse-templates"}],
+      "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe": {"httpGet": {"path":
+      "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds": 30}, "name":
+      "standard-controller", "ports": [{"containerPort": 8889, "name": "http"}], "readinessProbe":
       {"httpGet": {"path": "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds":
-      30}, "name": "standard-controller", "ports": [{"containerPort": 8889, "name":
-      "http"}], "readinessProbe": {"httpGet": {"path": "/health", "port": "http",
-      "scheme": "HTTP"}, "initialDelaySeconds": 30}, "resources": {"limits": {"memory":
-      "512Mi"}, "requests": {"memory": "512Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
-      "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/enmasse-templates",
-      "name": "templates", "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      30}, "resources": {"limits": {"memory": "512Mi"}, "requests": {"memory": "512Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
+      "readOnly": true}, {"mountPath": "/enmasse-templates", "name": "templates",
+      "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
       {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
       {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
@@ -557,8 +559,9 @@ items:
       "required": true}, {"description": "The client cert to use as identity against
       authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
       "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "The service account with address space admin privileges", "name":
-      "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
+      {"description": "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER",
+      "value": "false"}, {"description": "The service account with address space admin
+      privileges", "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
     standard-space-infra.json: '{"apiVersion": "v1", "kind": "Template", "metadata":
       {"labels": {"app": "enmasse"}, "name": "standard-space-infra"}, "objects": [{"apiVersion":
       "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
@@ -622,22 +625,23 @@ items:
       "Recreate"}, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env":
       [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE",
-      "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
-      "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
-      "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
-      "value": "authservice-ca"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "JAVA_OPTS", "value":
-      "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
-      {"name": "MESSAGING_SECRET", "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR",
-      "value": "/enmasse-templates"}], "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe":
+      "value": "${ADDRESS_SPACE}"}, {"name": "ENABLE_EVENT_LOGGER", "value": "${ENABLE_EVENT_LOGGER}"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
+      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "JAVA_OPTS", "value": "-verbose:gc"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "MESSAGING_SECRET",
+      "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR", "value": "/enmasse-templates"}],
+      "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe": {"httpGet": {"path":
+      "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds": 30}, "name":
+      "standard-controller", "ports": [{"containerPort": 8889, "name": "http"}], "readinessProbe":
       {"httpGet": {"path": "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds":
-      30}, "name": "standard-controller", "ports": [{"containerPort": 8889, "name":
-      "http"}], "readinessProbe": {"httpGet": {"path": "/health", "port": "http",
-      "scheme": "HTTP"}, "initialDelaySeconds": 30}, "resources": {"limits": {"memory":
-      "512Mi"}, "requests": {"memory": "512Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
-      "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/enmasse-templates",
-      "name": "templates", "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      30}, "resources": {"limits": {"memory": "512Mi"}, "requests": {"memory": "512Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
+      "readOnly": true}, {"mountPath": "/enmasse-templates", "name": "templates",
+      "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
       {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
       {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
@@ -1057,8 +1061,9 @@ items:
       "required": true}, {"description": "The client cert to use as identity against
       authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
       "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "The service account with address space admin privileges", "name":
-      "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
+      {"description": "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER",
+      "value": "false"}, {"description": "The service account with address space admin
+      privileges", "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
   kind: ConfigMap
   metadata:
     labels:
@@ -1086,6 +1091,8 @@ items:
         containers:
         - env:
           - name: ENABLE_RBAC
+            value: 'false'
+          - name: ENABLE_EVENT_LOGGER
             value: 'false'
           - name: ENVIRONMENT
             value: development

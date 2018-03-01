@@ -212,6 +212,8 @@ objects:
               value: /etc/enmasse-certs
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
+            - name: ENABLE_EVENT_LOGGER
+              value: ${ENABLE_EVENT_LOGGER}
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -1301,6 +1303,9 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: Enable logging of kubernetes events
+    name: ENABLE_EVENT_LOGGER
+    value: 'false'
   - description: The service account with address space admin privileges
     name: ADDRESS_SPACE_ADMIN_SA
     value: address-space-admin
@@ -1511,6 +1516,8 @@ objects:
               value: /etc/enmasse-certs
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
+            - name: ENABLE_EVENT_LOGGER
+              value: ${ENABLE_EVENT_LOGGER}
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -2764,6 +2771,9 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: Enable logging of kubernetes events
+    name: ENABLE_EVENT_LOGGER
+    value: 'false'
   - description: The service account with address space admin privileges
     name: ADDRESS_SPACE_ADMIN_SA
     value: address-space-admin
@@ -2963,6 +2973,8 @@ objects:
           - env:
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
+            - name: ENABLE_EVENT_LOGGER
+              value: ${ENABLE_EVENT_LOGGER}
             - name: ADDRESS_SPACE_TYPE
               value: brokered
             - name: CERT_DIR
@@ -3069,6 +3081,9 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: Enable logging of kubernetes events
+    name: ENABLE_EVENT_LOGGER
+    value: 'false'
   - description: The service account with address space admin privileges
     name: ADDRESS_SPACE_ADMIN_SA
     value: address-space-admin
@@ -3095,6 +3110,8 @@ objects:
         - env:
           - name: ENABLE_RBAC
             value: ${ENABLE_RBAC}
+          - name: ENABLE_EVENT_LOGGER
+            value: ${ENABLE_EVENT_LOGGER}
           - name: ENVIRONMENT
             value: ${ENVIRONMENT}
           - name: ADDRESS_CONTROLLER_SA

@@ -67,13 +67,12 @@ public class AuthController implements Controller {
             if (secret == null) {
                 secret = certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
                 //put crt into address space
-                log.info("Issued addressspace ca certificates for {}", addressSpace.getName());
                 eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             }
             return secret;
         } catch (Exception e) {
             log.warn("Error issuing addressspace ca certificate", e);
-            eventLogger.log(CertCreateFailed, "Error creating certificate",Warning, ControllerKind.AddressSpace, addressSpace.getName());
+            eventLogger.log(CertCreateFailed, "Error creating certificate: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getName());
             return null;
         }
     }
@@ -90,12 +89,11 @@ public class AuthController implements Controller {
                     .collect(Collectors.toList());
 
             if (!certs.isEmpty()) {
-                log.info("Issued component certificates: {}", certs);
                 eventLogger.log(CertCreated, "Created component certificates", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             }
         } catch (Exception e) {
             log.warn("Error issuing component certificates", e);
-            eventLogger.log(CertCreateFailed, "Error creating component certificates", Warning, ControllerKind.AddressSpace, addressSpace.getName());
+            eventLogger.log(CertCreateFailed, "Error creating component certificates: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getName());
         }
     }
 

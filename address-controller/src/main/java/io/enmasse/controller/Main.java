@@ -41,7 +41,8 @@ public class Main extends AbstractVerticle {
     public void start(Future<Void> startPromise) {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-        EventLogger eventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller");
+        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
+                : new LogEventLogger();
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);

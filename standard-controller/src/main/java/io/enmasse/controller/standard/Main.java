@@ -4,9 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.k8s.api.ConfigMapSchemaApi;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.k8s.api.*;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
@@ -43,7 +41,9 @@ public class Main {
         Kubernetes kubernetes = new KubernetesHelper(new DefaultOpenShiftClient(), templateDir);
         BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace);
 
-        EventLogger eventLogger = kubernetes.createEventLogger(Clock.systemUTC(), "standard-controller");
+        boolean enableEventLogger = Boolean.parseBoolean(getEnv(env, "ENABLE_EVENT_LOGGER").orElse("false"));
+        EventLogger eventLogger = enableEventLogger ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
+                : new LogEventLogger();
 
 
         AddressController addressController = new AddressController(

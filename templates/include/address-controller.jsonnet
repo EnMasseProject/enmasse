@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("restapi-external", "LoadBalancer", {}),
 
-  deployment(image, template_config, cert_secret, environment, enable_rbac, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret)::
+  deployment(image, template_config, cert_secret, environment, enable_rbac, enable_event_logger, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -67,6 +67,7 @@ local common = import "common.jsonnet";
                 "name": "address-controller",
                 "env": [
                   common.env("ENABLE_RBAC", enable_rbac),
+                  common.env("ENABLE_EVENT_LOGGER", enable_event_logger),
                   common.env("ENVIRONMENT", environment),
                   common.env("ADDRESS_CONTROLLER_SA", address_controller_sa),
                   common.env("ADDRESS_SPACE_ADMIN_SA", address_space_admin_sa),

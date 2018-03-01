@@ -14,6 +14,7 @@ import io.enmasse.k8s.api.KubeEventLogger;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonArray;
@@ -185,11 +186,6 @@ public class KubernetesHelper implements Kubernetes {
                     .endSubject()
                     .done();
         }
-    }
-
-    @Override
-    public EventLogger createEventLogger(Clock clock, String componentName) {
-        return new KubeEventLogger(client, namespace, clock, componentName);
     }
 
     @Override

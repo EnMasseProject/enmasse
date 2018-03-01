@@ -4,8 +4,8 @@
  */
 package io.enmasse.address.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents the status of an address
@@ -13,7 +13,7 @@ import java.util.List;
 public class Status {
     private boolean isReady = false;
     private Phase phase = Phase.Pending;
-    private List<String> messages = new ArrayList<>();
+    private Set<String> messages = new HashSet<>();
 
     public Status(boolean isReady) {
         this.isReady = isReady;
@@ -43,7 +43,7 @@ public class Status {
         return this;
     }
 
-    public List<String> getMessages() {
+    public Set<String> getMessages() {
         return messages;
     }
 
@@ -57,7 +57,7 @@ public class Status {
         return this;
     }
 
-    public Status setMessages(List<String> messages) {
+    public Status setMessages(Set<String> messages) {
         this.messages = messages;
         return this;
     }
