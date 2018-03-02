@@ -27,15 +27,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BooleanSupplier;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -62,8 +54,10 @@ public class SaslDelegatingLogin implements LoginModule {
 
     private static final String[] TLS_PROTOCOL_PREFERENCES = new String[]{"TLSv1.2", "TLSv1.1", "TLS", "TLSv1"};
     private static final Symbol AUTHENTICATED_IDENTITY = Symbol.valueOf("authenticated-identity");
+    private static final Set<String> SPECIAL_AUTHZ_GROUPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("admin", "manage")));
     public static final String PREFERRED_USERNAME = "preferred_username";
     public static final String SUB = "sub";
+    public static final String GROUPS = "groups";
     public static final String PROP_ADDRESS_AUTHZ = "address-authz";
     public static final Symbol CAPABILITY_ADDRESS_AUTHZ = Symbol.valueOf("ADDRESS-AUTHZ");
 
@@ -319,6 +313,11 @@ public class SaslDelegatingLogin implements LoginModule {
             }
             roles.addAll(defaultRolesAuthenticated);
 
+            if (remoteProperties.get(Symbol.valueOf(GROUPS)) instanceof List) {
+                List<String> groups = (List<String>) remoteProperties.get(Symbol.valueOf(GROUPS));
+                groups.retainAll(SPECIAL_AUTHZ_GROUPS);
+                roles.addAll(groups);
+            }
         }
 
         if(supportsAuthz) {
