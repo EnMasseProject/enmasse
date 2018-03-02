@@ -95,7 +95,6 @@ public class QueueDrainer {
                                 log.info("Connected to receiver: " + recvConn.getRemoteContainer());
                                 recvConn.openHandler(h -> {
                                     log.info("Receiver other end opened: " + h.result().getRemoteContainer());
-                                    markInstanceDeleted(recvConn.getRemoteContainer());
                                     ProtonReceiver receiver = recvConn.createReceiver(address);
                                     receiver.setPrefetch(0);
                                     receiver.openHandler(handler -> {
@@ -141,18 +140,6 @@ public class QueueDrainer {
                 vertx.setTimer(5000, id -> startDrain(to, address));
             }
         });
-    }
-
-    private void markInstanceDeleted(String instanceName) {
-        try {
-            File instancePath = new File("/var/run/artemis", instanceName);
-            if (instancePath.exists()) {
-                Files.write(new File(instanceName, "terminating").toPath(), "yes".getBytes(), StandardOpenOption.WRITE);
-                log.info("Instance " + instanceName + " marked as terminating");
-            }
-        } catch (IOException e) {
-            log.warn("Error deleting instance: " + e.getMessage());
-        }
     }
 
     private void waitUntilEmpty(Artemis broker, Collection<String> queues) throws InterruptedException {

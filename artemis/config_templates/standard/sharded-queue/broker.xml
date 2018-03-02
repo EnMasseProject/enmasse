@@ -48,9 +48,8 @@ under the License.
       <journal-pool-files>-1</journal-pool-files>
 
       <journal-file-size>10M</journal-file-size>
-      
-      <journal-buffer-timeout>2212000</journal-buffer-timeout>
 
+      <journal-buffer-timeout>2212000</journal-buffer-timeout>
 
       <!-- how often we are looking for how many bytes are being used on the disk in ms -->
       <disk-scan-period>5000</disk-scan-period>
@@ -69,10 +68,8 @@ under the License.
       <critical-analyzer-policy>HALT</critical-analyzer-policy>
 
       <acceptors>
-         <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP,CORE,OPENWIRE,MQTT;saslMechanisms=PLAIN</acceptor>
-         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP,CORE,OPENWIRE,MQTT;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
-         <!-- SASL Mechanism should be EXTERNAL not anonymous... but Artemis doesn't support EXTERNAL -->
-         <acceptor name="amqps-normal">tcp://0.0.0.0:55671?protocols=AMQP;saslMechanisms=ANONYMOUS;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
+         <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576</acceptor>
+         <acceptor name="amqp">tcp://0.0.0.0:5673?protocols=AMQP;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
       </acceptors>
 
 
@@ -94,6 +91,24 @@ under the License.
             <address-full-policy>FAIL</address-full-policy>
          </address-setting>
       </address-settings>
+
+      <addresses>
+         <address name="$QUEUE_NAME">
+            <anycast>
+               <queue name="$QUEUE_NAME" />
+            </anycast>
+         </address>
+      </addresses>
+
+      <connector-services>
+        <connector-service name="amqp-connector">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
+          <param key="containerId" value="$QUEUE_NAME" />
+          <param key="clusterId" value="$QUEUE_NAME" />
+        </connector-service>
+      </connector-services>
    </core>
 </configuration>
 
