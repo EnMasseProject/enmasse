@@ -178,9 +178,7 @@ local images = import "images.jsonnet";
       }
     },
 
-
-
-  keycloak_deployment(keycloak_plugin_image, keycloak_image, keycloak_credentials_secret, cert_secret_name, pvc_claim_name, podspec_extra={})::
+  keycloak_deployment(keycloak_plugin_image, keycloak_image, keycloak_credentials_secret, cert_secret_name, keycloak_home, add_keycloak_user, pvc_claim_name, podspec_extra={})::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -205,12 +203,18 @@ local images = import "images.jsonnet";
                 "image": keycloak_plugin_image,
                 "name": "keycloak-plugin",
                 "env": [
-                  common.env("KEYCLOAK_DIR", "/opt/jboss/keycloak")
+                  common.env("KEYCLOAK_DIR", keycloak_home)
                 ],
-                "volumeMounts": [
-                  common.volume_mount("keycloak-providers", "/opt/jboss/keycloak/providers"),
-                  common.volume_mount("keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration"),
-                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert")
+                [if add_keycloak_user == "true" then "volumeMounts"]: [
+                  common.volume_mount("keycloak-providers", "%s/providers" % [keycloak_home]),
+                  common.volume_mount("keycloak-configuration", "%s/standalone/configuration" % [keycloak_home]),
+                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert"),
+                  common.volume_mount("keycloak-bin", "%s/standalone/bin" % [keycloak_home])
+                ],
+                [if add_keycloak_user == "false" then "volumeMounts"]: [
+                  common.volume_mount("keycloak-providers", "%s/providers" % [keycloak_home]),
+                  common.volume_mount("keycloak-configuration", "%s/standalone/configuration" % [keycloak_home]),
+                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert"),
                 ],
               }
             ],
@@ -251,22 +255,39 @@ local images = import "images.jsonnet";
                     }
                   }
                 ],
-                "volumeMounts": [
-                  common.volume_mount("keycloak-providers", "/opt/jboss/keycloak/providers"),
-                  common.volume_mount("keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration"),
+                [if add_keycloak_user=="true" then "command"]: [
+                  "%s/standalone/bin/start-keycloak.sh" % [keycloak_home]
+                ],
+                [if add_keycloak_user=="true" then "volumeMounts"]: [
+                  common.volume_mount("keycloak-providers", "%s/providers" % [keycloak_home]),
+                  common.volume_mount("keycloak-configuration", "%s/standalone/configuration" % [keycloak_home]),
                   common.volume_mount(cert_secret_name, "/opt/enmasse/cert"),
-                  common.volume_mount("keycloak-persistence", "/opt/jboss/keycloak/standalone/data")
+                  common.volume_mount("keycloak-persistence", "%s/standalone/data" % [keycloak_home]),
+                  common.volume_mount("keycloak-bin", "%s/standalone/bin" % [keycloak_home])
+                ],
+                [if add_keycloak_user=="false" then "volumeMounts"]: [
+                  common.volume_mount("keycloak-providers", "%s/providers" % [keycloak_home]),
+                  common.volume_mount("keycloak-configuration", "%s/standalone/configuration" % [keycloak_home]),
+                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert"),
+                  common.volume_mount("keycloak-persistence", "%s/standalone/data" % [keycloak_home]),                
                 ],
                 "livenessProbe": common.http_probe("https", "/auth", "HTTPS", 120),
                 "readinessProbe": common.http_probe("https", "/auth", "HTTPS", 120)
               }
             ],
-            "volumes": [
+            [if add_keycloak_user=="true" then "volumes"]: [
               common.secret_volume(cert_secret_name, cert_secret_name),
               common.persistent_volume("keycloak-persistence", pvc_claim_name),
               common.empty_volume("keycloak-configuration"),
-              common.empty_volume("keycloak-providers")
-            ]
+              common.empty_volume("keycloak-providers"),
+              common.empty_volume("keycloak-bin")
+            ],
+            [if add_keycloak_user=="false" then "volumes"]: [
+              common.secret_volume(cert_secret_name, cert_secret_name),
+              common.persistent_volume("keycloak-persistence", pvc_claim_name),
+              common.empty_volume("keycloak-configuration"),
+              common.empty_volume("keycloak-providers"),
+            ]            
           } + podspec_extra
         }
       }
@@ -398,7 +419,7 @@ local images = import "images.jsonnet";
     "kind": "List",
     "items": [
       me.keycloak_pvc("keycloak-pvc", "2Gi"),
-      me.keycloak_deployment(images.keycloak_plugin, images.keycloak, "keycloak-credentials", "standard-authservice-cert",
+      me.keycloak_deployment(images.keycloak_plugin, images.keycloak, "keycloak-credentials", "standard-authservice-cert", std.extVar("KEYCLOAK_HOME"), std.extVar("ADD_KEYCLOAK_USER"),
         "keycloak-pvc", {
               "securityContext": {
                 "runAsUser": 0,
@@ -418,7 +439,7 @@ local images = import "images.jsonnet";
     "kind": "Template",
     "objects": [
       me.keycloak_pvc("keycloak-pvc", "${KEYCLOAK_STORAGE_CAPACITY}"),
-      me.keycloak_deployment("${KEYCLOAK_PLUGIN_IMAGE}", "${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${KEYCLOAK_CERT_SECRET_NAME}", "keycloak-pvc"),
+      me.keycloak_deployment("${KEYCLOAK_PLUGIN_IMAGE}", "${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${KEYCLOAK_CERT_SECRET_NAME}", std.extVar("KEYCLOAK_HOME"), std.extVar("ADD_KEYCLOAK_USER"), "keycloak-pvc"),
       me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${KEYCLOAK_CONTROLLER_CONFIGMAP_NAME}", "${KEYCLOAK_CERT_SECRET_NAME}"),
       me.keycloak_controller_config,
       me.standard_authservice,

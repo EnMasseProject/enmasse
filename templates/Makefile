@@ -18,6 +18,10 @@ KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.3.0.Final"
 KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
 KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
 
+KEYCLOAK_HOME ?= "/opt/jboss/keycloak"
+ADD_KEYCLOAK_USER ?= "false"
+NODE_CMD="node"
+
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
 INSTALLDIR=enmasse-$(TAG)
@@ -43,6 +47,9 @@ INSTALLDIR=enmasse-$(TAG)
 		-V KEYCLOAK_IMAGE=$(KEYCLOAK_IMAGE) \
 		-V KEYCLOAK_PLUGIN_IMAGE=$(KEYCLOAK_PLUGIN_IMAGE) \
 		-V KEYCLOAK_CONTROLLER_IMAGE=$(KEYCLOAK_CONTROLLER_IMAGE) \
+		-V KEYCLOAK_HOME=$(KEYCLOAK_HOME) \
+		-V ADD_KEYCLOAK_USER=$(ADD_KEYCLOAK_USER) \
+		-V NODE_CMD=$(NODE_CMD) \
 		-m build $<
 
 yaml:
