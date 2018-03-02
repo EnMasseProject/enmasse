@@ -2,6 +2,7 @@
 
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/enmasse.svg?branch=master)](https://travis-ci.org/EnMasseProject/enmasse)
 [![GitHub release](https://img.shields.io/github/release/EnMasseProject/enmasse.svg)](https://github.com/EnMasseProject/enmasse/releases/latest)
+[![Twitter Follow](https://img.shields.io/twitter/follow/enmasseio.svg?style=social&label=Follow&style=for-the-badge)](https://twitter.com/enmasseio)
 
 --- 
 
