@@ -24,7 +24,6 @@ build_tar:
 	cp -r config_templates $(ARTIFACT_BASE)/
 	cp -r utils/bin $(ARTEMIS_HOME)
 	cp -r utils/dynamic-resources $(ARTIFACT_BASE)/usr/local
-	cp -r utils/partition $(ARTIFACT_BASE)/opt
 	cp -r utils/run-java $(ARTIFACT_BASE)/opt
 	mkdir -p $(ARTIFACT_BASE)/shutdown-hook
 	cp -r shutdown-hook/target/shutdown-hook-$(VERSION).jar $(ARTIFACT_BASE)/shutdown-hook/shutdown-hook.jar
