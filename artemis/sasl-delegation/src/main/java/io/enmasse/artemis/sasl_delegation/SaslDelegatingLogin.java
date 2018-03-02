@@ -87,6 +87,8 @@ public class SaslDelegatingLogin implements LoginModule {
     private SSLContext sslContext;
     private char[] trustStorePassword;
     private Map<String, List<String>> validCertUsers = new HashMap<>();
+    private List<String> defaultRolesAuthenticated = new ArrayList<>();
+    private List<String> defaultRolesUnauthenticated = new ArrayList<>();
     private String securitySettings;
 
     @Override
@@ -135,6 +137,20 @@ public class SaslDelegatingLogin implements LoginModule {
                     }
                 }
                 validCertUsers.put(userRoles[0], roles);
+            }
+        }
+        if(options.containsKey("default_roles_authenticated")) {
+           defaultRolesAuthenticated.clear();
+           String [] roles = String.valueOf(options.get("default_roles_authenticated")).split(",");
+           for (String role : roles) {
+               defaultRolesAuthenticated.add(role.trim());
+           }
+        }
+        if(options.containsKey("default_roles_unauthenticated")) {
+            defaultRolesUnauthenticated.clear();
+            String [] roles = String.valueOf(options.get("default_roles_unauthenticated")).split(",");
+            for (String role : roles) {
+                defaultRolesUnauthenticated.add(role.trim());
             }
         }
         if(options.containsKey("security_settings")) {
@@ -301,7 +317,7 @@ public class SaslDelegatingLogin implements LoginModule {
             } else {
                 user = String.valueOf(identity.get(SUB)).trim();
             }
-            roles.add("all");
+            roles.addAll(defaultRolesAuthenticated);
 
         }
 
@@ -328,7 +344,7 @@ public class SaslDelegatingLogin implements LoginModule {
                 SaslGroupBasedSecuritySettingsPlugin securitySettingPlugin = SaslGroupBasedSecuritySettingsPlugin.getInstance(this.securitySettings);
                 if(securitySettingPlugin != null) {
                     LOG.infov("Using sasl delegation for authz, but delegate does offer support, adding admin role to : {0}", user);
-                    roles.add("admin");
+                    roles.addAll(defaultRolesUnauthenticated);
                 }
             }
         }
