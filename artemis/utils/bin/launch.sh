@@ -102,7 +102,9 @@ function configure() {
         export ARTEMIS_INSTANCE_URI=file:${instanceDir}/
         envsubst < $CONFIG_TEMPLATES/artemis.profile > $instanceDir/etc/artemis.profile
 
-        # cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
+        if [ "$DEBUG_LOGGING" == "true" ]; then
+            cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
+        fi
     fi
 
 }

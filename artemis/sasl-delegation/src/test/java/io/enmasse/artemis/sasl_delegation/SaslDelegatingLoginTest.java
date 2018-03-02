@@ -96,6 +96,7 @@ public class SaslDelegatingLoginTest {
         options.put("hostname", "127.0.0.1");
         options.put("port", port);
         options.put("security_settings", "test");
+        options.put("default_roles_authenticated", "all");
     }
 
     @After
