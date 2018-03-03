@@ -38,6 +38,9 @@ local registry = std.extVar("REGISTRY");
   mqtt_lwt::
     self.image(std.extVar("MQTT_LWT_IMAGE")),
 
+  service_broker::
+    self.image(std.extVar("SERVICE_BROKER_IMAGE")),
+
   none_authservice::
     self.image(std.extVar("NONE_AUTHSERVICE_IMAGE")),
 

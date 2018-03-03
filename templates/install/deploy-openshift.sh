@@ -100,7 +100,6 @@ while getopts a:c:de:gm:n:o:p:st:u:yvh opt; do
             echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"
             echo "  -o mode              Deploy in given mode, 'singletenant' or 'multitenant'.  (default: \"singletenant\")"
             echo "  -p PARAMS            Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
-            echo "  -s                   Experimental: Only applicable when also using -d option. Starts OpenShift with Service Catalog enabled and registers EnMasse Service Broker"
             echo "  -t TEMPLATE          An alternative OpenShift template file to deploy EnMasse"
             echo "  -u USER              OpenShift user to run commands as (default: $DEFAULT_USER)"
             echo
@@ -166,7 +165,7 @@ runcmd "oc create sa enmasse-admin -n $NAMESPACE" "Create service account for ad
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 
-create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
+create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller.${NAMESPACE}.svc.cluster" "address-controller.${NAMESPACE}.svc" "address-controller-cert"
 
 for auth_service in $AUTH_SERVICES
 do
@@ -221,23 +220,3 @@ else
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
-
-if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
-then
-    runcmd "oc login -u system:admin" "Logging in as system:admin"
-    runcmd "oc create secret generic enmasse-broker-auth --from-literal=username=foo --from-literal=password=bar -n service-catalog" "Creating Secret with EnMasse Service Broker auth credentials"
-    runcmd "cat <<EOF | oc create -f -
-apiVersion: servicecatalog.k8s.io/v1alpha1
-kind: Broker
-metadata:
-  name: enmasse
-spec:
-  url: http://address-controller.${NAMESPACE}.svc.cluster.local:8080/osbapi
-  authInfo:
-    basicAuthSecret:
-      namespace: service-catalog
-      name: enmasse-broker-auth
-EOF" "Registering EnMasse Service Broker in Service Catalog"
-
-#    runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
-fi

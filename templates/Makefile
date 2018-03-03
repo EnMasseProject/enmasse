@@ -17,6 +17,7 @@ NONE_AUTHSERVICE_IMAGE ?= "none-authservice"
 KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.4.3.Final"
 KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
 KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
+SERVICE_BROKER_IMAGE ?= "service-broker"
 
 KEYCLOAK_HOME ?= "/opt/jboss/keycloak"
 ADD_KEYCLOAK_USER ?= "false"
@@ -40,6 +41,7 @@ INSTALLDIR=enmasse-$(TAG)
 		-V QUEUE_SCHEDULER_IMAGE=$(QUEUE_SCHEDULER_IMAGE) \
 		-V RAGENT_IMAGE=$(RAGENT_IMAGE) \
 		-V SUBSERV_IMAGE=$(SUBSERV_IMAGE) \
+		-V SERVICE_BROKER_IMAGE=$(SERVICE_BROKER_IMAGE) \
 		-V AGENT_IMAGE=$(AGENT_IMAGE) \
 		-V MQTT_GATEWAY_IMAGE=$(MQTT_GATEWAY_IMAGE) \
 		-V MQTT_LWT_IMAGE=$(MQTT_LWT_IMAGE) \
@@ -53,12 +55,13 @@ INSTALLDIR=enmasse-$(TAG)
 		-m build $<
 
 yaml:
-	for d in kubernetes openshift; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
+	for d in kubernetes openshift service-broker; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
 
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
 	mkdir -p build/kubernetes/addons
 	mkdir -p build/openshift/addons
+	mkdir -p build/service-broker
 	cp include/*.json build
 	cp -f include/resource-definitions.yaml install/kubernetes/addons/
 	cp -f include/resource-definitions.yaml install/openshift/addons/

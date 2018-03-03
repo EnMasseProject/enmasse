@@ -1,0 +1,25 @@
+---
+- name: Check if secret exists
+  shell: oc get secret -n {{ namespace }} {{ cert_secret }}
+  register: secret_exists
+  ignore_errors: True
+- name: Create temp folder for certificates
+  when: secret_exists.failed
+  register: cert_temp
+  tempfile:
+    state: directory
+- name: Generate an OpenSSL CA private key
+  when: secret_exists.failed
+  shell: openssl genrsa -out "{{ cert_temp.path }}/ca.key" 2048
+- name: Generate an OpenSSL CA cert
+  when: secret_exists.failed
+  shell: openssl req -new -x509 -days 720 -key "{{ cert_temp.path }}/ca.key" -subj "/O=io.enmasse/CN={{ cert_cn }}" -out "{{ cert_temp.path }}/ca.crt"
+- name: Generate an OpenSSL CSR
+  when: secret_exists.failed
+  shell: openssl req -newkey rsa:2048 -nodes -keyout "{{ cert_temp.path }}/tls.key" -subj "/O=io.enmasse/CN={{ cert_cn }}" -out "{{ cert_temp.path }}/tls.csr"
+- name: Generate an OpenSSL server cert
+  when: secret_exists.failed
+  shell: bash -c 'openssl x509 -req -extfile <(printf "subjectAltName={{ cert_sans }}") -days 720 -in "{{ cert_temp.path }}/tls.csr" -CA "{{ cert_temp.path }}/ca.crt" -CAkey "{{ cert_temp.path }}/ca.key" -CAcreateserial -out "{{ cert_temp.path }}/tls.crt"'
+- name: Create a secret containing the certificate
+  shell: oc create secret tls {{ cert_secret }} -n {{ namespace }} --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
+  when: secret_exists.failed

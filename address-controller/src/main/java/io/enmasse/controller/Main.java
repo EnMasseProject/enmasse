@@ -9,6 +9,9 @@ import java.time.Clock;
 import java.util.*;
 
 import io.enmasse.address.model.*;
+import io.enmasse.api.auth.AuthApi;
+import io.enmasse.api.auth.KubeAuthApi;
+import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.*;
@@ -29,7 +32,6 @@ public class Main extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(Main.class.getName());
     private final NamespacedOpenShiftClient controllerClient;
     private final ControllerOptions options;
-    private final Kubernetes kubernetes;
 
     private Main(ControllerOptions options) {
         this.controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
@@ -38,7 +40,6 @@ public class Main extends AbstractVerticle {
                 .withNamespace(options.getNamespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac(), options.getImpersonateUser());
     }
 
     @Override
@@ -46,6 +47,8 @@ public class Main extends AbstractVerticle {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
+        Kubernetes kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac(), options.getImpersonateUser());
+        AuthApi authApi = new KubeAuthApi(controllerClient, options.getImpersonateUser(), options.getToken());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
@@ -66,7 +69,7 @@ public class Main extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(controllerChain),
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), kubernetes, kubernetes.isRBACEnabled()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), authApi, kubernetes.isRBACEnabled()), new DeploymentOptions().setWorker(true)));
     }
 
     private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {

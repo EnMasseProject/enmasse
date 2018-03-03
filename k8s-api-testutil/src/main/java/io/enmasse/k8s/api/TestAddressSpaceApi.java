@@ -35,6 +35,11 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
+    public void createAddressSpaceWithLabels(AddressSpace addressSpace, Map<String, String> labels) throws Exception {
+
+    }
+
+    @Override
     public void replaceAddressSpace(AddressSpace addressSpace) {
         createAddressSpace(addressSpace);
     }
@@ -53,6 +58,11 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
             throw new RuntimeException("foo");
         }
         return new LinkedHashSet<>(addressSpaces.values());
+    }
+
+    @Override
+    public Set<AddressSpace> listAddressSpacesWithLabels(Map<String, String> labels) {
+        return null;
     }
 
     @Override

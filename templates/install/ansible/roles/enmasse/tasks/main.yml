@@ -19,3 +19,6 @@
   when: '"standard" in authentication_services'
 - import_role:
     name: address_controller
+- import_role:
+    name: service_catalog
+  when: service_catalog
