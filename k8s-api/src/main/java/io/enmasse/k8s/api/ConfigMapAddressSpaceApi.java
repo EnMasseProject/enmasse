@@ -56,6 +56,17 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
+    public void createAddressSpaceWithLabels(AddressSpace addressSpace, Map<String, String> labels) throws Exception {
+        try {
+            create(client.configMaps().createNew(), addressSpace, labels);
+        } catch (Exception e) {
+            log.error("Error creating {}", addressSpace.getName());
+            throw e;
+        }
+    }
+
+
+    @Override
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
         String name = addressSpace.getName();
         ConfigMap previous = client.configMaps().withName(name).get();
@@ -63,7 +74,8 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
             return;
         }
         try {
-            create(client.configMaps().createOrReplaceWithNew(), addressSpace);
+            create(client.configMaps().createOrReplaceWithNew(), addressSpace,
+                    previous.getMetadata().getLabels());
         } catch (Exception e) {
             log.error("Error replacing {}", addressSpace.getName());
             throw e;
@@ -80,6 +92,22 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
                 .done();
     }
 
+    private void create(DoneableConfigMap config, AddressSpace addressSpace, Map<String, String> labels) throws Exception {
+        String name = addressSpace.getName();
+        if(labels == null) {
+            labels = Collections.singletonMap(LabelKeys.TYPE, "address-space");
+        } else {
+            labels = new HashMap<>(labels);
+            labels.put(LabelKeys.TYPE, "address-space");
+        }
+        config.withNewMetadata()
+                .withName(name)
+                .addToLabels(labels)
+                .endMetadata()
+                .addToData("config.json", mapper.writeValueAsString(addressSpace))
+                .done();
+    }
+
     @Override
     public void deleteAddressSpace(AddressSpace addressSpace) {
         String name = addressSpace.getName();
@@ -90,6 +118,19 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     public Set<AddressSpace> listAddressSpaces() {
         Set<AddressSpace> instances = new LinkedHashSet<>();
         for (ConfigMap map : list(new ListOptions()).getItems()) {
+            instances.add(getAddressSpaceFromConfig(map));
+        }
+        return instances;
+    }
+
+    @Override
+    public Set<AddressSpace> listAddressSpacesWithLabels(Map<String, String> labels) {
+        Set<AddressSpace> instances = new LinkedHashSet<>();
+        labels = new LinkedHashMap<>(labels);
+        labels.put(LabelKeys.TYPE, "address-space");
+        ConfigMapList list = client.configMaps().withLabels(labels).list();
+        log.info("found {} config maps with labels {}", list.getItems().size(), labels);
+        for (ConfigMap map : list.getItems()) {
             instances.add(getAddressSpaceFromConfig(map));
         }
         return instances;

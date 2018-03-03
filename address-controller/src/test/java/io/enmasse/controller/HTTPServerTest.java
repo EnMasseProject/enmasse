@@ -10,7 +10,6 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.SubjectAccessReview;
 import io.enmasse.controller.common.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.k8s.api.TestSchemaApi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -53,7 +52,7 @@ public class HTTPServerTest {
         when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", kubernetes, true, null), context.asyncAssertSuccess());
     }
 
     @After

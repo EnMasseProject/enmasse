@@ -110,12 +110,40 @@ function create_and_sign_cert() {
 function create_self_signed_cert() {
     local CMD=$1
     local CN=${2::64}
-    local SECRET_NAME=$3
+    local SANS=""
+    local LASTARG=$3
+    shift 3
+    while (( "$#" )); do
+
+      if [[ "${SANS}" == "" ]]; then
+	    SANS="subjectAltName=DNS:${LASTARG}"
+      else
+        SANS+=",DNS:${LASTARG}"
+	  fi
+	  LASTARG=$1
+
+      shift
+
+    done
+
+    local SECRET_NAME=${LASTARG}
+
 
     KEY=${TEMPDIR}/${CN}.key
     CERT=${TEMPDIR}/${CN}.crt
 
+    CSR=${TEMPDIR}/${CN}.csr
+    CAKEY=${TEMPDIR}/${CN}.ca_key
+    CACERT=${TEMPDIR}/${CN}.ca_crt
+
+    if [[ "${SANS}" == "" ]]; then
     runcmd "openssl req -new -x509 -batch -nodes -days 11000 -out ${CERT} -keyout ${KEY} -subj \"/O=io.enmasse/CN=${CN}\"" "Create self-signed certificate for ${CN}"
+    else
+      runcmd "openssl genrsa -out ${CAKEY} 2048" "Create CA Key for ${CN}"
+      runcmd "openssl req -new -x509 -days 1100 -key ${CAKEY} -subj \"/O=io.enmasse/CN=${CN}\" -out ${CACERT}" "Create CA Cert for ${CN}"
+      runcmd "openssl req -newkey rsa:2048 -nodes -keyout ${KEY} -subj \"/O=io.enmasse/CN=${CN}\" -out ${CSR}" "Create CSR for ${CN}"
+      runcmd "openssl x509 -req -extfile <(printf \"${SANS}\") -days 1100 -in ${CSR} -CA ${CACERT} -CAkey ${CAKEY} -CAcreateserial -out ${CERT}" "Create self-signed certificate for ${CN}"
+    fi
     fix_key_file_format ${KEY}
     create_tls_secret $CMD $SECRET_NAME $KEY $CERT
 }

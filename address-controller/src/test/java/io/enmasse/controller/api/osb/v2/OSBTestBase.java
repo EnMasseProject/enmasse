@@ -45,9 +45,9 @@ public class OSBTestBase {
     public void setup() throws Exception {
         addressSpaceApi = new TestAddressSpaceApi();
         String brokerId = "myspace";
-        provisioningService = new OSBProvisioningService(addressSpaceApi, brokerId);
-        bindingService = new OSBBindingService(addressSpaceApi, brokerId);
-        lastOperationService = new OSBLastOperationService(addressSpaceApi, brokerId);
+        provisioningService = new OSBProvisioningService(addressSpaceApi, null, null);
+        bindingService = new OSBBindingService(addressSpaceApi, null, null, null);
+        lastOperationService = new OSBLastOperationService(addressSpaceApi, null, null);
     }
 
     protected void provisionService(String serviceInstanceId) throws Exception {
@@ -67,7 +67,7 @@ public class OSBTestBase {
         provisionRequest.putParameter("name", "my-queue");
         provisionRequest.putParameter("group", "my-group");
 
-        provisioningService.provisionService(getSecurityContext(), serviceInstanceId, true, provisionRequest);
+        provisioningService.provisionService(getSecurityContext(), null, serviceInstanceId, true, provisionRequest);
         // TODO: wait for provisioning to finish (poll lastOperation endpoint)
         return serviceInstanceId;
     }

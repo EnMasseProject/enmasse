@@ -4,92 +4,88 @@
  */
 package io.enmasse.controller.api.osb.v2.provision;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.Endpoint;
 import io.enmasse.controller.api.ResourceVerb;
-import io.enmasse.controller.api.osb.v2.EmptyResponse;
-import io.enmasse.controller.api.osb.v2.OSBExceptions;
-import io.enmasse.controller.api.osb.v2.OSBServiceBase;
-import io.enmasse.controller.api.osb.v2.ServiceType;
-import io.enmasse.address.model.Address;
+import io.enmasse.controller.api.osb.v2.*;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.controller.api.osb.v2.catalog.Plan;
+import io.enmasse.controller.api.osb.v2.catalog.Service;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.fabric8.kubernetes.api.model.Secret;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, String namespace) {
-        super(addressSpaceApi, namespace);
+    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, ServiceMapping serviceMapping) {
+        super(addressSpaceApi, kubernetes, serviceMapping);
     }
 
     @PUT
     public Response provisionService(@Context SecurityContext securityContext,
+                                     @HeaderParam("X-Broker-API-Originating-Identity") String originatingIdentity,
                                      @PathParam("instanceId") String instanceId,
                                      @QueryParam("accepts_incomplete") @DefaultValue("false") boolean acceptsIncomplete,
                                      ProvisionRequest request) throws Exception {
 
         verifyAuthorized(securityContext, ResourceVerb.create);
 
+        log.info("Originating identity: " + originatingIdentity);
+        if(originatingIdentity != null && originatingIdentity.split(" +").length>1) {
+            log.info("identity: " + new String(Base64.getDecoder().decode(originatingIdentity.split(" +")[1])), StandardCharsets.UTF_8);
+        }
+        Optional<Secret> keycloakCreds = getKubernetes().getSecret("keycloak-credentials");
+        keycloakCreds.ifPresent(secret -> log.info("keycloak creds: " + secret.getData()));
+
+
         if (!acceptsIncomplete) {
             throw OSBExceptions.unprocessableEntityException("AsyncRequired", "This service plan requires client support for asynchronous service operations.");
         }
 
-        // We must shorten the organizationId so the resulting address configmap name isn't too long
-        String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
+        Service service = getServiceMapping().getService(request.getServiceId());
+        if(service == null) {
+            throw OSBExceptions.badRequestException("Invalid service_id " + request.getServiceId());
+        }
 
-        log.info("Received provision request for addressspace {} (service id {}, plan id {}, org id {}, name {})",
-                instanceId, request.getServiceId(), request.getPlanId(),
-                shortOrganizationId, request.getParameter("name").orElse(null));
-
-        ServiceType serviceType = ServiceType.valueOf(request.getServiceId())
-                .orElseThrow(() -> OSBExceptions.badRequestException("Invalid service_id " + request.getServiceId()));
-
-        if (!isValidPlan(serviceType, request.getPlanId())) {
+        if (!isValidPlan(service, request.getPlanId())) {
             throw OSBExceptions.badRequestException("Invalid plan_id " + request.getPlanId());
         }
 
-        String name = request.getParameter("name").orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
+        String name = request.getParameter("name").orElse(service.getName() + "-" + shortenUuid(instanceId));
+        Optional<AddressSpace> existingAddressSpace = findAddressSpaceByInstanceId(instanceId);
 
-        String addressType = serviceType.addressType();
-        String plan = getPlan(addressType, request.getPlanId());
-        AddressSpace addressSpace = getOrCreateAddressSpace(shortOrganizationId);
-
-        // TODO: Allow address to be separate
-        Address address = new Address.Builder()
-                .setName(name)
-                .setAddress(name)
-                .setType(addressType)
-                .setPlan(plan)
-                .setAddressSpace(shortOrganizationId)
-                .setUuid(instanceId)
-                .build();
-
-        Optional<Address> existingAddress = findAddress(addressSpace, instanceId);
-        String dashboardUrl = getConsoleURL(addressSpace).orElse(null);
-        if (existingAddress.isPresent()) {
-            if (existingAddress.get().equals(address)) {
-                return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
-            } else {
-                throw OSBExceptions.conflictException("Service addressspace " + instanceId + " already exists");
+        if (existingAddressSpace.isPresent()) {
+            Optional<Service> desiredService = getServiceMapping().getServiceForAddressSpaceType(existingAddressSpace.get().getType());
+            if (desiredService.isPresent() && desiredService.get().equals(service)) {
+                Optional<Plan> plan = service.getPlan(request.getPlanId());
+                if (plan.isPresent() && plan.get().getName().equals(existingAddressSpace.get().getPlan())) {
+                    String dashboardUrl = getConsoleURL(existingAddressSpace.get()).orElse(null);
+                    return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
+                }
             }
+            throw OSBExceptions.conflictException("Service addressspace " + instanceId + " already exists");
         }
 
-        provisionAddress(addressSpace, address);
+        if(findAddressSpaceByName(name).isPresent()) {
+            throw OSBExceptions.conflictException("Service addressspace with name " + name + " already exists");
+        }
+        AddressSpaceType addressSpaceType = getServiceMapping().getAddressSpaceTypeForService(service);
+        AddressSpace addressSpace = createAddressSpace(instanceId, name, addressSpaceType.getName(), service.getPlan(request.getPlanId()).get().getName());
+        String dashboardUrl = getConsoleURL(addressSpace).orElse(null);
 
         log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
         return Response.status(Response.Status.ACCEPTED)
@@ -98,13 +94,15 @@ public class OSBProvisioningService extends OSBServiceBase {
     }
 
     private Optional<String> getConsoleURL(AddressSpace maasInstance) {
-        return maasInstance.getEndpoints().stream()
+        // TODO
+        List<Endpoint> endpoints = maasInstance.getEndpoints();
+        return endpoints == null ? Optional.empty() : endpoints.stream()
                 .filter(endpoint -> endpoint.getName().equals("console"))
                 .findAny().flatMap(e -> e.getHost()).map(s -> "http://" + s);
     }
 
-    private boolean isValidPlan(ServiceType serviceType, UUID planId) {
-        return getPlans(serviceType).stream().anyMatch(plan -> plan.getUuid().equals(planId));
+    private boolean isValidPlan(Service service, UUID planId) {
+        return service.getPlans().stream().anyMatch(plan -> plan.getUuid().equals(planId));
     }
 
     // TODO: @PATCH updateService
@@ -121,14 +119,13 @@ public class OSBProvisioningService extends OSBServiceBase {
         if (planId == null) {
             throw OSBExceptions.badRequestException("Missing plan_id parameter");
         }
+        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId)
+                .orElseThrow(() -> OSBExceptions.goneException("Service addressspace " + instanceId + " is gone"));
+        deleteAddressSpace(addressSpace);
+        return Response.ok(new EmptyResponse()).build();
 
-        boolean deleted = deleteAddressByUuid(instanceId);
-        if (deleted) {
-            return Response.ok(new EmptyResponse()).build();
-        } else {
-            throw OSBExceptions.goneException("Service addressspace " + instanceId + " is gone");
-        }
     }
+
 
     private String shortenUuid(String uuid) {
         int dashIndex = uuid.indexOf('-');

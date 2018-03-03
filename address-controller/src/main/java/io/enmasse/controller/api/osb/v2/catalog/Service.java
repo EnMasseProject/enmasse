@@ -5,11 +5,7 @@
 package io.enmasse.controller.api.osb.v2.catalog;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -140,6 +136,15 @@ public class Service {
                 ", dashboardClient=" + dashboardClient +
                 ", plans=" + plans +
                 '}';
+    }
+
+    public Optional<Plan> getPlan(UUID planId) {
+        for(Plan plan : plans) {
+            if(plan.getUuid().equals(planId)) {
+                return Optional.of(plan);
+            }
+        }
+        return Optional.empty();
     }
 
     protected static class Serializer extends JsonSerializer<Service> {

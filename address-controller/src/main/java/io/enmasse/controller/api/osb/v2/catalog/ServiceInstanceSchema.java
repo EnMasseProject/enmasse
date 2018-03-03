@@ -41,7 +41,9 @@ public class ServiceInstanceSchema {
         public void serialize(ServiceInstanceSchema value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             ObjectNode node = mapper.createObjectNode();
             node.set("create", mapper.valueToTree(value.getCreateParameters()));
-            node.set("update", mapper.valueToTree(value.getUpdateParameters()));
+            if(value.getUpdateParameters() != null) {
+                node.set("update", mapper.valueToTree(value.getUpdateParameters()));
+            }
             mapper.writeValue(gen, node);
         }
     }

@@ -9,6 +9,8 @@ import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.controller.api.osb.v2.ServiceMapping;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
 import javax.ws.rs.*;
@@ -16,14 +18,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.Collections;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}/last_operation")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBLastOperationService extends OSBServiceBase {
 
-    public OSBLastOperationService(AddressSpaceApi addressSpaceApi, String namespace) {
-        super(addressSpaceApi, namespace);
+    public OSBLastOperationService(AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, ServiceMapping serviceMapping) {
+        super(addressSpaceApi, kubernetes, serviceMapping);
     }
 
     @GET
@@ -37,22 +40,25 @@ public class OSBLastOperationService extends OSBServiceBase {
                 instanceId, operation, serviceId, planId);
         verifyAuthorized(securityContext, ResourceVerb.get);
 
-        AddressSpace instance = findAddressSpaceByAddressUuid(instanceId)
-                .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
+        AddressSpace instance = findAddressSpaceByInstanceId(instanceId)
+                .orElse(null);
 
-        Address address = findAddress(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
-                .orElseThrow(() -> OSBExceptions.notFoundException("Service addressspace " + instanceId + " does not exist"));
-
-
-        LastOperationResponse response;
-        if (isAddressReady(instance, address)) {
-            response = new LastOperationResponse(LastOperationState.SUCCEEDED, "All required pods are ready.");
+        if(instance == null) {
+            log.info("No such address space found");
+            return Response.status(Response.Status.GONE).entity(Collections.EMPTY_MAP).build();
         } else {
-            response = new LastOperationResponse(LastOperationState.IN_PROGRESS, "Waiting for pods to be ready");
-        }
-        // TODO LastOperationState.FAILED ?
+            LastOperationResponse response;
+            if (instance.getStatus().isReady()) {
+                log.info("Address space is ready");
+                response = new LastOperationResponse(LastOperationState.SUCCEEDED, "All required pods are ready.");
+            } else {
+                log.info("Address space is not yet ready");
+                response = new LastOperationResponse(LastOperationState.IN_PROGRESS, "Waiting for pods to be ready");
+            }
+            // TODO LastOperationState.FAILED ?
 
-        return Response.ok(response).build();
+            return Response.ok(response).build();
+        }
     }
 
 }

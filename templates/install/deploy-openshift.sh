@@ -166,7 +166,7 @@ runcmd "oc create sa enmasse-admin -n $NAMESPACE" "Create service account for ad
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 
-create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
+create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller.${NAMESPACE}.svc.cluster" "address-controller.${NAMESPACE}.svc" "address-controller-cert"
 
 for auth_service in $AUTH_SERVICES
 do

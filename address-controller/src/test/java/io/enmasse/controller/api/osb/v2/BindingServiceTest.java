@@ -34,7 +34,7 @@ public class BindingServiceTest extends OSBTestBase {
 
     @Test(expected = UnprocessableEntityException.class)
     public void testSyncProvisioningRequest() throws Exception {
-        provisioningService.provisionService(getSecurityContext(),"123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(),null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test

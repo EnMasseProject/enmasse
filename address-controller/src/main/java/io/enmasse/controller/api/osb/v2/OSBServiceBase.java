@@ -4,23 +4,15 @@
  */
 package io.enmasse.controller.api.osb.v2;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
-import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
-import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
-import io.enmasse.address.model.AddressSpacePlan;
+import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.api.RbacSecurityContext;
 import io.enmasse.controller.api.ResourceVerb;
-import io.enmasse.controller.api.osb.v2.catalog.InputParameters;
-import io.enmasse.controller.api.osb.v2.catalog.Plan;
-import io.enmasse.controller.api.osb.v2.catalog.Schemas;
-import io.enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
-import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,104 +26,59 @@ public abstract class OSBServiceBase {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
     private final AddressSpaceApi addressSpaceApi;
-    private final String namespace;
+    private final ServiceMapping serviceMapping;
+    private final Kubernetes kubernetes;
 
-    public OSBServiceBase(AddressSpaceApi addressSpaceApi, String namespace) {
+    public OSBServiceBase(AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, ServiceMapping serviceMapping) {
         this.addressSpaceApi = addressSpaceApi;
-        this.namespace = namespace;
+        this.kubernetes = kubernetes;
+        this.serviceMapping = serviceMapping;
+
+    }
+
+    protected ServiceMapping getServiceMapping() {
+        return serviceMapping;
     }
 
     protected void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(kubernetes.getNamespace(), verb))) {
             throw OSBExceptions.notAuthorizedException();
         }
     }
 
-    protected Optional<AddressSpace> findAddressSpaceByAddressUuid(String addressUuid) {
-        return addressSpaceApi.listAddressSpaces().stream()
-                .filter(instance -> findAddress(instance, addressUuid).isPresent())
-                .findAny();
+
+    protected Optional<AddressSpace> findAddressSpaceByInstanceId(String serviceInstanceId) {
+        return addressSpaceApi.listAddressSpacesWithLabels(Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, serviceInstanceId)).stream().findAny();
     }
 
-    protected Optional<Address> findAddress(AddressSpace maasAddressSpace, String addressUuid) {
-        return addressSpaceApi.withAddressSpace(maasAddressSpace).listAddresses().stream()
-                .filter(dest -> addressUuid.equals(dest.getUuid()))
-                .findAny();
+    protected Optional<AddressSpace> findAddressSpaceByName(String name) {
+        return addressSpaceApi.listAddressSpaces().stream().filter(a -> a.getName().equals(name)).findAny();
     }
 
-    protected void provisionAddress(AddressSpace addressSpace, Address address) {
-        log.info("Creating address {} with plan {} of MaaS addressspace {} (namespace {})",
-                address.getAddress(), address.getPlan(), addressSpace.getName(), addressSpace.getNamespace());
-        addressSpaceApi.withAddressSpace(addressSpace).createAddress(address);
+    protected AddressSpace createAddressSpace(String instanceId, String name, String type, String plan) throws Exception {
+        AuthenticationService authService = new AuthenticationService.Builder()
+                .setType(AuthenticationServiceType.STANDARD)
+                .setDetails(Collections.emptyMap())
+                .build();
+        AddressSpace addressSpace = new AddressSpace.Builder()
+                .setName(name)
+                .setType(type)
+                .setPlan(plan)
+                .setAuthenticationService(authService)
+                .setEndpointList(null)
+                .build();
+        addressSpaceApi.createAddressSpaceWithLabels(addressSpace, Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, instanceId));
+        log.info("Created MaaS addressspace {}", addressSpace.getName());
+        return addressSpace;
     }
 
-    protected AddressSpace getOrCreateAddressSpace(String addressSpaceId) throws Exception {
-        Optional<AddressSpace> instance = addressSpaceApi.getAddressSpaceWithName(addressSpaceId);
-        if (!instance.isPresent()) {
-            AddressSpace i = new AddressSpace.Builder()
-                    .setName(addressSpaceId)
-                    .setType("standard")
-                    .setPlan("unlimited")
-                    .build();
-            addressSpaceApi.createAddressSpace(i);
-            log.info("Created MaaS addressspace {}", i.getName());
-            return i;
-        } else {
-            return instance.get();
-        }
+    protected boolean deleteAddressSpace(AddressSpace addressSpace) {
+        log.info("Deleting address space : {}", addressSpace.getName());
+        addressSpaceApi.deleteAddressSpace(addressSpace);
+        return true;
     }
 
-    protected boolean deleteAddressByUuid(String addressUuid) {
-        log.info("Deleting address with UUID {}", addressUuid);
-        for (AddressSpace i : addressSpaceApi.listAddressSpaces()) {
-            AddressApi addressApi = addressSpaceApi.withAddressSpace(i);
-            Optional<Address> d = addressApi.getAddressWithUuid(addressUuid);
-            if (d.isPresent()) {
-                log.info("Address found in addressspace {} (namespace {}). Deleting it now.",
-                        i.getName(), i.getNamespace());
-                addressApi.deleteAddress(d.get());
-                return true;
-            }
-        }
-        log.info("Address with UUID {} not found in any addressspace", addressUuid);
-        return false;
-    }
-
-    protected static String getPlan(String addressType, UUID planId) {
-        return null;
-    }
-
-    protected boolean isAddressReady(AddressSpace maasAddressSpace, Address address) throws Exception {
-        return maasAddressSpace.getStatus().isReady() && address.getStatus().isReady();
-    }
-
-    protected List<Plan> getPlans(ServiceType serviceType) {
-        return Collections.emptyList();
-    }
-
-    private Plan convertPlanToOSBPlan(AddressSpacePlan plan, ServiceType serviceType) {
-        Plan osbPlan = new Plan(
-                UUID.fromString(plan.getUuid()),
-                sanitizePlanName(plan.getName()),
-                plan.getShortDescription(),
-                true, true);
-        osbPlan.getMetadata().put("displayName", plan.getDisplayName());
-        osbPlan.setSchemas(createSchemas(serviceType));
-        return osbPlan;
-    }
-
-    private Schemas createSchemas(ServiceType serviceType) {
-        ObjectSchema serviceInstanceSchema = new ObjectSchema();
-        StringSchema namePropertySchema = new StringSchema();
-        namePropertySchema.setTitle("Address name");
-        namePropertySchema.setDescription("Enter the name of this address");
-        namePropertySchema.setMinLength(2);
-        serviceInstanceSchema.putProperty("name", namePropertySchema);
-
-        return new Schemas(new ServiceInstanceSchema(new InputParameters(serviceInstanceSchema), null), null);
-    }
-
-    private String sanitizePlanName(String name) {
-        return name.toLowerCase().replace(' ', '-');    // TODO: improve this
+    protected Kubernetes getKubernetes() {
+        return kubernetes;
     }
 }

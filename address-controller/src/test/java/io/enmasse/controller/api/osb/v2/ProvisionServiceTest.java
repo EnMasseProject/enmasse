@@ -39,22 +39,22 @@ public class ProvisionServiceTest extends OSBTestBase {
 
     @Test(expected = UnprocessableEntityException.class)
     public void testSyncProvisioningRequest() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(), null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test(expected = BadRequestException.class)
     public void testInvalidServiceUuid() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(), null,  "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test(expected = BadRequestException.class)
     public void testInvalidPlan() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test(expected = BadRequestException.class)
     public void testInvalidServiceInstandeUuid() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class ProvisionServiceTest extends OSBTestBase {
         ProvisionRequest provisionRequest = new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID);
         provisionRequest.putParameter("name", ADDRESS);
         provisionRequest.putParameter("transactional", "true");
-        Response response = provisioningService.provisionService(getSecurityContext(), SERVICE_INSTANCE_ID, true, provisionRequest);
+        Response response = provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, provisionRequest);
         ProvisionResponse provisionResponse = (ProvisionResponse) response.getEntity();
 
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_ACCEPTED));
@@ -114,16 +114,16 @@ public class ProvisionServiceTest extends OSBTestBase {
 
     @Test
     public void testProvisionTwiceWithDifferentPrameters() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), SERVICE_INSTANCE_ID, true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
         exceptionGrabber.expect(ConflictException.class);
-        provisioningService.provisionService(getSecurityContext(), SERVICE_INSTANCE_ID, true, new ProvisionRequest(ServiceType.TOPIC.uuid(), TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(ServiceType.TOPIC.uuid(), TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test
     public void testProvisionTwiceWithSameParameters() throws Exception {
         ProvisionRequest provisionRequest = new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID);
-        provisioningService.provisionService(getSecurityContext(), SERVICE_INSTANCE_ID, true, provisionRequest);
-        Response response = provisioningService.provisionService(getSecurityContext(), SERVICE_INSTANCE_ID, true, provisionRequest);
+        provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, provisionRequest);
+        Response response = provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, provisionRequest);
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
     }
 
