@@ -3,6 +3,7 @@ local roles = import "include/roles.jsonnet";
 local authService = import "include/auth-service.jsonnet";
 local kubernetes = import "include/enmasse-kubernetes.jsonnet";
 local prometheus = import "include/prometheus.jsonnet";
+local serviceBroker = import "include/service-broker.jsonnet";
 local grafana = import "include/grafana.jsonnet";
 {
     "openshift/enmasse.json": openshift.template,
@@ -11,6 +12,8 @@ local grafana = import "include/grafana.jsonnet";
     "openshift/addons/none-authservice.json": authService.none_openshift,
     "openshift/addons/prometheus.json": prometheus.prometheus,
     "openshift/addons/grafana.json": grafana.grafana,
+    "service-broker/deployment.json": serviceBroker.deployment,
+    "service-broker/service.json": serviceBroker.service,
     "kubernetes/enmasse.json": kubernetes.list,
     "kubernetes/addons/external-lb.json": kubernetes.external_lb,
     "kubernetes/addons/prometheus.json": prometheus.prometheus,

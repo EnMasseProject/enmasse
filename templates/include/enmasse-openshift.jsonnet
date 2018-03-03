@@ -83,7 +83,6 @@ local roles = import "roles.jsonnet";
       {
         "name": "IMPERSONATE_USER",
         "description": "User to impersonate when creating resources (uses service-account if not set)",
-        "value": "developer"
       },
       {
         "name": "STANDARD_AUTHSERVICE_CONFIG",

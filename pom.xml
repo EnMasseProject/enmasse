@@ -48,6 +48,7 @@
         <module>k8s-api</module>
         <module>k8s-api-testutil</module>
         <module>amqp-utils</module>
+        <module>api-common</module>
         <module>discovery-lib</module>
         <module>topic-forwarder</module>
         <module>mqtt-gateway</module>
@@ -58,6 +59,7 @@
         <module>keycloak-controller</module>
         <module>systemtests</module>
         <module>artemis</module>
+        <module>service-broker</module>
     </modules>
 
     <build>

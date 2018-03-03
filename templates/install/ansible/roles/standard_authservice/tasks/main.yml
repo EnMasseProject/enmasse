@@ -1,3 +1,10 @@
+- name: Create standard-authservice certificates
+  include_role:
+    name: ssl_certs
+  vars:
+    cert_secret: standard-authservice-cert
+    cert_cn: "standard-authservice.{{ namespace }}.svc.cluster.local"
+    cert_sans: "DNS:standard-authservice.{{ namespace }}.svc.cluster,DNS:standard-authservice.{{ namespace }}.svc,DNS:standard-authservice"
 - name: Check if keycloak credentials secret exists
   shell: oc get secret -n {{ namespace }} keycloak-credentials
   register: secret_exists
@@ -22,4 +29,4 @@
   when: config_exists.failed and (keycloak_http_url is not defined)
 - name: Create configmap with the keycloak info
   when: config_exists.failed and (keycloak_http_url is defined)
-  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }}
+  shell: oc create configmap keycloak-config -n {{ namespace }} --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }}

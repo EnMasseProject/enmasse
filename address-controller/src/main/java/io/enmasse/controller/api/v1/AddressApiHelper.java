@@ -14,10 +14,10 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
 
 import io.enmasse.address.model.*;
-import io.enmasse.controller.SchemaProvider;
-import io.enmasse.controller.api.RbacSecurityContext;
-import io.enmasse.controller.api.ResourceVerb;
-import io.enmasse.controller.api.osb.v2.OSBExceptions;
+import io.enmasse.api.common.Exceptions;
+import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.auth.RbacSecurityContext;
+import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
@@ -39,7 +39,7 @@ public class AddressApiHelper {
 
     private void verifyAuthorized(SecurityContext securityContext, AddressSpace addressSpace, ResourceVerb verb) {
         if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(addressSpace.getNamespace(), verb))) {
-            throw OSBExceptions.notAuthorizedException();
+            throw Exceptions.notAuthorizedException();
         }
     }
 

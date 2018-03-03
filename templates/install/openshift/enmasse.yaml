@@ -3375,7 +3375,6 @@ parameters:
 - description: User to impersonate when creating resources (uses service-account if
     not set)
   name: IMPERSONATE_USER
-  value: developer
 - description: Name of configmap containing standard authservice config
   name: STANDARD_AUTHSERVICE_CONFIG
   value: keycloak-config

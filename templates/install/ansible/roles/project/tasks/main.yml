@@ -4,5 +4,5 @@
   register: namespace_exists
   ignore_errors: True
 - name: Create project namespace
-  shell: oc new-project {{ namespace }}
+  shell: oc new-project {{ namespace }} --description="EnMasse Infrastructure"
   when: namespace_exists.failed

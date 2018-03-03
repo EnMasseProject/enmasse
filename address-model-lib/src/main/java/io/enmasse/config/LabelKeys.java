@@ -12,6 +12,7 @@ public interface LabelKeys {
     String TYPE = "type";
 
     String UUID = "uuid";
+    String SERVICE_INSTANCE_ID="serviceInstanceId";
     String ADDRESS = "address";
     String APP = "app";
     String CAPABILITY = "capability";

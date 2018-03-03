@@ -1,0 +1,12 @@
+- hosts: localhost
+  vars:
+    namespace: enmasse
+    multitenant: true
+    enable_rbac: "true"
+    admin_user: developer
+    service_catalog: true
+    keycloak_admin_password: admin
+    authentication_services:
+      - standard
+  roles:
+    - enmasse
