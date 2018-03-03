@@ -87,26 +87,8 @@ function create_tls_secret() {
   local SECRET_NAME=$2
   local KEYFILE=$3
   local CERTFILE=$4
-  if [ $(uname) = 'Darwin' ]; then
-      local WRAPOPTION="-b"
-  else
-      local WRAPOPTION="-w"
-  fi
 
-  runcmd "cat <<EOF | $CMD create -n ${NAMESPACE} -f -
-{
-    \"apiVersion\": \"v1\",
-    \"kind\": \"Secret\",
-    \"metadata\": {
-        \"name\": \"$SECRET_NAME\"
-    },
-    \"type\": \"kubernetes.io/tls\",
-    \"data\": {
-        \"tls.key\": \"\$(base64 ${WRAPOPTION} 0 ${KEYFILE})\",
-        \"tls.crt\": \"\$(base64 ${WRAPOPTION} 0 ${CERTFILE})\"
-    }
-}
-EOF" "Create $SECRET_NAME TLS secret"
+  runcmd "$CMD create secret tls ${SECRET_NAME} -n ${NAMESPACE} --cert=${CERTFILE} --key=${KEYFILE}" "Create $SECRET_NAME TLS secret"
 }
 
 function create_and_sign_cert() {
