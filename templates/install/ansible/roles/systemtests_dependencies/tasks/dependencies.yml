@@ -1,83 +1,90 @@
 ---
-# tasks file for install npm, pip etc...
-- name: check to see if pip is already installed
+# tasks file for install dependencies for systemtests
+
+######################################################
+# Tasks for PIP
+- name: PIP | check to see if pip is already installed
   command: "pip --version"
   ignore_errors: true
   register: pip_is_installed
   changed_when: false
 
-- name: download get-pip.py
+- name: PIP | download get-pip.py
   get_url:
     url: https://bootstrap.pypa.io/get-pip.py
     dest: /tmp
   when: pip_is_installed.rc != 0
 
-- name: install pip
+- name: PIP | install pip
   command: "python /tmp/get-pip.py"
   when: pip_is_installed.rc != 0
 
-- name: delete get-pip.py
+- name: PIP | delete get-pip.py
   file:
     state: absent
     path: /tmp/get-pip.py
   when: pip_is_installed.rc != 0
 
-- name: Install redhat-rpm-config
+
+######################################################
+# Install dependencies by yum
+- name: YUM | Install redhat-rpm-config
   yum:
     name: redhat-rpm-config
     state: present
 
-- name: Install bzip2
+- name: YUM | Install bzip2
   yum:
     name: bzip2
     state: present
 
-- name: Install python-devel
+- name: YUM | Install python-devel
   yum:
     name: python-devel
     state: present
 
-- name: Install openssl
+- name: YUM | Install openssl
   yum:
     name: openssl
     state: latest
 
-- name: Install openssl-devel
+- name: YUM | Install openssl-devel
   yum:
     name: openssl-devel
     state: latest
 
-- include_tasks: epel.yml
-
-- name: Install nodejs
+- name: YUM | Install nodejs
   yum:
     name: "nodejs-{{ nodejs_version }}.*"
     state: present
     enablerepo: epel
 
-- name: install the Xvfb
+- name: YUM | install the Xvfb
   yum:
     name: xorg-x11-server-Xvfb
     state: latest
 
-- name: install gtk
+- name: YUM | install gtk
   yum:
     name: gtk3
     state: latest
 
-- name: Chceck if maven is present
+
+######################################################
+# Task for install maven
+- name: MAVEN | Chceck if maven is present
   command: "mvn --version || cd {{ maven_path }}"
   ignore_errors: true
   register: mvn_is_installed
   changed_when: false
 
-- name: Download apache maven
+- name: MAVEN | Download apache maven
   get_url:
     url: https://archive.apache.org/dist/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
     dest: "{{ maven_root_path }}"
   when: mvn_is_installed.rc != 0
 
-- name: Extract apache maven
+- name: MAVEN | Extract apache maven
   unarchive:
     src: "{{ maven_root_path }}/apache-maven-3.5.2-bin.tar.gz"
     dest: "{{ maven_root_path }}"
