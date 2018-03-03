@@ -9,13 +9,6 @@ privileges is required for Prometheus to monitor pods in the cluster.
 
 .Procedure
 
-. Create cluster-reader role needed by Prometheus
-+
-[options="nowrap"]
-----
-oc create -f ./openshift/addons/cluster-reader.yaml
-----
-
 . Create Prometheus deployment
 +
 [options="nowrap"]

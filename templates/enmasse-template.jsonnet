@@ -11,7 +11,6 @@ local grafana = import "include/grafana.jsonnet";
     "openshift/addons/none-authservice.json": authService.none_openshift,
     "openshift/addons/prometheus.json": prometheus.prometheus,
     "openshift/addons/grafana.json": grafana.grafana,
-    "openshift/addons/cluster-reader.json": roles.cluster_reader,
     "kubernetes/enmasse.json": kubernetes.list,
     "kubernetes/addons/external-lb.json": kubernetes.external_lb,
     "kubernetes/addons/prometheus.json": prometheus.prometheus,
