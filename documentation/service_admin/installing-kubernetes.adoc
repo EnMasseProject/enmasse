@@ -1,4 +1,4 @@
-[[installing-openshift]]
+[[installing-kubernetes]]
 
 == Installing {ProductName} on Kubernetes
 
