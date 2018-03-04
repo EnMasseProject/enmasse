@@ -16,7 +16,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
@@ -464,14 +463,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        try {
-            assertElementDisabled("Console failed, create button is enabled for user " + monitorUser.getUsername(),
-                    consoleWebPage.getCreateButton());
-            consoleWebPage.createAddressWebConsole(destination, false, true);
-            fail("Create button is clickable");
-        } catch (Exception ex) {
-            assertTrue("Console failed, bad exception throws", ex instanceof InvalidElementStateException);
-        }
+        assertElementDisabled("Console failed, create button is enabled for user " + monitorUser.getUsername(),
+                consoleWebPage.getCreateButton());
     }
 
     protected void doTestCannotDeleteAddresses() throws Exception {
@@ -488,14 +481,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        try {
-            assertElementDisabled("Console failed, delete button is enabled for user " + monitorUser.getUsername(),
-                    consoleWebPage.getRemoveButton());
-            consoleWebPage.deleteAddressWebConsole(destination, false);
-            fail("Remove button is clickable");
-        } catch (Exception ex) {
-            assertTrue("Console failed, wrong exception thrown", ex instanceof InvalidElementStateException);
-        }
+        assertElementDisabled("Console failed, delete button is enabled for user " + monitorUser.getUsername(),
+                consoleWebPage.getRemoveButton());
     }
 
     protected void doTestViewAddresses() throws Exception {
