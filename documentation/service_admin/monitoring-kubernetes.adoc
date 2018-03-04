@@ -1,4 +1,4 @@
-[[monitoring]]
+[[monitoring-kubernetes]]
 
 == Monitoring {ProductName} on Kubernetes
 
