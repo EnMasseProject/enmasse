@@ -47,7 +47,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     @Before
     public void setUpWebConsoleTests() throws Exception {
-        Thread.sleep(30000); //sleep before run test (until geckodriver will be fixed)
         selenium.setupDriver(environment, kubernetes, buildDriver());
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
     }
@@ -573,11 +572,13 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                     addressApiClient, sharedAddressSpace);
             consoleWebPage.openWebConsolePage();
             log.info(String.format("User %s successfully authenticated", username));
-        } catch (IllegalStateException ex) {
-            String message = "Console web page wasn't opened!";
-            assertEquals(message, ex.getMessage());
+        } catch (IllegalStateException | org.openqa.selenium.UnhandledAlertException ex) {
+            String messageIllegalException = "Console web page wasn't opened!";
+            String messageSeleniumException = "{Using=tag name, value=body}";
+            assertTrue(ex.getMessage().contains(messageIllegalException) ||
+                    ex.getMessage().contains(messageSeleniumException));
             log.info(String.format("User %s can't authenticate", username));
-            throw ex;
+            throw new IllegalStateException();
         }
     }
 
