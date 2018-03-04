@@ -10,11 +10,13 @@
   shell: 'firefox --version | grep Firefox | cut -d" " -f 3'
   register: get_firefox_version
   changed_when: false
-  when: (not (firefox_status|failed))
+  when: firefox_status.rc == 0
 
 - name: Set install fact
   set_fact: firefox_needs_install=true
-  when: ((firefox_status|failed) or ((get_firefox_version.stdout is defined) and (get_firefox_version.stdout < firefox_version)))
+  when: ((firefox_status.rc != 0) or
+         ((get_firefox_version.stdout is defined) and
+          (get_firefox_version.stdout < firefox_version)))
 
 - name: Uninstall firefox rhel
   yum:
@@ -43,5 +45,8 @@
   when: firefox_needs_install is defined
 
 - name: Copy firefox to /usr/bin
-  shell: 'ln -s /usr/local/firefox/firefox /usr/bin/firefox'
+  file:
+    src: "/usr/local/firefox/firefox"
+    dest: "/usr/bin/firefox"
+    state: link
   when: firefox_needs_install is defined

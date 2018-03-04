@@ -70,9 +70,8 @@ public class SeleniumProvider {
         if (driver != null) {
             takeScreenShot();
             try {
-                driver.close();
-            } catch (Exception ex) {
                 driver.quit();
+            } catch (Exception ex) {
                 log.warn("Raise warning on quit: " + ex.getMessage());
             }
             log.info("Driver is closed");
