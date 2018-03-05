@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-definition-router
+  labels:
+    type: resource-definition
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "ResourceDefinition",
+      "metadata": {
+        "name": "router"
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-definition-broker-topic
+  labels:
+    type: resource-definition
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "ResourceDefinition",
+      "metadata": {
+        "name": "broker-topic"
+      },
+      "template": "topic-persisted"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-definition-broker
+  labels:
+    type: resource-definition
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "ResourceDefinition",
+      "metadata": {
+        "name": "broker"
+      },
+      "template": "queue-persisted"
+    }

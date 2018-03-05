@@ -60,6 +60,8 @@ prepare:
 	mkdir -p build/kubernetes/addons
 	mkdir -p build/openshift/addons
 	cp include/*.json build
+	cp -f include/resource-definitions.yaml install/kubernetes/addons/
+	cp -f include/resource-definitions.yaml install/openshift/addons/
 	cp -f include/*-plans.yaml install/kubernetes/addons/
 	cp -f include/*-plans.yaml install/openshift/addons/
 	cp -f include/address.yaml include/address-space.yaml install/openshift/
