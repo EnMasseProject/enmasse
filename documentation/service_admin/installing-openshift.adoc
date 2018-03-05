@@ -142,6 +142,14 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address
 oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
 ----
 
+. Install default plan and resource configuration
++
+[options="nowrap"]
+----
+oc create -f ./openshift/addons/standard-plans.yaml
+oc create -f ./openshift/addons/brokered-plans.yaml
+----
+
 . Deploy the address-controller:
 +
 [options="nowrap"]
@@ -185,7 +193,6 @@ oc policy add-role-to-user admin system:serviceaccount:enmasse:address-space-adm
 [options="nowrap"]
 ----
 oc create -f ./openshift/addons/standard-plans.yaml
-oc create -f ./openshift/addons/brokered-plans.yaml
 ----
 
 . Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
