@@ -154,10 +154,10 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
     }
 
     @Override
-    public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
+    public List<io.fabric8.kubernetes.client.Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-config");
-        return client.configMaps().inNamespace(namespace).withLabels(labels).watch(watcher);
+        return Arrays.asList(client.configMaps().inNamespace(namespace).withLabels(labels).watch(watcher));
     }
 
     @Override

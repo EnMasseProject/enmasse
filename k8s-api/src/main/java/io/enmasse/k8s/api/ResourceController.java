@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  */
 public class ResourceController<T> implements io.fabric8.kubernetes.client.Watcher, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ResourceController.class.getName());
-    private Watch watch;
+    private List<Watch> watches;
     private final Resource<T> resource;
     private final Watcher<T> changeHandler;
     private Thread watcherThread;
@@ -59,8 +59,8 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
         while (running) {
             try {
                 if (useEventLoop) {
-                    if (watch == null) {
-                        watch = resource.watchResources(this);
+                    if (watches == null) {
+                        watches = resource.watchResources(this);
                     }
                     events.poll(resyncSupplier.get(), TimeUnit.MILLISECONDS);
                 } else {
@@ -84,8 +84,10 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
         try {
             if (useEventLoop) {
                 log.debug("Putting poison pill event");
-                if (watch != null) {
-                    watch.close();
+                if (watches != null) {
+                    for (Watch watch : watches) {
+                        watch.close();
+                    }
                 }
                 events.put(Action.ERROR);
             } else {
@@ -94,7 +96,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
 
             watcherThread.join();
             watcherThread = null;
-            watch = null;
+            watches = null;
         } catch (InterruptedException ignored) {
             log.warn("Interrupted while stopping", ignored);
         }
@@ -130,7 +132,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
             start();
         } else {
             log.info("Watch for address space configs force closed, stopping");
-            watch = null;
+            watches = null;
             stop();
         }
     }

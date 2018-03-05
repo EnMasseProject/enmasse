@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.v1.Either;
+import io.enmasse.controller.TestSchemaProvider;
 import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -40,7 +41,7 @@ public class HttpAddressServiceTest {
     @Before
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        this.addressService = new HttpAddressService(addressSpaceApi, new TestSchemaApi());
+        this.addressService = new HttpAddressService(addressSpaceApi, new TestSchemaProvider());
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")

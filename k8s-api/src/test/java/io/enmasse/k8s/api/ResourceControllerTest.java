@@ -10,7 +10,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -80,8 +82,8 @@ public class ResourceControllerTest {
         private Set<String> resources = new HashSet<>();
 
         @Override
-        public Watch watchResources(Watcher watcher) {
-            return () -> {};
+        public List<Watch> watchResources(Watcher watcher) {
+            return Collections.singletonList(() -> {});
         }
 
         public synchronized TestResource addResource(String resource) {
