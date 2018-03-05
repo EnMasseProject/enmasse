@@ -127,6 +127,9 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         }
 
         var on_update = function (reason) {
+          if ($scope.filterConfig) {
+            $scope.filterConfig.resultsCount = $scope.items.length;
+          }
           if (reason.split('_')[0] !== 'address') {
             return
           }
