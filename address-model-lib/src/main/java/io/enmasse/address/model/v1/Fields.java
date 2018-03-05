@@ -16,8 +16,10 @@ interface Fields {
     String ENDPOINTS = "endpoints";
     String HOST = "host";
     String SERVICE = "service";
-    String CERT_PROVIDER = "certProvider";
+    String CERT = "cert";
     String SECRET_NAME = "secretName";
+    String PROVIDER = "provider";
+    String CERT_PROVIDER = "certProvider";
 
     String SPEC = "spec";
     String STATUS = "status";

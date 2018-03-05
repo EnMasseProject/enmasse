@@ -4,10 +4,10 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.CertProviderSpec;
+import io.enmasse.address.model.CertSpec;
 import io.enmasse.controller.auth.CertProvider;
 
 public interface CertProviderFactory {
-    CertProvider createProvider(CertProviderSpec certProviderSpec);
+    CertProvider createProvider(CertSpec certSpec);
     String getDefaultProviderName();
 }

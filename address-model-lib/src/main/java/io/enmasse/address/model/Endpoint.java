@@ -15,14 +15,14 @@ public class Endpoint {
     private final String service;
     private final String host;
     private final int port;
-    private final CertProviderSpec certProviderSpec;
+    private final CertSpec certSpec;
 
-    public Endpoint(String name, String service, String host, int port, CertProviderSpec certProviderSpec) {
+    public Endpoint(String name, String service, String host, int port, CertSpec certSpec) {
         this.name = name;
         this.service = service;
         this.host = host;
         this.port = port;
-        this.certProviderSpec = certProviderSpec;
+        this.certSpec = certSpec;
     }
 
     public String getName() {
@@ -41,8 +41,8 @@ public class Endpoint {
         return Optional.ofNullable(host);
     }
 
-    public Optional<CertProviderSpec> getCertProviderSpec() {
-        return Optional.ofNullable(certProviderSpec);
+    public Optional<CertSpec> getCertSpec() {
+        return Optional.ofNullable(certSpec);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class Endpoint {
                 .append("host=").append(host).append(",")
                 .append("service=").append(service).append(",")
                 .append("port=").append(port).append(",")
-                .append("certProviderSpec").append(certProviderSpec).append("}")
+                .append("certProviderSpec").append(certSpec).append("}")
                 .toString();
     }
 
@@ -61,7 +61,7 @@ public class Endpoint {
         private String service;
         private String host;
         private int port = 0;
-        private CertProviderSpec certProviderSpec;
+        private CertSpec certSpec;
 
         public Builder() {}
 
@@ -70,7 +70,7 @@ public class Endpoint {
             this.port = endpoint.getPort();
             this.service = endpoint.getService();
             this.host = endpoint.getHost().orElse(null);
-            this.certProviderSpec = endpoint.getCertProviderSpec().orElse(null);
+            this.certSpec = endpoint.getCertSpec().orElse(null);
         }
 
         public Builder setName(String name) {
@@ -93,15 +93,15 @@ public class Endpoint {
             return this;
         }
 
-        public Builder setCertProviderSpec(CertProviderSpec certProviderSpec) {
-            this.certProviderSpec = certProviderSpec;
+        public Builder setCertSpec(CertSpec certSpec) {
+            this.certSpec = certSpec;
             return this;
         }
 
         public Endpoint build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(service, "service not set");
-            return new Endpoint(name, service, host, port, certProviderSpec);
+            return new Endpoint(name, service, host, port, certSpec);
         }
     }
 }

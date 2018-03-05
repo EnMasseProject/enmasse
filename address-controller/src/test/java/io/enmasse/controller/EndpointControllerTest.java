@@ -69,6 +69,6 @@ public class EndpointControllerTest {
         assertThat(newspace.getEndpoints().get(0).getName(), is("myservice-external"));
         assertTrue(newspace.getEndpoints().get(0).getHost().isPresent());
         assertThat(newspace.getEndpoints().get(0).getHost().get(), is("messaging.example.com"));
-        assertTrue(newspace.getEndpoints().get(0).getCertProviderSpec().isPresent());
+        assertTrue(newspace.getEndpoints().get(0).getCertSpec().isPresent());
     }
 }

@@ -9,12 +9,9 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.KubeEventLogger;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.api.model.*;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonArray;
@@ -26,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.time.Clock;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -237,10 +233,10 @@ public class KubernetesHelper implements Kubernetes {
                     .endPort()
                     .endSpec();
 
-            if (endpoint.getCertProviderSpec().isPresent()) {
+            if (endpoint.getCertSpec().isPresent()) {
                 route.editOrNewMetadata()
-                        .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertProviderSpec().get().getName())
-                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProviderSpec().get().getSecretName())
+                        .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertSpec().get().getProvider())
+                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertSpec().get().getSecretName())
                         .endMetadata()
                         .editOrNewSpec()
                         .withNewTls()
@@ -274,10 +270,10 @@ public class KubernetesHelper implements Kubernetes {
                         .withSelector(service.getSpec().getSelector())
                         .withType("LoadBalancer")
                         .endSpec();
-                if (endpoint.getCertProviderSpec().isPresent()) {
+                if (endpoint.getCertSpec().isPresent()) {
                     svc.editOrNewMetadata()
-                            .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertProviderSpec().get().getName())
-                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProviderSpec().get().getSecretName())
+                            .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertSpec().get().getProvider())
+                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertSpec().get().getSecretName())
                             .endMetadata();
                 }
                 return svc.build();

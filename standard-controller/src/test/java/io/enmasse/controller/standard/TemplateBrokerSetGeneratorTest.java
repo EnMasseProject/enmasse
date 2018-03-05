@@ -80,7 +80,7 @@ public class TemplateBrokerSetGeneratorTest {
                 .appendEndpoint(new Endpoint.Builder()
                         .setName("foo")
                         .setService("messaging")
-                        .setCertProviderSpec(new CertProviderSpec("mysecret", "mysecret"))
+                        .setCertSpec(new CertSpec("mysecret", "mysecret"))
                         .build())
                 .build();
     }

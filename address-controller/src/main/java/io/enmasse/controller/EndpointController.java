@@ -5,7 +5,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertProviderSpec;
+import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
@@ -75,7 +75,7 @@ public class EndpointController implements Controller {
                 .setService(route.getSpec().getTo().getName());
 
         if (secretName != null) {
-            builder.setCertProviderSpec(new CertProviderSpec(providerName, secretName));
+            builder.setCertSpec(new CertSpec(providerName, secretName));
         }
 
         return builder.build();
@@ -90,7 +90,7 @@ public class EndpointController implements Controller {
                 .setService(serviceName);
 
         if (secretName != null) {
-            builder.setCertProviderSpec(new CertProviderSpec(providerName, secretName));
+            builder.setCertSpec(new CertSpec(providerName, secretName));
         }
 
         if (service.getSpec().getPorts().size() > 0) {
