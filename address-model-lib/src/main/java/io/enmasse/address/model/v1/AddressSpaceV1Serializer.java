@@ -53,13 +53,12 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                 if (endpoint.getPort() != 0) {
                     e.put(Fields.PORT, endpoint.getPort());
                 }
-                endpoint.getCertProviderSpec().ifPresent(provider -> {
-                    ObjectNode p = e.putObject(Fields.CERT_PROVIDER);
-                    for (Map.Entry<String, String> entry : provider.getParameters().entrySet()) {
-                        p.put(entry.getKey(), entry.getValue());
+                endpoint.getCertSpec().ifPresent(cert -> {
+                    ObjectNode p = e.putObject(Fields.CERT);
+                    p.put(Fields.PROVIDER, cert.getProvider());
+                    if (cert.getSecretName() != null) {
+                        p.put(Fields.SECRET_NAME, cert.getSecretName());
                     }
-                    p.put(Fields.NAME, provider.getName());
-                    p.put(Fields.SECRET_NAME, provider.getSecretName());
                 });
             }
         }

@@ -45,9 +45,9 @@ public class AuthController implements Controller {
         List<Endpoint> endpoints = addressSpace.getEndpoints();
         if (endpoints != null) {
             for (Endpoint endpoint : endpoints) {
-                if (endpoint.getCertProviderSpec().isPresent()) {
+                if (endpoint.getCertSpec().isPresent()) {
                     try {
-                        CertProvider certProvider = certProviderFactory.createProvider(endpoint.getCertProviderSpec().get());
+                        CertProvider certProvider = certProviderFactory.createProvider(endpoint.getCertSpec().get());
                         Secret secret = certProvider.provideCert(addressSpace, endpoint);
                         certManager.grantServiceAccountAccess(secret, "default", addressSpace.getNamespace());
                     } catch (Exception e) {

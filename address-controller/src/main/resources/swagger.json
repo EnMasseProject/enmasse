@@ -444,10 +444,10 @@
                             "host": {
                                 "type": "string"
                             },
-                            "certProvider": {
+                            "cert": {
                                 "type": "object",
                                 "properties": {
-                                    "name": {
+                                    "provider": {
                                         "type": "string"
                                     },
                                     "secretName": {

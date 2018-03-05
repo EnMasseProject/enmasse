@@ -10,7 +10,6 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.k8s.api.SchemaApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -58,7 +57,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
             // Step 1: Validate endpoints and remove unknown
             List<String> availableServices = addressSpaceType.getServiceNames();
-            Map<String, CertProviderSpec> serviceCertProviders = new HashMap<>();
+            Map<String, CertSpec> serviceCertProviders = new HashMap<>();
 
             List<Endpoint> endpoints = null;
             if (addressSpace.getEndpoints() != null) {
@@ -70,7 +69,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                         log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
                         it.remove();
                     } else {
-                        endpoint.getCertProviderSpec().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
+                        endpoint.getCertSpec().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
                     }
                 }
             } else {
@@ -83,21 +82,27 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             // Step 3: Create missing secrets if not specified
             for (String service : availableServices) {
                 if (!serviceCertProviders.containsKey(service)) {
-                    serviceCertProviders.put(service, new CertProviderSpec(defaultCertProvider, "external-certs-" + service));
+                    serviceCertProviders.put(service, new CertSpec(defaultCertProvider));
                 }
             }
 
             // Step 3: Ensure all endpoints have their certProviders set
             endpoints = endpoints.stream()
                     .map(endpoint -> {
-                        if (!endpoint.getCertProviderSpec().isPresent()) {
+                        if (!endpoint.getCertSpec().isPresent()) {
                             return new Endpoint.Builder(endpoint)
-                                    .setCertProviderSpec(serviceCertProviders.get(endpoint.getService()))
+                                    .setCertSpec(serviceCertProviders.get(endpoint.getService()))
                                     .build();
                         } else {
                             return endpoint;
                         }
                     }).collect(Collectors.toList());
+
+            for (Map.Entry<String, CertSpec> entry : serviceCertProviders.entrySet()) {
+                if (entry.getValue().getSecretName() == null) {
+                    entry.getValue().setSecretName("external-certs-" + entry.getKey());
+                }
+            }
 
             if (availableServices.contains("messaging")) {
                 parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName());

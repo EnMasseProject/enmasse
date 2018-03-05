@@ -65,12 +65,12 @@ public class Main extends AbstractVerticle {
     private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {
         return new CertProviderFactory() {
             @Override
-            public CertProvider createProvider(CertProviderSpec certProviderSpec) {
-                if ("wildcard".equals(certProviderSpec.getName())) {
+            public CertProvider createProvider(CertSpec certSpec) {
+                if ("wildcard".equals(certSpec.getProvider())) {
                     String secretName = options.getWildcardCertSecret();
-                    return new WildcardCertProvider(controllerClient, certProviderSpec, secretName);
+                    return new WildcardCertProvider(controllerClient, certSpec, secretName);
                 } else {
-                    return new SelfsignedCertProvider(controllerClient, certProviderSpec, certManager);
+                    return new SelfsignedCertProvider(controllerClient, certSpec, certManager);
                 }
             }
 
