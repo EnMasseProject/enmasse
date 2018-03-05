@@ -6,7 +6,6 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.SubjectAccessReview;
 import io.enmasse.controller.common.TokenReview;
@@ -49,13 +48,12 @@ public class HTTPServerTest {
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
-        SchemaProvider schemaProvider = new TestSchemaApi();
         Kubernetes kubernetes = mock(Kubernetes.class);
         when(kubernetes.getNamespace()).thenReturn("controller");
         when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, schemaProvider,"/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
     }
 
     @After

@@ -5,13 +5,8 @@
 
 package io.enmasse.controller;
 
-import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.controller.api.JacksonConfig;
 import io.enmasse.controller.api.AuthInterceptor;
-import io.enmasse.controller.api.osb.v2.bind.OSBBindingService;
-import io.enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
-import io.enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
-import io.enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import io.enmasse.controller.api.v1.http.SwaggerSpecEndpoint;
 import io.enmasse.controller.api.v1.http.HttpAddressService;
 import io.enmasse.controller.api.v1.http.HttpAddressSpaceService;

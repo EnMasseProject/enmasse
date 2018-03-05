@@ -22,14 +22,14 @@ public class CreateController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(CreateController.class.getName());
 
     private final Kubernetes kubernetes;
-    private final SchemaApi schemaApi;
+    private final SchemaProvider schemaProvider;
     private final InfraResourceFactory infraResourceFactory;
     private final String namespace;
     private final EventLogger eventLogger;
 
-    public CreateController(Kubernetes kubernetes, SchemaApi schemaApi, InfraResourceFactory infraResourceFactory, String namespace, EventLogger eventLogger) {
+    public CreateController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, String namespace, EventLogger eventLogger) {
         this.kubernetes = kubernetes;
-        this.schemaApi = schemaApi;
+        this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
         this.namespace = namespace;
         this.eventLogger = eventLogger;
@@ -39,7 +39,7 @@ public class CreateController implements Controller {
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
         Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
 
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaApi.getSchema());
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
         addressSpaceResolver.validate(addressSpace);
 
         if (namespace.equals(addressSpace.getNamespace())) {
@@ -56,7 +56,7 @@ public class CreateController implements Controller {
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
             kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
-            schemaApi.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
+            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
         }
 
         KubernetesList resourceList = new KubernetesListBuilder()

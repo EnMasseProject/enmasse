@@ -5,14 +5,24 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpacePlan;
-import io.enmasse.address.model.v1.SchemaProvider;
+import io.enmasse.address.model.Schema;
 
 /**
  * Interface for Schema of the address model
  */
-public interface SchemaApi extends SchemaProvider {
+public interface SchemaApi {
     /**
      * Copy address space plan and referenced address plans and resource definitions into namespace;
      */
     void copyIntoNamespace(AddressSpacePlan addressSpacePlan, String otherNamespace);
+
+    /**
+     * List schema
+     */
+    Schema getSchema() throws Exception;
+
+    /**
+     * Watch changes to schema
+     */
+    Watch watchSchema(Watcher<Schema> watcher) throws Exception;
 }

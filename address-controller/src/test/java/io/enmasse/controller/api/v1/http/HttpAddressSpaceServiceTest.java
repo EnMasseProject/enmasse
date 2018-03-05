@@ -7,6 +7,7 @@ package io.enmasse.controller.api.v1.http;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.controller.TestSchemaProvider;
 import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -38,8 +39,7 @@ public class HttpAddressSpaceServiceTest {
     @Before
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        SchemaApi schemaApi = new TestSchemaApi();
-        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, schemaApi,"controller");
+        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(),"controller");
         securityContext = mock(SecurityContext.class);
         when(securityContext.getUserPrincipal()).thenReturn(new BasicUserPrincipal("me"));
         when(securityContext.isUserInRole(any())).thenReturn(true);

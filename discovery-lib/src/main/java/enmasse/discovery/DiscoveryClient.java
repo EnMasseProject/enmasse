@@ -84,8 +84,8 @@ public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
     }
 
     @Override
-    public Watch watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
-        return client.pods().withLabels(labelFilter).watch(watcher);
+    public List<Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
+        return Collections.singletonList(client.pods().withLabels(labelFilter).watch(watcher));
     }
 
     @Override

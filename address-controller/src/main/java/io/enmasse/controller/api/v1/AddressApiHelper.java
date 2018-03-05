@@ -14,7 +14,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.v1.SchemaProvider;
+import io.enmasse.controller.SchemaProvider;
 import io.enmasse.controller.api.RbacSecurityContext;
 import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;

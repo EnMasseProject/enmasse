@@ -5,7 +5,7 @@
 package io.enmasse.controller.api.v1.http;
 
 import io.enmasse.address.model.v1.Either;
-import io.enmasse.address.model.v1.SchemaProvider;
+import io.enmasse.controller.SchemaProvider;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.v1.AddressApiHelper;
 import io.enmasse.address.model.Address;

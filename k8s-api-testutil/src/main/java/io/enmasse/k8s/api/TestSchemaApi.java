@@ -87,4 +87,9 @@ public class TestSchemaApi implements SchemaApi {
                 ))
                 .build();
     }
+
+    @Override
+    public Watch watchSchema(Watcher<Schema> watcher) throws Exception {
+        return null;
+    }
 }

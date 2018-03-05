@@ -23,6 +23,9 @@ import java.util.Set;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Schema;
+import io.enmasse.controller.SchemaProvider;
+import io.enmasse.controller.TestSchemaProvider;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.TestSchemaApi;
@@ -51,7 +54,7 @@ public class AddressApiHelperTest {
         when(securityContext.isUserInRole(any())).thenReturn(true);
         when(addressSpaceApi.getAddressSpaceWithName(eq("test"))).thenReturn(Optional.of(addressSpace));
         when(addressSpaceApi.withAddressSpace(eq(addressSpace))).thenReturn(addressApi);
-        helper = new AddressApiHelper(addressSpaceApi, new TestSchemaApi());
+        helper = new AddressApiHelper(addressSpaceApi, new TestSchemaProvider());
     }
 
     @Test

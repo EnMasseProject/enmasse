@@ -107,8 +107,8 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
         labels.put(LabelKeys.TYPE, "address-space");
         ResourceController<AddressSpace> controller = ResourceController.create(new Resource<AddressSpace>() {
             @Override
-            public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
-                return client.configMaps().withLabels(labels).watch(w);
+            public List<io.fabric8.kubernetes.client.Watch> watchResources(io.fabric8.kubernetes.client.Watcher w) {
+                return Collections.singletonList(client.configMaps().withLabels(labels).watch(w));
             }
 
             @Override

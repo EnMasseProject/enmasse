@@ -22,13 +22,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class.getName());
 
     private final Kubernetes kubernetes;
-    private final SchemaApi schemaApi;
+    private final SchemaProvider schemaProvider;
     private final AuthenticationServiceResolverFactory authResolverFactory;
     private final String defaultCertProvider;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, SchemaApi schemaApi, AuthenticationServiceResolverFactory authResolverFactory, String defaultCertProvider) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, SchemaProvider schemaProvider, AuthenticationServiceResolverFactory authResolverFactory, String defaultCertProvider) {
         this.kubernetes = kubernetes;
-        this.schemaApi = schemaApi;
+        this.schemaProvider = schemaProvider;
         this.authResolverFactory = authResolverFactory;
         this.defaultCertProvider = defaultCertProvider;
     }
@@ -37,7 +37,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     public List<HasMetadata> createResourceList(AddressSpace addressSpace) {
         List<HasMetadata> resourceList = new ArrayList<>();
 
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaApi.getSchema());
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace);
         AddressSpacePlan plan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace);
         ResourceDefinition resourceDefinition = addressSpaceResolver.getResourceDefinition(plan);

@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class ConfigMapSchemaApi implements SchemaApi {
+public class ConfigMapSchemaApi implements SchemaApi, Resource<Schema> {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapSchemaApi.class);
     private final KubernetesClient client;
@@ -242,5 +242,26 @@ public class ConfigMapSchemaApi implements SchemaApi {
         builder.setName(name);
         builder.setDescription(description);
         return builder.build();
+    }
+
+    @Override
+    public Watch watchSchema(Watcher<Schema> watcher) throws Exception {
+        ResourceController<Schema> controller = ResourceController.create(this, watcher);
+        controller.start();
+        return controller::stop;
+    }
+
+    @Override
+    public List<io.fabric8.kubernetes.client.Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
+        List<io.fabric8.kubernetes.client.Watch> watches = new ArrayList<>();
+        watches.add(client.configMaps().inNamespace(namespace).withLabel(LabelKeys.TYPE, "address-space-plan").watch(watcher));
+        watches.add(client.configMaps().inNamespace(namespace).withLabel(LabelKeys.TYPE, "address-plan").watch(watcher));
+        watches.add(client.configMaps().inNamespace(namespace).withLabel(LabelKeys.TYPE, "resource-definition").watch(watcher));
+        return watches;
+    }
+
+    @Override
+    public Set<Schema> listResources() {
+        return Collections.singleton(getSchema());
     }
 }

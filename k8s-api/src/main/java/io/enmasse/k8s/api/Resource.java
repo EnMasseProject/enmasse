@@ -4,12 +4,15 @@
  */
 package io.enmasse.k8s.api;
 
+import io.fabric8.kubernetes.client.Watch;
+
+import java.util.List;
 import java.util.Set;
 
 /**
  * Interface for components supporting listing and watching a resource.
  */
 public interface Resource<T> {
-    io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher watcher);
+    List<Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher);
     Set<T> listResources();
 }

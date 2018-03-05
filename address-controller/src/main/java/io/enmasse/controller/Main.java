@@ -38,8 +38,11 @@ public class Main extends AbstractVerticle {
     }
 
     @Override
-    public void start(Future<Void> startPromise) {
+    public void start(Future<Void> startPromise) throws Exception {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
+        CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
+        schemaApi.watchSchema(schemaProvider);
+
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
                 : new LogEventLogger();
@@ -49,17 +52,17 @@ public class Main extends AbstractVerticle {
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaApi, resolverFactory, authController.getDefaultCertProvider());
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaProvider, resolverFactory, authController.getDefaultCertProvider());
 
         ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, eventLogger);
-        controllerChain.addController(new CreateController(kubernetes, schemaApi, infraResourceFactory, kubernetes.getNamespace(), eventLogger));
+        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, kubernetes.getNamespace(), eventLogger));
         controllerChain.addController(new StatusController(kubernetes, infraResourceFactory));
         controllerChain.addController(new EndpointController(controllerClient));
         controllerChain.addController(authController);
 
         deployVerticles(startPromise,
                 new Deployment(controllerChain),
-                new Deployment(new HTTPServer(addressSpaceApi, schemaApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }
 
     private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {

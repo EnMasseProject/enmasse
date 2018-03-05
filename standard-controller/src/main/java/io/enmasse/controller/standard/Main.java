@@ -25,7 +25,7 @@ import java.util.Optional;
 public class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class.getName());
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
 
         TemplateOptions templateOptions = new TemplateOptions(env);
@@ -37,6 +37,8 @@ public class Main {
         String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
         OpenShiftClient openShiftClient = new DefaultOpenShiftClient();
         SchemaApi schemaApi = new ConfigMapSchemaApi(openShiftClient, openShiftClient.getNamespace());
+        CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
+        schemaApi.watchSchema(schemaProvider);
 
         Kubernetes kubernetes = new KubernetesHelper(new DefaultOpenShiftClient(), templateDir);
         BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace);
@@ -53,7 +55,7 @@ public class Main {
                 clusterGenerator,
                 certDir,
                 eventLogger,
-                schemaApi);
+                schemaProvider);
 
         log.info("Deploying address space controller for " + addressSpace);
         Vertx vertx = Vertx.vertx();

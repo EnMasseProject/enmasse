@@ -5,7 +5,6 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.v1.SchemaProvider;
 import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
