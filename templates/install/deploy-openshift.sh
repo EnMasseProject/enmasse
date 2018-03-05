@@ -206,12 +206,14 @@ then
 fi
 
 if [ "$MODE" == "singletenant" ]; then
+    runcmd "oc create -f $ADDONS/resource-definitions.yaml" "Create resource definitions"
     runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
     runcmd "oc create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
     runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
 
     create_address_space "oc" "default" $NAMESPACE
 else
+    runcmd "oc create -f $ADDONS/resource-definitions.yaml" "Create resource definitions"
     runcmd "oc create -f $ADDONS/standard-plans.yaml" "Create standard address space plans"
     runcmd "oc create -f $ADDONS/brokered-plans.yaml" "Create brokered address space plans"
 fi

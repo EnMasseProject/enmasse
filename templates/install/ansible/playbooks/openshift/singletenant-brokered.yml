@@ -1,0 +1,7 @@
+- hosts: localhost
+  vars:
+    multitenant: false
+    address_space_type: brokered
+    address_space_plan: unlimited-brokered
+  roles:
+    - enmasse
