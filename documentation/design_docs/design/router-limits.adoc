@@ -1,12 +1,12 @@
 == Connections
 
-At present, the router can be restricted at the number of connections it can accept.  A simple experiment where 1000 connections are created + a sender/receiver pair is created for each causes the router memory usage to go from the baseline of 20MB to 80MB. This means that the router memory usage goes up by 60kB for each connection.
+At present, the router can be restricted at the number of connections it can accept.  A simple experiment where 1000 connections are created + a sender/receiver pair is that sends 100k messages, causes router memory usage to go from the baseline of 20MB to 140MB. This means that the router memory usage goes up by 120kB for each client/connection. This is a very conservative number since its unlikely that all clients will send with such a high throughput. 
+
+It is nonetheless good to be on the safe side.
 
 If we assume that the router needs at least 100MB for everything else, we can assume 400MB to be available for bookkeeping in the default router pod configuration.
 
-This means that the router can handle 6666 connections with the default memory configuration.  We can then set the router max connections setting to be approximately (memory_limit_in_kb / 60).
-
-We may want to be even more conservative and restrict to less connections.
+This means that the router can handle 3333 connections with the default memory configuration.  We can then set the router max connections setting to be approximately (memory_limit_in_kb / 120).
 
 To increase the number of connections an address space can handle, one can either increase the number of router pods or increase the memory limit available to each pod.
 
@@ -16,6 +16,4 @@ Since the router connection limit is per router, the mapping to credits comes na
 
 Unfortunately, the router cannot enforce limits per address, which means that it doesnt make sense to offer different levels of credits for the router resource in address plans. 
 
-Configuring 10000 addresses + autolinks on the router causes a memory increase from 20 MB to 64 MB.  If I create a connection with a sender/receiver pair for each of these addresses, the router memory goes up to 550 MB, without being able to establish all of them (and not able to figure out how many got established as qdmanage QUERY --type=connection stops working).
-
-Short term, I think we need to make an assumption about how many connections we expect for a given address on average and just use that. If we assume 1 address per connection, the maths are simple. A router can then fit ~5000 addresses, which should give a router credit of 0.0002 given idle connections. However, I'm not sure that number is realistic. 
+Short term, I think we need to make an assumption about how many connections we expect for a given address on average and just use that. If we assume 1 address per connection, the maths are simple. A router can then fit ~3333 addresses, which should give a router credit of 0.0003 allowing full throttle for each connection.
