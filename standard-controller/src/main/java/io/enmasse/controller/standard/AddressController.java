@@ -168,32 +168,72 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
         // TODO: Instead of going to the routers directly, list routers, and perform a request against the
         // router agent to do the check
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, certDir);
+        List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
-                checkRouterStatus(router, addresses, numOk, addressResolver);
+                try {
+                    RouterStatus routerStatus = routerStatusCollector.collect(router);
+                    if (routerStatus != null) {
+                        routerStatusList.add(routerStatus);
+                    }
+                } catch (Exception e) {
+                    log.info("Error requesting router status from {}. Ignoring", router.getMetadata().getName(), e);
+                    eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, addressSpaceName);
+                }
             }
         }
 
+        Map<String, Integer> clusterOk = new HashMap<>();
         for (Address address : addresses) {
             AddressType addressType = addressResolver.getType(address);
             AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
-            numOk.put(address, checkClusterStatus(address, addressPlan) + numOk.getOrDefault(address, 0));
+
+            int ok = 0;
+            switch (addressType.getName()) {
+                case "queue":
+                    ok += checkBrokerStatus(address, clusterOk, addressPlan);
+                    for (RouterStatus routerStatus : routerStatusList) {
+                        ok += routerStatus.checkAddress(address);
+                        ok += routerStatus.checkAutoLinks(address);
+                    }
+                    ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
+                    break;
+                case "topic":
+                    ok += checkBrokerStatus(address, clusterOk, addressPlan);
+                    for (RouterStatus routerStatus : routerStatusList) {
+                        ok += routerStatus.checkLinkRoutes(address);
+                    }
+                    if (isPooled(addressPlan)) {
+                        ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
+                    } else {
+                        ok += RouterStatus.checkConnection(address, routerStatusList);
+                    }
+                    break;
+                case "anycast":
+                case "multicast":
+                    for (RouterStatus routerStatus : routerStatusList) {
+                        ok += routerStatus.checkAddress(address);
+                    }
+                    break;
+            }
+            numOk.put(address, ok);
         }
 
         return numOk;
     }
 
-    private int checkClusterStatus(Address address, AddressPlan addressPlan) {
-        int numOk = 0;
+    private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk, AddressPlan addressPlan) {
         String clusterId = isPooled(addressPlan) ? "broker" : address.getName();
-        String addressType = address.getType();
-        // TODO: Get rid of references to queue and topic
-        if ((addressType.equals("queue") || addressType.equals("topic")) && !kubernetes.isDestinationClusterReady(clusterId)) {
-            address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
-        } else {
-            numOk++;
+        if (!clusterOk.containsKey(clusterId)) {
+            if (!kubernetes.isDestinationClusterReady(clusterId)) {
+                address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
+                clusterOk.put(clusterId, 0);
+            } else {
+                clusterOk.put(clusterId, 1);
+            }
         }
-        return numOk;
+        return clusterOk.get(clusterId);
     }
 
     private boolean isPooled(AddressPlan plan) {
@@ -206,91 +246,4 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
 
-    private void checkRouterStatus(Pod router, Set<Address> addressList, Map<Address, Integer> okMap, AddressResolver addressResolver) throws Exception {
-
-        int port = 0;
-        for (Container container : router.getSpec().getContainers()) {
-            if (container.getName().equals("router")) {
-                for (ContainerPort containerPort : container.getPorts()) {
-                    if (containerPort.getName().equals("amqps-normal")) {
-                        port = containerPort.getContainerPort();
-                    }
-                }
-            }
-        }
-
-        if (port != 0) {
-            log.debug("Checking router status of router " + router.getStatus().getPodIP());
-            ProtonClientOptions clientOptions = new ProtonClientOptions()
-                    .setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
-                    .setHostnameVerificationAlgorithm("")
-                    .setPemTrustOptions(new PemTrustOptions()
-                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
-                    .setPemKeyCertOptions(new PemKeyCertOptions()
-                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-            SyncRequestClient client = new SyncRequestClient(router.getStatus().getPodIP(), port, vertx, clientOptions);
-            List<String> addresses = checkRouter(client,"org.apache.qpid.dispatch.router.config.address", "prefix");
-            List<String> autoLinks = checkRouter(client, "org.apache.qpid.dispatch.router.config.autoLink", "addr");
-            List<String> linkRoutes = checkRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
-
-            for (Address address : addressList) {
-                AddressType addressType = addressResolver.getType(address);
-                AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
-                // TODO: Move these checks to agent
-                if (!address.getType().equals("topic")) {
-                    boolean found = addresses.contains(address.getAddress());
-                    if (!found) {
-                        address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
-                    } else {
-                        okMap.put(address, checkClusterStatus(address, addressPlan) + okMap.getOrDefault(address, 0));
-                    }
-                    if (address.getType().equals("queue")) {
-                        found = autoLinks.contains(address.getAddress());
-                        if (!found) {
-                            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());
-                        } else {
-                            okMap.put(address, checkClusterStatus(address, addressPlan) + okMap.getOrDefault(address, 0));
-                        }
-                    }
-                } else {
-                    boolean found = linkRoutes.contains(address.getAddress());
-                    if (!found) {
-                        address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + router.getMetadata().getName());
-                    } else {
-                        okMap.put(address, checkClusterStatus(address, addressPlan) + okMap.getOrDefault(address, 0));
-                    }
-                }
-            }
-        } else {
-            log.info("Unable to find appropriate router port, skipping address check");
-        }
-    }
-
-    private List<String> checkRouter(SyncRequestClient client, String entityType, String attributeName) {
-        Map<String, Object> properties = new LinkedHashMap<>();
-        properties.put("operation", "QUERY");
-        properties.put("entityType", entityType);
-        Map body = new LinkedHashMap<>();
-
-        body.put("attributeNames", Arrays.asList(attributeName));
-
-        Message message = Proton.message();
-        message.setAddress("$management");
-        message.setApplicationProperties(new ApplicationProperties(properties));
-        message.setBody(new AmqpValue(body));
-
-        try {
-            Message response = client.request(message, 10, TimeUnit.SECONDS);
-            AmqpValue value = (AmqpValue) response.getBody();
-            Map values = (Map) value.getValue();
-            List<List<String>> results = (List<List<String>>) values.get("results");
-            return results.stream().map(l -> l.get(0)).collect(Collectors.toList());
-        } catch (Exception e) {
-            log.info("Error requesting router status. Ignoring", e);
-            eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, addressSpaceName);
-            return Collections.emptyList();
-        }
-    }
 }
