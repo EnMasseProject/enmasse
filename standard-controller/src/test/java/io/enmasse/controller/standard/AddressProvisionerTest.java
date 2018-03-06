@@ -121,7 +121,7 @@ public class AddressProvisionerTest {
         Address largeQueue = new Address.Builder()
                 .setAddress("q4")
                 .setType("queue")
-                .setPlan("large-queue")
+                .setPlan("xlarge-queue")
                 .build();
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(largeQueue));
 
@@ -245,22 +245,37 @@ public class AddressProvisionerTest {
                 .build());
 
 
-        AddressProvisioner provisioner = createProvisioner();
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 0, 3),
+                new ResourceAllowance("router", 0, 1),
+                new ResourceAllowance("aggregate", 0, 4)));
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(addresses);
 
-        Address queue = new Address.Builder()
+        Address q1 = new Address.Builder()
                 .setAddress("q1")
+                .setPlan("xlarge-queue")
+                .setType("queue")
+                .build();
+        Address q2 = new Address.Builder()
+                .setAddress("q2")
                 .setPlan("large-queue")
                 .setType("queue")
                 .build();
-        Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
+        Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(q1, q2));
 
-        when(generator.generateCluster(eq(queue.getName()), any(), eq(2), eq(queue))).thenReturn(new AddressCluster(queue.getName(), new KubernetesList()));
+        when(generator.generateCluster(eq(q1.getName()), any(), anyInt(), eq(q1))).thenReturn(new AddressCluster(q1.getName(), new KubernetesList()));
+        when(generator.generateCluster(eq(q2.getName()), any(), anyInt(), eq(q2))).thenReturn(new AddressCluster(q2.getName(), new KubernetesList()));
         provisioner.provisionResources(usageMap, provisionMap);
 
-        assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
-        assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertNull(queue.getAnnotations().get(AnnotationKeys.BROKER_ID));
+        assertTrue(q1.getStatus().getMessages().toString(), q1.getStatus().getMessages().isEmpty());
+        assertThat(q1.getStatus().getPhase(), is(Status.Phase.Configuring));
+        assertNull(q1.getAnnotations().get(AnnotationKeys.BROKER_ID));
+        verify(generator).generateCluster(eq(q1.getName()), any(), eq(2), eq(q1));
+
+        assertTrue(q2.getStatus().getMessages().toString(), q2.getStatus().getMessages().isEmpty());
+        assertThat(q2.getStatus().getPhase(), is(Status.Phase.Configuring));
+        assertNull(q2.getAnnotations().get(AnnotationKeys.BROKER_ID));
+        verify(generator).generateCluster(eq(q2.getName()), any(), eq(1), eq(q2));
     }
 
     @Test

@@ -215,9 +215,7 @@ public class AddressProvisioner {
             } else if ("broker".equals(resourceRequest.getResourceName())) {
                 double sumUsage = resourceUsage.getOrDefault("all", 0.0);
                 double needed = neededMap.get(resourceRequest.getResourceName());
-                int required = (int) Math.ceil(
-                        sumUsage
-                        + needed);
+                int required = (int) Math.ceil(needed);
 
                 log.info("Require ceil(usage({}) + needed({})) = {} sharded brokers", sumUsage, needed, required);
                 ResourceDefinition resourceDefinition = addressResolver.getResourceDefinition(addressPlan, resourceRequest.getResourceName());

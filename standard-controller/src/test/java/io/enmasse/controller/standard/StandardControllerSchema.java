@@ -66,6 +66,13 @@ public class StandardControllerSchema {
                                                 .setAddressType("queue")
                                                 .setRequestedResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.2),
+                                                        new ResourceRequest("broker", 1.0)))
+                                                .build(),
+                                        new AddressPlan.Builder()
+                                                .setName("xlarge-queue")
+                                                .setAddressType("queue")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.2),
                                                         new ResourceRequest("broker", 2.0)))
                                                 .build()))
                                 .build()))
