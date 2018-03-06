@@ -102,12 +102,12 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestCannotDeleteAddresses();
     }
 
-    //@Test disabled due to issue: #949
+    @Test
     public void testViewAddresses() throws Exception {
         doTestViewAddresses();
     }
 
-    //@Test disabled due to issue: #949
+    @Test
     public void testViewConnections() throws Exception {
         doTestViewConnections();
     }
