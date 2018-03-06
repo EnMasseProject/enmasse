@@ -40,22 +40,12 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         setAddresses(sharedAddressSpace, addresses.toArray(new Destination[0]));
     }
 
-    @Before
-    public void initAuthzTest() throws Exception {
-        if (getAddressSpaceType() == AddressSpaceType.BROKERED) {
-            getKeycloakClient().createGroup(sharedAddressSpace.getName(), "send_#");
-            getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "send_#", username);
-            getKeycloakClient().createGroup(sharedAddressSpace.getName(), "recv_#");
-            getKeycloakClient().joinGroup(sharedAddressSpace.getName(), "recv_#", username);
-        }
-    }
-
     protected void doTestSendAuthz() throws Exception {
         initAddresses();
         KeycloakCredentials allowedUser = new KeycloakCredentials("sender", "senderPa55");
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedSender", "nobodyPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.SEND_ALL.toString());
+        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
         assertSend(allowedUser.getUsername(), allowedUser.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
 
@@ -68,7 +58,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         assertCannotSend(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), noAllowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.RECV_ALL.toString());
+        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertCannotSend(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), noAllowedUser.getUsername());
     }
@@ -78,7 +68,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedReceiver", "nobodyPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.RECV_ALL.toString());
+        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertReceive(allowedUser.getUsername(), allowedUser.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
 
@@ -87,7 +77,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         assertReceive(allowedUser.getUsername(), allowedUser.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.SEND_ALL.toString());
+        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
         assertCannotReceive(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), noAllowedUser.getUsername());
     }
@@ -96,7 +86,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         initAddresses();
         KeycloakCredentials user = new KeycloakCredentials("pepa", "pepaPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), user.getUsername(), user.getPassword(), Group.RECV_ALL.toString());
+        getKeycloakClient().createUser(sharedAddressSpace.getName(), user.getUsername(), user.getPassword(), Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertReceive(user.getUsername(), user.getPassword());
         getKeycloakClient().deleteUser(sharedAddressSpace.getName(), user.getUsername());
 

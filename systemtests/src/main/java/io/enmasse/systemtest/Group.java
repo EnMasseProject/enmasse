@@ -5,13 +5,21 @@
 package io.enmasse.systemtest;
 
 public enum Group {
-    MANAGE,
-    SEND_ALL,
-    RECV_ALL,
-    MONITOR;
+    MANAGE_ALL_STANDARD,
+    MANAGE_ALL_BROKERED,
+    SEND_ALL_BROKERED,
+    SEND_ALL_STANDARD,
+    RECV_ALL_BROKERED,
+    RECV_ALL_STANDARD,
+    VIEW_ALL_STANDARD,
+    VIEW_ALL_BROKERED,
+    MONITOR,
+    ADMIN;
 
     @Override
     public String toString() {
-        return super.toString().toLowerCase().replace("_all", "_*");
+        return super.toString().toLowerCase()
+                .replace("_all_standard", "_*")
+                .replace("_all_brokered", "_#");
     }
 }

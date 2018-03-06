@@ -82,13 +82,13 @@ public class AuthenticationTest extends MarathonTestBase {
     @Test
     public void testCreateDeleteUsersRestartKeyCloakLong() throws Exception {
         log.info("testCreateDeleteUsersRestartKeyCloakLong start");
-        AddressSpace addressSpace = new AddressSpace("test-create-delete-users-restart-brokered",
+        final AddressSpace addressSpace = new AddressSpace("test-create-delete-users-restart-brokered",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "standard");
         log.info("Address space '{}'created", addressSpace);
 
-        Destination queue = Destination.queue("test-create-delete-users-restart-queue", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("test-create-delete-users-restart-topic", getDefaultPlan(AddressType.TOPIC));
+        final Destination queue = Destination.queue("test-create-delete-users-restart-queue", getDefaultPlan(AddressType.QUEUE));
+        final Destination topic = Destination.topic("test-create-delete-users-restart-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
@@ -98,12 +98,12 @@ public class AuthenticationTest extends MarathonTestBase {
         runTestInLoop(30, () -> {
             log.info("Start test iteration");
             createUser(addressSpace, username, password);
-            doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            assertCanConnect(addressSpace, username, password, Arrays.asList(queue, topic));
             log.info("Restart keycloak");
             scaleKeycloak(0);
             scaleKeycloak(1);
-            Thread.sleep(60000);
-            doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            Thread.sleep(160000);
+            assertCanConnect(addressSpace, username, password, Arrays.asList(queue, topic));
             removeUser(addressSpace, username);
         });
         log.info("testCreateDeleteUsersRestartKeyCloakLong finished");
