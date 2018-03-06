@@ -188,11 +188,8 @@ public class TestUtils {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
         if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
-            Set<String> groups = new HashSet<>();
-            for (Destination destination : destinations) {
-                if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
-                    groups.add(destination.getDeployment());
-                }
+            if (destinations.length == 0) {
+                waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
             }
         }
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
