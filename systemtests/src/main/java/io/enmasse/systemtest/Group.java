@@ -5,7 +5,7 @@
 package io.enmasse.systemtest;
 
 public enum Group {
-    MANAGE_ALL_STANDARD,
+    MANAGE,
     MANAGE_ALL_BROKERED,
     SEND_ALL_BROKERED,
     SEND_ALL_STANDARD,

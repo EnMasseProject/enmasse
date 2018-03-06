@@ -157,7 +157,7 @@ public class KeycloakClient {
                 Group.MANAGE_ALL_BROKERED.toString(),
                 Group.SEND_ALL_STANDARD.toString(),
                 Group.RECV_ALL_STANDARD.toString(),
-                Group.MANAGE_ALL_STANDARD.toString());
+                Group.MANAGE.toString());
     }
 
     public void createUser(String realm, String userName, String password, String... groups) throws Exception {
@@ -172,7 +172,7 @@ public class KeycloakClient {
                 Group.MANAGE_ALL_BROKERED.toString(),
                 Group.SEND_ALL_STANDARD.toString(),
                 Group.RECV_ALL_STANDARD.toString(),
-                Group.MANAGE_ALL_STANDARD.toString());
+                Group.MANAGE.toString());
     }
 
     public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit, String... groups)
