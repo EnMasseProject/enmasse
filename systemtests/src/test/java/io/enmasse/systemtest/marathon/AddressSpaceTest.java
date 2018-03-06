@@ -46,7 +46,7 @@ public class AddressSpaceTest extends MarathonTestBase {
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
                     "test-queue-createdelete-brokered-%d");
-            Thread.sleep(10000);
+            Thread.sleep(30000);
         });
     }
 
@@ -65,7 +65,7 @@ public class AddressSpaceTest extends MarathonTestBase {
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
                     "test-queue-createdelete-auth-brokered-%d", username, password);
-            Thread.sleep(10000);
+            Thread.sleep(30000);
         });
     }
 

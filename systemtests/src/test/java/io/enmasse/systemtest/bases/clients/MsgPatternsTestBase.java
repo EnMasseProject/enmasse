@@ -196,7 +196,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     }
 
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        int expectedMsgCount = 50;
+        int expectedMsgCount = 10;
 
         clients.addAll(Arrays.asList(sender, receiver));
         Destination queue = Destination.queue("selector-queue" + ClientType.getAddressName(sender),

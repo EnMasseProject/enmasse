@@ -82,7 +82,11 @@ public abstract class TestBaseWithShared extends TestBase {
         getKeycloakClient().createUser(sharedAddressSpace.getName(),
                 managementCredentials.getUsername(),
                 managementCredentials.getPassword(),
-                "admin", "send_#", "recv_#", "view_#", "manage_#");
+                Group.ADMIN.toString(),
+                Group.SEND_ALL_BROKERED.toString(),
+                Group.RECV_ALL_BROKERED.toString(),
+                Group.VIEW_ALL_BROKERED.toString(),
+                Group.MANAGE_ALL_BROKERED.toString());
 
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
