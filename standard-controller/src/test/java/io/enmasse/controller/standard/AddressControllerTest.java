@@ -73,6 +73,7 @@ public class AddressControllerTest {
     @Test
     public void testDeleteUnusedClusters() throws Exception {
         Address alive = new Address.Builder()
+                .setName("q1")
                 .setAddress("q1")
                 .setType("queue")
                 .setPlan("small-queue")
