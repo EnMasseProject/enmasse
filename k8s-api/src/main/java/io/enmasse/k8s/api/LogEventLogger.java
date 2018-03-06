@@ -16,7 +16,7 @@ public class LogEventLogger implements EventLogger {
     }
 
     public static void log(Logger logger, Reason reason, String message, Type type, ObjectKind objectKind, String objectName) {
-        String line = String.format("%s (%s): %s %s", objectName, objectKind.name(), reason.name(), message);
+        String line = String.format("%s (kind=%s name=%s): %s", reason.name(), objectKind.name(), objectName, message);
         switch (type) {
             case Warning:
                 logger.warn(line);
