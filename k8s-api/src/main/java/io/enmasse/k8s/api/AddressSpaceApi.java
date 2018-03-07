@@ -5,8 +5,9 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
-import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.enmasse.k8s.api.cache.Store;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,7 +21,7 @@ public interface AddressSpaceApi {
     void deleteAddressSpace(AddressSpace addressSpace);
     Set<AddressSpace> listAddressSpaces();
 
-    Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception;
+    Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception;
 
     AddressApi withAddressSpace(AddressSpace addressSpace);
 }

@@ -48,8 +48,6 @@ public interface Kubernetes {
 
     KubernetesList processTemplate(String templateName, ParameterValue... parameterValues);
 
-    AddressApi createAddressApi();
-
     List<String> listBrokers(String clusterId);
 
     void scaleDeployment(String deploymentName, int numReplicas);

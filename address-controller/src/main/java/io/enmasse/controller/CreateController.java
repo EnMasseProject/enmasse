@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.Schema;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
@@ -39,7 +40,12 @@ public class CreateController implements Controller {
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
         Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
 
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+        Schema schema = schemaProvider.getSchema();
+        if (schema == null) {
+            log.info("No schema available");
+            return addressSpace;
+        }
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         addressSpaceResolver.validate(addressSpace);
 
         if (namespace.equals(addressSpace.getNamespace())) {

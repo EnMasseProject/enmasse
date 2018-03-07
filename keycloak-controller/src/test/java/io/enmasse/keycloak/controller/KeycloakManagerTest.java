@@ -11,10 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -48,13 +45,13 @@ public class KeycloakManagerTest {
 
     @Test
     public void testAddAddressSpace() {
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.onUpdate(Collections.singleton(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertTrue(realms.isEmpty());
 
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a2"));
 
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a2"));
         assertTrue(realms.contains("a3"));
         assertEquals(2, realms.size());
@@ -65,8 +62,8 @@ public class KeycloakManagerTest {
 
     @Test
     public void testRemoveAddressSpace() {
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
 
         assertTrue(realms.contains("a1"));
         assertFalse(realms.contains("a2"));
@@ -76,11 +73,11 @@ public class KeycloakManagerTest {
 
     @Test
     public void testAuthTypeChanged() {
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a1"));
         assertEquals(1, realms.size());
 
-        manager.resourcesUpdated(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertFalse(realms.contains("a1"));
         assertEquals(0, realms.size());
     }

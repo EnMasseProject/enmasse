@@ -5,28 +5,33 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.kubernetes.client.RequestConfig;
+import io.fabric8.kubernetes.client.RequestConfigBuilder;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the AddressSpace API towards Kubernetes
  */
-public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
+public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<ConfigMap, ConfigMapList> {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
-    private final OpenShiftClient client;
+    private final NamespacedOpenShiftClient client;
     private final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressSpaceApi(OpenShiftClient client) {
+    public ConfigMapAddressSpaceApi(NamespacedOpenShiftClient client) {
         this.client = client;
     }
 
@@ -84,12 +89,12 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     @Override
     public Set<AddressSpace> listAddressSpaces() {
         Set<AddressSpace> instances = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().withLabel(LabelKeys.TYPE, "address-space").list();
-        for (ConfigMap map : list.getItems()) {
+        for (ConfigMap map : list(new ListOptions()).getItems()) {
             instances.add(getAddressSpaceFromConfig(map));
         }
         return instances;
     }
+
 
     private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
         try {
@@ -102,27 +107,51 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "address-space");
-        ResourceController<AddressSpace> controller = ResourceController.create(new Resource<AddressSpace>() {
-            @Override
-            public List<io.fabric8.kubernetes.client.Watch> watchResources(io.fabric8.kubernetes.client.Watcher w) {
-                return Collections.singletonList(client.configMaps().withLabels(labels).watch(w));
+    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) {
+        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
+        config.setClock(Clock.systemUTC());
+        config.setExpectedType(ConfigMap.class);
+        config.setListerWatcher(this);
+        config.setResyncInterval(resyncInterval);
+        config.setWorkQueue(queue);
+        config.setProcessor(map -> {
+            if (queue.hasSynced()) {
+                watcher.onUpdate(queue.list().stream()
+                        .map(this::getAddressSpaceFromConfig)
+                        .collect(Collectors.toSet()));
             }
+        });
 
-            @Override
-            public Set<AddressSpace> listResources() {
-                return listAddressSpaces();
-            }
-        }, watcher);
-
+        Reflector<ConfigMap, ConfigMapList> reflector = new Reflector<>(config);
+        Controller controller = new Controller(reflector);
         controller.start();
-        return controller::stop;
+        return controller;
     }
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
         return new ConfigMapAddressApi(client, addressSpace.getNamespace());
+    }
+
+    @Override
+    public ConfigMapList list(ListOptions listOptions) {
+        return client.configMaps()
+                .inNamespace(client.getNamespace())
+                .withLabel(LabelKeys.TYPE, "address-space")
+                .list();
+    }
+
+    @Override
+    public io.fabric8.kubernetes.client.Watch watch(io.fabric8.kubernetes.client.Watcher<ConfigMap> watcher, ListOptions listOptions) {
+        RequestConfig requestConfig = new RequestConfigBuilder()
+                .withRequestTimeout(listOptions.getTimeoutSeconds())
+                .build();
+        return client.withRequestConfig(requestConfig).call(c ->
+                c.configMaps()
+                        .inNamespace(client.getNamespace())
+                        .withLabel(LabelKeys.TYPE, "address-space")
+                        .withResourceVersion(listOptions.getResourceVersion())
+                        .watch(watcher));
     }
 }

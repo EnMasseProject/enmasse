@@ -29,10 +29,10 @@ public class DiscoveryTest {
         client.addListener(changedHosts::complete);
 
         System.out.println("Waiting for subscriber to be created");
-        client.resourcesUpdated(Collections.singleton(createPod("False", "Pending")));
+        client.resourcesUpdated(Collections.singletonList(createPod("False", "Pending")));
 
         System.out.println("Sending second response");
-        client.resourcesUpdated(Collections.singleton(createPod("False", "Running")));
+        client.resourcesUpdated(Collections.singletonList(createPod("False", "Running")));
         try {
             changedHosts.get(10, TimeUnit.SECONDS);
             fail("Ready must be true before returning host");
@@ -40,7 +40,7 @@ public class DiscoveryTest {
         }
 
         System.out.println("Sending third response");
-        client.resourcesUpdated(Collections.singleton(createPod("True", "Running")));
+        client.resourcesUpdated(Collections.singletonList(createPod("True", "Running")));
         try {
             Set<Host> actual = changedHosts.get(2, TimeUnit.MINUTES);
             assertThat(actual.size(), is(1));

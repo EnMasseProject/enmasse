@@ -6,11 +6,14 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Schema;
 import io.enmasse.k8s.api.Watcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
-    private volatile Schema schema;
+    private static final Logger log = LoggerFactory.getLogger(CachingSchemaProvider.class);
+    private volatile Schema schema = null;
 
     @Override
     public Schema getSchema() {
@@ -18,11 +21,11 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
     }
 
     @Override
-    public void resourcesUpdated(Set<Schema> resources) {
-        if (resources.isEmpty()) {
-            schema = null;
-        } else {
-            schema = resources.iterator().next();
+    public void onUpdate(Set<Schema> items) {
+        if (items.isEmpty()) {
+            return;
         }
+        log.info("Schema updated");
+        schema = items.iterator().next();
     }
 }

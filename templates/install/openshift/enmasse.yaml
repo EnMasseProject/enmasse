@@ -212,6 +212,12 @@ objects:
               value: /etc/enmasse-certs
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
+            - name: RESYNC_INTERVAL
+              value: ${CONTROLLER_RESYNC_INTERVAL}
+            - name: CHECK_INTERVAL
+              value: ${CONTROLLER_CHECK_INTERVAL}
+            - name: EVENT_QUEUE_SIZE
+              value: ${CONTROLLER_EVENT_QUEUE_SIZE}
             - name: ENABLE_EVENT_LOGGER
               value: ${ENABLE_EVENT_LOGGER}
             - name: AUTHENTICATION_SERVICE_HOST
@@ -1306,6 +1312,15 @@ objects:
   - description: Enable logging of kubernetes events
     name: ENABLE_EVENT_LOGGER
     value: 'false'
+  - description: Interval (in seconds) to use between controller resync
+    name: CONTROLLER_RESYNC_INTERVAL
+    value: '600'
+  - description: Interval (in seconds) to use between status checks
+    name: CONTROLLER_CHECK_INTERVAL
+    value: '30'
+  - description: Max number of events queued up for controller
+    name: CONTROLLER_EVENT_QUEUE_SIZE
+    value: '10000'
   - description: The service account with address space admin privileges
     name: ADDRESS_SPACE_ADMIN_SA
     value: address-space-admin
@@ -1516,6 +1531,12 @@ objects:
               value: /etc/enmasse-certs
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
+            - name: RESYNC_INTERVAL
+              value: ${CONTROLLER_RESYNC_INTERVAL}
+            - name: CHECK_INTERVAL
+              value: ${CONTROLLER_CHECK_INTERVAL}
+            - name: EVENT_QUEUE_SIZE
+              value: ${CONTROLLER_EVENT_QUEUE_SIZE}
             - name: ENABLE_EVENT_LOGGER
               value: ${ENABLE_EVENT_LOGGER}
             - name: AUTHENTICATION_SERVICE_HOST
@@ -2774,6 +2795,15 @@ objects:
   - description: Enable logging of kubernetes events
     name: ENABLE_EVENT_LOGGER
     value: 'false'
+  - description: Interval (in seconds) to use between controller resync
+    name: CONTROLLER_RESYNC_INTERVAL
+    value: '600'
+  - description: Interval (in seconds) to use between status checks
+    name: CONTROLLER_CHECK_INTERVAL
+    value: '30'
+  - description: Max number of events queued up for controller
+    name: CONTROLLER_EVENT_QUEUE_SIZE
+    value: '10000'
   - description: The service account with address space admin privileges
     name: ADDRESS_SPACE_ADMIN_SA
     value: address-space-admin
@@ -3120,6 +3150,12 @@ objects:
             value: ${ADDRESS_SPACE_ADMIN_SA}
           - name: WILDCARD_ENDPOINT_CERT_SECRET
             value: ${WILDCARD_ENDPOINT_CERT_SECRET}
+          - name: RESYNC_INTERVAL
+            value: ${CONTROLLER_RESYNC_INTERVAL}
+          - name: CHECK_INTERVAL
+            value: ${CONTROLLER_CHECK_INTERVAL}
+          - name: EVENT_QUEUE_SIZE
+            value: ${CONTROLLER_EVENT_QUEUE_SIZE}
           image: ${ADDRESS_CONTROLLER_IMAGE}
           livenessProbe:
             httpGet:
@@ -3204,3 +3240,12 @@ parameters:
 - description: The service account with address space admin privileges
   name: ADDRESS_SPACE_ADMIN_SA
   value: address-space-admin
+- description: Interval (in seconds) to use between controller resync
+  name: CONTROLLER_RESYNC_INTERVAL
+  value: '600'
+- description: Interval (in seconds) to use between status checks
+  name: CONTROLLER_CHECK_INTERVAL
+  value: '30'
+- description: Max number of events queued up for controller
+  name: CONTROLLER_EVENT_QUEUE_SIZE
+  value: '10000'

@@ -5,17 +5,19 @@
 
 package io.enmasse.keycloak.controller;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.k8s.api.cache.Store;
 import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 public class KeycloakManager implements Watcher<AddressSpace>
@@ -28,7 +30,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
     }
 
     @Override
-    public void resourcesUpdated(final Set<AddressSpace> addressSpaces) {
+    public void onUpdate(Set<AddressSpace> addressSpaces) {
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
                              .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD)

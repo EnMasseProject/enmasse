@@ -9,27 +9,32 @@ import io.enmasse.address.model.*;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.RequestConfig;
+import io.fabric8.kubernetes.client.RequestConfigBuilder;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class ConfigMapSchemaApi implements SchemaApi, Resource<Schema> {
+public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, ConfigMapList> {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapSchemaApi.class);
-    private final KubernetesClient client;
+    private final NamespacedOpenShiftClient client;
     private final String namespace;
 
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapSchemaApi(KubernetesClient client, String namespace) {
+    public ConfigMapSchemaApi(NamespacedOpenShiftClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
     }
@@ -52,25 +57,27 @@ public class ConfigMapSchemaApi implements SchemaApi, Resource<Schema> {
         return client.configMaps().inNamespace(namespace).withLabels(labels).list();
     }
 
-    private <T> List<T> listResources(Class<T> type, String labelType) {
+    private <T> List<T> getResources(Class<T> type, String labelType, List<ConfigMap> maps) {
         List<T> items = new ArrayList<>();
 
-        for (ConfigMap config : listConfigMaps(labelType).getItems()) {
-            items.add(getResourceFromConfig(type, config));
+        for (ConfigMap config : maps) {
+            if (config.getMetadata().getLabels().get(LabelKeys.TYPE).equals(labelType)) {
+                items.add(getResourceFromConfig(type, config));
+            }
         }
         return items;
     }
 
-    private List<AddressPlan> listAddressPlans() {
-        return listResources(AddressPlan.class, "address-plan");
+    private List<AddressPlan> getAddressPlans(List<ConfigMap> maps) {
+        return getResources(AddressPlan.class, "address-plan", maps);
     }
 
-    private List<AddressSpacePlan> listAddressSpacePlans() {
-        return listResources(AddressSpacePlan.class, "address-space-plan");
+    private List<AddressSpacePlan> getAddressSpacePlans(List<ConfigMap> maps) {
+        return getResources(AddressSpacePlan.class, "address-space-plan", maps);
     }
 
-    private List<ResourceDefinition> listResourceDefinitions() {
-        return listResources(ResourceDefinition.class, "resource-definition");
+    private List<ResourceDefinition> getResourceDefinitions(List<ConfigMap> maps) {
+        return getResources(ResourceDefinition.class, "resource-definition", maps);
     }
 
     @Override
@@ -106,32 +113,32 @@ public class ConfigMapSchemaApi implements SchemaApi, Resource<Schema> {
         return list;
     }
 
-    private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan) {
-        Set<String> resourceDefinitions = listResourceDefinitions().stream().map(ResourceDefinition::getName).collect(Collectors.toSet());
+    private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<ResourceDefinition> resourceDefinitions) {
+        Set<String> resourceDefinitionNames = resourceDefinitions.stream().map(ResourceDefinition::getName).collect(Collectors.toSet());
         String definedBy = addressSpacePlan.getAnnotations().get(AnnotationKeys.DEFINED_BY);
-        if (!resourceDefinitions.contains(definedBy)) {
-            String error = "Error validating address space plan " + addressSpacePlan.getName() + ": missing resource definition " + definedBy + ", found: " + resourceDefinitions;
+        if (!resourceDefinitionNames.contains(definedBy)) {
+            String error = "Error validating address space plan " + addressSpacePlan.getName() + ": missing resource definition " + definedBy + ", found: " + resourceDefinitionNames;
             log.warn(error);
             throw new SchemaValidationException(error);
         }
 
-        Set<String> addressPlans = listAddressPlans().stream().map(AddressPlan::getName).collect(Collectors.toSet());
-        if (!addressPlans.containsAll(addressSpacePlan.getAddressPlans())) {
+        Set<String> addressPlanNames = addressPlans.stream().map(AddressPlan::getName).collect(Collectors.toSet());
+        if (!addressPlanNames.containsAll(addressSpacePlan.getAddressPlans())) {
             Set<String> missing = new HashSet<>(addressSpacePlan.getAddressPlans());
-            missing.removeAll(addressPlans);
+            missing.removeAll(addressPlanNames);
             String error = "Error validating address space plan " + addressSpacePlan.getName() + ": missing " + missing;
             log.warn(error);
             throw new SchemaValidationException(error);
         }
     }
 
-    private void validateAddressPlan(AddressPlan addressPlan) {
-        Set<String> resourceDefinitions = listResourceDefinitions().stream().map(ResourceDefinition::getName).collect(Collectors.toSet());
+    private void validateAddressPlan(AddressPlan addressPlan, List<ResourceDefinition> resourceDefinitions) {
+        Set<String> resourceDefinitionNames = resourceDefinitions.stream().map(ResourceDefinition::getName).collect(Collectors.toSet());
         Set<String> resourcesUsed = addressPlan.getRequiredResources().stream().map(ResourceRequest::getResourceName).collect(Collectors.toSet());
 
-        if (!resourceDefinitions.containsAll(resourcesUsed)) {
+        if (!resourceDefinitionNames.containsAll(resourcesUsed)) {
             Set<String> missing = new HashSet<>(resourcesUsed);
-            missing.removeAll(resourceDefinitions);
+            missing.removeAll(resourceDefinitionNames);
             String error = "Error validating address plan " + addressPlan.getName() + ": missing resources " + missing;
             log.warn(error);
             throw new SchemaValidationException(error);
@@ -140,24 +147,8 @@ public class ConfigMapSchemaApi implements SchemaApi, Resource<Schema> {
 
     @Override
     public Schema getSchema() {
-        List<AddressSpacePlan> addressSpacePlans = listAddressSpacePlans();
-        List<AddressPlan> addressPlans = listAddressPlans();
-
-        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-            validateAddressSpacePlan(addressSpacePlan);
-        }
-
-        for (AddressPlan addressPlan : addressPlans) {
-            validateAddressPlan(addressPlan);
-        }
-
-        List<AddressSpaceType> types = new ArrayList<>();
-        types.add(createBrokeredType(addressSpacePlans, addressPlans));
-        types.add(createStandardType(addressSpacePlans, addressPlans));
-        return new Schema.Builder()
-                .setAddressSpaceTypes(types)
-                .setResourceDefinitions(listResourceDefinitions())
-                .build();
+        List<ConfigMap> maps = list(new ListOptions()).getItems();
+        return assembleSchema(maps);
     }
 
     private AddressSpaceType createStandardType(List<AddressSpacePlan> addressSpacePlans, List<AddressPlan> addressPlans) {
@@ -245,23 +236,68 @@ public class ConfigMapSchemaApi implements SchemaApi, Resource<Schema> {
     }
 
     @Override
-    public Watch watchSchema(Watcher<Schema> watcher) throws Exception {
-        ResourceController<Schema> controller = ResourceController.create(this, watcher);
+    public Watch watchSchema(Watcher<Schema> watcher, Duration resyncInterval) {
+        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
+        config.setClock(Clock.systemUTC());
+        config.setExpectedType(ConfigMap.class);
+        config.setListerWatcher(this);
+        config.setResyncInterval(resyncInterval);
+        config.setWorkQueue(queue);
+        config.setProcessor(map -> {
+            if (queue.hasSynced()) {
+                watcher.onUpdate(
+                        Collections.singleton(assembleSchema(queue.list())));
+            }
+        });
+
+        Reflector<ConfigMap, ConfigMapList> reflector = new Reflector<>(config);
+        Controller controller = new Controller(reflector);
         controller.start();
-        return controller::stop;
+        return controller;
     }
 
     @Override
-    public List<io.fabric8.kubernetes.client.Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
-        List<io.fabric8.kubernetes.client.Watch> watches = new ArrayList<>();
-        watches.add(client.configMaps().inNamespace(namespace).withLabel(LabelKeys.TYPE, "address-space-plan").watch(watcher));
-        watches.add(client.configMaps().inNamespace(namespace).withLabel(LabelKeys.TYPE, "address-plan").watch(watcher));
-        watches.add(client.configMaps().inNamespace(namespace).withLabel(LabelKeys.TYPE, "resource-definition").watch(watcher));
-        return watches;
+    public io.fabric8.kubernetes.client.Watch watch(io.fabric8.kubernetes.client.Watcher<ConfigMap> watcher, ListOptions listOptions) {
+        RequestConfig requestConfig = new RequestConfigBuilder()
+                .withRequestTimeout(listOptions.getTimeoutSeconds())
+                .build();
+        return client.withRequestConfig(requestConfig).call(c ->
+                c.configMaps()
+                        .inNamespace(namespace)
+                        .withLabelIn(LabelKeys.TYPE,"address-space-plan", "address-plan", "resource-definition")
+                        .withResourceVersion(listOptions.getResourceVersion())
+                        .watch(watcher));
     }
 
     @Override
-    public Set<Schema> listResources() {
-        return Collections.singleton(getSchema());
+    public ConfigMapList list(ListOptions listOptions) {
+        return client.configMaps()
+                .inNamespace(namespace)
+                .withLabelIn(LabelKeys.TYPE, "address-space-plan", "address-plan", "resource-definition")
+                .list();
     }
+
+    private Schema assembleSchema(List<ConfigMap> maps) {
+        List<AddressSpacePlan> addressSpacePlans = getAddressSpacePlans(maps);
+        List<AddressPlan> addressPlans = getAddressPlans(maps);
+        List<ResourceDefinition> resourceDefinitions = getResourceDefinitions(maps);
+
+        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+            validateAddressSpacePlan(addressSpacePlan, addressPlans, resourceDefinitions);
+        }
+
+        for (AddressPlan addressPlan : addressPlans) {
+            validateAddressPlan(addressPlan, resourceDefinitions);
+        }
+
+        List<AddressSpaceType> types = new ArrayList<>();
+        types.add(createBrokeredType(addressSpacePlans, addressPlans));
+        types.add(createStandardType(addressSpacePlans, addressPlans));
+        return new Schema.Builder()
+                .setAddressSpaceTypes(types)
+                .setResourceDefinitions(resourceDefinitions)
+                .build();
+    }
+
 }

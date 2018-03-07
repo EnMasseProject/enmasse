@@ -168,6 +168,21 @@ local storage = import "storage-template.jsonnet";
         "value": "false"
       },
       {
+        "name": "CONTROLLER_RESYNC_INTERVAL",
+        "description": "Interval (in seconds) to use between controller resync",
+        "value": "600"
+      },
+      {
+        "name": "CONTROLLER_CHECK_INTERVAL",
+        "description": "Interval (in seconds) to use between status checks",
+        "value": "30"
+      },
+      {
+        "name": "CONTROLLER_EVENT_QUEUE_SIZE",
+        "description": "Max number of events queued up for controller",
+        "value": "10000"
+      },
+      {
         "name": "ADDRESS_SPACE_ADMIN_SA",
         "description": "The service account with address space admin privileges",
         "value": "address-space-admin"

@@ -69,6 +69,9 @@ local common = import "common.jsonnet";
               "env": [
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
+                common.env("RESYNC_INTERVAL", "${CONTROLLER_RESYNC_INTERVAL}"),
+                common.env("CHECK_INTERVAL", "${CONTROLLER_CHECK_INTERVAL}"),
+                common.env("EVENT_QUEUE_SIZE", "${CONTROLLER_EVENT_QUEUE_SIZE}"),
                 common.env("ENABLE_EVENT_LOGGER", "${ENABLE_EVENT_LOGGER}"),
                 common.env("AUTHENTICATION_SERVICE_HOST", "${AUTHENTICATION_SERVICE_HOST}"),
                 common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),

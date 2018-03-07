@@ -6,6 +6,9 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.Schema;
+import io.enmasse.k8s.api.cache.Store;
+
+import java.time.Duration;
 
 /**
  * Interface for Schema of the address model
@@ -24,5 +27,5 @@ public interface SchemaApi {
     /**
      * Watch changes to schema
      */
-    Watch watchSchema(Watcher<Schema> watcher) throws Exception;
+    Watch watchSchema(Watcher<Schema> watcher, Duration resyncInterval) throws Exception;
 }

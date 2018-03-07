@@ -9,14 +9,16 @@ import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.Security;
+import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
 public class Main {
     public static void main(String [] args) throws Exception {
@@ -26,11 +28,15 @@ public class Main {
         String openshiftUri = String.format("https://%s:%s", getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST"), getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT"));
 
         Config config = new ConfigBuilder().withMasterUrl(openshiftUri).withOauthToken(getAuthenticationToken()).withNamespace(getNamespace()).build();
-        OpenShiftClient openShiftClient = new DefaultOpenShiftClient(config);
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(openShiftClient);
+        NamespacedOpenShiftClient client = new DefaultOpenShiftClient(config);
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
         KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(KeycloakParams.fromEnv(System.getenv())));
 
-        addressSpaceApi.watchAddressSpaces(keycloakManager);
+        Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofMinutes(5));
+
+        addressSpaceApi.watchAddressSpaces(keycloakManager, resyncInterval);
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {
@@ -39,6 +45,10 @@ public class Main {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
         }
         return var;
+    }
+
+    private static Optional<String> getEnv(Map<String, String> env, String envVar) {
+        return Optional.ofNullable(env.get(envVar));
     }
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";

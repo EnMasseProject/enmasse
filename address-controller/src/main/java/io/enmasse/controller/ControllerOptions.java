@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,9 +34,12 @@ public final class ControllerOptions {
 
     private final String wildcardCertSecret;
 
+    private final Duration resyncInterval;
+    private final Duration recheckInterval;
+
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File templateDir, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -49,6 +53,8 @@ public final class ControllerOptions {
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
         this.wildcardCertSecret = wildcardCertSecret;
+        this.resyncInterval = resyncInterval;
+        this.recheckInterval = recheckInterval;
     }
 
     public String getMasterUrl() {
@@ -103,6 +109,14 @@ public final class ControllerOptions {
         return wildcardCertSecret;
     }
 
+    public Duration getResyncInterval() {
+        return resyncInterval;
+    }
+
+    public Duration getRecheckInterval() {
+        return recheckInterval;
+    }
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
@@ -139,6 +153,14 @@ public final class ControllerOptions {
 
         String wildcardCertSecret = getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null);
 
+        Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofMinutes(5));
+
+        Duration recheckInterval = getEnv(env, "CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30));
+
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
@@ -150,7 +172,9 @@ public final class ControllerOptions {
                 enableEventLogger, environment,
                 addressControllerSa,
                 addressSpaceAdminSa,
-                wildcardCertSecret);
+                wildcardCertSecret,
+                resyncInterval,
+                recheckInterval);
     }
 
 

@@ -6,13 +6,14 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.k8s.api.*;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
@@ -35,12 +36,20 @@ public class Main {
 
         String certDir = getEnvOrThrow(env, "CERT_DIR");
         String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
-        OpenShiftClient openShiftClient = new DefaultOpenShiftClient();
+        Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofMinutes(5));
+
+        Duration recheckInterval = getEnv(env, "CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30));
+
+        NamespacedOpenShiftClient openShiftClient = new DefaultOpenShiftClient();
         SchemaApi schemaApi = new ConfigMapSchemaApi(openShiftClient, openShiftClient.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
-        schemaApi.watchSchema(schemaProvider);
+        schemaApi.watchSchema(schemaProvider, resyncInterval);
 
-        Kubernetes kubernetes = new KubernetesHelper(new DefaultOpenShiftClient(), templateDir);
+        Kubernetes kubernetes = new KubernetesHelper(openShiftClient, templateDir);
         BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace);
 
         boolean enableEventLogger = Boolean.parseBoolean(getEnv(env, "ENABLE_EVENT_LOGGER").orElse("false"));
@@ -50,12 +59,15 @@ public class Main {
 
         AddressController addressController = new AddressController(
                 addressSpace,
-                kubernetes.createAddressApi(),
+                new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace()),
                 kubernetes,
                 clusterGenerator,
                 certDir,
                 eventLogger,
-                schemaProvider);
+                schemaProvider,
+                recheckInterval,
+                resyncInterval
+        );
 
         log.info("Deploying address space controller for " + addressSpace);
         Vertx vertx = Vertx.vertx();

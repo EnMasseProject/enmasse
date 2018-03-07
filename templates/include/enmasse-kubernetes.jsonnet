@@ -24,7 +24,7 @@ local roles = import "roles.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.global,
-               addressController.deployment(images.address_controller, "enmasse-template-config", "address-controller-cert", "development", "false", "false", "enmasse-admin", "address-space-admin", ""),
+               addressController.deployment(images.address_controller, "enmasse-template-config", "address-controller-cert", "development", "false", "false", "enmasse-admin", "address-space-admin", "", "600", "30", "10000"),
                addressController.internal_service ]
   },
 
