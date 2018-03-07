@@ -25,7 +25,7 @@ pipeline {
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
     }
     options {
-        timeout(time: 4, unit: 'HOURS')
+        timeout(time: 5, unit: 'HOURS')
     }
     environment {
         CORES_DIR = "/tmp/cores"
