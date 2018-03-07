@@ -174,6 +174,10 @@ public abstract class Kubernetes {
         return client.configMaps().inNamespace(globalNamespace).withLabels(labels).list();
     }
 
+    public ConfigMapList getAllConfigMaps(String namespace) {
+        return client.configMaps().inNamespace(namespace).list();
+    }
+
     /**
      * create new ConfigMap with new address space plan definition
      */
