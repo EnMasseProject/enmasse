@@ -134,12 +134,12 @@ then
 fi
 
 if [ "$MODE" == "singletenant" ]; then
-    runcmd "kubectl apply -f $ADDONS/resource-definitions.yaml" "Create resource definitions"
+    runcmd "kubectl apply -f $ADDONS/resource-definitions.yaml -n $NAMESPACE" "Create resource definitions"
     runcmd "kubectl apply -f $ADDONS/standard-plans.yaml -n $NAMESPACE" "Create standard address space plans"
     runcmd "kubectl create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
     create_address_space "kubectl" "default" $NAMESPACE
 else
-    runcmd "kubectl apply -f $ADDONS/resource-definitions.yaml" "Create resource definitions"
+    runcmd "kubectl apply -f $ADDONS/resource-definitions.yaml -n $NAMESPACE" "Create resource definitions"
     runcmd "kubectl apply -f $ADDONS/standard-plans.yaml -n $NAMESPACE" "Create standard address space plans"
     runcmd "kubectl apply -f $ADDONS/brokered-plans.yaml -n $NAMESPACE" "Create brokered address space plans"
 fi
