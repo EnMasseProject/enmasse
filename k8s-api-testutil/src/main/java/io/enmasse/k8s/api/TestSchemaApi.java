@@ -5,7 +5,9 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.*;
+import io.enmasse.k8s.api.cache.Store;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -89,7 +91,8 @@ public class TestSchemaApi implements SchemaApi {
     }
 
     @Override
-    public Watch watchSchema(Watcher<Schema> watcher) throws Exception {
+    public Watch watchSchema(Watcher<Schema> schemaStore, Duration resyncInterval) throws Exception {
         return null;
     }
+
 }

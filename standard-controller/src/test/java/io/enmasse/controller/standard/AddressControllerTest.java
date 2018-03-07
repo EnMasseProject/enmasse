@@ -6,30 +6,23 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressResolver;
 import io.enmasse.address.model.Status;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.TestSchemaApi;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.internal.util.collections.Sets;
-import org.mockito.internal.verification.VerificationModeFactory;
 
+import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class AddressControllerTest {
@@ -48,7 +41,7 @@ public class AddressControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
 
-        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema);
+        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5));
     }
 
     @Test
@@ -65,7 +58,7 @@ public class AddressControllerTest {
                 .setPlan("small-queue")
                 .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
                 .build();
-        controller.resourcesUpdated(Sets.newSet(alive, terminating));
+        controller.onUpdate(Sets.newSet(alive, terminating));
         verify(mockApi).deleteAddress(any());
         verify(mockApi).deleteAddress(eq(terminating));
     }
@@ -93,7 +86,7 @@ public class AddressControllerTest {
                 new AddressCluster("broker", new KubernetesList()),
                 new AddressCluster("unused", oldList)));
 
-        controller.resourcesUpdated(Sets.newSet(alive));
+        controller.onUpdate(Sets.newSet(alive));
 
         verify(mockHelper).delete(any());
         verify(mockHelper).delete(eq(oldList));

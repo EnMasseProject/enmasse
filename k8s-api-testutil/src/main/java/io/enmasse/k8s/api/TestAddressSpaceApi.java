@@ -7,9 +7,9 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Status;
-import io.enmasse.address.model.v1.CodecV1;
-import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.enmasse.k8s.api.cache.Store;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,7 +56,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception {
+    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception {
         return null;
     }
 

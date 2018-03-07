@@ -7,7 +7,9 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.Status;
+import io.enmasse.k8s.api.cache.Store;
 
+import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -40,12 +42,7 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
-    public Watch watchAddresses(Watcher<Address> watcher) throws Exception {
-        return null;
-    }
-
-    @Override
-    public Watch watchAddresses(Watcher<Address> watcher, boolean useEventLoop) throws Exception {
+    public Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) {
         return null;
     }
 

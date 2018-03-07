@@ -75,7 +75,7 @@ public class OpenSSLCertManager implements CertManager {
             BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
             String line = null;
             while ((line = reader.readLine()) != null) {
-                log.info(line);
+                log.debug(line);
             }
             reader.close();
             if (!keyGen.waitFor(1, TimeUnit.MINUTES)) {

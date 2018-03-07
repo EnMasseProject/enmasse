@@ -5,32 +5,37 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.Address;
+import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.RequestConfig;
+import io.fabric8.kubernetes.client.RequestConfigBuilder;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implements the AddressApi using config maps.
  */
-public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
+public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap, ConfigMapList> {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
-    private final KubernetesClient client;
+    private final NamespacedOpenShiftClient client;
     private final String namespace;
 
     private final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(KubernetesClient client, String namespace) {
+    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
     }
@@ -140,28 +145,46 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
     }
 
     @Override
-    public Watch watchAddresses(Watcher<Address> watcher, boolean useEventLoop) throws Exception {
-        ResourceController<Address> controller = ResourceController.create(this, watcher, useEventLoop);
+    public Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) {
+        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
+        config.setClock(Clock.systemUTC());
+        config.setExpectedType(ConfigMap.class);
+        config.setListerWatcher(this);
+        config.setResyncInterval(resyncInterval);
+        config.setWorkQueue(queue);
+        config.setProcessor(map -> {
+                    if (queue.hasSynced()) {
+                        watcher.onUpdate(queue.list().stream()
+                                .map(this::getAddressFromConfig)
+                                .collect(Collectors.toSet()));
+                    }
+                });
+
+        Reflector<ConfigMap, ConfigMapList> reflector = new Reflector<>(config);
+        Controller controller = new Controller(reflector);
         controller.start();
-        return controller::stop;
+        return controller;
     }
 
     @Override
-    public Watch watchAddresses(Watcher<Address> watcher) throws Exception {
-        ResourceController<Address> controller = ResourceController.create(this, watcher);
-        controller.start();
-        return controller::stop;
+    public ConfigMapList list(ListOptions listOptions) {
+        return client.configMaps()
+                        .inNamespace(namespace)
+                        .withLabel(LabelKeys.TYPE, "address-config")
+                        .list();
     }
 
     @Override
-    public List<io.fabric8.kubernetes.client.Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "address-config");
-        return Arrays.asList(client.configMaps().inNamespace(namespace).withLabels(labels).watch(watcher));
-    }
-
-    @Override
-    public Set<Address> listResources() {
-        return listAddresses();
+    public io.fabric8.kubernetes.client.Watch watch(io.fabric8.kubernetes.client.Watcher<ConfigMap> watcher, ListOptions listOptions) {
+        RequestConfig requestConfig = new RequestConfigBuilder()
+                .withRequestTimeout(listOptions.getTimeoutSeconds())
+                .build();
+        return client.withRequestConfig(requestConfig).call(c ->
+                c.configMaps()
+                        .inNamespace(namespace)
+                        .withLabel(LabelKeys.TYPE, "address-config")
+                        .withResourceVersion(listOptions.getResourceVersion())
+                        .watch(watcher));
     }
 }

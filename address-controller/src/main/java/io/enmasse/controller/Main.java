@@ -14,7 +14,7 @@ import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
@@ -23,7 +23,7 @@ import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 
 public class Main extends AbstractVerticle {
-    private final OpenShiftClient controllerClient;
+    private final NamespacedOpenShiftClient controllerClient;
     private final ControllerOptions options;
     private final Kubernetes kubernetes;
 
@@ -41,7 +41,7 @@ public class Main extends AbstractVerticle {
     public void start(Future<Void> startPromise) throws Exception {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
-        schemaApi.watchSchema(schemaProvider);
+        schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
@@ -54,7 +54,7 @@ public class Main extends AbstractVerticle {
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaProvider, resolverFactory, authController.getDefaultCertProvider());
 
-        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, eventLogger);
+        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, kubernetes.getNamespace(), eventLogger));
         controllerChain.addController(new StatusController(kubernetes, infraResourceFactory));
         controllerChain.addController(new EndpointController(controllerClient));

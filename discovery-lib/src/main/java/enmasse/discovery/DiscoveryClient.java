@@ -5,19 +5,22 @@
 
 package enmasse.discovery;
 
-import io.enmasse.k8s.api.Resource;
-import io.enmasse.k8s.api.ResourceController;
 import io.enmasse.k8s.api.Watcher;
+import io.enmasse.k8s.api.cache.*;
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
+public class DiscoveryClient implements ListerWatcher<io.fabric8.kubernetes.api.model.Pod, PodList> {
     private final List<DiscoveryListener> listeners = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
     private final String containerName;
@@ -25,14 +28,31 @@ public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
     private final Map<String, String> annotationFilter;
     private Set<Host> currentHosts = new LinkedHashSet<>();
     private final KubernetesClient client;
-    private final ResourceController<Pod> resourceController;
+    private final Controller controller;
 
     public DiscoveryClient(KubernetesClient client, Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName) {
         this.client = client;
         this.labelFilter = labelFilter;
         this.annotationFilter = annotationFilter;
         this.containerName = containerName;
-        this.resourceController = ResourceController.create(this, this);
+        WorkQueue<io.fabric8.kubernetes.api.model.Pod> queue = new FifoQueue<>(pod -> pod.getMetadata().getName());
+        Reflector.Config<io.fabric8.kubernetes.api.model.Pod, PodList> config = new Reflector.Config<>();
+        config.setClock(Clock.systemUTC());
+        config.setExpectedType(io.fabric8.kubernetes.api.model.Pod.class);
+        config.setListerWatcher(this);
+        config.setResyncInterval(Duration.ofMinutes(5));
+        config.setWorkQueue(queue);
+        config.setProcessor(map -> {
+            if (queue.hasSynced()) {
+                resourcesUpdated(queue.list().stream()
+                        .map(Pod::new)
+                        .filter(this::filterPod)
+                        .collect(Collectors.toList()));
+            }
+        });
+
+        Reflector<io.fabric8.kubernetes.api.model.Pod, PodList> reflector = new Reflector<>(config);
+        controller = new Controller(reflector);
     }
 
     public DiscoveryClient(Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName) {
@@ -48,18 +68,17 @@ public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
             return;
         }
         currentHosts = new LinkedHashSet<>(hosts);
-        log.debug("Received new set of hosts: " + hosts);
+        log.info("Received new set of hosts: " + hosts);
         for (DiscoveryListener listener : listeners) {
             listener.hostsChanged(hosts);
         }
     }
 
     public void start() {
-        resourceController.start();;
+        controller.start();
     }
 
-    @Override
-    public void resourcesUpdated(Set<Pod> resources) throws Exception {
+    void resourcesUpdated(List<Pod> resources) {
         Set<Host> hosts = new HashSet<>();
         for (Pod pod : resources) {
 
@@ -79,23 +98,9 @@ public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
         notifyListeners(hosts);
     }
 
-    public void stop() {
-        resourceController.stop();
+    public void stop() throws InterruptedException {
+        controller.stop();
     }
-
-    @Override
-    public List<Watch> watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
-        return Collections.singletonList(client.pods().withLabels(labelFilter).watch(watcher));
-    }
-
-    @Override
-    public Set<Pod> listResources() {
-        return client.pods().withLabels(labelFilter).list().getItems().stream()
-                .map(Pod::new)
-                .filter(this::filterPod)
-                .collect(Collectors.toSet());
-    }
-
 
     private boolean filterPod(Pod pod) {
         Map<String, String> annotations = pod.getAnnotations();
@@ -114,5 +119,15 @@ public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
             }
         }
         return true;
+    }
+
+    @Override
+    public PodList list(ListOptions listOptions) {
+        return client.pods().withLabels(labelFilter).list();
+    }
+
+    @Override
+    public Watch watch(io.fabric8.kubernetes.client.Watcher<io.fabric8.kubernetes.api.model.Pod> watcher, ListOptions listOptions) {
+        return client.pods().withLabels(labelFilter).withResourceVersion(listOptions.getResourceVersion()).watch(watcher);
     }
 }

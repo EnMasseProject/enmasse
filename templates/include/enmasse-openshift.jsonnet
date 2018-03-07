@@ -32,7 +32,7 @@ local roles = import "roles.jsonnet";
     "objects": [ standardInfra.template(false, false),
                  standardInfra.template(false, true),
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}", "${CONTROLLER_RESYNC_INTERVAL}", "${CONTROLLER_CHECK_INTERVAL}", "${CONTROLLER_EVENT_QUEUE_SIZE}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -69,7 +69,22 @@ local roles = import "roles.jsonnet";
         "name": "ADDRESS_SPACE_ADMIN_SA",
         "description": "The service account with address space admin privileges",
         "value": "address-space-admin"
-      }
+      },
+      {
+        "name": "CONTROLLER_RESYNC_INTERVAL",
+        "description": "Interval (in seconds) to use between controller resync",
+        "value": "600"
+      },
+      {
+        "name": "CONTROLLER_CHECK_INTERVAL",
+        "description": "Interval (in seconds) to use between status checks",
+        "value": "30"
+      },
+      {
+        "name": "CONTROLLER_EVENT_QUEUE_SIZE",
+        "description": "Max number of events queued up for controller",
+        "value": "10000"
+      },
     ]
   }
 }

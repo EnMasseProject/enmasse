@@ -5,27 +5,16 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
-import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClientOptions;
-import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Status.Phase.Active;
@@ -48,8 +37,10 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private final String certDir;
     private final EventLogger eventLogger;
     private final SchemaProvider schemaProvider;
+    private final Duration recheckInterval;
+    private final Duration resyncInterval;
 
-    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, String certDir, EventLogger eventLogger, SchemaProvider schemaProvider) {
+    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, String certDir, EventLogger eventLogger, SchemaProvider schemaProvider, Duration recheckInterval, Duration resyncInterval) {
         this.addressSpaceName = addressSpaceName;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
@@ -57,13 +48,17 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         this.certDir = certDir;
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
+        this.recheckInterval = recheckInterval;
+        this.resyncInterval = resyncInterval;
     }
 
     @Override
-    public void start(Future<Void> startPromise) throws Exception {
+    public void start(Future<Void> startPromise) {
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
-                promise.complete(addressApi.watchAddresses(this));
+                ResourceChecker<Address> checker = new ResourceChecker<Address>(this, recheckInterval);
+                checker.start();
+                promise.complete(addressApi.watchAddresses(checker, resyncInterval));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -78,10 +73,21 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     @Override
-    public synchronized void resourcesUpdated(Set<Address> addressSet) throws Exception {
+    public void stop(Future<Void> stopPromise) throws Exception {
+        if (watch != null) {
+            watch.close();
+        }
+    }
+
+    @Override
+    public void onUpdate(Set<Address> addressSet) throws Exception {
         log.info("Check addresses in address space controller: " + addressSet.stream().map(Address::getAddress).collect(Collectors.toList()));
 
         Schema schema = schemaProvider.getSchema();
+        if (schema == null) {
+            log.info("No schema available");
+            return;
+        }
         AddressSpaceType addressSpaceType = schema.findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to start standard-controller: standard address space not found in schema!"));
         AddressResolver addressResolver = new AddressResolver(schema, addressSpaceType);
         if (addressSpaceType.getPlans().isEmpty()) {

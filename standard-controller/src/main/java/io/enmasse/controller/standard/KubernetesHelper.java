@@ -11,6 +11,7 @@ import io.enmasse.k8s.api.ConfigMapAddressApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -100,11 +101,6 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void delete(KubernetesList resources) {
         client.lists().delete(resources);
-    }
-
-    @Override
-    public AddressApi createAddressApi() {
-        return new ConfigMapAddressApi(client, client.getNamespace());
     }
 
     @Override

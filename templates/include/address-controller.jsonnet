@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("restapi-external", "LoadBalancer", {}),
 
-  deployment(image, template_config, cert_secret, environment, enable_rbac, enable_event_logger, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret)::
+  deployment(image, template_config, cert_secret, environment, enable_rbac, enable_event_logger, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret, resync_interval, check_interval, event_queue_size)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -71,7 +71,10 @@ local common = import "common.jsonnet";
                   common.env("ENVIRONMENT", environment),
                   common.env("ADDRESS_CONTROLLER_SA", address_controller_sa),
                   common.env("ADDRESS_SPACE_ADMIN_SA", address_space_admin_sa),
-                  common.env("WILDCARD_ENDPOINT_CERT_SECRET", wildcard_endpoint_cert_secret)
+                  common.env("WILDCARD_ENDPOINT_CERT_SECRET", wildcard_endpoint_cert_secret),
+                  common.env("RESYNC_INTERVAL", resync_interval),
+                  common.env("CHECK_INTERVAL", check_interval),
+                  common.env("EVENT_QUEUE_SIZE", event_queue_size),
                 ],
                 "volumeMounts": [
                   common.volume_mount("address-controller-cert", "/address-controller-cert", true),

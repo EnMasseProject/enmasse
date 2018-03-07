@@ -8,16 +8,14 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NamespaceInfo;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.Watch;
-import io.enmasse.k8s.api.Watcher;
+import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -42,25 +40,32 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
 
     private final List<Controller> chain = new ArrayList<>();
     private final EventLogger eventLogger;
+    private final Duration recheckInterval;
+    private final Duration resyncInterval;
 
     public ControllerChain(Kubernetes kubernetes,
                            AddressSpaceApi addressSpaceApi,
-                           EventLogger eventLogger) {
+                           EventLogger eventLogger,
+                           Duration recheckInterval,
+                           Duration resyncInterval) {
         this.kubernetes = kubernetes;
         this.addressSpaceApi = addressSpaceApi;
         this.eventLogger = eventLogger;
+        this.recheckInterval = recheckInterval;
+        this.resyncInterval = resyncInterval;
     }
 
-    public ControllerChain addController(Controller controller) {
+    public void addController(Controller controller) {
         chain.add(controller);
-        return this;
     }
 
     @Override
     public void start(Future<Void> startPromise) {
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
-                promise.complete(addressSpaceApi.watchAddressSpaces(this));
+                ResourceChecker<AddressSpace> checker = new ResourceChecker<>(this, recheckInterval);
+                checker.start();
+                promise.complete(addressSpaceApi.watchAddressSpaces(checker, resyncInterval));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -95,8 +100,8 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     }
 
     @Override
-    public void resourcesUpdated(Set<AddressSpace> resources) throws Exception {
-        log.debug("Check standard address spaces: " + resources);
+    public void onUpdate(Set<AddressSpace> resources) throws Exception {
+        log.info("Check standard address spaces: {}", resources.stream().map(AddressSpace::getName).collect(Collectors.toSet()));
 
         for (AddressSpace addressSpace : resources) {
             try {

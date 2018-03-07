@@ -18,6 +18,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.internal.util.collections.Sets;
 
+import java.time.Duration;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -46,7 +48,7 @@ public class ControllerChainTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, testLogger);
+        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, testLogger, Duration.ofSeconds(5), Duration.ofSeconds(5));
         Controller mockController = mock(Controller.class);
         controllerChain.addController(mockController);
 
@@ -69,7 +71,7 @@ public class ControllerChainTest {
         when(mockController.handle(eq(a1))).thenReturn(a1);
         when(mockController.handle(eq(a2))).thenReturn(a2);
 
-        controllerChain.resourcesUpdated(Sets.newSet(a1, a2));
+        controllerChain.onUpdate(Sets.newSet(a1, a2));
 
         verify(mockController, times(2)).handle(any());
         verify(mockController).handle(eq(a1));
