@@ -227,4 +227,47 @@ describe('configmap backed address source', function() {
             done();
         });
     });
+    it('retrieves plans concurrently with addresses', function(done) {
+        this.timeout(5000);
+        configmaps.add_address_plan({plan_name:'small', address_type:'queue'});
+        configmaps.add_address_plan({plan_name:'medium', address_type:'queue'});
+        configmaps.add_address_plan({plan_name:'large', address_type:'queue'});
+        configmaps.add_address_plan({plan_name:'foo', address_type:'topic'});
+        configmaps.add_address_plan({plan_name:'bar', address_type:'topic'});
+        configmaps.add_address_plan({plan_name:'standard', address_type:'anycast', display_name:'display me', shortDescription:'abcdefg', longDescription:'hijklmn'});
+        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var plans = source.get_address_types();
+        source.once('addresses_defined', function (addresses) {
+            configmaps.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
+            source.once('addresses_defined', function (addresses) {
+                plans.then(function (types) {
+                    var queue = remove_by_name(types, 'queue');
+                    assert(queue);
+                    assert.equal(queue.plans.length, 3);
+                    assert_equal_set(queue.plans.map(plan_name), ['small', 'medium', 'large']);
+                    var topic = remove_by_name(types, 'topic');
+                    assert(topic);
+                    assert.equal(topic.plans.length, 2);
+                    assert_equal_set(topic.plans.map(plan_name), ['foo', 'bar']);
+                    var anycast = remove_by_name(types, 'anycast');
+                    assert(anycast);
+                    assert.equal(anycast.plans.length, 1);
+                    assert.equal(anycast.plans[0].name, 'standard');
+                    assert.equal(anycast.plans[0].displayName, 'display me');
+                    assert.equal(anycast.plans[0].shortDescription, 'abcdefg');
+                    assert.equal(anycast.plans[0].longDescription, 'hijklmn');
+                    assert.equal(types.length, 0);
+
+                    source.watcher.close().then(function () {
+                        assert.equal(addresses.length, 1);
+                        assert.equal(addresses[0].address, 'foo');
+                        assert.equal(addresses[0].type, 'queue');
+                        done();
+                    }).catch(done);
+                }).catch(function (error) {
+                    done(error);
+                });
+            });
+        });
+    });
 });

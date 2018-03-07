@@ -25,8 +25,7 @@ var myutils = require('./utils.js');
 function AddressSource(address_space, config) {
     this.address_space = address_space;
     this.config = config || {};
-    var options = this.config;
-    options.selector = 'type=address-config';
+    var options = myutils.merge({selector: 'type=address-config'}, this.config);
     events.EventEmitter.call(this);
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
@@ -200,8 +199,7 @@ function extract_plan_details (plan) {
 }
 
 AddressSource.prototype.get_address_types = function () {
-    var options = this.config;
-    options.selector = 'type=address-plan';
+    var options = myutils.merge({selector: 'type=address-plan'}, this.config);
     return kubernetes.get('configmaps', options).then(function (configmaps) {
         //extract plans
         var plans = configmaps.items.map(extract_address_plan);
