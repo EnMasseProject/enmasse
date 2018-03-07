@@ -135,7 +135,7 @@ public class PlansTest extends TestBase {
                 new AddressSpaceResource("router", 1.0, 1.0),
                 new AddressSpaceResource("aggregate", 0.0, 2.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, topicPlan, anycastPlan);
-        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("test-quota-limits-pooled", "test-quota-limits-pooled",
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-pooled-plan", "quota-limits-pooled-plan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
 
@@ -175,7 +175,7 @@ public class PlansTest extends TestBase {
                         Destination.queue("q4", queuePlan2.getName()),
                         Destination.queue("q5", queuePlan2.getName()),
                         Destination.queue("q6", queuePlan2.getName())
-                ), null, username, password);
+                ), Collections.emptyList(), username, password);
 
         //check aggregate limits
         checkLimits(addressSpace,
@@ -210,7 +210,7 @@ public class PlansTest extends TestBase {
                 new AddressSpaceResource("router", 1.0, 2.0),
                 new AddressSpaceResource("aggregate", 0.0, 3.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan);
-        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("test-quota-limits-sharded", "test-quota-limits-sharded",
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-sharded-plan", "quota-limits-sharded-plan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
 
@@ -247,7 +247,7 @@ public class PlansTest extends TestBase {
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
                 Arrays.toString(allowedDest.stream().map(Destination::getName).toArray(String[]::new)),
-                notAllowedDest != null ? Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)) : "[]");
+                Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)));
 
         setAddresses(addressSpace, allowedDest.toArray(new Destination[0]));
         List<Future<List<Address>>> getAddresses = new ArrayList<>();
@@ -265,7 +265,7 @@ public class PlansTest extends TestBase {
         assertCanConnect(addressSpace, username, password, allowedDest);
 
         getAddresses.clear();
-        if (notAllowedDest != null || notAllowedDest.size() > 0) {
+        if (notAllowedDest.size() > 0) {
             try {
                 appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Destination[0]));
             } catch (IllegalStateException ex) {
