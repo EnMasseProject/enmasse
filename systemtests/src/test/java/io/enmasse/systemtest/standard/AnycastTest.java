@@ -52,7 +52,7 @@ public class AnycastTest extends StandardTestBase {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 210;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 200 * 0.01 = 2.1 pods
+            dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
         }
         setAddresses(dest.toArray(new Destination[0]));
 //        TODO once getAddressPlanConfig() method will be implemented
@@ -72,10 +72,9 @@ public class AnycastTest extends StandardTestBase {
         //remove part of destinations
         int removeCount = 111;
         deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.11 => 0.99 pods
-        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 10);
+        waitForRouterReplicas(sharedAddressSpace, 1);
 
         //simple send/receive
-        waitForRouterReplicas(sharedAddressSpace, 1);
         for (int i = 0; i < destCount - removeCount; i = i + 3) {
             runAnycastTest(dest.get(i), client1, client2);
         }
