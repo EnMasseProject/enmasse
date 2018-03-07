@@ -114,7 +114,10 @@ public class PlansTest extends TestBase {
                 Collections.singletonList(new AddressResource("broker", 0.6)));
 
         AddressPlan queuePlan2 = new AddressPlan("queue-pooled-test2", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.2)));
+                Collections.singletonList(new AddressResource("broker", 0.1)));
+
+        AddressPlan queuePlan3 = new AddressPlan("queue-pooled-test3", AddressType.QUEUE,
+                Collections.singletonList(new AddressResource("broker", 0.05)));
 
         AddressPlan topicPlan = new AddressPlan("topic-pooled-test1", AddressType.TOPIC,
                 Arrays.asList(
@@ -126,6 +129,7 @@ public class PlansTest extends TestBase {
 
         plansProvider.createAddressPlanConfig(queuePlan);
         plansProvider.createAddressPlanConfig(queuePlan2);
+        plansProvider.createAddressPlanConfig(queuePlan3);
         plansProvider.createAddressPlanConfig(topicPlan);
         plansProvider.createAddressPlanConfig(anycastPlan);
 
@@ -134,7 +138,7 @@ public class PlansTest extends TestBase {
                 new AddressSpaceResource("broker", 0.0, 2.0),
                 new AddressSpaceResource("router", 1.0, 1.0),
                 new AddressSpaceResource("aggregate", 0.0, 2.0));
-        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, topicPlan, anycastPlan);
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-pooled-plan", "quota-limits-pooled-plan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
@@ -169,12 +173,18 @@ public class PlansTest extends TestBase {
 
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()),
-                        Destination.queue("q2", queuePlan.getName()),
-                        Destination.queue("q3", queuePlan2.getName()),
-                        Destination.queue("q4", queuePlan2.getName()),
-                        Destination.queue("q5", queuePlan2.getName()),
-                        Destination.queue("q6", queuePlan2.getName())
+                        Destination.queue("q1", queuePlan.getName()), // 0.6
+                        Destination.queue("q2", queuePlan.getName()), // 0.6
+                        Destination.queue("q3", queuePlan2.getName()), // 0.1
+                        Destination.queue("q4", queuePlan2.getName()), // 0.1
+                        Destination.queue("q5", queuePlan2.getName()), // 0.1
+                        Destination.queue("q6", queuePlan2.getName()), // 0.1
+                        Destination.queue("q7", queuePlan3.getName()), // 0.05
+                        Destination.queue("q8", queuePlan3.getName()), // 0.05
+                        Destination.queue("q9", queuePlan3.getName()), // 0.05
+                        Destination.queue("q10", queuePlan3.getName()), // 0.05
+                        Destination.queue("q11", queuePlan3.getName()), // 0.05
+                        Destination.queue("q12", queuePlan3.getName()) // 0.05
                 ), Collections.emptyList(), username, password);
 
         //check aggregate limits
@@ -249,7 +259,7 @@ public class PlansTest extends TestBase {
                 Arrays.toString(allowedDest.stream().map(Destination::getName).toArray(String[]::new)),
                 Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)));
 
-        setAddresses(addressSpace, allowedDest.toArray(new Destination[0]));
+        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Destination[0]));
         List<Future<List<Address>>> getAddresses = new ArrayList<>();
         for (Destination dest : allowedDest) {
             getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getAddress())));
