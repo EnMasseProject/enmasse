@@ -804,6 +804,6 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void assertWaitForValue(int expected, Callable<Integer> fn) throws Exception {
-        assertWaitForValue(expected, fn, new TimeoutBudget(2, TimeUnit.SECONDS);
+        assertWaitForValue(expected, fn, new TimeoutBudget(2, TimeUnit.SECONDS));
     }
 }
