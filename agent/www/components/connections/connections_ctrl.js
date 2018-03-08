@@ -50,6 +50,9 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
         }
 
         address_service.on_update(function (reason) {
+          if ($scope.filterConfig) {
+            $scope.filterConfig.resultsCount = $scope.items.length;
+          }
           if (reason.split('_')[0] !== 'connection') {
             return
           }
