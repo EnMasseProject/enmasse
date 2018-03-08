@@ -105,6 +105,7 @@ public class AddressSpaceTest extends MarathonTestBase {
 
         deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         deleteAddresses(addressSpace, topicList.toArray(new Destination[0]));
+        Thread.sleep(15000);
     }
 
     private void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception {
