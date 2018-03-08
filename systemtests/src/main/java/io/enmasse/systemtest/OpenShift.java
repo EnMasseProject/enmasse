@@ -67,7 +67,22 @@ public class OpenShift extends Kubernetes {
             return endpoint;
         } else {
             log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint(namespace, endpointName, "https");
+            String port;
+            switch (endpointName) {
+                case "messaging":
+                    port = "amqps";
+                    break;
+                case "console":
+                    port = "https";
+                    break;
+                case "mqtt":
+                    port = "secure-mqtt";
+                    break;
+                default:
+                    throw new IllegalStateException(String.format("Endpoint '%s' in namespace '%s' doesn't exist.",
+                            endpointName, namespace));
+            }
+            return getEndpoint(namespace, endpointName, port);
         }
     }
 }
