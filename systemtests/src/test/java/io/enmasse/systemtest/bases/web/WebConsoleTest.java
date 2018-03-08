@@ -496,9 +496,9 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertEquals("Incorrect results value", 1, consoleWebPage.getResultsCount());
+        assertWaitForValue(1, () -> consoleWebPage.getResultsCount());
         selenium.refreshPage();
-        assertEquals("Incorrect results value", 1, consoleWebPage.getResultsCount());
+        assertWaitForValue(1, () -> consoleWebPage.getResultsCount());
 
         assertThat(String.format("Console failed, does not contain %d addresses", 1),
                 consoleWebPage.getAddressItems().size(), is(1));
@@ -521,9 +521,9 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 connections, 1, 0, "view_user_connections", "viewPa55");
         selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
 
-        assertEquals("Incorrect results value", connections, consoleWebPage.getResultsCount());
+        assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
         selenium.refreshPage();
-        assertEquals("Incorrect results value", connections, consoleWebPage.getResultsCount());
+        assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
 
         assertEquals(String.format("Console failed, does not contain %d connections", connections),
                 connections, consoleWebPage.getConnectionItems().size());

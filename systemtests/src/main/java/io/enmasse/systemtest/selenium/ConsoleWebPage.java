@@ -393,7 +393,7 @@ public class ConsoleWebPage {
         }
     }
 
-    public int getResultsCount() throws Exception {
+    public Integer getResultsCount() throws Exception {
         String resultsString = getFilterResultsToolbar()
                 .findElement(By.className("col-sm-12"))
                 .findElement(By.className("ng-binding"))
