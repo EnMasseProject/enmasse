@@ -150,8 +150,10 @@ public class SeleniumProvider {
 
     public void refreshPage() {
         takeScreenShot();
+        log.info("Web page is going to be refreshed");
         driver.navigate().refresh();
         angularDriver.waitForAngularRequestsToFinish();
+        log.info("Web page successfully refreshed");
         takeScreenShot();
     }
 

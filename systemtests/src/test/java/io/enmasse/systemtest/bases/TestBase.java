@@ -37,10 +37,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -791,5 +788,22 @@ public abstract class TestBase extends SystemTestRunListener {
             assertTrue(message, Ordering.from(comparator).isOrdered(list));
         else
             assertTrue(message, Ordering.from(comparator).reverse().isOrdered(list));
+    }
+
+    protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {
+        Integer got = null;
+        log.info("waiting for expected value '{}' ...", expected);
+        while (budget.timeLeft() >= 0) {
+            got = fn.call();
+            if (got != null && expected == got.intValue()) {
+                return;
+            }
+            Thread.sleep(100);
+        }
+        fail(String.format("Incorrect results value! expected: '%s', got: '%s'", expected, got.intValue()));
+    }
+
+    protected void assertWaitForValue(int expected, Callable<Integer> fn) throws Exception {
+        assertWaitForValue(expected, fn, new TimeoutBudget(2, TimeUnit.SECONDS);
     }
 }
