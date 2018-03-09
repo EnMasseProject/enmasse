@@ -50,7 +50,7 @@ public abstract class TestBaseWithShared extends TestBase {
         @Override
         protected void succeeded(Description description) {
             try {
-                deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[1]));
+                deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -137,7 +137,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[1]));
+        deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
         allSharedAddresses.clear();
         if (destinations.length > 0) {
             appendAddresses(sharedAddressSpace, destinations);
