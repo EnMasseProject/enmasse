@@ -29,6 +29,9 @@ public abstract class TestBaseWithShared extends TestBase {
     protected static AddressSpace sharedAddressSpace;
     protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
+    private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
+    private ArrayList<Destination> allSharedAddresses = new ArrayList<>();
+
     @Rule
     public TestWatcher watcher = new TestWatcher() {
         @Override
@@ -47,12 +50,20 @@ public abstract class TestBaseWithShared extends TestBase {
         @Override
         protected void succeeded(Description description) {
             try {
-                setAddresses(sharedAddressSpace);
+                deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[1]));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     };
+
+    private void appendSharedAddresses(Destination... destinations) {
+        for (Destination dest : destinations) {
+            if (!dest.equals(dummyAddress)) {
+                allSharedAddresses.add(dest);
+            }
+        }
+    }
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         sharedAddressSpaces.remove(addressSpace.getName());
@@ -74,6 +85,14 @@ public abstract class TestBaseWithShared extends TestBase {
                 AuthService.STANDARD);
         log.info("Test is running in multitenant mode");
         createSharedAddressSpace(sharedAddressSpace);
+        createSharedAddressSpace(sharedAddressSpace, "standard");
+        if (!isBrokered(sharedAddressSpace)) {
+            Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.of(dummyAddress.getName()));
+            List<String> address = addresses.get(20, TimeUnit.SECONDS);
+            if (address.isEmpty()) {
+                appendAddresses(sharedAddressSpace, dummyAddress);
+            }
+        }
 
         this.username = "test";
         this.password = "test";
@@ -118,7 +137,12 @@ public abstract class TestBaseWithShared extends TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        setAddresses(sharedAddressSpace, destinations);
+        deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[1]));
+        allSharedAddresses.clear();
+        if (destinations.length > 0) {
+            appendAddresses(sharedAddressSpace, destinations);
+            appendSharedAddresses(destinations);
+        }
     }
 
     /**
@@ -129,6 +153,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
         appendAddresses(sharedAddressSpace, destinations);
+        appendSharedAddresses(destinations);
     }
 
     /**
@@ -139,6 +164,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
         deleteAddresses(sharedAddressSpace, destinations);
+        allSharedAddresses.clear();
     }
 
     /**
