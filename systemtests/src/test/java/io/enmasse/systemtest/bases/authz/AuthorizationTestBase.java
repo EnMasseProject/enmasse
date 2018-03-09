@@ -36,7 +36,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             addresses.add(anycast);
             addresses.add(multicast);
         }
-        setAddresses(sharedAddressSpace, addresses.toArray(new Destination[0]));
+        setAddresses(addresses.toArray(new Destination[0]));
     }
 
     protected void doTestSendAuthz() throws Exception {

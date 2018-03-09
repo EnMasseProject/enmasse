@@ -29,7 +29,7 @@ public class QueueTest extends BrokeredTestBase {
     @Test
     public void messageGroupTest() throws Exception {
         Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, dest);
+        setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient(sharedAddressSpace);
 

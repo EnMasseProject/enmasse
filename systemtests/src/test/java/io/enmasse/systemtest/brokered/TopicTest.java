@@ -38,7 +38,7 @@ public class TopicTest extends BrokeredTestBase {
             topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 1), getDefaultPlan(AddressType.TOPIC)));
             topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 2), getDefaultPlan(AddressType.TOPIC)));
         }
-        setAddresses(sharedAddressSpace, topicList.toArray(new Destination[0]));
+        setAddresses(topicList.toArray(new Destination[0]));
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
