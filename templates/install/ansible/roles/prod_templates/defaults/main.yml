@@ -1,0 +1,7 @@
+---
+# vars prod templates
+enmasse_root_dir: "{{ playbook_dir }}../../../../../../"
+templates_folder: "{{ enmasse_root_dir }}/templates/install"
+downloaded_templates_folder: "{{ enmasse_root_dir }}/jboss-amqmaas-image/templates"
+templates_repo_url: "https://github.com/jboss-container-images/jboss-amqmaas-image.git"
+template_repo_dest: "{{ enmasse_root_dir }}/jboss-amqmaas-image"

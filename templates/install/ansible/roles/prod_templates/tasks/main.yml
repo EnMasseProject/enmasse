@@ -1,0 +1,13 @@
+---
+# tasks for get templates with prod images
+
+- name: Clone templates repo
+  git:
+    repo: "{{ templates_repo_url }}"
+    dest: "{{ template_repo_dest }}"
+    update: yes
+    clone: yes
+    force: yes
+
+- name: Copy prod templates
+  shell: "cp {{ downloaded_templates_folder }}/* {{ templates_folder }} -R"
