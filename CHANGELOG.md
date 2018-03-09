@@ -1,4 +1,11 @@
-## 0.17.0 (February 22, 2017)
+## 0.17.1 (February 22, 2018)
+* Bug fixes to console UI
+* Update router image with bugfixes
+* Improve status checks to cover pooled brokers
+* Added standard address space plan without MQTT components
+* Support using wildcard certificates for external routes
+
+## 0.17.0 (February 22, 2018)
 * Support for deploying EnMasse on OpenShift using Ansible
 * Add support for address space plans, which provides a way to configure address space quotas.
 * Add support for address plans, which provides a way to configure resources requirements for a
@@ -10,7 +17,7 @@
 * Change address model to require 'address' and 'plan' fields to be set, and make 'name' field optional
 * Expose status of addresses in console
 
-## 0.16.0 (January 30, 2017)
+## 0.16.0 (January 30, 2018)
 * Support for authorization at address level. To enable this, create groups in keycloak on the form 'send_*' and 'recv_*', and have users join a particular group to allow sending or receiving from a particular address (wildcards if you want to allow on all addresses). More detailed docs will follow
 * Ability to deploy keycloak-controller standalone in order to automatically manage an  external keycloak instance
 * Enable hawtio console for brokers for easier debugging broker state. The console is authenticated against keycloak.
