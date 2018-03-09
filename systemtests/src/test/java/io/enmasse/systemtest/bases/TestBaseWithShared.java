@@ -164,7 +164,9 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
         deleteAddresses(sharedAddressSpace, destinations);
-        allSharedAddresses.clear();
+        for (Destination d : destinations) {
+            allSharedAddresses.removeIf(destIter -> destIter.getAddress().equals(d.getAddress()));
+        }
     }
 
     /**
