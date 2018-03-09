@@ -19,9 +19,9 @@ public class AuthorizationTest extends AuthorizationTestBase {
     protected String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return "sharded-queue";
+                return "pooled-queue";
             case TOPIC:
-                return "sharded-topic";
+                return "pooled-topic";
             case ANYCAST:
                 return "standard-anycast";
             case MULTICAST:
