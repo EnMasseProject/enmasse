@@ -8,7 +8,7 @@ pipeline {
     environment {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
-        PLANS_JOB_NAME = 'enmasse-master-plans'
+        PLANS_JOB_NAME = 'enmasse-master-common'
         MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
@@ -79,7 +79,7 @@ pipeline {
                         ]
             }
         }
-        stage('execute plans') {
+        stage('execute common') {
             environment {
                 ACTUAL_COMMIT = readFile('actual-commit.file')
             }
@@ -88,7 +88,7 @@ pipeline {
                         [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
-                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'plans.**'],
+                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.**'],
                                 [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
             }
