@@ -87,9 +87,9 @@ public abstract class TestBaseWithShared extends TestBase {
         createSharedAddressSpace(sharedAddressSpace);
         createSharedAddressSpace(sharedAddressSpace, "standard");
         if (!isBrokered(sharedAddressSpace)) {
-            Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.of(dummyAddress.getName()));
+            Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty());
             List<String> address = addresses.get(20, TimeUnit.SECONDS);
-            if (address.isEmpty()) {
+            if (!address.contains(dummyAddress.getAddress())) {
                 appendAddresses(sharedAddressSpace, dummyAddress);
             }
         }
