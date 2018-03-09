@@ -17,11 +17,10 @@ pipeline {
             label 'enmasse'
         }
     }
-    environment {
-        MAILING_LIST = credentials('MAILING_LIST')
-    }
     parameters {
-        string(name: 'MAILING_LIST', defaultValue: '', description: '')
+        string(name: 'MAILING_LIST', defaultValue: credentials('MAILING_LIST'), description: '')
+        string(name: 'TESTS_GIT_TAG', defaultValue: '0.17.1', description: 'Version of systemtests')
+        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
     }
     options {
         timeout(time: 6, unit: 'HOURS')
@@ -38,7 +37,7 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh 'git checkout tags/0.16.1'
+                sh "git checkout tags/${params.TEST_GIT_TAG}"
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
@@ -47,16 +46,6 @@ pipeline {
             steps {
                 sh './systemtests/scripts/setup-openshift.sh'
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
-            }
-        }
-        stage('install clients') {
-            steps {
-                sh 'sudo PATH=$PATH make client_install'
-            }
-        }
-        stage('install webdrivers') {
-            steps {
-                sh 'sudo make webdriver_install'
             }
         }
         stage('system tests') {
@@ -68,10 +57,8 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
-                    sh 'Xvfb :10 -ac &'
-                    sh 'git clone https://github.com/jboss-container-images/jboss-amqmaas-image.git && cp jboss-amqmaas-image/templates/* templates/install -R'
-                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig 'systemtests' 'brokered.**'"
+                    sh 'ansible-playbook templates/install/ansible/playbooks/openshift/prod-templates.yml'
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig ${params.TEST_CASE} ''"
                 }
             }
         }
@@ -94,7 +81,7 @@ pipeline {
         }
         failure {
             echo "build failed"
-            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+            mail to: "${params.MAILING_LIST}", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
         }
     }
 }
