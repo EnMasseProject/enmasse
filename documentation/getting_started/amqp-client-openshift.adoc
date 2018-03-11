@@ -9,14 +9,14 @@ To send and receive messages, you should connect to the exposed route. To start 
 
 [options="nowrap",subs=attributes+]
 ....
-./simple_recv.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/anycast" -m 10
+./simple_recv.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/myanycast" -m 10
 ....
 
 This will block until it has received 10 messages. To start the sender, run:
 
 [options="nowrap",subs=attributes+]
 ....
-./simple_send.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/anycast" -m 10
+./simple_send.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/myanycast" -m 10
 ....
 
 The server certificates is not verified in the above examples. To fetch the certificate, run:
