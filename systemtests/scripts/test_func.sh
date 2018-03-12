@@ -127,6 +127,7 @@ function get_docker_info() {
     ARTIFACTS_DIR=${1}
     CONTAINER=${2}
 
-    FILENAME="docker_${CONTAINER}.log"
-    docker logs ${CONTAINER} > ${FILENAME}
+    FILENAME_STDOUT="docker_${CONTAINER}.stdout.log"
+    FILENAME_STDERR="docker_${CONTAINER}.stderr.log"
+    docker logs ${CONTAINER} > ${FILENAME_STDOUT} 2> ${FILENAME_STDERR}
 }
