@@ -1,10 +1,9 @@
 #!/usr/bin/env groovy
 
-def storeArtifacts(buildStatus) {
-    if (buildStatus == 'ABORTED') {
-        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
-        sh 'rm -rf /tmp/testlogs'
-    }
+def storeArtifacts() {
+    sh './systemtests/scripts/store_kubernetes_info.sh "artifacts/openshift-info/"'
+    sh './systemtests/scripts/collect_logs.sh "/tmp/testlogs" "artifacts/openshift-logs"'
+    sh 'rm -rf /tmp/testlogs'
 }
 
 def tearDownOpenshift() {
@@ -83,13 +82,12 @@ pipeline {
     }
     post {
         always {
-            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            storeArtifacts() //store artifacts if build was aborted - due to timeout reached
             //store test results from build and system tests
             junit '**/TEST-*.xml'
 
             //archive test results and openshift lofs
             archive '**/TEST-*.xml'
-            archive 'artifacts/**'
             archive 'templates/install/**'
             sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}/"
             sh "sudo mv core-dumps.tar.gz artifacts/"
