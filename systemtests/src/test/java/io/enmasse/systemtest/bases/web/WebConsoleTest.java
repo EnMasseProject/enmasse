@@ -12,6 +12,7 @@ import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.selenium.*;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
@@ -32,7 +33,7 @@ import static org.junit.Assert.*;
 public abstract class WebConsoleTest extends TestBaseWithShared implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private SeleniumProvider selenium = new SeleniumProvider();
+    private static SeleniumProvider selenium = new SeleniumProvider();
     private List<AbstractClient> clientsList;
 
     @Rule
@@ -42,21 +43,27 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             selenium.onFailed(e, description);
         }
     };
+
     private ConsoleWebPage consoleWebPage;
 
     @Before
     public void setUpWebConsoleTests() throws Exception {
-        selenium.setupDriver(environment, kubernetes, buildDriver());
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace);
+        if (selenium.getDriver() == null)
+            selenium.setupDriver(environment, kubernetes, buildDriver());
     }
 
     @After
-    public void tearDownDrivers() throws Exception {
-        selenium.tearDownDrivers();
+    public void tearDownWebConsoleTests() throws Exception {
+        selenium.clearScreenShots();
         if (clientsList != null) {
             stopClients(clientsList);
             clientsList.clear();
         }
+    }
+
+    @AfterClass
+    public static void TearDownDrivers() {
+        selenium.tearDownDrivers();
     }
 
     //============================================================================================
@@ -525,6 +532,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         selenium.refreshPage();
         assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
 
+        log.info("Check if connection count is {}", connections);
         assertEquals(String.format("Console failed, does not contain %d connections", connections),
                 connections, consoleWebPage.getConnectionItems().size());
         assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", username),
@@ -625,11 +633,14 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     private void assertViewOnlyUsersAddresses(String message, String group, List<AddressWebItem> addresses) {
+        log.info("Check if user {} see only addresses he has rights on", username);
         if (addresses == null || addresses.size() == 0)
             fail("No address items in console for group " + group);
         for (AddressWebItem item : addresses) {
             if (group.contains("*")) {
-                String rights = username.replace("user_view_", "").replace("*", "");
+                String rights = username.replace("user_view_", "")
+                        .replace("*", "")
+                        .replace("#", "");
                 assertTrue(message, rights.equals("") || item.getName().contains(rights));
             } else {
                 assertTrue(message, item.getName().equals(group.replace("view_", "")));
@@ -638,6 +649,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     private void assertViewOnlyUsersConnections(String message, String username, List<ConnectionWebItem> connections) {
+        log.info("Check if user {} see only his connections", username);
         if (connections == null || connections.size() == 0)
             fail("No connection items in console under user " + username);
         for (ConnectionWebItem conn : connections) {
