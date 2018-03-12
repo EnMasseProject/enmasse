@@ -7,6 +7,8 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpaceTypeData;
+import io.enmasse.systemtest.resources.SchemaData;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -282,6 +284,16 @@ public class TestUtils {
     }
 
     /**
+     * get schema
+     */
+    public static Future<SchemaData> getSchema(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getSchema();
+        CompletableFuture<SchemaData> schema = new CompletableFuture<>();
+        schema.complete(getSchemaObejct(response));
+        return schema;
+    }
+
+    /**
      * Check if isReady attribute is set to true
      *
      * @param address JsonObject with address
@@ -383,6 +395,24 @@ public class TestUtils {
         } catch (Exception ignored) {
         }
         return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages);
+    }
+
+    /**
+     * Create object of SchemaData class from JsonObject
+     *
+     * @param addressJsonObject
+     * @return
+     */
+    private static SchemaData getSchemaObejct(JsonObject addressJsonObject) {
+        log.info("Got Schema object: {}", addressJsonObject.toString());
+        List<AddressSpaceTypeData> data = new ArrayList<>();
+        JsonObject spec = addressJsonObject.getJsonObject("spec");
+        JsonArray addressSpaceTypes = spec.getJsonArray("addressSpaceTypes");
+        for (int i = 0; i < addressSpaceTypes.size(); i++) {
+            data.add(new AddressSpaceTypeData(addressSpaceTypes.getJsonObject(i)));
+        }
+
+        return new SchemaData(data);
     }
 
     /**

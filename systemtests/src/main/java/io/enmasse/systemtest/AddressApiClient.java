@@ -29,6 +29,7 @@ public class AddressApiClient {
     private Endpoint endpoint;
     private final Vertx vertx;
     private final int initRetry = 10;
+    private final String schemaPath = "/apis/enmasse.io/v1/schema";
     private final String addressSpacesPath = "/apis/enmasse.io/v1/addressspaces";
     private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
@@ -164,6 +165,26 @@ public class AddressApiClient {
         return doRequestNTimes(initRetry, () -> {
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
             client.get(endpoint.getPort(), endpoint.getHost(), path.toString())
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .timeout(20_000)
+                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        });
+    }
+
+    /**
+     * give you JsonObject with Schema
+     *
+     * @return
+     * @throws Exception
+     */
+    public JsonObject getSchema() throws Exception {
+        log.info("GET-schema: path {}; ", schemaPath);
+
+        return doRequestNTimes(initRetry, () -> {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            client.get(endpoint.getPort(), endpoint.getHost(), schemaPath)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .timeout(20_000)
