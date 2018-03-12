@@ -52,6 +52,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             selenium.setupDriver(environment, kubernetes, buildDriver());
         else
             selenium.clearScreenShots();
+        super.setAddresses(sharedAddressSpace);
     }
 
     @After

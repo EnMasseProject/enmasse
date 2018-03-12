@@ -224,7 +224,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName);
+        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     /**
@@ -235,7 +235,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName);
+        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     /**

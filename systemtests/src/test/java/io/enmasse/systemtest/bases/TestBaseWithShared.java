@@ -87,10 +87,8 @@ public abstract class TestBaseWithShared extends TestBase {
         createSharedAddressSpace(sharedAddressSpace);
         createSharedAddressSpace(sharedAddressSpace, "standard");
         if (!isBrokered(sharedAddressSpace)) {
-            Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty());
-            List<String> address = addresses.get(20, TimeUnit.SECONDS);
-            if (!address.contains(dummyAddress.getAddress())) {
-                appendAddresses(sharedAddressSpace, dummyAddress);
+            if (!dummyExists()) {
+                super.setAddresses(sharedAddressSpace, dummyAddress);
             }
         }
 
@@ -121,17 +119,30 @@ public abstract class TestBaseWithShared extends TestBase {
         scale(sharedAddressSpace, destination, numReplicas);
     }
 
+    /**
+     * get all addresses except 'dummy-address'
+     */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return getAddresses(sharedAddressSpace, addressName);
+        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+    }
+
+    /**
+     * check if dummy address exists
+     */
+    private boolean dummyExists() throws Exception {
+        Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
+                new ArrayList<>());
+        List<String> address = addresses.get(20, TimeUnit.SECONDS);
+        return address.contains(dummyAddress.getAddress());
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return getAddressesObjects(sharedAddressSpace, addressName);
+        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
     }
 
 
     /**
-     * use PUT html method to replace all addresses
+     * delete all addresses except 'dummy-address' and append new addresses
      *
      * @param destinations
      * @throws Exception
@@ -140,13 +151,12 @@ public abstract class TestBaseWithShared extends TestBase {
         deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
         allSharedAddresses.clear();
         if (destinations.length > 0) {
-            appendAddresses(sharedAddressSpace, destinations);
-            appendSharedAddresses(destinations);
+            appendAddresses(destinations);
         }
     }
 
     /**
-     * use POST html method to append addresses to already existing addresses
+     * append new addresses into address-space and sharedAddresses list
      *
      * @param destinations
      * @throws Exception
@@ -179,7 +189,8 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String
+            username, String password) throws Exception {
         return attachReceivers(sharedAddressSpace, destination, receiverCount, username, password);
     }
 

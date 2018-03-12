@@ -299,20 +299,22 @@ public class TestUtils {
     /**
      * get list of Address names by REST API
      */
-    public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+    public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace,
+                                                    Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListString(response));
+        listOfAddresses.complete(convertToListString(response, skipAddresses));
         return listOfAddresses;
     }
 
     /**
      * get list of Address objects by REST API
      */
-    public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+    public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace,
+                                                            Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response));
+        listOfAddresses.complete(convertToListAddress(response, skipAddresses));
         return listOfAddresses;
     }
 
@@ -345,13 +347,15 @@ public class TestUtils {
      *
      * @return list of address names
      */
-    private static List<String> convertToListString(JsonObject htmlResponse) {
+    private static List<String> convertToListString(JsonObject htmlResponse, List<String> skipAddresses) {
         if (htmlResponse != null) {
             String kind = htmlResponse.getString("kind");
             List<String> addresses = new ArrayList<>();
             switch (kind) {
                 case "Address":
-                    addresses.add(htmlResponse.getJsonObject("spec").getString("address"));
+                    if (!skipAddresses.contains(htmlResponse.getJsonObject("spec").getString("address"))) {
+                        addresses.add(htmlResponse.getJsonObject("spec").getString("address"));
+                    }
                     break;
                 case "AddressList":
                     JsonArray items = htmlResponse.getJsonArray("items");
@@ -375,13 +379,15 @@ public class TestUtils {
      * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of addresses
      */
-    public static List<Address> convertToListAddress(JsonObject htmlResponse) {
+    public static List<Address> convertToListAddress(JsonObject htmlResponse, List<String> skipAddresses) {
         if (htmlResponse != null) {
             String kind = htmlResponse.getString("kind");
             List<Address> addresses = new ArrayList<>();
             switch (kind) {
                 case "Address":
-                    addresses.add(getAddressObject(htmlResponse));
+                    if (!skipAddresses.contains(htmlResponse.getJsonObject("spec").getString("address"))) {
+                        addresses.add(getAddressObject(htmlResponse));
+                    }
                     break;
                 case "AddressList":
                     JsonArray items = htmlResponse.getJsonArray("items");
