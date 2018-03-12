@@ -519,7 +519,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         AbstractClient noUsersConnections = attachConnector(destination, connections, 1, 0);
         AbstractClient usersConnections = attachConnector(sharedAddressSpace, destination,
                 connections, 1, 0, "view_user_connections", "viewPa55");
-        selenium.waitUntilItemPresent(60, () -> consoleWebPage.getConnectionItems().get(0));
+        selenium.waitUntilPropertyPresent(60, 5, () -> consoleWebPage.getConnectionItems().size());
 
         assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
         selenium.refreshPage();
