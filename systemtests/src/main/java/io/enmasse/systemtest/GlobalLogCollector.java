@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest;
 
-import io.fabric8.kubernetes.api.model.Event;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -13,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class GlobalLogCollector {
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
@@ -82,13 +82,26 @@ public class GlobalLogCollector {
     }
 
     public void collectEvents(String namespace) {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command("kubectl", "get", "events", "-n", namespace);
+        processBuilder.redirectErrorStream(true);
+        Process process;
+
         File eventLog = new File(logDir, namespace + ".events");
-        try (FileWriter fileWriter = new FileWriter(eventLog)) {
-            for (Event event : kubernetes.listEvents(namespace)) {
-                fileWriter.write(event.toString());
+        try (FileWriter fileWriter = new FileWriter(eventLog)){
+            process = processBuilder.start();
+            InputStream stdout = process.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                fileWriter.write(line);
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            reader.close();
+            if (!process.waitFor(1, TimeUnit.MINUTES)) {
+                throw new RuntimeException("Command timed out");
+            }
+        } catch (Exception e) {
+            log.error("Error collecting events for {}", namespace, e);
         }
     }
 }
