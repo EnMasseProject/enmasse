@@ -45,7 +45,7 @@ get_kubernetes_info ${LOG_DIR} pods default "-after"
 get_kubernetes_info ${LOG_DIR} events ${OPENSHIFT_PROJECT}
 
 #store artifacts
-$CURDIR/collect_logs.sh ${ARTIFACTS_DIR}
+$CURDIR/collect_logs.sh ${OPENSHIFT_TEST_LOGDIR} ${ARTIFACTS_DIR}
 
 if [ $failure -gt 0 ]
 then

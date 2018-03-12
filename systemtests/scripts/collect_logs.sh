@@ -1,5 +1,6 @@
 #!/bin/bash
-ARTIFACTS_DIR=$1
+LOGDIR=$1
+ARTIFACTS_DIR=$2
 
 function runcmd {
     local cmd=$1
@@ -23,4 +24,4 @@ do
     done
 done
 
-cp -r ${OPENSHIFT_TEST_LOGDIR}/* ${ARTIFACTS_DIR}/logs/
+cp -r ${LOGDIR}/* ${ARTIFACTS_DIR}/logs/

@@ -47,16 +47,9 @@ kill ${STATS_PID}
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill ${LOGS_PID}
 
-#environment info after tests
-${CURDIR}/store_kubernetes_info.sh ${LOG_DIR} ${OPENSHIFT_PROJECT}
-
-#store artifacts
-${CURDIR}/collect_logs.sh ${ARTIFACTS_DIR}
-
 if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
-    oc get events
     exit 1
 else
     teardown_test ${OPENSHIFT_PROJECT}

@@ -118,6 +118,11 @@ function get_previous_logs() {
     done
 }
 
+function get_all_events() {
+    LOG_DIR=${1}
+    kubectl get events --all-namespaces > ${LOG_DIR}/all_events.log
+}
+
 function get_docker_info() {
     ARTIFACTS_DIR=${1}
     CONTAINER=${2}
