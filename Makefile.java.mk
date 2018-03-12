@@ -6,7 +6,7 @@ endif
 
 ifneq ($(FULL_BUILD),true)
 build:
-	cd $(TOPDIR); mvn compile $(MAVEN_ARGS)
+	cd $(TOPDIR); mvn install $(MAVEN_ARGS)
 
 test:
 ifeq ($(SKIP_TESTS),true)
