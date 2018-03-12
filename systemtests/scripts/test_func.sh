@@ -92,13 +92,13 @@ function create_user() {
 }
 
 function get_kubernetes_info() {
-    ARTIFACTS_DIR=${1}
+    LOG_DIR=${1}
     RESOURCE=${2}
     NAMESPACE=${3}
     SUFIX=${4}
     FILE_NAME="openshift-${RESOURCE}-${NAMESPACE}${SUFIX}.log"
-    kubectl get ${RESOURCE} -n ${NAMESPACE} > "${1}/${FILE_NAME}"
-    kubectl get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${1}/${FILE_NAME}"
+    kubectl get ${RESOURCE} -n ${NAMESPACE} > "${LOG_DIR}/${FILE_NAME}"
+    kubectl get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${LOG_DIR}/${FILE_NAME}"
 }
 
 #store previous logs from restarted pods
