@@ -70,9 +70,12 @@ public abstract class TestBaseWithShared extends TestBase {
     @Before
     public void setupShared() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
-        sharedAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
+        sharedAddressSpace = new AddressSpace(
+                getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()),
+                getAddressSpaceType(),
+                AuthService.STANDARD);
         log.info("Test is running in multitenant mode");
-        createSharedAddressSpace(sharedAddressSpace, "standard");
+        createSharedAddressSpace(sharedAddressSpace);
 
         this.username = "test";
         this.password = "test";
@@ -92,9 +95,9 @@ public abstract class TestBaseWithShared extends TestBase {
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
     }
 
-    protected void createSharedAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+    protected void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         sharedAddressSpaces.put(addressSpace.getName(), addressSpace);
-        super.createAddressSpace(addressSpace, authService);
+        super.createAddressSpace(addressSpace);
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {

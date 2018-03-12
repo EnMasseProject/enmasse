@@ -63,8 +63,13 @@ public class SmokeTest extends BrokeredTestBase {
      */
     @Test
     public void testCreateDeleteAddressSpace() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace("brokered-create-delete-a", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpaceA, "standard");
+        AddressSpace addressSpaceA = new AddressSpace("brokered-create-delete-a", AddressSpaceType.BROKERED,
+                AuthService.STANDARD);
+
+        AddressSpace addressSpaceC = new AddressSpace("brokered-create-delete-c", AddressSpaceType.BROKERED,
+                AuthService.STANDARD);
+        createAddressSpaceList(addressSpaceA, addressSpaceC);
+
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
         getKeycloakClient().createUser(addressSpaceA.getName(), "test", "test");
@@ -74,8 +79,6 @@ public class SmokeTest extends BrokeredTestBase {
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
         amqpQueueCliA.close();
 
-        AddressSpace addressSpaceC = new AddressSpace("brokered-create-delete-c", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpaceC, "standard");
         setAddresses(addressSpaceC, queueB);
         getKeycloakClient().createUser(addressSpaceC.getName(), "test", "test");
 
@@ -91,8 +94,8 @@ public class SmokeTest extends BrokeredTestBase {
 
     //@Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
     public void testCreateAlreadyExistingAddress() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpaceA, "standard");
+        AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpaceA);
         Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueA);
 

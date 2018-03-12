@@ -24,7 +24,7 @@ public class AddressSpaceTest extends MarathonTestBase {
             AddressSpace addressSpace = new AddressSpace("test-create-delete-addrspace-brokered",
                     "test-create-delete-addrspace-brokered",
                     AddressSpaceType.BROKERED);
-            createAddressSpace(addressSpace, "none");
+            createAddressSpace(addressSpace);
             log.info("Address space created");
 
             doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
@@ -41,7 +41,7 @@ public class AddressSpaceTest extends MarathonTestBase {
         AddressSpace addressSpace = new AddressSpace("test-create-delete-addresses-brokered",
                 "test-create-delete-addresses-brokered",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
+        createAddressSpace(addressSpace);
 
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
@@ -54,8 +54,8 @@ public class AddressSpaceTest extends MarathonTestBase {
     public void testCreateDeleteAddressesWithAuthLong() throws Exception {
         log.info("test testCreateDeleteAddressesWithAuthLong");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-addresses-auth-brokered",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
+                AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
 
         String username = "test-user";
         String password = "test-user";

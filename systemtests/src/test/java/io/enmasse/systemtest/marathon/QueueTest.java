@@ -23,7 +23,7 @@ public class QueueTest extends MarathonTestBase {
         AddressSpace addressSpace = new AddressSpace("test-queue-sendreceive-brokered",
                 "test-queue-sendreceive-brokered",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
+        createAddressSpace(addressSpace);
 
         int msgCount = 1000;
         int queueCount = 10;
