@@ -50,7 +50,7 @@ public class QueueTest extends StandardTestBase {
     @Test
     public void testRestApi() throws Exception {
         Destination q1 = Destination.queue("queue1", "pooled-queue");
-        Destination q2 = Destination.queue("queue1", "pooled-queue");
+        Destination q2 = Destination.queue("queue2", "pooled-queue");
 
         runRestApiTest(q1, q2);
     }
