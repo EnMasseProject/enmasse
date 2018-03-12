@@ -111,14 +111,42 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
-    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        createAddressSpace(addressSpace, authService, addressSpace.getType().equals(AddressSpaceType.STANDARD));
+    protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        createAddressSpace(addressSpace, !isBrokered(addressSpace));
     }
 
-    protected void createAddressSpace(AddressSpace addressSpace, String authService, boolean extraWait) throws Exception {
+
+    protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        ArrayList<AddressSpace> spaces = new ArrayList<>();
+        for (AddressSpace addressSpace : addressSpaces) {
+            if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+                log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
+                spaces.add(addressSpace);
+            } else {
+                log.warn("Address space '" + addressSpace + "' already exists.");
+            }
+        }
+        addressApiClient.createAddressSpaceList(spaces.toArray(new AddressSpace[0]));
+
+        boolean extraWait = false;
+        for (AddressSpace addressSpace : spaces) {
+            logCollector.startCollecting(addressSpace.getNamespace());
+            TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+            if (!addressSpace.equals(getSharedAddressSpace())) {
+                addressSpaceList.add(addressSpace);
+            }
+            extraWait = extraWait ? extraWait : !isBrokered(addressSpace);
+        }
+        if (extraWait) {
+            log.info("One of requested address-spaces is 'standard' type - Waiting for 2 minutes before starting tests");
+            Thread.sleep(120_000);
+        }
+    }
+
+    protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
-            addressApiClient.createAddressSpace(addressSpace, authService);
+            addressApiClient.createAddressSpace(addressSpace);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
 

@@ -53,7 +53,52 @@ public class AddressApiClient {
     }
 
 
-    public void createAddressSpace(AddressSpace addressSpace, String authServiceType) throws Exception {
+    public void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "v1");
+        config.put("kind", "AddressSpaceList");
+
+        JsonArray items = new JsonArray();
+        for (AddressSpace addressSpace : addressSpaces) {
+            JsonObject entry = new JsonObject();
+            JsonObject metadata = new JsonObject();
+
+            metadata.put("name", addressSpace.getName());
+            if (addressSpace.getNamespace() != null) {
+                metadata.put("namespace", addressSpace.getNamespace());
+            }
+            metadata.put("addressSpace", addressSpace.getName());
+            entry.put("metadata", metadata);
+
+            JsonObject spec = new JsonObject();
+            spec.put("type", addressSpace.getType());
+            spec.put("plan", addressSpace.getPlan());
+            config.put("spec", spec);
+
+            JsonObject authService = new JsonObject();
+            authService.put("type", addressSpace.getAuthService());
+            spec.put("authenticationService", authService);
+
+            items.add(entry);
+        }
+        config.put("items", items);
+
+        log.info("POST-address-space-list: path {}; body {}", addressSpacesPath, config.toString());
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+
+        doRequestNTimes(initRetry, () -> {
+            client.post(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
+                    .timeout(20_000)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .sendJsonObject(config, ar -> responseHandler(ar,
+                            responsePromise,
+                            String.format("Error: create address space list '%s'", addressSpaces)));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        });
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
@@ -69,7 +114,7 @@ public class AddressApiClient {
         config.put("spec", spec);
 
         JsonObject authService = new JsonObject();
-        authService.put("type", authServiceType);
+        authService.put("type", addressSpace.getAuthService());
         spec.put("authenticationService", authService);
 
         log.info("POST-address-space: path {}; body {}", addressSpacesPath, config.toString());
