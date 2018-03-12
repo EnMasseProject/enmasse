@@ -86,6 +86,7 @@ public class GlobalLogCollector {
         processBuilder.command("kubectl", "get", "events", "-n", namespace);
         processBuilder.redirectErrorStream(true);
         Process process;
+        log.info("Collecting events in {}", namespace);
 
         File eventLog = new File(logDir, namespace + ".events");
         try (FileWriter fileWriter = new FileWriter(eventLog)){
@@ -95,6 +96,7 @@ public class GlobalLogCollector {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 fileWriter.write(line);
+                fileWriter.write("\n");
             }
             reader.close();
             if (!process.waitFor(1, TimeUnit.MINUTES)) {
