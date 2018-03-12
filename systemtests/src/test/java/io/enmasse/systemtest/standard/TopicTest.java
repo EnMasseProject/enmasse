@@ -69,8 +69,7 @@ public class TopicTest extends StandardTestBase {
                 recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    //disabled due to issue: #693
-    //@Test
+    @Test
     public void testRestApi() throws Exception {
         Destination t1 = Destination.topic("topicRest1", "pooled-topic");
         Destination t2 = Destination.topic("topicRest2", "pooled-topic");
