@@ -83,8 +83,6 @@ public class TopicTest extends StandardTestBase {
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
 
-        Thread.sleep(30_000);
-
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
 
         Map<String, Object> appProperties = new HashMap<>();
@@ -160,7 +158,6 @@ public class TopicTest extends StandardTestBase {
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
         AmqpClient client2 = amqpClientFactory.createTopicClient();
         Future<List<Message>> receivedWithoutSel = client2.recvMessages(dest.getAddress(), msgsCount - 1);
-        Thread.sleep(10_000);
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 
@@ -189,8 +186,6 @@ public class TopicTest extends StandardTestBase {
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
-        Thread.sleep(30_000);
-
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();
         for (int i = 0; i < msgsCount; i++) {
@@ -216,8 +211,6 @@ public class TopicTest extends StandardTestBase {
 
         AmqpClient client = amqpClientFactory.createTopicClient();
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
-
-        Thread.sleep(10_000);
 
         Future<Integer> sent = client.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 
