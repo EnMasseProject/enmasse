@@ -72,11 +72,10 @@ public class TopicTest extends StandardTestBase {
     //disabled due to issue: #693
     //@Test
     public void testRestApi() throws Exception {
-        List<String> topics = Arrays.asList("topicRest1", "topicRest2");
-        Destination t1 = Destination.topic(topics.get(0), "sharded-topic");
-        Destination t2 = Destination.topic(topics.get(1), "sharded-topic");
+        Destination t1 = Destination.topic("topicRest1", "pooled-topic");
+        Destination t2 = Destination.topic("topicRest2", "pooled-topic");
 
-        runRestApiTest(topics, t1, t2);
+        runRestApiTest(t1, t2);
     }
 
     @Test

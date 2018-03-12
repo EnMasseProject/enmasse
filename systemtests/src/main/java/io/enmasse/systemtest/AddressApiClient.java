@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class AddressApiClient {
     private final WebClient client;
@@ -179,10 +181,15 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         StringBuilder path = new StringBuilder();
-        for (Destination destination : destinations) {
-            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
+        if (destinations.length == 0) {
+            path.append(addressPath).append("/").append(addressSpace.getName());
             doDelete(path.toString());
-            path.setLength(0);
+        } else {
+            for (Destination destination : destinations) {
+                path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
+                doDelete(path.toString());
+                path.setLength(0);
+            }
         }
     }
 

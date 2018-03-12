@@ -12,6 +12,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -64,5 +65,13 @@ public class QueueTest extends BrokeredTestBase {
         for (Message m : receivedGroupB.get()) {
             assertEquals("Group id is different", m.getGroupId(), "group B");
         }
+    }
+
+    @Test
+    public void testRestApi() throws Exception {
+        Destination q1 = Destination.queue("queue1", "brokered-queue");
+        Destination q2 = Destination.queue("queue2", "brokered-queue");
+
+        runRestApiTest(q1, q2);
     }
 }

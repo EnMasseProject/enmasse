@@ -8,7 +8,6 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
@@ -19,7 +18,6 @@ import org.slf4j.Logger;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -179,27 +177,35 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * body for rest api tests
      */
-    public void runRestApiTest(List<String> destinationsNames, Destination d1, Destination d2) throws Exception {
+    public void runRestApiTest(Destination d1, Destination d2) throws Exception {
+        List<String> destinationsNames = Arrays.asList(d1.getAddress(), d2.getAddress());
         setAddresses(d1);
         appendAddresses(d2);
 
         //queue1, queue2
         Future<List<String>> response = getAddresses(Optional.empty());
         assertThat("Rest api does not return all addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames));
-        log.info("addresses (" + destinationsNames.stream().collect(Collectors.joining(",")) + ") successfully created");
+        log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
 
         deleteAddresses(d1);
 
         //queue1
         response = getAddresses(Optional.empty());
         assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-        log.info("address (" + d1.getAddress() + ") successfully deleted");
+        log.info("address {} successfully deleted", d1.getAddress());
 
         deleteAddresses(d2);
 
         //empty
         response = getAddresses(Optional.empty());
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        log.info("addresses (" + d2.getAddress() + ") successfully deleted");
+        log.info("addresses {} successfully deleted", d2.getAddress());
+
+        //check if delete all works
+        setAddresses(d1, d2);
+        deleteAddresses();
+        response = getAddresses(Optional.empty());
+        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
+        log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 }
