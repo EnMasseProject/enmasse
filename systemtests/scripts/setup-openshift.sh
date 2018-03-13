@@ -14,6 +14,11 @@ sudo rm -rf /var/log/containers/*
 sudo rm -rf /var/log/pods/*
 
 oc cluster up $OC_CLUSTER_ARGS
+if [ ! $? -ne 0 ]; then
+    echo "WARN: openshift cluster didn't start properly, trying to restart..."
+    oc cluster down
+    oc cluster up ${OC_CLUSTER_ARGS}
+fi
 oc login -u system:admin
 
 TIMEOUT=300
