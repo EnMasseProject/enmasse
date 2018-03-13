@@ -40,10 +40,11 @@ public class ConsoleWebPage {
     }
 
     public void openWebConsolePage(String route) throws IllegalStateException {
-        selenium.driver.get(route);
-        selenium.angularDriver.waitForAngularRequestsToFinish();
+        log.info("Opening console web page");
+        selenium.getDriver().get(route);
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (!selenium.driver.findElement(By.tagName("body")).getText().isEmpty()) {
+        if (!selenium.getDriver().findElement(By.tagName("body")).getText().isEmpty()) {
             log.info("Console page opened");
         } else {
             throw new IllegalStateException("Console web page wasn't opened!");
@@ -51,7 +52,7 @@ public class ConsoleWebPage {
     }
 
     private WebElement getNavigateMenu() throws Exception {
-        return selenium.driver.findElement(By.className("nav-pf-vertical"));
+        return selenium.getDriver().findElement(By.className("nav-pf-vertical"));
     }
 
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
@@ -87,11 +88,11 @@ public class ConsoleWebPage {
     }
 
     public WebElement getCreateButton() throws Exception {
-        return selenium.driver.findElement(ByAngular.buttonText("Create"));
+        return selenium.getDriver().findElement(ByAngular.buttonText("Create"));
     }
 
     public WebElement getRemoveButton() throws Exception {
-        return selenium.driver.findElement(ByAngular.buttonText("Delete"));
+        return selenium.getDriver().findElement(ByAngular.buttonText("Delete"));
     }
 
     public void clickOnCreateButton() throws Exception {
@@ -115,7 +116,7 @@ public class ConsoleWebPage {
      * get element with toolbar and all addresses/connections
      */
     private WebElement getContentContainer() throws Exception {
-        return selenium.driver.findElement(By.id("contentContainer"));
+        return selenium.getDriver().findElement(By.id("contentContainer"));
     }
 
     /**
@@ -123,7 +124,7 @@ public class ConsoleWebPage {
      * get toolbar with filter/sort
      */
     private WebElement getToolbar() throws Exception {
-        return selenium.driver.findElement(By.id(toolbarType.toString()));
+        return selenium.getDriver().findElement(By.id(toolbarType.toString()));
     }
 
     /**
@@ -245,7 +246,7 @@ public class ConsoleWebPage {
     }
 
     public WebElement getCreateAddressModalWindow() throws Exception {
-        return selenium.driver.findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
+        return selenium.getDriver().findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
     }
 
     /**
@@ -526,17 +527,17 @@ public class ConsoleWebPage {
         clickOnCreateButton();
 
         //fill address name
-        selenium.fillInputItem(selenium.driver.findElement(By.id("new-name")), destination.getAddress());
+        selenium.fillInputItem(selenium.getDriver().findElement(By.id("new-name")), destination.getAddress());
 
         //select address type
-        selenium.clickOnItem(selenium.driver.findElement(By.id(destination.getType())), "Radio button " + destination.getType());
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id(destination.getType())), "Radio button " + destination.getType());
 
-        WebElement nextButton = selenium.driver.findElement(By.id("nextButton"));
+        WebElement nextButton = selenium.getDriver().findElement(By.id("nextButton"));
 
         selenium.clickOnItem(nextButton);
 
         //select address plan
-        selenium.clickOnItem(selenium.driver.findElement(By.id(destination.getPlan())), "Radio button " + destination.getPlan());
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id(destination.getPlan())), "Radio button " + destination.getPlan());
 
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);

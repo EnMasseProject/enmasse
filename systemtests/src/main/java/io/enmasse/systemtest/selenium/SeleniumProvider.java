@@ -30,9 +30,9 @@ public class SeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
-    public WebDriver driver;
-    public NgWebDriver angularDriver;
-    public WebDriverWait driverWait;
+    private WebDriver driver;
+    private NgWebDriver angularDriver;
+    private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
     private Environment environment;
@@ -40,6 +40,7 @@ public class SeleniumProvider {
 
     public void onFailed(Throwable e, Description description) {
         try {
+            takeScreenShot();
             Path path = Paths.get(
                     environment.testLogDir(),
                     webconsoleFolder,
@@ -50,11 +51,13 @@ public class SeleniumProvider {
                 FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
                         String.format("%s_%s.png", description.getDisplayName(), dateFormat.format(key))).toString()));
             }
+            log.info("Screenshots stored");
         } catch (Exception ex) {
             log.warn("Cannot save screenshots: " + ex.getMessage());
+        } finally {
+            tearDownDrivers();
         }
     }
-
 
     public void setupDriver(Environment environment, Kubernetes kubernetes, WebDriver driver) throws Exception {
         this.environment = environment;
@@ -67,8 +70,8 @@ public class SeleniumProvider {
 
 
     public void tearDownDrivers() {
+        log.info("Tear down selenium web drivers");
         if (driver != null) {
-            takeScreenShot();
             try {
                 driver.quit();
             } catch (Exception ex) {
@@ -78,30 +81,37 @@ public class SeleniumProvider {
             driver = null;
             angularDriver = null;
             driverWait = null;
+            browserScreenshots.clear();
         }
     }
 
-    protected WebDriver getDriver() {
+    public WebDriver getDriver() {
         return this.driver;
     }
 
-    protected NgWebDriver getAngularDriver() {
+    public NgWebDriver getAngularDriver() {
         return this.angularDriver;
     }
 
-    protected WebDriverWait getDriverWait() {
+    public WebDriverWait getDriverWait() {
         return driverWait;
     }
 
-
     protected void takeScreenShot() {
         try {
+            log.info("Taking screenshot");
             browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
         } catch (Exception ex) {
             log.warn("Cannot take screenshot: " + ex.getMessage());
         }
     }
 
+    public void clearScreenShots() {
+        if (browserScreenshots != null) {
+            browserScreenshots.clear();
+            log.info("Screenshots cleared");
+        }
+    }
 
     protected void clickOnItem(WebElement element) throws Exception {
         clickOnItem(element, null);
