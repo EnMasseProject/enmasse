@@ -88,6 +88,7 @@ public abstract class TestBaseWithShared extends TestBase {
         createSharedAddressSpace(sharedAddressSpace, "standard");
         if (!isBrokered(sharedAddressSpace)) {
             if (!dummyExists()) {
+                log.info("'%s' address doesn't exist and will be created");
                 super.setAddresses(sharedAddressSpace, dummyAddress);
             }
         }
