@@ -32,7 +32,7 @@ local roles = import "roles.jsonnet";
     "objects": [ standardInfra.template(false, false),
                  standardInfra.template(false, true),
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}", "${CONTROLLER_RESYNC_INTERVAL}", "${CONTROLLER_CHECK_INTERVAL}", "${CONTROLLER_EVENT_QUEUE_SIZE}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}", "${CONTROLLER_RESYNC_INTERVAL}", "${CONTROLLER_CHECK_INTERVAL}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -79,12 +79,7 @@ local roles = import "roles.jsonnet";
         "name": "CONTROLLER_CHECK_INTERVAL",
         "description": "Interval (in seconds) to use between status checks",
         "value": "30"
-      },
-      {
-        "name": "CONTROLLER_EVENT_QUEUE_SIZE",
-        "description": "Max number of events queued up for controller",
-        "value": "10000"
-      },
+      }
     ]
   }
 }

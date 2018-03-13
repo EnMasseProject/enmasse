@@ -3154,8 +3154,6 @@ objects:
             value: ${CONTROLLER_RESYNC_INTERVAL}
           - name: CHECK_INTERVAL
             value: ${CONTROLLER_CHECK_INTERVAL}
-          - name: EVENT_QUEUE_SIZE
-            value: ${CONTROLLER_EVENT_QUEUE_SIZE}
           image: ${ADDRESS_CONTROLLER_IMAGE}
           livenessProbe:
             httpGet:
@@ -3246,6 +3244,3 @@ parameters:
 - description: Interval (in seconds) to use between status checks
   name: CONTROLLER_CHECK_INTERVAL
   value: '30'
-- description: Max number of events queued up for controller
-  name: CONTROLLER_EVENT_QUEUE_SIZE
-  value: '10000'
