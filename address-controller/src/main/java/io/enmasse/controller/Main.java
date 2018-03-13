@@ -54,7 +54,7 @@ public class Main extends AbstractVerticle {
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaProvider, resolverFactory, authController.getDefaultCertProvider());
 
-        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
+        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, kubernetes.getNamespace(), eventLogger));
         controllerChain.addController(new StatusController(kubernetes, infraResourceFactory));
         controllerChain.addController(new EndpointController(controllerClient));
