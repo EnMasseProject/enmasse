@@ -56,27 +56,12 @@ public class AddressApiClient {
         config.put("kind", "AddressSpaceList");
 
         JsonArray items = new JsonArray();
+        JsonObject item = new JsonObject();
         for (AddressSpace addressSpace : addressSpaces) {
-            JsonObject entry = new JsonObject();
-            JsonObject metadata = new JsonObject();
-
-            metadata.put("name", addressSpace.getName());
-            if (addressSpace.getNamespace() != null) {
-                metadata.put("namespace", addressSpace.getNamespace());
-            }
-            metadata.put("addressSpace", addressSpace.getName());
-            entry.put("metadata", metadata);
-
-            JsonObject spec = new JsonObject();
-            spec.put("type", addressSpace.getType());
-            spec.put("plan", addressSpace.getPlan());
-            config.put("spec", spec);
-
-            JsonObject authService = new JsonObject();
-            authService.put("type", addressSpace.getAuthService().toString());
-            spec.put("authenticationService", authService);
-
-            items.add(entry);
+            item.put("metadata", createAddressSpaceMetadata(addressSpace));
+            item.put("spec", createAddressSpaceSpec(addressSpace));
+            items.add(item);
+            item.clear();
         }
         config.put("items", items);
 
@@ -95,24 +80,31 @@ public class AddressApiClient {
         });
     }
 
+    private JsonObject createAddressSpaceMetadata(AddressSpace addressSpace) {
+        JsonObject metadata = new JsonObject();
+        metadata.put("name", addressSpace.getName());
+        if (addressSpace.getNamespace() != null) {
+            metadata.put("namespace", addressSpace.getNamespace());
+        }
+        return metadata;
+    }
+
+    private JsonObject createAddressSpaceSpec(AddressSpace addressSpace) {
+        JsonObject spec = new JsonObject();
+        spec.put("type", addressSpace.getType().toString().toLowerCase());
+        spec.put("plan", addressSpace.getPlan());
+        JsonObject authService = new JsonObject();
+        authService.put("type", addressSpace.getAuthService());
+        spec.put("authenticationService", authService);
+        return spec;
+    }
+
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
-
-        JsonObject metadata = new JsonObject();
-        metadata.put("name", addressSpace.getName());
-        metadata.put("namespace", addressSpace.getNamespace());
-        config.put("metadata", metadata);
-
-        JsonObject spec = new JsonObject();
-        spec.put("type", addressSpace.getType().toString().toLowerCase());
-        spec.put("plan", addressSpace.getPlan());
-        config.put("spec", spec);
-
-        JsonObject authService = new JsonObject();
-        authService.put("type", addressSpace.getAuthService());
-        spec.put("authenticationService", authService);
+        config.put("metadata", createAddressSpaceMetadata(addressSpace));
+        config.put("spec", createAddressSpaceSpec(addressSpace));
 
         log.info("POST-address-space: path {}; body {}", addressSpacesPath, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
