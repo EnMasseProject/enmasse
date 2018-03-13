@@ -72,8 +72,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Deployment getDeployment(String name) {
-        return client.extensions().deployments().withName(name).get();
+    public RouterCluster getRouterCluster() {
+        Deployment d = client.extensions().deployments().withName("qdrouterd").get();
+        return new RouterCluster(d.getMetadata().getName(), d.getSpec().getReplicas());
     }
 
     @Override
@@ -123,21 +124,15 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void scaleDeployment(Deployment deployment, int numReplicas) {
-        if (deployment.getSpec().getReplicas() != numReplicas) {
-            log.info("Scaling deployment with id {} and {} replicas", deployment.getMetadata().getName(), numReplicas);
-            client.extensions().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
-            deployment.getSpec().setReplicas(numReplicas);
-        }
+    public void scaleDeployment(String name, int numReplicas) {
+        log.info("Scaling deployment with id {} and {} replicas", name, numReplicas);
+        client.extensions().deployments().withName(name).scale(numReplicas);
     }
 
     @Override
-    public void scaleCluster(BrokerCluster cluster, int numReplicas) {
-        if (numReplicas != cluster.getReplicas()) {
-            log.info("Scaling broker set with id {} and {} replicas", cluster.getClusterId(), numReplicas);
-            client.apps().statefulSets().withName(cluster.getClusterId()).scale(numReplicas);
-            cluster.setReplicas(numReplicas);
-        }
+    public void scaleStatefulSet(String name, int numReplicas) {
+        log.info("Scaling stateful set with id {} and {} replicas", name, numReplicas);
+        client.apps().statefulSets().withName(name).scale(numReplicas);
     }
 
     @Override

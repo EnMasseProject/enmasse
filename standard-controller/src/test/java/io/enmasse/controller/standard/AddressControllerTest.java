@@ -21,8 +21,6 @@ import org.mockito.internal.util.collections.Sets;
 import java.time.Duration;
 import java.util.*;
 
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Mockito.*;
 
 public class AddressControllerTest {
@@ -40,7 +38,7 @@ public class AddressControllerTest {
         mockClient = mock(OpenShiftClient.class);
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
-
+        when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1));
         controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5));
     }
 

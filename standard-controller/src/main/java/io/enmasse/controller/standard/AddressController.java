@@ -108,9 +108,9 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         Map<Address, Map<String, Double>> neededMap = provisioner.checkQuota(usageMap, filterByPhases(addressSet, Arrays.asList(Pending)));
 
         List<BrokerCluster> clusterList = kubernetes.listClusters();
-        Deployment router = kubernetes.getDeployment("qdrouterd");
+        RouterCluster routerCluster = kubernetes.getRouterCluster();
 
-        provisioner.provisionResources(router, clusterList, usageMap, neededMap);
+        provisioner.provisionResources(routerCluster, clusterList, usageMap, neededMap);
 
         checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
         for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
