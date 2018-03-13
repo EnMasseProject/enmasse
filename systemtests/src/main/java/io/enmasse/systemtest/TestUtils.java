@@ -198,6 +198,38 @@ public class TestUtils {
     }
 
     /**
+     * get path to all addresses for each address-spaces
+     *
+     * @param apiClient client for sending http requests to address controller
+     * @return list of rest-api paths
+     * @throws Exception
+     */
+    public static List<String> getAddressesPaths(AddressApiClient apiClient) throws Exception {
+        JsonArray addressPaths = apiClient.getAddressesPaths();
+        List<String> paths = new ArrayList<>();
+        for (int i = 0; i < addressPaths.size(); i++) {
+            paths.add(addressPaths.getString(i));
+        }
+        return paths;
+    }
+
+    /**
+     * send whatever request to restapi route
+     *
+     * @param apiClient client for sending http requests to address controller
+     * @param method    http method PUT, POST, DELETE, GET
+     * @param path      api path
+     * @param payload   JsonObject as a payload
+     * @return JsonObject
+     * @throws Exception
+     */
+    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, String path,
+                                                Optional<JsonObject> payload) throws Exception {
+        return apiClient.sendRequest(method, path, payload);
+    }
+
+
+    /**
      * Check if AddressSpace exists
      *
      * @param apiClient        client for http requests on address controller

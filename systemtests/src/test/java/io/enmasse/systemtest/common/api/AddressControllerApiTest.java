@@ -7,6 +7,7 @@ package io.enmasse.systemtest.common.api;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.resources.*;
+import io.vertx.core.http.HttpMethod;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -78,6 +80,21 @@ public class AddressControllerApiTest extends TestBase {
                 .map(PlanData::getName)
                 .collect(Collectors.toList())
                 .contains("test-schema-rest-api-addr-plan"));
+    }
+
+    @Test
+    public void testVerifyRoutes() throws Exception {
+        AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
+        AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);
+        createAddressSpaceList(addrSpaceAlfa, addrSpaceBeta);
+        List<String> paths = getAddressesPaths();
+        assertThat(String.format("Unexpected count of paths: '%s'", paths), paths.size(), is(2));
+
+        for (String path : paths) {
+            assertThat("No addresses were created, so list should be empty!",
+                    TestUtils.convertToListAddress(sendRestApiRequest(HttpMethod.GET, path, Optional.empty())).size(),
+                    is(0));
+        }
     }
 
     @Test

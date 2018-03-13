@@ -207,6 +207,14 @@ public abstract class TestBase extends SystemTestRunListener {
         TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
     }
 
+    protected List<String> getAddressesPaths() throws Exception {
+        return TestUtils.getAddressesPaths(addressApiClient);
+    }
+
+    protected JsonObject sendRestApiRequest(HttpMethod method, String path, Optional<JsonObject> payload) throws Exception {
+        return TestUtils.sendRestApiRequest(addressApiClient, method, path, payload);
+    }
+
     /**
      * give you a list of names of all deployed addresses (or single deployed address)
      *
