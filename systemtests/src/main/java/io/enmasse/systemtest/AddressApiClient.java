@@ -73,7 +73,7 @@ public class AddressApiClient {
             config.put("spec", spec);
 
             JsonObject authService = new JsonObject();
-            authService.put("type", addressSpace.getAuthService());
+            authService.put("type", addressSpace.getAuthService().toString());
             spec.put("authenticationService", authService);
 
             items.add(entry);
