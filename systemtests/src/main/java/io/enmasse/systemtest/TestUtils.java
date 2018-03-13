@@ -381,6 +381,7 @@ public class TestUtils {
 
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
+        String uuid = metadata.getString("uuid");
         String addressSpaceName = metadata.getString("addressSpace");
 
         JsonObject status = addressJsonObject.getJsonObject("status");
@@ -394,7 +395,7 @@ public class TestUtils {
             }
         } catch (Exception ignored) {
         }
-        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages);
+        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages, uuid);
     }
 
     /**

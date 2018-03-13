@@ -11,6 +11,7 @@ public class Address {
     private String addressSpace;
     private String address;
     private String name;
+    private String uuid;
     private String type;
     private String plan;
     private String phase;
@@ -18,10 +19,11 @@ public class Address {
     private List<String> statusMessages;
 
 
-    public Address(String addressSpace, String address, String name, String type, String plan, String phase, boolean isReady, List<String> statusMessages) {
+    public Address(String addressSpace, String address, String name, String type, String plan, String phase, boolean isReady, List<String> statusMessages, String uuid) {
         this.addressSpace = addressSpace;
         this.address = address;
         this.name = name;
+        this.uuid = uuid;
         this.type = type;
         this.plan = plan;
         this.phase = phase;
@@ -59,5 +61,9 @@ public class Address {
 
     public List<String> getStatusMessages() {
         return statusMessages;
+    }
+
+    public String getUuid() {
+        return uuid;
     }
 }

@@ -14,16 +14,29 @@ public class Destination {
     private final String address;
     private final String type;
     private final String plan;
+    private final String uuid;
+    private final String addressSpace;
 
     public Destination(String name, String address, String type, String plan) {
         this.name = name;
         this.address = address;
         this.type = type;
         this.plan = plan;
+        this.uuid = null;
+        this.addressSpace = null;
     }
 
     public Destination(String address, String type, String plan) {
         this(TestUtils.sanitizeAddress(address), address, type, plan);
+    }
+
+    public Destination(String name, String uuid, String addressSpace, String address, String type, String plan) {
+        this.name = name;
+        this.address = address;
+        this.type = type;
+        this.plan = plan;
+        this.uuid = uuid;
+        this.addressSpace = addressSpace;
     }
 
     public static Destination queue(String address, String plan) {
@@ -72,6 +85,14 @@ public class Destination {
 
     public String getPlan() {
         return plan;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public String getAddressSpace() {
+        return addressSpace;
     }
 
     /**

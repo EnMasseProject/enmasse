@@ -4,10 +4,7 @@
  */
 package io.enmasse.systemtest.common.api;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.IsolatedAddressSpace;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.resources.*;
 import org.junit.After;
@@ -19,12 +16,14 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category(IsolatedAddressSpace.class)
@@ -79,5 +78,55 @@ public class AddressControllerApiTest extends TestBase {
                 .map(PlanData::getName)
                 .collect(Collectors.toList())
                 .contains("test-schema-rest-api-addr-plan"));
+    }
+
+    @Test
+    public void testRestApiAddressResourceOptionalParams() throws Exception {
+        AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, AuthService.NONE.toString());
+
+        AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace2, AuthService.NONE.toString());
+
+        log.info("--------------------------------------------------");
+        log.info("Check if uuid is propagated");
+        String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
+        Destination dest1 = new Destination("test-rest-api-queue", uuid, addressSpace.getName(),
+                "test-rest-api-queue", AddressType.QUEUE.toString(), "brokered-queue");
+
+        setAddresses(addressSpace, dest1);
+        Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getAddress())).get(20, TimeUnit.SECONDS).get(0);
+        assertEquals("Address uuid is not equal", uuid, dest1AddressObj.getUuid());
+
+        log.info("--------------------------------------------------");
+        log.info("Check if name is optional");
+        Destination dest2 = new Destination(null, null, addressSpace.getName(),
+                "test-rest-api-queue2", AddressType.QUEUE.toString(), "brokered-queue");
+        setAddresses(addressSpace, dest2);
+
+        Address dest2AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
+        assertEquals("Address name is empty",
+                String.format("%s-%s", dest2AddressObj.getAddress(), dest2AddressObj.getUuid()), dest2AddressObj.getName());
+
+        log.info("--------------------------------------------------");
+        log.info("Check if adddressSpace is optional");
+        Destination dest3 = new Destination(null, null, null,
+                "test-rest-api-queue3", AddressType.QUEUE.toString(), "brokered-queue");
+        setAddresses(addressSpace, dest3);
+
+        Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
+        assertEquals("Address name is empty",
+                addressSpace.getName(), dest3AddressObj.getAddressSpace());
+
+        log.info("--------------------------------------------------");
+        log.info("Check if behavior when addressSpace is set to another existing address space");
+        Destination dest4 = new Destination(null, null, addressSpace2.getName(),
+                "test-rest-api-queue4", AddressType.QUEUE.toString(), "brokered-queue");
+        try {
+            setAddresses(addressSpace, dest4);
+        } catch (java.util.concurrent.ExecutionException ex) {
+            assertTrue("Exception does not contain right information",
+                    ex.getMessage().contains("does not match address space in url"));
+        }
     }
 }
