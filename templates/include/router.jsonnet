@@ -84,7 +84,12 @@ local authService = import "auth-service.jsonnet";
         {
           "name": "LINK_CAPACITY",
           "value": "${ROUTER_LINK_CAPACITY}"
-        }],
+        },
+        {
+          "name": "ALLOW_DURABLE_SUBSCRIPTIONS",
+          "value": "${ALLOW_DURABLE_SUBSCRIPTIONS}"
+        }
+      ],
       "env": env + linkEnv + authService.envVars,
 
       "ports": [routerPort, secureRouterPort, amqpsNormalPort, amqpsBrokerPort],

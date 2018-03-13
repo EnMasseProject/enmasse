@@ -83,8 +83,8 @@ items:
       "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "https"}, "labels": {"app": "enmasse"},
       "name": "console"}, "spec": {"ports": [{"name": "https", "port": 8081, "targetPort":
       8080}], "selector": {"role": "agent"}}}], "parameters": [{"description": "The
-      docker image to use for the message broker", "name": "BROKER_IMAGE", "value":
-      "docker.io/enmasseproject/artemis:latest"}, {"description": "The docker image
+      container image to use for the message broker", "name": "BROKER_IMAGE", "value":
+      "docker.io/enmasseproject/artemis:latest"}, {"description": "The container image
       to use for the enmasse agent", "name": "AGENT_IMAGE", "value": "docker.io/enmasseproject/agent:latest"},
       {"description": "Storage capacity required for volume claims", "name": "STORAGE_CAPACITY",
       "value": "2Gi"}, {"description": "The address space this infrastructure is deployed
@@ -135,7 +135,8 @@ items:
       "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template": {"metadata":
       {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
       "capability": "router", "name": "qdrouterd"}}, "spec": {"containers": [{"env":
-      [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "ALLOW_DURABLE_SUBSCRIPTIONS",
+      "value": "${ALLOW_DURABLE_SUBSCRIPTIONS}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
@@ -259,7 +260,7 @@ items:
       \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}, {\"emptyDir\":
       { }, \"name\": \"${NAME}\"}]}}}}], \"parameters\": [{\"description\": \"Storage
       capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\", \"value\":
-      \"2Gi\"}, {\"description\": \"The docker image to use for the message broker\",
+      \"2Gi\"}, {\"description\": \"The container image to use for the message broker\",
       \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
       {\"description\": \"The default image to use as topic forwarder\", \"name\":
       \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
@@ -331,26 +332,26 @@ items:
       [\"ReadWriteOnce\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}],
       \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
       \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
-      docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The default
-      image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\": \"The
-      image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\": \"docker.io/enmasseproject/router:latest\"},
-      {\"description\": \"The link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\",
-      \"value\": \"50\"}, {\"description\": \"A valid addressSpace name for the address
-      Space\", \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\":
-      \"A valid name for the deployment\", \"name\": \"NAME\", \"required\": true},
-      {\"description\": \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\",
-      \"required\": true}, {\"description\": \"The address to use for the queue\",
-      \"name\": \"ADDRESS\", \"value\": \"\"}, {\"description\": \"Name of secret
-      containing router key and certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\",
-      \"required\": true}, {\"description\": \"The hostname of the authentication
-      service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_HOST\",
-      \"required\": true}, {\"description\": \"The port of the authentication service
-      used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\", \"required\":
-      true}, {\"description\": \"The secret to use for validating authentication service
-      cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\": true},
-      {\"description\": \"The client cert to use as identity against authentication
+      container image to use for the message broker\", \"name\": \"BROKER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The
+      default image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\":
+      \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\":
+      \"docker.io/enmasseproject/router:latest\"}, {\"description\": \"The link capacity
+      setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\", \"value\": \"50\"},
+      {\"description\": \"A valid addressSpace name for the address Space\", \"name\":
+      \"ADDRESS_SPACE\", \"required\": true}, {\"description\": \"A valid name for
+      the deployment\", \"name\": \"NAME\", \"required\": true}, {\"description\":
+      \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\", \"required\":
+      true}, {\"description\": \"The address to use for the queue\", \"name\": \"ADDRESS\",
+      \"value\": \"\"}, {\"description\": \"Name of secret containing router key and
+      certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\", \"required\": true}, {\"description\":
+      \"The hostname of the authentication service used by this address space\", \"name\":
+      \"AUTHENTICATION_SERVICE_HOST\", \"required\": true}, {\"description\": \"The
+      port of the authentication service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"required\": true}, {\"description\": \"The secret to use for validating authentication
+      service cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\":
+      true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
       {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
@@ -394,7 +395,8 @@ items:
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
       \"readOnly\": true}]}, {\"env\": [{\"name\": \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"},
       {\"name\": \"LINK_CAPACITY\", \"value\": \"${ROUTER_LINK_CAPACITY}\"}, {\"name\":
-      \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
+      \"ALLOW_DURABLE_SUBSCRIPTIONS\", \"value\": \"${ALLOW_DURABLE_SUBSCRIPTIONS}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
@@ -422,8 +424,8 @@ items:
       {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"},
       {\"emptyDir\": { }, \"name\": \"${NAME}\"}]}}}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
-      \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
-      broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      \"value\": \"2Gi\"}, {\"description\": \"The container image to use for the
+      message broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
       {\"description\": \"The default image to use as topic forwarder\", \"name\":
       \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
       {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
@@ -485,7 +487,8 @@ items:
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
       \"readOnly\": true}]}, {\"env\": [{\"name\": \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"},
       {\"name\": \"LINK_CAPACITY\", \"value\": \"${ROUTER_LINK_CAPACITY}\"}, {\"name\":
-      \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
+      \"ALLOW_DURABLE_SUBSCRIPTIONS\", \"value\": \"${ALLOW_DURABLE_SUBSCRIPTIONS}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
@@ -517,8 +520,8 @@ items:
       \"spec\": {\"accessModes\": [\"ReadWriteOnce\"], \"resources\": {\"requests\":
       {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
-      \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
-      broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      \"value\": \"2Gi\"}, {\"description\": \"The container image to use for the
+      message broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
       {\"description\": \"The default image to use as topic forwarder\", \"name\":
       \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
       {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
@@ -549,11 +552,13 @@ items:
       to use for the router metrics collector", "name": "ROUTER_METRICS_IMAGE", "value":
       "docker.io/enmasseproject/router-metrics:latest"}, {"description": "The link
       capacity setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"},
-      {"description": "The image to use for the configuration service", "name": "CONFIGSERV_IMAGE",
-      "value": "docker.io/enmasseproject/configserv:latest"}, {"description": "The
-      docker image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_IMAGE",
-      "value": "docker.io/enmasseproject/queue-scheduler:latest"}, {"description":
-      "The docker image to use for the standard controller", "name": "STANDARD_CONTROLLER_IMAGE",
+      {"description": "Whether AMQP based durable subscriptions to topics are allowed",
+      "name": "ALLOW_DURABLE_SUBSCRIPTIONS", "value": "true"}, {"description": "The
+      image to use for the configuration service", "name": "CONFIGSERV_IMAGE", "value":
+      "docker.io/enmasseproject/configserv:latest"}, {"description": "The container
+      image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_IMAGE", "value":
+      "docker.io/enmasseproject/queue-scheduler:latest"}, {"description": "The container
+      image to use for the standard controller", "name": "STANDARD_CONTROLLER_IMAGE",
       "value": "docker.io/enmasseproject/standard-controller:latest"}, {"description":
       "The image to use for the enmasse agent", "name": "AGENT_IMAGE", "value": "docker.io/enmasseproject/agent:latest"},
       {"description": "The hostname to use for the exposed route for messaging", "name":
@@ -617,7 +622,8 @@ items:
       "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template": {"metadata":
       {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
       "capability": "router", "name": "qdrouterd"}}, "spec": {"containers": [{"env":
-      [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "ALLOW_DURABLE_SUBSCRIPTIONS",
+      "value": "${ALLOW_DURABLE_SUBSCRIPTIONS}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
@@ -741,7 +747,7 @@ items:
       \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}, {\"emptyDir\":
       { }, \"name\": \"${NAME}\"}]}}}}], \"parameters\": [{\"description\": \"Storage
       capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\", \"value\":
-      \"2Gi\"}, {\"description\": \"The docker image to use for the message broker\",
+      \"2Gi\"}, {\"description\": \"The container image to use for the message broker\",
       \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
       {\"description\": \"The default image to use as topic forwarder\", \"name\":
       \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
@@ -813,26 +819,26 @@ items:
       [\"ReadWriteOnce\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}],
       \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
       \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
-      docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The default
-      image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\": \"The
-      image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\": \"docker.io/enmasseproject/router:latest\"},
-      {\"description\": \"The link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\",
-      \"value\": \"50\"}, {\"description\": \"A valid addressSpace name for the address
-      Space\", \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\":
-      \"A valid name for the deployment\", \"name\": \"NAME\", \"required\": true},
-      {\"description\": \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\",
-      \"required\": true}, {\"description\": \"The address to use for the queue\",
-      \"name\": \"ADDRESS\", \"value\": \"\"}, {\"description\": \"Name of secret
-      containing router key and certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\",
-      \"required\": true}, {\"description\": \"The hostname of the authentication
-      service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_HOST\",
-      \"required\": true}, {\"description\": \"The port of the authentication service
-      used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\", \"required\":
-      true}, {\"description\": \"The secret to use for validating authentication service
-      cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\": true},
-      {\"description\": \"The client cert to use as identity against authentication
+      container image to use for the message broker\", \"name\": \"BROKER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The
+      default image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\":
+      \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\":
+      \"docker.io/enmasseproject/router:latest\"}, {\"description\": \"The link capacity
+      setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\", \"value\": \"50\"},
+      {\"description\": \"A valid addressSpace name for the address Space\", \"name\":
+      \"ADDRESS_SPACE\", \"required\": true}, {\"description\": \"A valid name for
+      the deployment\", \"name\": \"NAME\", \"required\": true}, {\"description\":
+      \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\", \"required\":
+      true}, {\"description\": \"The address to use for the queue\", \"name\": \"ADDRESS\",
+      \"value\": \"\"}, {\"description\": \"Name of secret containing router key and
+      certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\", \"required\": true}, {\"description\":
+      \"The hostname of the authentication service used by this address space\", \"name\":
+      \"AUTHENTICATION_SERVICE_HOST\", \"required\": true}, {\"description\": \"The
+      port of the authentication service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"required\": true}, {\"description\": \"The secret to use for validating authentication
+      service cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\":
+      true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
       {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
@@ -876,7 +882,8 @@ items:
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
       \"readOnly\": true}]}, {\"env\": [{\"name\": \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"},
       {\"name\": \"LINK_CAPACITY\", \"value\": \"${ROUTER_LINK_CAPACITY}\"}, {\"name\":
-      \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
+      \"ALLOW_DURABLE_SUBSCRIPTIONS\", \"value\": \"${ALLOW_DURABLE_SUBSCRIPTIONS}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
@@ -904,8 +911,8 @@ items:
       {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"},
       {\"emptyDir\": { }, \"name\": \"${NAME}\"}]}}}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
-      \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
-      broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      \"value\": \"2Gi\"}, {\"description\": \"The container image to use for the
+      message broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
       {\"description\": \"The default image to use as topic forwarder\", \"name\":
       \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
       {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
@@ -967,7 +974,8 @@ items:
       true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
       \"readOnly\": true}]}, {\"env\": [{\"name\": \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"},
       {\"name\": \"LINK_CAPACITY\", \"value\": \"${ROUTER_LINK_CAPACITY}\"}, {\"name\":
-      \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
+      \"ALLOW_DURABLE_SUBSCRIPTIONS\", \"value\": \"${ALLOW_DURABLE_SUBSCRIPTIONS}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
@@ -999,8 +1007,8 @@ items:
       \"spec\": {\"accessModes\": [\"ReadWriteOnce\"], \"resources\": {\"requests\":
       {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}], \"parameters\": [{\"description\":
       \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
-      \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
-      broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      \"value\": \"2Gi\"}, {\"description\": \"The container image to use for the
+      message broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
       {\"description\": \"The default image to use as topic forwarder\", \"name\":
       \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
       {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
@@ -1073,11 +1081,13 @@ items:
       {"description": "The image to use for the router metrics collector", "name":
       "ROUTER_METRICS_IMAGE", "value": "docker.io/enmasseproject/router-metrics:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
-      "value": "50"}, {"description": "The image to use for the configuration service",
-      "name": "CONFIGSERV_IMAGE", "value": "docker.io/enmasseproject/configserv:latest"},
-      {"description": "The docker image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_IMAGE",
+      "value": "50"}, {"description": "Whether AMQP based durable subscriptions to
+      topics are allowed", "name": "ALLOW_DURABLE_SUBSCRIPTIONS", "value": "true"},
+      {"description": "The image to use for the configuration service", "name": "CONFIGSERV_IMAGE",
+      "value": "docker.io/enmasseproject/configserv:latest"}, {"description": "The
+      container image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_IMAGE",
       "value": "docker.io/enmasseproject/queue-scheduler:latest"}, {"description":
-      "The docker image to use for the standard controller", "name": "STANDARD_CONTROLLER_IMAGE",
+      "The container image to use for the standard controller", "name": "STANDARD_CONTROLLER_IMAGE",
       "value": "docker.io/enmasseproject/standard-controller:latest"}, {"description":
       "The image to use for the enmasse agent", "name": "AGENT_IMAGE", "value": "docker.io/enmasseproject/agent:latest"},
       {"description": "The hostname to use for the exposed route for messaging", "name":

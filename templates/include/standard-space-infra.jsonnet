@@ -78,6 +78,11 @@ local storage = import "storage-template.jsonnet";
         "value": "50"
       },
       {
+        "name": "ALLOW_DURABLE_SUBSCRIPTIONS",
+        "description": "Whether AMQP based durable subscriptions to topics are allowed",
+        "value": "true"
+      },
+      {
         "name": "CONFIGSERV_IMAGE",
         "description": "The image to use for the configuration service",
         "value": images.configserv
