@@ -48,7 +48,7 @@ public class ControllerChainTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, testLogger, Duration.ofSeconds(5), Duration.ofSeconds(5));
+        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, new TestSchemaProvider(), testLogger, Duration.ofSeconds(5), Duration.ofSeconds(5));
         Controller mockController = mock(Controller.class);
         controllerChain.addController(mockController);
 

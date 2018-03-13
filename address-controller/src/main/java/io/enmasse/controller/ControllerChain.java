@@ -39,17 +39,20 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     private Watch watch;
 
     private final List<Controller> chain = new ArrayList<>();
+    private final SchemaProvider schemaProvider;
     private final EventLogger eventLogger;
     private final Duration recheckInterval;
     private final Duration resyncInterval;
 
     public ControllerChain(Kubernetes kubernetes,
                            AddressSpaceApi addressSpaceApi,
+                           SchemaProvider schemaProvider,
                            EventLogger eventLogger,
                            Duration recheckInterval,
                            Duration resyncInterval) {
         this.kubernetes = kubernetes;
         this.addressSpaceApi = addressSpaceApi;
+        this.schemaProvider = schemaProvider;
         this.eventLogger = eventLogger;
         this.recheckInterval = recheckInterval;
         this.resyncInterval = resyncInterval;
@@ -102,6 +105,11 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     @Override
     public void onUpdate(Set<AddressSpace> resources) throws Exception {
         log.info("Check standard address spaces: {}", resources.stream().map(AddressSpace::getName).collect(Collectors.toSet()));
+
+        if (schemaProvider.getSchema() == null) {
+            log.info("No schema available");
+            return;
+        }
 
         for (AddressSpace addressSpace : resources) {
             try {
