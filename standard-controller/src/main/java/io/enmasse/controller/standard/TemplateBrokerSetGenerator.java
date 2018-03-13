@@ -7,7 +7,6 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.address.model.KubeUtil;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -37,14 +36,14 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
      * NOTE: This method assumes that all destinations within a group share the same properties.
      *
      */
-    public AddressCluster generateCluster(String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address) {
+    public BrokerCluster generateCluster(String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address) {
 
         KubernetesListBuilder resourcesBuilder = new KubernetesListBuilder();
         if (resourceDefinition.getTemplateName().isPresent()) {
             KubernetesList newResources = processTemplate(clusterId, numReplicas, address, resourceDefinition.getTemplateName().get(), resourceDefinition.getTemplateParameters());
             resourcesBuilder.addAllToItems(newResources.getItems());
         }
-        return new AddressCluster(clusterId, resourcesBuilder.build());
+        return new BrokerCluster(clusterId, resourcesBuilder.build());
     }
 
     private KubernetesList processTemplate(String clusterId, int numReplicas, Address address, String templateName, Map<String, String> parameterMap) {

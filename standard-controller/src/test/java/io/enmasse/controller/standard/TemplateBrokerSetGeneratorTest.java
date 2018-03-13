@@ -40,7 +40,7 @@ public class TemplateBrokerSetGeneratorTest {
     public void testDirect() {
         Address dest = createAddress("foo_bar_FOO", "anycast");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
-        AddressCluster clusterList = generateCluster(dest, captor);
+        BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         List<ParameterValue> parameters = captor.getAllValues();
@@ -51,7 +51,7 @@ public class TemplateBrokerSetGeneratorTest {
     public void testStoreAndForward() {
         Address dest = createAddress("foo.bar", "queue");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
-        AddressCluster clusterList = generateCluster(dest, captor);
+        BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         for (HasMetadata resource : resources) {
@@ -85,7 +85,7 @@ public class TemplateBrokerSetGeneratorTest {
                 .build();
     }
 
-    private AddressCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) {
+    private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
         return generator.generateCluster(address.getName(), testResource, 1, address);
