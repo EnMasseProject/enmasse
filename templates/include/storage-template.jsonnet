@@ -200,8 +200,13 @@ local forwarder = import "forwarder.jsonnet";
         },
         {
           "name": "BROKER_MEMORY_LIMIT",
-          "description": "Memory limits for Artemis",
+          "description": "Memory limits for container",
           "value": "512Mi"
+        },
+        {
+          "name": "GLOBAL_MAX_SIZE",
+          "description": "Global max size for all addresses in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT",
+          "value": "128Mb"
         }
       ]
     }

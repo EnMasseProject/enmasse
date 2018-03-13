@@ -13,7 +13,8 @@ local authService = import "auth-service.jsonnet";
       "env": [
         addressEnv,
         common.env("CLUSTER_ID", "${CLUSTER_ID}"),
-        common.env("CERT_DIR", "/etc/enmasse-certs")
+        common.env("CERT_DIR", "/etc/enmasse-certs"),
+        common.env("GLOBAL_MAX_SIZE", "${GLOBAL_MAX_SIZE}")
       ] + authService.envVars,
       "volumeMounts": [
         common.volume_mount(volumeName, "/var/run/artemis"),
