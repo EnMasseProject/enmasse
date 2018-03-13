@@ -45,12 +45,14 @@ public class BrokerCluster {
 
     private final String clusterId;
     private final KubernetesList resources;
-    private int replicas;
+    private final int replicas;
+    private int newReplicas;
 
     public BrokerCluster(String clusterId, KubernetesList resources) {
         this.clusterId = clusterId;
         this.resources = resources;
         this.replicas = findReplicas(resources.getItems());
+        this.newReplicas = replicas;
     }
 
     private int findReplicas(List<HasMetadata> items) {
@@ -64,12 +66,21 @@ public class BrokerCluster {
         return 0;
     }
 
+
+    public void setNewReplicas(int replicas) {
+        this.newReplicas = replicas;
+    }
+
     public int getReplicas() {
         return replicas;
     }
 
-    public void setReplicas(int replicas) {
-        this.replicas = replicas;
+    public int getNewReplicas() {
+        return newReplicas;
+    }
+
+    public boolean hasChanged() {
+        return replicas != newReplicas;
     }
 
     public KubernetesList getResources() {

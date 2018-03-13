@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Function;
 
 import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.BrokerCreateFailed;
@@ -175,7 +174,7 @@ public class AddressProvisioner {
         return limits;
     }
 
-    public void provisionResources(Deployment router, List<BrokerCluster> existingClusters, Map<String, Map<String, Double>> usageMap, Map<Address, Map<String, Double>> neededMap) {
+    public void provisionResources(RouterCluster router, List<BrokerCluster> existingClusters, Map<String, Map<String, Double>> usageMap, Map<Address, Map<String, Double>> neededMap) {
         Map<String, Map<String, Double>> newUsageMap = copyUsageMap(usageMap);
         Map<String, List<BrokerInfo>> brokerInfoMap = new HashMap<>();
 
@@ -187,9 +186,18 @@ public class AddressProvisioner {
             }
         }
 
+        if (router.hasChanged()) {
+            kubernetes.scaleDeployment(router.getName(), router.getNewReplicas());
+        }
+        for (BrokerCluster cluster : existingClusters) {
+            if (cluster.hasChanged()) {
+                kubernetes.scaleStatefulSet(cluster.getClusterId(), cluster.getNewReplicas());
+            }
+        }
+
     }
 
-    private boolean provisionResources(Deployment router, List<BrokerCluster> clusterList, Map<String, List<BrokerInfo>> brokerInfoMap, Map<String, Map<String, Double>> usageMap, Map<String, Double> neededMap, Address address) {
+    private boolean provisionResources(RouterCluster router, List<BrokerCluster> clusterList, Map<String, List<BrokerInfo>> brokerInfoMap, Map<String, Map<String, Double>> usageMap, Map<String, Double> neededMap, Address address) {
 
         AddressType addressType = addressResolver.getType(address);
         AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
@@ -206,7 +214,8 @@ public class AddressProvisioner {
                         + needed);
 
                 log.info("Address {} require ceil(usage({}) + needed({})) = {} routers", address.getAddress(), sumUsage, needed, required);
-                success = provisionRouter(router, required);
+                router.setNewReplicas(required);
+                success = true;
             } else if ("broker".equals(resourceRequest.getResourceName()) && resourceRequest.getAmount() < 1) {
                 double sumUsage = sumMap(resourceUsage);
                 double shardedUsage = resourceUsage.getOrDefault("all", 0.0);
@@ -279,7 +288,7 @@ public class AddressProvisioner {
 
     private boolean provisionRouter(Deployment router, int numReplicas) {
         try {
-            kubernetes.scaleDeployment(router, numReplicas);
+            router.getSpec().setReplicas(numReplicas);
             return true;
         } catch (Exception e) {
             log.warn("Error scaling router deployment", e);
@@ -291,7 +300,7 @@ public class AddressProvisioner {
         try {
             for (BrokerCluster cluster : clusterList) {
                 if (cluster.getClusterId().equals(clusterId)) {
-                    kubernetes.scaleCluster(cluster, numReplicas);
+                    cluster.setNewReplicas(numReplicas);
                     return true;
                 }
             }

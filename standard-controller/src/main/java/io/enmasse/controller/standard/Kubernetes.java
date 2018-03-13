@@ -49,8 +49,8 @@ public interface Kubernetes {
     KubernetesList processTemplate(String templateName, ParameterValue... parameterValues);
 
     List<String> listBrokers(String clusterId);
-    Deployment getDeployment(String name);
+    RouterCluster getRouterCluster();
 
-    void scaleDeployment(Deployment deployment, int numReplicas);
-    void scaleCluster(BrokerCluster cluster, int numReplicas);
+    void scaleDeployment(String name, int numReplicas);
+    void scaleStatefulSet(String name, int numReplicas);
 }
