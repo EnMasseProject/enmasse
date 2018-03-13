@@ -437,6 +437,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -551,9 +553,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: v1
     kind: Template
     metadata:
@@ -613,6 +619,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -741,9 +749,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: v1
     kind: Template
     metadata:
@@ -803,6 +815,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -990,9 +1004,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1052,6 +1070,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -1253,9 +1273,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   parameters:
   - description: The image to use for the router
     name: ROUTER_IMAGE
@@ -1762,6 +1786,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -1876,9 +1902,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: v1
     kind: Template
     metadata:
@@ -1938,6 +1968,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -2066,9 +2098,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: v1
     kind: Template
     metadata:
@@ -2128,6 +2164,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -2315,9 +2353,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: v1
     kind: Template
     metadata:
@@ -2377,6 +2419,8 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -2578,9 +2622,13 @@ objects:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: Memory limits for Artemis
+    - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:

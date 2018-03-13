@@ -67,6 +67,8 @@ under the License.
 
       <critical-analyzer-policy>HALT</critical-analyzer-policy>
 
+      <global-max-size>${GLOBAL_MAX_SIZE}</global-max-size>
+
       <acceptors>
          <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576</acceptor>
          <acceptor name="amqp">tcp://0.0.0.0:5673?protocols=AMQP;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
@@ -86,7 +88,7 @@ under the License.
             <dead-letter-address>DLQ</dead-letter-address>
             <redelivery-delay>0</redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
-            <max-size-bytes>52428800</max-size-bytes>
+            <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
             <address-full-policy>FAIL</address-full-policy>
          </address-setting>

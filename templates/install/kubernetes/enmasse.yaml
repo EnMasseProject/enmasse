@@ -234,7 +234,8 @@ items:
       \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -280,14 +281,16 @@ items:
       true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}", "queue-persisted.json": "{\"apiVersion\": \"v1\",
-      \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\":
-      \"queue-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
-      \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}", "queue-persisted.json": "{\"apiVersion\":
+      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
+      \"name\": \"queue-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\":
+      \"Service\", \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
+      \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
       \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
       \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
@@ -299,7 +302,8 @@ items:
       \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -349,25 +353,29 @@ items:
       {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}", "topic-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\":
-      \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-inmemory\"},
-      \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"clusterIP\":
-      \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
-      \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}", "topic-inmemory.json": "{\"apiVersion\":
+      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
+      \"name\": \"topic-inmemory\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\":
+      \"Service\", \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
+      \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
+      \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
+      {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
+      \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\": \"broker\", \"enmasse.io/cert-secret\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
-      {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
-      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
       \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
       \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -436,14 +444,16 @@ items:
       true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}", "topic-persisted.json": "{\"apiVersion\": \"v1\",
-      \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\":
-      \"topic-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
-      \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}", "topic-persisted.json": "{\"apiVersion\":
+      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
+      \"name\": \"topic-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\":
+      \"Service\", \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
+      \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
       \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
       \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
@@ -455,7 +465,8 @@ items:
       \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -528,16 +539,19 @@ items:
       true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}"}, "kind": "ConfigMap", "metadata": {"labels": {"app":
-      "enmasse"}, "name": "enmasse-storage-templates"}}], "parameters": [{"description":
-      "The image to use for the router", "name": "ROUTER_IMAGE", "value": "docker.io/enmasseproject/router:latest"},
-      {"description": "The image to use for the router metrics collector", "name":
-      "ROUTER_METRICS_IMAGE", "value": "docker.io/enmasseproject/router-metrics:latest"},
-      {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
-      "value": "50"}, {"description": "The image to use for the configuration service",
-      "name": "CONFIGSERV_IMAGE", "value": "docker.io/enmasseproject/configserv:latest"},
-      {"description": "The docker image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_IMAGE",
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}"}, "kind": "ConfigMap", "metadata":
+      {"labels": {"app": "enmasse"}, "name": "enmasse-storage-templates"}}], "parameters":
+      [{"description": "The image to use for the router", "name": "ROUTER_IMAGE",
+      "value": "docker.io/enmasseproject/router:latest"}, {"description": "The image
+      to use for the router metrics collector", "name": "ROUTER_METRICS_IMAGE", "value":
+      "docker.io/enmasseproject/router-metrics:latest"}, {"description": "The link
+      capacity setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"},
+      {"description": "The image to use for the configuration service", "name": "CONFIGSERV_IMAGE",
+      "value": "docker.io/enmasseproject/configserv:latest"}, {"description": "The
+      docker image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_IMAGE",
       "value": "docker.io/enmasseproject/queue-scheduler:latest"}, {"description":
       "The docker image to use for the standard controller", "name": "STANDARD_CONTROLLER_IMAGE",
       "value": "docker.io/enmasseproject/standard-controller:latest"}, {"description":
@@ -702,7 +716,8 @@ items:
       \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -748,14 +763,16 @@ items:
       true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}", "queue-persisted.json": "{\"apiVersion\": \"v1\",
-      \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\":
-      \"queue-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
-      \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}", "queue-persisted.json": "{\"apiVersion\":
+      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
+      \"name\": \"queue-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\":
+      \"Service\", \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
+      \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
       \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
       \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
@@ -767,7 +784,8 @@ items:
       \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -817,25 +835,29 @@ items:
       {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}", "topic-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\":
-      \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-inmemory\"},
-      \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"clusterIP\":
-      \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\": \"broker\"}}}, {\"apiVersion\":
-      \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\":
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}", "topic-inmemory.json": "{\"apiVersion\":
+      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
+      \"name\": \"topic-inmemory\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\":
+      \"Service\", \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
+      \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
+      \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
+      {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
+      \"serviceName\": \"${NAME}\", \"template\": {\"metadata\": {\"annotations\":
       {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\": \"broker\", \"enmasse.io/cert-secret\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"serviceName\": \"${NAME}\", \"template\": {\"metadata\":
-      {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\": \"${ADDRESS_SPACE}\",
-      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
       \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
       \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -904,14 +926,16 @@ items:
       true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}", "topic-persisted.json": "{\"apiVersion\": \"v1\",
-      \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\":
-      \"topic-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\": \"Service\",
-      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\", \"role\":
-      \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}", "topic-persisted.json": "{\"apiVersion\":
+      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
+      \"name\": \"topic-persisted\"}, \"objects\": [{\"apiVersion\": \"v1\", \"kind\":
+      \"Service\", \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\":
+      \"${NAME}\"}, \"spec\": {\"clusterIP\": \"None\", \"selector\": {\"name\": \"${NAME}\",
+      \"role\": \"broker\"}}}, {\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\",
       \"metadata\": {\"annotations\": {\"address\": \"${ADDRESS}\", \"addressSpace\":
       \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"enmasse.io/cert-cn\":
       \"broker\", \"enmasse.io/cert-secret\": \"broker-internal-cert\"}, \"labels\":
@@ -923,7 +947,8 @@ items:
       \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"GLOBAL_MAX_SIZE\",
+      \"value\": \"${GLOBAL_MAX_SIZE}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
@@ -996,14 +1021,16 @@ items:
       true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"},
-      {\"description\": \"Memory limits for Artemis\", \"name\": \"BROKER_MEMORY_LIMIT\",
-      \"value\": \"512Mi\"}]}"}, "kind": "ConfigMap", "metadata": {"labels": {"app":
-      "enmasse"}, "name": "enmasse-storage-templates"}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "enmasse.io/cert-secret": "subserv-internal-cert"}, "labels": {"app": "enmasse",
-      "name": "subserv"}, "name": "subserv"}, "spec": {"replicas": 1, "template":
-      {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse", "name": "subserv"}}, "spec": {"containers": [{"command":
+      {\"description\": \"Memory limits for container\", \"name\": \"BROKER_MEMORY_LIMIT\",
+      \"value\": \"512Mi\"}, {\"description\": \"Global max size for all addresses
+      in broker. Cannot be larger than a quarter of BROKER_MEMORY_LIMIT\", \"name\":
+      \"GLOBAL_MAX_SIZE\", \"value\": \"128Mb\"}]}"}, "kind": "ConfigMap", "metadata":
+      {"labels": {"app": "enmasse"}, "name": "enmasse-storage-templates"}}, {"apiVersion":
+      "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}", "enmasse.io/cert-secret": "subserv-internal-cert"}, "labels":
+      {"app": "enmasse", "name": "subserv"}, "name": "subserv"}, "spec": {"replicas":
+      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse", "name": "subserv"}}, "spec": {"containers": [{"command":
       ["node", "/opt/app-root/src/bin/subserv.js"], "image": "${AGENT_IMAGE}", "livenessProbe":
       {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}}, "name": "subserv",
       "ports": [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}], "resources":
