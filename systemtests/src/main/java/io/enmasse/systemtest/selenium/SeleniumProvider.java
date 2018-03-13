@@ -40,6 +40,7 @@ public class SeleniumProvider {
 
     public void onFailed(Throwable e, Description description) {
         try {
+            takeScreenShot();
             Path path = Paths.get(
                     environment.testLogDir(),
                     webconsoleFolder,
@@ -50,6 +51,7 @@ public class SeleniumProvider {
                 FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
                         String.format("%s_%s.png", description.getDisplayName(), dateFormat.format(key))).toString()));
             }
+            log.info("Screenshots stored");
         } catch (Exception ex) {
             log.warn("Cannot save screenshots: " + ex.getMessage());
         } finally {
@@ -70,7 +72,6 @@ public class SeleniumProvider {
     public void tearDownDrivers() {
         log.info("Tear down selenium web drivers");
         if (driver != null) {
-            takeScreenShot();
             try {
                 driver.quit();
             } catch (Exception ex) {
@@ -98,6 +99,7 @@ public class SeleniumProvider {
 
     protected void takeScreenShot() {
         try {
+            log.info("Taking screenshot");
             browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
         } catch (Exception ex) {
             log.warn("Cannot take screenshot: " + ex.getMessage());
@@ -105,8 +107,10 @@ public class SeleniumProvider {
     }
 
     public void clearScreenShots() {
-        if (browserScreenshots != null)
+        if (browserScreenshots != null) {
             browserScreenshots.clear();
+            log.info("Screenshots cleared");
+        }
     }
 
     protected void clickOnItem(WebElement element) throws Exception {

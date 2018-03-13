@@ -50,11 +50,12 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     public void setUpWebConsoleTests() throws Exception {
         if (selenium.getDriver() == null)
             selenium.setupDriver(environment, kubernetes, buildDriver());
+        else
+            selenium.clearScreenShots();
     }
 
     @After
     public void tearDownWebConsoleTests() throws Exception {
-        selenium.clearScreenShots();
         if (clientsList != null) {
             stopClients(clientsList);
             clientsList.clear();
@@ -568,6 +569,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.openWebConsolePage();
             log.info(String.format("User %s successfully authenticated", username));
         } catch (IllegalStateException | org.openqa.selenium.UnhandledAlertException ex) {
+            selenium.tearDownDrivers();
             String messageIllegalException = "Console web page wasn't opened!";
             String messageSeleniumException = "{Using=tag name, value=body}";
             assertTrue(ex.getMessage().contains(messageIllegalException) ||

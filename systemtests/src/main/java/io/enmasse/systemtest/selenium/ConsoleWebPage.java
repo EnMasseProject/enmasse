@@ -40,6 +40,7 @@ public class ConsoleWebPage {
     }
 
     public void openWebConsolePage(String route) throws IllegalStateException {
+        log.info("Opening console web page");
         selenium.getDriver().get(route);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
