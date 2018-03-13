@@ -97,6 +97,12 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
+        if (countByPhase.get(Configuring) < 5) {
+            log.info("Addresses in configuring: {}", filterByPhases(addressSet, Arrays.asList(Configuring)));
+        }
+        if (countByPhase.get(Pending) < 5) {
+            log.info("Addresses in pending : {}", filterByPhases(addressSet, Arrays.asList(Pending)));
+        }
 
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
         Map<Address, Map<String, Double>> neededMap = provisioner.checkQuota(usageMap, filterByPhases(addressSet, Arrays.asList(Pending)));
