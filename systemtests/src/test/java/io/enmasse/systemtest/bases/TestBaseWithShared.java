@@ -148,10 +148,14 @@ public abstract class TestBaseWithShared extends TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
-        allSharedAddresses.clear();
-        if (destinations.length > 0) {
-            appendAddresses(destinations);
+        if (isBrokered(sharedAddressSpace)) {
+            setAddresses(sharedAddressSpace);
+        } else {
+            deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
+            allSharedAddresses.clear();
+            if (destinations.length > 0) {
+                appendAddresses(destinations);
+            }
         }
     }
 
