@@ -353,15 +353,19 @@ public class TestUtils {
             List<String> addresses = new ArrayList<>();
             switch (kind) {
                 case "Address":
-                    if (!skipAddresses.contains(htmlResponse.getJsonObject("spec").getString("address"))) {
-                        addresses.add(htmlResponse.getJsonObject("spec").getString("address"));
+                    String destinationAddr = htmlResponse.getJsonObject("spec").getString("address");
+                    if (!skipAddresses.contains(destinationAddr)) {
+                        addresses.add(destinationAddr);
                     }
                     break;
                 case "AddressList":
                     JsonArray items = htmlResponse.getJsonArray("items");
                     if (items != null) {
                         items.forEach(address -> {
-                            addresses.add(((JsonObject) address).getJsonObject("spec").getString("address"));
+                            String destinationAddrL = ((JsonObject) address).getJsonObject("spec").getString("address");
+                            if (!skipAddresses.contains(destinationAddrL)) {
+                                addresses.add(destinationAddrL);
+                            }
                         });
                     }
                     break;
@@ -393,7 +397,9 @@ public class TestUtils {
                     JsonArray items = htmlResponse.getJsonArray("items");
                     if (items != null) {
                         for (int i = 0; i < items.size(); i++) {
-                            addresses.add(getAddressObject(items.getJsonObject(i)));
+                            if (!skipAddresses.contains(items.getJsonObject(i).getJsonObject("spec").getString("address"))) {
+                                addresses.add(getAddressObject(items.getJsonObject(i)));
+                            }
                         }
                     }
                     break;
