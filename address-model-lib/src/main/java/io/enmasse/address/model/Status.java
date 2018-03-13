@@ -67,6 +67,7 @@ public class Status {
         return new StringBuilder()
                 .append("{isReady=").append(isReady)
                 .append(",").append("phase=").append(phase)
+                .append(",").append("messages=").append(messages)
                 .append("}")
                 .toString();
     }
