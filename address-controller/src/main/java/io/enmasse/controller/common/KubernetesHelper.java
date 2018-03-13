@@ -68,15 +68,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void create(KubernetesList resources, String namespace) {
-        // This is a workaround until kubernetes-client has been fixed: https://github.com/fabric8io/kubernetes-client/pull/958
-        for (HasMetadata metadata : resources.getItems()) {
-            if (metadata.getKind().equals("Template")) {
-                client.templates().inNamespace(namespace).create((Template) metadata);
-            } else {
-                client.resource(metadata).inNamespace(namespace).createOrReplace();
-            }
-        }
-        //client.lists().inNamespace(namespace).create(resources);
+        client.lists().inNamespace(namespace).create(resources);
     }
 
     @Override
