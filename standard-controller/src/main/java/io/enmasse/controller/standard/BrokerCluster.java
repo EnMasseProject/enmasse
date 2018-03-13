@@ -5,22 +5,27 @@
 
 package io.enmasse.controller.standard;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Represents a cluster of resources for a given destination.
  */
-public class AddressCluster {
-    private static final Logger log = LoggerFactory.getLogger(AddressCluster.class.getName());
+public class BrokerCluster {
+    private static final Logger log = LoggerFactory.getLogger(BrokerCluster.class.getName());
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AddressCluster that = (AddressCluster) o;
+        BrokerCluster that = (BrokerCluster) o;
 
         if (!clusterId.equals(that.clusterId)) return false;
         return resources.equals(that.resources);
@@ -40,10 +45,31 @@ public class AddressCluster {
 
     private final String clusterId;
     private final KubernetesList resources;
+    private int replicas;
 
-    public AddressCluster(String clusterId, KubernetesList resources) {
+    public BrokerCluster(String clusterId, KubernetesList resources) {
         this.clusterId = clusterId;
         this.resources = resources;
+        this.replicas = findReplicas(resources.getItems());
+    }
+
+    private int findReplicas(List<HasMetadata> items) {
+        for (HasMetadata item : items) {
+            if (item instanceof StatefulSet) {
+                return ((StatefulSet)item).getSpec().getReplicas();
+            } else if (item instanceof Deployment) {
+                return ((Deployment)item).getSpec().getReplicas();
+            }
+        }
+        return 0;
+    }
+
+    public int getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(int replicas) {
+        this.replicas = replicas;
     }
 
     public KubernetesList getResources() {

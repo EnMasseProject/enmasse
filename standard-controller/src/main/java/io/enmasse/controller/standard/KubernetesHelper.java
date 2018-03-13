@@ -6,12 +6,10 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.k8s.api.AddressApi;
-import io.enmasse.k8s.api.ConfigMapAddressApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -37,7 +35,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public List<AddressCluster> listClusters() {
+    public List<BrokerCluster> listClusters() {
         Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
 
         // Add other resources part of a destination cluster
@@ -45,7 +43,7 @@ public class KubernetesHelper implements Kubernetes {
         objects.addAll(client.extensions().deployments().list().getItems());
         objects.addAll(client.apps().statefulSets().list().getItems());
         objects.addAll(client.persistentVolumeClaims().list().getItems());
-        objects.addAll(client.configMaps().list().getItems());
+        objects.addAll(client.configMaps().withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
         objects.addAll(client.services().list().getItems());
 
         for (HasMetadata config : objects) {
@@ -56,7 +54,7 @@ public class KubernetesHelper implements Kubernetes {
 
                 Map<String, String> labels = config.getMetadata().getLabels();
 
-                if (labels != null && !"address-config".equals(labels.get(LabelKeys.TYPE))) {
+                if (labels != null) {
                     if (!resourceMap.containsKey(groupId)) {
                         resourceMap.put(groupId, new ArrayList<>());
                     }
@@ -69,8 +67,13 @@ public class KubernetesHelper implements Kubernetes {
                 .map(entry -> {
                     KubernetesList list = new KubernetesList();
                     list.setItems(entry.getValue());
-                    return new AddressCluster(entry.getKey(), list);
+                    return new BrokerCluster(entry.getKey(), list);
                 }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Deployment getDeployment(String name) {
+        return client.extensions().deployments().withName(name).get();
     }
 
     @Override
@@ -80,7 +83,7 @@ public class KubernetesHelper implements Kubernetes {
                 .anyMatch(KubernetesHelper::areAllDeploymentsReady);
     }
 
-    private static boolean areAllDeploymentsReady(AddressCluster dc) {
+    private static boolean areAllDeploymentsReady(BrokerCluster dc) {
         return dc.getResources().getItems().stream().filter(KubernetesHelper::isDeployment).allMatch(Readiness::isReady);
     }
 
@@ -120,13 +123,21 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void scaleDeployment(String deploymentName, int numReplicas) {
-        client.extensions().deployments().withName(deploymentName).scale(numReplicas);
+    public void scaleDeployment(Deployment deployment, int numReplicas) {
+        if (deployment.getSpec().getReplicas() != numReplicas) {
+            log.info("Scaling deployment with id {} and {} replicas", deployment.getMetadata().getName(), numReplicas);
+            client.extensions().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
+            deployment.getSpec().setReplicas(numReplicas);
+        }
     }
 
     @Override
-    public void scaleStatefulSet(String setName, int numReplicas) {
-        client.apps().statefulSets().withName(setName).scale(numReplicas);
+    public void scaleCluster(BrokerCluster cluster, int numReplicas) {
+        if (numReplicas != cluster.getReplicas()) {
+            log.info("Scaling broker set with id {} and {} replicas", cluster.getClusterId(), numReplicas);
+            client.apps().statefulSets().withName(cluster.getClusterId()).scale(numReplicas);
+            cluster.setReplicas(numReplicas);
+        }
     }
 
     @Override

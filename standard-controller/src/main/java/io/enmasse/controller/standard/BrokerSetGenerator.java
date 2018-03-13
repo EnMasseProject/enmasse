@@ -7,9 +7,6 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.ResourceDefinition;
 
-import java.util.Optional;
-import java.util.Set;
-
 /**
  * Generates clusters for a set of addresses.
  */
@@ -23,5 +20,5 @@ public interface BrokerSetGenerator {
      * @param numReplicas Number of replicas for the initial set
      * @param address Address to pass as template parameter (null is allowed)
      */
-    AddressCluster generateCluster(String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address);
+    BrokerCluster generateCluster(String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address);
 }

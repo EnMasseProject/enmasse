@@ -8,6 +8,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
@@ -17,9 +18,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.enmasse.address.model.Status.Phase.Active;
-import static io.enmasse.address.model.Status.Phase.Pending;
-import static io.enmasse.address.model.Status.Phase.Terminating;
+import static io.enmasse.address.model.Status.Phase.*;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
 import static io.enmasse.controller.standard.ControllerReason.*;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
@@ -81,8 +80,6 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     @Override
     public void onUpdate(Set<Address> addressSet) throws Exception {
-        log.info("Check addresses in address space controller: " + addressSet.stream().map(Address::getAddress).collect(Collectors.toList()));
-
         Schema schema = schemaProvider.getSchema();
         if (schema == null) {
             log.info("No schema available");
@@ -98,10 +95,16 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         AddressProvisioner provisioner = new AddressProvisioner(addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger);
 
+        Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
+        log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
+
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
         Map<Address, Map<String, Double>> neededMap = provisioner.checkQuota(usageMap, filterByPhases(addressSet, Arrays.asList(Pending)));
 
-        provisioner.provisionResources(usageMap, neededMap);
+        List<BrokerCluster> clusterList = kubernetes.listClusters();
+        Deployment router = kubernetes.getDeployment("qdrouterd");
+
+        provisioner.provisionResources(router, clusterList, usageMap, neededMap);
 
         checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
         for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
@@ -110,7 +113,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             }
         }
 
-        deprovisionUnused(filterByNotPhases(addressSet, Arrays.asList(Terminating)));
+        deprovisionUnused(clusterList, filterByNotPhases(addressSet, Arrays.asList(Terminating)));
         for (Address address : addressSet) {
             addressApi.replaceAddress(address);
         }
@@ -118,9 +121,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     }
 
-    private void deprovisionUnused(Set<Address> addressSet) {
-        List<AddressCluster> clusters = kubernetes.listClusters();
-        for (AddressCluster cluster : clusters) {
+    private void deprovisionUnused(List<BrokerCluster> clusters, Set<Address> addressSet) {
+        for (BrokerCluster cluster : clusters) {
             int numFound = 0;
             for (Address address : addressSet) {
                 String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
@@ -149,6 +151,17 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         return addressSet.stream()
                 .filter(address -> phases.contains(address.getStatus().getPhase()))
                 .collect(Collectors.toSet());
+    }
+
+    private Map<Status.Phase,Long> countPhases(Set<Address> addressSet) {
+        Map<Status.Phase, Long> countMap = new HashMap<>();
+        for (Status.Phase phase : Status.Phase.values()) {
+            countMap.put(phase, 0L);
+        }
+        for (Address address : addressSet) {
+            countMap.put(address.getStatus().getPhase(), 1 + countMap.get(address.getStatus().getPhase()));
+        }
+        return countMap;
     }
 
     private Set<Address> filterByNotPhases(Set<Address> addressSet, List<Status.Phase> phases) {

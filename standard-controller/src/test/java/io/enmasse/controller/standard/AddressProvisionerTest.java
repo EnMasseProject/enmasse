@@ -7,10 +7,12 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
-import io.fabric8.kubernetes.api.model.EndpointAddress;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.*;
@@ -184,9 +186,9 @@ public class AddressProvisionerTest {
                 .build();
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
-        when(kubernetes.listClusters()).thenReturn(Arrays.asList(new AddressCluster("broker", new KubernetesList())));
         when(kubernetes.listBrokers(eq("broker"))).thenReturn(Arrays.asList("broker-0"));
-        provisioner.provisionResources(usageMap, provisionMap);
+        List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker", new KubernetesList()));
+        provisioner.provisionResources(new Deployment(), clusterList, usageMap, provisionMap);
 
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
@@ -225,10 +227,12 @@ public class AddressProvisionerTest {
                 .build();
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
-        when(kubernetes.listClusters()).thenReturn(Arrays.asList(new AddressCluster("broker", new KubernetesList())));
         when(kubernetes.listBrokers(eq("broker"))).thenReturn(Arrays.asList("broker-0", "broker-1"));
-        provisioner.provisionResources(usageMap, provisionMap);
-        verify(kubernetes).scaleStatefulSet(eq("broker"), eq(2));
+        List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker", new KubernetesList()));
+        provisioner.provisionResources(new Deployment(), clusterList, usageMap, provisionMap);
+        ArgumentCaptor<BrokerCluster> captor = ArgumentCaptor.forClass(BrokerCluster.class);
+        verify(kubernetes).scaleCluster(captor.capture(), eq(2));
+        assertThat(captor.getValue().getClusterId(), is("broker"));
 
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
@@ -263,9 +267,9 @@ public class AddressProvisionerTest {
                 .build();
         Map<Address, Map<String, Double>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(q1, q2));
 
-        when(generator.generateCluster(eq(q1.getName()), any(), anyInt(), eq(q1))).thenReturn(new AddressCluster(q1.getName(), new KubernetesList()));
-        when(generator.generateCluster(eq(q2.getName()), any(), anyInt(), eq(q2))).thenReturn(new AddressCluster(q2.getName(), new KubernetesList()));
-        provisioner.provisionResources(usageMap, provisionMap);
+        when(generator.generateCluster(eq(q1.getName()), any(), anyInt(), eq(q1))).thenReturn(new BrokerCluster(q1.getName(), new KubernetesList()));
+        when(generator.generateCluster(eq(q2.getName()), any(), anyInt(), eq(q2))).thenReturn(new BrokerCluster(q2.getName(), new KubernetesList()));
+        provisioner.provisionResources(new Deployment(), new ArrayList<>(), usageMap, provisionMap);
 
         assertTrue(q1.getStatus().getMessages().toString(), q1.getStatus().getMessages().isEmpty());
         assertThat(q1.getStatus().getPhase(), is(Status.Phase.Configuring));
@@ -300,9 +304,17 @@ public class AddressProvisionerTest {
 
         System.out.println(provisionMap);
 
-        provisioner.provisionResources(usageMap, provisionMap);
+        Deployment d = new DeploymentBuilder()
+                .editOrNewMetadata()
+                .withName("qdrouterd")
+                .endMetadata()
+                .editOrNewSpec()
+                .withReplicas(1)
+                .endSpec()
+                .build();
+        provisioner.provisionResources(d, new ArrayList<>(), usageMap, provisionMap);
 
-        verify(kubernetes, atLeast(1)).scaleDeployment(eq("qdrouterd"), eq(40));
-        verify(kubernetes, never()).scaleDeployment(eq("qdrouterd"), eq(41));
+        verify(kubernetes, atLeast(1)).scaleDeployment(eq(d), eq(40));
+        verify(kubernetes, never()).scaleDeployment(eq(d), eq(41));
     }
 }

@@ -4,10 +4,10 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.k8s.api.AddressApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.LinkedHashMap;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface Kubernetes {
-    List<AddressCluster> listClusters();
+    List<BrokerCluster> listClusters();
     boolean isDestinationClusterReady(String clusterId);
     List<Pod> listRouters();
 
@@ -49,7 +49,8 @@ public interface Kubernetes {
     KubernetesList processTemplate(String templateName, ParameterValue... parameterValues);
 
     List<String> listBrokers(String clusterId);
+    Deployment getDeployment(String name);
 
-    void scaleDeployment(String deploymentName, int numReplicas);
-    void scaleStatefulSet(String setName, int numReplicas);
+    void scaleDeployment(Deployment deployment, int numReplicas);
+    void scaleCluster(BrokerCluster cluster, int numReplicas);
 }

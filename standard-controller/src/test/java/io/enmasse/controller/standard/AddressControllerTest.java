@@ -83,8 +83,8 @@ public class AddressControllerTest {
                         .build())
                 .build();
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(
-                new AddressCluster("broker", new KubernetesList()),
-                new AddressCluster("unused", oldList)));
+                new BrokerCluster("broker", new KubernetesList()),
+                new BrokerCluster("unused", oldList)));
 
         controller.onUpdate(Sets.newSet(alive));
 
