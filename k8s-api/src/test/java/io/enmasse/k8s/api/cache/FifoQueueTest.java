@@ -23,7 +23,7 @@ public class FifoQueueTest {
         WorkQueue<String> queue = new FifoQueue<>(s -> s);
         queue.add("k1");
         assertTrue(queue.hasSynced());
-        assertTrue(queue.listKeys().isEmpty());
+        assertTrue(queue.listKeys().contains("k1"));
 
         Processor<String> mockProc = mock(Processor.class);
         queue.pop(mockProc, 0, TimeUnit.SECONDS);
@@ -36,8 +36,8 @@ public class FifoQueueTest {
     public void testUpdate() throws Exception {
         WorkQueue<String> queue = new FifoQueue<>(s -> s);
         queue.update("k1");
-        assertTrue(queue.hasSynced());
-        assertTrue(queue.listKeys().isEmpty());
+        assertTrue(queue.listKeys().contains("k1"));
+        assertTrue(queue.list().contains("k1"));
 
         Processor<String> mockProc = mock(Processor.class);
         queue.pop(mockProc, 0, TimeUnit.SECONDS);
@@ -57,8 +57,8 @@ public class FifoQueueTest {
         Processor<String> mockProc = mock(Processor.class);
         queue.pop(mockProc, 0, TimeUnit.SECONDS);
         verify(mockProc).process(eq("k1"));
-        assertTrue(queue.listKeys().contains("k1"));
-        assertTrue(queue.list().contains("k1"));
+        assertTrue(queue.listKeys().isEmpty());
+        assertTrue(queue.list().isEmpty());
 
         queue.pop(mockProc, 0, TimeUnit.SECONDS);
         verify(mockProc, times(2)).process(eq("k1"));

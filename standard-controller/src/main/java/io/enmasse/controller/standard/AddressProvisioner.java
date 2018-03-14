@@ -187,10 +187,12 @@ public class AddressProvisioner {
         }
 
         if (router.hasChanged()) {
+            log.info("Scaling router to {} replicas", router.getNewReplicas());
             kubernetes.scaleDeployment(router.getName(), router.getNewReplicas());
         }
         for (BrokerCluster cluster : existingClusters) {
             if (cluster.hasChanged()) {
+                log.info("Scaling broker cluster {} to {} replicas", cluster.getClusterId(), cluster.getNewReplicas());
                 kubernetes.scaleStatefulSet(cluster.getClusterId(), cluster.getNewReplicas());
             }
         }
@@ -249,7 +251,7 @@ public class AddressProvisioner {
             log.warn("Error provisioning resources for {}", address);
             return false;
         } else {
-            log.info("Setting phase of {} to Configuring", address.getAddress());
+            log.debug("Setting phase of {} to Configuring", address.getAddress());
             address.getStatus().setPhase(Status.Phase.Configuring);
             return true;
         }

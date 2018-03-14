@@ -5,6 +5,7 @@
 package io.enmasse.address.model;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -63,6 +64,22 @@ public class Status {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Status status = (Status) o;
+        return isReady == status.isReady &&
+                phase == status.phase &&
+                Objects.equals(messages, status.messages);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isReady, phase, messages);
+    }
+
+
+    @Override
     public String toString() {
         return new StringBuilder()
                 .append("{isReady=").append(isReady)
@@ -70,24 +87,6 @@ public class Status {
                 .append(",").append("messages=").append(messages)
                 .append("}")
                 .toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Status status = (Status) o;
-
-        if (isReady != status.isReady) return false;
-        return phase.equals(status.phase);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (isReady ? 1 : 0);
-        result = 31 * result + phase.hashCode();
-        return result;
     }
 
     public enum Phase {
