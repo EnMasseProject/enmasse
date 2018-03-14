@@ -61,7 +61,7 @@ public class FifoQueueTest {
         assertTrue(queue.list().isEmpty());
 
         queue.pop(mockProc, 0, TimeUnit.SECONDS);
-        verify(mockProc, times(2)).process(eq("k1"));
+        verify(mockProc).process(eq("k1"));
         assertTrue(queue.listKeys().isEmpty());
         assertTrue(queue.list().isEmpty());
     }
