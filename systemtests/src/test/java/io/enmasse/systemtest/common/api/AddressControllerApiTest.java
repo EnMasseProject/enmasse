@@ -100,10 +100,8 @@ public class AddressControllerApiTest extends TestBase {
     @Test
     public void testRestApiAddressResourceOptionalParams() throws Exception {
         AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, AuthService.NONE.toString());
-
         AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace2, AuthService.NONE.toString());
+        createAddressSpaceList(addressSpace, addressSpace2);
 
         logWithSeparator(log, "Check if uuid is propagated");
         String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
