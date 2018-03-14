@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.enmasse.k8s.api.cache.FifoQueue.EventType.*;
 
@@ -17,7 +18,7 @@ public class FifoQueue<T> implements WorkQueue<T> {
     private final KeyExtractor<T> keyExtractor;
     private final Map<String, T> store = new HashMap<>();
     private final BlockingQueue<Event<T>> queue = new LinkedBlockingDeque<>();
-    private volatile int initialPopulationCount = 0;
+    private AtomicInteger initialPopulationCount = new AtomicInteger(0);
     private volatile boolean populated = false;
 
     enum EventType {
@@ -48,15 +49,17 @@ public class FifoQueue<T> implements WorkQueue<T> {
             log.debug("Woke up but queue is empty");
             return;
         }
+
+        List<Event<T>> events = new ArrayList<>();
+        queue.drainTo(events);
+
         String key = null;
         if (event.obj != null) {
             key = keyExtractor.getKey(event.obj);
         }
 
-        if (event.eventType.equals(Sync)) {
-            if (initialPopulationCount > 0) {
-                initialPopulationCount--;
-            }
+        if (initialPopulationCount.get() > 0) {
+            initialPopulationCount.decrementAndGet();
         }
         log.info("Processing event {} with key {}", event.eventType, key);
         processor.process(event.obj);
@@ -85,7 +88,7 @@ public class FifoQueue<T> implements WorkQueue<T> {
 
     @Override
     public boolean hasSynced() {
-        return populated && initialPopulationCount == 0;
+        return populated && initialPopulationCount.get() == 0;
     }
 
     @Override
@@ -124,7 +127,7 @@ public class FifoQueue<T> implements WorkQueue<T> {
         store.clear();
         store.putAll(newItems);
         if (!populated) {
-            initialPopulationCount = 1;
+            initialPopulationCount.set(1);
         }
         queueEvent(Sync, null);
     }
