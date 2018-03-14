@@ -188,13 +188,13 @@ public abstract class TestBaseWithShared extends TestBase {
         log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
 
         //get specific address d2
-        response = getAddresses(Optional.ofNullable(d2.getAddress()));
+        response = getAddresses(Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
         assertThat("Rest api does not return specific address", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
 
         deleteAddresses(d1);
 
         //d2
-        response = getAddresses(Optional.ofNullable(d2.getAddress()));
+        response = getAddresses(Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
         assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
         log.info("address {} successfully deleted", d1.getAddress());
 
