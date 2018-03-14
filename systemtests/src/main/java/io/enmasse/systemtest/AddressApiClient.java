@@ -56,12 +56,12 @@ public class AddressApiClient {
         config.put("kind", "AddressSpaceList");
 
         JsonArray items = new JsonArray();
-        JsonObject item = new JsonObject();
+
         for (AddressSpace addressSpace : addressSpaces) {
+            JsonObject item = new JsonObject();
             item.put("metadata", createAddressSpaceMetadata(addressSpace));
             item.put("spec", createAddressSpaceSpec(addressSpace));
             items.add(item);
-            item.clear();
         }
         config.put("items", items);
 
@@ -94,7 +94,7 @@ public class AddressApiClient {
         spec.put("type", addressSpace.getType().toString().toLowerCase());
         spec.put("plan", addressSpace.getPlan());
         JsonObject authService = new JsonObject();
-        authService.put("type", addressSpace.getAuthService());
+        authService.put("type", addressSpace.getAuthService().toString());
         spec.put("authenticationService", authService);
         return spec;
     }
