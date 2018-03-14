@@ -28,11 +28,6 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     private final Destination multicast = Destination.multicast("authz-multicast");
     private List<Destination> addresses;
 
-    @Override
-    protected boolean skipDummyAddress() {
-        return false;
-    }
-
     private void initAddresses() throws Exception {
         addresses = new ArrayList<>();
         addresses.add(queue);

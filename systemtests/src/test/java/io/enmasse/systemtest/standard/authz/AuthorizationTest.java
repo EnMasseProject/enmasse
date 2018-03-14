@@ -30,6 +30,11 @@ public class AuthorizationTest extends AuthorizationTestBase {
         return null;
     }
 
+    @Override
+    protected boolean skipDummyAddress() {
+        return false;
+    }
+
     @Test
     public void testSendAuthz() throws Exception {
         doTestSendAuthz();
