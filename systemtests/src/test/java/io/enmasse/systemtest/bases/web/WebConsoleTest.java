@@ -68,6 +68,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         selenium.tearDownDrivers();
     }
 
+    @Override
+    protected boolean skipDummyAddress() {
+        return true;
+    }
+
     //============================================================================================
     //============================ do test methods ===============================================
     //============================================================================================

@@ -72,6 +72,8 @@ public abstract class TestBaseWithShared extends TestBase {
 
     protected abstract AddressSpaceType getAddressSpaceType();
 
+    protected abstract boolean skipDummyAddress();
+
     public AddressSpace getSharedAddressSpace() {
         return sharedAddressSpace;
     }
@@ -86,7 +88,7 @@ public abstract class TestBaseWithShared extends TestBase {
         log.info("Test is running in multitenant mode");
         createSharedAddressSpace(sharedAddressSpace);
         createSharedAddressSpace(sharedAddressSpace, "standard");
-        if (environment.useDummyAddress() && !isBrokered(sharedAddressSpace)) {
+        if (environment.useDummyAddress() && !skipDummyAddress()) {
             if (!dummyExists()) {
                 log.info("'{}' address doesn't exist and will be created", dummyAddress);
                 super.setAddresses(sharedAddressSpace, dummyAddress);

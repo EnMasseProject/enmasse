@@ -27,4 +27,9 @@ public abstract class MsgPatternsTest extends MsgPatternsTestBase {
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.BROKERED;
     }
+
+    @Override
+    protected boolean skipDummyAddress() {
+        return true;
+    }
 }

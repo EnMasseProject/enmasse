@@ -27,4 +27,9 @@ public abstract class StandardTestBase extends TestBaseWithShared {
         }
         return null;
     }
+
+    @Override
+    protected boolean skipDummyAddress() {
+        return false;
+    }
 }

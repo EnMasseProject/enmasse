@@ -29,4 +29,8 @@ public abstract class MsgPatternsTest extends MsgPatternsTestBase {
         return AddressSpaceType.STANDARD;
     }
 
+    @Override
+    protected boolean skipDummyAddress() {
+        return false;
+    }
 }
