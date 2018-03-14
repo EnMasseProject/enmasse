@@ -88,8 +88,7 @@ public class AddressControllerApiTest extends TestBase {
         AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace2, AuthService.NONE.toString());
 
-        log.info("--------------------------------------------------");
-        log.info("Check if uuid is propagated");
+        logWithSeparator(log, "Check if uuid is propagated");
         String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
         Destination dest1 = new Destination("test-rest-api-queue", uuid, addressSpace.getName(),
                 "test-rest-api-queue", AddressType.QUEUE.toString(), "brokered-queue");
@@ -98,8 +97,7 @@ public class AddressControllerApiTest extends TestBase {
         Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getAddress())).get(20, TimeUnit.SECONDS).get(0);
         assertEquals("Address uuid is not equal", uuid, dest1AddressObj.getUuid());
 
-        log.info("--------------------------------------------------");
-        log.info("Check if name is optional");
+        logWithSeparator(log, "Check if name is optional");
         Destination dest2 = new Destination(null, null, addressSpace.getName(),
                 "test-rest-api-queue2", AddressType.QUEUE.toString(), "brokered-queue");
         setAddresses(addressSpace, dest2);
@@ -108,18 +106,16 @@ public class AddressControllerApiTest extends TestBase {
         assertEquals("Address name is empty",
                 String.format("%s-%s", dest2AddressObj.getAddress(), dest2AddressObj.getUuid()), dest2AddressObj.getName());
 
-        log.info("--------------------------------------------------");
-        log.info("Check if adddressSpace is optional");
+        logWithSeparator(log, "Check if adddressSpace is optional");
         Destination dest3 = new Destination(null, null, null,
                 "test-rest-api-queue3", AddressType.QUEUE.toString(), "brokered-queue");
         setAddresses(addressSpace, dest3);
 
         Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals("Address name is empty",
+        assertEquals("Addressspace name is empty",
                 addressSpace.getName(), dest3AddressObj.getAddressSpace());
 
-        log.info("--------------------------------------------------");
-        log.info("Check if behavior when addressSpace is set to another existing address space");
+        logWithSeparator(log, "Check if behavior when addressSpace is set to another existing address space");
         Destination dest4 = new Destination(null, null, addressSpace2.getName(),
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), "brokered-queue");
         try {

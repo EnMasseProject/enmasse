@@ -8,7 +8,6 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Before;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -204,24 +203,25 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     }
 
     private boolean canSend(Destination destination, String username, String password) throws Exception {
-        log.info("---------------------------------------------------");
-        log.info("Try send message under user {} from {} {}", username, destination.getType(), destination.getAddress());
-        log.info("***** Try to open sender client under user {}", username);
-        log.info("***** Try to open receiver client under user {}", this.username);
+        logWithSeparator(log,
+                String.format("Try send message under user %s from %s %s", username, destination.getType(), destination.getAddress()),
+                String.format("***** Try to open sender client under user %s", username),
+                String.format("***** Try to open receiver client under user %s", this.username));
         AmqpClient sender = createClient(destination, username, password);
         AmqpClient receiver = createClient(destination, this.username, this.password);
-        log.info("---------------------------------------------------");
+        logWithSeparator(log);
         return canAuth(sender, receiver, destination);
     }
 
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
-        log.info("---------------------------------------------------");
-        log.info("Try receive message under user {} from {} {}", username, destination.getType(), destination.getAddress());
-        log.info("***** Try to open sender client under user {}", this.username);
-        log.info("***** Try to open receiver client under user {}", username);
+        logWithSeparator(log,
+                String.format("Try receive message under user %s from %s %s", username, destination.getType(), destination.getAddress()),
+                String.format("***** Try to open sender client under user %s", this.username),
+                String.format("***** Try to open receiver client under user %s", username));
+
         AmqpClient sender = createClient(destination, this.username, this.password);
         AmqpClient receiver = createClient(destination, username, password);
-        log.info("---------------------------------------------------");
+        logWithSeparator(log);
         return canAuth(sender, receiver, destination);
     }
 

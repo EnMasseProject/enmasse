@@ -264,7 +264,7 @@ public class TestUtils {
     }
 
     /**
-     * get list of Address names
+     * get list of Address names by REST API
      */
     public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
@@ -274,7 +274,7 @@ public class TestUtils {
     }
 
     /**
-     * get list of Address objects
+     * get list of Address objects by REST API
      */
     public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
@@ -284,12 +284,12 @@ public class TestUtils {
     }
 
     /**
-     * get schema
+     * get schema object by REST API
      */
     public static Future<SchemaData> getSchema(AddressApiClient apiClient) throws Exception {
         JsonObject response = apiClient.getSchema();
         CompletableFuture<SchemaData> schema = new CompletableFuture<>();
-        schema.complete(getSchemaObejct(response));
+        schema.complete(getSchemaObject(response));
         return schema;
     }
 
@@ -404,7 +404,7 @@ public class TestUtils {
      * @param addressJsonObject
      * @return
      */
-    private static SchemaData getSchemaObejct(JsonObject addressJsonObject) {
+    private static SchemaData getSchemaObject(JsonObject addressJsonObject) {
         log.info("Got Schema object: {}", addressJsonObject.toString());
         List<AddressSpaceTypeData> data = new ArrayList<>();
         JsonObject spec = addressJsonObject.getJsonObject("spec");

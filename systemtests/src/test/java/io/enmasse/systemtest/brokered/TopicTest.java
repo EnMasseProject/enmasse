@@ -69,8 +69,8 @@ public class TopicTest extends BrokeredTestBase {
 
     @Test
     public void testRestApi() throws Exception {
-        Destination t1 = Destination.topic("topic1", "brokered-topic");
-        Destination t2 = Destination.topic("topic2", "brokered-topic");
+        Destination t1 = Destination.topic("topic1", getDefaultPlan(AddressType.TOPIC));
+        Destination t2 = Destination.topic("topic2", getDefaultPlan(AddressType.TOPIC));
 
         runRestApiTest(t1, t2);
     }

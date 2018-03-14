@@ -722,6 +722,12 @@ public abstract class TestBase extends SystemTestRunListener {
         return Arrays.asList(queue, queue2, topic, topic2);
     }
 
+    protected void logWithSeparator(Logger logger, String... messages) {
+        logger.info("--------------------------------------------------------------------------------");
+        for (String message : messages)
+            logger.info(message);
+    }
+
     //================================================================================================
     //==================================== Config maps operations ====================================
     //================================================================================================
