@@ -155,9 +155,12 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         config.setWorkQueue(queue);
         config.setProcessor(map -> {
                     if (queue.hasSynced()) {
+                        long start = System.nanoTime();
                         watcher.onUpdate(queue.list().stream()
                                 .map(this::getAddressFromConfig)
                                 .collect(Collectors.toSet()));
+                        long end = System.nanoTime();
+                        log.info("Address watcher onUpdate took {} ns", end - start);
                     }
                 });
 

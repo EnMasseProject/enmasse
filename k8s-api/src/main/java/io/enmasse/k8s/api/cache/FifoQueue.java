@@ -43,39 +43,42 @@ public class FifoQueue<T> implements WorkQueue<T> {
 
     @Override
     public void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception {
-        String key = null;
         Event<T> event = queue.poll(timeout, timeUnit);
         if (event == null) {
             log.debug("Woke up but queue is empty");
             return;
         }
-        if (event != null) {
-            synchronized (this) {
-                if (event.obj != null) {
-                    key = keyExtractor.getKey(event.obj);
-                }
+        String key = null;
+        if (event.obj != null) {
+            key = keyExtractor.getKey(event.obj);
+        }
 
-                switch (event.eventType) {
-                    case Deleted:
-                        store.remove(key);
-                        break;
-                    case Updated:
-                    case Added:
-                        store.put(key, event.obj);
-                        break;
-                    case Sync:
-                        if (initialPopulationCount > 0) {
-                            initialPopulationCount--;
-                        }
-                        break;
-                }
-                log.debug("Processing event {} with key {}", event.eventType, key);
-                processor.process(event.obj);
+        if (event.eventType.equals(Sync)) {
+            if (initialPopulationCount > 0) {
+                initialPopulationCount--;
             }
         }
+        log.info("Processing event {} with key {}", event.eventType, key);
+        processor.process(event.obj);
     }
 
     private void queueEvent(EventType eventType, T obj) throws InterruptedException {
+        synchronized (this) {
+            String key = null;
+            if (obj != null) {
+                key = keyExtractor.getKey(obj);
+            }
+
+            switch (eventType) {
+                case Deleted:
+                    store.remove(key);
+                    break;
+                case Updated:
+                case Added:
+                    store.put(key, obj);
+                    break;
+            }
+        }
         populated = true;
         queue.put(new Event<>(eventType, obj));
     }

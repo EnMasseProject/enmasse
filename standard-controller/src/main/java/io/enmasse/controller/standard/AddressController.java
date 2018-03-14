@@ -80,6 +80,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     @Override
     public void onUpdate(Set<Address> addressSet) throws Exception {
+        long start = System.nanoTime();
         Schema schema = schemaProvider.getSchema();
         if (schema == null) {
             log.info("No schema available");
@@ -91,8 +92,15 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             log.info("No address space plan available");
             return;
         }
+
+        Map<String, Status> previousStatus = new HashMap<>();
+        for (Address address : addressSet) {
+            previousStatus.put(address.getAddress(), new Status(address.getStatus()));
+        }
+
         AddressSpacePlan addressSpacePlan = addressSpaceType.getPlans().get(0);
 
+        long resolvedPlan = System.nanoTime();
         AddressProvisioner provisioner = new AddressProvisioner(addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger);
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
@@ -105,14 +113,22 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
 
         Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
+
+        long calculatedUsage = System.nanoTime();
         Map<Address, Map<String, Double>> neededMap = provisioner.checkQuota(usageMap, filterByPhases(addressSet, Arrays.asList(Pending)));
+
+        long checkedQuota = System.nanoTime();
 
         List<BrokerCluster> clusterList = kubernetes.listClusters();
         RouterCluster routerCluster = kubernetes.getRouterCluster();
+        long listClusters = System.nanoTime();
 
         provisioner.provisionResources(routerCluster, clusterList, usageMap, neededMap);
 
+        long provisionResources = System.nanoTime();
+
         checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
+        long checkStatuses = System.nanoTime();
         for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
             if (address.getStatus().isReady()) {
                 address.getStatus().setPhase(Active);
@@ -120,10 +136,18 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
 
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, Arrays.asList(Terminating)));
+        long deprovisionUnused = System.nanoTime();
+
         for (Address address : addressSet) {
-            addressApi.replaceAddress(address);
+            if (!previousStatus.get(address.getAddress()).equals(address.getStatus())) {
+                addressApi.replaceAddress(address);
+            }
         }
+
+        long replaceAddresses = System.nanoTime();
         garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
+        long gcTerminating = System.nanoTime();
+        log.info("resolvedPlan: {}, calculatedUsage: {}, checkedQuota: {}, listClusters: {}, provisionResources: {}, checkStatuses: {}, deprovisionUnused: {}, replaceAddresses: {}, gcTerminating: {}", resolvedPlan - start, calculatedUsage - start,  checkedQuota  - start, listClusters - start, provisionResources - start, checkStatuses - start, deprovisionUnused - start, replaceAddresses - start, gcTerminating - start );
 
     }
 
