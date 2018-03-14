@@ -147,7 +147,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         long replaceAddresses = System.nanoTime();
         garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
         long gcTerminating = System.nanoTime();
-        log.info("resolvedPlan: {}, calculatedUsage: {}, checkedQuota: {}, listClusters: {}, provisionResources: {}, checkStatuses: {}, deprovisionUnused: {}, replaceAddresses: {}, gcTerminating: {}", resolvedPlan - start, calculatedUsage - start,  checkedQuota  - start, listClusters - start, provisionResources - start, checkStatuses - start, deprovisionUnused - start, replaceAddresses - start, gcTerminating - start );
+        log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, replaceAddresses - deprovisionUnused, gcTerminating - replaceAddresses);
 
     }
 

@@ -160,7 +160,6 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                                 .map(this::getAddressFromConfig)
                                 .collect(Collectors.toSet()));
                         long end = System.nanoTime();
-                        log.info("Address watcher onUpdate took {} ns", end - start);
                     }
                 });
 
