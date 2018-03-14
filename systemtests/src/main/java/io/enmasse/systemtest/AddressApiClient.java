@@ -51,33 +51,9 @@ public class AddressApiClient {
 
 
     public void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
-        JsonObject config = new JsonObject();
-        config.put("apiVersion", "v1");
-        config.put("kind", "AddressSpaceList");
-
-        JsonArray items = new JsonArray();
-
         for (AddressSpace addressSpace : addressSpaces) {
-            JsonObject item = new JsonObject();
-            item.put("metadata", createAddressSpaceMetadata(addressSpace));
-            item.put("spec", createAddressSpaceSpec(addressSpace));
-            items.add(item);
+            createAddressSpace(addressSpace);
         }
-        config.put("items", items);
-
-        log.info("POST-address-space-list: path {}; body {}", addressSpacesPath, config.toString());
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-
-        doRequestNTimes(initRetry, () -> {
-            client.post(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
-                    .timeout(20_000)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .sendJsonObject(config, ar -> responseHandler(ar,
-                            responsePromise,
-                            String.format("Error: create address space list '%s'", addressSpaces)));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
     }
 
     private JsonObject createAddressSpaceMetadata(AddressSpace addressSpace) {
