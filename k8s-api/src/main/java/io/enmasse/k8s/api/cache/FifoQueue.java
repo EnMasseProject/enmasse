@@ -16,9 +16,9 @@ public class FifoQueue<T> implements WorkQueue<T> {
     private static final Logger log = LoggerFactory.getLogger(FifoQueue.class);
     private final KeyExtractor<T> keyExtractor;
     private final Map<String, T> store = new HashMap<>();
-    private final Queue<Event<T>> queue = new LinkedBlockingDeque<>();
-    private int initialPopulationCount = 0;
-    private boolean populated = false;
+    private final BlockingQueue<Event<T>> queue = new LinkedBlockingDeque<>();
+    private volatile int initialPopulationCount = 0;
+    private volatile boolean populated = false;
 
     enum EventType {
         Added,
@@ -42,66 +42,62 @@ public class FifoQueue<T> implements WorkQueue<T> {
     }
 
     @Override
-    public synchronized void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception {
-        if (queue.isEmpty()) {
-            if (timeout > 0) {
-                wait(timeUnit.toMillis(timeout));
-            }
-        }
-
-        if (queue.isEmpty()) {
+    public void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception {
+        String key = null;
+        Event<T> event = queue.poll(timeout, timeUnit);
+        if (event == null) {
             log.debug("Woke up but queue is empty");
             return;
         }
-        Event<T> event = queue.poll();
         if (event != null) {
-            String key = null;
-            if (event.obj != null) {
-                key = keyExtractor.getKey(event.obj);
+            synchronized (this) {
+                if (event.obj != null) {
+                    key = keyExtractor.getKey(event.obj);
+                }
+
+                switch (event.eventType) {
+                    case Deleted:
+                        store.remove(key);
+                        break;
+                    case Updated:
+                    case Added:
+                        store.put(key, event.obj);
+                        break;
+                    case Sync:
+                        if (initialPopulationCount > 0) {
+                            initialPopulationCount--;
+                        }
+                        break;
+                }
+                log.debug("Processing event {} with key {}", event.eventType, key);
+                processor.process(event.obj);
             }
-            switch (event.eventType) {
-                case Deleted:
-                    store.remove(key);
-                    break;
-                case Updated:
-                case Added:
-                    store.put(key, event.obj);
-                    break;
-                case Sync:
-                    if (initialPopulationCount > 0) {
-                        initialPopulationCount--;
-                    }
-                    break;
-            }
-            log.debug("Processing event {} with key {}", event.eventType, key);
-            processor.process(event.obj);
         }
     }
 
-    private void queueEventLocked(EventType eventType, T obj) {
+    private void queueEvent(EventType eventType, T obj) throws InterruptedException {
         populated = true;
-        queue.add(new Event<>(eventType, obj));
-        notifyAll();
+        queue.put(new Event<>(eventType, obj));
     }
 
     @Override
-    public synchronized boolean hasSynced() {
+    public boolean hasSynced() {
         return populated && initialPopulationCount == 0;
     }
 
     @Override
-    public synchronized void add(T t) {
-        queueEventLocked(Added, t);
+    public void add(T t) throws InterruptedException {
+        queueEvent(Added, t);
     }
 
     @Override
-    public synchronized void update(T t) {
-        queueEventLocked(Updated, t);
+    public void update(T t) throws InterruptedException {
+        queueEvent(Updated, t);
     }
 
     @Override
-    public synchronized void delete(T t) {
-        queueEventLocked(Deleted, t);
+    public void delete(T t) throws InterruptedException {
+        queueEvent(Deleted, t);
     }
 
     @Override
@@ -115,7 +111,7 @@ public class FifoQueue<T> implements WorkQueue<T> {
     }
 
     @Override
-    public synchronized void replace(List<T> list, String resourceVersion) {
+    public synchronized void replace(List<T> list, String resourceVersion) throws InterruptedException {
         Map<String, T> newItems = new HashMap<>();
         for (T item : list) {
             String key = keyExtractor.getKey(item);
@@ -127,6 +123,6 @@ public class FifoQueue<T> implements WorkQueue<T> {
         if (!populated) {
             initialPopulationCount = 1;
         }
-        queueEventLocked(Sync, null);
+        queueEvent(Sync, null);
     }
 }

@@ -66,7 +66,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
         return lastSyncResourceVersion;
     }
 
-    private void resync() {
+    private void resync() throws InterruptedException {
         log.info("Resync");
         if (watch != null) {
             log.info("Closing existing watch");
@@ -92,27 +92,34 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
                     return;
                 }
 
-                String newResourceVersion = t.getMetadata().getResourceVersion();
 
-                switch (action) {
-                    case ADDED:
-                        log.info("ADDED {} version {}", t.getMetadata().getName(), t.getMetadata().getResourceVersion());
-                        queue.add(t);
-                        break;
-                    case MODIFIED:
-                        log.info("MODIFIED {} version {}", t.getMetadata().getName(), t.getMetadata().getResourceVersion());
-                        queue.update(t);
-                        break;
-                    case DELETED:
-                        log.info("DELETED {} version {}", t.getMetadata().getName(), t.getMetadata().getResourceVersion());
-                        queue.delete(t);
-                        break;
-                    case ERROR:
-                        log.warn("Got error event {}", action);
-                        break;
+                try {
+                    String newResourceVersion = t.getMetadata().getResourceVersion();
+
+                    long before = System.nanoTime();
+                    switch (action) {
+                        case ADDED:
+                            queue.add(t);
+                            break;
+                        case MODIFIED:
+                            queue.update(t);
+                            break;
+                        case DELETED:
+                            queue.delete(t);
+                            break;
+                        case ERROR:
+                            log.warn("Got error event {}", action);
+                            break;
+                    }
+                    if (log.isDebugEnabled()) {
+                        long after = System.nanoTime();
+                        log.debug("{} {} version {} took {} ns", action, t.getMetadata().getName(), t.getMetadata().getResourceVersion(), after - before);
+                    }
+                    lastSyncResourceVersion = newResourceVersion;
+                    eventCount.incrementAndGet();
+                } catch (Exception e) {
+                    log.error("Error handling watch event", e);
                 }
-                lastSyncResourceVersion = newResourceVersion;
-                eventCount.incrementAndGet();
             }
 
             @Override
@@ -127,7 +134,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
         }, watchOptions);
     }
 
-    private void syncWith(List<T> items, String resourceVersion) {
+    private void syncWith(List<T> items, String resourceVersion) throws InterruptedException {
         queue.replace(items, resourceVersion);
     }
 
