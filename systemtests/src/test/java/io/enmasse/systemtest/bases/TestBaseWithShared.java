@@ -86,9 +86,9 @@ public abstract class TestBaseWithShared extends TestBase {
         log.info("Test is running in multitenant mode");
         createSharedAddressSpace(sharedAddressSpace);
         createSharedAddressSpace(sharedAddressSpace, "standard");
-        if (!isBrokered(sharedAddressSpace)) {
+        if (environment.useDummyAddress() && !isBrokered(sharedAddressSpace)) {
             if (!dummyExists()) {
-                log.info("'%s' address doesn't exist and will be created");
+                log.info("'{}' address doesn't exist and will be created", dummyAddress);
                 super.setAddresses(sharedAddressSpace, dummyAddress);
             }
         }
@@ -134,6 +134,9 @@ public abstract class TestBaseWithShared extends TestBase {
         Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
                 new ArrayList<>());
         List<String> address = addresses.get(20, TimeUnit.SECONDS);
+        log.info("found addresses");
+        address.stream().forEach(addr -> log.info("- address '{}'", addr));
+        log.info("looking for '{}' address", dummyAddress.getAddress());
         return address.contains(dummyAddress.getAddress());
     }
 
@@ -149,7 +152,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        if (isBrokered(sharedAddressSpace)) {
+        if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
             setAddresses(sharedAddressSpace);
         } else {
             deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));

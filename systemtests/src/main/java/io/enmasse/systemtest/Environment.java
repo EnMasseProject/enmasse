@@ -16,6 +16,7 @@ public class Environment {
     private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
     private final String keycloakAdminPassword = System.getenv("KEYCLOAK_ADMIN_PASSWORD");
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv("USE_MINIKUBE"));
+    private final boolean useDummyAddress = Boolean.parseBoolean(System.getenv("USE_DUMMY_ADDRESS"));
 
     public String openShiftUrl() {
         return url;
@@ -55,5 +56,9 @@ public class Environment {
 
     public boolean useMinikube() {
         return useMinikube;
+    }
+
+    public boolean useDummyAddress() {
+        return useDummyAddress;
     }
 }
