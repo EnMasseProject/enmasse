@@ -155,7 +155,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void setAddresses(Destination... destinations) throws Exception {
         if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
-            setAddresses(sharedAddressSpace);
+            setAddresses(sharedAddressSpace, destinations);
         } else {
             deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
             allSharedAddresses.clear();
