@@ -37,12 +37,15 @@ public class AddressResolver {
         return resourceDefinitions;
     }
 
+    public ResourceDefinition getResourceDefinition(String resourceName) {
+        return schema.findResourceDefinition(resourceName).orElseThrow(() -> new UnresolvedAddressException("Unknown resource definition " + resourceName));
+    }
+
     public ResourceDefinition getResourceDefinition(AddressPlan addressPlan, String resourceName) {
         if (isShardedTopic(addressPlan)) {
             resourceName = resourceName + "-topic";
         }
-        String finalResourceName = resourceName;
-        return schema.findResourceDefinition(resourceName).orElseThrow(() -> new UnresolvedAddressException("Unknown resource definition " + finalResourceName));
+        return getResourceDefinition(resourceName);
     }
 
     private boolean isShardedTopic(AddressPlan addressPlan) {
