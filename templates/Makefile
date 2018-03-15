@@ -14,7 +14,7 @@ AGENT_IMAGE ?= "agent"
 MQTT_GATEWAY_IMAGE ?= "mqtt-gateway"
 MQTT_LWT_IMAGE ?= "mqtt-lwt"
 NONE_AUTHSERVICE_IMAGE ?= "none-authservice"
-KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.3.0.Final"
+KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.4.3.Final"
 KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
 KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
 
