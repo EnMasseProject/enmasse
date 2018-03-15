@@ -80,7 +80,7 @@ public abstract class TestBaseWithShared extends TestBase {
         createSharedAddressSpace(sharedAddressSpace);
         createSharedAddressSpace(sharedAddressSpace, "standard");
         if (environment.useDummyAddress() && !skipDummyAddress()) {
-            if (!dummyExists()) {
+            if (!addressExists(dummyAddress)) {
                 log.info("'{}' address doesn't exist and will be created", dummyAddress);
                 super.setAddresses(sharedAddressSpace, dummyAddress);
             }
@@ -121,16 +121,16 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     /**
-     * check if dummy address exists
+     * check if address exists
      */
-    private boolean dummyExists() throws Exception {
+    protected boolean addressExists(Destination destination) throws Exception {
         Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
                 new ArrayList<>());
         List<String> address = addresses.get(20, TimeUnit.SECONDS);
         log.info("found addresses");
         address.stream().forEach(addr -> log.info("- address '{}'", addr));
-        log.info("looking for '{}' address", dummyAddress.getAddress());
-        return address.contains(dummyAddress.getAddress());
+        log.info("looking for '{}' address", destination.getAddress());
+        return address.contains(destination.getAddress());
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
