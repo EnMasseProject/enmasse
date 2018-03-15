@@ -212,6 +212,9 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private Map<Address, Integer> checkStatuses(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
         Map<Address, Integer> numOk = new HashMap<>();
+        if (addresses.isEmpty()) {
+            return numOk;
+        }
         for (Address address : addresses) {
             address.getStatus().setReady(true).clearMessages();
         }
