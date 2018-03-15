@@ -93,6 +93,39 @@ describe('configmap backed address source', function() {
             }, 100);
         });
     });
+    it('watches for changes even on error', function(done) {
+        var count = 0;
+        configmaps.failure_injector = {
+            match: function (request) {
+                return count++ === 0 && request.watch === false && request.type === 'configmaps';
+            },
+            code: function (request) {
+                return 500;
+            }
+        };
+        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        source.once('addresses_defined', function () {
+            setTimeout(function () {
+                configmaps.add_address_definition({address:'foo', type:'queue'});
+                configmaps.add_address_definition({address:'bar', type:'topic'});
+                var addresses;
+                source.on('addresses_defined', function (latest) {
+                    addresses = latest;
+                });
+                setTimeout(function () {
+                    assert.equal(addresses.length, 2);
+                    //relies on sorted order (TODO: avoid relying on any order)
+                    assert.equal(addresses[0].address, 'bar');
+                    assert.equal(addresses[0].type, 'topic');
+                    assert.equal(addresses[1].address, 'foo');
+                    assert.equal(addresses[1].type, 'queue');
+                    source.watcher.close().then(function () {
+                        done();
+                    });
+                }, 100);
+            }, 100);
+        });
+    });
     it('updates readiness', function(done) {
         configmaps.add_address_definition({address:'foo', type:'queue'});
         configmaps.add_address_definition({address:'bar', type:'topic'});

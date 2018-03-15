@@ -145,6 +145,7 @@ function Watcher (resource, options) {
     this.resource = resource;
     this.options = options;
     this.objects = [];
+    this.delay = 0;
 }
 
 util.inherits(Watcher, events.EventEmitter);
@@ -159,6 +160,7 @@ Watcher.prototype.notify = function () {
 Watcher.prototype.list = function () {
     var self = this;
     do_get(this.resource, this.options).then(function (result) {
+        self.delay = 0;
         self.objects = result.items;
         self.notify();
         if (!self.closed) {
@@ -167,6 +169,10 @@ Watcher.prototype.list = function () {
         } else {
             self.emit('closed');
         }
+    }).catch(function (error) {
+        log.error('failed to retrieve %s: %s (retry in %d seconds)', self.resource, error, self.delay);
+        setTimeout(self.list.bind(self), self.delay * 1000);
+        self.delay = Math.min(30, self.delay + 1);
     });
 };
 

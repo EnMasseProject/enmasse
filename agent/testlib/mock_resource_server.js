@@ -101,6 +101,8 @@ ResourceServer.prototype.listen = function (port, callback) {
         if (self.debug) console.log('%s %s => %j', request.method, request.url, path);
         if (path === undefined) {
             error(request, response, 404);
+        } else if (self.failure_injector && self.failure_injector.match(path)) {
+            error(request, response, self.failure_injector.code(path));
         } else {
             if (path.watch && request.method === 'GET') {
                 self.watch_resources(request, response);
