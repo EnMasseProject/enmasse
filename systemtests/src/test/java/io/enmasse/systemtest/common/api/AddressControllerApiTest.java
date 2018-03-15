@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.common.api;
 
+import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.resources.*;
@@ -82,17 +83,19 @@ public class AddressControllerApiTest extends TestBase {
                 .contains("test-schema-rest-api-addr-plan"));
     }
 
-    @Test
+    //@Test disabled due to issue: #947
     public void testVerifyRoutes() throws Exception {
         AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
         AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);
         createAddressSpaceList(addrSpaceAlfa, addrSpaceBeta);
-        List<String> paths = getAddressesPaths();
+        List<Uri> paths = getAddressesPaths();
+        for (Uri uri : paths) {
+            log.info("uri: {}", uri);
+        }
         assertThat(String.format("Unexpected count of paths: '%s'", paths), paths.size(), is(2));
-
-        for (String path : paths) {
+        for (Uri uri : paths) {
             assertThat("No addresses were created, so list should be empty!",
-                    TestUtils.convertToListAddress(sendRestApiRequest(HttpMethod.GET, path, Optional.empty())).size(),
+                    TestUtils.convertToListAddress(sendRestApiRequest(HttpMethod.GET, uri, Optional.empty())).size(),
                     is(0));
         }
     }

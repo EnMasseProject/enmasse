@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest;
 
+import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.AddressSpaceTypeData;
@@ -204,11 +205,11 @@ public class TestUtils {
      * @return list of rest-api paths
      * @throws Exception
      */
-    public static List<String> getAddressesPaths(AddressApiClient apiClient) throws Exception {
+    public static List<Uri> getAddressesPaths(AddressApiClient apiClient) throws Exception {
         JsonArray addressPaths = apiClient.getAddressesPaths();
-        List<String> paths = new ArrayList<>();
+        List<Uri> paths = new ArrayList<>();
         for (int i = 0; i < addressPaths.size(); i++) {
-            paths.add(addressPaths.getString(i));
+            paths.add(new Uri(addressPaths.getString(i)));
         }
         return paths;
     }
@@ -218,14 +219,14 @@ public class TestUtils {
      *
      * @param apiClient client for sending http requests to address controller
      * @param method    http method PUT, POST, DELETE, GET
-     * @param path      api path
+     * @param uri       api route
      * @param payload   JsonObject as a payload
      * @return JsonObject
      * @throws Exception
      */
-    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, String path,
+    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, Uri uri,
                                                 Optional<JsonObject> payload) throws Exception {
-        return apiClient.sendRequest(method, path, payload);
+        return apiClient.sendRequest(method, uri, payload);
     }
 
 

@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.bases;
 
 import com.google.common.collect.Ordering;
+import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -207,12 +208,12 @@ public abstract class TestBase extends SystemTestRunListener {
         TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
     }
 
-    protected List<String> getAddressesPaths() throws Exception {
+    protected List<Uri> getAddressesPaths() throws Exception {
         return TestUtils.getAddressesPaths(addressApiClient);
     }
 
-    protected JsonObject sendRestApiRequest(HttpMethod method, String path, Optional<JsonObject> payload) throws Exception {
-        return TestUtils.sendRestApiRequest(addressApiClient, method, path, payload);
+    protected JsonObject sendRestApiRequest(HttpMethod method, Uri uri, Optional<JsonObject> payload) throws Exception {
+        return TestUtils.sendRestApiRequest(addressApiClient, method, uri, payload);
     }
 
     /**

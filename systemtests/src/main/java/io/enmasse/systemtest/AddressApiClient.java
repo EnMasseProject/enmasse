@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import com.sun.jndi.toolkit.url.Uri;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -311,20 +312,24 @@ public class AddressApiClient {
         });
     }
 
-    public JsonObject sendRequest(HttpMethod method, String path, Optional<JsonObject> payload) throws Exception {
-        log.info("{}-address: path {}; body: {}", method, path, payload.toString());
+    public JsonObject sendRequest(HttpMethod method, Uri uri, Optional<JsonObject> payload) throws Exception {
+        log.info("{}-address: url {}; body: {}", method, uri, payload.toString());
+
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         return doRequestNTimes(initRetry, () -> {
-            HttpRequest<JsonObject> request = client.request(method, endpoint.getPort(), endpoint.getHost(), path)
+            client.get("as", "s");
+            HttpRequest<JsonObject> request = client.request(method, uri.getPort(), uri.getHost(), uri.getPath())
                     .timeout(20_000)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject());
             Handler<AsyncResult<HttpResponse<JsonObject>>> handleResponse = (ar) -> responseHandler(ar, responsePromise,
-                    String.format("Error: send payload: '%s' with path: '%s'", payload.toString(), path));
+                    String.format("Error: send payload: '%s' with url: '%s'", payload.toString(), uri));
 
             if (payload.isPresent()) {
+                log.info("use payload");
                 request.sendJsonObject(payload.get(), handleResponse);
             } else {
+                log.info("don't use payload");
                 request.send(handleResponse);
             }
             return responsePromise.get(30, TimeUnit.SECONDS);
