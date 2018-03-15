@@ -118,6 +118,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         Set<Address> pendingAddresses = filterByPhases(addressSet, Arrays.asList(Pending));
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses);
 
+        log.info("Usage: {}, Needed: {}", usageMap, neededMap);
+
         long checkedQuota = System.nanoTime();
 
         List<BrokerCluster> clusterList = kubernetes.listClusters();
