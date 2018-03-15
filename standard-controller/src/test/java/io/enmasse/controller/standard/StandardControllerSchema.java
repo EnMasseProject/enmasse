@@ -29,7 +29,10 @@ public class StandardControllerSchema {
                 .setAddressSpaceType("standard")
                 .setAddressPlans(Arrays.asList(
                         "small-anycast",
-                        "small-queue"
+                        "small-queue",
+                        "pooled-queue-larger",
+                        "pooled-queue-small",
+                        "pooled-queue-tiny"
                 ))
                 .build();
 
@@ -54,6 +57,24 @@ public class StandardControllerSchema {
                                 .setName("queue")
                                 .setDescription("queue")
                                 .setAddressPlans(Arrays.asList(
+                                        new AddressPlan.Builder()
+                                                .setName("pooled-queue-large")
+                                                .setAddressType("queue")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("broker", 0.6)))
+                                                .build(),
+                                        new AddressPlan.Builder()
+                                                .setName("pooled-queue-small")
+                                                .setAddressType("queue")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("broker", 0.1)))
+                                                .build(),
+                                        new AddressPlan.Builder()
+                                                .setName("pooled-queue-tiny")
+                                                .setAddressType("queue")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("broker", 0.05)))
+                                                .build(),
                                         new AddressPlan.Builder()
                                                 .setName("small-queue")
                                                 .setAddressType("queue")

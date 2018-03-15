@@ -13,6 +13,7 @@ import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,14 +49,17 @@ public class AddressControllerTest {
                 .setAddress("q1")
                 .setType("queue")
                 .setPlan("small-queue")
+                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .setStatus(new Status(true).setPhase(Status.Phase.Active))
                 .build();
         Address terminating = new Address.Builder()
                 .setAddress("q2")
                 .setType("queue")
                 .setPlan("small-queue")
+                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
                 .build();
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker", new KubernetesList())));
         controller.onUpdate(Sets.newSet(alive, terminating));
         verify(mockApi).deleteAddress(any());
         verify(mockApi).deleteAddress(eq(terminating));

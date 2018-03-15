@@ -112,10 +112,11 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             log.debug("Addresses in pending : {}", filterByPhases(addressSet, Arrays.asList(Pending)));
         }
 
-        Map<String, Map<String, Double>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
 
         long calculatedUsage = System.nanoTime();
-        Map<Address, Map<String, Double>> neededMap = provisioner.checkQuota(usageMap, filterByPhases(addressSet, Arrays.asList(Pending)));
+        Set<Address> pendingAddresses = filterByPhases(addressSet, Arrays.asList(Pending));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses);
 
         long checkedQuota = System.nanoTime();
 
@@ -123,7 +124,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         RouterCluster routerCluster = kubernetes.getRouterCluster();
         long listClusters = System.nanoTime();
 
-        provisioner.provisionResources(routerCluster, clusterList, usageMap, neededMap);
+        provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses);
 
         long provisionResources = System.nanoTime();
 
