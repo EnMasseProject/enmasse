@@ -69,14 +69,12 @@ public class TopicTest extends StandardTestBase {
                 recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    //disabled due to issue: #693
-    //@Test
+    @Test
     public void testRestApi() throws Exception {
-        List<String> topics = Arrays.asList("topicRest1", "topicRest2");
-        Destination t1 = Destination.topic(topics.get(0), "sharded-topic");
-        Destination t2 = Destination.topic(topics.get(1), "sharded-topic");
+        Destination t1 = Destination.topic("topicRest1", getDefaultPlan(AddressType.TOPIC));
+        Destination t2 = Destination.topic("topicRest2", getDefaultPlan(AddressType.TOPIC));
 
-        runRestApiTest(topics, t1, t2);
+        runRestApiTest(t1, t2);
     }
 
     @Test
@@ -84,8 +82,6 @@ public class TopicTest extends StandardTestBase {
         Destination selTopic = Destination.topic("selectorTopicAppProp", "sharded-topic");
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
-
-        Thread.sleep(30_000);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
 
@@ -162,7 +158,6 @@ public class TopicTest extends StandardTestBase {
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
         AmqpClient client2 = amqpClientFactory.createTopicClient();
         Future<List<Message>> receivedWithoutSel = client2.recvMessages(dest.getAddress(), msgsCount - 1);
-        Thread.sleep(10_000);
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 
@@ -191,8 +186,6 @@ public class TopicTest extends StandardTestBase {
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
-        Thread.sleep(30_000);
-
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();
         for (int i = 0; i < msgsCount; i++) {
@@ -218,8 +211,6 @@ public class TopicTest extends StandardTestBase {
 
         AmqpClient client = amqpClientFactory.createTopicClient();
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
-
-        Thread.sleep(10_000);
 
         Future<Integer> sent = client.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 

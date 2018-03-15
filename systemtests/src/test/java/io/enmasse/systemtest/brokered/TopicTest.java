@@ -4,20 +4,21 @@
  */
 package io.enmasse.systemtest.brokered;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.BrokeredTestBase;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
-
-
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public class TopicTest extends BrokeredTestBase {
 
@@ -64,5 +65,13 @@ public class TopicTest extends BrokeredTestBase {
         }
 
         client.close();
+    }
+
+    @Test
+    public void testRestApi() throws Exception {
+        Destination t1 = Destination.topic("topic1", getDefaultPlan(AddressType.TOPIC));
+        Destination t2 = Destination.topic("topic2", getDefaultPlan(AddressType.TOPIC));
+
+        runRestApiTest(t1, t2);
     }
 }

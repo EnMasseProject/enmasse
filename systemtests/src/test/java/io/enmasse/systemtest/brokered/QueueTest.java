@@ -4,9 +4,10 @@
  */
 package io.enmasse.systemtest.brokered;
 
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.BrokeredTestBase;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -17,7 +18,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class QueueTest extends BrokeredTestBase {
 
@@ -64,5 +66,13 @@ public class QueueTest extends BrokeredTestBase {
         for (Message m : receivedGroupB.get()) {
             assertEquals("Group id is different", m.getGroupId(), "group B");
         }
+    }
+
+    @Test
+    public void testRestApi() throws Exception {
+        Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
+        Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
+
+        runRestApiTest(q1, q2);
     }
 }

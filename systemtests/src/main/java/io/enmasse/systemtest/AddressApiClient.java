@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class AddressApiClient {
     private final WebClient client;
@@ -27,6 +29,7 @@ public class AddressApiClient {
     private Endpoint endpoint;
     private final Vertx vertx;
     private final int initRetry = 10;
+    private final String schemaPath = "/apis/enmasse.io/v1/schema";
     private final String addressSpacesPath = "/apis/enmasse.io/v1/addressspaces";
     private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
@@ -171,6 +174,26 @@ public class AddressApiClient {
     }
 
     /**
+     * give you JsonObject with Schema
+     *
+     * @return
+     * @throws Exception
+     */
+    public JsonObject getSchema() throws Exception {
+        log.info("GET-schema: path {}; ", schemaPath);
+
+        return doRequestNTimes(initRetry, () -> {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            client.get(endpoint.getPort(), endpoint.getHost(), schemaPath)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .timeout(20_000)
+                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        });
+    }
+
+    /**
      * delete addresses via reset api
      *
      * @param addressSpace address space
@@ -179,10 +202,15 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         StringBuilder path = new StringBuilder();
-        for (Destination destination : destinations) {
-            path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
+        if (destinations.length == 0) {
+            path.append(addressPath).append("/").append(addressSpace.getName());
             doDelete(path.toString());
-            path.setLength(0);
+        } else {
+            for (Destination destination : destinations) {
+                path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
+                doDelete(path.toString());
+                path.setLength(0);
+            }
         }
     }
 
@@ -210,7 +238,12 @@ public class AddressApiClient {
             if (destination.getName() != null) {
                 metadata.put("name", destination.getName());
             }
-            metadata.put("addressSpace", addressSpace.getName());
+            if (destination.getUuid() != null) {
+                metadata.put("uuid", destination.getUuid());
+            }
+            if (destination.getAddressSpace() != null) {
+                metadata.put("addressSpace", destination.getAddressSpace());
+            }
             entry.put("metadata", metadata);
 
             JsonObject spec = new JsonObject();

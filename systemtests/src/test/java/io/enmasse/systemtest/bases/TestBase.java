@@ -19,6 +19,7 @@ import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.http.HttpMethod;
@@ -198,6 +199,16 @@ public abstract class TestBase extends SystemTestRunListener {
      */
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName);
+    }
+
+    /**
+     * give you a schema object
+     *
+     * @return schema object
+     * @throws Exception
+     */
+    protected Future<SchemaData> getSchema() throws Exception {
+        return TestUtils.getSchema(addressApiClient);
     }
 
     /**
@@ -709,6 +720,12 @@ public abstract class TestBase extends SystemTestRunListener {
         Destination topic2 = Destination.topic("topic.ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
+    }
+
+    protected void logWithSeparator(Logger logger, String... messages) {
+        logger.info("--------------------------------------------------------------------------------");
+        for (String message : messages)
+            logger.info(message);
     }
 
     //================================================================================================

@@ -49,11 +49,10 @@ public class QueueTest extends StandardTestBase {
 
     @Test
     public void testRestApi() throws Exception {
-        List<String> queues = Arrays.asList("queue1", "queue2");
-        Destination q1 = Destination.queue(queues.get(0), "pooled-queue");
-        Destination q2 = Destination.queue(queues.get(1), "pooled-queue");
+        Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
+        Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
-        runRestApiTest(queues, q1, q2);
+        runRestApiTest(q1, q2);
     }
 
     @Test

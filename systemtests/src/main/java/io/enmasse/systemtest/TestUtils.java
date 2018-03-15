@@ -7,6 +7,8 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpaceTypeData;
+import io.enmasse.systemtest.resources.SchemaData;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -262,7 +264,7 @@ public class TestUtils {
     }
 
     /**
-     * get list of Address names
+     * get list of Address names by REST API
      */
     public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
@@ -272,13 +274,23 @@ public class TestUtils {
     }
 
     /**
-     * get list of Address objects
+     * get list of Address objects by REST API
      */
     public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
         listOfAddresses.complete(convertToListAddress(response));
         return listOfAddresses;
+    }
+
+    /**
+     * get schema object by REST API
+     */
+    public static Future<SchemaData> getSchema(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getSchema();
+        CompletableFuture<SchemaData> schema = new CompletableFuture<>();
+        schema.complete(getSchemaObject(response));
+        return schema;
     }
 
     /**
@@ -369,6 +381,7 @@ public class TestUtils {
 
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
+        String uuid = metadata.getString("uuid");
         String addressSpaceName = metadata.getString("addressSpace");
 
         JsonObject status = addressJsonObject.getJsonObject("status");
@@ -382,7 +395,25 @@ public class TestUtils {
             }
         } catch (Exception ignored) {
         }
-        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages);
+        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages, uuid);
+    }
+
+    /**
+     * Create object of SchemaData class from JsonObject
+     *
+     * @param addressJsonObject
+     * @return
+     */
+    private static SchemaData getSchemaObject(JsonObject addressJsonObject) {
+        log.info("Got Schema object: {}", addressJsonObject.toString());
+        List<AddressSpaceTypeData> data = new ArrayList<>();
+        JsonObject spec = addressJsonObject.getJsonObject("spec");
+        JsonArray addressSpaceTypes = spec.getJsonArray("addressSpaceTypes");
+        for (int i = 0; i < addressSpaceTypes.size(); i++) {
+            data.add(new AddressSpaceTypeData(addressSpaceTypes.getJsonObject(i)));
+        }
+
+        return new SchemaData(data);
     }
 
     /**

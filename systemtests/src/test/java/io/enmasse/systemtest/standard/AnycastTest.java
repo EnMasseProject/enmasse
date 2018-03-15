@@ -48,11 +48,10 @@ public class AnycastTest extends StandardTestBase {
 
     @Test
     public void testRestApi() throws Exception {
-        List<String> addresses = Arrays.asList("anycastRest1", "anycastRest2");
-        Destination a1 = Destination.anycast(addresses.get(0));
-        Destination a2 = Destination.anycast(addresses.get(1));
+        Destination a1 = Destination.anycast("anycastRest1");
+        Destination a2 = Destination.anycast("anycastRest2");
 
-        runRestApiTest(addresses, a1, a2);
+        runRestApiTest(a1, a2);
     }
 
 }

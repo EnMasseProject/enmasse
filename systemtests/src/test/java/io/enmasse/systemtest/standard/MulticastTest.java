@@ -15,10 +15,9 @@ public class MulticastTest extends StandardTestBase {
 
     @Test
     public void testRestApi() throws Exception {
-        List<String> addresses = Arrays.asList("multicastRest1", "multicastRest2");
-        Destination m1 = Destination.multicast(addresses.get(0));
-        Destination m2 = Destination.multicast(addresses.get(1));
+        Destination m1 = Destination.multicast("multicastRest1");
+        Destination m2 = Destination.multicast("multicastRest2");
 
-        runRestApiTest(addresses, m1, m2);
+        runRestApiTest(m1, m2);
     }
 }
