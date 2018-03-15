@@ -249,6 +249,17 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     /**
+     * give you a list of objects of all deployed addresses (or single deployed address)
+     *
+     * @param addressName name of single address
+     * @return list of Destinations
+     * @throws Exception
+     */
+    protected Future<List<Destination>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
+    }
+
+    /**
      * scale up/down destination (StatefulSet) to count of replicas, includes waiting for expected replicas
      */
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {

@@ -303,7 +303,7 @@ public class TestUtils {
                                                     Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListString(response, skipAddresses));
+        listOfAddresses.complete(convertToListAddress(response, skipAddresses, String.class));
         return listOfAddresses;
     }
 
@@ -314,7 +314,18 @@ public class TestUtils {
                                                             Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, skipAddresses));
+        listOfAddresses.complete(convertToListAddress(response, skipAddresses, Address.class));
+        return listOfAddresses;
+    }
+
+    /**
+     * get list of Address objects
+     */
+    public static Future<List<Destination>> getDestinationsObjects(AddressApiClient apiClient, AddressSpace addressSpace,
+                                                                   Optional<String> addressName, List<String> skipAddresses) throws Exception {
+        JsonObject response = apiClient.getAddresses(addressSpace, addressName);
+        CompletableFuture<List<Destination>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToListAddress(response, skipAddresses, Destination.class));
         return listOfAddresses;
     }
 
@@ -343,68 +354,48 @@ public class TestUtils {
     }
 
     /**
-     * Pulling out names of queues from json object
-     *
-     * @return list of address names
-     */
-    private static List<String> convertToListString(JsonObject htmlResponse, List<String> skipAddresses) {
-        if (htmlResponse != null) {
-            String kind = htmlResponse.getString("kind");
-            List<String> addresses = new ArrayList<>();
-            switch (kind) {
-                case "Address":
-                    String destinationAddr = htmlResponse.getJsonObject("spec").getString("address");
-                    if (!skipAddresses.contains(destinationAddr)) {
-                        addresses.add(destinationAddr);
-                    }
-                    break;
-                case "AddressList":
-                    JsonArray items = htmlResponse.getJsonArray("items");
-                    if (items != null) {
-                        items.forEach(address -> {
-                            String destinationAddrL = ((JsonObject) address).getJsonObject("spec").getString("address");
-                            if (!skipAddresses.contains(destinationAddrL)) {
-                                addresses.add(destinationAddrL);
-                            }
-                        });
-                    }
-                    break;
-                default:
-                    log.warn("Unspecified kind: " + kind);
-            }
-            return addresses;
-        }
-        throw new IllegalArgumentException("htmlResponse can't be null");
-    }
-
-    /**
      * Pulling out name,type and plan of addresses from json object
      *
      * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of addresses
      */
-    public static List<Address> convertToListAddress(JsonObject htmlResponse, List<String> skipAddresses) {
+    public static <T> List<T> convertToListAddress(JsonObject htmlResponse, List<String> skipAddresses, Class<T> clazz) {
         if (htmlResponse != null) {
             String kind = htmlResponse.getString("kind");
-            List<Address> addresses = new ArrayList<>();
+            List<T> addresses = new ArrayList<>();
+            String destinationAddr;
             switch (kind) {
                 case "Address":
-                    if (!skipAddresses.contains(htmlResponse.getJsonObject("spec").getString("address"))) {
-                        addresses.add(getAddressObject(htmlResponse));
+                    destinationAddr = htmlResponse.getJsonObject("spec").getString("address");
+                    if (!skipAddresses.contains(destinationAddr)) {
+                        if (clazz.equals(String.class)) {
+                            addresses.add((T) destinationAddr);
+                        } else if (clazz.equals(Address.class)) {
+                            addresses.add((T) getAddressObject(htmlResponse));
+                        } else if (clazz.equals(Destination.class)) {
+                            addresses.add((T) getDestinationObject(htmlResponse));
+                        }
                     }
                     break;
                 case "AddressList":
                     JsonArray items = htmlResponse.getJsonArray("items");
                     if (items != null) {
                         for (int i = 0; i < items.size(); i++) {
-                            if (!skipAddresses.contains(items.getJsonObject(i).getJsonObject("spec").getString("address"))) {
-                                addresses.add(getAddressObject(items.getJsonObject(i)));
+                            destinationAddr = items.getJsonObject(i).getJsonObject("spec").getString("address");
+                            if (!skipAddresses.contains(destinationAddr)) {
+                                if (clazz.equals(String.class)) {
+                                    addresses.add((T) destinationAddr);
+                                } else if (clazz.equals(Address.class)) {
+                                    addresses.add((T) getAddressObject(items.getJsonObject(i)));
+                                } else if (clazz.equals(Destination.class)) {
+                                    addresses.add((T) getDestinationObject(items.getJsonObject(i)));
+                                }
                             }
                         }
                     }
                     break;
                 default:
-                    log.warn("Unspecified kind: " + kind);
+                    throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
             }
             return addresses;
         }
@@ -459,6 +450,32 @@ public class TestUtils {
         }
 
         return new SchemaData(data);
+    }
+
+    /**
+     * Create object of Destination class from JsonObject
+     *
+     * @param addressJsonObject
+     * @return
+     */
+    private static Destination getDestinationObject(JsonObject addressJsonObject) {
+        log.info("Got address object: {}", addressJsonObject.toString());
+        JsonObject spec = addressJsonObject.getJsonObject("spec");
+        String address = spec.getString("address");
+        String type = spec.getString("type");
+        String plan = spec.getString("plan");
+        switch (type) {
+            case "queue":
+                return Destination.queue(address, plan);
+            case "topic":
+                return Destination.topic(address, plan);
+            case "anycast":
+                return Destination.anycast(address, plan);
+            case "multicast":
+                return Destination.multicast(address, plan);
+            default:
+                throw new IllegalStateException(String.format("Unknown Destination type'%s'", type));
+        }
     }
 
     /**

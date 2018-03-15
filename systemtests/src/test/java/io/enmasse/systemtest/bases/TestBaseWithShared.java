@@ -30,7 +30,6 @@ public abstract class TestBaseWithShared extends TestBase {
     protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
-    private ArrayList<Destination> allSharedAddresses = new ArrayList<>();
 
     @Rule
     public TestWatcher watcher = new TestWatcher() {
@@ -50,20 +49,12 @@ public abstract class TestBaseWithShared extends TestBase {
         @Override
         protected void succeeded(Description description) {
             try {
-                deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
+                setAddresses();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     };
-
-    private void appendSharedAddresses(Destination... destinations) {
-        for (Destination dest : destinations) {
-            if (!dest.equals(dummyAddress)) {
-                allSharedAddresses.add(dest);
-            }
-        }
-    }
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         sharedAddressSpaces.remove(addressSpace.getName());
@@ -146,6 +137,9 @@ public abstract class TestBaseWithShared extends TestBase {
         return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
     }
 
+    protected Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
+        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+    }
 
     /**
      * delete all addresses except 'dummy-address' and append new addresses
@@ -156,11 +150,10 @@ public abstract class TestBaseWithShared extends TestBase {
     protected void setAddresses(Destination... destinations) throws Exception {
         if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
             setAddresses(sharedAddressSpace, destinations);
-            allSharedAddresses.clear();
-            appendSharedAddresses(destinations);
         } else {
-            deleteAddresses(sharedAddressSpace, allSharedAddresses.toArray(new Destination[0]));
-            allSharedAddresses.clear();
+            List<Destination> inShared = getDestinationsObjects(Optional.empty())
+                    .get(10, TimeUnit.SECONDS);
+            deleteAddresses(sharedAddressSpace, inShared.toArray(new Destination[0]));
             if (destinations.length > 0) {
                 appendAddresses(destinations);
             }
@@ -175,7 +168,6 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
         appendAddresses(sharedAddressSpace, destinations);
-        appendSharedAddresses(destinations);
     }
 
     /**
@@ -186,9 +178,6 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
         deleteAddresses(sharedAddressSpace, destinations);
-        for (Destination d : destinations) {
-            allSharedAddresses.removeIf(destIter -> destIter.getAddress().equals(d.getAddress()));
-        }
     }
 
     /**
