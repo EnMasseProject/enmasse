@@ -76,6 +76,7 @@ public class PythonClientSender extends AbstractClient {
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
         args = brokerUrlTranformation(args);
+        args.put(Argument.LOG_LIB, "TRANSPORT_FRM");
         return args;
     }
 
