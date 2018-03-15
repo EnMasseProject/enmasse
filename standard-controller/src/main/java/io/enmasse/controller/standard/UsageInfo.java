@@ -23,6 +23,11 @@ class UsageInfo {
         needed = (int) Math.ceil(used);
     }
 
+    @Override
+    public String toString() {
+        return "{used=" + used + ", needed=" + needed + "}";
+    }
+
     public double getUsed() {
         return used;
     }

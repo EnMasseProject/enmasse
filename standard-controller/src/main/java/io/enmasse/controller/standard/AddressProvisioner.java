@@ -106,7 +106,10 @@ public class AddressProvisioner {
                 boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getAmount());
                 if (!scheduled) {
                     allocateBroker(resourceUsage);
-                    scheduleAddress(resourceUsage, address, resourceRequest.getAmount());
+                    if (!scheduleAddress(resourceUsage, address, resourceRequest.getAmount())) {
+                        log.warn("Unable to find broker for scheduling {}", address);
+                        return null;
+                    }
                 }
             } else if ("broker".equals(resourceName)) {
                 UsageInfo info = resourceUsage.get(address.getName());
@@ -255,7 +258,6 @@ public class AddressProvisioner {
                 return true;
             }
         }
-        log.warn("Unable to find broker for scheduling {}", address);
         return false;
     }
 
