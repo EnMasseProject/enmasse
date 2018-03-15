@@ -44,44 +44,45 @@ public class FifoQueue<T> implements WorkQueue<T> {
 
     @Override
     public void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception {
-        Event<T> event = queue.poll(timeout, timeUnit);
-        if (event == null) {
+        Event<T> firstEvent = queue.poll(timeout, timeUnit);
+        if (firstEvent == null) {
             log.debug("Woke up but queue is empty");
             return;
         }
 
         List<Event<T>> events = new ArrayList<>();
+        events.add(firstEvent);
         queue.drainTo(events);
 
-        String key = null;
-        if (event.obj != null) {
-            key = keyExtractor.getKey(event.obj);
-        }
+        synchronized (this) {
+            for (Event<T> event : events) {
+                String key = null;
+                if (event.obj != null) {
+                    key = keyExtractor.getKey(event.obj);
+                }
 
-        if (initialPopulationCount.get() > 0) {
-            initialPopulationCount.decrementAndGet();
+                switch (event.eventType) {
+                    case Deleted:
+                        store.remove(key);
+                        break;
+                    case Updated:
+                    case Added:
+                        store.put(key, event.obj);
+                        break;
+                    case Sync:
+                        if (initialPopulationCount.get() > 0) {
+                            initialPopulationCount.decrementAndGet();
+                        }
+                        break;
+                }
+            }
+            String key = firstEvent.obj != null ? keyExtractor.getKey(firstEvent.obj) : null;
+            log.info("Processing event {} with key {}", firstEvent.eventType, key);
+            processor.process(firstEvent.obj);
         }
-        log.info("Processing event {} with key {}", event.eventType, key);
-        processor.process(event.obj);
     }
 
     private void queueEvent(EventType eventType, T obj) throws InterruptedException {
-        synchronized (this) {
-            String key = null;
-            if (obj != null) {
-                key = keyExtractor.getKey(obj);
-            }
-
-            switch (eventType) {
-                case Deleted:
-                    store.remove(key);
-                    break;
-                case Updated:
-                case Added:
-                    store.put(key, obj);
-                    break;
-            }
-        }
         populated = true;
         queue.put(new Event<>(eventType, obj));
     }
