@@ -35,6 +35,20 @@ public abstract class AuthenticationTestBase extends TestBase {
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
+    @Override
+    protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        super.createAddressSpaceList(addressSpaces);
+        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        for (AddressSpace addressSpace : addressSpaces) {
+            if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
+                brokeredAddressList = amqpAddressList.subList(0, 2);
+            }
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+            //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
+        }
+
+    }
+
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
         AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type);
         AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, AuthService.STANDARD);
