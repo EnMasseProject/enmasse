@@ -9,39 +9,80 @@ public class AddressSpace {
     private String namespace;
     private String plan;
     private AddressSpaceType type;
+    private AuthService authService;
+    private AddressSpaceEndpoint endpoint;
 
     public AddressSpace(String name) {
-        this(name, name, AddressSpaceType.STANDARD);
+        this(name, name, AddressSpaceType.STANDARD, AuthService.NONE);
     }
 
-    public AddressSpace(String name, String namespace) {
-        this(name, namespace, AddressSpaceType.STANDARD);
-    }
-
-    public AddressSpace(String name, String namespace, String plan) {
-        this(name, name, AddressSpaceType.STANDARD, plan);
+    public AddressSpace(String name, AuthService authService) {
+        this(name, name, AddressSpaceType.STANDARD, authService);
     }
 
     public AddressSpace(String name, AddressSpaceType type) {
-        this(name, name, type);
+        this(name, name, type, AuthService.NONE);
+    }
+
+    public AddressSpace(String name, String namespace) {
+        this(name, namespace, AddressSpaceType.STANDARD, AuthService.NONE);
+    }
+
+    public AddressSpace(String name, String namespace, AuthService authService) {
+        this(name, namespace, AddressSpaceType.STANDARD, authService);
+    }
+
+    public AddressSpace(String name, String namespace, String plan) {
+        this(name, namespace, AddressSpaceType.STANDARD, plan);
+    }
+
+    public AddressSpace(String name, String namespace, String plan, AuthService authService) {
+        this(name, namespace, AddressSpaceType.STANDARD, plan, authService);
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan) {
         this(name, name, type, plan);
     }
 
+    public AddressSpace(String name, String namespace, AddressSpaceType type, String plan) {
+        this(name, namespace, type, plan, AuthService.NONE);
+    }
+
     public AddressSpace(String name, String namespace, AddressSpaceType type) {
         setName(name);
         setNamespace(namespace);
         setType(type);
+        setAuthService(AuthService.NONE);
     }
 
-    public AddressSpace(String name, String namespace, AddressSpaceType type, String plan) {
+
+    public AddressSpace(String name, AddressSpaceType type, AuthService authService) {
+        setName(name);
+        setNamespace(name);
+        setType(type);
+        setAuthService(authService);
+    }
+
+    public AddressSpace(String name, String namespace, AddressSpaceType type, AuthService authService) {
+        setName(name);
+        setNamespace(namespace);
+        setType(type);
+        setAuthService(authService);
+    }
+
+    public AddressSpace(String name, String namespace, AddressSpaceType type, String plan, AuthService authService) {
         setName(name);
         setNamespace(namespace);
         setType(type);
         setPlan(plan);
+        setAuthService(authService);
     }
+
+    public AddressSpace(String name, AddressSpaceType type, String plan, AuthService authService) {
+        this(name, name, type, plan);
+    }
+
+
 
     public AddressSpace setName(String name) {
         this.name = name;
@@ -70,6 +111,14 @@ public class AddressSpace {
         return this;
     }
 
+    public void setEndpoint(AddressSpaceEndpoint endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public void setAuthService(AuthService authService) {
+        this.authService = authService;
+    }
+
     public String getName() {
         return name;
     }
@@ -84,6 +133,14 @@ public class AddressSpace {
 
     public AddressSpaceType getType() {
         return type;
+    }
+
+    public AuthService getAuthService() {
+        return authService;
+    }
+
+    public AddressSpaceEndpoint getEndpoint() {
+        return endpoint;
     }
 
     @Override

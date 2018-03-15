@@ -20,8 +20,8 @@ public class AuthenticationTest extends MarathonTestBase {
     public void testCreateDeleteUsersLong() throws Exception {
         log.info("testCreateDeleteUsersLong start");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-users-brokered",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
+                AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
         Destination queue = Destination.queue("test-create-delete-users-queue", getDefaultPlan(AddressType.QUEUE));
@@ -56,8 +56,8 @@ public class AuthenticationTest extends MarathonTestBase {
     public void testAuthSendReceiveLong() throws Exception {
         log.info("testAuthSendReceiveLong start");
         AddressSpace addressSpace = new AddressSpace("test-auth-send-receive-brokered",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
+                AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
         Destination queue = Destination.queue("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
@@ -83,8 +83,8 @@ public class AuthenticationTest extends MarathonTestBase {
     public void testCreateDeleteUsersRestartKeyCloakLong() throws Exception {
         log.info("testCreateDeleteUsersRestartKeyCloakLong start");
         final AddressSpace addressSpace = new AddressSpace("test-create-delete-users-restart-brokered",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
+                AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
         final Destination queue = Destination.queue("test-create-delete-users-restart-queue", getDefaultPlan(AddressType.QUEUE));

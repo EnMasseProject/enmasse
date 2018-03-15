@@ -4,12 +4,15 @@
  */
 package io.enmasse.systemtest;
 
+import com.sun.jndi.toolkit.url.Uri;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -53,24 +56,37 @@ public class AddressApiClient {
     }
 
 
-    public void createAddressSpace(AddressSpace addressSpace, String authServiceType) throws Exception {
-        JsonObject config = new JsonObject();
-        config.put("apiVersion", "v1");
-        config.put("kind", "AddressSpace");
+    public void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        for (AddressSpace addressSpace : addressSpaces) {
+            createAddressSpace(addressSpace);
+        }
+    }
 
+    private JsonObject createAddressSpaceMetadata(AddressSpace addressSpace) {
         JsonObject metadata = new JsonObject();
         metadata.put("name", addressSpace.getName());
-        metadata.put("namespace", addressSpace.getNamespace());
-        config.put("metadata", metadata);
+        if (addressSpace.getNamespace() != null) {
+            metadata.put("namespace", addressSpace.getNamespace());
+        }
+        return metadata;
+    }
 
+    private JsonObject createAddressSpaceSpec(AddressSpace addressSpace) {
         JsonObject spec = new JsonObject();
         spec.put("type", addressSpace.getType().toString().toLowerCase());
         spec.put("plan", addressSpace.getPlan());
-        config.put("spec", spec);
-
         JsonObject authService = new JsonObject();
-        authService.put("type", authServiceType);
+        authService.put("type", addressSpace.getAuthService().toString());
         spec.put("authenticationService", authService);
+        return spec;
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "v1");
+        config.put("kind", "AddressSpace");
+        config.put("metadata", createAddressSpaceMetadata(addressSpace));
+        config.put("spec", createAddressSpaceSpec(addressSpace));
 
         log.info("POST-address-space: path {}; body {}", addressSpacesPath, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -146,6 +162,19 @@ public class AddressApiClient {
             }
         }
         return spaces;
+    }
+
+    public JsonArray getAddressesPaths() throws Exception {
+        log.info("GET-addresses-paths: path {}; ", addressPath);
+        return doRequestNTimes(initRetry, () -> {
+            CompletableFuture<JsonArray> responsePromise = new CompletableFuture<>();
+            client.get(endpoint.getPort(), endpoint.getHost(), addressPath)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonArray())
+                    .timeout(20_000)
+                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses path"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        });
     }
 
     /**
@@ -283,6 +312,30 @@ public class AddressApiClient {
         });
     }
 
+    public JsonObject sendRequest(HttpMethod method, Uri uri, Optional<JsonObject> payload) throws Exception {
+        log.info("{}-address: url {}; body: {}", method, uri, payload.toString());
+
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        return doRequestNTimes(initRetry, () -> {
+            client.get("as", "s");
+            HttpRequest<JsonObject> request = client.request(method, uri.getPort(), uri.getHost(), uri.getPath())
+                    .timeout(20_000)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject());
+            Handler<AsyncResult<HttpResponse<JsonObject>>> handleResponse = (ar) -> responseHandler(ar, responsePromise,
+                    String.format("Error: send payload: '%s' with url: '%s'", payload.toString(), uri));
+
+            if (payload.isPresent()) {
+                log.info("use payload");
+                request.sendJsonObject(payload.get(), handleResponse);
+            } else {
+                log.info("don't use payload");
+                request.send(handleResponse);
+            }
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        });
+    }
+
     public JsonObject responseAddressHandler(JsonObject responseData) throws AddressAlreadyExistsException {
         if (responseData != null) {
             String errMsg = responseData.getString("error");
@@ -294,11 +347,11 @@ public class AddressApiClient {
         return responseData;
     }
 
-    private void responseHandler(AsyncResult<HttpResponse<JsonObject>> ar, CompletableFuture<JsonObject> promise,
-                                 String warnMessage) {
+    private <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise,
+                                     String warnMessage) {
         try {
             if (ar.succeeded()) {
-                HttpResponse<JsonObject> response = ar.result();
+                HttpResponse<T> response = ar.result();
                 if (response.statusCode() < 200 || response.statusCode() >= 300) {
                     promise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
                 } else {
@@ -319,7 +372,7 @@ public class AddressApiClient {
         }
     }
 
-    JsonObject doRequestNTimes(int retry, Callable<JsonObject> fn) throws Exception {
+    public <T> T doRequestNTimes(int retry, Callable<T> fn) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
             endpoint = kubernetes.getRestEndpoint();
             return fn.call();

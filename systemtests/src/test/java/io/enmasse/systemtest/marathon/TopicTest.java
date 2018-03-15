@@ -23,7 +23,7 @@ public class TopicTest extends MarathonTestBase {
         AddressSpace addressSpace = new AddressSpace("test-topic-pubsub-brokered",
                 "test-topic-pubsub-brokered",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
+        createAddressSpace(addressSpace);
 
         int msgCount = 1000;
         int topicCount = 10;

@@ -6,5 +6,10 @@ package io.enmasse.systemtest;
 
 
 public enum AddressSpaceType {
-    STANDARD, BROKERED
+    STANDARD, BROKERED;
+
+    @Override
+    public String toString() {
+        return super.toString().toLowerCase();
+    }
 }

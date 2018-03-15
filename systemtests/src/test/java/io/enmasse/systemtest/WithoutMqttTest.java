@@ -27,8 +27,9 @@ public class WithoutMqttTest extends TestBase {
 
     @Before
     public void setupSpace() throws Exception {
-        addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
-        createAddressSpace(addressSpace, "standard", false);
+        addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt",
+                AuthService.STANDARD);
+        createAddressSpace(addressSpace, false);
         createUser(addressSpace, "test", "test");
         setAddresses(addressSpace, Destination.anycast("a1"));
     }
@@ -49,8 +50,8 @@ public class WithoutMqttTest extends TestBase {
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions()
-                    .setUsername("test")
-                    .setPassword("test");
+                .setUsername("test")
+                .setPassword("test");
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
