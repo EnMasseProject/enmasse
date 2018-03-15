@@ -25,7 +25,7 @@
     <spring.version>1.5.4.RELEASE</spring.version>
     <logback.version>1.1.11</logback.version>
     <netty.version>4.1.15.Final</netty.version>
-    <keycloak.version>3.3.0.Final</keycloak.version>
+    <keycloak.version>3.4.3.Final</keycloak.version>
     <jboss.logging.version>3.3.0.Final</jboss.logging.version>
     <jboss.logging.annotations.version>2.1.0.Final</jboss.logging.annotations.version>
     <protonj.version>0.22.0</protonj.version>
