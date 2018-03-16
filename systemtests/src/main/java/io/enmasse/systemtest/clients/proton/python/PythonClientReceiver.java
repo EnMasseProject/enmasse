@@ -9,12 +9,17 @@ import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 public class PythonClientReceiver extends AbstractClient {
     public PythonClientReceiver() {
         super(ClientType.CLI_PROTON_PYTHON_RECEIVER);
+    }
+
+    public PythonClientReceiver(Path logPath) {
+        super(ClientType.CLI_PROTON_PYTHON_RECEIVER, logPath);
     }
 
     @Override

@@ -12,37 +12,37 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
 
     @Test
     public void testBasicMessage() throws Exception {
-        doBasicMessageTest(new PythonClientSender(), new PythonClientReceiver());
+        doBasicMessageTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
     public void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
+        doRoundRobinReceiverTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
     public void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver(), false);
+        doTopicSubscribeTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
 
     //@Test
     public void testMessageBrowse() throws Exception {
-        doMessageBrowseTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
+        doMessageBrowseTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     //@Test
     public void testDrainQueue() throws Exception {
-        doDrainQueueTest(new PythonClientSender(), new PythonClientReceiver());
+        doDrainQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     //@Test
     public void testMessageSelectorQueue() throws Exception{
-        doMessageSelectorQueueTest(new PythonClientSender(), new PythonClientReceiver());
+        doMessageSelectorQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
     public void testMessageSelectorTopic() throws Exception{
-        doMessageSelectorTopicTest(new PythonClientSender(), new PythonClientReceiver(),
-                new PythonClientReceiver(), new PythonClientReceiver(), false);
+        doMessageSelectorTopicTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath),
+                new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
 }

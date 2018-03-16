@@ -9,6 +9,7 @@ import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +17,10 @@ import java.util.List;
 public class RheaClientConnector extends AbstractClient {
     public RheaClientConnector() {
         super(ClientType.CLI_RHEA_CONNECTOR);
+    }
+
+    public RheaClientConnector(Path logPath) {
+        super(ClientType.CLI_RHEA_CONNECTOR, logPath);
     }
 
     @Override

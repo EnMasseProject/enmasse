@@ -9,12 +9,17 @@ import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 public class ProtonJMSClientReceiver extends AbstractClient {
     public ProtonJMSClientReceiver() {
         super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
+    }
+
+    public ProtonJMSClientReceiver(Path logPath) {
+        super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER, logPath);
     }
 
     @Override

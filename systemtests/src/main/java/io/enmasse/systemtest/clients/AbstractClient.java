@@ -10,7 +10,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -24,11 +28,13 @@ public abstract class AbstractClient {
     private final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
     protected ArrayList<Argument> allowedArgs = new ArrayList<>();
     private Executor executor;
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
+    private Path logPath;
 
     /**
      * Constructor of abstract client
@@ -37,6 +43,18 @@ public abstract class AbstractClient {
      */
     public AbstractClient(ClientType clientType) {
         this.clientType = clientType;
+        this.fillAllowedArgs();
+    }
+
+    /**
+     * Constructor of abstract client
+     *
+     * @param clientType type of client
+     * @param logPath    path where logs will be stored
+     */
+    public AbstractClient(ClientType clientType, Path logPath) {
+        this.clientType = clientType;
+        this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
         this.fillAllowedArgs();
     }
 
@@ -128,7 +146,7 @@ public abstract class AbstractClient {
     private boolean runClient(int timeout) {
         messages.clear();
         try {
-            executor = new Executor();
+            executor = new Executor(logPath);
             int ret = executor.execute(prepareCommand(), timeout);
             synchronized (lock) {
                 log.info("Return code - " + ret);
