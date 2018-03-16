@@ -15,10 +15,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -95,7 +92,10 @@ public class AddressControllerApiTest extends TestBase {
         assertThat(String.format("Unexpected count of paths: '%s'", paths), paths.size(), is(2));
         for (Uri uri : paths) {
             assertThat("No addresses were created, so list should be empty!",
-                    TestUtils.convertToListAddress(sendRestApiRequest(HttpMethod.GET, uri, Optional.empty())).size(),
+                    TestUtils.convertToListAddress(
+                            sendRestApiRequest(HttpMethod.GET, uri, Optional.empty()),
+                            new ArrayList<>(),
+                            Address.class).size(),
                     is(0));
         }
     }
