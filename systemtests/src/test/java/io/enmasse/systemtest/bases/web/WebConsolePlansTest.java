@@ -91,8 +91,8 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = new AddressSpace("console-plan-instance", AddressSpaceType.STANDARD,
-                consolePlan.getName());
-        createAddressSpace(consoleAddrSpace, AuthService.STANDARD.toString());
+                consolePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(consoleAddrSpace);
 
         //create new user
         String username = "test_newplan_name";

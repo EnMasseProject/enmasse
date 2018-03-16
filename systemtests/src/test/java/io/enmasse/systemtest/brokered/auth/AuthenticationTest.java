@@ -29,8 +29,8 @@ public class AuthenticationTest extends AuthenticationTestBase {
     @Test
     public void testStandardAuthenticationServiceRestartBrokered() throws Exception {
         log.info("testStandardAuthenticationServiceRestartBrokered");
-        AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
+        AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
 
         KeycloakCredentials credentials = new KeycloakCredentials("Pavel", "Novak");
         getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());

@@ -4,10 +4,7 @@
  */
 package io.enmasse.systemtest.marathon;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -41,8 +38,8 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
     public void setUpWebConsoleTests() throws Exception {
         log.info("testCreateDeleteUsersLong start");
         addressSpace = new AddressSpace("brokered-marathon-web-console",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
+                AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
         username = "test";

@@ -71,8 +71,8 @@ public class PlansTest extends TestBase {
 
         //create address space plan with new plan
         AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.STANDARD,
-                weakSpacePlan.getName());
-        createAddressSpace(weakAddressSpace, AuthService.STANDARD.toString());
+                weakSpacePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(weakAddressSpace);
 
         //deploy destinations
         Destination weakQueueDest = Destination.queue("weak-queue", weakQueuePlan.getName());
@@ -145,8 +145,8 @@ public class PlansTest extends TestBase {
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpace("test-quota-limits-pooled", AddressSpaceType.STANDARD,
-                addressSpacePlan.getName());
-        createAddressSpace(addressSpace, AuthService.STANDARD.toString());
+                addressSpacePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(addressSpace);
 
         getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
 
@@ -226,8 +226,8 @@ public class PlansTest extends TestBase {
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpace("test-quota-limits-sharded", AddressSpaceType.STANDARD,
-                addressSpacePlan.getName());
-        createAddressSpace(addressSpace, AuthService.STANDARD.toString());
+                addressSpacePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(addressSpace);
 
         getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
 

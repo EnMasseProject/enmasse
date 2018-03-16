@@ -25,8 +25,8 @@ public abstract class AuthenticationTestBase extends TestBase {
     protected static final String anonymousPswd = "anonymous";
 
     @Override
-    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        super.createAddressSpace(addressSpace, authService);
+    protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        super.createAddressSpace(addressSpace);
         List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
@@ -35,14 +35,28 @@ public abstract class AuthenticationTestBase extends TestBase {
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
+    @Override
+    protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        super.createAddressSpaceList(addressSpaces);
+        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        for (AddressSpace addressSpace : addressSpaces) {
+            if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
+                brokeredAddressList = amqpAddressList.subList(0, 2);
+            }
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+            //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
+        }
+
+    }
+
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
         AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type);
-        createAddressSpace(s3standard, "none");
+        AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, AuthService.STANDARD);
+        createAddressSpaceList(s3standard, s4standard);
+
         assertCanConnect(s3standard, emptyUser, emptyPassword, amqpAddressList);
         assertCanConnect(s3standard, "bob", "pass", amqpAddressList);
 
-        AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type);
-        createAddressSpace(s4standard, "standard");
         assertCanConnect(s3standard, emptyUser, emptyPassword, amqpAddressList);
         assertCanConnect(s3standard, "bob", "pass", amqpAddressList);
         assertCannotConnect(s4standard, emptyUser, emptyPassword, amqpAddressList);
@@ -50,8 +64,9 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
-        AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type);
-        createAddressSpace(s1brokered, "standard");
+        AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type, AuthService.STANDARD);
+        AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type, AuthService.STANDARD);
+        createAddressSpaceList(s1brokered, s2brokered);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials
         assertCannotConnect(s1brokered, null, null, amqpAddressList);
@@ -73,8 +88,6 @@ public abstract class AuthenticationTestBase extends TestBase {
         assertCannotConnect(s1brokered, s1Bob.getUsername(), "s2pass", amqpAddressList);
         assertCannotConnect(s1brokered, "alice", "s1pass", amqpAddressList);
 
-        AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type);
-        createAddressSpace(s2brokered, "standard");
 
         KeycloakCredentials s2Bob = new KeycloakCredentials("bob", "s2pass");
         getKeycloakClient().createUser(s2brokered.getName(), s2Bob.getUsername(), s2Bob.getPassword());
@@ -89,7 +102,7 @@ public abstract class AuthenticationTestBase extends TestBase {
         assertCanConnect(s2brokered, s2Carol.getUsername(), s2Carol.getPassword(), amqpAddressList);
 
         assertCannotConnect(s2brokered, s1Bob.getUsername(), s1Bob.getPassword(), amqpAddressList);
-        assertCannotConnect(s1brokered, s2Bob.getUsername(), s2Bob.getPassword() ,amqpAddressList);
+        assertCannotConnect(s1brokered, s2Bob.getUsername(), s2Bob.getPassword(), amqpAddressList);
     }
 
 }
