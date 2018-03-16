@@ -448,12 +448,12 @@ local images = import "images.jsonnet";
     "parameters": [
       {
         "name": "KEYCLOAK_PLUGIN_IMAGE",
-        "description": "The docker image to use for the keycloak plugin image",
+        "description": "The container image to use for the keycloak plugin image",
         "value": images.keycloak_plugin
       },
       {
         "name": "STANDARD_AUTHSERVICE_IMAGE",
-        "description": "The docker image to use for the 'standard' auth service",
+        "description": "The container image to use for the 'standard' auth service",
         "value": images.keycloak
       },
       {
@@ -463,7 +463,7 @@ local images = import "images.jsonnet";
       },
       {
         "name": "KEYCLOAK_CONTROLLER_IMAGE",
-        "description": "The docker image to use for the keycloak controller",
+        "description": "The container image to use for the keycloak controller",
         "value": images.keycloak_controller
       },
       {
@@ -510,7 +510,7 @@ local images = import "images.jsonnet";
     "parameters": [
       {
         "name": "NONE_AUTHSERVICE_IMAGE",
-        "description": "The docker image to use for the 'none' auth service",
+        "description": "The container image to use for the 'none' auth service",
         "value": images.none_authservice
       },
       {

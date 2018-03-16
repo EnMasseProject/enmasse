@@ -84,12 +84,12 @@ local storage = import "storage-template.jsonnet";
       },
       {
         "name": "QUEUE_SCHEDULER_IMAGE",
-        "description": "The docker image to use for the queue scheduler",
+        "description": "The container image to use for the queue scheduler",
         "value": images.queue_scheduler
       },
       {
         "name": "STANDARD_CONTROLLER_IMAGE",
-        "description": "The docker image to use for the standard controller",
+        "description": "The container image to use for the standard controller",
         "value": images.standard_controller
       },
       {
