@@ -4,8 +4,10 @@
  */
 package io.enmasse.keycloak.controller;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
+import io.enmasse.k8s.api.ResourceChecker;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
@@ -36,7 +38,13 @@ public class Main {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofMinutes(5));
 
-        addressSpaceApi.watchAddressSpaces(keycloakManager, resyncInterval);
+        Duration checkInterval = getEnv(env, "CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30));
+
+        ResourceChecker<AddressSpace> resourceChecker = new ResourceChecker<>(keycloakManager, checkInterval);
+        resourceChecker.start();
+        addressSpaceApi.watchAddressSpaces(resourceChecker, resyncInterval);
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {

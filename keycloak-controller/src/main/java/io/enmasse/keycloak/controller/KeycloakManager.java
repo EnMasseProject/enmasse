@@ -36,7 +36,9 @@ public class KeycloakManager implements Watcher<AddressSpace>
                              .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD)
                              .collect(Collectors.toMap(AddressSpace::getName, Function.identity()));
 
-        for(String realmName : keycloak.getRealmNames()) {
+        Set<String> realmNames = keycloak.getRealmNames();
+        log.info("Actual: {}, Desired: {}", realmNames, standardAuthSvcSpaces.keySet());
+        for(String realmName : realmNames) {
             if(standardAuthSvcSpaces.remove(realmName) == null && !"master".equals(realmName)) {
                 log.info("Deleting realm {}", realmName);
                 keycloak.deleteRealm(realmName);
