@@ -48,56 +48,52 @@ class RouterStatus {
         return routerId;
     }
 
-    public int checkAddress(Address address) {
-        int ok = 0;
-        boolean found = addresses.contains(address.getAddress());
-        if (!found) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + routerId);
+    public StatusCheckResult checkAddress(Address address) {
+        if (addresses.contains(address.getAddress())) {
+            return new StatusCheckResult(true);
         } else {
-            ok++;
+            return new StatusCheckResult(false, "Address " + address.getAddress() + " not found on " + routerId);
         }
-        return ok;
     }
 
-    public int checkAutoLinks(Address address) {
+    public List<StatusCheckResult> checkAutoLinks(Address address) {
 
-        int ok = 0;
+        List<StatusCheckResult> statusCheckResults = new ArrayList<>();
         for (List<String> autoLink : autoLinks) {
             String addr = autoLink.get(0);
 
             if (addr.equals(address.getAddress())) {
-                ok++;
+                statusCheckResults.add(new StatusCheckResult(true));
             }
         }
 
-        if (ok < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + routerId);
+        if (statusCheckResults.size() < 2) {
+            statusCheckResults.add(new StatusCheckResult(false, "Address " + address.getAddress() + " is missing autoLinks on " + routerId));
         }
 
-        return ok;
+        return statusCheckResults;
     }
 
-    public int checkLinkRoutes(Address address) {
-        int ok = 0;
+    public List<StatusCheckResult> checkLinkRoutes(Address address) {
+        List<StatusCheckResult> statusCheckResults = new ArrayList<>();
 
         for (List<String> linkRoute : linkRoutes) {
             String prefix = linkRoute.get(0);
 
             // Pooled topics have active link routes
             if (prefix.equals(address.getAddress())) {
-                ok++;
+                statusCheckResults.add(new StatusCheckResult(true));
             }
         }
 
-        if (ok < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + routerId);
+        if (statusCheckResults.size() < 2) {
+            statusCheckResults.add(new StatusCheckResult(false, "Address " + address.getAddress() + " is missing linkRoutes on " + routerId));
         }
 
-        return ok;
+        return statusCheckResults;
     }
 
-    public static int checkActiveAutoLink(Address address, List<RouterStatus> routerStatusList) {
-        int ok = 0;
+    public static StatusCheckResult checkActiveAutoLink(Address address, List<RouterStatus> routerStatusList) {
         Set<String> active = new HashSet<>();
 
         for (RouterStatus routerStatus : routerStatusList) {
@@ -114,14 +110,13 @@ class RouterStatus {
         }
 
         if (active.size() < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing active autoLink (active in dirs: " + active + ")");
+            return new StatusCheckResult(false, "Address " + address.getAddress() + " is missing active autoLink (active in dirs: " + active + ")");
         } else {
-            ok++;
+            return new StatusCheckResult(true);
         }
-        return ok;
     }
 
-    public static int checkActiveLinkRoute(Address address, List<RouterStatus> routerStatusList) {
+    public static StatusCheckResult checkActiveLinkRoute(Address address, List<RouterStatus> routerStatusList) {
         int ok = 0;
         Set<String> active = new HashSet<>();
         String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
@@ -141,28 +136,22 @@ class RouterStatus {
         }
 
         if (active.size() < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing active linkRoute (active in dirs: " + active + ")");
+            return new StatusCheckResult(false, "Address " + address.getAddress() + " is missing active linkRoute (active in dirs: " + active + ")");
         } else {
-            ok++;
+            return new StatusCheckResult(true);
         }
-        return ok;
     }
 
-    public static int checkConnection(Address address, List<RouterStatus> routerStatusList) {
-        int ok = 0;
+    public static StatusCheckResult checkConnection(Address address, List<RouterStatus> routerStatusList) {
         for (RouterStatus routerStatus : routerStatusList) {
             for (String containerId : routerStatus.connections) {
                 if (containerId.startsWith(address.getName())) {
-                    ok++;
-                    break;
+                    return new StatusCheckResult(true);
                 }
             }
         }
 
-        if (ok == 0) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing connection from broker");
-        }
-        return ok;
+        return new StatusCheckResult(false, "Address " + address.getAddress() + " is missing connection from broker");
     }
 
     @Override

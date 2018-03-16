@@ -8,7 +8,6 @@ import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
@@ -130,7 +129,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         long provisionResources = System.nanoTime();
 
-        checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
+        Map<Address, List<StatusCheckResult>> statusChecks = checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active, Status.Phase.Terminating)), addressResolver);
         long checkStatuses = System.nanoTime();
         for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
             if (address.getStatus().isReady()) {
@@ -142,13 +141,20 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         long deprovisionUnused = System.nanoTime();
 
         for (Address address : addressSet) {
+            if (statusChecks.containsKey(address)) {
+                for (StatusCheckResult result : statusChecks.get(address)) {
+                    if (!result.isSuccess()) {
+                        address.getStatus().setReady(false).appendMessage(result.getMessage());
+                    }
+                }
+            }
             if (!previousStatus.get(address.getAddress()).equals(address.getStatus())) {
                 addressApi.replaceAddress(address);
             }
         }
 
         long replaceAddresses = System.nanoTime();
-        garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
+        garbageCollectTerminating(statusChecks, addressResolver);
         long gcTerminating = System.nanoTime();
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, replaceAddresses - deprovisionUnused, gcTerminating - replaceAddresses);
 
@@ -203,20 +209,57 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 .collect(Collectors.toSet());
     }
 
-    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
-        Map<Address, Integer> okMap = checkStatuses(addresses, addressResolver);
-        for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
-            if (entry.getValue() == 0) {
-                log.info("Garbage collecting {}", entry.getKey());
-                addressApi.deleteAddress(entry.getKey());
+    private void garbageCollectTerminating(Map<Address, List<StatusCheckResult>> statusChecks, AddressResolver addressResolver) throws Exception {
+        for (Map.Entry<Address, List<StatusCheckResult>> entry : statusChecks.entrySet()) {
+            Address address = entry.getKey();
+            if (address.getStatus().getPhase().equals(Terminating)) {
+                List<StatusCheckResult> passingChecks = entry.getValue().stream()
+                        .filter(StatusCheckResult::isSuccess)
+                        .collect(Collectors.toList());
+
+                AddressType addressType = addressResolver.getType(address);
+                AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
+
+                if (canTerminate(statusChecks.keySet(), addressPlan, passingChecks, addressResolver)) {
+                    log.info("Garbage collecting {}", entry.getKey());
+                    addressApi.deleteAddress(entry.getKey());
+                } else {
+                    log.info("Not garbage collecting {} as it has {} passing status checks", entry.getKey(), entry.getValue());
+                }
             }
         }
     }
 
-    private Map<Address, Integer> checkStatuses(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
-        Map<Address, Integer> numOk = new HashMap<>();
+    private boolean canTerminate(Set<Address> addressSet, AddressPlan addressPlan, List<StatusCheckResult> passingChecks, AddressResolver addressResolver) {
+        if (passingChecks.isEmpty()) {
+            return true;
+        } else if (isPooled(addressPlan)) {
+
+            for (StatusCheckResult result : passingChecks) {
+                if (!result.allowSuccessForPooled()) {
+                    return false;
+                }
+            }
+            return containsPooled(filterByNotPhases(addressSet, Arrays.asList(Terminating)), addressResolver);
+        }
+        return false;
+    }
+
+    private boolean containsPooled(Set<Address> addressSet, AddressResolver addressResolver) {
+        for (Address address : addressSet) {
+            AddressType type = addressResolver.getType(address);
+            AddressPlan plan = addressResolver.getPlan(type, address);
+            if (isPooled(plan)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Map<Address, List<StatusCheckResult>> checkStatuses(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
+        Map<Address, List<StatusCheckResult>> results = new HashMap<>();
         if (addresses.isEmpty()) {
-            return numOk;
+            return results;
         }
         for (Address address : addresses) {
             address.getStatus().setReady(true).clearMessages();
@@ -239,59 +282,60 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             }
         }
 
-        Map<String, Integer> clusterOk = new HashMap<>();
+
+        Map<String, StatusCheckResult> clusterStatusCache = new HashMap<>();
         for (Address address : addresses) {
             AddressType addressType = addressResolver.getType(address);
             AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
-
-            int ok = 0;
+            List<StatusCheckResult> statusCheckResults = new ArrayList<>();
             switch (addressType.getName()) {
                 case "queue":
-                    ok += checkBrokerStatus(address, clusterOk, addressPlan);
+                    statusCheckResults.add(checkBrokerStatus(address, clusterStatusCache, addressPlan));
                     for (RouterStatus routerStatus : routerStatusList) {
-                        ok += routerStatus.checkAddress(address);
-                        ok += routerStatus.checkAutoLinks(address);
+                        statusCheckResults.add(routerStatus.checkAddress(address));
+                        statusCheckResults.addAll(routerStatus.checkAutoLinks(address));
                     }
-                    ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
+                    statusCheckResults.add(RouterStatus.checkActiveAutoLink(address, routerStatusList));
                     break;
                 case "topic":
-                    ok += checkBrokerStatus(address, clusterOk, addressPlan);
+                    statusCheckResults.add(checkBrokerStatus(address, clusterStatusCache, addressPlan));
                     for (RouterStatus routerStatus : routerStatusList) {
-                        ok += routerStatus.checkLinkRoutes(address);
+                        statusCheckResults.addAll(routerStatus.checkLinkRoutes(address));
                     }
                     if (isPooled(addressPlan)) {
-                        ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
+                        statusCheckResults.add(RouterStatus.checkActiveLinkRoute(address, routerStatusList));
                     } else {
-                        ok += RouterStatus.checkConnection(address, routerStatusList);
+                        statusCheckResults.add(RouterStatus.checkConnection(address, routerStatusList));
                     }
                     break;
                 case "anycast":
                 case "multicast":
                     for (RouterStatus routerStatus : routerStatusList) {
-                        ok += routerStatus.checkAddress(address);
+                        statusCheckResults.add(routerStatus.checkAddress(address));
                     }
                     break;
             }
-            numOk.put(address, ok);
+
+            results.put(address, statusCheckResults);
         }
 
-        return numOk;
+        return results;
     }
 
-    private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk, AddressPlan addressPlan) {
+
+    private StatusCheckResult checkBrokerStatus(Address address, Map<String, StatusCheckResult> statusCache, AddressPlan addressPlan) {
         String clusterId = isPooled(addressPlan) ? "broker" : address.getName();
-        if (!clusterOk.containsKey(clusterId)) {
+        if (!statusCache.containsKey(clusterId)) {
             if (!kubernetes.isDestinationClusterReady(clusterId)) {
-                address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
-                clusterOk.put(clusterId, 0);
+                statusCache.put(clusterId, new StatusCheckResult(false, "Cluster " + clusterId + " is unavailable"));
             } else {
-                clusterOk.put(clusterId, 1);
+                statusCache.put(clusterId, new StatusCheckResult(true, true, null));
             }
         }
-        return clusterOk.get(clusterId);
+        return statusCache.get(clusterId);
     }
 
-    private boolean isPooled(AddressPlan plan) {
+    private static boolean isPooled(AddressPlan plan) {
         for (ResourceRequest request : plan.getRequiredResources()) {
             if ("broker".equals(request.getResourceName()) && request.getAmount() < 1.0) {
                 return true;
