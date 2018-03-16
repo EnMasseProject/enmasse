@@ -75,12 +75,12 @@ public class AnycastTest extends StandardTestBase {
         waitForRouterReplicas(sharedAddressSpace, 1);
 
         //simple send/receive
-        for (int i = 0; i < destCount - removeCount; i = i + 3) {
+        for (int i = removeCount; i < destCount; i = i + 3) {
             runAnycastTest(dest.get(i), client1, client2);
         }
 
         //append due to scale to 2 replicas
-        appendAddresses(Destination.anycast("small-anycast-"), Destination.anycast("small-anycast-"));
+        appendAddresses(Destination.anycast("small-anycast-0"), Destination.anycast("small-anycast-1"));
         waitForRouterReplicas(sharedAddressSpace, 2);
 
         //remove all destinations
