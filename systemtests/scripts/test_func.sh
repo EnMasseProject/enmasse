@@ -110,7 +110,7 @@ function get_previous_logs() {
     for pod_id in ${pods_id}
     do
         restart_count=$(kubectl get -o json pod -n ${ADDRESS_SPACE} ${pod_id} -o jsonpath={.status.containerStatuses[0].restartCount})
-        if [ ${restart_count} > 0 ]
+        if (( ${restart_count} > 0 ))
         then
             echo "pod ${pod_id} was restarted"
             kubectl logs -p ${pod_id} -n ${ADDRESS_SPACE} > "${LOG_DIR}/${pod_id}.previous.log"
