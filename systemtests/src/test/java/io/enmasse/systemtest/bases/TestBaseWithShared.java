@@ -153,7 +153,9 @@ public abstract class TestBaseWithShared extends TestBase {
         } else {
             List<Destination> inShared = getDestinationsObjects(Optional.empty())
                     .get(10, TimeUnit.SECONDS);
-            deleteAddresses(sharedAddressSpace, inShared.toArray(new Destination[0]));
+            if (inShared.size() > 0) {
+                deleteAddresses(inShared.toArray(new Destination[0]));
+            }
             if (destinations.length > 0) {
                 appendAddresses(destinations);
             }
