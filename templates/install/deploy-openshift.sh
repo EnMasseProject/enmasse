@@ -94,7 +94,7 @@ while getopts a:c:de:gm:n:o:p:st:u:yvh opt; do
             echo "  -h                   show this help message"
             echo "  -a \"none standard\" Deploy given authentication services (default: \"none\")"
             echo "  -c                   CA certificate to use in address controller"
-            echo "  -d                   create an all-in-one docker OpenShift on localhost"
+            echo "  -d                   create an all-in-one OpenShift container on localhost"
             echo "  -e                   Environment label for this EnMasse deployment"
             echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"

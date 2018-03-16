@@ -309,12 +309,12 @@ local prometheus = import "prometheus.jsonnet";
     "parameters": [
       {
         "name": "BROKER_IMAGE",
-        "description": "The docker image to use for the message broker",
+        "description": "The container image to use for the message broker",
         "value": images.artemis
       },
       {
         "name": "AGENT_IMAGE",
-        "description": "The docker image to use for the enmasse agent",
+        "description": "The container image to use for the enmasse agent",
         "value": images.agent
       },
       {

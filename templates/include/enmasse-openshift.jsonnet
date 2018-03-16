@@ -47,7 +47,7 @@ local roles = import "roles.jsonnet";
       },
       {
         "name": "ADDRESS_CONTROLLER_IMAGE",
-        "description": "The docker image to use for the address controller",
+        "description": "The container image to use for the address controller",
         "value": images.address_controller
       },
       {

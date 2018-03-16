@@ -132,7 +132,7 @@ local forwarder = import "forwarder.jsonnet";
         },
         {
           "name": "BROKER_IMAGE",
-          "description": "The docker image to use for the message broker",
+          "description": "The container image to use for the message broker",
           "value": images.artemis
         },
         {
