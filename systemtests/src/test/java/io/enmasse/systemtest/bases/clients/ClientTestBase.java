@@ -9,7 +9,14 @@ import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.ArgumentMap;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
+import javax.sound.midi.Patch;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +24,8 @@ import java.util.List;
 public abstract class ClientTestBase extends TestBaseWithShared {
     protected ArgumentMap arguments = new ArgumentMap();
     protected List<AbstractClient> clients;
+    private final String clientFolder = "clients_tests";
+    protected Path logPath = null;
 
     @Before
     public void setUpClientBase() {
@@ -33,4 +42,11 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     protected String getTopicPrefix(boolean topicSwitch) {
         return topicSwitch ? "topic://" : "";
     }
+
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            logPath = Paths.get(environment.testLogDir(), clientFolder, description.getClassName(), description.getMethodName());
+        }
+    };
 }

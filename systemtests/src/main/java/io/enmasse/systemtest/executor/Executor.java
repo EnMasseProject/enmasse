@@ -8,6 +8,9 @@ import io.enmasse.systemtest.CustomLogger;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
@@ -21,6 +24,14 @@ public class Executor {
     private String stdErr;
     private StreamGobbler stdOutReader;
     private StreamGobbler stdErrReader;
+    private Path logPath;
+
+    public Executor() {
+    }
+
+    public Executor(Path logPath) {
+        this.logPath = logPath;
+    }
 
     /**
      * Getter for stdOutput
@@ -96,7 +107,7 @@ public class Executor {
         } catch (TimeoutException ex) {
             stdErr = stdErrReader.getData();
         }
-
+        storeOutputsToFile();
         return retCode;
     }
 
@@ -136,6 +147,21 @@ public class Executor {
     private void shutDownReaders() {
         stdOutReader.shutDownReader();
         stdErrReader.shutDownReader();
+    }
+
+    /**
+     * Get stdOut and stdErr and store it into files
+     */
+    private void storeOutputsToFile() {
+        if (logPath != null) {
+            try {
+                Files.createDirectories(logPath);
+                Files.write(Paths.get(logPath.toString(), "stdOutput.log"), stdOut.getBytes());
+                Files.write(Paths.get(logPath.toString(), "stdError.log"), stdErr.getBytes());
+            } catch (Exception ex) {
+                log.warn("Cannot save output of execution: " + ex.getMessage());
+            }
+        }
     }
 
     /**

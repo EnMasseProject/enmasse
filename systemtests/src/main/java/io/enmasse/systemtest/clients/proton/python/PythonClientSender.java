@@ -9,6 +9,7 @@ import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +17,10 @@ import java.util.List;
 public class PythonClientSender extends AbstractClient {
     public PythonClientSender() {
         super(ClientType.CLI_PROTON_PYTHON_SENDER);
+    }
+
+    public PythonClientSender(Path logPath) {
+        super(ClientType.CLI_PROTON_PYTHON_SENDER, logPath);
     }
 
     @Override
@@ -76,6 +81,7 @@ public class PythonClientSender extends AbstractClient {
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
         args = brokerUrlTranformation(args);
+        args.put(Argument.LOG_LIB, "TRANSPORT_FRM");
         return args;
     }
 

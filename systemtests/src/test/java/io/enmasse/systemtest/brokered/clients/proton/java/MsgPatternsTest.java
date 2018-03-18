@@ -12,37 +12,37 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Test
     public void testBasicMessage() throws Exception {
-        doBasicMessageTest(new ProtonJMSClientSender(), new ProtonJMSClientSender());
+        doBasicMessageTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
     public void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
+        doRoundRobinReceiverTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
     public void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
+        doTopicSubscribeTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
     }
 
     @Test
     public void testMessageBrowse() throws Exception {
-        doMessageBrowseTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
+        doMessageBrowseTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
     public void testDrainQueue() throws Exception {
-        doDrainQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
+        doDrainQueueTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
     public void testMessageSelectorQueue() throws Exception{
-        doMessageSelectorQueueTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver());
+        doMessageSelectorQueueTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
     public void testMessageSelectorTopic() throws Exception{
-        doMessageSelectorTopicTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(),
-                new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
+        doMessageSelectorTopicTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath),
+                new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
     }
 }

@@ -9,12 +9,17 @@ import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 public class RheaClientReceiver extends AbstractClient {
     public RheaClientReceiver() {
         super(ClientType.CLI_RHEA_RECEIVER);
+    }
+
+    public RheaClientReceiver(Path logPath) {
+        super(ClientType.CLI_RHEA_RECEIVER, logPath);
     }
 
     @Override
@@ -63,6 +68,7 @@ public class RheaClientReceiver extends AbstractClient {
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
         args = basicBrokerTransformation(args);
+        args.put(Argument.LOG_LIB, "TRANSPORT_FRM");
         return args;
     }
 
