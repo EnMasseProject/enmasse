@@ -4,13 +4,16 @@
  */
 package io.enmasse.systemtest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AddressSpace {
     private String name;
     private String namespace;
     private String plan;
     private AddressSpaceType type;
     private AuthService authService;
-    private AddressSpaceEndpoint endpoint;
+    private List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
 
     public AddressSpace(String name) {
         this(name, name, AddressSpaceType.STANDARD, AuthService.NONE);
@@ -83,7 +86,6 @@ public class AddressSpace {
     }
 
 
-
     public AddressSpace setName(String name) {
         this.name = name;
         return this;
@@ -111,12 +113,16 @@ public class AddressSpace {
         return this;
     }
 
-    public void setEndpoint(AddressSpaceEndpoint endpoint) {
-        this.endpoint = endpoint;
+    public void setEndpoints(List<AddressSpaceEndpoint> endpoints) {
+        this.endpoints = endpoints;
     }
 
     public void setAuthService(AuthService authService) {
         this.authService = authService;
+    }
+
+    public List<AddressSpaceEndpoint> getEndpoints() {
+        return endpoints;
     }
 
     public String getName() {
@@ -137,10 +143,6 @@ public class AddressSpace {
 
     public AuthService getAuthService() {
         return authService;
-    }
-
-    public AddressSpaceEndpoint getEndpoint() {
-        return endpoint;
     }
 
     @Override

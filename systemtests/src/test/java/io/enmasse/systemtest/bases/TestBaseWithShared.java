@@ -35,14 +35,18 @@ public abstract class TestBaseWithShared extends TestBase {
     public TestWatcher watcher = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            log.info("test failed:" + description);
-            log.info("shared address space '{}' will be removed", sharedAddressSpace);
-            try {
-                deleteSharedAddressSpace(sharedAddressSpace);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
+            if (!environment.skipCleanup()) {
+                log.info("test failed:" + description);
+                log.info("shared address space '{}' will be removed", sharedAddressSpace);
+                try {
+                    deleteSharedAddressSpace(sharedAddressSpace);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
+                }
+            } else {
+                log.warn("Remove address spaces when test failed - SKIPPED!");
             }
         }
 

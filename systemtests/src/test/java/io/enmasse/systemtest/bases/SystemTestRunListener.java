@@ -32,14 +32,18 @@ public class SystemTestRunListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        TestBaseWithShared.sharedAddressSpaces.forEach((name, addrSpace) -> {
-            log.info("shared address space '{}' will be removed", addrSpace);
-            try {
-                TestBase.deleteAddressSpace(addrSpace);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        if (!TestBase.environment.skipCleanup()) {
+            TestBaseWithShared.sharedAddressSpaces.forEach((name, addrSpace) -> {
+                log.info("shared address space '{}' will be removed", addrSpace);
+                try {
+                    TestBase.deleteAddressSpace(addrSpace);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            log.warn("Remove address spaces when test run finished - SKIPPED!");
+        }
     }
 
     @Override
