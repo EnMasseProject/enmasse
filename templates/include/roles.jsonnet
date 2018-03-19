@@ -28,123 +28,29 @@
       ]
     },
 
-  // Role for address-controller service account
-  namespace_admin_role::
+  // Cluster role for address-controller service account
+  enmasse_admin_role::
     {
       "apiVersion": "v1",
       "kind": "ClusterRole",
       "metadata": {
-        "name": "enmasse-namespace-admin"
+        "name": "enmasse-admin"
       },
       "rules": [
         {
           "apiGroups": [
             "",
-            "user.openshift.io"
+            "project.openshift.io",
+            "authentication.k8s.io",
+            "authorization.k8s.io"
           ],
           "resources": [
-            "users"
-          ],
-          "verbs": [
-            "impersonate"
-          ]
-        },
-        {
-          "apiGroups": [
-            "",
-            "extensions",
-            "authorization.openshift.io",
-            "route.openshift.io"
-          ],
-          "resources": [
-            "clusterrolebindings",
-            "rolebindings",
-            "events",
-            "policybindings",
-            "deployments",
-            "pods",
-            "configmaps",
-            "routes",
-            "serviceaccounts",
-            "secrets",
-            "services",
-            "persistentvolumeclaims"
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "rbac.authorization.k8s.io"
-          ],
-          "resources": [
-            "clusterrolebindings",
-            "rolebindings",
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "authentication.k8s.io"
-          ],
-          "resources": [
+            "projectrequests",
+            "localsubjectaccessreviews",
             "tokenreviews"
           ],
           "verbs": [
             "create"
-          ]
-        },
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
-            "namespaces"
-          ],
-          "verbs": [
-            "get",
-            "list",
-            "watch"
-          ]
-        }
-      ]
-    },
-
-  event_reporter_role::
-    {
-      "apiVersion": "v1",
-      "kind": "ClusterRole",
-      "metadata": {
-        "name": "event-reporter"
-      },
-      "rules": [
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
-            "events"
-          ],
-          "verbs": [
-            "create",
-            "get",
-            "update",
-            "patch"
           ]
         }
       ]

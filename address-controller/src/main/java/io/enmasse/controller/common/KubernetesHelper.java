@@ -6,12 +6,13 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Endpoint;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.RouteBuilder;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonArray;
@@ -33,7 +34,7 @@ public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".json";
 
-    private final OpenShiftClient client;
+    private final NamespacedOpenShiftClient client;
     private final String namespace;
     private final String controllerToken;
     private final String environment;
@@ -42,7 +43,7 @@ public class KubernetesHelper implements Kubernetes {
     private final String addressSpaceAdminSa;
     private final boolean enableRbac;
 
-    public KubernetesHelper(String namespace, OpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa, boolean enableRbac) {
+    public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa, boolean enableRbac) {
         this.client = client;
         this.namespace = namespace;
         this.controllerToken = token;
@@ -51,19 +52,6 @@ public class KubernetesHelper implements Kubernetes {
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
         this.enableRbac = enableRbac;
-    }
-
-
-    @Override
-    public void create(HasMetadata... resources) {
-        create(new KubernetesListBuilder()
-                .addToItems(resources)
-                .build());
-    }
-
-    @Override
-    public void create(KubernetesList resources) {
-        client.lists().inNamespace(namespace).create(resources);
     }
 
     @Override
@@ -82,38 +70,25 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void delete(HasMetadata... resources) {
-        delete(new KubernetesListBuilder()
-                .addToItems(resources)
-                .build());
-    }
-
-    @Override
     public void createNamespace(AddressSpace addressSpace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            JsonObject projectrequest = new JsonObject();
-            projectrequest.put("apiVersion", "v1");
-            projectrequest.put("kind", "ProjectRequest");
-
-            JsonObject metadata = new JsonObject();
-            metadata.put("name", addressSpace.getNamespace());
-            projectrequest.put("metadata", metadata);
-
-            doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getCreatedBy());
-            deleteRoleBindingRestrictions(addressSpace);
+            client.projectrequests().createNew()
+                .editOrNewMetadata()
+                .withName(addressSpace.getNamespace())
+                .endMetadata()
+                .done();
 
             client.configMaps().inNamespace(namespace).createNew()
-                    .editOrNewMetadata()
-                    .withName(addressSpace.getUid())
-                    .addToLabels("app", "enmasse")
-                    .addToLabels(LabelKeys.TYPE, "namespace")
-                    .addToLabels(LabelKeys.ENVIRONMENT, environment)
-                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
-                    .addToAnnotations(AnnotationKeys.NAMESPACE, addressSpace.getNamespace())
-                    .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getCreatedBy())
-                    .endMetadata()
-                    .done();
-
+                .editOrNewMetadata()
+                .withName(addressSpace.getUid())
+                .addToLabels("app", "enmasse")
+                .addToLabels(LabelKeys.TYPE, "namespace")
+                .addToLabels(LabelKeys.ENVIRONMENT, environment)
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
+                .addToAnnotations(AnnotationKeys.NAMESPACE, addressSpace.getNamespace())
+                .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getCreatedBy())
+                .endMetadata()
+                .done();
         } else {
             client.namespaces().createNew()
                     .editOrNewMetadata()
@@ -126,21 +101,6 @@ public class KubernetesHelper implements Kubernetes {
                     .endMetadata()
                     .done();
         }
-    }
-
-    // Needed as long as we can't do user impersonation through fabric8 client
-    private void deleteRoleBindingRestrictions(AddressSpace addressSpace) {
-        JsonObject roleBindingRestrictions = doRawHttpRequest("/oapi/v1/namespaces/" + addressSpace.getNamespace() + "/rolebindingrestrictions", "GET", null, true, addressSpace.getCreatedBy());
-        if (roleBindingRestrictions == null || !"RoleBindingRestrictionList".equals(roleBindingRestrictions.getString("kind"))) {
-            return;
-        }
-        JsonArray items = roleBindingRestrictions.getJsonArray("items");
-        for (int i = 0; i < items.size(); i++) {
-            JsonObject entry = items.getJsonObject(i);
-            String name = entry.getJsonObject("metadata").getString("name");
-            doRawHttpRequest("/oapi/v1/namespaces/" + addressSpace.getNamespace() + "/rolebindingrestrictions/" + name, "DELETE", null, true, addressSpace.getCreatedBy());
-        }
-
     }
 
     @Override
@@ -164,15 +124,15 @@ public class KubernetesHelper implements Kubernetes {
             String groupName = "system:serviceaccounts:" + addressSpace.getNamespace();
             log.info("Adding system:image-pullers policy for {}", groupName);
             client.roleBindings()
-                    .inNamespace(namespace)
-                    .withName("system:image-pullers")
-                    .edit()
-                    .addToGroupNames(groupName)
-                    .addNewSubject()
-                    .withKind("SystemGroup")
-                    .withName(groupName)
-                    .endSubject()
-                    .done();
+                .inNamespace(namespace)
+                .withName("system:image-pullers")
+                .edit()
+                .addToGroupNames(groupName)
+                .addNewSubject()
+                .withKind("SystemGroup")
+                .withName(groupName)
+                .endSubject()
+                .done();
         }
     }
 
@@ -180,7 +140,7 @@ public class KubernetesHelper implements Kubernetes {
     public void deleteNamespace(NamespaceInfo namespaceInfo) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
-            doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getCreatedBy());
+            client.inNamespace(namespace).projects().withName(namespaceInfo.getNamespace()).delete();
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
         }
@@ -188,7 +148,12 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public boolean existsNamespace(String namespace) {
-        return client.namespaces().withName(namespace).get() != null;
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            return client.projects().list().getItems().stream()
+                    .anyMatch(p -> p.getMetadata().getName().equals(namespace));
+        } else {
+            return client.namespaces().withName(namespace).get() != null;
+        }
     }
 
     @Override
@@ -313,7 +278,7 @@ public class KubernetesHelper implements Kubernetes {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
     }
 
-    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk, String impersonateUser) {
+    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
         HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
@@ -322,10 +287,6 @@ public class KubernetesHelper implements Kubernetes {
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Bearer " + controllerToken)
                 .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
-
-        if (impersonateUser != null) {
-            requestBuilder.addHeader("Impersonate-User", impersonateUser);
-        }
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             try (ResponseBody responseBody = response.body()) {
@@ -360,7 +321,7 @@ public class KubernetesHelper implements Kubernetes {
             spec.put("token", token);
             body.put("spec", spec);
 
-            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false, null);
+            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false);
             JsonObject status = responseBody.getJsonObject("status");
             boolean authenticated = false;
             String userName = null;
@@ -379,7 +340,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb, String impersonateUser) {
+    public SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb) {
         if (client.isAdaptable(OkHttpClient.class)) {
             JsonObject body = new JsonObject();
 
@@ -401,7 +362,7 @@ public class KubernetesHelper implements Kubernetes {
             spec.put("user", user);
 
             body.put("spec", spec);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/namespaces/" + namespace + "/localsubjectaccessreviews", "POST", body, false, impersonateUser);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/namespaces/" + namespace + "/localsubjectaccessreviews", "POST", body, false);
 
             JsonObject status = responseBody.getJsonObject("status");
             boolean allowed = false;
@@ -424,7 +385,7 @@ public class KubernetesHelper implements Kubernetes {
 
     }
 
-    private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList, String impersonateUser) {
+    private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList) {
 
         String apiVersion = client.isAdaptable(OpenShiftClient.class) ? "v1" : "rbac.authorization.k8s.io/v1beta1";
         String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
@@ -461,15 +422,14 @@ public class KubernetesHelper implements Kubernetes {
         body.put("subjects", subjects);
 
 
-        doRawHttpRequest(apiPath + "/namespaces/" + namespace + "/rolebindings", "POST", body, false, impersonateUser);
+        doRawHttpRequest(apiPath + "/namespaces/" + namespace + "/rolebindings", "POST", body, false);
     }
 
     @Override
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
         if (isRBACSupported()) {
             createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
-                    new Subject("ServiceAccount", addressControllerSa, namespace)),
-                    addressSpace.getCreatedBy());
+                    new Subject("ServiceAccount", addressControllerSa, namespace)));
         }
     }
 
@@ -482,10 +442,10 @@ public class KubernetesHelper implements Kubernetes {
     public void createServiceAccount(String namespace, String saName) {
         if (client.serviceAccounts().inNamespace(namespace).withName(saName).get() == null) {
             client.serviceAccounts().inNamespace(namespace).createNew()
-                    .editOrNewMetadata()
-                    .withName(saName)
-                    .endMetadata()
-                    .done();
+                .editOrNewMetadata()
+                .withName(saName)
+                .endMetadata()
+                .done();
         }
     }
 
@@ -495,25 +455,12 @@ public class KubernetesHelper implements Kubernetes {
 
         if (isRBACSupported()) {
             createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
-                    new Subject("ServiceAccount", "default", namespace)), addressSpace.getCreatedBy());;
-            createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
-                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
-            if (hasClusterRole("event-reporter")) {
-                try {
-                    createRoleBinding("event-reporters", namespace, "ClusterRole", "event-reporter", Arrays.asList(
-                            new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
-                } catch (Exception e) {
-                    log.warn("Unable to grant event create privileges");
-                }
-            }
+                    new Subject("ServiceAccount", "default", namespace)));
+            createRoleBinding("address-admins", namespace, "ClusterRole", "admin", Arrays.asList(
+                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)));
         } else {
             log.info("No support for RBAC, won't add to address-admin role");
         }
-    }
-
-    private boolean hasClusterRole(String roleName) {
-        String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
-        return doRawHttpRequest(apiPath + "/clusterroles/" + roleName, "GET", null, true, null) != null;
     }
 
     private static boolean isReady(Deployment deployment) {

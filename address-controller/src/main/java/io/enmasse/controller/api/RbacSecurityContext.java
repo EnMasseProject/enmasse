@@ -35,16 +35,14 @@ public class RbacSecurityContext implements SecurityContext {
 
         String namespace = data.getString("namespace");
         String verb = data.getString("verb");
-        String impersonateUser = data.getString("impersonateUser");
-        SubjectAccessReview accessReview = kubernetes.performSubjectAccessReview(tokenReview.getUserName(), namespace, verb, impersonateUser);
+        SubjectAccessReview accessReview = kubernetes.performSubjectAccessReview(tokenReview.getUserName(), namespace, verb);
         return accessReview.isAllowed();
     }
 
-    public static String rbacToRole(String namespace, ResourceVerb verb, String impersonateUser) {
+    public static String rbacToRole(String namespace, ResourceVerb verb) {
         JsonObject object = new JsonObject();
         object.put("namespace", namespace);
         object.put("verb", verb);
-        object.put("impersonateUser", impersonateUser);
         return object.toString();
     }
 

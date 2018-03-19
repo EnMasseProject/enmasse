@@ -14,8 +14,7 @@ local roles = import "roles.jsonnet";
     "kind": "List",
     "items": [
       roles.address_admin_role,
-      roles.namespace_admin_role,
-      roles.event_reporter_role,
+      roles.enmasse_admin_role
     ]
   },
 
@@ -79,7 +78,7 @@ local roles = import "roles.jsonnet";
         "name": "CONTROLLER_CHECK_INTERVAL",
         "description": "Interval (in seconds) to use between status checks",
         "value": "30"
-      }
+      },
     ]
   }
 }

@@ -117,6 +117,7 @@ public final class ControllerOptions {
         return recheckInterval;
     }
 
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
