@@ -115,10 +115,10 @@ describe('configmap backed address source', function() {
                 setTimeout(function () {
                     assert.equal(addresses.length, 2);
                     //relies on sorted order (TODO: avoid relying on any order)
-                    assert.equal(addresses[0].address, 'bar');
-                    assert.equal(addresses[0].type, 'topic');
-                    assert.equal(addresses[1].address, 'foo');
-                    assert.equal(addresses[1].type, 'queue');
+                    assert.equal(addresses[1].address, 'bar');
+                    assert.equal(addresses[1].type, 'topic');
+                    assert.equal(addresses[0].address, 'foo');
+                    assert.equal(addresses[0].type, 'queue');
                     source.watcher.close().then(function () {
                         done();
                     });
