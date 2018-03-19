@@ -7,6 +7,7 @@
         "name": "MY_QUEUE"
       },
       "spec": {
+        "address": "MY_QUEUE",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -16,6 +17,7 @@
         "name": "MY_QUEUE2"
       },
       "spec": {
+        "address": "MY_QUEUE2",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -25,6 +27,7 @@
         "name": "testQ0"
       },
       "spec": {
+        "address": "testQ0",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -34,6 +37,7 @@
         "name": "testQ1"
       },
       "spec": {
+        "address": "testQ1",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -43,6 +47,7 @@
         "name": "testQ2"
       },
       "spec": {
+        "address": "testQ2",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -52,6 +57,7 @@
         "name": "testQueue2"
       },
       "spec": {
+        "address": "testQueue2",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -61,6 +67,7 @@
         "name": "Q2"
       },
       "spec": {
+        "address": "Q2",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -70,6 +77,7 @@
         "name": "myQueue"
       },
       "spec": {
+        "address": "myQueue",
         "type": "queue",
         "plan": "brokered-queue"
       }
@@ -79,6 +87,7 @@
         "name": "MY_TOPIC"
       },
       "spec": {
+        "address": "MY_TOPIC",
         "type": "topic",
         "plan": "brokered-topic"
       }
@@ -88,6 +97,7 @@
         "name": "MY_TOPIC2"
       },
       "spec": {
+        "address": "MY_TOPIC2",
         "type": "topic",
         "plan": "brokered-topic"
       }
@@ -97,6 +107,7 @@
         "name": "testT0"
       },
       "spec": {
+        "address": "testT0",
         "type": "topic",
         "plan": "brokered-topic"
       }
@@ -106,6 +117,7 @@
         "name": "testT1"
       },
       "spec": {
+        "address": "testT1",
         "type": "topic",
         "plan": "brokered-topic"
       }
@@ -115,7 +127,9 @@
         "name": "testT2"
       },
       "spec": {
-        "type": "topic"
+        "address": "testT2",
+        "type": "topic",
+        "plan": "brokered-topic"
       }
     },
     {
@@ -123,7 +137,9 @@
         "name": "myTopic"
       },
       "spec": {
-        "type": "topic"
+        "address": "myTopic",
+        "type": "topic",
+        "plan": "brokered-topic"
       }
     }
   ]
