@@ -79,7 +79,7 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan, AuthService authService) {
-        this(name, name, type, plan);
+        this(name, name, type, plan, authService);
     }
 
 
