@@ -165,7 +165,7 @@ function is_topic(address) {
 }
 
 function to_link_route(direction, address) {
-    return {name:address.name + '_' + direction, prefix:address.address, dir:direction, containerId:address.allocated_to};
+    return {name:address.name + '_' + direction, prefix:address.address, dir:direction, containerId: address.allocated_to ? address.address : undefined};
 }
 
 function to_in_link_route(address) {
@@ -302,8 +302,7 @@ ConnectedRouter.prototype.delete_address = function (address) {
 ConnectedRouter.prototype.define_autolink = function (address, direction) {
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
     log.info('[%s] defining %s autolink for %s', this.container_id, direction, address.name);
-    var brokerId = address.allocated_to || address.address;
-    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.address, containerId:brokerId});
+    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.address, containerId:address.address});
 }
 
 ConnectedRouter.prototype.delete_autolink = function (address, direction) {

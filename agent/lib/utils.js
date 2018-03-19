@@ -173,7 +173,7 @@ module.exports.changes = function (last, current, compare, unchanged, stringify)
             added: current,
             removed: [],
             modified: [],
-            decription: util.format('initial %s', description(current))
+            description: util.format('initial %s', description(current))
         };
     } else {
         let d = {

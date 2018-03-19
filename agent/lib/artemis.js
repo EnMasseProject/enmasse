@@ -340,6 +340,47 @@ Artemis.prototype.deleteAddress = function (name) {
     return this._request('broker', 'deleteAddress', [name]);
 };
 
+var address_settings_fields = {
+    'DLA':'',
+    'expiryAddress':'',
+    'expiryDelay':-1,
+    'lastValueQueue':false,
+    'deliveryAttempts':-1,
+    'maxSizeBytes':-1,
+    'pageSizeBytes':-1,
+    'pageMaxCacheSize':-1,
+    'redeliveryDelay':-1,
+    'redeliveryMultiplier':-1,
+    'maxRedeliveryDelay':-1,
+    'redistributionDelay':-1,
+    'sendToDLAOnNoRoute':false,
+    'addressFullMessagePolicy': 'FAIL',
+    'slowConsumerThreshold':-1,
+    'slowConsumerCheckPeriod':-1,
+    'slowConsumerPolicy':'DROP',
+    'autoCreateJmsQueues':false,
+    'autoDeleteJmsQueues':false,
+    'autoCreateJmsTopics':false,
+    'autoDeleteJmsTopics':false,
+    'autoCreateQueues':false,
+    'autoDeleteQueues':false,
+    'autoCreateAddresses':false,
+    'autoDeleteAddresses':false
+};
+
+Artemis.prototype.addAddressSettings = function (match, settings) {
+    var args = [match];
+    for (var name in address_settings_fields) {
+        var v = settings[name] || address_settings_fields[name];
+        args.push(v);
+    }
+    return this._request('broker', 'addAddressSettings', args);
+};
+
+Artemis.prototype.removeAddressSettings = function (match) {
+    return this._request('broker', 'removeAddressSettings', [match]);
+};
+
 Artemis.prototype.deleteAddressAndBindings = function (address) {
     var self = this;
     return this.deleteBindingsFor(address).then(function () {
@@ -468,6 +509,11 @@ Artemis.prototype.listProducers = function () {
     return this._request('broker', 'listProducersInfoAsJSON', []).then(function (result) {
         return JSON.parse(result);
     });
+}
+
+Artemis.prototype.getGlobalMaxSize = function ()
+{
+    return this._request('broker', 'getGlobalMaxSize', []);
 }
 
 /**

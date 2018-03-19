@@ -134,7 +134,7 @@ class RouterStatus {
                 String dir = linkRoute.get(2);
                 String operStatus = linkRoute.get(3);
 
-                if (addr.equals(address.getAddress()) && brokerId != null && brokerId.equals(containerId) && operStatus.equals("active")) {
+                if (addr.equals(address.getAddress()) && operStatus.equals("active")) {
                     active.add(dir);
                 }
             }

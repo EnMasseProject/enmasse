@@ -16,10 +16,12 @@
 'use strict';
 
 var AddressSource = require('../lib/internal_address_source.js');
+var BrokerAddressSettings = require('../lib/broker_address_settings.js');
 var ConsoleServer = require('../lib/console_server.js');
 var kubernetes = require('../lib/kubernetes.js');
 var Ragent = require('../lib/ragent.js');
 var tls_options = require('../lib/tls_options.js');
+var myutils = require('../lib/utils.js');
 
 function bind_event(source, event, target, method) {
     source.on(event, target[method || event].bind(target));
@@ -50,6 +52,8 @@ function start(env) {
             stats.init(console_server);
 
             var ragent = new Ragent();
+            var address_settings = new BrokerAddressSettings(env);
+            ragent.broker_address_settings = address_settings.get_address_settings_async.bind(address_settings);
             bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses')
             ragent.start_listening(env);
             ragent.listen_probe({PROBE_PORT:8888});
