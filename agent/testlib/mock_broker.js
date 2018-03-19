@@ -47,6 +47,42 @@ function match_source_address(link, address) {
         && link.local.attach.source.value[0].toString() === address;
 }
 
+var address_setting_names = [
+    "DLA",
+    "expiryAddress",
+    "expiryDelay",
+    "lastValueQueue",
+    "deliveryAttempts",
+    "maxSizeBytes",
+    "pageSizeBytes",
+    "pageMaxCacheSize",
+    "redeliveryDelay",
+    "redeliveryMultiplier",
+    "maxRedeliveryDelay",
+    "redistributionDelay",
+    "sendToDLAOnNoRoute",
+    "addressFullMessagePolicy",
+    "slowConsumerThreshold",
+    "slowConsumerCheckPeriod",
+    "slowConsumerPolicy",
+    "autoCreateJmsQueues",
+    "autoDeleteJmsQueues",
+    "autoCreateJmsTopics",
+    "autoDeleteJmsTopics",
+    "autoCreateQueues",
+    "autoDeleteQueues",
+    "autoCreateAddresses",
+    "autoDeleteAddresses"
+];
+
+function get_address_settings (args) {
+    var settings = {};
+    for (var i = 0; i < args.length; i++) {
+        settings[address_setting_names[i]] = args[i];
+    }
+    return settings;
+}
+
 function MockBroker (name) {
     this.name = name;
     this.objects = [];
@@ -63,12 +99,17 @@ function MockBroker (name) {
         if (context.sender.source.dynamic) {
             var id = self.container.generate_uuid();
             context.sender.set_source({address:id});
+        } else {
+            context.sender.set_source({address:context.sender.remote.attach.source.address});
         }
     });
 
     var self = this;
     this.objects.push({
         resource_id: 'broker',
+        getGlobalMaxSize : function () {
+            return self.global_max_size;
+        },
         getAddressNames : function () {
             return self.list_addresses().map(function (a) { return a.name; });
         },
@@ -115,6 +156,18 @@ function MockBroker (name) {
                 throw new Error('error deleting address ' + name);
             }
         },
+        addAddressSettings : function () {
+            if (self.objects.some(function (o) { return o.type === 'address_settings' && o.match === arguments[0]; })) {
+                throw new Error('address settings for ' + o.match + ' already exists!');
+            } else {
+                self.add_address_settings(arguments[0], get_address_settings(Array.prototype.slice.call(arguments, 1)));
+            }
+        },
+        removeAddressSettings : function (match) {
+            if (myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.match === match; }) !== 1) {
+                throw new Error('error deleting address settings ' + match);
+            }
+        },
         listConnectionsAsJSON : function () {
             return JSON.stringify(self.get('connection'));
         },
@@ -126,8 +179,22 @@ function MockBroker (name) {
         },
         listAllConsumersAsJSON : function () {
             return JSON.stringify(self.get('consumer'));
+        },
+        createConnectorService : function (name, ignore, params) {
+            if (self.objects.some(function (o) { return o.type === 'connector' && o.name === name; })) {
+                throw new Error('connector for ' + name + ' already exists!');
+            } else {
+                self.add_connector(name, {name: name, source: params.sourceAddress, target: params.clientAddress});
+            }
+        },
+        destroyConnectorService : function (name) {
+            if (myutils.remove(self.objects, function (o) { return o.type === 'connector' && o.name === name; }) !== 1) {
+                throw new Error('error deleting connector ' + name);
+            }
+        },
+        getConnectorServices : function () {
+            return JSON.stringify(self.get('connector'));
         }
-
     });
 }
 
@@ -260,6 +327,12 @@ MockBroker.prototype.add_address = function (name, is_multicast, messages, queue
     return address;
 };
 
+MockBroker.prototype.add_address_settings = function (name, settings) {
+    var o = new Resource(name, 'address_settings', undefined, settings);
+    this.objects.push(o);
+    return o;
+};
+
 MockBroker.prototype.add_queue_address = function (name, properties) {
     this.add_queue(name, properties);
     var addr = this.add_address(name, false, 0, [name]);
@@ -273,6 +346,12 @@ MockBroker.prototype.add_topic_address = function (name, subscribers, messages) 
     return this.add_address(name, true, messages, Object.keys(subscribers));
 };
 
+MockBroker.prototype.add_connector = function (name, connector) {
+    var o = new Resource(name, 'connector', undefined, connector);
+    this.objects.push(o);
+    return o;
+};
+
 MockBroker.prototype.get = function (type) {
     return this.objects.filter(function (o) { return o.type === type; });
 };
@@ -283,6 +362,10 @@ MockBroker.prototype.list_queues = function () {
 
 MockBroker.prototype.list_addresses = function () {
     return this.get('address');
+};
+
+MockBroker.prototype.list_address_settings = function () {
+    return this.get('address_settings');
 };
 
 
@@ -377,6 +460,46 @@ MockBroker.prototype.verify_addresses = function (expected) {
     }
     assert.equal(addresses.length, 0);
     assert.equal(queues.length, 0);
-}
+};
+
+MockBroker.prototype.verify_addresses = function (expected) {
+    var addresses = this.list_addresses();
+    var queues = this.list_queues();
+    for (var i = 0; i < expected.length; i++) {
+        if (expected[i].type === 'queue') {
+            this.verify_queue(addresses, queues, expected[i].address);
+        } else if (expected[i].type === 'topic') {
+            this.verify_topic(addresses, expected[i].address);
+        }
+    }
+    assert.equal(addresses.length, 0);
+    assert.equal(queues.length, 0);
+};
+
+MockBroker.prototype.verify_address_settings = function (expected) {
+    var settings = this.list_address_settings();
+    for (var i = 0; i < expected.length; i++) {
+        var s = remove(settings, function (o) { return o.name === expected[i].match; })[0];
+        assert(s, util.format('no settings object found for %s', expected[i].match));
+        for (var f in expected[i]) {
+            if (f !== 'match') {
+                assert.equal(s[f], expected[i][f], util.format('address setting %s does not match got %s expected %s', f, s[f], expected[i][f]));
+            }
+        }
+    }
+    assert.equal(settings.length, 0, util.format('extra settings found: %j', settings));
+};
+
+MockBroker.prototype.verify_connectors = function (expected) {
+    var connectors = this.get('connector');
+    for (var i = 0; i < expected.length; i++) {
+        var s = remove(connectors, function (o) { return o.name === expected[i].name; })[0];
+        assert(s, util.format('no connector object found for %s', expected[i].name));
+        for (var f in expected[i]) {
+            assert.equal(s[f], expected[i][f], util.format('connector %s does not match got %s expected %s', f, s[f], expected[i][f]));
+        }
+    }
+    assert.equal(connectors.length, 0, util.format('extra connectors found: %j', connectors));
+};
 
 module.exports = MockBroker;

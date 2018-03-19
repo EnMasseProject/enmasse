@@ -370,8 +370,11 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
         shortDescription: params.shortDescription,
         longDescription: params.longDescription,
         displayOrder: params.displayOrder,
-        addressType: params.address_type
+        addressType: params.address_type,
     };
+    if (params.required_resources) {
+        plan.requiredResources = params.required_resources;
+    }
     this.add_resource(get_config_map(plan.name, 'address-plan', 'definition', plan));
 };
 
