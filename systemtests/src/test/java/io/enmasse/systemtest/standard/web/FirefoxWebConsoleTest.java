@@ -12,22 +12,22 @@ import org.openqa.selenium.WebDriver;
 public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
 
 
-    @Test
+    //@Test related issue: #1074
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
-    @Test
+    //@Test related issue: #1074
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
-    @Test
+    //@Test related issue: #1074
     public void testCreateDeleteAnycast() throws Exception {
         doTestCreateDeleteAddress(Destination.anycast("test-anycast-firefox"));
     }
 
-    @Test
+    //@Test related issue: #1074
     public void testCreateDeleteMulticast() throws Exception {
         doTestCreateDeleteAddress(Destination.multicast("test-multicast-firefox"));
     }
