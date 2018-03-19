@@ -9,5 +9,5 @@ import io.enmasse.address.model.Schema;
 
 public interface SchemaProvider {
     Schema getSchema();
-    void copyIntoNamespace(AddressSpacePlan plan, String namespace);
+    void copyIntoNamespace(AddressSpacePlan plan, String namespace, String createdBy);
 }

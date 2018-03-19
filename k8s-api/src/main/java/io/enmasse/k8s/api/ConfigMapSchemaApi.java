@@ -81,7 +81,7 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
     }
 
     @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace) {
+    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace, String createdBy) {
         KubernetesListBuilder listBuilder = new KubernetesListBuilder();
         listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("resource-definition").getItems(), m -> true, otherNamespace));
         listBuilder.addAllToConfigMapItems(copyMaps(
@@ -92,7 +92,9 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                 listConfigMaps("address-plan").getItems(),
                 m -> plan.getAddressPlans().contains(getResourceFromConfig(AddressPlan.class, m).getName()),
                 otherNamespace));
-        client.lists().inNamespace(otherNamespace).create(listBuilder.build());
+        client.withRequestConfig(new RequestConfigBuilder()
+                .withImpersonateUsername(createdBy)
+                .build()).call(c ->c.lists().inNamespace(otherNamespace).create(listBuilder.build()));
     }
 
     private Collection<ConfigMap> copyMaps(List<ConfigMap> items, Predicate<ConfigMap> filter, String otherNamespace) {

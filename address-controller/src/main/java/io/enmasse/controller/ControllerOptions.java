@@ -37,9 +37,11 @@ public final class ControllerOptions {
     private final Duration resyncInterval;
     private final Duration recheckInterval;
 
+    private final String impersonateUser;
+
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File templateDir, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -55,6 +57,7 @@ public final class ControllerOptions {
         this.wildcardCertSecret = wildcardCertSecret;
         this.resyncInterval = resyncInterval;
         this.recheckInterval = recheckInterval;
+        this.impersonateUser = impersonateUser;
     }
 
     public String getMasterUrl() {
@@ -117,6 +120,11 @@ public final class ControllerOptions {
         return recheckInterval;
     }
 
+    public String getImpersonateUser() {
+        return impersonateUser;
+    }
+
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
@@ -161,6 +169,8 @@ public final class ControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30));
 
+        String impersonateUser = getEnv(env, "IMPERSONATE_USER").orElse(null);
+
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
@@ -174,7 +184,8 @@ public final class ControllerOptions {
                 addressSpaceAdminSa,
                 wildcardCertSecret,
                 resyncInterval,
-                recheckInterval);
+                recheckInterval,
+                impersonateUser);
     }
 
 

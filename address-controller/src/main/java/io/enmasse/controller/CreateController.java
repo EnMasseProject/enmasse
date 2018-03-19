@@ -50,15 +50,15 @@ public class CreateController implements Controller {
                 return addressSpace;
             }
         } else {
-            if (kubernetes.existsNamespace(addressSpace.getNamespace())) {
+            if (kubernetes.existsNamespace(addressSpace.getNamespace(), addressSpace.getCreatedBy())) {
                 return addressSpace;
             }
             kubernetes.createNamespace(addressSpace);
             kubernetes.addAddressSpaceAdminRoleBinding(addressSpace);
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
-            kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
-            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
+            kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa(), addressSpace.getCreatedBy());
+            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace(), addressSpace.getCreatedBy());
         }
         log.info("Creating address space {}", addressSpace);
 
@@ -72,7 +72,7 @@ public class CreateController implements Controller {
             }
         }
 
-        kubernetes.create(resourceList, addressSpace.getNamespace());
+        kubernetes.create(resourceList, addressSpace.getNamespace(), addressSpace.getCreatedBy());
         eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
         return addressSpace;
     }

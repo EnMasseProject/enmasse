@@ -22,18 +22,15 @@ public interface Kubernetes {
     String getNamespace();
     Kubernetes withNamespace(String namespace);
 
-    void create(HasMetadata ... resources);
-    void create(KubernetesList resources);
-    void create(KubernetesList resources, String namespace);
-    void delete(KubernetesList resources);
-    void delete(HasMetadata ... resources);
+    void create(KubernetesList resources, String namespace, String impersonateUser);
+    void delete(KubernetesList resources, String impersonateUser);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Set<NamespaceInfo> listAddressSpaces();
     void deleteNamespace(NamespaceInfo namespaceInfo);
     void createNamespace(AddressSpace addressSpace);
 
-    boolean existsNamespace(String namespace);
+    boolean existsNamespace(String namespace, String impersonateUser);
 
     boolean hasService(String service);
 
@@ -55,5 +52,5 @@ public interface Kubernetes {
 
     String getAddressSpaceAdminSa();
 
-    void createServiceAccount(String namespace, String addressSpaceAdminSa);
+    void createServiceAccount(String namespace, String addressSpaceAdminSa, String impersonateUser);
 }
