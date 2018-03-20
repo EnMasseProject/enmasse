@@ -70,8 +70,8 @@ public class AnycastTest extends StandardTestBase {
         }
 
         //remove part of destinations
-        int removeCount = 111;
-        deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.11 => 0.99 pods
+        int removeCount = 120;
+        deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.2 => 0.90 pods + dummy-address in special case
         waitForRouterReplicas(sharedAddressSpace, 1);
 
         //simple send/receive
@@ -79,8 +79,8 @@ public class AnycastTest extends StandardTestBase {
             runAnycastTest(dest.get(i), client1, client2);
         }
 
-        //append due to scale to 2 replicas
-        appendAddresses(Destination.anycast("small-anycast-0"), Destination.anycast("small-anycast-1"));
+        //append 15 addresses due to scale to 2 replicas
+        appendAddresses(dest.subList(0, 15).toArray(new Destination[0])); //router credit => 0.9 + 0.15 => 1.05 pods ~2pods
         waitForRouterReplicas(sharedAddressSpace, 2);
 
         //remove all destinations
