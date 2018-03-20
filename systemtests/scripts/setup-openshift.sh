@@ -13,6 +13,13 @@ sudo rm -rf /var/lib/origin/openshift.local.pv
 sudo rm -rf /var/log/containers/*
 sudo rm -rf /var/log/pods/*
 
+DOCKER_STATUS=$(sudo systemctl show --property ActiveState ${DOCKER} | sed -n -e 's/^ActiveState=//p')
+if [ $DOCKER_STATUS != "active" ]; then
+    echo "Docker service is not running"
+    echo "Starting docker service"
+    sudo systemctl restart ${DOCKER}
+fi
+
 oc cluster up $OC_CLUSTER_ARGS
 if [ ! $? -ne 0 ]; then
     echo "WARN: openshift cluster didn't start properly, wait for 30s and try to restart..."
