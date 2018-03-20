@@ -70,6 +70,7 @@ pipeline {
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
                 DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
                 COMMIT = "${params.BUILD_TAG}"
+                USE_DUMMY_ADDRESS = true
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {

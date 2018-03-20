@@ -224,7 +224,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName);
+        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     /**
@@ -235,7 +235,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName);
+        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     /**
@@ -246,6 +246,17 @@ public abstract class TestBase extends SystemTestRunListener {
      */
     protected Future<SchemaData> getSchema() throws Exception {
         return TestUtils.getSchema(addressApiClient);
+    }
+
+    /**
+     * give you a list of objects of all deployed addresses (or single deployed address)
+     *
+     * @param addressName name of single address
+     * @return list of Destinations
+     * @throws Exception
+     */
+    protected Future<List<Destination>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     /**

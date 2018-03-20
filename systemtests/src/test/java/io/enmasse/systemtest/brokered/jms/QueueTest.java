@@ -35,7 +35,7 @@ public class QueueTest extends JMSTestBase {
     @Before
     public void setUp() throws Exception {
         addressQueue = Destination.queue(queue, getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, addressQueue);
+        setAddresses(addressQueue);
 
         env = setUpEnv("amqps://" + getRouteEndpoint(sharedAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{

@@ -24,6 +24,11 @@ import static org.junit.Assert.assertThat;
  */
 public class PublishTest extends StandardTestBase {
 
+    @Override
+    protected boolean skipDummyAddress() {
+        return true;
+    }
+
     @Test
     public void testPublishQoS0() throws Exception {
 
@@ -52,7 +57,7 @@ public class PublishTest extends StandardTestBase {
 
     private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic("mytopic", getDefaultPlan(AddressType.TOPIC));
+        Destination dest = Destination.topic("mytopic", "sharded-topic");
         setAddresses(dest);
         Thread.sleep(60_000);
 

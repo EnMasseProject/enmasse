@@ -74,6 +74,7 @@ pipeline {
                 ARTIFACTS_DIR = 'artifacts'
                 JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
                 OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+                USE_DUMMY_ADDRESS = true
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {

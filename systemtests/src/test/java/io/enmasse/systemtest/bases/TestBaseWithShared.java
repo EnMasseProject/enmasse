@@ -29,6 +29,8 @@ public abstract class TestBaseWithShared extends TestBase {
     protected static AddressSpace sharedAddressSpace;
     protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
+    private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
+
     @Rule
     public TestWatcher watcher = new TestWatcher() {
         @Override
@@ -47,7 +49,7 @@ public abstract class TestBaseWithShared extends TestBase {
         @Override
         protected void succeeded(Description description) {
             try {
-                setAddresses(sharedAddressSpace);
+                setAddresses();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -60,6 +62,8 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     protected abstract AddressSpaceType getAddressSpaceType();
+
+    protected abstract boolean skipDummyAddress();
 
     public AddressSpace getSharedAddressSpace() {
         return sharedAddressSpace;
@@ -74,6 +78,12 @@ public abstract class TestBaseWithShared extends TestBase {
                 AuthService.STANDARD);
         log.info("Test is running in multitenant mode");
         createSharedAddressSpace(sharedAddressSpace);
+        if (environment.useDummyAddress() && !skipDummyAddress()) {
+            if (!addressExists(dummyAddress)) {
+                log.info("'{}' address doesn't exist and will be created", dummyAddress);
+                super.setAddresses(sharedAddressSpace, dummyAddress);
+            }
+        }
 
         this.username = "test";
         this.password = "test";
@@ -102,27 +112,57 @@ public abstract class TestBaseWithShared extends TestBase {
         scale(sharedAddressSpace, destination, numReplicas);
     }
 
+    /**
+     * get all addresses except 'dummy-address'
+     */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return getAddresses(sharedAddressSpace, addressName);
+        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+    }
+
+    /**
+     * check if address exists
+     */
+    protected boolean addressExists(Destination destination) throws Exception {
+        Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
+                new ArrayList<>());
+        List<String> address = addresses.get(20, TimeUnit.SECONDS);
+        log.info("found addresses");
+        address.stream().forEach(addr -> log.info("- address '{}'", addr));
+        log.info("looking for '{}' address", destination.getAddress());
+        return address.contains(destination.getAddress());
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return getAddressesObjects(sharedAddressSpace, addressName);
+        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
     }
 
+    protected Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
+        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+    }
 
     /**
-     * use PUT html method to replace all addresses
+     * delete all addresses except 'dummy-address' and append new addresses
      *
      * @param destinations
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        setAddresses(sharedAddressSpace, destinations);
+        if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
+            setAddresses(sharedAddressSpace, destinations);
+        } else {
+            List<Destination> inShared = getDestinationsObjects(Optional.empty())
+                    .get(10, TimeUnit.SECONDS);
+            if (inShared.size() > 0) {
+                deleteAddresses(inShared.toArray(new Destination[0]));
+            }
+            if (destinations.length > 0) {
+                appendAddresses(destinations);
+            }
+        }
     }
 
     /**
-     * use POST html method to append addresses to already existing addresses
+     * append new addresses into address-space and sharedAddresses list
      *
      * @param destinations
      * @throws Exception
@@ -151,7 +191,8 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String
+            username, String password) throws Exception {
         return attachReceivers(sharedAddressSpace, destination, receiverCount, username, password);
     }
 

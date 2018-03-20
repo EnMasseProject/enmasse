@@ -33,7 +33,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         Destination dest = Destination.queue("message-basic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, dest);
+        setAddresses(dest);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
@@ -60,7 +60,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         Destination dest = Destination.queue("receiver-round-robin" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, dest);
+        setAddresses(dest);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
@@ -98,7 +98,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         Destination dest = Destination.topic("topic-subscribe" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
-        setAddresses(sharedAddressSpace, dest);
+        setAddresses(dest);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
@@ -139,7 +139,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         Destination dest = Destination.queue("message-browse" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, dest);
+        setAddresses(dest);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
@@ -170,7 +170,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Destination dest = Destination.queue("drain-queue" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, dest);
+        setAddresses(dest);
 
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
@@ -201,7 +201,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, receiver));
         Destination queue = Destination.queue("selector-queue" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
-        setAddresses(sharedAddressSpace, queue);
+        setAddresses(queue);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
@@ -261,7 +261,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
 
         Destination topic = Destination.topic("selector-topic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
-        setAddresses(sharedAddressSpace, topic);
+        setAddresses(topic);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));

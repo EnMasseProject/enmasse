@@ -25,4 +25,9 @@ public abstract class BrokeredTestBase extends TestBaseWithShared {
         }
         return null;
     }
+
+    @Override
+    protected boolean skipDummyAddress() {
+        return true;
+    }
 }

@@ -52,6 +52,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             selenium.setupDriver(environment, kubernetes, buildDriver());
         else
             selenium.clearScreenShots();
+        super.setAddresses(sharedAddressSpace);
     }
 
     @After
@@ -65,6 +66,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     @AfterClass
     public static void TearDownDrivers() {
         selenium.tearDownDrivers();
+    }
+
+    @Override
+    protected boolean skipDummyAddress() {
+        return true;
     }
 
     //============================================================================================
