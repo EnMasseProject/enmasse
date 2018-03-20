@@ -6,10 +6,7 @@
 package io.enmasse.systemtest;
 
 import com.sun.jndi.toolkit.url.Uri;
-import io.enmasse.systemtest.resources.AddressPlan;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.AddressSpaceTypeData;
-import io.enmasse.systemtest.resources.SchemaData;
+import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -707,6 +704,38 @@ public class TestUtils {
      */
     public static boolean removeAddressSpacePlanConfig(Kubernetes kubernetes, AddressSpacePlan addressSpacePlan) {
         return kubernetes.removeAddressSpacePlanConfig(addressSpacePlan);
+    }
+
+    /**
+     * create new ResourceDefinition
+     *
+     * @param kubernetes         client for manipulation with kubernetes cluster
+     * @param resourceDefinition ResourceDefinition
+     */
+    public static void createResourceDefinitionConfig(Kubernetes kubernetes, ResourceDefinition resourceDefinition, boolean replaceExisting) {
+        kubernetes.createResourceDefinitionConfig(resourceDefinition, replaceExisting);
+    }
+
+    /**
+     * Get ResourceDefinition by name of the config file
+     *
+     * @param config     name attribute within ConfigMap object
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return ResourceDefinition
+     */
+    public static ResourceDefinition getResourceDefinitionConfig(Kubernetes kubernetes, String config) {
+        return kubernetes.getResourceDefinitionConfig(config);
+    }
+
+    /**
+     * Remove ResourceDefinition by name of the config file
+     *
+     * @param kubernetes         client for manipulation with kubernetes cluster
+     * @param resourceDefinition ResourceDefinition object
+     * @return true if AddressSpacePlan was removed successfully
+     */
+    public static boolean removeResourceDefinitionConfig(Kubernetes kubernetes, ResourceDefinition resourceDefinition) {
+        return kubernetes.removeResourceDefinitionConfig(resourceDefinition);
     }
 
     public static String sanitizeAddress(String address) {
