@@ -11,6 +11,7 @@ import org.keycloak.representations.idm.UserRepresentation;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Keycloak implements KeycloakApi {
@@ -69,6 +70,7 @@ public class Keycloak implements KeycloakApi {
                 .password(params.getAdminPassword())
                 .clientId("admin-cli")
                 .resteasyClient(new ResteasyClientBuilder()
+                        .establishConnectionTimeout(30, TimeUnit.SECONDS)
                         .trustStore(params.getKeyStore())
                         .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
                         .build())
