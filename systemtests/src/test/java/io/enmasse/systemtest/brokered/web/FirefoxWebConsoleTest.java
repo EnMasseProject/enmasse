@@ -12,12 +12,12 @@ import org.openqa.selenium.WebDriver;
 public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
 
-    @Test
+    //@Test related issue: #1074
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
-    @Test
+    //@Test related issue: #1074
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
