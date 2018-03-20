@@ -249,9 +249,9 @@ public abstract class TestBaseWithShared extends TestBase {
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
         log.info("addresses {} successfully deleted", d2.getAddress());
 
-        //check if delete all works
         setAddresses(d1, d2);
-        deleteAddresses();
+        deleteAddresses(d1, d2);
+
         response = getAddresses(Optional.empty());
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
         log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));

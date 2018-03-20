@@ -114,11 +114,13 @@ public class AddressControllerApiTest extends TestBase {
         setAddresses(addressSpace, dest1);
         Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getAddress())).get(20, TimeUnit.SECONDS).get(0);
         assertEquals("Address uuid is not equal", uuid, dest1AddressObj.getUuid());
+        deleteAddresses(addressSpace);
 
         logWithSeparator(log, "Check if name is optional");
         Destination dest2 = new Destination(null, null, addressSpace.getName(),
                 "test-rest-api-queue2", AddressType.QUEUE.toString(), "brokered-queue");
         setAddresses(addressSpace, dest2);
+        deleteAddresses(addressSpace);
 
         Address dest2AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
         assertEquals("Address name is empty",
@@ -128,6 +130,7 @@ public class AddressControllerApiTest extends TestBase {
         Destination dest3 = new Destination(null, null, null,
                 "test-rest-api-queue3", AddressType.QUEUE.toString(), "brokered-queue");
         setAddresses(addressSpace, dest3);
+        deleteAddresses(addressSpace);
 
         Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
         assertEquals("Addressspace name is empty",
