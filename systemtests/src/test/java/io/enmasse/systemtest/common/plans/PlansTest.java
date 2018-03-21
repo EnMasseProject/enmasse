@@ -7,10 +7,11 @@ package io.enmasse.systemtest.common.plans;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.resources.AddressPlan;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
+import io.enmasse.systemtest.clients.AbstractClient;
+import io.enmasse.systemtest.clients.Argument;
+import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.rhea.RheaClientSender;
+import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.After;
@@ -23,8 +24,7 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Category(IsolatedAddressSpace.class)
 public class PlansTest extends TestBase {
@@ -251,6 +251,45 @@ public class PlansTest extends TestBase {
                         Destination.topic("t3", topicPlan.getName())
                 ), username, password);
     }
+
+    @Test
+    public void testGlobalSizeLimitations() throws Exception {
+        String username = "test";
+        String password = "test";
+        ResourceDefinition limitedResource = new ResourceDefinition(
+                "broker",
+                "queue-persisted",
+                Arrays.asList(
+                        new ResourceParameter("GLOBAL_MAX_SIZE", "1Mb")
+                ));
+        plansProvider.replaceResourceDefinitionConfig(limitedResource);
+
+        //create address space with new plan
+        AddressSpace addressSpace = new AddressSpace("global-size-limited-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        createAddressSpace(addressSpace);
+        getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
+
+
+        Destination queue = Destination.queue("test-queue", "sharded-queue");
+        setAddresses(addressSpace, queue);
+
+        AbstractClient client = new RheaClientSender();
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.MSG_CONTENT, String.join("", Collections.nCopies(1024, "F")));
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.ADDRESS, queue.getAddress());
+        arguments.put(Argument.COUNT, "1000");
+        client.setArguments(arguments);
+
+        assertFalse("Client does not fail", client.run(false));
+    }
+
+    //------------------------------------------------------------------------------------------------
+    // Help methods
+    //------------------------------------------------------------------------------------------------
 
     private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, String username, String password)
             throws Exception {

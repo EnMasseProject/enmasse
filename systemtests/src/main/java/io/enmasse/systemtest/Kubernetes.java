@@ -209,23 +209,23 @@ public abstract class Kubernetes {
     private void createConfigMap(String type, String configName, Map<String, String> configMapData, boolean replaceExisting) {
         String fullName = String.format("%s-%s", type, configName);
         log.info("{}-{} ConfigMap will be created", type, configName);
-        ConfigMap addressSpacePlanDefinition = new ConfigMap();
+        ConfigMap configMap = new ConfigMap();
 
-        addressSpacePlanDefinition.setApiVersion("v1"); // <apiVersion>
-        addressSpacePlanDefinition.setKind("ConfigMap");         // <kind>
+        configMap.setApiVersion("v1"); // <apiVersion>
+        configMap.setKind("ConfigMap");         // <kind>
 
         ObjectMeta metadata = new ObjectMeta(); // <metadata>
         metadata.setName(fullName);
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("type", type);
         metadata.setLabels(labels);
-        addressSpacePlanDefinition.setMetadata(metadata); // </metadata>
-        addressSpacePlanDefinition.setData(configMapData); // <data></data>
+        configMap.setMetadata(metadata); // </metadata>
+        configMap.setData(configMapData); // <data></data>
 
         if (replaceExisting) {
-            client.configMaps().inNamespace(globalNamespace).createOrReplace(addressSpacePlanDefinition);
+            client.configMaps().inNamespace(globalNamespace).createOrReplace(configMap);
         } else if (client.configMaps().inNamespace(globalNamespace).withName(fullName).get() == null) {
-            client.configMaps().create(addressSpacePlanDefinition);
+            client.configMaps().create(configMap);
         } else {
             throw new IllegalStateException(String.format("%s '%s' already exists and replace is set to '%s'",
                     type, fullName, replaceExisting));
@@ -352,13 +352,14 @@ public abstract class Kubernetes {
 
                 JsonArray requiredResourcesDef = configDefinition.getJsonArray("parameters");
                 List<ResourceParameter> parameters = new ArrayList<>();
-
-                for (int i = 0; i < requiredResourcesDef.size(); i++) {
-                    JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);
-                    ResourceParameter requiredResource = new ResourceParameter(
-                            resourceDef.getString("name"),
-                            resourceDef.getString("value"));
-                    parameters.add(requiredResource);
+                if (requiredResourcesDef != null) {
+                    for (int i = 0; i < requiredResourcesDef.size(); i++) {
+                        JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);
+                        ResourceParameter requiredResource = new ResourceParameter(
+                                resourceDef.getString("name"),
+                                resourceDef.getString("value"));
+                        parameters.add(requiredResource);
+                    }
                 }
 
                 requestedPlan.set(new ResourceDefinition(metadataDef.getString("name"), template, parameters));

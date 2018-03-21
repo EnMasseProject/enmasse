@@ -76,6 +76,14 @@ public abstract class AbstractClient {
         return clientType;
     }
 
+    public String getStdOut() {
+        return executor.getStdOut();
+    }
+
+    public String getStdErr() {
+        return executor.getStdErr();
+    }
+
     /**
      * @param clientType
      */
@@ -143,18 +151,20 @@ public abstract class AbstractClient {
      * @param timeout kill timeout in ms
      * @return true if command end with exit code 0
      */
-    private boolean runClient(int timeout) {
+    private boolean runClient(int timeout, boolean logToOutput) {
         messages.clear();
         try {
             executor = new Executor(logPath);
             int ret = executor.execute(prepareCommand(), timeout);
             synchronized (lock) {
                 log.info("Return code - " + ret);
-                if (ret == 0) {
-                    log.info(executor.getStdOut());
-                    parseToJson(executor.getStdOut());
-                } else {
-                    log.error(executor.getStdErr());
+                if (logToOutput) {
+                    if (ret == 0) {
+                        log.info(executor.getStdOut());
+                        parseToJson(executor.getStdOut());
+                    } else {
+                        log.error(executor.getStdErr());
+                    }
                 }
             }
             return ret == 0;
@@ -183,7 +193,7 @@ public abstract class AbstractClient {
      * @return future of exit status of client
      */
     public Future<Boolean> runAsync() {
-        return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT));
+        return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT, true));
     }
 
     /**
@@ -192,7 +202,27 @@ public abstract class AbstractClient {
      * @return exit status of client
      */
     public boolean run() {
-        return runClient(DEFAULT_SYNC_TIMEOUT);
+        return runClient(DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    /**
+     * Run client async
+     *
+     * @param logToOutput enable logging of stdOut and stdErr on output
+     * @return future of exit status of client
+     */
+    public Future<Boolean> runAsync(boolean logToOutput) {
+        return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput));
+    }
+
+    /**
+     * Run client in sync mode
+     *
+     * @param logToOutput enable logging of stdOut and stdErr on output
+     * @return exit status of client
+     */
+    public boolean run(boolean logToOutput) {
+        return runClient(DEFAULT_SYNC_TIMEOUT, logToOutput);
     }
 
     /**
@@ -202,7 +232,7 @@ public abstract class AbstractClient {
      * @return exit status of client
      */
     public boolean run(int timeout) {
-        return runClient(timeout);
+        return runClient(timeout, true);
     }
 
     /**
