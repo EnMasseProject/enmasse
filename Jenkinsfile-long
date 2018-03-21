@@ -32,7 +32,7 @@ pipeline {
                 sh 'docker rmi $(docker images -q) -f || true'
             }
         }
-        stage ('checkout') {
+        stage('checkout') {
             steps {
                 checkout scm
                 sh 'git submodule update --init --recursive'
@@ -41,12 +41,14 @@ pipeline {
         }
         stage('start openshift') {
             steps {
-                sh './systemtests/scripts/setup-openshift.sh'
-                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+                timeout(time: 10, unit: 'MINUTES') {
+                    sh './systemtests/scripts/setup-openshift.sh'
+                    sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+                }
             }
         }
         stage('deploy enmasse') {
-            steps{
+            steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh 'sudo chmod 777 -R ./systemtests/scripts/'
                     sh 'OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/deploy_enmasse.sh enmasse-latest /var/lib/origin/openshift.local.config/master/admin.kubeconfig'
