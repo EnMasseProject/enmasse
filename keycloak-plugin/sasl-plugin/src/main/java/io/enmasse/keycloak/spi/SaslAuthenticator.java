@@ -50,13 +50,13 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
         final SaslServerMechanism scramSHA1SaslServerMechanism = new ScramSaslServerMechanism("HmacSHA1", "SCRAM-SHA-1", "SHA-1", ScramSha1PasswordHashProviderFactory.ID, Pbkdf2PasswordHashProviderFactory.ID);
         final SaslServerMechanism scramSha256SaslServerMechanism = new ScramSaslServerMechanism("HmacSHA256", "SCRAM-SHA-256", "SHA-256", ScramSha256PasswordHashProviderFactory.ID, Pbkdf2Sha256PasswordHashProviderFactory.ID);
         final SaslServerMechanism scramSha512SaslServerMechanism = new ScramSaslServerMechanism("HmacSHA512", "SCRAM-SHA-512", "SHA-512", ScramSha512PasswordHashProviderFactory.ID, Pbkdf2Sha512PasswordHashProviderFactory.ID);
-        //final SaslServerMechanism xoauth2SHA1SaslServerMechanism = new XOAUTH2SaslServerMechanism();
+        final SaslServerMechanism xoauth2SHA1SaslServerMechanism = new XOAUTH2SaslServerMechanism();
 
         MECHANISMS.put(plainSaslServerMechanism.getName(), plainSaslServerMechanism);
         MECHANISMS.put(scramSHA1SaslServerMechanism.getName(), scramSHA1SaslServerMechanism);
         MECHANISMS.put(scramSha256SaslServerMechanism.getName(), scramSha256SaslServerMechanism);
         MECHANISMS.put(scramSha512SaslServerMechanism.getName(), scramSha512SaslServerMechanism);
-        //MECHANISMS.put(xoauth2SHA1SaslServerMechanism.getName(), scramSHA1SaslServerMechanism);
+        MECHANISMS.put(xoauth2SHA1SaslServerMechanism.getName(), xoauth2SHA1SaslServerMechanism);
     }
 
     private final Config.Scope config;

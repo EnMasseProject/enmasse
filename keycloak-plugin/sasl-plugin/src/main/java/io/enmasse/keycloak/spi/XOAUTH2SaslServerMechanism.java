@@ -2,32 +2,41 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package io.enmasse.keycloak.spi;
 
-public abstract class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
-/*
+import org.jboss.logging.Logger;
+import org.keycloak.Config;
+import org.keycloak.RSATokenVerifier;
+import org.keycloak.common.VerificationException;
+import org.keycloak.models.*;
+import org.keycloak.representations.AccessToken;
+import org.keycloak.services.Urls;
+import org.keycloak.services.managers.AuthenticationManager;
+import org.keycloak.services.managers.UserSessionCrossDCManager;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
+
+public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
+
     private static final String BEARER_PREFIX = "Bearer ";
-    private TokenManager tokenManager = new TokenManager();
+    private static final Logger LOG = Logger.getLogger(XOAUTH2SaslServerMechanism.class);
 
+    private final TokenVerifier tokenVerifier;
 
-    @Override
+    XOAUTH2SaslServerMechanism() {
+        tokenVerifier = this::verifyRSAToken;
+    }
+
+    // Used only for testing purposes
+    XOAUTH2SaslServerMechanism(TokenVerifier tokenVerifier) {
+        this.tokenVerifier = tokenVerifier;
+    }
+
+        @Override
     public String getName() {
         return "XOAUTH2";
     }
@@ -39,6 +48,7 @@ public abstract class XOAUTH2SaslServerMechanism implements SaslServerMechanism 
     {
         return new Instance()
         {
+            private UserDataImpl authenticatedUser;
             private boolean complete;
             private boolean authenticated;
             private RuntimeException error;
@@ -50,78 +60,93 @@ public abstract class XOAUTH2SaslServerMechanism implements SaslServerMechanism 
                     throw error;
                 }
 
-                Map<String, String> responsePairs = splitResponse(response);
-
-                String auth = responsePairs.get("auth");
-                if (auth == null) {
-                    error = new IllegalArgumentException("Invalid XOAUTH2 encoding, the mandatory 'auth' part of the response was absent");
-                    throw error;
-                }
-
-                if (!auth.startsWith(BEARER_PREFIX)) {
-                    error = new IllegalArgumentException("Invalid XOAUTH2 encoding, the 'auth' part of response does not not begin with the expected prefix");
-                    throw error;
-                }
-
-
                 final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
+                if (realm == null) {
+                    LOG.info("Realm " + hostname + " not found");
+                    authenticated = false;
+                    complete = true;
+                    return null;
+                }
 
-                String tokenString = auth.substring(BEARER_PREFIX.length()).trim();
 
+                String tokenString = getTokenFromInitialResponse(response);
 
                 AccessToken token = null;
                 try {
                     URI baseUri = new URI(config.get("baseUri", "https://localhost:8443/auth"));
 
-                    RSATokenVerifier verifier = RSATokenVerifier.create(tokenString)
-                                                                .realmUrl(Urls.realmIssuer(baseUri,
-                                                                                           realm.getName()));
-                    String kid = verifier.getHeader().getKeyId();
-                    verifier.publicKey(keycloakSession.keys().getRsaPublicKey(realm, kid));
-                    token = verifier.verify().getToken();
+                    token = tokenVerifier.verifyTokenString(realm, tokenString, baseUri, keycloakSession);
                 } catch (VerificationException e) {
-                    error = new IllegalArgumentException("Token invalid: " + e.getMessage());
-                    throw error;
+                    LOG.debug("Token invalid: " + e.getMessage());
+                    authenticated = false;
+                    complete = true;
+                    return null;
                 } catch (URISyntaxException e)  {
                     error = new IllegalArgumentException("Invalid URI from SASL XOAUTH2 config: " + e.getMessage());
                     throw error;
                 }
 
-                UserSessionModel userSession =
-                        keycloakSession.sessions().getUserSession(realm, token.getSessionState());
+                ClientModel clientModel = realm.getClientByClientId(token.getIssuedFor());
 
-                ClientSessionModel clientSession =
-                        keycloakSession.sessions().getClientSession(token.getClientSession());
-
-                if (userSession == null) {
+                if(clientModel == null || !clientModel.isEnabled()) {
                     authenticated = false;
                 } else {
-
-                    UserModel userModel = userSession.getUser();
-                    if (userModel == null || clientSession == null || !AuthenticationManager.isSessionValid(realm, userSession)) {
-                        authenticated = false;
-                    } else {
-
-                        ClientModel clientModel = realm.getClientByClientId(token.getIssuedFor());
-                        if (clientModel == null || !clientModel.isEnabled()) {
+                    UserSessionModel userSession = findValidSession(token, clientModel, realm, keycloakSession);
+                    if(userSession != null) {
+                        UserModel user = userSession.getUser();
+                        if (user == null || !AuthenticationManager.isSessionValid(realm, userSession)) {
                             authenticated = false;
                         } else {
                             authenticated = true;
-                            AccessToken userInfo = new AccessToken();
-                            tokenManager.transformUserInfoAccessToken(keycloakSession,
-                                                                      userInfo,
-                                                                      realm,
-                                                                      clientModel,
-                                                                      userModel,
-                                                                      userSession,
-                                                                      clientSession);
-
+                            authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
                         }
+                    } else {
+                        authenticated = false;
                     }
                 }
+
                 complete = true;
 
                 return null;
+            }
+
+            private String getTokenFromInitialResponse(byte[] response) {
+                String[] splitResponse = new String(response, StandardCharsets.US_ASCII).split("\1");
+                String invalidFormatMessage = "Invalid XOAUTH2 encoding, the format must be of the form user={User}^Aauth=Bearer{Access Token}^A^A";
+                String specifiedUser;
+                String auth;
+
+                if(splitResponse.length != 2) {
+                    LOG.info(invalidFormatMessage);
+                    error = new IllegalArgumentException(invalidFormatMessage);
+                    throw error;
+                }
+
+                String[] userValue = splitResponse[0].split("=", 2);
+                if (userValue.length == 2 && userValue[0].trim().equals("user")) {
+                    specifiedUser = userValue[1].trim();
+                } else {
+                    LOG.info(invalidFormatMessage);
+                    error = new IllegalArgumentException(invalidFormatMessage);
+                    throw error;
+                }
+
+                String[] authValue = splitResponse[1].split("=", 2);
+                if (authValue.length == 2 && authValue[0].trim().equals("auth")) {
+                    auth = authValue[1].trim();
+                } else {
+                    LOG.info(invalidFormatMessage);
+                    error = new IllegalArgumentException(invalidFormatMessage);
+                    throw error;
+                }
+
+                if (!auth.startsWith(BEARER_PREFIX)) {
+                    String msg = "Invalid XOAUTH2 encoding, the 'auth' part of response does not not begin with the expected prefix";
+                    LOG.info(msg);
+                    error = new IllegalArgumentException(msg);
+                    throw error;
+                }
+                return auth.substring(BEARER_PREFIX.length()).trim();
             }
 
             @Override
@@ -134,20 +159,47 @@ public abstract class XOAUTH2SaslServerMechanism implements SaslServerMechanism 
                 return authenticated;
             }
 
-            private Map<String, String> splitResponse(final byte[] response) {
-                String[] splitResponse = new String(response, StandardCharsets.US_ASCII).split("\1");
-                Map<String, String> responseItems = new HashMap<>(splitResponse.length);
-                for(String nameValue : splitResponse) {
-                    if (nameValue.length() > 0) {
-                        String[] nameValueSplit = nameValue.split("=", 2);
-                        if (nameValueSplit.length == 2) {
-                            responseItems.put(nameValueSplit[0], nameValueSplit[1]);
-                        }
+            @Override
+            public UserData getAuthenticatedUser() {
+                return authenticatedUser;
+            }
+
+            private UserSessionModel findValidSession(AccessToken token, ClientModel client, RealmModel realm, KeycloakSession session) {
+                UserSessionModel userSession = new UserSessionCrossDCManager(session).getUserSessionWithClient(realm, token.getSessionState(), false, client.getId());
+                UserSessionModel offlineUserSession = null;
+                if (AuthenticationManager.isSessionValid(realm, userSession)) {
+                    return userSession;
+                } else {
+                    offlineUserSession = new UserSessionCrossDCManager(session).getUserSessionWithClient(realm, token.getSessionState(), true, client.getId());
+                    if (AuthenticationManager.isOfflineSessionValid(realm, offlineUserSession)) {
+                        return offlineUserSession;
                     }
                 }
-                return responseItems;
+
+                if (userSession == null && offlineUserSession == null) {
+                    LOG.debug("User session not found or doesn't have client attached on it");
+                } else {
+                    LOG.debug("Session expired");
+                }
+                return null;
             }
 
         };
-    }*/
+    }
+
+    interface TokenVerifier
+    {
+        AccessToken verifyTokenString(RealmModel realm, String tokenString, URI baseUri, KeycloakSession keycloakSession) throws VerificationException;
+    }
+
+    private AccessToken verifyRSAToken(RealmModel realm, String tokenString, URI baseUri, KeycloakSession keycloakSession) throws VerificationException {
+        AccessToken token;
+        RSATokenVerifier verifier = RSATokenVerifier.create(tokenString)
+                                                    .realmUrl(Urls.realmIssuer(baseUri,
+                                                                               realm.getName()));
+        String kid = verifier.getHeader().getKeyId();
+        verifier.publicKey(keycloakSession.keys().getRsaPublicKey(realm, kid));
+        token = verifier.verify().getToken();
+        return token;
+    }
 }
