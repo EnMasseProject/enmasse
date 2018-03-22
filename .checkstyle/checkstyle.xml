@@ -9,5 +9,8 @@
         <property name="ignoreLines" value="2"/><!-- includes copyright year -->
         <property name="fileExtensions" value="java"/>
     </module>
+    <module name="SuppressionFilter">
+      <property name="file" value="${checkstyle.suppressions.file}" />
+    </module>
 </module>
 
