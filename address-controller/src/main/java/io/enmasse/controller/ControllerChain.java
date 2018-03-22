@@ -10,6 +10,7 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NamespaceInfo;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;

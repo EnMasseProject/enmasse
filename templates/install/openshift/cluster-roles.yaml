@@ -20,80 +20,17 @@ items:
 - apiVersion: v1
   kind: ClusterRole
   metadata:
-    name: enmasse-namespace-admin
+    name: enmasse-admin
   rules:
   - apiGroups:
     - ''
-    - user.openshift.io
-    resources:
-    - users
-    verbs:
-    - impersonate
-  - apiGroups:
-    - ''
-    - extensions
-    - authorization.openshift.io
-    - route.openshift.io
-    resources:
-    - clusterrolebindings
-    - rolebindings
-    - events
-    - policybindings
-    - deployments
-    - pods
-    - configmaps
-    - routes
-    - serviceaccounts
-    - secrets
-    - services
-    - persistentvolumeclaims
-    verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-  - apiGroups:
-    - rbac.authorization.k8s.io
-    resources:
-    - clusterrolebindings
-    - rolebindings
-    verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-  - apiGroups:
+    - project.openshift.io
     - authentication.k8s.io
+    - authorization.k8s.io
     resources:
+    - projectrequests
+    - localsubjectaccessreviews
     - tokenreviews
     verbs:
     - create
-  - apiGroups:
-    - ''
-    resources:
-    - namespaces
-    verbs:
-    - get
-    - list
-    - watch
-- apiVersion: v1
-  kind: ClusterRole
-  metadata:
-    name: event-reporter
-  rules:
-  - apiGroups:
-    - ''
-    resources:
-    - events
-    verbs:
-    - create
-    - get
-    - update
-    - patch
 kind: List

@@ -6,7 +6,7 @@
 - name: Create cluster wide roles used by enmasse-admin service account
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/templates/cluster-roles.yaml
 - name: Grant cluster admin privileges to service account
-  shell: oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:{{ namespace }}:enmasse-admin
 - name: Grant view policy to default SA
   shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
 - name: Grant admin policy to enmasse-admin

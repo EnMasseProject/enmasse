@@ -122,7 +122,7 @@ oc create -f ./openshift/cluster-roles.yaml
 [options="nowrap"]
 ----
 oc login -u system:admin
-oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:enmasse:enmasse-admin
 ----
 +
 *Note*: You can log back in as the regular user after this step.

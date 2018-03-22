@@ -192,11 +192,11 @@ if [ $MODE == "multitenant" ]; then
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
         runcmd "oc create -f $CLUSTER_ROLES -n $NAMESPACE" "Create cluster roles needed for RBAC"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting admin rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting admin rights to enmasse-admin"
         runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
     else
         echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f $CLUSTER_ROLES -n $NAMESPACE'"
-        echo "Please add enmasse-namespace-admin role to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+        echo "Please add enmasse-admin role to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:${NAMESPACE}:enmasse-admin'"
     fi
 fi
 

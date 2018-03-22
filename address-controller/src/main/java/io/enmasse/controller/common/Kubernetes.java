@@ -22,11 +22,8 @@ public interface Kubernetes {
     String getNamespace();
     Kubernetes withNamespace(String namespace);
 
-    void create(HasMetadata ... resources);
-    void create(KubernetesList resources);
     void create(KubernetesList resources, String namespace);
     void delete(KubernetesList resources);
-    void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Set<NamespaceInfo> listAddressSpaces();
@@ -45,7 +42,7 @@ public interface Kubernetes {
 
     TokenReview performTokenReview(String token);
 
-    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb, String impersonateUser);
+    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
 
     boolean isRBACSupported();
     void addAddressSpaceRoleBindings(AddressSpace namespace);

@@ -50,8 +50,7 @@ public class HttpAddressSpaceService {
     }
 
     private void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : null;
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, user))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb))) {
             throw OSBExceptions.notAuthorizedException();
         }
     }
