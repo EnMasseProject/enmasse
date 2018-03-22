@@ -22,7 +22,11 @@ public class HttpRootService {
     public Response getAll(@Context UriInfo uriInfo) {
         List<URI> uriList = new ArrayList<>();
         URI baseUri = uriInfo.getBaseUri();
+        uriList.add(baseUri.resolve("/apis"));
+        uriList.add(baseUri.resolve("/apis/enmasse.io"));
         uriList.add(baseUri.resolve("/apis/enmasse.io/v1"));
+        uriList.add(baseUri.resolve("/healthz"));
+        uriList.add(baseUri.resolve("/swagger.json"));
         uriList.add(baseUri.resolve("/osbapi"));
         return Response.status(200).entity(uriList).build();
     }

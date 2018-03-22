@@ -129,9 +129,6 @@ public class AddressSpace {
 
         public Builder setName(String name) {
             this.name = name;
-            if (this.namespace == null) {
-                this.namespace = "enmasse-" + name;
-            }
             return this;
         }
 
@@ -186,10 +183,12 @@ public class AddressSpace {
 
         public AddressSpace build() {
             Objects.requireNonNull(name, "name not set");
-            Objects.requireNonNull(namespace, "namespace not set");
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(authenticationService, "authentication service not set");
             Objects.requireNonNull(status, "status not set");
+            if (namespace == null) {
+                namespace = name;
+            }
             return new AddressSpace(name, namespace, type, endpointList, plan, authenticationService, status, uid, createdBy);
         }
 

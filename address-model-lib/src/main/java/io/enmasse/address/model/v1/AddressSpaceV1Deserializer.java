@@ -50,7 +50,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             builder.setPlan(planName);
         }
 
-        if (metadata.hasNonNull(Fields.NAMESPACE)) {
+        if (metadata.hasNonNull(Fields.NAMESPACE) && !metadata.get(Fields.NAMESPACE).asText().isEmpty()) {
             builder.setNamespace(metadata.get(Fields.NAMESPACE).asText());
         }
 

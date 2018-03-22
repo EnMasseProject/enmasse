@@ -9,7 +9,6 @@ import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.controller.TestSchemaProvider;
 import io.enmasse.controller.api.DefaultExceptionMapper;
-import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.api.TestSchemaApi;
 import org.apache.http.auth.BasicUserPrincipal;

@@ -5,9 +5,7 @@
 package io.enmasse.controller.api.v1;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -41,6 +39,17 @@ public class AddressApiHelper {
         if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(addressSpace.getNamespace(), verb))) {
             throw OSBExceptions.notAuthorizedException();
         }
+    }
+
+    public AddressList getAddresses(SecurityContext securityContext) {
+        AddressList addressList = new AddressList();
+        Set<AddressSpace> addressSpaceList = addressSpaceApi.listAddressSpaces();
+        for (AddressSpace addressSpace : addressSpaceList) {
+            if (securityContext.isUserInRole(RbacSecurityContext.rbacToRole(addressSpace.getNamespace(), ResourceVerb.list))) {
+                addressList.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddresses());
+            }
+        }
+        return addressList;
     }
 
     public AddressList getAddresses(SecurityContext securityContext, String addressSpaceId) throws IOException {
@@ -88,7 +97,6 @@ public class AddressApiHelper {
     }
 
     private AddressSpace getAddressSpace(String addressSpaceId) throws Exception {
-        // TODO: Make our own exception for this API
         return addressSpaceApi.getAddressSpaceWithName(addressSpaceId)
                 .orElseThrow(() -> new NotFoundException("Address space " + addressSpaceId + " not found"));
     }
@@ -105,6 +113,26 @@ public class AddressApiHelper {
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         addressApi.getAddressWithName(name).ifPresent(addressApi::deleteAddress);
         return new AddressList(addressApi.listAddresses());
+    }
+
+    public AddressList appendAddresses(SecurityContext securityContext, AddressList addressList) throws Exception {
+        Map<String, AddressList> perAddressSpaceList = new HashMap<>();
+        for (Address address : addressList) {
+            if (address.getAddressSpace() == null) {
+                throw new BadRequestException("Address '" + address.getAddress() + "' is missing addressSpace");
+            }
+            AddressList perList = perAddressSpaceList.get(address.getAddressSpace());
+            if (perList == null) {
+                perList = new AddressList();
+                perAddressSpaceList.put(address.getAddressSpace(), perList);
+            }
+            perList.add(address);
+        }
+
+        for (Map.Entry<String, AddressList> entry : perAddressSpaceList.entrySet()) {
+            appendAddresses(securityContext, entry.getKey(), entry.getValue());
+        }
+        return addressList;
     }
 
     public AddressList appendAddresses(SecurityContext securityContext, String addressSpaceId, AddressList addressList) throws Exception {

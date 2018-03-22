@@ -1166,7 +1166,7 @@ items:
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             httpGet:
-              path: /apis/enmasse.io/v1/health
+              path: /healthz
               port: https
               scheme: HTTPS
             initialDelaySeconds: 30
@@ -1178,7 +1178,7 @@ items:
             name: http
           readinessProbe:
             httpGet:
-              path: /apis/enmasse.io/v1/health
+              path: /healthz
               port: https
               scheme: HTTPS
             initialDelaySeconds: 30

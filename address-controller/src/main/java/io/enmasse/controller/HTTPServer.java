@@ -14,6 +14,7 @@ import io.enmasse.controller.api.v1.http.HttpHealthService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
 import io.enmasse.controller.api.v1.http.*;
 import io.enmasse.controller.api.DefaultExceptionMapper;
+import io.enmasse.controller.api.v1.http.HttpApiRootService;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
@@ -74,9 +75,8 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpSchemaService(schemaProvider));
         deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider, kubernetes.getNamespace()));
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
-        deployment.getRegistry().addSingletonResource(new HttpV1RootService());
         deployment.getRegistry().addSingletonResource(new HttpRootService());
-        deployment.getRegistry().addSingletonResource(new HttpAddressRootService(addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new HttpApiRootService());
 
         //deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, kubernetes.getNamespace()));
         //deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, kubernetes.getNamespace()));

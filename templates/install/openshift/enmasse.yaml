@@ -3237,7 +3237,7 @@ objects:
           image: ${ADDRESS_CONTROLLER_IMAGE}
           livenessProbe:
             httpGet:
-              path: /apis/enmasse.io/v1/health
+              path: /healthz
               port: https
               scheme: HTTPS
             initialDelaySeconds: 30
@@ -3249,7 +3249,7 @@ objects:
             name: http
           readinessProbe:
             httpGet:
-              path: /apis/enmasse.io/v1/health
+              path: /healthz
               port: https
               scheme: HTTPS
             initialDelaySeconds: 30
