@@ -292,8 +292,12 @@ public class AddressApiClient {
             entry.put("metadata", metadata);
 
             JsonObject spec = new JsonObject();
-            spec.put("address", destination.getAddress());
-            spec.put("type", destination.getType());
+            if (destination.getAddress() != null) {
+                spec.put("address", destination.getAddress());
+            }
+            if (destination.getType() != null) {
+                spec.put("type", destination.getType());
+            }
             spec.put("plan", destination.getPlan());
             entry.put("spec", spec);
 

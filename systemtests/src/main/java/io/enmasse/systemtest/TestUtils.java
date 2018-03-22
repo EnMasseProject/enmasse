@@ -840,7 +840,7 @@ public class TestUtils {
     }
 
     public static String sanitizeAddress(String address) {
-        return address.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
+        return address != null ? address.toLowerCase().replaceAll("[^a-z0-9\\-]", "") : address;
     }
 
     public static String getExternalEndpointName(AddressSpace addressSpace, String service) {

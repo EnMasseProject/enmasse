@@ -214,5 +214,13 @@ public class AddressControllerApiTest extends TestBase {
             assertTrue("Exception does not contain right information",
                     ex.getMessage().contains("does not match address space in url"));
         }
+
+        //required parameters check: disabled due to: #1082
+//        Destination destWithouAddress = Destination.queue(null, "brokered-queue");
+//        setAddresses(addressSpace, destWithouAddress);
+//
+//        Destination destWithoutType = new Destination("address-a", null, "brokered-queue");
+//        setAddresses(addressSpace, destWithoutType);
+
     }
 }
