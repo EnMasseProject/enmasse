@@ -68,7 +68,7 @@ public class QueueTest extends StandardTestBase {
             setAddresses(address, destExtra);
             Thread.sleep(20_000);
 
-            //runQueueTest(client, address, 1); //TODO! commented due to issue #429
+            runQueueTest(client, address, 42);
 
             deleteAddresses(address);
             Future<List<String>> response = getAddresses(Optional.empty());
