@@ -169,7 +169,10 @@ public final class ControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30));
 
-        String impersonateUser = getEnv(env, "IMPERSONATE_USER").orElse(null);
+        String impersonateUser = getEnv(env, "IMPERSONATE_USER").orElse("");
+        if (impersonateUser.isEmpty()) {
+            impersonateUser = null;
+        }
 
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,

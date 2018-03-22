@@ -63,7 +63,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void create(KubernetesList resources, String namespace, String impersonateUser) {
+    public void create(KubernetesList resources, String namespace) {
         try {
             ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
             client.withRequestConfig(new RequestConfigBuilder()
@@ -80,7 +80,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void delete(KubernetesList resources, String impersonateUser) {
+    public void delete(KubernetesList resources) {
         ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
         try {
             client.withRequestConfig(new RequestConfigBuilder()
@@ -94,10 +94,10 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void createNamespace(AddressSpace addressSpace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            ImpersonatorInterceptor.setImpersonateUser(addressSpace.getCreatedBy());
+            ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
             try {
                 client.withRequestConfig(new RequestConfigBuilder()
-                        .withImpersonateUsername(addressSpace.getCreatedBy())
+                        .withImpersonateUsername(impersonateUser)
                         .build()).call(c -> c.projectrequests().createNew()
                         .editOrNewMetadata()
                         .withName(addressSpace.getNamespace())
@@ -176,7 +176,7 @@ public class KubernetesHelper implements Kubernetes {
         if (client.isAdaptable(OpenShiftClient.class)) {
             client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
             client.withRequestConfig(new RequestConfigBuilder()
-                    .withImpersonateUsername(namespaceInfo.getCreatedBy())
+                    .withImpersonateUsername(impersonateUser)
                     .build()).call(c -> c.inNamespace(namespace).projects().withName(namespaceInfo.getNamespace()).delete());
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
@@ -184,7 +184,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public boolean existsNamespace(String namespace, String impersonateUser) {
+    public boolean existsNamespace(String namespace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             try {
                 ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
@@ -330,7 +330,7 @@ public class KubernetesHelper implements Kubernetes {
                 .addHeader("Authorization", "Bearer " + controllerToken)
                 .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
 
-        if (impersonateUser != null) {
+        if (impersonateUser != null && !impersonateUser.isEmpty()) {
             requestBuilder.addHeader("Impersonate-User", impersonateUser);
         }
 
@@ -386,7 +386,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb, String impersonateUser) {
+    public SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb) {
         if (client.isAdaptable(OkHttpClient.class)) {
             JsonObject body = new JsonObject();
 
@@ -431,7 +431,7 @@ public class KubernetesHelper implements Kubernetes {
 
     }
 
-    private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList, String impersonateUser) {
+    private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList) {
 
         String apiVersion = client.isAdaptable(OpenShiftClient.class) ? "v1" : "rbac.authorization.k8s.io/v1beta1";
         String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
@@ -475,8 +475,7 @@ public class KubernetesHelper implements Kubernetes {
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
         if (isRBACSupported()) {
             createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
-                    new Subject("ServiceAccount", addressControllerSa, namespace)),
-                    addressSpace.getCreatedBy());
+                    new Subject("ServiceAccount", addressControllerSa, namespace)));
         }
     }
 
@@ -486,7 +485,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createServiceAccount(String namespace, String saName, String impersonateUser) {
+    public void createServiceAccount(String namespace, String saName) {
         ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
         try {
             if (client.serviceAccounts().inNamespace(namespace).withName(saName).get() == null) {
@@ -507,13 +506,13 @@ public class KubernetesHelper implements Kubernetes {
 
         if (isRBACSupported()) {
             createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
-                    new Subject("ServiceAccount", "default", namespace)), addressSpace.getCreatedBy());;
+                    new Subject("ServiceAccount", "default", namespace)));;
             createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
-                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
+                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)));
             if (hasClusterRole("event-reporter")) {
                 try {
                     createRoleBinding("event-reporters", namespace, "ClusterRole", "event-reporter", Arrays.asList(
-                            new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
+                            new Subject("ServiceAccount", addressSpaceAdminSa, namespace)));
                 } catch (Exception e) {
                     log.warn("Unable to grant event create privileges");
                 }

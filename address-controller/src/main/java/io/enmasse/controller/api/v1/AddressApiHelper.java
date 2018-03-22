@@ -38,7 +38,7 @@ public class AddressApiHelper {
     }
 
     private void verifyAuthorized(SecurityContext securityContext, AddressSpace addressSpace, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(addressSpace.getNamespace(), verb, addressSpace.getCreatedBy()))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(addressSpace.getNamespace(), verb))) {
             throw OSBExceptions.notAuthorizedException();
         }
     }

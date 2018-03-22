@@ -37,7 +37,7 @@ public class ControllerChainTest {
 
         when(kubernetes.withNamespace(anyString())).thenReturn(kubernetes);
         when(kubernetes.getNamespace()).thenReturn("myspace");
-        when(kubernetes.existsNamespace(anyString(), anyString())).thenReturn(true);
+        when(kubernetes.existsNamespace(anyString())).thenReturn(true);
     }
 
     @After

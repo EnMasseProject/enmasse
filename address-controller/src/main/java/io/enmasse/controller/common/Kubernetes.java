@@ -6,12 +6,10 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.time.Clock;
 import java.util.*;
 
 /**
@@ -22,15 +20,15 @@ public interface Kubernetes {
     String getNamespace();
     Kubernetes withNamespace(String namespace);
 
-    void create(KubernetesList resources, String namespace, String impersonateUser);
-    void delete(KubernetesList resources, String impersonateUser);
+    void create(KubernetesList resources, String namespace);
+    void delete(KubernetesList resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Set<NamespaceInfo> listAddressSpaces();
     void deleteNamespace(NamespaceInfo namespaceInfo);
     void createNamespace(AddressSpace addressSpace);
 
-    boolean existsNamespace(String namespace, String impersonateUser);
+    boolean existsNamespace(String namespace);
 
     boolean hasService(String service);
 
@@ -42,7 +40,7 @@ public interface Kubernetes {
 
     TokenReview performTokenReview(String token);
 
-    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb, String impersonateUser);
+    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
 
     boolean isRBACSupported();
     void addAddressSpaceRoleBindings(AddressSpace namespace);
@@ -52,5 +50,5 @@ public interface Kubernetes {
 
     String getAddressSpaceAdminSa();
 
-    void createServiceAccount(String namespace, String addressSpaceAdminSa, String impersonateUser);
+    void createServiceAccount(String namespace, String addressSpaceAdminSa);
 }

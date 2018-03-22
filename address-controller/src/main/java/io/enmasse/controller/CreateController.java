@@ -10,7 +10,6 @@ import io.enmasse.address.model.Schema;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.SchemaApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -50,14 +49,14 @@ public class CreateController implements Controller {
                 return addressSpace;
             }
         } else {
-            if (kubernetes.existsNamespace(addressSpace.getNamespace(), addressSpace.getCreatedBy())) {
+            if (kubernetes.existsNamespace(addressSpace.getNamespace())) {
                 return addressSpace;
             }
             kubernetes.createNamespace(addressSpace);
             kubernetes.addAddressSpaceAdminRoleBinding(addressSpace);
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
-            kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa(), addressSpace.getCreatedBy());
+            kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
             schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace(), addressSpace.getCreatedBy());
         }
         log.info("Creating address space {}", addressSpace);
@@ -72,7 +71,7 @@ public class CreateController implements Controller {
             }
         }
 
-        kubernetes.create(resourceList, addressSpace.getNamespace(), addressSpace.getCreatedBy());
+        kubernetes.create(resourceList, addressSpace.getNamespace());
         eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
         return addressSpace;
     }

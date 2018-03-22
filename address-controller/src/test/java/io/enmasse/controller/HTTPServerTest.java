@@ -51,8 +51,8 @@ public class HTTPServerTest {
         Kubernetes kubernetes = mock(Kubernetes.class);
         when(kubernetes.getNamespace()).thenReturn("controller");
         when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
-        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
     }
 
