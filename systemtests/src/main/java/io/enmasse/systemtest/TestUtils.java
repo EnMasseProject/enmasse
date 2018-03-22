@@ -712,4 +712,13 @@ public class TestUtils {
     public static String sanitizeAddress(String address) {
         return address.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
     }
+
+    public static String getExternalEndpointName(AddressSpace addressSpace, String service) {
+        for (AddressSpaceEndpoint endpoint : addressSpace.getEndpoints()) {
+            if (endpoint.getService().equals(service) && endpoint.getName() != null && !endpoint.getName().isEmpty()) {
+                return endpoint.getName();
+            }
+        }
+        return service;
+    }
 }

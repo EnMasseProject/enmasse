@@ -78,7 +78,21 @@ public class AddressApiClient {
         JsonObject authService = new JsonObject();
         authService.put("type", addressSpace.getAuthService().toString());
         spec.put("authenticationService", authService);
+        if (!addressSpace.getEndpoints().isEmpty()) {
+            spec.put("endpoints", createAddressSpaceEndpoints(addressSpace));
+        }
         return spec;
+    }
+
+    private JsonArray createAddressSpaceEndpoints(AddressSpace addressSpace) {
+        JsonArray endpointsJson = new JsonArray();
+        for (AddressSpaceEndpoint endpoint : addressSpace.getEndpoints()) {
+            JsonObject endpointJson = new JsonObject();
+            endpointJson.put("name", endpoint.getName());
+            endpointJson.put("service", endpoint.getService());
+            endpointsJson.add(endpointJson);
+        }
+        return endpointsJson;
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {

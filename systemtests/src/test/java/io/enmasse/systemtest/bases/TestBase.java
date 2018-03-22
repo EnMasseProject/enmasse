@@ -101,11 +101,14 @@ public abstract class TestBase extends SystemTestRunListener {
             mqttClientFactory.close();
             amqpClientFactory.close();
 
-            for (AddressSpace addressSpace : addressSpaceList) {
-                deleteAddressSpace(addressSpace);
+            if (!environment.skipCleanup()) {
+                for (AddressSpace addressSpace : addressSpaceList) {
+                    deleteAddressSpace(addressSpace);
+                }
+                addressSpaceList.clear();
+            }else{
+                log.warn("Remove address spaces in tear down - SKIPPED!");
             }
-
-            addressSpaceList.clear();
         } catch (Exception e) {
             log.error("Error tearing down test: {}", e.getMessage());
             throw e;
@@ -422,7 +425,8 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
-        Endpoint messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "messaging");
+        String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
+        Endpoint messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
 
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
@@ -432,8 +436,9 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
+        String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
         String consoleRoute = String.format("https://%s:%s@%s", username, password,
-                kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "console"));
+                kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName));
         log.info(consoleRoute);
         return consoleRoute;
     }
@@ -458,7 +463,7 @@ public abstract class TestBase extends SystemTestRunListener {
     /**
      * selenium provider with Firefox webdriver
      */
-    private SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
+    protected SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
         SeleniumProvider seleniumProvider = new SeleniumProvider();
         seleniumProvider.setupDriver(environment, kubernetes, getFirefoxDriver());
         return seleniumProvider;

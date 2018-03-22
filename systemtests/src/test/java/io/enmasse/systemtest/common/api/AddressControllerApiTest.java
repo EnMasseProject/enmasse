@@ -6,8 +6,16 @@ package io.enmasse.systemtest.common.api;
 
 import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
+
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.mqtt.MqttClient;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.standard.AnycastTest;
+import io.enmasse.systemtest.standard.mqtt.PublishTest;
 import io.vertx.core.http.HttpMethod;
 import org.junit.After;
 import org.junit.Before;
@@ -97,6 +105,68 @@ public class AddressControllerApiTest extends TestBase {
                             new ArrayList<>(),
                             Address.class).size(),
                     is(0));
+        }
+    }
+
+    @Test
+    public void testConsoleMessagingMqttRoutes() throws Exception {
+        AddressSpace addressSpace = new AddressSpace("routes-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        String endpointPrefix = "test-endpoint-";
+        addressSpace.setEndpoints(Arrays.asList(
+                new AddressSpaceEndpoint(endpointPrefix + "messaging", "messaging"),
+                new AddressSpaceEndpoint(endpointPrefix + "console", "console"),
+                new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt")));
+        createAddressSpace(addressSpace);
+
+        KeycloakCredentials luckyUser = new KeycloakCredentials("hovnovolenasersi", "luckyPswd");
+        getKeycloakClient().createUser(addressSpace.getName(), luckyUser.getUsername(), luckyUser.getPassword());
+
+        //try to get all external endpoints
+        kubernetes.getExternalEndpoint(addressSpace.getNamespace(), endpointPrefix + "messaging");
+        kubernetes.getExternalEndpoint(addressSpace.getNamespace(), endpointPrefix + "console");
+        kubernetes.getExternalEndpoint(addressSpace.getNamespace(), endpointPrefix + "mqtt");
+
+        //messsaging
+        Destination anycast = Destination.anycast("test-routes-anycast");
+        setAddresses(addressSpace, anycast);
+        AmqpClient client1 = amqpClientFactory.createQueueClient(addressSpace);
+        client1.getConnectOptions().setUsername(luckyUser.getUsername()).setPassword(luckyUser.getPassword());
+        AmqpClient client2 = amqpClientFactory.createQueueClient(addressSpace);
+        client2.getConnectOptions().setUsername(luckyUser.getUsername()).setPassword(luckyUser.getPassword());
+        AnycastTest.runAnycastTest(anycast, client1, client2);
+
+        //mqtt
+        Destination topic = Destination.topic("mytopic", "sharded-topic");
+        appendAddresses(addressSpace, topic);
+        Thread.sleep(10_000);
+        MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace,
+                luckyUser.getUsername(), luckyUser.getPassword());
+        MqttClient mqttClient = mqttFactory.createClient();
+        try {
+            PublishTest.simpleMQTTSendReceive(topic, mqttClient, 3);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            mqttFactory.close();
+        }
+
+        //console
+        SeleniumProvider selenium = null;
+        try {
+            selenium = getFirefoxSeleniumProvider();
+            ConsoleWebPage console = new ConsoleWebPage(
+                    selenium,
+                    getConsoleRoute(addressSpace, luckyUser.getUsername(), luckyUser.getPassword()),
+                    addressApiClient,
+                    addressSpace);
+            console.openWebConsolePage();
+            console.openAddressesPageWebConsole();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (selenium != null) {
+                selenium.tearDownDrivers();
+            }
         }
     }
 

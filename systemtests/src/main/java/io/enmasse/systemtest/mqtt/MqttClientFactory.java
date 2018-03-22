@@ -66,8 +66,8 @@ public class MqttClientFactory {
         Endpoint mqttEndpoint;
 
         if (environment.useTLS()) {
-
-            mqttEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "mqtt");
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
+            mqttEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
 
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new X509TrustManager() {
@@ -95,7 +95,7 @@ public class MqttClientFactory {
             }
 
         } else {
-            mqttEndpoint = this.kubernetes.getEndpoint(addressSpace.getNamespace(),"mqtt", "mqtt");
+            mqttEndpoint = this.kubernetes.getEndpoint(addressSpace.getNamespace(), "mqtt", "mqtt");
         }
 
         if (username != null && password != null) {
@@ -118,7 +118,7 @@ public class MqttClientFactory {
             }
         }
         throw new NoSuchAlgorithmException(String.format("Could not create SSLContext with one of the requested protocols: %s",
-                                                         Arrays.toString(protocols)));
+                Arrays.toString(protocols)));
     }
 
     private static class SNISettingSSLSocketFactory extends SSLSocketFactory {
@@ -149,7 +149,7 @@ public class MqttClientFactory {
         private Socket setHostnameParameter(final Socket newSocket) {
             SSLParameters sslParameters = new SSLParameters();
             sslParameters.setServerNames(this.sniHostNames);
-            ((SSLSocket)newSocket).setSSLParameters(sslParameters);
+            ((SSLSocket) newSocket).setSSLParameters(sslParameters);
             return newSocket;
         }
 

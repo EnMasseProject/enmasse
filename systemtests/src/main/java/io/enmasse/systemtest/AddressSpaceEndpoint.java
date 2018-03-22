@@ -8,13 +8,15 @@ public class AddressSpaceEndpoint {
     private String name;
     private String service;
     private String host;
-    private String port;
 
-    public AddressSpaceEndpoint(String name, String service, String host, String port) {
+    public AddressSpaceEndpoint(String name, String service) {
         this.name = name;
         this.service = service;
+    }
+
+    public AddressSpaceEndpoint(String name, String service, String host) {
+        this(name, service);
         this.host = host;
-        this.port = port;
     }
 
     public String getName() {
@@ -31,14 +33,6 @@ public class AddressSpaceEndpoint {
 
     public void setHost(String host) {
         this.host = host;
-    }
-
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
     }
 
     public String getService() {
