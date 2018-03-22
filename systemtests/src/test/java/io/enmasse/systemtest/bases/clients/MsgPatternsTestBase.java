@@ -35,7 +35,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -62,7 +62,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount / 2));
         arguments.put(Argument.TIMEOUT, "60");
@@ -100,7 +100,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -141,7 +141,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -175,7 +175,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
@@ -203,7 +203,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(queue);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
@@ -263,7 +263,7 @@ public abstract class MsgPatternsTestBase extends ClientTestBase {
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(topic);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(sharedAddressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");

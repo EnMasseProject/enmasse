@@ -66,8 +66,7 @@ public class MqttClientFactory {
         Endpoint mqttEndpoint;
 
         if (environment.useTLS()) {
-            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
-            mqttEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+            mqttEndpoint = addressSpace.getEndpoint("mqtt");
 
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new X509TrustManager() {

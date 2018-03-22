@@ -274,7 +274,7 @@ public class TestUtils {
      * @param addressSpace name of addressSpace
      * @throws Exception IllegalStateException if address space is not ready within timeout
      */
-    public static void waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
+    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
         JsonObject addressSpaceObject = null;
         TimeoutBudget budget = null;
 
@@ -291,6 +291,8 @@ public class TestUtils {
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
         }
+        return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
+                addrSpaceI.getName().equals(addressSpace)).findFirst().get();
     }
 
 
@@ -447,11 +449,11 @@ public class TestUtils {
      */
     private static AddressSpace convertJsonToAddressSpace(JsonObject addressSpaceJson) {
         String name = addressSpaceJson.getJsonObject("metadata").getString("name");
-        String namespace = addressSpaceJson.getJsonObject("metadata").getString("namemespace");
+        String namespace = addressSpaceJson.getJsonObject("metadata").getString("namespace");
 
         AddressSpaceType type = AddressSpaceType.valueOf(
                 addressSpaceJson.getJsonObject("spec")
-                        .getString("plan").toUpperCase());
+                        .getString("type").toUpperCase());
         String plan = addressSpaceJson.getJsonObject("spec").getString("plan");
 
         AuthService authService = AuthService.valueOf(
@@ -814,14 +816,5 @@ public class TestUtils {
 
     public static String sanitizeAddress(String address) {
         return address.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
-    }
-
-    public static String getExternalEndpointName(AddressSpace addressSpace, String service) {
-        for (AddressSpaceEndpoint endpoint : addressSpace.getEndpoints()) {
-            if (endpoint.getService().equals(service) && endpoint.getName() != null && !endpoint.getName().isEmpty()) {
-                return endpoint.getName();
-            }
-        }
-        return service;
     }
 }

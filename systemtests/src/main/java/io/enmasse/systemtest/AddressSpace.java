@@ -113,6 +113,16 @@ public class AddressSpace {
         return this;
     }
 
+    public Endpoint getEndpoint(String endpointService) {
+        for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
+            if (addrSpaceEndpoint.getService().equals(endpointService)) {
+                return new Endpoint(addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
+            }
+        }
+        throw new IllegalStateException(String.format("Endpoint wih service name '%s' doesn't exist in address space '%s'",
+                endpointService, name));
+    }
+
     public void setEndpoints(List<AddressSpaceEndpoint> endpoints) {
         this.endpoints = endpoints;
     }

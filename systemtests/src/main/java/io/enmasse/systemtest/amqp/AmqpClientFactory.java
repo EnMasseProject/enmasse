@@ -70,8 +70,7 @@ public class AmqpClientFactory {
     public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         assertNotNull("Address space is null", addressSpace);
         if (environment.useTLS()) {
-            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
-            Endpoint messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+            Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
             Endpoint clientEndpoint;
             ProtonClientOptions clientOptions = new ProtonClientOptions();
             clientOptions.setSsl(true);
