@@ -107,7 +107,7 @@ public abstract class TestBase extends SystemTestRunListener {
                     deleteAddressSpace(addressSpace);
                 }
                 addressSpaceList.clear();
-            }else{
+            } else {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }
         } catch (Exception e) {
@@ -170,8 +170,12 @@ public abstract class TestBase extends SystemTestRunListener {
 
     //!TODO: protected void appendAddressSpace(...)
 
-    protected JsonObject getAddressSpace(String name) throws Exception {
-        return addressApiClient.getAddressSpace(name);
+    protected AddressSpace getAddressSpace(String name) throws Exception {
+        return TestUtils.getAddressSpaceObject(addressApiClient, name);
+    }
+
+    protected List<AddressSpace> getAddressSpaces() throws Exception {
+        return TestUtils.getAddressSpacesObjects(addressApiClient);
     }
 
     protected KeycloakClient getKeycloakClient() throws Exception {
