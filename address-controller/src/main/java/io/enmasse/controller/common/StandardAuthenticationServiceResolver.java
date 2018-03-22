@@ -23,12 +23,22 @@ public class StandardAuthenticationServiceResolver implements AuthenticationServ
 
     @Override
     public String getHost(AuthenticationService authService) {
-        return host;
+        String overrideHost = (String) authService.getDetails().get("host");
+        if (overrideHost != null) {
+            return overrideHost;
+        } else {
+            return host;
+        }
     }
 
     @Override
     public int getPort(AuthenticationService authService) {
-        return port;
+        String overridePort = (String) authService.getDetails().get("port");
+        if (overridePort != null) {
+            return Integer.parseInt(overridePort);
+        } else {
+            return port;
+        }
     }
 
     @Override
