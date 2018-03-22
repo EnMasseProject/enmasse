@@ -45,9 +45,6 @@
           "resources": [
             "users"
           ],
-          "resourceNames": [
-            "developer"
-          ],
           "verbs": [
             "impersonate"
           ]
