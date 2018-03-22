@@ -56,4 +56,13 @@ public class AddressSpaceEndpoint {
     public void setPort(int port) {
         this.port = port;
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("endpoint-").append(service).append("=")
+                .append("{host=").append(host).append(",")
+                .append("port=").append(port).append("}")
+                .toString();
+    }
 }

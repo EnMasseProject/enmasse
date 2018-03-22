@@ -157,11 +157,15 @@ public class AddressSpace {
 
     @Override
     public String toString() {
-        return new StringBuilder()
+        StringBuilder addressSpaceString = new StringBuilder()
                 .append("{name=").append(name).append(",")
                 .append("namespace=").append(namespace).append(",")
                 .append("type=").append(type.toString().toLowerCase()).append(",")
-                .append("plan=").append(plan).append("}")
-                .toString();
+                .append("plan=").append(plan);
+        for (AddressSpaceEndpoint endpoint : endpoints) {
+            addressSpaceString.append(",").append(endpoint);
+        }
+        addressSpaceString.append("}");
+        return addressSpaceString.toString();
     }
 }
