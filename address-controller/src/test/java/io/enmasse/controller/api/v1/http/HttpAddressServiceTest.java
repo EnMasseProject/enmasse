@@ -20,8 +20,14 @@ import org.junit.Test;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static io.enmasse.address.model.Status.Phase.Terminating;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -175,7 +181,10 @@ public class HttpAddressServiceTest {
         assertThat(response.getStatus(), is(200));
 
         assertThat(addressApi.listAddresses(), hasItem(q1));
-        assertThat(addressApi.listAddresses().size(), is(1));
+        assertThat(addressApi.listAddresses().size(), is(2));
+        Map<String, List<Address>> addresses = addressApi.listAddresses().stream()
+                .collect(Collectors.groupingBy(Address::getName));
+        assertThat(addresses.get("a1").get(0).getStatus().getPhase(), is(Terminating));
     }
 
     @Test

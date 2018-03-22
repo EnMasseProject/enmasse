@@ -140,7 +140,7 @@ public abstract class TestBase extends SystemTestRunListener {
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
-            extraWait = extraWait ? extraWait : !isBrokered(addressSpace);
+            extraWait = extraWait || !isBrokered(addressSpace);
         }
         if (extraWait) {
             log.info("One of requested address-spaces is 'standard' type - Waiting for 2 minutes before starting tests");
