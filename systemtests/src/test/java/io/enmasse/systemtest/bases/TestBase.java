@@ -149,6 +149,7 @@ public abstract class TestBase extends SystemTestRunListener {
         Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
             originalAddrSpace.setEndpoints(addrSpacesResponse.stream().filter(
                     resposeAddrSpace -> resposeAddrSpace.getName().equals(originalAddrSpace.getName())).findFirst().get().getEndpoints());
+            log.info(String.format("Address-space successfully created: %s", originalAddrSpace));
         });
     }
 
@@ -173,6 +174,7 @@ public abstract class TestBase extends SystemTestRunListener {
             log.info("Address space '" + addressSpace + "' already exists.");
         }
         addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+        log.info(String.format("Address-space successfully created: %s", addressSpace));
     }
 
     //!TODO: protected void appendAddressSpace(...)
