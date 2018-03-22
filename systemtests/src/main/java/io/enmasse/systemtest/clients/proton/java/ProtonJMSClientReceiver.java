@@ -79,7 +79,7 @@ public class ProtonJMSClientReceiver extends AbstractClient {
     protected ArgumentMap transformArguments(ArgumentMap args) {
         args = javaBrokerTransformation(args);
         args = modifySelectorArg(args);
-        args.put(Argument.LOG_LIB, "TRANSPORT_FRM");
+        args.put(Argument.LOG_LIB, "trace");
         return args;
     }
 

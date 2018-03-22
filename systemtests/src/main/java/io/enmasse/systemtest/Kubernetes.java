@@ -4,10 +4,7 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.resources.AddressPlan;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
+import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
@@ -178,92 +175,98 @@ public abstract class Kubernetes {
         return client.configMaps().inNamespace(namespace).list();
     }
 
+    //------------------------------------------------------------------------------------------------
+    // Create config maps
+    //------------------------------------------------------------------------------------------------
+
     /**
      * create new ConfigMap with new address space plan definition
      */
     public void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
-        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
-        ConfigMap addressSpacePlanDefinition = new ConfigMap();
+        createConfigMap("address-space-plan", addressSpacePlan.getConfigName(),
+                createAddressSpacePlanData(addressSpacePlan), replaceExisting);
+    }
 
-        addressSpacePlanDefinition.setApiVersion("v1"); // <apiVersion>
-        addressSpacePlanDefinition.setKind("ConfigMap");         // <kind>
+    /**
+     * create new ConfigMap with new address plan definition
+     */
+    public void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
+        createConfigMap("address-plan", addressPlan.getName(),
+                createAddressPlanData(addressPlan), replaceExisting);
+    }
+
+    /**
+     * create new ConfigMap with new resource definition
+     */
+    public void createResourceDefinitionConfig(ResourceDefinition resourceDefinition, boolean replaceExisting) {
+        createConfigMap("resource-definition", resourceDefinition.getName(),
+                createResourceDefinitionData(resourceDefinition), replaceExisting);
+    }
+
+    /**
+     * create new ConfigMap
+     */
+    private void createConfigMap(String type, String configName, Map<String, String> configMapData, boolean replaceExisting) {
+        String fullName = String.format("%s-%s", type, configName);
+        log.info("{}-{} ConfigMap will be created", type, configName);
+        ConfigMap configMap = new ConfigMap();
+
+        configMap.setApiVersion("v1"); // <apiVersion>
+        configMap.setKind("ConfigMap");         // <kind>
 
         ObjectMeta metadata = new ObjectMeta(); // <metadata>
-        metadata.setName(fullAddressSpacePlanName);
+        metadata.setName(fullName);
         Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("type", "address-space-plan");
+        labels.put("type", type);
         metadata.setLabels(labels);
-        addressSpacePlanDefinition.setMetadata(metadata); // </metadata>
-        addressSpacePlanDefinition.setData(createAddressSpacePlanData(addressSpacePlan)); // <data></data>
+        configMap.setMetadata(metadata); // </metadata>
+        configMap.setData(configMapData); // <data></data>
 
         if (replaceExisting) {
-            client.configMaps().inNamespace(globalNamespace).createOrReplace(addressSpacePlanDefinition);
-        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName).get() == null) {
-            client.configMaps().create(addressSpacePlanDefinition);
+            client.configMaps().inNamespace(globalNamespace).createOrReplace(configMap);
+        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullName).get() == null) {
+            client.configMaps().create(configMap);
         } else {
-            throw new IllegalStateException(String.format("AddressSpacePlan '%s' already exists and replace is set to '%s'",
-                    fullAddressSpacePlanName, replaceExisting));
+            throw new IllegalStateException(String.format("%s '%s' already exists and replace is set to '%s'",
+                    type, fullName, replaceExisting));
         }
-        log.info(String.format("AddressSpacePlan '%s' successfully '%s'", fullAddressSpacePlanName,
-                replaceExisting ? "replaced" : "created"));
+        log.info("{} '{}' successfully '{}'", type, fullName, replaceExisting ? "replaced" : "created");
     }
+
+    //------------------------------------------------------------------------------------------------
+    // Remove config maps
+    //------------------------------------------------------------------------------------------------
 
     /**
      * remove address-space-plan ConfigMap according to its name
      */
     public boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        String fullAddressSpacePlanName = String.format("address-space-plan-%s", addressSpacePlan.getConfigName());
-        return client.configMaps().inNamespace(globalNamespace).withName(fullAddressSpacePlanName).delete();
+        return removeconfigMap("address-space-plan", addressSpacePlan.getConfigName());
     }
 
     /**
-     * create body for ConfigMap definition for new address space plan definition
+     * remove address-plan ConfigMap according to its name
      */
-    private Map<String, String> createAddressSpacePlanData(AddressSpacePlan addressSpacePlan) {
-        Map<String, String> data = new LinkedHashMap<>();
-
-        //definition
-        JsonObject config = new JsonObject();
-        config.put("apiVersion", "enmasse.io/v1");
-        config.put("kind", "AddressSpacePlan");
-
-        JsonObject definitionMetadata = new JsonObject(); // <metadata>
-        definitionMetadata.put("name", addressSpacePlan.getName());
-
-        JsonObject annotations = new JsonObject();  // <annotations>
-        annotations.put("enmasse.io/defined-by", addressSpacePlan.getResourceDefName()); //"brokered-space", "standard-space", newly created...
-        definitionMetadata.put("annotations", annotations); // </annotations>
-
-        config.put("metadata", definitionMetadata); // </metadata>
-
-        config.put("displayName", addressSpacePlan.getName()); //not parameterized for now
-        config.put("displayOrder", "0");
-        config.put("shortDescription", "Newly defined address space plan.");
-        config.put("longDescription", "Newly defined address space plan.");
-        config.put("uuid", "677485a2-0d96-11e8-ba89-0ed5f89f718b");
-        config.put("addressSpaceType", addressSpacePlan.getType().toString().toLowerCase()); // "standard", "brokered", newly created...
-
-        JsonArray defResources = new JsonArray(); // <resources>
-        JsonObject brokerResource;
-        for (AddressSpaceResource res : addressSpacePlan.getResources()) {
-            brokerResource = new JsonObject();
-            brokerResource.put("name", res.getName());
-            brokerResource.put("min", res.getMin());
-            brokerResource.put("max", res.getMax());
-            defResources.add(brokerResource);
-        }
-        config.put("resources", defResources); // </resources>
-
-        JsonArray defAddressPlan = new JsonArray(); // <addressPlans>
-        for (AddressPlan plan : addressSpacePlan.getAddressPlans()) {
-            defAddressPlan.add(plan.getName());
-        }
-        config.put("addressPlans", defAddressPlan); // </addressPlans>
-
-        data.put("definition", config.toString());
-
-        return data;
+    public boolean removeAddressPlanConfig(AddressPlan addressPlan) {
+        return removeconfigMap("address-plan", addressPlan.getName());
     }
+
+    /**
+     * remove resource-definition ConfigMap according to its name
+     */
+    public boolean removeResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
+        return removeconfigMap("resource-definition", resourceDefinition.getName());
+    }
+
+    private boolean removeconfigMap(String type, String name) {
+        log.info("{}-{} ConfigMap will be removed", type, name);
+        String fullName = String.format("%s-%s", type, name);
+        return client.configMaps().inNamespace(globalNamespace).withName(fullName).delete();
+    }
+
+    //------------------------------------------------------------------------------------------------
+    // Get config maps
+    //------------------------------------------------------------------------------------------------
 
     public AddressSpacePlan getAddressSpacePlanConfig(String configName) {
         String fullAddressSpacePlanName = String.format("address-space-plan-%s", configName);
@@ -335,45 +338,88 @@ public abstract class Kubernetes {
         return requestedPlan.get();
     }
 
+    public ResourceDefinition getResourceDefinitionConfig(String configName) {
+        String fullResourceDefinitionName = String.format("resource-definition-%s", configName);
+        AtomicReference<ResourceDefinition> requestedPlan = new AtomicReference<>();
+
+        listConfigMaps("resource-definition").getItems().forEach(resourceDefinition -> {
+            if (resourceDefinition.getMetadata().getName().equals(fullResourceDefinitionName)) {
+                log.info(String.format("Resource definition '%s' found", fullResourceDefinitionName));
+                Map<String, String> data = resourceDefinition.getData();
+                JsonObject configDefinition = new JsonObject(data.get("definition"));
+                JsonObject metadataDef = configDefinition.getJsonObject("metadata");
+                String template = configDefinition.getString("template");
+
+                JsonArray requiredResourcesDef = configDefinition.getJsonArray("parameters");
+                List<ResourceParameter> parameters = new ArrayList<>();
+                if (requiredResourcesDef != null) {
+                    for (int i = 0; i < requiredResourcesDef.size(); i++) {
+                        JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);
+                        ResourceParameter requiredResource = new ResourceParameter(
+                                resourceDef.getString("name"),
+                                resourceDef.getString("value"));
+                        parameters.add(requiredResource);
+                    }
+                }
+
+                requestedPlan.set(new ResourceDefinition(metadataDef.getString("name"), template, parameters));
+            }
+        });
+        return requestedPlan.get();
+    }
+
+    //------------------------------------------------------------------------------------------------
+    // Create config map data
+    //------------------------------------------------------------------------------------------------
 
     /**
-     * create new ConfigMap with new address plan definition
+     * create body for ConfigMap definition for new address space plan definition
      */
-    public void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
-        String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
-        ConfigMap addressPlanDefinition = new ConfigMap();
-        addressPlanDefinition.setApiVersion("v1"); //apiVersion
-        addressPlanDefinition.setKind("ConfigMap"); //Kind
+    private Map<String, String> createAddressSpacePlanData(AddressSpacePlan addressSpacePlan) {
+        Map<String, String> data = new LinkedHashMap<>();
 
-        ObjectMeta metadata = new ObjectMeta(); // <metadata>
-        metadata.setName(fullAddressPlanName);
-        Map<String, String> labels = new LinkedHashMap<>(); // <labels>
-        labels.put("type", "address-plan");
-        metadata.setLabels(labels); // </labels>
-        addressPlanDefinition.setMetadata(metadata); //</metadata>
+        //definition
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "enmasse.io/v1");
+        config.put("kind", "AddressSpacePlan");
 
-        addressPlanDefinition.setData(createAddressPlanData(addressPlan)); // <data></data>
+        JsonObject definitionMetadata = new JsonObject(); // <metadata>
+        definitionMetadata.put("name", addressSpacePlan.getName());
 
-        if (replaceExisting) {
-            client.configMaps().inNamespace(globalNamespace).createOrReplace(addressPlanDefinition);
-        } else if (client.configMaps().inNamespace(globalNamespace).withName(fullAddressPlanName).get() == null) {
-            client.configMaps().create(addressPlanDefinition);
-        } else {
-            throw new IllegalStateException(String.format("AddressPlan '%s' already exists and replace is set to '%s'",
-                    fullAddressPlanName, replaceExisting));
+        JsonObject annotations = new JsonObject();  // <annotations>
+        annotations.put("enmasse.io/defined-by", addressSpacePlan.getResourceDefName()); //"brokered-space", "standard-space", newly created...
+        definitionMetadata.put("annotations", annotations); // </annotations>
+
+        config.put("metadata", definitionMetadata); // </metadata>
+
+        config.put("displayName", addressSpacePlan.getName()); //not parameterized for now
+        config.put("displayOrder", "0");
+        config.put("shortDescription", "Newly defined address space plan.");
+        config.put("longDescription", "Newly defined address space plan.");
+        config.put("uuid", "677485a2-0d96-11e8-ba89-0ed5f89f718b");
+        config.put("addressSpaceType", addressSpacePlan.getType().toString().toLowerCase()); // "standard", "brokered", newly created...
+
+        JsonArray defResources = new JsonArray(); // <resources>
+        JsonObject brokerResource;
+        for (AddressSpaceResource res : addressSpacePlan.getResources()) {
+            brokerResource = new JsonObject();
+            brokerResource.put("name", res.getName());
+            brokerResource.put("min", res.getMin());
+            brokerResource.put("max", res.getMax());
+            defResources.add(brokerResource);
         }
-        log.info(String.format("AddressPlan '%s' successfully '%s'", fullAddressPlanName,
-                replaceExisting ? "replaced" : "created"));
-    }
+        config.put("resources", defResources); // </resources>
 
-    /**
-     * remove address-plan ConfigMap according to its name
-     */
-    public boolean removeAddressPlanConfig(AddressPlan addressPlan) {
-        String fullAddressPlanName = String.format("address-plan-%s", addressPlan.getName());
-        return client.configMaps().inNamespace(globalNamespace).withName(fullAddressPlanName).delete();
-    }
+        JsonArray defAddressPlan = new JsonArray(); // <addressPlans>
+        for (AddressPlan plan : addressSpacePlan.getAddressPlans()) {
+            defAddressPlan.add(plan.getName());
+        }
+        config.put("addressPlans", defAddressPlan); // </addressPlans>
 
+        data.put("definition", config.toString());
+
+        return data;
+    }
 
     /**
      * create body for ConfigMap definition for new address plan definition
@@ -411,6 +457,36 @@ public abstract class Kubernetes {
     }
 
     /**
+     * create body of ConfigMap definition for new resource definition
+     */
+    private Map<String, String> createResourceDefinitionData(ResourceDefinition resourceDefinition) {
+        Map<String, String> data = new LinkedHashMap<>(); // <data>
+
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "enmasse.io/v1");
+        config.put("kind", "ResourceDefinition");
+
+        JsonObject definitionMetadata = new JsonObject(); // <metadata>
+        definitionMetadata.put("name", resourceDefinition.getName());
+        config.put("metadata", definitionMetadata);// </metadata>
+
+        config.put("template", resourceDefinition.getTemplate());
+
+        JsonArray parameters = new JsonArray(); // <parameters>
+        JsonObject parameter;
+        for (ResourceParameter rp : resourceDefinition.getParameters()) {
+            parameter = new JsonObject();
+            parameter.put("name", rp.getName());
+            parameter.put("value", rp.getValue());
+            parameters.add(parameter);
+        }
+        config.put("parameters", parameters); // </parameters>
+        data.put("definition", config.toString());
+
+        return data;
+    }
+
+    /**
      * append
      */
     public void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
@@ -428,8 +504,8 @@ public abstract class Kubernetes {
                 data.replace("definition", planDefinition.toString());
                 plan.setData(data);
                 client.configMaps().inNamespace(globalNamespace).withName(plan.getMetadata().getName()).replace(plan);
-                log.info(String.format("AddressPlan '%s' successfully appended into AddressSpace plan '%s'.",
-                        fullAddressPlanName, fullAddressSpacePlanName));
+                log.info("AddressPlan '{}' successfully appended into AddressSpace plan '{}'.",
+                        fullAddressPlanName, fullAddressSpacePlanName);
             }
         });
     }
@@ -450,8 +526,8 @@ public abstract class Kubernetes {
                 data.replace("definition", planDefinition.toString());
                 plan.setData(data);
                 client.configMaps().inNamespace(globalNamespace).withName(plan.getMetadata().getName()).replace(plan);
-                log.info(String.format("AddressPlan '%s' successfully removed from AddressSpace plan '%s'.",
-                        fullAddressPlanName, fullAddressSpacePlanName));
+                log.info("AddressPlan '{}' successfully removed from AddressSpace plan '{}'.",
+                        fullAddressPlanName, fullAddressSpacePlanName);
             }
         }
         return removed;

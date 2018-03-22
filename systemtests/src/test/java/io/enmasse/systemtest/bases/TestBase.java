@@ -20,6 +20,7 @@ import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.ResourceDefinition;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -835,6 +836,26 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
         return TestUtils.removeAddressSpacePlanConfig(kubernetes, addressSpacePlan);
+    }
+
+    //=========================
+    //Resource definition config-maps
+    //=========================
+
+    protected void createResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
+        createResourceDefinitionConfig(resourceDefinition, false);
+    }
+
+    protected void createResourceDefinitionConfig(ResourceDefinition resourceDefinition, boolean replaceExisting) {
+        TestUtils.createResourceDefinitionConfig(kubernetes, resourceDefinition, replaceExisting);
+    }
+
+    protected ResourceDefinition getResourceDefinitionConfig(String config) {
+        return TestUtils.getResourceDefinitionConfig(kubernetes, config);
+    }
+
+    protected boolean removeResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
+        return TestUtils.removeResourceDefinitionConfig(kubernetes, resourceDefinition);
     }
 
 
