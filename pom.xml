@@ -42,7 +42,6 @@
         <bouncycastle.version>1.56</bouncycastle.version>
     </properties>
 
-
     <modules>
         <module>address-model-lib</module>
         <module>k8s-api</module>
