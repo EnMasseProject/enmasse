@@ -35,6 +35,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
     }
 
     AddressSpace deserialize(ObjectNode root) {
+        validate(root);
 
         ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
@@ -145,6 +146,42 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             builder.setStatus(s);
         }
         return builder.build();
+    }
+
+    private void validate(ObjectNode root) {
+        validateMetadata(root);
+        validateSpec(root);
+    }
+
+    private void validateMetadata(ObjectNode root) {
+        JsonNode node = root.get(Fields.METADATA);
+        if (node == null || !node.isObject()) {
+            throw new DeserializeException("Missing 'metadata' object field");
+        }
+
+        ObjectNode metadata = (ObjectNode) node;
+        JsonNode name = metadata.get(Fields.NAME);
+        if (name == null || !name.isTextual()) {
+            throw new DeserializeException("Missing 'name' string field in 'metadata'");
+        }
+    }
+
+    private void validateSpec(ObjectNode root) {
+        JsonNode node = root.get(Fields.SPEC);
+        if (node == null || !node.isObject()) {
+            throw new DeserializeException("Missing 'spec' object field");
+        }
+
+        ObjectNode spec = (ObjectNode) node;
+        JsonNode type = spec.get(Fields.TYPE);
+        if (type == null || !type.isTextual()) {
+            throw new DeserializeException("Missing 'type' string field in 'spec'");
+        }
+
+        JsonNode plan = spec.get(Fields.PLAN);
+        if (plan == null || !plan.isTextual()) {
+            throw new DeserializeException("Missing 'plan' string field in 'spec'");
+        }
     }
 
     static class TypeConverter {
