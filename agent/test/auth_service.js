@@ -40,12 +40,12 @@ describe('auth service', function() {
     });
 
     it('accepts valid credentials', function(done) {
-        as.authenticate({name:'bob', pass:'bob'}, auth_service_options).then(function () {
+        as.authenticate({username:'bob', password:'bob'}, auth_service_options).then(function () {
             done();
         });
     });
     it('rejects invalid credentials', function(done) {
-        as.authenticate({name:'foo', pass:'bar'}, auth_service_options).catch(function () {
+        as.authenticate({username:'foo', password:'bar'}, auth_service_options).catch(function () {
             done();
         });
     });
@@ -94,12 +94,12 @@ describe('auth service with tls', function() {
     });
 
     it('accepts valid credentials', function(done) {
-        as.authenticate({name:'bob', pass:'bob'}, auth_service_options).then(function () {
+        as.authenticate({username:'bob', password:'bob'}, auth_service_options).then(function () {
             done();
         });
     });
     it('rejects invalid credentials', function(done) {
-        as.authenticate({name:'foo', pass:'bar'}, auth_service_options).catch(function () {
+        as.authenticate({username:'foo', password:'bar'}, auth_service_options).catch(function () {
             done();
         });
     });
@@ -114,7 +114,7 @@ describe('auth service with tls', function() {
         env.AUTHENTICATION_SERVICE_PORT = auth_service_options.port;
         env.AUTH_SERVICE_CA = path.resolve(__dirname,'ca-cert.pem');
         var default_options = as.default_options(env);
-        as.authenticate({name:'bob', pass:'bob'}, default_options).then(function () {
+        as.authenticate({username:'bob', password:'bob'}, default_options).then(function () {
             done();
         });
     });
