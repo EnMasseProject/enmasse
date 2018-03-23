@@ -62,7 +62,7 @@ public class Main extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(controllerChain),
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), kubernetes, kubernetes.isRBACEnabled()), new DeploymentOptions().setWorker(true)));
     }
 
     private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {

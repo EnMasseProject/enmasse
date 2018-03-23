@@ -57,7 +57,7 @@ public class CreateController implements Controller {
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
             kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
-            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace(), addressSpace.getCreatedBy());
+            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
         }
         log.info("Creating address space {}", addressSpace);
 

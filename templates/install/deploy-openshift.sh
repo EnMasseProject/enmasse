@@ -187,7 +187,7 @@ if [ "$ENVIRONMENT" != "" ]; then
 fi
 
 if [ $MODE == "multitenant" ]; then
-    TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENABLE_RBAC=true"
+    TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENABLE_RBAC=true IMPERSONATE_USER=$OS_USER"
     if [ -n "$OS_ALLINONE" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"

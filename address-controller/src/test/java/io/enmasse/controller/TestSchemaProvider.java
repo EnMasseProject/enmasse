@@ -17,7 +17,7 @@ public class TestSchemaProvider implements SchemaProvider {
     }
 
     @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String namespace, String createdBy) {
-        api.copyIntoNamespace(plan, namespace, createdBy);
+    public void copyIntoNamespace(AddressSpacePlan plan, String namespace) {
+        api.copyIntoNamespace(plan, namespace);
     }
 }

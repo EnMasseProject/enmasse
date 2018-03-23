@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
+import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
     }
 
     @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace, String createdBy) {
+    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace) {
         KubernetesListBuilder listBuilder = new KubernetesListBuilder();
         listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("resource-definition").getItems(), m -> true, otherNamespace));
         listBuilder.addAllToConfigMapItems(copyMaps(
@@ -92,9 +93,7 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                 listConfigMaps("address-plan").getItems(),
                 m -> plan.getAddressPlans().contains(getResourceFromConfig(AddressPlan.class, m).getName()),
                 otherNamespace));
-        client.withRequestConfig(new RequestConfigBuilder()
-                .withImpersonateUsername(createdBy)
-                .build()).call(c ->c.lists().inNamespace(otherNamespace).create(listBuilder.build()));
+        client.lists().inNamespace(otherNamespace).create(listBuilder.build());
     }
 
     private Collection<ConfigMap> copyMaps(List<ConfigMap> items, Predicate<ConfigMap> filter, String otherNamespace) {

@@ -42,7 +42,7 @@ public interface Kubernetes {
 
     SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
 
-    boolean isRBACSupported();
+    boolean isRBACEnabled();
     void addAddressSpaceRoleBindings(AddressSpace namespace);
     void addSystemImagePullerPolicy(String namespace, AddressSpace tenantNamespace);
 

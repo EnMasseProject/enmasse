@@ -37,7 +37,7 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
     }
 
     @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String namespace, String createdBy) {
-        schemaApi.copyIntoNamespace(plan, namespace, createdBy);
+    public void copyIntoNamespace(AddressSpacePlan plan, String namespace) {
+        schemaApi.copyIntoNamespace(plan, namespace);
     }
 }

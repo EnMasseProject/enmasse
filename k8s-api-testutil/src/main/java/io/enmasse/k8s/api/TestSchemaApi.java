@@ -21,7 +21,7 @@ public class TestSchemaApi implements SchemaApi {
     }
 
     @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace, String createdBy) {
+    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace) {
         copiedTo.add(otherNamespace);
     }
 

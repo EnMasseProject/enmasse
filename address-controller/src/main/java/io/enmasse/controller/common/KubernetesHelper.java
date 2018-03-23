@@ -10,11 +10,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.authentication.TokenReviewBuilder;
-import io.fabric8.kubernetes.api.model.authentication.TokenReviewStatus;
-import io.fabric8.kubernetes.api.model.authentication.UserInfo;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
 import io.fabric8.openshift.api.model.*;
@@ -64,14 +60,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void create(KubernetesList resources, String namespace) {
-        try {
-            ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
-            client.withRequestConfig(new RequestConfigBuilder()
-                    .withImpersonateUsername(impersonateUser)
-                    .build()).call(c -> c.lists().inNamespace(namespace).create(resources));
-        } finally {
-            ImpersonatorInterceptor.setImpersonateUser(null);
-        }
+        client.lists().inNamespace(namespace).create(resources);
     }
 
     @Override
@@ -81,14 +70,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void delete(KubernetesList resources) {
-        ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
-        try {
-            client.withRequestConfig(new RequestConfigBuilder()
-                    .withImpersonateUsername(impersonateUser)
-                    .build()).call(c -> c.lists().inNamespace(namespace).delete(resources));
-        } finally {
-            ImpersonatorInterceptor.setImpersonateUser(null);
-        }
+        client.lists().inNamespace(namespace).delete(resources);
     }
 
     @Override
@@ -174,10 +156,15 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void deleteNamespace(NamespaceInfo namespaceInfo) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
-            client.withRequestConfig(new RequestConfigBuilder()
-                    .withImpersonateUsername(impersonateUser)
-                    .build()).call(c -> c.inNamespace(namespace).projects().withName(namespaceInfo.getNamespace()).delete());
+            try {
+                ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
+                client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
+                client.withRequestConfig(new RequestConfigBuilder()
+                        .withImpersonateUsername(impersonateUser)
+                        .build()).call(c -> c.inNamespace(namespace).projects().withName(namespaceInfo.getNamespace()).delete());
+            } finally {
+                ImpersonatorInterceptor.setImpersonateUser(null);
+            }
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
         }
@@ -423,12 +410,16 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public boolean isRBACSupported() {
-        return enableRbac &&
-                client.supportsApiPath("/apis/authentication.k8s.io") &&
+    public boolean isRBACEnabled() {
+        return enableRbac && isRBACSupported();
+
+
+    }
+
+    private boolean isRBACSupported() {
+        return client.supportsApiPath("/apis/authentication.k8s.io") &&
                 client.supportsApiPath("/apis/authorization.k8s.io") &&
                 client.supportsApiPath("/apis/rbac.authorization.k8s.io");
-
     }
 
     private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList) {
