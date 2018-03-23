@@ -3,7 +3,6 @@
     namespace: enmasseci
     multitenant: true
     enable_rbac: true
-    admin_user: maas
     keycloak_admin_password: admin
     authentication_services:
       - standard
