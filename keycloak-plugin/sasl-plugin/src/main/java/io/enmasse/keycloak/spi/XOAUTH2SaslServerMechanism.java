@@ -60,49 +60,54 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
                     throw error;
                 }
 
-                final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
-                if (realm == null) {
-                    LOG.info("Realm " + hostname + " not found");
-                    authenticated = false;
-                    complete = true;
-                    return null;
-                }
-
-
-                String tokenString = getTokenFromInitialResponse(response);
-
-                AccessToken token = null;
+                keycloakSession.getTransactionManager().begin();
                 try {
-                    URI baseUri = new URI(config.get("baseUri", "https://localhost:8443/auth"));
 
-                    token = tokenVerifier.verifyTokenString(realm, tokenString, baseUri, keycloakSession);
-                } catch (VerificationException e) {
-                    LOG.debug("Token invalid: " + e.getMessage());
-                    authenticated = false;
-                    complete = true;
-                    return null;
-                } catch (URISyntaxException e)  {
-                    error = new IllegalArgumentException("Invalid URI from SASL XOAUTH2 config: " + e.getMessage());
-                    throw error;
-                }
-
-                ClientModel clientModel = realm.getClientByClientId(token.getIssuedFor());
-
-                if(clientModel == null || !clientModel.isEnabled()) {
-                    authenticated = false;
-                } else {
-                    UserSessionModel userSession = findValidSession(token, clientModel, realm, keycloakSession);
-                    if(userSession != null) {
-                        UserModel user = userSession.getUser();
-                        if (user == null || !AuthenticationManager.isSessionValid(realm, userSession)) {
-                            authenticated = false;
-                        } else {
-                            authenticated = true;
-                            authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
-                        }
-                    } else {
+                    final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
+                    if (realm == null) {
+                        LOG.info("Realm " + hostname + " not found");
                         authenticated = false;
+                        complete = true;
+                        return null;
                     }
+
+                    String tokenString = getTokenFromInitialResponse(response);
+
+                    AccessToken token = null;
+                    try {
+                        URI baseUri = new URI(config.get("baseUri", "https://localhost:8443/auth"));
+
+                        token = tokenVerifier.verifyTokenString(realm, tokenString, baseUri, keycloakSession);
+                    } catch (VerificationException e) {
+                        LOG.debug("Token invalid: " + e.getMessage());
+                        authenticated = false;
+                        complete = true;
+                        return null;
+                    } catch (URISyntaxException e) {
+                        error = new IllegalArgumentException("Invalid URI from SASL XOAUTH2 config: " + e.getMessage());
+                        throw error;
+                    }
+
+                    ClientModel clientModel = realm.getClientByClientId(token.getIssuedFor());
+
+                    if (clientModel == null || !clientModel.isEnabled()) {
+                        authenticated = false;
+                    } else {
+                        UserSessionModel userSession = findValidSession(token, clientModel, realm, keycloakSession);
+                        if (userSession != null) {
+                            UserModel user = userSession.getUser();
+                            if (user == null || !AuthenticationManager.isSessionValid(realm, userSession)) {
+                                authenticated = false;
+                            } else {
+                                authenticated = true;
+                                authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                            }
+                        } else {
+                            authenticated = false;
+                        }
+                    }
+                } finally {
+                    keycloakSession.getTransactionManager().commit();
                 }
 
                 complete = true;
