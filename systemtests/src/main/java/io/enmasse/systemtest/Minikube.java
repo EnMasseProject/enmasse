@@ -60,7 +60,6 @@ public class Minikube extends Kubernetes {
 
     @Override
     public Endpoint getExternalEndpoint(String namespace, String name) {
-        String externalName = name + "-external";
-        return new Endpoint(getIp(namespace, externalName), Integer.parseInt(getPort(namespace, externalName)));
+        return new Endpoint(getIp(namespace, name), Integer.parseInt(getPort(namespace, name)));
     }
 }
