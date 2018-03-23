@@ -1151,6 +1151,8 @@ items:
             value: 'false'
           - name: ENVIRONMENT
             value: development
+          - name: IMPERSONATE_USER
+            value: ''
           - name: ADDRESS_CONTROLLER_SA
             value: enmasse-admin
           - name: ADDRESS_SPACE_ADMIN_SA

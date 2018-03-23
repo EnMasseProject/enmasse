@@ -14,7 +14,7 @@ local roles = import "roles.jsonnet";
     "kind": "List",
     "items": [
       roles.address_admin_role,
-      roles.namespace_admin_role,
+      roles.enmasse_admin_role,
       roles.event_reporter_role,
     ]
   },
@@ -24,7 +24,7 @@ local roles = import "roles.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.global,
-               addressController.deployment(images.address_controller, "enmasse-template-config", "address-controller-cert", "development", "false", "false", "enmasse-admin", "address-space-admin", "", "600", "30"),
+               addressController.deployment(images.address_controller, "enmasse-template-config", "address-controller-cert", "development", "false", "false", "enmasse-admin", "address-space-admin", "", "600", "30", ""),
                addressController.internal_service ]
   },
 

@@ -3222,6 +3222,8 @@ objects:
             value: ${ENABLE_EVENT_LOGGER}
           - name: ENVIRONMENT
             value: ${ENVIRONMENT}
+          - name: IMPERSONATE_USER
+            value: ${IMPERSONATE_USER}
           - name: ADDRESS_CONTROLLER_SA
             value: ${ADDRESS_CONTROLLER_SA}
           - name: ADDRESS_SPACE_ADMIN_SA
@@ -3322,3 +3324,6 @@ parameters:
 - description: Interval (in seconds) to use between status checks
   name: CONTROLLER_CHECK_INTERVAL
   value: '30'
+- description: User to impersonate when creating resources (uses service-account if
+    not set)
+  name: IMPERSONATE_USER

@@ -29,12 +29,12 @@
     },
 
   // Role for address-controller service account
-  namespace_admin_role::
+  enmasse_admin_role::
     {
       "apiVersion": "v1",
       "kind": "ClusterRole",
       "metadata": {
-        "name": "enmasse-namespace-admin"
+        "name": "enmasse-admin"
       },
       "rules": [
         {
@@ -51,55 +51,6 @@
         },
         {
           "apiGroups": [
-            "",
-            "extensions",
-            "authorization.openshift.io",
-            "route.openshift.io"
-          ],
-          "resources": [
-            "clusterrolebindings",
-            "rolebindings",
-            "events",
-            "policybindings",
-            "deployments",
-            "pods",
-            "configmaps",
-            "routes",
-            "serviceaccounts",
-            "secrets",
-            "services",
-            "persistentvolumeclaims"
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "rbac.authorization.k8s.io"
-          ],
-          "resources": [
-            "clusterrolebindings",
-            "rolebindings",
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
             "authentication.k8s.io"
           ],
           "resources": [
@@ -107,19 +58,6 @@
           ],
           "verbs": [
             "create"
-          ]
-        },
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
-            "namespaces"
-          ],
-          "verbs": [
-            "get",
-            "list",
-            "watch"
           ]
         }
       ]

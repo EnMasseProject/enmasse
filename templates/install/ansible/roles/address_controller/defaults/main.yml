@@ -1,3 +1,4 @@
 ---
 namespace: enmasse
 enable_rbac: true
+admin_user: developer

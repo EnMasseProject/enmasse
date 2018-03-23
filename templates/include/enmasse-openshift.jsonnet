@@ -14,7 +14,7 @@ local roles = import "roles.jsonnet";
     "kind": "List",
     "items": [
       roles.address_admin_role,
-      roles.namespace_admin_role,
+      roles.enmasse_admin_role,
       roles.event_reporter_role,
     ]
   },
@@ -32,7 +32,7 @@ local roles = import "roles.jsonnet";
     "objects": [ standardInfra.template(false, false),
                  standardInfra.template(false, true),
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}", "${CONTROLLER_RESYNC_INTERVAL}", "${CONTROLLER_CHECK_INTERVAL}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ENABLE_EVENT_LOGGER}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}", "${WILDCARD_ENDPOINT_CERT_SECRET}", "${CONTROLLER_RESYNC_INTERVAL}", "${CONTROLLER_CHECK_INTERVAL}", "${IMPERSONATE_USER}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -79,6 +79,10 @@ local roles = import "roles.jsonnet";
         "name": "CONTROLLER_CHECK_INTERVAL",
         "description": "Interval (in seconds) to use between status checks",
         "value": "30"
+      },
+      {
+        "name": "IMPERSONATE_USER",
+        "description": "User to impersonate when creating resources (uses service-account if not set)",
       }
     ]
   }
