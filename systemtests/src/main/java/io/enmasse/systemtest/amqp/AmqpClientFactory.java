@@ -71,6 +71,10 @@ public class AmqpClientFactory {
         assertNotNull("Address space is null", addressSpace);
         if (environment.useTLS()) {
             Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
+            if (messagingEndpoint == null) {
+                String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
+                messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+            }
             Endpoint clientEndpoint;
             ProtonClientOptions clientOptions = new ProtonClientOptions();
             clientOptions.setSsl(true);

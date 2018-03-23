@@ -291,12 +291,9 @@ public class TestUtils {
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
         }
-
         waitUntilEndpointsPresent(apiClient, addressSpace);
-
         return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
                 addrSpaceI.getName().equals(addressSpace)).findFirst().get();
-
     }
 
     private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
@@ -844,5 +841,14 @@ public class TestUtils {
 
     public static String sanitizeAddress(String address) {
         return address.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
+    }
+
+    public static String getExternalEndpointName(AddressSpace addressSpace, String service) {
+        for (AddressSpaceEndpoint endpoint : addressSpace.getEndpoints()) {
+            if (endpoint.getService().equals(service) && endpoint.getName() != null && !endpoint.getName().isEmpty()) {
+                return endpoint.getName();
+            }
+        }
+        return service;
     }
 }

@@ -148,8 +148,11 @@ public abstract class TestBase extends SystemTestRunListener {
             Thread.sleep(120_000);
         }
         Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
-            originalAddrSpace.setEndpoints(addrSpacesResponse.stream().filter(
-                    resposeAddrSpace -> resposeAddrSpace.getName().equals(originalAddrSpace.getName())).findFirst().get().getEndpoints());
+            if (originalAddrSpace.getEndpoints().isEmpty()) {
+                originalAddrSpace.setEndpoints(addrSpacesResponse.stream().filter(
+                        resposeAddrSpace -> resposeAddrSpace.getName().equals(originalAddrSpace.getName())).findFirst().get().getEndpoints());
+                log.info(String.format("Address-space '%s' endpoints successfully set", originalAddrSpace.getName()));
+            }
             log.info(String.format("Address-space successfully created: %s", originalAddrSpace));
         });
     }
@@ -174,7 +177,10 @@ public abstract class TestBase extends SystemTestRunListener {
             addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
             log.info("Address space '" + addressSpace + "' already exists.");
         }
-        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+        if (addressSpace.getEndpoints().isEmpty()) {
+            addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+            log.info(String.format("Address-space '%s' endpoints successfully set.", addressSpace.getName()));
+        }
         log.info(String.format("Address-space successfully created: %s", addressSpace));
     }
 
@@ -441,6 +447,10 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
         Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
+        if (messagingEndpoint == null) {
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
+            messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+        }
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
@@ -450,6 +460,10 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
         Endpoint consoleEndpoint = addressSpace.getEndpoint("console");
+        if(consoleEndpoint == null){
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
+            consoleEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(),externalEndpointName);
+        }
         String consoleRoute = String.format("https://%s:%s@%s", username, password, consoleEndpoint);
         log.info(consoleRoute);
         return consoleRoute;
