@@ -291,10 +291,37 @@ public class TestUtils {
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
         }
+
+        waitUntilEndpointsPresent(apiClient, addressSpace);
+
         return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
                 addrSpaceI.getName().equals(addressSpace)).findFirst().get();
+
     }
 
+    private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
+        waitUntilEndpointsPresent(apiClient, name, new TimeoutBudget(15, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Periodically check address space endpoints and wait until endpoints will be present
+     */
+    private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name, TimeoutBudget budget) throws Exception {
+        log.info(String.format("Waiting until endpoints for address space '%s' will be present...", name));
+        JsonObject addressSpaceJson = apiClient.getAddressSpace(name);
+        boolean endpointsReady = false;
+        while (budget.timeLeft() >= 0) {
+            if (convertJsonToAddressSpace(addressSpaceJson).getEndpoints() != null) {
+                endpointsReady = true;
+                break;
+            }
+            addressSpaceJson = apiClient.getAddressSpace(name);
+            Thread.sleep(1000);
+        }
+        if (!endpointsReady) {
+            throw new IllegalStateException(String.format("Address-space '%s' have no ready endpoints!"));
+        }
+    }
 
     public static AddressSpace getAddressSpaceObject(AddressApiClient apiClient, String addressSpaceName) throws Exception {
         JsonObject addressSpaceJson = apiClient.getAddressSpace(addressSpaceName);
@@ -450,7 +477,6 @@ public class TestUtils {
     private static AddressSpace convertJsonToAddressSpace(JsonObject addressSpaceJson) {
         String name = addressSpaceJson.getJsonObject("metadata").getString("name");
         String namespace = addressSpaceJson.getJsonObject("metadata").getString("namespace");
-
         AddressSpaceType type = AddressSpaceType.valueOf(
                 addressSpaceJson.getJsonObject("spec")
                         .getString("type").toUpperCase());
@@ -463,12 +489,14 @@ public class TestUtils {
 
         List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
         JsonArray endpointsJson = addressSpaceJson.getJsonObject("spec").getJsonArray("endpoints");
-        for (int i = 0; i < endpointsJson.size(); i++) {
-            JsonObject endpointJson = endpointsJson.getJsonObject(i);
-            endpoints.add(new AddressSpaceEndpoint(endpointJson.getString("name"),
-                    endpointJson.getString("service"),
-                    endpointJson.getString("host"),
-                    endpointJson.getInteger("port")));
+        if (endpointsJson != null) {
+            for (int i = 0; i < endpointsJson.size(); i++) {
+                JsonObject endpointJson = endpointsJson.getJsonObject(i);
+                endpoints.add(new AddressSpaceEndpoint(endpointJson.getString("name"),
+                        endpointJson.getString("service"),
+                        endpointJson.getString("host"),
+                        endpointJson.getInteger("port")));
+            }
         }
         AddressSpace addrSpace = new AddressSpace(name, namespace, type, plan, authService);
         addrSpace.setEndpoints(endpoints);

@@ -122,6 +122,7 @@ public abstract class TestBase extends SystemTestRunListener {
 
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        List<AddressSpace> addrSpacesResponse = new ArrayList<>();
         ArrayList<AddressSpace> spaces = new ArrayList<>();
         for (AddressSpace addressSpace : addressSpaces) {
             if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
@@ -129,10 +130,10 @@ public abstract class TestBase extends SystemTestRunListener {
                 spaces.add(addressSpace);
             } else {
                 log.warn("Address space '" + addressSpace + "' already exists.");
+                addrSpacesResponse.add(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()));
             }
         }
         addressApiClient.createAddressSpaceList(spaces.toArray(new AddressSpace[0]));
-        List<AddressSpace> addrSpacesResponse = new ArrayList<>();
         boolean extraWait = false;
         for (AddressSpace addressSpace : spaces) {
             logCollector.startCollecting(addressSpace.getNamespace());
