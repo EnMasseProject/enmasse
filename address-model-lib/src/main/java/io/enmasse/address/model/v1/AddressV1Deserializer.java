@@ -7,6 +7,7 @@ package io.enmasse.address.model.v1;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -29,6 +30,7 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
     }
 
     Address deserialize(ObjectNode root) {
+        validate(root);
         ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
@@ -82,5 +84,28 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
         }
 
         return builder.build();
+    }
+
+    private void validate(ObjectNode root) {
+        JsonNode node = root.get(Fields.SPEC);
+        if (node == null || !node.isObject()) {
+            throw new DeserializeException("Missing 'spec' object field");
+        }
+
+        ObjectNode spec = (ObjectNode) node;
+        JsonNode address = spec.get(Fields.ADDRESS);
+        if (address == null || !address.isTextual()) {
+            throw new DeserializeException("Missing 'address' string field in 'spec'");
+        }
+
+        JsonNode type = spec.get(Fields.TYPE);
+        if (type == null || !type.isTextual()) {
+            throw new DeserializeException("Missing 'type' string field in 'spec'");
+        }
+
+        JsonNode plan = spec.get(Fields.PLAN);
+        if (plan == null || !plan.isTextual()) {
+            throw new DeserializeException("Missing 'plan' string field in 'spec'");
+        }
     }
 }

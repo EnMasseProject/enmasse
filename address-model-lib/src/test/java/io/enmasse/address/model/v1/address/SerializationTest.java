@@ -7,6 +7,7 @@ package io.enmasse.address.model.v1.address;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.v1.CodecV1;
+import io.enmasse.address.model.v1.DeserializeException;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -129,6 +130,18 @@ public class SerializationTest {
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
         assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
+    }
+
+    @Test(expected = DeserializeException.class)
+    public void testDeserializeAddressSpaceMissingDefaults() throws IOException {
+        String serialized = "{\"kind\": \"AddressSpace\", \"apiVersion\": \"v1\"}";
+        CodecV1.getMapper().readValue(serialized, AddressSpace.class);
+    }
+
+    @Test(expected = DeserializeException.class)
+    public void testDeserializeAddressMissingDefaults() throws IOException {
+        String serialized = "{\"kind\": \"Address\", \"apiVersion\": \"v1\"}";
+        CodecV1.getMapper().readValue(serialized, Address.class);
     }
 
     @Test

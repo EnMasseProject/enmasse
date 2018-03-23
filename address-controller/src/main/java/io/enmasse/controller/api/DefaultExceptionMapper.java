@@ -11,6 +11,7 @@ import javax.ws.rs.ext.Provider;
 
 import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.address.model.UnresolvedAddressSpaceException;
+import io.enmasse.address.model.v1.DeserializeException;
 import io.enmasse.controller.common.exceptionmapping.ErrorResponse;
 import okhttp3.ResponseBody;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             WebApplicationException webApplicationException = (WebApplicationException) exception;
             status = Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
             response = webApplicationException.getResponse();
-        } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException) {
+        } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException) {
             status = Response.Status.BAD_REQUEST;
             response = Response.status(status)
                     .entity(new ErrorResponse(null, exception.getMessage()))
