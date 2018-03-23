@@ -8,7 +8,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
@@ -226,7 +226,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, certDir);
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
-            if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
+            if (Readiness.isPodReady(router)) {
                 try {
                     RouterStatus routerStatus = routerStatusCollector.collect(router);
                     if (routerStatus != null) {
