@@ -48,7 +48,7 @@ AuthorizationPolicy.prototype.is_admin = function (connection) {
 
 AuthorizationPolicy.prototype.set_authz_props = function (request, credentials, properties) {
     if (credentials) {
-        request.authz_props = {groups:properties.groups, authid:credentials.name};
+        request.authz_props = {groups:properties.groups, authid:credentials.username};
     } else {
         request.authz_props = {groups:properties.groups};
     }

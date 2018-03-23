@@ -239,6 +239,7 @@ local prometheus = import "prometheus.jsonnet";
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("CONSOLE_CERT_DIR", "/etc/console-certs"),
                 common.env("MESSAGING_CERT", "/opt/agent/messaging-cert/tls.crt"),
+                common.env("PROBE_PORT", "8088"),
               ] + auth_service.envVars,
               "volumeMounts": [
                 common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),
@@ -247,10 +248,11 @@ local prometheus = import "prometheus.jsonnet";
                 common.volume_mount("messaging-cert", "/opt/agent/messaging-cert", true)
               ],
               "ports": [
-                common.container_port("https", 8080)
+                common.container_port("https", 8080),
+                common.container_port("http", 8088)
               ],
-              "livenessProbe": common.http_probe("https", "/probe", "HTTPS"),
-              "readinessProbe": common.http_probe("https", "/probe", "HTTPS")
+              "livenessProbe": common.http_probe("http", "/probe", "HTTP"),
+              "readinessProbe": common.http_probe("http", "/probe", "HTTP")
             }
           ]
         }
