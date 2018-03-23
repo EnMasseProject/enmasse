@@ -77,6 +77,8 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
     public void init(final NetSocket socket,
                      final ProtonConnection protonConnection,
                      final Transport transport) {
+        // allow for frames bigger than 512 bytes to support mechanisms that send (for instance) tokens
+        transport.setInitialRemoteMaxFrameSize(1024*1024);
         this.sasl = transport.sasl();
         sasl.server();
         sasl.allowSkip(false);
