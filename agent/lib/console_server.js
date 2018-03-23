@@ -25,10 +25,10 @@ var util = require('util');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
 var AddressList = require('./address_list.js');
-var auth_service = require('./auth_service.js');
 var Registry = require('./registry.js');
 var tls_options = require('./tls_options.js');
 var myutils = require('./utils.js');
+var auth_utils = require('./auth_utils.js');
 
 function ConsoleServer (address_ctrl) {
     this.address_ctrl = address_ctrl;
@@ -88,27 +88,23 @@ function ConsoleServer (address_ctrl) {
     });
 }
 
+function get_cookies(request) {
+    let cookies = {};
+    let header = request.headers.cookie;
+    if (header) {
+        let items = header.split(';');
+        for (let i = 0; i < items.length; i++) {
+            let parts = items[i].split('=');
+            cookies[parts.shift().trim()] = decodeURI(parts.join('='));
+        }
+    }
+    return cookies;
+}
+
 ConsoleServer.prototype.ws_bind = function (server, env) {
     var self = this;
     this.ws_server = new WebSocketServer({'server': server, path: '/websocket', verifyClient:function (info, callback) {
-        try {
-            var credentials = myutils.basic_auth(info.req);
-            auth_service.authenticate(credentials, auth_service.default_options(env)).then(function (properties) {
-                self.authz.set_authz_props(info.req, credentials, properties);
-                if (self.authz.access_console(properties)) {
-                    callback(true);
-                } else {
-                    log.error('Access to console denied to %s [%j]', credentials.name, properties);
-                    callback(false, 403, 'You do not have permission to use this console');
-                }
-            }).catch(function (error) {
-                log.error('Failed to authorize websocket: %s', error);
-                callback(false, 401, 'Authorization Required');
-            });
-        } catch (e) {
-            log.error('failed to verify websocket: %s', e);
-            callback(false, 500, 'Authorization Required');
-        }
+        auth_utils.ws_auth_handler(self.authz, env)(info.req, callback);
     }});
     this.ws_server.on('connection', function (ws, request) {
         log.info('Accepted incoming websocket connection');
@@ -147,53 +143,40 @@ function get_content_type(file) {
 }
 
 function static_handler(request, response, transform) {
-    return function (properties) {
-        var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
-        if (file.charAt(file.length - 1) === '/') {
-            file += 'index.html';
-        }
-        fs.readFile(file, function (error, data) {
-            if (error) {
-                response.statusCode = error.code === 'ENOENT' ? 404 : 500;
-                response.end(http.STATUS_CODES[response.statusCode]);
-                log.warn('GET %s => %i %j', request.url, response.statusCode, error);
-            } else {
-                var content = transform ? transform(data) : data;
-                var content_type = get_content_type(file);
-                if (content_type) {
-                    response.setHeader('content-type', content_type);
-                }
-                log.debug('GET %s => %s', request.url, file);
-                response.end(content);
+    var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
+    if (file.charAt(file.length - 1) === '/') {
+        file += 'index.html';
+    }
+    fs.readFile(file, function (error, data) {
+        if (error) {
+            response.statusCode = error.code === 'ENOENT' ? 404 : 500;
+            response.end(http.STATUS_CODES[response.statusCode]);
+            log.warn('GET %s => %i %j', request.url, response.statusCode, error);
+        } else {
+            var content = transform ? transform(data) : data;
+            var content_type = get_content_type(file);
+            if (content_type) {
+                response.setHeader('content-type', content_type);
             }
-        });
-    };
+            log.debug('GET %s => %s', request.url, file);
+            response.end(content);
+        }
+    });
 }
 
 function file_load_handler(request, response, file) {
-    return function () {
-        fs.readFile(file, function (error, data) {
-            if (error) {
-                response.statusCode = error.code === 'ENOENT' ? 404 : 500;
-                response.end(http.STATUS_CODES[response.statusCode]);
-                log.warn('GET %s => %i %j', request.url, response.statusCode, error);
-            } else {
-                var content_type = get_content_type(file);
-                response.setHeader('content-type', 'text/plain');
-                log.debug('GET %s => %s', request.url, file);
-                response.end(data);
-            }
-        });
-    };
-}
-
-function auth_required(response) {
-    return function(error) {
-        if (error) log.error('Failed to authenticate http request: %s', error);
-        response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
-        response.statusCode = 401;
-        response.end('Authorization Required');
-    };
+    fs.readFile(file, function (error, data) {
+        if (error) {
+            response.statusCode = error.code === 'ENOENT' ? 404 : 500;
+            response.end(http.STATUS_CODES[response.statusCode]);
+            log.warn('GET %s => %i %j', request.url, response.statusCode, error);
+        } else {
+            var content_type = get_content_type(file);
+            response.setHeader('content-type', 'text/plain');
+            log.debug('GET %s => %s', request.url, file);
+            response.end(data);
+        }
+    });
 }
 
 function get_create_server(env) {
@@ -216,30 +199,17 @@ function replacer(original, replacement) {
 ConsoleServer.prototype.listen = function (env, callback) {
     var self = this;
     this.authz = require('./authz.js').policy(env);
-    this.server = get_create_server(env)(function (request, response) {
-        if (request.method === 'GET' && request.url === '/probe') {
-            response.statusCode = 200;
-            response.end('OK');
-        } else if (request.method === 'GET') {
+    let handler = function (request, response) {
+        if (request.method === 'GET') {
             try {
-                var user = myutils.basic_auth(request);
-                var next;
                 if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
                     var transform = replacer('\&lt\;messaging\-route\-hostname\&gt\;', env.MESSAGING_ROUTE_HOSTNAME);
-                    next = static_handler(request, response,  transform);
+                    static_handler(request, response,  transform);
                 } else if (url.parse(request.url).pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
-                    next = file_load_handler(request, response, env.MESSAGING_CERT);
+                    file_load_handler(request, response, env.MESSAGING_CERT);
                 } else {
-                    next = static_handler(request, response);
+                    static_handler(request, response);
                 }
-                auth_service.authenticate(user, auth_service.default_options(env)).then(function (properties) {
-                    if (self.authz.access_console(properties)) {
-                        next();
-                    } else {
-                        response.statusCode = 403;
-                        response.end('You do not have permission to view the console');
-                    }
-                }).catch(auth_required(response));
             } catch (error) {
                 response.statusCode = 500;
                 response.end(error.message);
@@ -248,10 +218,21 @@ ConsoleServer.prototype.listen = function (env, callback) {
             response.statusCode = 405;
             response.end(util.format('%s not allowed on %s', request.method, request.url));
         }
-    });
+    };
+    this.server = get_create_server(env)(auth_utils.auth_handler(this.authz, env, handler));
     this.server.listen(env.port === undefined ? 8080 : env.port, callback);
     this.ws_bind(this.server, env);
     return this.server;
+};
+
+ConsoleServer.prototype.listen_probe = function (env) {
+    if (env.PROBE_PORT !== undefined) {
+        var probe = http.createServer(function (req, res) {
+            res.writeHead(200, {'Content-Type': 'text/plain'});
+            res.end('OK');
+        });
+        return probe.listen(env.PROBE_PORT);
+    }
 };
 
 ConsoleServer.prototype.subscribe = function (name, sender) {

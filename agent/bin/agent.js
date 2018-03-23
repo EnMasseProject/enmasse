@@ -35,6 +35,7 @@ function start(env) {
         console_server.listen(env);
 
         if (env.ADDRESS_SPACE_TYPE === 'brokered') {
+            console_server.listen_probe(env);
             var event_logger = env.ENABLE_EVENT_LOGGER == 'true' ? kubernetes.post_event : undefined;
             var bc = require('../lib/broker_controller.js').create_agent(event_logger);
             bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');

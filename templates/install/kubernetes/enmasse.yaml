@@ -63,14 +63,15 @@ items:
       "value": "${ENABLE_EVENT_LOGGER}"}, {"name": "ADDRESS_SPACE_TYPE", "value":
       "brokered"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "CONSOLE_CERT_DIR",
       "value": "/etc/console-certs"}, {"name": "MESSAGING_CERT", "value": "/opt/agent/messaging-cert/tls.crt"},
-      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
-      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
-      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
-      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
-      "image": "${AGENT_IMAGE}", "livenessProbe": {"httpGet": {"path": "/probe", "port":
-      "https", "scheme": "HTTPS"}}, "name": "agent", "ports": [{"containerPort": 8080,
-      "name": "https"}], "readinessProbe": {"httpGet": {"path": "/probe", "port":
-      "https", "scheme": "HTTPS"}}, "volumeMounts": [{"mountPath": "/opt/agent/authservice-ca",
+      {"name": "PROBE_PORT", "value": "8088"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
+      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
+      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${AGENT_IMAGE}",
+      "livenessProbe": {"httpGet": {"path": "/probe", "port": "http", "scheme": "HTTP"}},
+      "name": "agent", "ports": [{"containerPort": 8080, "name": "https"}, {"containerPort":
+      8088, "name": "http"}], "readinessProbe": {"httpGet": {"path": "/probe", "port":
+      "http", "scheme": "HTTP"}}, "volumeMounts": [{"mountPath": "/opt/agent/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/console-certs",
       "name": "console-external-cert", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "agent-internal-cert", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",

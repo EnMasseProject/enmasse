@@ -3091,6 +3091,8 @@ objects:
               value: /etc/console-certs
             - name: MESSAGING_CERT
               value: /opt/agent/messaging-cert/tls.crt
+            - name: PROBE_PORT
+              value: '8088'
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -3103,17 +3105,19 @@ objects:
             livenessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
             name: agent
             ports:
             - containerPort: 8080
               name: https
+            - containerPort: 8088
+              name: http
             readinessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
             volumeMounts:
             - mountPath: /opt/agent/authservice-ca
               name: authservice-ca

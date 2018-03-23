@@ -126,13 +126,6 @@ function define_tests(v, client) {
             });
         });
 
-        it('supports a probe path', function(done) {
-            http_get({port:console_server.server.address().port, hostname:'localhost',path:'/probe'}, function (response) {
-                assert.equal(response.statusCode, 200);
-                done();
-            });
-        });
-
         it('retrieves a resource that exists', function(done) {
             http_get({port:console_server.server.address().port, hostname:'localhost',path:'/index.html'}, function (response) {
                 assert.equal(response.statusCode, 200);
