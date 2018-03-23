@@ -75,7 +75,11 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
 
                     AccessToken token = null;
                     try {
-                        URI baseUri = new URI(config.get("baseUri", "https://localhost:8443/auth"));
+                        String defaultUri = System.getenv("KEYCLOAK_SASL_XOAUTH_BASE_URI");
+                        if (defaultUri == null) {
+                            defaultUri = "https://localhost:8443/auth";
+                        }
+                        URI baseUri = new URI(config.get("baseUri", defaultUri));
 
                         token = tokenVerifier.verifyTokenString(realm, tokenString, baseUri, keycloakSession);
                     } catch (VerificationException e) {
