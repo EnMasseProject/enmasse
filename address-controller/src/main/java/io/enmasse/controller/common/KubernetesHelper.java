@@ -132,7 +132,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addSystemImagePullerPolicy(String namespace, AddressSpace addressSpace) {
-        if (isRBACSupported()) {
+        if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
             try {
                 ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
                 String groupName = "system:serviceaccounts:" + addressSpace.getNamespace();
@@ -464,7 +464,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
-        if (isRBACSupported()) {
+        if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
             createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
                     new Subject("ServiceAccount", addressControllerSa, namespace)));
         }
@@ -495,7 +495,7 @@ public class KubernetesHelper implements Kubernetes {
     public void addAddressSpaceRoleBindings(AddressSpace addressSpace) {
         String namespace = addressSpace.getNamespace();
 
-        if (isRBACSupported()) {
+        if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
             createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
                     new Subject("ServiceAccount", "default", namespace)));;
             createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
