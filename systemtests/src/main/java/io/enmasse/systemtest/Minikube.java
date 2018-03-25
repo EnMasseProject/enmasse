@@ -25,7 +25,7 @@ public class Minikube extends Kubernetes {
         return runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName);
     }
 
-    private static String runCommand(String ... cmd) {
+    private static String runCommand(String... cmd) {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd).redirectErrorStream(true);
 
         Process proc = null;
@@ -60,7 +60,10 @@ public class Minikube extends Kubernetes {
 
     @Override
     public Endpoint getExternalEndpoint(String namespace, String name) {
-        String externalName = name + "-external";
+        String externalName = name;
+        if (!name.endsWith("-external")) {
+            externalName += "-external";
+        }
         return new Endpoint(getIp(namespace, externalName), Integer.parseInt(getPort(namespace, externalName)));
     }
 }

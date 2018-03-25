@@ -472,6 +472,7 @@ public class TestUtils {
      * @return
      */
     private static AddressSpace convertJsonToAddressSpace(JsonObject addressSpaceJson) {
+        log.info(String.format("address-space json object: %s", addressSpaceJson));
         String name = addressSpaceJson.getJsonObject("metadata").getString("name");
         String namespace = addressSpaceJson.getJsonObject("metadata").getString("namespace");
         AddressSpaceType type = AddressSpaceType.valueOf(
