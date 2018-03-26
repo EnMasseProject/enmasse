@@ -179,9 +179,9 @@ public abstract class TestBase extends SystemTestRunListener {
         }
         if (addressSpace.getEndpoints().isEmpty()) {
             addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
-            log.info(String.format("Address-space '%s' endpoints successfully set.", addressSpace.getName()));
+            log.info("Address-space '{}' endpoints successfully set.", addressSpace.getName());
         }
-        log.info(String.format("Address-space successfully created: %s", addressSpace));
+        log.info("Address-space successfully created: '{}'", addressSpace);
     }
 
     //!TODO: protected void appendAddressSpace(...)
@@ -460,9 +460,9 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
         Endpoint consoleEndpoint = addressSpace.getEndpoint("console");
-        if(consoleEndpoint == null){
+        if (consoleEndpoint == null) {
             String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
-            consoleEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(),externalEndpointName);
+            consoleEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
         }
         String consoleRoute = String.format("https://%s:%s@%s", username, password, consoleEndpoint);
         log.info(consoleRoute);
