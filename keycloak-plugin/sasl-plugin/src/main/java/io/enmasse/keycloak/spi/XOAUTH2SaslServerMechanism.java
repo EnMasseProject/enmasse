@@ -77,7 +77,11 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
                     try {
                         String defaultUri = System.getenv("KEYCLOAK_SASL_XOAUTH_BASE_URI");
                         if (defaultUri == null) {
-                            defaultUri = "https://localhost:8443/auth";
+                            String host = System.getenv("STANDARD_AUTHSERVICE_SERVICE_HOST");
+                            if (host == null) {
+                                host = "localhost";
+                            }
+                            defaultUri = "https://" + host + ":8443/auth";
                         }
                         URI baseUri = new URI(config.get("baseUri", defaultUri));
 
