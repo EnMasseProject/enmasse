@@ -274,15 +274,15 @@ public class TestUtils {
      * @param addressSpace name of addressSpace
      * @throws Exception IllegalStateException if address space is not ready within timeout
      */
-    public static void waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
-        JsonObject addressObject = null;
+    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
+        JsonObject addressSpaceObject = null;
         TimeoutBudget budget = null;
 
         boolean isReady = false;
         budget = new TimeoutBudget(3, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
-            addressObject = apiClient.getAddressSpace(addressSpace);
-            isReady = isAddressSpaceReady(addressObject);
+            addressSpaceObject = apiClient.getAddressSpace(addressSpace);
+            isReady = isAddressSpaceReady(addressSpaceObject);
             if (!isReady) {
                 Thread.sleep(10000);
             }
@@ -291,6 +291,43 @@ public class TestUtils {
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
         }
+        waitUntilEndpointsPresent(apiClient, addressSpace);
+        return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
+                addrSpaceI.getName().equals(addressSpace)).findFirst().get();
+    }
+
+    private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
+        waitUntilEndpointsPresent(apiClient, name, new TimeoutBudget(15, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Periodically check address space endpoints and wait until endpoints will be present
+     */
+    private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name, TimeoutBudget budget) throws Exception {
+        log.info(String.format("Waiting until endpoints for address space '%s' will be present...", name));
+        JsonObject addressSpaceJson = apiClient.getAddressSpace(name);
+        boolean endpointsReady = false;
+        while (budget.timeLeft() >= 0) {
+            if (convertJsonToAddressSpace(addressSpaceJson).getEndpoints() != null) {
+                endpointsReady = true;
+                break;
+            }
+            addressSpaceJson = apiClient.getAddressSpace(name);
+            Thread.sleep(1000);
+        }
+        if (!endpointsReady) {
+            throw new IllegalStateException(String.format("Address-space '%s' have no ready endpoints!"));
+        }
+    }
+
+    public static AddressSpace getAddressSpaceObject(AddressApiClient apiClient, String addressSpaceName) throws Exception {
+        JsonObject addressSpaceJson = apiClient.getAddressSpace(addressSpaceName);
+        return convertToAddressSpaceObject(addressSpaceJson).get(0);
+    }
+
+    public static List<AddressSpace> getAddressSpacesObjects(AddressApiClient apiClient) throws Exception {
+        JsonObject addressSpaceJson = apiClient.listAddressSpacesObjects();
+        return convertToAddressSpaceObject(addressSpaceJson);
     }
 
     /**
@@ -397,6 +434,70 @@ public class TestUtils {
             return addresses;
         }
         throw new IllegalArgumentException("htmlResponse can't be null");
+    }
+
+
+    /**
+     * Convert restapi json response(kind: AddressSpace or AddressSpaceList) from address controller to AddressSpace object
+     *
+     * @param addressSpaceJson
+     * @return
+     */
+    private static List<AddressSpace> convertToAddressSpaceObject(JsonObject addressSpaceJson) {
+        if (addressSpaceJson == null) {
+            throw new IllegalArgumentException("null response can't be converted to AddressSpace");
+        }
+        String kind = addressSpaceJson.getString("kind");
+        List<AddressSpace> resultAddrSpace = new ArrayList<>();
+        switch (kind) {
+            case "AddressSpace":
+                resultAddrSpace.add(convertJsonToAddressSpace(addressSpaceJson));
+                break;
+            case "AddressSpaceList":
+                JsonArray items = addressSpaceJson.getJsonArray("items");
+                for (int i = 0; i < items.size(); i++) {
+                    resultAddrSpace.add(convertJsonToAddressSpace(items.getJsonObject(i)));
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
+        }
+        return resultAddrSpace;
+    }
+
+    /**
+     * Convert single JsonObject (kind: AddressSpace) to AddressSpace
+     *
+     * @param addressSpaceJson
+     * @return
+     */
+    private static AddressSpace convertJsonToAddressSpace(JsonObject addressSpaceJson) {
+        String name = addressSpaceJson.getJsonObject("metadata").getString("name");
+        String namespace = addressSpaceJson.getJsonObject("metadata").getString("namespace");
+        AddressSpaceType type = AddressSpaceType.valueOf(
+                addressSpaceJson.getJsonObject("spec")
+                        .getString("type").toUpperCase());
+        String plan = addressSpaceJson.getJsonObject("spec").getString("plan");
+
+        AuthService authService = AuthService.valueOf(
+                addressSpaceJson.getJsonObject("spec")
+                        .getJsonObject("authenticationService")
+                        .getString("type").toUpperCase());
+
+        List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
+        JsonArray endpointsJson = addressSpaceJson.getJsonObject("spec").getJsonArray("endpoints");
+        if (endpointsJson != null) {
+            for (int i = 0; i < endpointsJson.size(); i++) {
+                JsonObject endpointJson = endpointsJson.getJsonObject(i);
+                endpoints.add(new AddressSpaceEndpoint(endpointJson.getString("name"),
+                        endpointJson.getString("service"),
+                        endpointJson.getString("host"),
+                        endpointJson.getInteger("port")));
+            }
+        }
+        AddressSpace addrSpace = new AddressSpace(name, namespace, type, plan, authService);
+        addrSpace.setEndpoints(endpoints);
+        return addrSpace;
     }
 
     /**

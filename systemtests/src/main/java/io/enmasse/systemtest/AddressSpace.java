@@ -113,6 +113,20 @@ public class AddressSpace {
         return this;
     }
 
+    public Endpoint getEndpoint(String endpointService) {
+        for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
+            if (addrSpaceEndpoint.getService().equals(endpointService)) {
+                if (addrSpaceEndpoint.getHost() == null) {
+                    return null;
+                } else {
+                    return new Endpoint(addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
+                }
+            }
+        }
+        throw new IllegalStateException(String.format("Endpoint wih service name '%s' doesn't exist in address space '%s'",
+                endpointService, name));
+    }
+
     public void setEndpoints(List<AddressSpaceEndpoint> endpoints) {
         this.endpoints = endpoints;
     }
@@ -147,11 +161,15 @@ public class AddressSpace {
 
     @Override
     public String toString() {
-        return new StringBuilder()
+        StringBuilder addressSpaceString = new StringBuilder()
                 .append("{name=").append(name).append(",")
                 .append("namespace=").append(namespace).append(",")
                 .append("type=").append(type.toString().toLowerCase()).append(",")
-                .append("plan=").append(plan).append("}")
-                .toString();
+                .append("plan=").append(plan);
+        for (AddressSpaceEndpoint endpoint : endpoints) {
+            addressSpaceString.append(",").append(endpoint);
+        }
+        addressSpaceString.append("}");
+        return addressSpaceString.toString();
     }
 }

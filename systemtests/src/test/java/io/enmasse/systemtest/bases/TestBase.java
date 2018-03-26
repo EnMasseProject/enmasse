@@ -107,7 +107,7 @@ public abstract class TestBase extends SystemTestRunListener {
                     deleteAddressSpace(addressSpace);
                 }
                 addressSpaceList.clear();
-            }else{
+            } else {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }
         } catch (Exception e) {
@@ -122,6 +122,7 @@ public abstract class TestBase extends SystemTestRunListener {
 
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
+        List<AddressSpace> addrSpacesResponse = new ArrayList<>();
         ArrayList<AddressSpace> spaces = new ArrayList<>();
         for (AddressSpace addressSpace : addressSpaces) {
             if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
@@ -129,14 +130,14 @@ public abstract class TestBase extends SystemTestRunListener {
                 spaces.add(addressSpace);
             } else {
                 log.warn("Address space '" + addressSpace + "' already exists.");
+                addrSpacesResponse.add(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()));
             }
         }
         addressApiClient.createAddressSpaceList(spaces.toArray(new AddressSpace[0]));
-
         boolean extraWait = false;
         for (AddressSpace addressSpace : spaces) {
             logCollector.startCollecting(addressSpace.getNamespace());
-            TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+            addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName()));
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
@@ -146,14 +147,23 @@ public abstract class TestBase extends SystemTestRunListener {
             log.info("One of requested address-spaces is 'standard' type - Waiting for 2 minutes before starting tests");
             Thread.sleep(120_000);
         }
+        Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
+            if (originalAddrSpace.getEndpoints().isEmpty()) {
+                originalAddrSpace.setEndpoints(addrSpacesResponse.stream().filter(
+                        resposeAddrSpace -> resposeAddrSpace.getName().equals(originalAddrSpace.getName())).findFirst().get().getEndpoints());
+                log.info(String.format("Address-space '%s' endpoints successfully set", originalAddrSpace.getName()));
+            }
+            log.info(String.format("Address-space successfully created: %s", originalAddrSpace));
+        });
     }
 
     protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
+        AddressSpace addrSpaceResponse = null;
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace);
             logCollector.startCollecting(addressSpace.getNamespace());
-            TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
@@ -164,14 +174,24 @@ public abstract class TestBase extends SystemTestRunListener {
                 Thread.sleep(120_000);
             }
         } else {
+            addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
             log.info("Address space '" + addressSpace + "' already exists.");
         }
+        if (addressSpace.getEndpoints().isEmpty()) {
+            addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+            log.info("Address-space '{}' endpoints successfully set.", addressSpace.getName());
+        }
+        log.info("Address-space successfully created: '{}'", addressSpace);
     }
 
     //!TODO: protected void appendAddressSpace(...)
 
-    protected JsonObject getAddressSpace(String name) throws Exception {
-        return addressApiClient.getAddressSpace(name);
+    protected AddressSpace getAddressSpace(String name) throws Exception {
+        return TestUtils.getAddressSpaceObject(addressApiClient, name);
+    }
+
+    protected List<AddressSpace> getAddressSpaces() throws Exception {
+        return TestUtils.getAddressSpacesObjects(addressApiClient);
     }
 
     protected KeycloakClient getKeycloakClient() throws Exception {
@@ -425,10 +445,12 @@ public abstract class TestBase extends SystemTestRunListener {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
-        String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
-        Endpoint messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
-
+    protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
+        Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
+        if (messagingEndpoint == null) {
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
+            messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+        }
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
@@ -437,9 +459,12 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
-        String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
-        String consoleRoute = String.format("https://%s:%s@%s", username, password,
-                kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName));
+        Endpoint consoleEndpoint = addressSpace.getEndpoint("console");
+        if (consoleEndpoint == null) {
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
+            consoleEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+        }
+        String consoleRoute = String.format("https://%s:%s@%s", username, password, consoleEndpoint);
         log.info(consoleRoute);
         return consoleRoute;
     }
@@ -624,7 +649,7 @@ public abstract class TestBase extends SystemTestRunListener {
      */
     protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.USERNAME, username);
@@ -653,7 +678,7 @@ public abstract class TestBase extends SystemTestRunListener {
         List<AbstractClient> senders = new ArrayList<>();
 
         ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.USERNAME, username);
@@ -685,7 +710,7 @@ public abstract class TestBase extends SystemTestRunListener {
         List<AbstractClient> receivers = new ArrayList<>();
 
         ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.USERNAME, username);
@@ -713,7 +738,7 @@ public abstract class TestBase extends SystemTestRunListener {
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
                                              int senderCount, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.USERNAME, username);

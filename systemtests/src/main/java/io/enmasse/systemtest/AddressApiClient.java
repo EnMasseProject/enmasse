@@ -156,26 +156,28 @@ public class AddressApiClient {
     }
 
     public Set<String> listAddressSpaces() throws Exception {
-        log.info("GET-address-spaces: path {}; endpoint {}; ", addressSpacesPath, endpoint.toString());
-
-        CompletableFuture<JsonObject> list = new CompletableFuture<>();
+        JsonArray items = listAddressSpacesObjects().getJsonArray("items");
         Set<String> spaces = new HashSet<>();
-        JsonArray items = doRequestNTimes(initRetry, () -> {
-            client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
-                    .as(BodyCodec.jsonObject())
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .timeout(20_000)
-                    .send(ar -> responseHandler(ar, list, "Error: get address spaces"));
-            return list.get(30, TimeUnit.SECONDS);
-        }).getJsonArray("items");
-
-        log.info("Following list of address spaces received" + items.toString());
         if (items != null) {
             for (int i = 0; i < items.size(); i++) {
                 spaces.add(items.getJsonObject(i).getJsonObject("metadata").getString("name"));
             }
         }
         return spaces;
+    }
+
+    public JsonObject listAddressSpacesObjects() throws Exception {
+        log.info("GET-address-spaces: path {}; endpoint {}; ", addressSpacesPath, endpoint.toString());
+
+        CompletableFuture<JsonObject> response = new CompletableFuture<>();
+        return doRequestNTimes(initRetry, () -> {
+            client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
+                    .as(BodyCodec.jsonObject())
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .timeout(20_000)
+                    .send(ar -> responseHandler(ar, response, "Error: get address spaces"));
+            return response.get(30, TimeUnit.SECONDS);
+        });
     }
 
     public JsonArray getAddressesPaths() throws Exception {

@@ -279,7 +279,7 @@ public class PlansTest extends TestBase {
         arguments.put(Argument.PASSWORD, password);
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.MSG_CONTENT, String.join("", Collections.nCopies(1024, "F")));
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.COUNT, "1000");
         client.setArguments(arguments);
