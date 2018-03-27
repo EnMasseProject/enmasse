@@ -101,6 +101,7 @@ local common = import "common.jsonnet";
                 common.env("AUTHENTICATION_SERVICE_CA_SECRET", auth_service_ca_secret),
                 common.env("AUTHENTICATION_SERVICE_CLIENT_SECRET", "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"),
                 common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
+                common.env("AUTHENTICATION_SERVICE_OAUTH_URL", "${AUTHENTICATION_SERVICE_OAUTH_URL}"),
                 common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
                 common.env("MESSAGING_CERT", "/opt/agent/messaging-cert/tls.crt")
               ],
