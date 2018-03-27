@@ -63,7 +63,7 @@ public class InteroperabilityTest extends StandardTestBase {
         Destination mqttTopic = Destination.topic("amqp-mqtt-topic", "sharded-topic");
         setAddresses(mqttTopic);
 
-        String payloadPrefix = "send mqtt, receive amqp :)";
+        String payloadPrefix = "send amqp, receive mqtt :)";
         Message[] messages = amqpMessageGenerator(mqttTopic.getAddress(), 20, payloadPrefix);
 
         MqttClient mqttClient = mqttClientFactory.createClient();
