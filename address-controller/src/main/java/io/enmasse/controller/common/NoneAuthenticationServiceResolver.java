@@ -45,4 +45,9 @@ public class NoneAuthenticationServiceResolver implements AuthenticationServiceR
     public Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService) {
         return Optional.empty();
     }
+
+    @Override
+    public Optional<String> getOAuthURL(AuthenticationService authService) {
+        return Optional.empty();
+    }
 }

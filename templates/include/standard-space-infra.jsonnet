@@ -168,6 +168,10 @@ local storage = import "storage-template.jsonnet";
         "description": "The hostname to use in sasl init",
       },
       {
+        "name": "AUTHENTICATION_SERVICE_OAUTH_URL",
+        "description": "The URL to use for OAUTH (if not set, OAUTH is not used)",
+      },
+      {
         "name": "ENABLE_EVENT_LOGGER",
         "description": "Enable logging of kubernetes events",
         "value": "false"

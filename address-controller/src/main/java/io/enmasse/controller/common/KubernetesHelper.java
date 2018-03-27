@@ -513,6 +513,20 @@ public class KubernetesHelper implements Kubernetes {
         }
     }
 
+    @Override
+    public String getRouteHost(String name) {
+        try {
+            List<String> match = client.routes().inNamespace(namespace).list().getItems().stream()
+                .filter(route -> route.getMetadata().getName().equals(name))
+                .map(route -> route.getSpec().getHost())
+                .collect(Collectors.toList());
+            return match.isEmpty() ? null : match.get(0);
+        } catch (Throwable t) {
+            log.warn("Unable to retrieve route host: ", t);
+            return null;
+        }
+    }
+
     private boolean hasClusterRole(String roleName) {
         String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
         return doRawHttpRequest(apiPath + "/clusterroles/" + roleName, "GET", null, true, null) != null;

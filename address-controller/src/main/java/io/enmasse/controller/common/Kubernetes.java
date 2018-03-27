@@ -51,4 +51,6 @@ public interface Kubernetes {
     String getAddressSpaceAdminSa();
 
     void createServiceAccount(String namespace, String addressSpaceAdminSa);
+
+    String getRouteHost(String name);
 }
