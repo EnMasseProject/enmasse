@@ -6,6 +6,7 @@ package io.enmasse.keycloak.controller;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
@@ -32,7 +33,7 @@ public class Keycloak implements KeycloakApi {
     }
 
     @Override
-    public void createRealm(String realmName, String realmAdminUser) {
+    public void createRealm(String realmName, String realmAdminUser, String consoleRedirectURI) {
         final RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setRealm(realmName);
         newRealm.setEnabled(true);
@@ -45,6 +46,14 @@ public class Keycloak implements KeycloakApi {
         newUser.setClientRoles(Collections.singletonMap("realm-management", Collections.singletonList("manage-users")));
 
         newRealm.setUsers(Collections.singletonList(newUser));
+
+        if (consoleRedirectURI != null) {
+            final ClientRepresentation console = new ClientRepresentation();
+            console.setClientId("enmasse-console");
+            console.setPublicClient(true);
+            console.setRedirectUris(Collections.singletonList(consoleRedirectURI));
+            newRealm.setClients(Collections.singletonList(console));
+        }
 
         try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
             wrapper.get().realms().create(newRealm);
