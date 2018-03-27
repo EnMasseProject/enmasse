@@ -110,7 +110,7 @@ public class MqttClient implements AutoCloseable {
         while (messageIterator.hasNext() && qosIterator.hasNext()) {
             MqttMessage message = new MqttMessage();
             message.setId(++messageId);
-            message.setPayload((messageIterator.next()).getBytes());
+            message.setPayload(messageIterator.next().getBytes());
             message.setQos(qosIterator.next());
             messageQueue.add(message);
         }
