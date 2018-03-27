@@ -31,7 +31,7 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String realmName, String realmAdminUser) {
+            public void createRealm(String realmName, String realmAdminUser, String consoleRedirectURI) {
                 realms.add(realmName);
                 realmAdminUsers.put(realmName, realmAdminUser);
             }
