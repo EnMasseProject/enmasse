@@ -12,12 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -50,11 +45,11 @@ public class MqttClient implements AutoCloseable {
         return options;
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {
-        return this.recvMessages(topic, numMessages, 0,  1, TimeUnit.MINUTES);
+    public Future<List<MqttMessage>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {
+        return this.recvMessages(topic, numMessages, 0, 1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages, int qos) throws ExecutionException, InterruptedException {
+    public Future<List<MqttMessage>> recvMessages(String topic, int numMessages, int qos) throws ExecutionException, InterruptedException {
         return this.recvMessages(topic, numMessages, qos, 1, TimeUnit.MINUTES);
     }
 
@@ -66,9 +61,12 @@ public class MqttClient implements AutoCloseable {
         return this.sendMessages(topic, messages, qos, 1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages, int qos, long connectTimeout, TimeUnit timeUnit) throws ExecutionException, InterruptedException {
+    public Future<Integer> sendMessages(String topic, MqttMessage... messages) throws InterruptedException {
+        return this.sendMessages(topic, Arrays.asList(messages), 1, TimeUnit.MINUTES);
+    }
 
-        CompletableFuture<List<String>> promise = new CompletableFuture<>();
+    public Future<List<MqttMessage>> recvMessages(String topic, int numMessages, int qos, long connectTimeout, TimeUnit timeUnit) throws ExecutionException, InterruptedException {
+        CompletableFuture<List<MqttMessage>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
         Subscriber subscriber = new Subscriber(this.endpoint, this.options, topic, qos, new Count<>(numMessages), promise, connectLatch);
@@ -89,6 +87,16 @@ public class MqttClient implements AutoCloseable {
         return promise;
     }
 
+    public Future<Integer> sendMessages(String topic, List<MqttMessage> messages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
+        Queue<MqttMessage> messageQueue = new LinkedList<>();
+        for (MqttMessage message : messages) {
+            messageQueue.add(message);
+        }
+        CompletableFuture<Integer> promise = new CompletableFuture<>();
+        publishMessages(topic, messageQueue, promise, connectTimeout, timeUnit);
+        return promise;
+    }
+
     public Future<Integer> sendMessages(String topic, List<String> messages, List<Integer> qos, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
 
         if (messages.size() != qos.size())
@@ -99,16 +107,20 @@ public class MqttClient implements AutoCloseable {
 
         Queue<MqttMessage> messageQueue = new LinkedList<>();
         int messageId = 0;
-
         while (messageIterator.hasNext() && qosIterator.hasNext()) {
             MqttMessage message = new MqttMessage();
             message.setId(++messageId);
-            message.setPayload(messageIterator.next().getBytes());
+            message.setPayload((messageIterator.next()).getBytes());
             message.setQos(qosIterator.next());
             messageQueue.add(message);
         }
 
         CompletableFuture<Integer> promise = new CompletableFuture<>();
+        publishMessages(topic, messageQueue, promise, connectTimeout, timeUnit);
+        return promise;
+    }
+
+    public Future<Integer> publishMessages(String topic, Queue<MqttMessage> messageQueue, CompletableFuture<Integer> promise, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
         CountDownLatch connectLatch = new CountDownLatch(1);
 
         Publisher publisher = new Publisher(this.endpoint, this.options, topic, messageQueue, promise, connectLatch);

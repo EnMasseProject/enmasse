@@ -9,6 +9,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class PublishTest extends StandardTestBase {
 
         MqttClient client = mqttClientFactory.createClient();
 
-        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), messages.size(), subscriberQos);
+        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), messages.size(), subscriberQos);
         Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, publisherQos);
 
         assertThat("Wrong count of messages sent",
@@ -81,7 +82,7 @@ public class PublishTest extends StandardTestBase {
         for (int i = 0; i < msgCount; i++) {
             messages.add(String.format("mqtt-simple-send-receive-%s", i));
         }
-        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
+        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
         Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, Collections.nCopies(msgCount, 0));
 
         assertThat("Incorrect count of messages sent",

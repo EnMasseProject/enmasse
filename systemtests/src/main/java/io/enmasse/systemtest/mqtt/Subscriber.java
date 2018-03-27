@@ -21,9 +21,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 
-public class Subscriber extends ClientHandlerBase<List<String>> {
+public class Subscriber extends ClientHandlerBase<List<MqttMessage>> {
 
-    private final List<String> messages = new ArrayList<>();
+    private final List<MqttMessage> messages = new ArrayList<>();
     private final int qos;
     private final Predicate<MqttMessage> done;
     private final CountDownLatch connectLatch;
@@ -34,7 +34,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                       String topic,
                       int qos,
                       Predicate<MqttMessage> done,
-                      CompletableFuture<List<String>> promise,
+                      CompletableFuture<List<MqttMessage>> promise,
                       CountDownLatch connectLatch) {
         super(endpoint, options, topic, promise);
         this.qos = qos;
@@ -68,22 +68,17 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                     getPromise().completeExceptionally(throwable);
                     connectLatch.countDown();
                 }
-            }, new IMqttMessageListener() {
+            }, (topic, message) -> {
+                log.info("Arrived message-id {}", message.getId());
+                messages.add(message);
+                if (done.test(message)) {
 
-                @Override
-                public void messageArrived(String s, MqttMessage message) throws Exception {
-
-                    log.info("Arrived message-id {}", message.getId());
-                    messages.add(String.valueOf(message.getPayload()));
-                    if (done.test(message)) {
-
-                        // NOTE : Eclipse Paho doesn't allow to call "disconnect" from a callback
-                        //        an exception is raised for that !
-                        /* if (this.client.isConnected()) {
-                            this.client.disconnect();
-                        } */
-                        getPromise().complete(messages);
-                    }
+                    // NOTE : Eclipse Paho doesn't allow to call "disconnect" from a callback
+                    //        an exception is raised for that !
+                    /* if (this.client.isConnected()) {
+                        this.client.disconnect();
+                    } */
+                    getPromise().complete(messages);
                 }
             });
 

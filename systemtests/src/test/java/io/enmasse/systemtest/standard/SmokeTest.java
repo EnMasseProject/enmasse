@@ -10,6 +10,7 @@ import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -92,7 +93,7 @@ public class SmokeTest extends StandardTestBase {
 
         MqttClient client = mqttClientFactory.createClient();
 
-        Future<List<String>> recvResult = client.recvMessages(mqttTopic.getAddress(), messages.size(), 1);
+        Future<List<MqttMessage>> recvResult = client.recvMessages(mqttTopic.getAddress(), messages.size(), 1);
         Future<Integer> sendResult = client.sendMessages(mqttTopic.getAddress(), messages, publisherQos);
 
         assertThat("Wrong count of messages sent",
