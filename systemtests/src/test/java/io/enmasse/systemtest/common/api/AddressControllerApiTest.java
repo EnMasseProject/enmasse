@@ -17,6 +17,7 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.standard.mqtt.PublishTest;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -171,7 +173,7 @@ public class AddressControllerApiTest extends TestBase {
     }
 
     @Test
-    public void testRestApiAddressResourceOptionalParams() throws Exception {
+    public void testRestApiAddressResourceParams() throws Exception {
         AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED);
         AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED);
         createAddressSpaceList(addressSpace, addressSpace2);
@@ -213,6 +215,33 @@ public class AddressControllerApiTest extends TestBase {
         } catch (java.util.concurrent.ExecutionException ex) {
             assertTrue("Exception does not contain right information",
                     ex.getMessage().contains("does not match address space in url"));
+        }
+
+        try { //missing address
+            Destination destWithouAddress = Destination.queue(null, "brokered-queue");
+            setAddresses(addressSpace, destWithouAddress);
+        } catch (ExecutionException expectedEx) {
+            JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
+            assertEquals("Incorrect response from server on missing address!",
+                    serverResponse.getString("description"), "Missing 'address' string field in 'spec'");
+        }
+
+        try { //missing type
+            Destination destWithoutType = new Destination("not-created-address", null, "brokered-queue");
+            setAddresses(addressSpace, destWithoutType);
+        } catch (ExecutionException expectedEx) {
+            JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
+            assertEquals("Incorrect response from serveron missing type!",
+                    serverResponse.getString("description"), "Missing 'type' string field in 'spec'");
+        }
+
+        try { //missing plan
+            Destination destWithouPlan = Destination.queue("not-created-queue", null);
+            setAddresses(addressSpace, destWithouPlan);
+        } catch (ExecutionException expectedEx) {
+            JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
+            assertEquals("Incorrect response from server on missing plan!",
+                    serverResponse.getString("description"), "Missing 'plan' string field in 'spec'");
         }
     }
 }

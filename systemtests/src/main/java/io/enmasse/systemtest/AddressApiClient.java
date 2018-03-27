@@ -292,9 +292,15 @@ public class AddressApiClient {
             entry.put("metadata", metadata);
 
             JsonObject spec = new JsonObject();
-            spec.put("address", destination.getAddress());
-            spec.put("type", destination.getType());
-            spec.put("plan", destination.getPlan());
+            if (destination.getAddress() != null) {
+                spec.put("address", destination.getAddress());
+            }
+            if (destination.getType() != null) {
+                spec.put("type", destination.getType());
+            }
+            if (destination.getPlan() != null) {
+                spec.put("plan", destination.getPlan());
+            }
             entry.put("spec", spec);
 
             items.add(entry);
@@ -369,7 +375,8 @@ public class AddressApiClient {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
                 if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                    promise.completeExceptionally(new RuntimeException(response.statusCode() + ": " + response.body()));
+                    log.error("response status code: {}, body: {}", response.statusCode(), response.body());
+                    promise.completeExceptionally(new RuntimeException(response.body().toString()));
                 } else {
                     promise.complete(ar.result().body());
                 }
