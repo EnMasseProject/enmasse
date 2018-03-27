@@ -55,4 +55,9 @@ public class StandardAuthenticationServiceResolver implements AuthenticationServ
     public Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService) {
         return Optional.of(addressSpaceName);
     }
+
+    @Override
+    public Optional<String> getOAuthURL(AuthenticationService authService) {
+        return Optional.of("https://"+ getHost(authService) + ":8443/auth");
+    }
 }

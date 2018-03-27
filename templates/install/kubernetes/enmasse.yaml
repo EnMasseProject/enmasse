@@ -29,7 +29,8 @@ items:
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${BROKER_IMAGE}",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "AUTHENTICATION_SERVICE_OAUTH_URL",
+      "value": "${AUTHENTICATION_SERVICE_OAUTH_URL}"}], "image": "${BROKER_IMAGE}",
       "livenessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
       "initialDelaySeconds": 120}, "name": "broker", "ports": [{"containerPort": 5672,
       "name": "amqp"}, {"containerPort": 5671, "name": "amqps"}, {"containerPort":
@@ -67,7 +68,8 @@ items:
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${AGENT_IMAGE}",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "AUTHENTICATION_SERVICE_OAUTH_URL",
+      "value": "${AUTHENTICATION_SERVICE_OAUTH_URL}"}], "image": "${AGENT_IMAGE}",
       "livenessProbe": {"httpGet": {"path": "/probe", "port": "http", "scheme": "HTTP"}},
       "name": "agent", "ports": [{"containerPort": 8080, "name": "https"}, {"containerPort":
       8088, "name": "http"}], "readinessProbe": {"httpGet": {"path": "/probe", "port":
@@ -101,9 +103,10 @@ items:
       "The client cert to use as identity against authentication service", "name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname to use
       in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}, {"description":
-      "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER", "value":
-      "false"}, {"description": "The service account with address space admin privileges",
-      "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
+      "The URL to use for OAUTH (if not set, OAUTH is not used)", "name": "AUTHENTICATION_SERVICE_OAUTH_URL"},
+      {"description": "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER",
+      "value": "false"}, {"description": "The service account with address space admin
+      privileges", "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
     standard-space-infra-without-mqtt.json: '{"apiVersion": "v1", "kind": "Template",
       "metadata": {"labels": {"app": "enmasse"}, "name": "standard-space-infra-without-mqtt"},
       "objects": [{"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
@@ -141,7 +144,8 @@ items:
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_IMAGE}",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "AUTHENTICATION_SERVICE_OAUTH_URL",
+      "value": "${AUTHENTICATION_SERVICE_OAUTH_URL}"}], "image": "${ROUTER_IMAGE}",
       "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}},
       "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
       "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}, {"containerPort":
@@ -191,6 +195,7 @@ items:
       {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_OAUTH_URL", "value": "${AUTHENTICATION_SERVICE_OAUTH_URL}"},
       {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "MESSAGING_CERT",
       "value": "/opt/agent/messaging-cert/tls.crt"}], "image": "${AGENT_IMAGE}", "livenessProbe":
       {"httpGet": {"path": "/probe", "port": "http", "scheme": "HTTP"}, "periodSeconds":
@@ -241,7 +246,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -309,7 +315,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -381,7 +388,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -400,7 +408,8 @@ items:
       {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
+      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\", \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}],
       \"image\": \"${ROUTER_IMAGE}\", \"livenessProbe\": {\"initialDelaySeconds\":
       60, \"tcpSocket\": {\"port\": \"amqp\"}}, \"name\": \"router\", \"ports\": [{\"containerPort\":
       5672, \"name\": \"amqp\", \"protocol\": \"TCP\"}, {\"containerPort\": 5671,
@@ -473,7 +482,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -492,7 +502,8 @@ items:
       {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
+      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\", \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}],
       \"image\": \"${ROUTER_IMAGE}\", \"livenessProbe\": {\"initialDelaySeconds\":
       60, \"tcpSocket\": {\"port\": \"amqp\"}}, \"name\": \"router\", \"ports\": [{\"containerPort\":
       5672, \"name\": \"amqp\", \"protocol\": \"TCP\"}, {\"containerPort\": 5671,
@@ -583,14 +594,15 @@ items:
       "required": true}, {"description": "The client cert to use as identity against
       authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
       "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER",
-      "value": "false"}, {"description": "Interval (in seconds) to use between controller
-      resync", "name": "CONTROLLER_RESYNC_INTERVAL", "value": "600"}, {"description":
-      "Interval (in seconds) to use between status checks", "name": "CONTROLLER_CHECK_INTERVAL",
-      "value": "30"}, {"description": "Max number of events queued up for controller",
-      "name": "CONTROLLER_EVENT_QUEUE_SIZE", "value": "10000"}, {"description": "The
-      service account with address space admin privileges", "name": "ADDRESS_SPACE_ADMIN_SA",
-      "value": "address-space-admin"}]}'
+      {"description": "The URL to use for OAUTH (if not set, OAUTH is not used)",
+      "name": "AUTHENTICATION_SERVICE_OAUTH_URL"}, {"description": "Enable logging
+      of kubernetes events", "name": "ENABLE_EVENT_LOGGER", "value": "false"}, {"description":
+      "Interval (in seconds) to use between controller resync", "name": "CONTROLLER_RESYNC_INTERVAL",
+      "value": "600"}, {"description": "Interval (in seconds) to use between status
+      checks", "name": "CONTROLLER_CHECK_INTERVAL", "value": "30"}, {"description":
+      "Max number of events queued up for controller", "name": "CONTROLLER_EVENT_QUEUE_SIZE",
+      "value": "10000"}, {"description": "The service account with address space admin
+      privileges", "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
     standard-space-infra.json: '{"apiVersion": "v1", "kind": "Template", "metadata":
       {"labels": {"app": "enmasse"}, "name": "standard-space-infra"}, "objects": [{"apiVersion":
       "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
@@ -628,7 +640,8 @@ items:
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_IMAGE}",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "AUTHENTICATION_SERVICE_OAUTH_URL",
+      "value": "${AUTHENTICATION_SERVICE_OAUTH_URL}"}], "image": "${ROUTER_IMAGE}",
       "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}},
       "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
       "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}, {"containerPort":
@@ -678,6 +691,7 @@ items:
       {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
       "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_OAUTH_URL", "value": "${AUTHENTICATION_SERVICE_OAUTH_URL}"},
       {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "MESSAGING_CERT",
       "value": "/opt/agent/messaging-cert/tls.crt"}], "image": "${AGENT_IMAGE}", "livenessProbe":
       {"httpGet": {"path": "/probe", "port": "http", "scheme": "HTTP"}, "periodSeconds":
@@ -728,7 +742,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -796,7 +811,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -868,7 +884,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -887,7 +904,8 @@ items:
       {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
+      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\", \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}],
       \"image\": \"${ROUTER_IMAGE}\", \"livenessProbe\": {\"initialDelaySeconds\":
       60, \"tcpSocket\": {\"port\": \"amqp\"}}, \"name\": \"router\", \"ports\": [{\"containerPort\":
       5672, \"name\": \"amqp\", \"protocol\": \"TCP\"}, {\"containerPort\": 5671,
@@ -960,7 +978,8 @@ items:
       \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
       \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
       \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\",
+      \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -979,7 +998,8 @@ items:
       {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_PORT\", \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"},
       {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\", \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"},
-      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}],
+      {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\", \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"},
+      {\"name\": \"AUTHENTICATION_SERVICE_OAUTH_URL\", \"value\": \"${AUTHENTICATION_SERVICE_OAUTH_URL}\"}],
       \"image\": \"${ROUTER_IMAGE}\", \"livenessProbe\": {\"initialDelaySeconds\":
       60, \"tcpSocket\": {\"port\": \"amqp\"}}, \"name\": \"router\", \"ports\": [{\"containerPort\":
       5672, \"name\": \"amqp\", \"protocol\": \"TCP\"}, {\"containerPort\": 5671,
@@ -1112,14 +1132,15 @@ items:
       "required": true}, {"description": "The client cert to use as identity against
       authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
       "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "Enable logging of kubernetes events", "name": "ENABLE_EVENT_LOGGER",
-      "value": "false"}, {"description": "Interval (in seconds) to use between controller
-      resync", "name": "CONTROLLER_RESYNC_INTERVAL", "value": "600"}, {"description":
-      "Interval (in seconds) to use between status checks", "name": "CONTROLLER_CHECK_INTERVAL",
-      "value": "30"}, {"description": "Max number of events queued up for controller",
-      "name": "CONTROLLER_EVENT_QUEUE_SIZE", "value": "10000"}, {"description": "The
-      service account with address space admin privileges", "name": "ADDRESS_SPACE_ADMIN_SA",
-      "value": "address-space-admin"}]}'
+      {"description": "The URL to use for OAUTH (if not set, OAUTH is not used)",
+      "name": "AUTHENTICATION_SERVICE_OAUTH_URL"}, {"description": "Enable logging
+      of kubernetes events", "name": "ENABLE_EVENT_LOGGER", "value": "false"}, {"description":
+      "Interval (in seconds) to use between controller resync", "name": "CONTROLLER_RESYNC_INTERVAL",
+      "value": "600"}, {"description": "Interval (in seconds) to use between status
+      checks", "name": "CONTROLLER_CHECK_INTERVAL", "value": "30"}, {"description":
+      "Max number of events queued up for controller", "name": "CONTROLLER_EVENT_QUEUE_SIZE",
+      "value": "10000"}, {"description": "The service account with address space admin
+      privileges", "name": "ADDRESS_SPACE_ADMIN_SA", "value": "address-space-admin"}]}'
   kind: ConfigMap
   metadata:
     labels:
