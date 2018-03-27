@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Tests related to interoperability mqtt with amqp
  */
-public class CrossProtocolTest extends StandardTestBase {
+public class InteroperabilityTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
 
     @Override
@@ -64,7 +64,7 @@ public class CrossProtocolTest extends StandardTestBase {
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp :)";
-        Message[] messages = amqpMessageGenerator(20, payloadPrefix);
+        Message[] messages = amqpMessageGenerator(mqttTopic.getAddress(), 20, payloadPrefix);
 
         MqttClient mqttClient = mqttClientFactory.createClient();
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
@@ -95,11 +95,13 @@ public class CrossProtocolTest extends StandardTestBase {
         return mqttMessages;
     }
 
-    private Message[] amqpMessageGenerator(int count, String payloadPrefix) {
+    private Message[] amqpMessageGenerator(String address, int count, String payloadPrefix) {
         Message[] mqttMessages = new Message[count];
         for (int i = 0; i < count; i++) {
             Message message = Message.Factory.create();
             message.setMessageId(new AmqpValue(i));
+            message.setAddress(address);
+            message.setSubject("mysubject");
             message.setBody(new AmqpValue(String.format("%s-%d", payloadPrefix, i)));
             mqttMessages[i] = message;
         }
