@@ -7,6 +7,7 @@ package io.enmasse.keycloak.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.Endpoint;
 import io.enmasse.k8s.api.cache.Store;
 import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
@@ -29,11 +30,26 @@ public class KeycloakManager implements Watcher<AddressSpace>
         this.keycloak = keycloak;
     }
 
+    private String getConsoleRedirectURI(AddressSpace addressSpace) {
+        if (addressSpace.getEndpoints() != null) {
+            for (Endpoint endpoint : addressSpace.getEndpoints()) {
+                if (endpoint.getName().equals("console") && endpoint.getHost().isPresent()) {
+                    String uri = "https://" + endpoint.getHost().get() + "/*";
+                    log.info("Using {} as redirect URI for enmasse-console", uri);
+                    return uri;
+                }
+            }
+        } else {
+            log.info("Address space {} has no endpoints defined", addressSpace.getName());
+        }
+        return null;
+    }
+
     @Override
     public void onUpdate(Set<AddressSpace> addressSpaces) {
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
-                             .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD)
+                             .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getEndpoints() != null)
                              .collect(Collectors.toMap(AddressSpace::getName, Function.identity()));
 
         Set<String> realmNames = keycloak.getRealmNames();
@@ -46,7 +62,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
         }
         for(String name : standardAuthSvcSpaces.keySet()) {
             log.info("Creating realm {}", name);
-            keycloak.createRealm(name, name + "-admin");
+            keycloak.createRealm(name, name + "-admin", getConsoleRedirectURI(standardAuthSvcSpaces.get(name)));
         }
     }
 }
