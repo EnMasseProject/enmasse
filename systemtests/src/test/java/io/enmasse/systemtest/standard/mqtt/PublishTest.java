@@ -11,6 +11,7 @@ import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -28,6 +30,7 @@ import static org.junit.Assert.assertThat;
  * Tests related to publish messages via MQTT
  */
 public class PublishTest extends StandardTestBase {
+    private static Logger log = CustomLogger.getLogger();
 
     @Override
     protected boolean skipDummyAddress() {
@@ -58,6 +61,35 @@ public class PublishTest extends StandardTestBase {
         List<Integer> publisherQos = Arrays.asList(2, 2, 2);
 
         this.publish(messages, publisherQos, 2);
+    }
+
+    //@Test
+    public void testRetainedMessages() throws Exception {
+        Destination topic = Destination.topic("retained-message-topic", "sharded-topic");
+        setAddresses(topic);
+
+        MqttMessage retainedMessage = new MqttMessage();
+        retainedMessage.setQos(1);
+        retainedMessage.setPayload("retained-message".getBytes());
+        retainedMessage.setId(1);
+        retainedMessage.setRetained(true);
+
+        //send retained message to the topic
+        MqttClient mqttClient = mqttClientFactory.createClient();
+        Future<Integer> sendResultMqtt = mqttClient.sendMessages(topic.getAddress(), retainedMessage);
+        assertThat("Incorrect count of messages sent",
+                sendResultMqtt.get(1, TimeUnit.MINUTES), is(1));
+
+        //each client which will subscribe to the topic should receive retained message!
+        int clients = 5;
+        for (int i = 0; i < clients; i++) {
+            mqttClient = mqttClientFactory.createClient();
+            Future<List<MqttMessage>> recvResult = mqttClient.recvMessages(topic.getAddress(), 1, 1);
+            assertThat("Incorrect count of messages received",
+                    recvResult.get(1, TimeUnit.MINUTES).size(), is(1));
+            log.info("id:{}, retained: {}", recvResult.get().get(0).getId(), recvResult.get().get(0).isRetained());
+            assertTrue("Retained message expected", recvResult.get().get(0).isRetained());
+        }
     }
 
     private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
