@@ -64,9 +64,9 @@ public abstract class TestBase extends SystemTestRunListener {
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
-    protected List<AddressSpace> addressSpaceList = new ArrayList<>();
+    private List<AddressSpace> addressSpaceList = new ArrayList<>();
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
-    protected BrokerManagement brokerManagement = new ArtemisManagement();
+    private BrokerManagement brokerManagement = new ArtemisManagement();
     private KeycloakClient keycloakApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
