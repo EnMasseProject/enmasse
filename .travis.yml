@@ -9,6 +9,9 @@ notifications:
     use_notice: true
     skip_join: true
 sudo: required
+addons:
+  hosts:
+    - travis.enmasse.dev
 services:
 - docker
 cache:
