@@ -75,20 +75,64 @@ function create_addresses() {
 
 function create_user() {
     CLI_ID=$1
-    NEW_USER_DEF=$2
-    ADDRESS_SPACE_NAME=$3
-
-    #get keycloak credentials
-    oc extract secret/keycloak-credentials
-    USER=$(cat admin.username)
-    PASSWORD=$(cat admin.password)
+    USER=$2
+    PASSWORD=$3
+    ADDRESS_SPACE_NAME=$4
+    NEW_USER_DEF=$5
 
     # get token
     RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
     TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
 
     #create user
-    curl -k -X POST -H "content-type: application/json" --data-binary @${NEW_USER_DEF} -H "Authorization: Bearer ${TOKEN}"  https://${USER}:${PASSWORD}@$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users
+    curl -k -X POST -H "content-type: application/json" --data-binary @${NEW_USER_DEF} -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users
+}
+
+function join_group() {
+    CLI_ID=$1
+    USER=$2
+    PASSWORD=$3
+    ADDRESS_SPACE_NAME=$4
+    USER_NAME=$5
+    GROUP_NAME=$6
+
+
+    # get token
+    RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
+    TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
+
+    #GET USER ID
+    echo "get user id: ${USER_NAME}"
+    TCKUSERJSON=$(curl -k -X GET -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users?search=${USER_NAME})
+    TCK_USER_ID=$(echo ${TCKUSERJSON} | jq -r '.[].id')
+    echo "user id: ${TCK_USER_ID}"
+
+    #GET GROUP ID
+    echo "get group id: ${GROUP_NAME}"
+    KEYCLOAK_GROUPS=$(curl -k -X GET -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/groups?search=${GROUP_NAME})
+    GROUP_ID=$(echo ${KEYCLOAK_GROUPS} | jq -r '.[].id')
+    echo "group id: ${GROUP_ID}"
+
+    #JOIN GROUP
+    $(curl -k -X PUT -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users/${TCK_USER_ID}/groups/${GROUP_ID})
+}
+
+function create_group() {
+    CLI_ID=$1
+    USER=$2
+    PASSWORD=$3
+    ADDRESS_SPACE_NAME=$4
+    GROUP_NAME=$5
+
+    GROUP_DEF="{\"name\":\"${GROUP_NAME}\"}"
+    echo ${GROUP_DEF}
+
+    # get token
+    RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
+    TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
+
+    #create group
+    curl -k -X POST -H "content-type: application/json" -d ${GROUP_DEF} -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/groups/
 }
 
 function get_kubernetes_info() {
