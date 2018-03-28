@@ -36,6 +36,7 @@ public class QueueTest extends StandardTestBase {
         runQueueTest(client, q3);
     }
 
+    @Test
     public void testShardedQueues() throws Exception {
         Destination q1 = Destination.queue("persistedQueue1", "sharded-queue");
         Destination q2 = Destination.queue("persistedQueue2", "sharded-queue");
