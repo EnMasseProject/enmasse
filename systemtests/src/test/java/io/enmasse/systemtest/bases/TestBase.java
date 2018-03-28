@@ -28,6 +28,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -399,7 +400,7 @@ public abstract class TestBase extends SystemTestRunListener {
         options.setUserName(username);
         options.setPassword(password.toCharArray());
 
-        Future<List<String>> received = client.recvMessages("t1", 1);
+        Future<List<MqttMessage>> received = client.recvMessages("t1", 1);
         Future<Integer> sent = client.sendMessages("t1", Arrays.asList("msgt1"));
 
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
