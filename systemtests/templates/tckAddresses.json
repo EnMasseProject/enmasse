@@ -4,7 +4,7 @@
   "items": [
     {
       "metadata": {
-        "name": "MY_QUEUE"
+        "name": "MY_QUEUE_upper"
       },
       "spec": {
         "address": "MY_QUEUE",
@@ -84,7 +84,7 @@
     },
     {
       "metadata": {
-        "name": "MY_TOPIC"
+        "name": "MY_TOPIC_upper"
       },
       "spec": {
         "address": "MY_TOPIC",
