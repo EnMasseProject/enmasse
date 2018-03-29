@@ -27,28 +27,31 @@ public class ConsoleWebPage {
     private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
+    private LoginWebPage loginWebPage;
+    private String username;
+    private String password;
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, String username, String password) {
         this.selenium = selenium;
         this.consoleRoute = consoleRoute;
         this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
+        this.loginWebPage = new LoginWebPage(selenium);
+        this.username = username;
+        this.password = password;
     }
 
-    public void openWebConsolePage() {
-        openWebConsolePage(consoleRoute);
+    public void openWebConsolePage() throws Exception {
+        openWebConsolePage(username, password);
     }
 
-    public void openWebConsolePage(String route) throws IllegalStateException {
+    public void openWebConsolePage(String username, String password) throws Exception {
         log.info("Opening console web page");
-        selenium.getDriver().get(route);
+        selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (!selenium.getDriver().findElement(By.tagName("body")).getText().isEmpty()) {
-            log.info("Console page opened");
-        } else {
-            throw new IllegalStateException("Console web page wasn't opened!");
-        }
+        if (!loginWebPage.login(username, password))
+            throw new IllegalAccessException(loginWebPage.getAlertMessage());
     }
 
     private WebElement getNavigateMenu() throws Exception {

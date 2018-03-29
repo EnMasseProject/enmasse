@@ -120,8 +120,8 @@ public class ChromeWebConsoleTest extends StandardWebConsoleTest {
         doTestViewAddressesWildcards();
     }
 
-    //@Test(expected = IllegalStateException.class)
-    public void testCannotOpenConsolePage() throws IllegalStateException {
+    //@Test(expected = IllegalAccessException.class)
+    public void testCannotOpenConsolePage() throws Exception {
         doTestCanOpenConsolePage("pepa", "pepaPa555");
     }
 
