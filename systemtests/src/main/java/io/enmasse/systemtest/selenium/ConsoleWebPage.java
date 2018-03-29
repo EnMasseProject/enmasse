@@ -47,6 +47,7 @@ public class ConsoleWebPage {
 
     public void openWebConsolePage(String username, String password) throws Exception {
         log.info("Opening console web page");
+        logout();
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
@@ -250,6 +251,23 @@ public class ConsoleWebPage {
 
     public WebElement getCreateAddressModalWindow() throws Exception {
         return selenium.getDriver().findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
+    }
+
+    private WebElement getRightDropDownMenus() throws Exception {
+        return selenium.getDriver().findElement(By.className("navbar-right"));
+    }
+
+    private WebElement getHelpDropDown() throws Exception {
+        return getRightDropDownMenus().findElements(By.className("dropdown")).get(1);
+    }
+
+    private WebElement getUserDropDown() throws Exception {
+        return getRightDropDownMenus().findElements(By.className("dropdown")).get(2);
+    }
+
+    private WebElement getLogoutHref() throws Exception {
+        log.info("Getting logout link");
+        return getUserDropDown().findElement(By.id("logout"));
     }
 
     /**
@@ -502,7 +520,7 @@ public class ConsoleWebPage {
      */
     public void createAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
-            createAddressWebConsole(dest);
+            createAddressWebConsole(dest, false, true);
         }
     }
 
@@ -559,7 +577,7 @@ public class ConsoleWebPage {
      */
     public void deleteAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
-            deleteAddressWebConsole(dest);
+            deleteAddressWebConsole(dest, false);
         }
     }
 
@@ -591,5 +609,14 @@ public class ConsoleWebPage {
 
         //check if address deleted
         assertNull("Console failed, still contains deleted address item ", getAddressItem(destination));
+    }
+
+    public void logout() throws Exception {
+        try {
+            selenium.clickOnItem(getUserDropDown(), "User dropdown");
+            selenium.clickOnItem(getLogoutHref(), "Logout");
+        } catch (Exception ex) {
+            log.info("Unable to logout, driver has login page opened.");
+        }
     }
 }

@@ -104,6 +104,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, username, password);
+        consoleWebPage.openWebConsolePage();
         Destination q1 = Destination.queue("new-queue-instance-1", consoleQueuePlan1.getName());
         Destination t2 = Destination.topic("new-topic-instance-2", consoleTopicPlan2.getName());
         Destination q3 = Destination.queue("new-queue-instance-3", consoleQueuePlan3.getName());
