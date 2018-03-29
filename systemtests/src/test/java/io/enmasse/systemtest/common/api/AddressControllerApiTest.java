@@ -7,7 +7,6 @@ package io.enmasse.systemtest.common.api;
 import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -158,9 +157,9 @@ public class AddressControllerApiTest extends TestBase {
             selenium = getFirefoxSeleniumProvider();
             ConsoleWebPage console = new ConsoleWebPage(
                     selenium,
-                    getConsoleRoute(addressSpace, luckyUser.getUsername(), luckyUser.getPassword()),
+                    getConsoleRoute(addressSpace),
                     addressApiClient,
-                    addressSpace);
+                    addressSpace, luckyUser.getUsername(), luckyUser.getPassword());
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
         } catch (Exception ex) {
