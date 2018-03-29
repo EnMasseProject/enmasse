@@ -13,7 +13,9 @@ import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
-import io.enmasse.systemtest.selenium.*;
+import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.After;
@@ -24,10 +26,11 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 @Category(IsolatedAddressSpace.class)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
@@ -100,7 +103,8 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         getKeycloakClient().createUser(consoleAddrSpace.getName(), username, password, 20, TimeUnit.SECONDS);
 
         //create addresses
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace, username, password), addressApiClient, consoleAddrSpace);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, username, password);
+        consoleWebPage.openWebConsolePage();
         Destination q1 = Destination.queue("new-queue-instance-1", consoleQueuePlan1.getName());
         Destination t2 = Destination.topic("new-topic-instance-2", consoleTopicPlan2.getName());
         Destination q3 = Destination.queue("new-queue-instance-3", consoleQueuePlan3.getName());

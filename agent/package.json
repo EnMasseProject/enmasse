@@ -10,7 +10,8 @@
     },
     "dependencies": {
         "debug": ">=0.8.0",
-        "rhea": ">=0.2.5",
+        "rhea": ">=0.2.11",
+        "keycloak-connect": "3.4.3",
         "ws": "*"
     },
     "devDependencies": {

@@ -459,19 +459,15 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
-    protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
+    protected String getConsoleRoute(AddressSpace addressSpace) {
         Endpoint consoleEndpoint = addressSpace.getEndpoint("console");
         if (consoleEndpoint == null) {
             String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
             consoleEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
         }
-        String consoleRoute = String.format("https://%s:%s@%s", username, password, consoleEndpoint);
+        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
         log.info(consoleRoute);
         return consoleRoute;
-    }
-
-    protected String getConsoleRoute(AddressSpace addressSpace) {
-        return getConsoleRoute(addressSpace, username, password);
     }
 
     protected FirefoxDriver getFirefoxDriver() {
@@ -510,7 +506,7 @@ public abstract class TestBase extends SystemTestRunListener {
         SeleniumProvider selenium = null;
         try {
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, username, password);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
             selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());

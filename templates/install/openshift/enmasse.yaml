@@ -115,6 +115,8 @@ objects:
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            - name: AUTHENTICATION_SERVICE_OAUTH_URL
+              value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
             image: ${ROUTER_IMAGE}
             livenessProbe:
               initialDelaySeconds: 60
@@ -275,6 +277,8 @@ objects:
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            - name: AUTHENTICATION_SERVICE_OAUTH_URL
+              value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
             - name: MESSAGING_CERT
@@ -449,6 +453,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -631,6 +637,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -827,6 +835,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -888,6 +898,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -1084,6 +1096,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -1145,6 +1159,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -1348,6 +1364,8 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: The URL to use for OAUTH (if not set, OAUTH is not used)
+    name: AUTHENTICATION_SERVICE_OAUTH_URL
   - description: Enable logging of kubernetes events
     name: ENABLE_EVENT_LOGGER
     value: 'false'
@@ -1473,6 +1491,8 @@ objects:
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            - name: AUTHENTICATION_SERVICE_OAUTH_URL
+              value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
             image: ${ROUTER_IMAGE}
             livenessProbe:
               initialDelaySeconds: 60
@@ -1633,6 +1653,8 @@ objects:
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            - name: AUTHENTICATION_SERVICE_OAUTH_URL
+              value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
             - name: MESSAGING_CERT
@@ -1807,6 +1829,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -1989,6 +2013,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -2185,6 +2211,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -2246,6 +2274,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -2442,6 +2472,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -2503,6 +2535,8 @@ objects:
                 value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -2870,6 +2904,8 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: The URL to use for OAUTH (if not set, OAUTH is not used)
+    name: AUTHENTICATION_SERVICE_OAUTH_URL
   - description: Enable logging of kubernetes events
     name: ENABLE_EVENT_LOGGER
     value: 'false'
@@ -2963,6 +2999,8 @@ objects:
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            - name: AUTHENTICATION_SERVICE_OAUTH_URL
+              value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
             image: ${BROKER_IMAGE}
             livenessProbe:
               exec:
@@ -3091,6 +3129,8 @@ objects:
               value: /etc/console-certs
             - name: MESSAGING_CERT
               value: /opt/agent/messaging-cert/tls.crt
+            - name: PROBE_PORT
+              value: '8088'
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -3099,21 +3139,25 @@ objects:
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            - name: AUTHENTICATION_SERVICE_OAUTH_URL
+              value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
             image: ${AGENT_IMAGE}
             livenessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
             name: agent
             ports:
             - containerPort: 8080
               name: https
+            - containerPort: 8088
+              name: http
             readinessProbe:
               httpGet:
                 path: /probe
-                port: https
-                scheme: HTTPS
+                port: http
+                scheme: HTTP
             volumeMounts:
             - mountPath: /opt/agent/authservice-ca
               name: authservice-ca
@@ -3189,6 +3233,8 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: The URL to use for OAUTH (if not set, OAUTH is not used)
+    name: AUTHENTICATION_SERVICE_OAUTH_URL
   - description: Enable logging of kubernetes events
     name: ENABLE_EVENT_LOGGER
     value: 'false'

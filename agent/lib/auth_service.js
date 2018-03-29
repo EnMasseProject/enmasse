@@ -20,12 +20,19 @@ var fs = require('fs');
 var rhea = require('rhea');
 var log = require("./log.js").logger();
 
-function authenticate(user, options) {
+function authenticate(credentials, options) {
     return new Promise(function(resolve, reject) {
-        if( user && user.name ) {
-            options.username = user.name;
-            options.password = user.pass;
+        if( credentials && credentials.username ) {
+            options.username = credentials.username;
+            if (credentials.password) {
+                log.info('authenticating as %s using PLAIN', options.username);
+                options.password = credentials.password;
+            } else if (credentials.token) {
+                log.info('authenticating as %s using XOAUTH2', options.username);
+                options.token = credentials.token;
+            }
         } else {
+            log.info('authenticating as anonymous');
             options.username = "anonymous";
         }
 
@@ -39,7 +46,7 @@ function authenticate(user, options) {
         var handleFailure = function (context) {
             if (!handled) {
                 handled = true;
-                reject();
+                reject(JSON.stringify(context.connection.get_error()));
             }
         };
         authServer.on("connection_error", handleFailure);
