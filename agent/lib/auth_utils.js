@@ -97,7 +97,7 @@ function store_in_session(request, key, value) {
 }
 
 function get_from_session(request, key) {
-    return request.session[key];
+    return request.session ? request.session[key] : undefined;
 }
 
 function remove_from_session(request, key) {
