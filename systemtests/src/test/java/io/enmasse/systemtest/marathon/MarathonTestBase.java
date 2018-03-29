@@ -97,7 +97,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
     //========================================================================================================
 
     void doTestCreateDeleteAddressSpaceLong(AddressSpace addressSpace) throws Exception {
-        runTestInLoop(60, () -> {
+        runTestInLoop(30, () -> {
             createAddressSpace(addressSpace);
             log.info("Address space created");
 
