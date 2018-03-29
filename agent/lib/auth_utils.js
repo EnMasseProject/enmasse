@@ -24,7 +24,7 @@ var log = require("./log.js").logger();
 const myutils = require('./utils.js');
 
 function my_request(original, defaults, options, callback) {
-    return original(myutils.merge(defaults, options), callback);
+    return original(myutils.merge({}, defaults, options), callback);
 }
 
 function set_defaults(defaults) {
