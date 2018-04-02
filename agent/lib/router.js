@@ -21,6 +21,8 @@ var qdr = require("./qdr.js");
 var myutils = require("./utils.js");
 var log = require("./log.js").logger();
 
+const ID_QUALIFIER = 'ragent'
+
 function create_record(names, values) {
     var record = {};
     for (var j = 0; j < names.length; j++) {
@@ -33,6 +35,10 @@ function has_inter_router_role (record) {
     return record.role === 'inter-router';
 }
 
+function matches_qualifier (record) {
+    return record.name.indexOf(ID_QUALIFIER) === 0;
+}
+
 function to_host_port (record) {
     return record.host + ':' + record.port;
 }
@@ -41,18 +47,18 @@ function by_name (o) {
     return o.name;
 }
 
-function not_overridden (o) {
-    return o.name.indexOf('override') !== 0;
+function by_prefix (o) {
+    return o.prefix;
 }
 
 function address_equivalence(a, b) {
     if (a === undefined) return b === undefined;
-    return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
+    return a.address === b.address && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
 }
 
 function link_route_equivalence(a, b) {
     if (a === undefined) return b === undefined;
-    return a.name === b.name && a.prefix === b.prefix && a.dir === b.dir;
+    return a.prefix === b.prefix && a.dir === b.dir;
 }
 
 /**
@@ -135,7 +141,7 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
     }
     var do_create = this.forall_connectors.bind(this, num_connectors, this.create_connector.bind(this));
     var do_delete = this.forall_connectors.bind(this, num_connectors, this.delete_connector.bind(this));
-    var work = missing.map(do_create).concat(stale.map(do_delete));
+    var work = missing.map(do_create).concat(stale.filter(matches_qualifier).map(do_delete));
     var self = this;
     if (work.length) {
         log.info('[%s] checking connectors on router, missing=%j, stale=%j', this.container_id, missing, stale);
@@ -159,7 +165,7 @@ function is_topic(address) {
 }
 
 function to_link_route(direction, address) {
-    return {name:address.name + '_' + direction, prefix:address.name, dir:direction, containerId:address.allocated_to};
+    return {name:address.name + '_' + direction, prefix:address.address, dir:direction, containerId:address.allocated_to};
 }
 
 function to_in_link_route(address) {
@@ -176,7 +182,7 @@ function to_link_routes(address_list) {
 }
 
 function update(actual, desired, type) {
-    var removed = myutils.values(myutils.difference(actual, desired, type.equivalence));
+    var removed = myutils.values(myutils.difference(actual, desired, type.equivalence)).filter(matches_qualifier);
     var added = myutils.values(myutils.difference(desired, actual, type.equivalence));
     return removed.map(type.remove).concat(added.map(type.add));
 }
@@ -240,7 +246,7 @@ ConnectedRouter.prototype.sync_addresses = function (desired) {
 ConnectedRouter.prototype.forall_connectors = function (num_connectors, connector_operation, host_port) {
     var futures = [];
     for (var i = 0; i < num_connectors; i++) {
-        var connector_name = host_port + "-" + i;
+        var connector_name = ID_QUALIFIER + '-' + host_port + '-' + i;
         futures.push(connector_operation(host_port, connector_name));
     }
     return Promise.all(futures);
@@ -263,7 +269,7 @@ function actual_distribution(address) {
 }
 
 function from_router_address(address) {
-    return {name:address.prefix, multicast:actual_distribution(address), store_and_forward:address.waypoint};
+    return {name:address.name, address:address.prefix, multicast:actual_distribution(address), store_and_forward:address.waypoint};
 }
 
 ConnectedRouter.prototype.define_address_and_autolinks = function (address) {
@@ -284,25 +290,25 @@ ConnectedRouter.prototype.delete_address_and_autolinks = function (address) {
 
 ConnectedRouter.prototype.define_address = function (address) {
     var dist = address.multicast ? "multicast" : "balanced";
-    log.info('[%s] defining address %s', this.container_id, address.name);
-    return this.router_mgmt.create_address({name:address.name, prefix:address.name, distribution:dist, waypoint:address.store_and_forward});
+    log.info('[%s] defining address %s', this.container_id, address.address);
+    return this.router_mgmt.create_address({name:address.name, prefix:address.address, distribution:dist, waypoint:address.store_and_forward});
 };
 
 ConnectedRouter.prototype.delete_address = function (address) {
-    log.info('[%s] deleting address %s', this.container_id, address.name);
+    log.info('[%s] deleting address %s', this.container_id, address.address);
     return this.router_mgmt.delete_address(address);
 };
 
 ConnectedRouter.prototype.define_autolink = function (address, direction) {
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
     log.info('[%s] defining %s autolink for %s', this.container_id, direction, address.name);
-    var brokerId = address.allocated_to || address.name;
-    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:brokerId});
+    var brokerId = address.allocated_to || address.address;
+    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.address, containerId:brokerId});
 }
 
 ConnectedRouter.prototype.delete_autolink = function (address, direction) {
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
-    log.info('[%s] deleting %s autolink for %s', this.container_id, direction, address.name);
+    log.info('[%s] deleting %s autolink for %s', this.container_id, direction, address.address);
     return this.delete_entity('org.apache.qpid.dispatch.router.config.autoLink', name);
 }
 
@@ -345,7 +351,7 @@ ConnectedRouter.prototype.retrieve_connectors = function () {
 ConnectedRouter.prototype.retrieve_addresses = function () {
     var self = this;
     return this.query('org.apache.qpid.dispatch.router.config.address', {attributeNames:[]}).then(function (results) {
-        self.addresses = myutils.index(results.filter(not_overridden), by_name, from_router_address);
+        self.addresses = myutils.index(results, by_prefix, from_router_address);
         log.debug('[%s] retrieved addresses: %j', self.container_id, self.addresses);
         return self.retrieve_link_routes();
     }).catch(function (error) {
@@ -358,7 +364,7 @@ ConnectedRouter.prototype.retrieve_addresses = function () {
 ConnectedRouter.prototype.retrieve_link_routes = function () {
     var self = this;
     return this.query('org.apache.qpid.dispatch.router.config.linkRoute').then(function (records) {
-        self.link_routes = myutils.index(records.filter(not_overridden), by_name);
+        self.link_routes = myutils.index(records, by_name);
         log.debug('[%s] retrieved link routes: %j', self.container_id, self.link_routes);
         self.emit('addresses_updated', self);
     }).catch(function (error) {

@@ -143,7 +143,8 @@ function transform_address (addr) {
         console.error('BAD ADDRESS: %j', addr);
     }
     return {
-        name: addr.address,
+        name: 'ragent-' + addr.address,
+        address: addr.address,
         multicast: (addr.type === 'multicast' || addr.type === 'topic'),
         store_and_forward: (addr.type === 'queue' || addr.type === 'topic'),
         allocated_to: addr.allocated_to
@@ -153,7 +154,7 @@ function transform_address (addr) {
 Ragent.prototype.sync_addresses = function (updated) {
     log.info('triggering address configuration check');
     this.sync_brokers(updated);
-    this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.name] = a; return map; }, {});
+    this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.address] = a; return map; }, {});
     log.debug('updating addresses: %j', this.addresses);
     this.addresses_updated();
     log.info('address configuration check triggered');

@@ -347,16 +347,16 @@ describe('basic router configuration', function() {
     it('configures multiple different types of address', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('removes unwanted address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
-           router.create_object('org.apache.qpid.dispatch.router.config.address', 'foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'bar', {prefix:'bar', dir:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'baz', {addr:'baz', dir:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', dir:'in'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', dir:'out'});
        }));
     it('removes or updates address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
-           router.create_object('org.apache.qpid.dispatch.router.config.address', 'a', {prefix:'a', distribution:'closest', 'waypoint':false});
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'b-in', {prefix:'b', dir:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'b-out', {prefix:'b', dir:'out'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'baz', {addr:'baz', dir:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-a', {prefix:'a', distribution:'closest', 'waypoint':false});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', dir:'in'});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', dir:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', dir:'out'});
        }));
     it('configures addresses on multiple routers', multi_router_address_test(3, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
@@ -406,11 +406,11 @@ describe('basic router configuration', function() {
                                 assert.equal(result, true);
                                 client.close();
                                 client.on('connection_close', function () { done(); } );
-                            });
+                            }).catch(done);
                         }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-                    });
+                    }).catch(done);
                 }, 200);
-            });
+            }).catch(done);
         });
     });
     it('handles disconnection of router', function(done) {
@@ -487,7 +487,7 @@ describe('basic router configuration', function() {
        }));
     it('handles address delete error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
-           router.create_object('org.apache.qpid.dispatch.router.config.address', 'foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
+           router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
            router.set_onetime_error_response('DELETE','org.apache.qpid.dispatch.router.config.address');
        }));
     it('handles connector create error', multi_router_address_test(2, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
