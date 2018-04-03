@@ -5,6 +5,13 @@
 - name: Create secret with the keycloak credentials
   when: secret_exists.failed
   shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
+- name: Check if keycloak config exists
+  shell: oc get configmap -n {{ namespace }} keycloak-config
+  register: config_exists
+  ignore_errors: True
+- name: Create configmap with the keycloak info
+  when: config_exists.failed
+  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=amqpPort=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=oauthURL={{ keycloak_oauth_url }}
 - name: Give view permissions for the keycloak controller
   shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
 - name: Create the standard authentication service

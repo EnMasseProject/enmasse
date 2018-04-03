@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("restapi-external", "LoadBalancer", {}),
 
-  deployment(image, template_config, cert_secret, environment, enable_rbac, enable_event_logger, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret, resync_interval, check_interval, impersonate_user)::
+  deployment(image, template_config, cert_secret, environment, enable_rbac, enable_event_logger, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret, resync_interval, check_interval, impersonate_user, standard_authservice_config)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -72,6 +72,7 @@ local common = import "common.jsonnet";
                   common.env("IMPERSONATE_USER", impersonate_user),
                   common.env("ADDRESS_CONTROLLER_SA", address_controller_sa),
                   common.env("ADDRESS_SPACE_ADMIN_SA", address_space_admin_sa),
+                  common.env("STANDARD_AUTHSERVICE_CONFIG", standard_authservice_config),
                   common.env("WILDCARD_ENDPOINT_CERT_SECRET", wildcard_endpoint_cert_secret),
                   common.env("RESYNC_INTERVAL", resync_interval),
                   common.env("CHECK_INTERVAL", check_interval)

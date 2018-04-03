@@ -4,14 +4,11 @@
  */
 package io.enmasse.controller;
 
-/**
- * Information about an Authentication Service
- */
-public class AuthServiceInfo {
+public class NoneAuthServiceInfo {
     private final String host;
     private final int amqpPort;
 
-    public AuthServiceInfo(String host, int amqpPort) {
+    public NoneAuthServiceInfo(String host, int amqpPort) {
         this.host = host;
         this.amqpPort = amqpPort;
     }

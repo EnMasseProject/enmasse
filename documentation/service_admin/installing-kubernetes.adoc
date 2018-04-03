@@ -88,6 +88,22 @@ kubectl create secret generic keycloak-credentials --from-literal=admin.username
 kubectl apply -f ./kubernetes/addons/standard-authservice.yaml
 ----
 
+. Create keycloak configuration used by controller and service. If you want to enable OAUTH support
+in the messaging console, you need to specify the `oauthUrl` setting. To get the service ip:
++
+[options="nowrap"]
+----
+kubectl get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
+
+. Create keycloak configuration:
+[options="nowrap"]
+----
+AUTH_HOST=<value from one of the previous commands>
+AUTH_PORT=8443 if using the service ip, 443 if using the route host
+kubectl create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=oauthUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
+----
+
 ==== Deploying {ProductName}
 
 . Create service account for the {ProductName} address controller:

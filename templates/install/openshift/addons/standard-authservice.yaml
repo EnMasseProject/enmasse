@@ -42,6 +42,11 @@ objects:
               secretKeyRef:
                 key: admin.password
                 name: ${KEYCLOAK_SECRET_NAME}
+          - name: KEYCLOAK_SASL_XOAUTH_BASE_URI
+            valueFrom:
+              configMapKeyRef:
+                key: oauthUrl
+                name: ${KEYCLOAK_CONFIGMAP_NAME}
           image: ${STANDARD_AUTHSERVICE_IMAGE}
           livenessProbe:
             httpGet:
@@ -126,12 +131,12 @@ objects:
             valueFrom:
               configMapKeyRef:
                 key: hostname
-                name: ${KEYCLOAK_CONTROLLER_CONFIGMAP_NAME}
+                name: ${KEYCLOAK_CONFIGMAP_NAME}
           - name: KEYCLOAK_PORT
             valueFrom:
               configMapKeyRef:
-                key: port
-                name: ${KEYCLOAK_CONTROLLER_CONFIGMAP_NAME}
+                key: httpPort
+                name: ${KEYCLOAK_CONFIGMAP_NAME}
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:
               secretKeyRef:
@@ -154,15 +159,6 @@ objects:
               memory: 256Mi
             requests:
               memory: 256Mi
-- apiVersion: v1
-  data:
-    hostname: standard-authservice
-    port: '8443'
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-    name: keycloak-controller-config
 - apiVersion: v1
   kind: Service
   metadata:
@@ -210,8 +206,8 @@ parameters:
   name: KEYCLOAK_CONTROLLER_IMAGE
   value: docker.io/enmasseproject/keycloak-controller:latest
 - description: The configmap used to configure the keycloak controller
-  name: KEYCLOAK_CONTROLLER_CONFIGMAP_NAME
-  value: keycloak-controller-config
+  name: KEYCLOAK_CONFIGMAP_NAME
+  value: keycloak-config
 - description: The secret containing the tls certificate and key
   name: KEYCLOAK_CERT_SECRET_NAME
   value: standard-authservice-cert

@@ -41,6 +41,11 @@ items:
               secretKeyRef:
                 key: admin.password
                 name: keycloak-credentials
+          - name: KEYCLOAK_SASL_XOAUTH_BASE_URI
+            valueFrom:
+              configMapKeyRef:
+                key: oauthUrl
+                name: keycloak-config
           image: jboss/keycloak-openshift:3.4.3.Final
           livenessProbe:
             httpGet:
@@ -128,12 +133,12 @@ items:
             valueFrom:
               configMapKeyRef:
                 key: hostname
-                name: keycloak-controller-config
+                name: keycloak-config
           - name: KEYCLOAK_PORT
             valueFrom:
               configMapKeyRef:
-                key: port
-                name: keycloak-controller-config
+                key: httpPort
+                name: keycloak-config
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:
               secretKeyRef:
@@ -156,15 +161,6 @@ items:
               memory: 256Mi
             requests:
               memory: 256Mi
-- apiVersion: v1
-  data:
-    hostname: standard-authservice
-    port: '8443'
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-    name: keycloak-controller-config
 - apiVersion: v1
   kind: Service
   metadata:

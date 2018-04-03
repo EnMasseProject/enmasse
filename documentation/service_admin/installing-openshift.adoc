@@ -83,7 +83,7 @@ oc create secret generic keycloak-credentials --from-literal=admin.username=admi
 +
 [options="nowrap"]
 ----
-oc adm policy add-role-to-user view system:serviceaccount:$(oc project -q):default
+oc adm policy add-role-to-user view system:serviceaccount:enmasse:default
 ----
 
 . Create the standard authentication service:
@@ -91,6 +91,30 @@ oc adm policy add-role-to-user view system:serviceaccount:$(oc project -q):defau
 [options="nowrap"]
 ----
 oc process -f ./openshift/addons/standard-authservice.yaml | oc create -f -
+----
+
+. Create keycloak configuration used by controller and service. If you want to enable OAUTH support
+in the messaging console, you need to specify the `oauthUrl` setting. If you are running a local
+OpenShift cluster without a public DNS, use the internal service IP for the hostname, otherwise use
+the hostname of the external route. To get the service ip:
++
+[options="nowrap"]
+----
+oc get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
++
+. Or, if you have a public hostname:
+[options="nowrap"]
+----
+oc get route keycloak -o jsonpath={.spec.host}
+----
+
+. Create keycloak configuration:
+[options="nowrap"]
+----
+AUTH_HOST=<value from one of the previous commands>
+AUTH_PORT=8443 if using the service ip, 443 if using the route host
+oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=oauthUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
 ----
 
 ==== Deploying {ProductName}
@@ -122,6 +146,7 @@ oc create -f ./openshift/cluster-roles.yaml
 [options="nowrap"]
 ----
 oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
 oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:enmasse:enmasse-admin
 ----
 +
@@ -176,8 +201,8 @@ oc get pods -n enmasse
 +
 [options="nowrap"]
 ----
-oc create sa -n enmasse enmasse-admin
-oc create sa -n enmasse address-space-admin
+oc create sa enmasse-admin
+oc create sa address-space-admin
 ----
 
 . Grant privileges required for viewing and managing resources:
