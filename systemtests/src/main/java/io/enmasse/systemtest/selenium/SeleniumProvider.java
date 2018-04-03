@@ -10,7 +10,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
 import org.apache.commons.io.FileUtils;
-import org.junit.runner.Description;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class SeleniumProvider {
 
@@ -38,18 +38,21 @@ public class SeleniumProvider {
     private Environment environment;
     private Kubernetes kubernetes;
 
-    public void onFailed(Throwable e, Description description) {
+
+    public void onFailed(ExtensionContext extensionContext) {
         try {
+            String getTestClassName = extensionContext.getTestClass().get().getName();
+            String getTestMethodName = extensionContext.getTestMethod().get().getName();
             takeScreenShot();
             Path path = Paths.get(
                     environment.testLogDir(),
                     webconsoleFolder,
-                    description.getClassName(),
-                    description.getMethodName());
+                    getTestClassName,
+                    getTestMethodName);
             Files.createDirectories(path);
             for (Date key : browserScreenshots.keySet()) {
                 FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
-                        String.format("%s_%s.png", description.getDisplayName(), dateFormat.format(key))).toString()));
+                        String.format("%s.%s_%s.png", getTestClassName, getTestMethodName, dateFormat.format(key))).toString()));
             }
             log.info("Screenshots stored");
         } catch (Exception ex) {
@@ -132,7 +135,7 @@ public class SeleniumProvider {
 
     protected void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
-        assertNotNull("Selenium provider failed, element is null", element);
+        assertNotNull(element, "Selenium provider failed, element is null");
         log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
         element.click();
         angularDriver.waitForAngularRequestsToFinish();
@@ -142,7 +145,7 @@ public class SeleniumProvider {
 
     protected void fillInputItem(WebElement element, String text) throws Exception {
         takeScreenShot();
-        assertNotNull("Selenium provider failed, element is null", element);
+        assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(text);
         angularDriver.waitForAngularRequestsToFinish();
         log.info("Filled input with text: " + text);
@@ -151,7 +154,7 @@ public class SeleniumProvider {
 
     protected void pressEnter(WebElement element) throws Exception {
         takeScreenShot();
-        assertNotNull("Selenium provider failed, element is null", element);
+        assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(Keys.RETURN);
         angularDriver.waitForAngularRequestsToFinish();
         log.info("Enter pressed");

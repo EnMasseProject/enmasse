@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class QueueTest extends StandardTestBase {
 
@@ -112,7 +113,7 @@ public class QueueTest extends StandardTestBase {
         int sub = 1;
         for (Message m : received.get()) {
             for (Message mSub : received.get().subList(sub, received.get().size())) {
-                assertTrue("Wrong order of messages", m.getPriority() >= mSub.getPriority());
+                assertTrue(m.getPriority() >= mSub.getPriority(), "Wrong order of messages");
             }
             sub++;
         }
@@ -164,7 +165,7 @@ public class QueueTest extends StandardTestBase {
         Count<Message> predicate = new Count<>(msgs.size());
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
 
-        assertNotNull("Sending messages didn't start", numSent);
+        assertNotNull(numSent, "Sending messages didn't start");
         int actual = 0;
         try {
             actual = numSent.get(1, TimeUnit.MINUTES);
@@ -185,7 +186,7 @@ public class QueueTest extends StandardTestBase {
         assertThat("Wrong count of messages received", actual, is(msgs.size()));
     }
 
-//    @Test // disabled due to issue: #903
+    //    @Test // disabled due to issue: #903
     public void testScalePooledQueueAutomatically() throws Exception {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 2000;

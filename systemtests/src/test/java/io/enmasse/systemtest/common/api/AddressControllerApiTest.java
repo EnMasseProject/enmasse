@@ -17,10 +17,10 @@ import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.standard.mqtt.PublishTest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -32,10 +32,10 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Category(IsolatedAddressSpace.class)
+@Tag("isolated")
 public class AddressControllerApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
 
@@ -44,12 +44,12 @@ public class AddressControllerApiTest extends TestBase {
         return null;
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         plansProvider.setUp();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         plansProvider.tearDown();
     }
@@ -212,8 +212,8 @@ public class AddressControllerApiTest extends TestBase {
         try {
             setAddresses(addressSpace, dest4);
         } catch (java.util.concurrent.ExecutionException ex) {
-            assertTrue("Exception does not contain right information",
-                    ex.getMessage().contains("does not match address space in url"));
+            assertTrue(ex.getMessage().contains("does not match address space in url"),
+                    "Exception does not contain right information");
         }
 
         try { //missing address

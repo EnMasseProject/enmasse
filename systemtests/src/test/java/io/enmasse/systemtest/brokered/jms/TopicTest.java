@@ -7,7 +7,9 @@ package io.enmasse.systemtest.brokered.jms;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.Destination;
-import org.junit.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import javax.jms.*;
@@ -23,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TopicTest extends JMSTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -36,7 +38,7 @@ public class TopicTest extends JMSTestBase {
     private String topic = "jmsTopic";
     private Destination addressTopic;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         addressTopic = Destination.topic(topic, getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
@@ -51,7 +53,7 @@ public class TopicTest extends JMSTestBase {
         connection.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.stop();

@@ -28,7 +28,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MqttClientFactory {
 
@@ -56,7 +56,7 @@ public class MqttClientFactory {
     }
 
     public MqttClient createClient() throws Exception {
-        assertNotNull("Address space is null", defaultAddressSpace);
+        assertNotNull(defaultAddressSpace, "Address space is null");
         return createClient(defaultAddressSpace);
     }
 

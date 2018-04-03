@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.TestCase.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AmqpClientFactory {
     private final Kubernetes kubernetes;
@@ -68,7 +68,7 @@ public class AmqpClientFactory {
     }
 
     public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
-        assertNotNull("Address space is null", addressSpace);
+        assertNotNull(addressSpace, "Address space is null");
         if (environment.useTLS()) {
             Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
             if (messagingEndpoint == null) {

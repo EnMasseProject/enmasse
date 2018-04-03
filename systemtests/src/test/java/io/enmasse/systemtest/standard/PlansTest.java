@@ -11,8 +11,8 @@ import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Test;
 import org.slf4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -22,19 +22,19 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class PlansTest extends StandardTestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         plansProvider.setUp();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         plansProvider.tearDown();
     }

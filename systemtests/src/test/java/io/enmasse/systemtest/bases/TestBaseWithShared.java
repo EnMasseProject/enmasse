@@ -8,12 +8,12 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.experimental.categories.Category;
+import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -21,9 +21,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("shared")
+@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class TestBaseWithShared extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-shared-";
@@ -32,34 +33,6 @@ public abstract class TestBaseWithShared extends TestBase {
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
 
-    @Rule
-    public TestWatcher watcher = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            if (!environment.skipCleanup()) {
-                log.info("test failed:" + description);
-                log.info("shared address space '{}' will be removed", sharedAddressSpace);
-                try {
-                    deleteSharedAddressSpace(sharedAddressSpace);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                } finally {
-                    spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
-                }
-            } else {
-                log.warn("Remove address spaces when test failed - SKIPPED!");
-            }
-        }
-
-        @Override
-        protected void succeeded(Description description) {
-            try {
-                setAddresses();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         sharedAddressSpaces.remove(addressSpace.getName());
@@ -74,7 +47,7 @@ public abstract class TestBaseWithShared extends TestBase {
         return sharedAddressSpace;
     }
 
-    @Before
+    @BeforeEach
     public void setupShared() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
         sharedAddressSpace = new AddressSpace(
@@ -106,6 +79,33 @@ public abstract class TestBaseWithShared extends TestBase {
 
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
+    }
+
+    @AfterEach
+    public void tearDownShared(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) { //test failed
+            if (!environment.skipCleanup()) {
+                log.info(String.format("test failed: %s.%s",
+                        context.getTestClass().get().getName(),
+                        context.getTestMethod().get().getName()));
+                log.info("shared address space '{}' will be removed", sharedAddressSpace);
+                try {
+                    deleteSharedAddressSpace(sharedAddressSpace);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
+                }
+            } else {
+                log.warn("Remove address spaces when test failed - SKIPPED!");
+            }
+        }else{ //succeed
+            try {
+                setAddresses();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     protected void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {

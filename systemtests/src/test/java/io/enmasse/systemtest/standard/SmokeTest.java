@@ -11,8 +11,9 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,8 +21,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a simple smoketest of EnMasse. If this passes, the chances of something being
@@ -35,7 +36,7 @@ public class SmokeTest extends StandardTestBase {
     private Destination anycast = Destination.anycast("smokeanycast");
     private Destination multicast = Destination.multicast("smokemulticast");
 
-    @Before
+    @BeforeEach
     public void createAddresses() throws Exception {
         setAddresses(queue, topic, mqttTopic, anycast, multicast);
         Thread.sleep(60_000);
@@ -128,11 +129,11 @@ public class SmokeTest extends StandardTestBase {
         assertThat("Wrong count of messages sent",
                 client.sendMessages(multicast.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertTrue("Wrong count of messages received: receiver0",
-                recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue("Wrong count of messages received: receiver1",
-                recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue("Wrong count of messages received: receiver2",
-                recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
+                "Wrong count of messages received: receiver0");
+        assertTrue(recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
+                "Wrong count of messages received: receiver1");
+        assertTrue(recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
+                "Wrong count of messages received: receiver2");
     }
 }

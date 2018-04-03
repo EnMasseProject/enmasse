@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JMSTestBase extends BrokeredTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -133,8 +133,8 @@ public class JMSTestBase extends BrokeredTestBase {
     protected void assertMessageContent(List<Message> msgs, String content) {
         msgs.forEach(m -> {
             try {
-                assertTrue("Message compare failed, message doesn't contain content.",
-                        ((TextMessage) m).getText().contains(content));
+                assertTrue(((TextMessage) m).getText().contains(content),
+                        "Message compare failed, message doesn't contain content.");
             } catch (JMSException e) {
                 e.printStackTrace();
             }

@@ -7,8 +7,8 @@ package io.enmasse.systemtest;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 
@@ -18,13 +18,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("isolated")
 public class WithoutMqttTest extends TestBase {
     private AddressSpace addressSpace;
 
-    @Before
+    @BeforeEach
     public void setupSpace() throws Exception {
         addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt",
                 AuthService.STANDARD);
@@ -33,7 +33,7 @@ public class WithoutMqttTest extends TestBase {
         setAddresses(addressSpace, Destination.anycast("a1"));
     }
 
-    @After
+    @AfterEach
     public void teardownSpace() throws Exception {
         deleteAddressSpace(addressSpace);
     }

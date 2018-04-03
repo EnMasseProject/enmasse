@@ -14,7 +14,7 @@ import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.*;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TopicTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -289,8 +289,8 @@ public class TopicTest extends StandardTestBase {
             log.info("received " + body);
             return "twelve".equals(body);
         });
-        assertTrue("Wrong count of messages received: batch2",
-                recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
+        assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2),
+                "Wrong count of messages received: batch2");
     }
 
     public void testDurableMessageRoutedSubscription() throws Exception {

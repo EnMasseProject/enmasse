@@ -9,6 +9,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
@@ -18,46 +19,42 @@ import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("isolated")
+@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium = new SeleniumProvider();
 
-    @Rule
-    public TestWatcher watchman = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            selenium.onFailed(e, description);
-        }
-    };
     private ConsoleWebPage consoleWebPage;
 
-    @Before
+    @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         Thread.sleep(30000); //sleep before run test (until geckodriver will be fixed)
         selenium.setupDriver(environment, kubernetes, buildDriver());
         plansProvider.setUp();
     }
 
-    @After
-    public void tearDownDrivers() throws Exception {
-        selenium.tearDownDrivers();
+    @AfterEach
+    public void tearDownDrivers(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) { //test failed
+            selenium.onFailed(context);
+        } else {
+            selenium.tearDownDrivers();
+        }
         plansProvider.tearDown();
     }
 

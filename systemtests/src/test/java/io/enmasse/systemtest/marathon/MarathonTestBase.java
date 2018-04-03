@@ -9,6 +9,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -16,7 +17,12 @@ import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestReporter;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -35,6 +41,7 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 
 @Tag("marathon")
+@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class MarathonTestBase extends TestBase implements ISeleniumProvider {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
@@ -46,17 +53,16 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         return getFirefoxDriver();
     }
 
-    @Rule
-    public TestWatcher watchman = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            selenium.onFailed(e, description);
+
+    @AfterEach
+    public void after(ExtensionContext context){
+        if(context.getExecutionException().isPresent()){ //test failed
+            selenium.onFailed(context);
             selenium.tearDownDrivers();
         }
-    };
+    }
 
-    @Rule
-    public ErrorCollector collector = new ErrorCollector();
+    private ErrorCollector collector = new ErrorCollector();
 
     //========================================================================================================
     // Runner tests methods

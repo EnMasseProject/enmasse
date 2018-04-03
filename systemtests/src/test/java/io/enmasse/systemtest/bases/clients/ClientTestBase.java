@@ -7,19 +7,17 @@ package io.enmasse.systemtest.bases.clients;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.ArgumentMap;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-import javax.sound.midi.Patch;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public abstract class ClientTestBase extends TestBaseWithShared {
     protected ArgumentMap arguments = new ArgumentMap();
@@ -27,13 +25,18 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     private final String clientFolder = "clients_tests";
     protected Path logPath = null;
 
-    @Before
-    public void setUpClientBase() {
+    @BeforeEach
+    public void setUpClientBase(TestInfo info) {
         clients = new ArrayList<>();
+        logPath = Paths.get(
+                environment.testLogDir(),
+                clientFolder,
+                info.getTestClass().get().getName(),
+                info.getTestMethod().get().getName());
     }
 
-    @After
-    public void teardownClient() {
+    @AfterEach
+    public void teardownClient(ExtensionContext context) {
         arguments.clear();
         clients.forEach(AbstractClient::stop);
         clients.clear();
@@ -43,10 +46,4 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         return topicSwitch ? "topic://" : "";
     }
 
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            logPath = Paths.get(environment.testLogDir(), clientFolder, description.getClassName(), description.getMethodName());
-        }
-    };
 }

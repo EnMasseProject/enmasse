@@ -29,8 +29,8 @@ import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -45,7 +45,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Base class for all tests
@@ -90,14 +90,14 @@ public abstract class TestBase extends SystemTestRunListener {
     protected abstract String getDefaultPlan(AddressType addressType);
 
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         try {
             mqttClientFactory.close();
@@ -355,16 +355,16 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue("Client failed, cannot connect under user " + username,
-                canConnectWithAmqp(addressSpace, username, password, destinations));
+        assertTrue(canConnectWithAmqp(addressSpace, username, password, destinations),
+                "Client failed, cannot connect under user " + username);
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
     protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
         try {
-            assertFalse("Client failed, can connect under user " + username,
-                    canConnectWithAmqp(addressSpace, username, password, destinations));
+            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations),
+                    "Client failed, can connect under user " + username);
             fail("Expected connection to timeout");
         } catch (ConnectTimeoutException e) {
         }
@@ -379,18 +379,18 @@ public abstract class TestBase extends SystemTestRunListener {
             String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), username);
             switch (destination.getType()) {
                 case "queue":
-                    assertTrue(message, canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()), message);
                     break;
                 case "topic":
-                    assertTrue(message, canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()), message);
                     break;
                 case "multicast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(message, canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()));
+                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()), message);
                     break;
                 case "anycast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(message, canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()));
+                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()), message);
                     break;
             }
         }
@@ -921,17 +921,17 @@ public abstract class TestBase extends SystemTestRunListener {
     public void assertSorted(String message, Iterable list, boolean reverse) throws Exception {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
-            assertTrue(message, Ordering.natural().isOrdered(list));
+            assertTrue(Ordering.natural().isOrdered(list), message);
         else
-            assertTrue(message, Ordering.natural().reverse().isOrdered(list));
+            assertTrue(Ordering.natural().reverse().isOrdered(list), message);
     }
 
     public void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) throws Exception {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
-            assertTrue(message, Ordering.from(comparator).isOrdered(list));
+            assertTrue(Ordering.from(comparator).isOrdered(list), message);
         else
-            assertTrue(message, Ordering.from(comparator).reverse().isOrdered(list));
+            assertTrue(Ordering.from(comparator).reverse().isOrdered(list), message);
     }
 
     protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {

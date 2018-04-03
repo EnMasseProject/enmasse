@@ -11,12 +11,10 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
@@ -24,20 +22,21 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 
 @Tag("isolated")
 public class PlansTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         plansProvider.setUp();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         plansProvider.tearDown();
     }
@@ -297,17 +296,17 @@ public class PlansTest extends TestBase {
         Destination queue3 = Destination.queue("test-queue3", queuePlan.getName());
         setAddresses(addressSpace, queue, queue2, queue3);
 
-        assertFalse("Client does not fail",
-                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                        queue.getAddress(), messageContent, 100, false));
+        assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                                queue.getAddress(), messageContent, 100, false),
+                "Client does not fail");
 
-        assertFalse("Client does not fail",
-                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                        queue2.getAddress(), messageContent, 100, false));
+        assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                                queue2.getAddress(), messageContent, 100, false),
+                "Client does not fail");
 
-        assertTrue("Client fails",
-                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                        queue3.getAddress(), messageContent, 50, false));
+        assertTrue(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                                queue3.getAddress(), messageContent, 50, false),
+                "Client fails");
     }
 
     @Test
@@ -533,7 +532,7 @@ public class PlansTest extends TestBase {
                 log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
                 assertEquals(assertMessage, "Pending", address.getPhase());
-                assertTrue("No status message is present", address.getStatusMessages().contains("Quota exceeded"));
+                assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
             }
         }
 
