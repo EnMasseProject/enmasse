@@ -10,8 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>systemtests</artifactId>
     <properties>
-        <testcase.groups></testcase.groups>
-        <exclude.tests.group></exclude.tests.group>
+        <tests></tests>
         <skip.tests>true</skip.tests>
     </properties>
     <dependencies>
@@ -126,6 +125,7 @@
                             <name>listener</name>
                             <value>io.enmasse.systemtest.bases.SystemTestRunListener</value>
                         </property>
+                        <includeTags>${tests}</includeTags>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>
                 </configuration>
