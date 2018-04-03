@@ -36,12 +36,12 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     }
 
     //@Test
-    public void testMessageSelectorQueue() throws Exception{
+    public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver());
     }
 
     //@Test
-    public void testMessageSelectorTopic() throws Exception{
+    public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(),
                 new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver(), true);
     }

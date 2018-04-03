@@ -31,13 +31,13 @@ public class AmqpClient implements AutoCloseable {
         this.options = options;
     }
 
+    public AmqpConnectOptions getConnectOptions() {
+        return options;
+    }
+
     public AmqpClient setConnectOptions(AmqpConnectOptions options) {
         this.options = options;
         return this;
-    }
-
-    public AmqpConnectOptions getConnectOptions() {
-        return options;
     }
 
     public Future<List<Message>> recvMessages(String address, int numMessages) throws InterruptedException, IOException, TimeoutException {
@@ -109,7 +109,7 @@ public class AmqpClient implements AutoCloseable {
         return sendMessages(address, messages, predicate, 1, TimeUnit.MINUTES);
     }
 
-    public Future<Integer> sendMessages(String address, Message ... messages) throws IOException, InterruptedException, ConnectTimeoutException {
+    public Future<Integer> sendMessages(String address, Message... messages) throws IOException, InterruptedException, ConnectTimeoutException {
         return sendMessages(address, 1, TimeUnit.MINUTES, Arrays.asList(messages), new Count<>(messages.length));
     }
 

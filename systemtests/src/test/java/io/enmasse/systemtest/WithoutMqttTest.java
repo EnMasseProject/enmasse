@@ -7,9 +7,9 @@ package io.enmasse.systemtest;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Arrays;

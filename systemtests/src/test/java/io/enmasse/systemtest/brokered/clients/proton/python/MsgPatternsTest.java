@@ -6,7 +6,6 @@ package io.enmasse.systemtest.brokered.clients.proton.python;
 
 import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.clients.proton.python.PythonClientSender;
-
 import org.junit.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
@@ -37,12 +36,12 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     }
 
     @Test
-    public void testMessageSelectorQueue() throws Exception{
+    public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic() throws Exception{
+    public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath),
                 new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }

@@ -10,9 +10,9 @@ import java.util.List;
 
 public class AddressPlan {
 
+    List<AddressResource> addressResources;
     private String name;
     private AddressType type;
-    List<AddressResource> addressResources;
 
     public AddressPlan(String name, AddressType type, List<AddressResource> addressResources) {
         this.name = name;

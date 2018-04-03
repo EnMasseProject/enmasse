@@ -7,11 +7,9 @@ package io.enmasse.systemtest.bases.clients;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.ArgumentMap;
-import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.nio.file.Path;
@@ -20,9 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ClientTestBase extends TestBaseWithShared {
+    private final String clientFolder = "clients_tests";
     protected ArgumentMap arguments = new ArgumentMap();
     protected List<AbstractClient> clients;
-    private final String clientFolder = "clients_tests";
     protected Path logPath = null;
 
     @BeforeEach

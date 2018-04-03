@@ -5,7 +5,8 @@
 package io.enmasse.systemtest.brokered.jms;
 
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +17,10 @@ import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;

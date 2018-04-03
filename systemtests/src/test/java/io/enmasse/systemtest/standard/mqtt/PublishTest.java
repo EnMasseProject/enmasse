@@ -32,6 +32,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class PublishTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
 
+    public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
+        List<String> messages = new ArrayList<>();
+        for (int i = 0; i < msgCount; i++) {
+            messages.add(String.format("mqtt-simple-send-receive-%s", i));
+        }
+        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
+        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, Collections.nCopies(msgCount, 0));
+
+        assertThat("Incorrect count of messages sent",
+                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
+        assertThat("Incorrect count of messages received",
+                recvResult.get(1, TimeUnit.MINUTES).size(), is(msgCount));
+    }
+
     @Override
     protected boolean skipDummyAddress() {
         return true;
@@ -107,19 +121,5 @@ public class PublishTest extends StandardTestBase {
                 sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
         assertThat("Wrong count of messages received",
                 recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
-    }
-
-    public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
-        List<String> messages = new ArrayList<>();
-        for (int i = 0; i < msgCount; i++) {
-            messages.add(String.format("mqtt-simple-send-receive-%s", i));
-        }
-        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
-        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, Collections.nCopies(msgCount, 0));
-
-        assertThat("Incorrect count of messages sent",
-                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat("Incorrect count of messages received",
-                recvResult.get(1, TimeUnit.MINUTES).size(), is(msgCount));
     }
 }

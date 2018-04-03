@@ -8,9 +8,6 @@ import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.StandardTestBase;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class MulticastTest extends StandardTestBase {
 
     @Test

@@ -23,13 +23,13 @@ import java.util.concurrent.Executors;
  * Collects logs from all EnMasse components and saves them to a file
  */
 public class LogCollector implements Watcher<Pod>, AutoCloseable {
+    private static Logger log = CustomLogger.getLogger();
     private final File logDir;
     private final Kubernetes kubernetes;
-    private Watch watch;
     private final Map<String, LogWatch> logWatches = new HashMap<>();
     private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private final String namespace;
-    private static Logger log = CustomLogger.getLogger();
+    private Watch watch;
 
     public LogCollector(Kubernetes kubernetes, File logDir, String namespace) {
         this.kubernetes = kubernetes;

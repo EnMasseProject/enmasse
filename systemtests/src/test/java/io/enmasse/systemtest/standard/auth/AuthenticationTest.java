@@ -4,7 +4,8 @@
  */
 package io.enmasse.systemtest.standard.auth;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
 import org.junit.Test;
 

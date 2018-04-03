@@ -5,14 +5,19 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
-
 import io.enmasse.systemtest.bases.StandardTestBase;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.*;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -30,6 +35,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TopicTest extends StandardTestBase {
     private static Logger log = CustomLogger.getLogger();
+
+    public static void runTopicTest(AmqpClient client, Destination dest)
+            throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runTopicTest(client, dest, 1024);
+    }
+
+    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount)
+            throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        List<String> msgs = TestUtils.generateMessages(msgCount);
+        Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
+
+        assertThat("Wrong count of messages sent",
+                client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received",
+                recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
 
     @Test
     public void testColocatedTopics() throws Exception {
@@ -51,22 +72,6 @@ public class TopicTest extends StandardTestBase {
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
         runTopicTest(topicClient, t1, 2048);
-    }
-
-    public static void runTopicTest(AmqpClient client, Destination dest)
-            throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        runTopicTest(client, dest, 1024);
-    }
-
-    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount)
-            throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        List<String> msgs = TestUtils.generateMessages(msgCount);
-        Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
-
-        assertThat("Wrong count of messages sent",
-                client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Wrong count of messages received",
-                recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test

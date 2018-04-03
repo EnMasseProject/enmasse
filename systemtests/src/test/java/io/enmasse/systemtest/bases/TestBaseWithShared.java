@@ -26,13 +26,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Tag("shared")
 @ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class TestBaseWithShared extends TestBase {
-    private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-shared-";
+    private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
     protected static AddressSpace sharedAddressSpace;
     protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
+    private static Logger log = CustomLogger.getLogger();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
-    private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
-
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         sharedAddressSpaces.remove(addressSpace.getName());
@@ -99,7 +98,7 @@ public abstract class TestBaseWithShared extends TestBase {
             } else {
                 log.warn("Remove address spaces when test failed - SKIPPED!");
             }
-        }else{ //succeed
+        } else { //succeed
             try {
                 setAddresses();
             } catch (Exception e) {

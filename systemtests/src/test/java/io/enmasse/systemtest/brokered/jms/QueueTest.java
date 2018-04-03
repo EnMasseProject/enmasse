@@ -4,7 +4,8 @@
  */
 package io.enmasse.systemtest.brokered.jms;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -8,9 +8,6 @@ import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public abstract class MsgPatternsTest extends MsgPatternsTestBase {
     @Override
     protected String getDefaultPlan(AddressType addressType) {

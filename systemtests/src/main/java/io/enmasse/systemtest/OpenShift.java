@@ -4,21 +4,11 @@
  */
 package io.enmasse.systemtest;
 
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
-
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Handles interaction with openshift cluster

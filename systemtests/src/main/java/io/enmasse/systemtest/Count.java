@@ -7,8 +7,7 @@ package io.enmasse.systemtest;
 
 import java.util.function.Predicate;
 
-public class Count<T> implements Predicate<T>
-{
+public class Count<T> implements Predicate<T> {
     private final int expected;
     private volatile int actual;
 
@@ -18,7 +17,7 @@ public class Count<T> implements Predicate<T>
 
     @Override
     public boolean test(T message) {
-        if(message != null) {
+        if (message != null) {
             ++actual;
         }
         return actual == expected;

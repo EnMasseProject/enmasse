@@ -76,19 +76,19 @@ public abstract class AbstractClient {
         return clientType;
     }
 
+    /**
+     * @param clientType
+     */
+    public void setClientType(ClientType clientType) {
+        this.clientType = clientType;
+    }
+
     public String getStdOut() {
         return executor.getStdOut();
     }
 
     public String getStdErr() {
         return executor.getStdErr();
-    }
-
-    /**
-     * @param clientType
-     */
-    public void setClientType(ClientType clientType) {
-        this.clientType = clientType;
     }
 
     /**

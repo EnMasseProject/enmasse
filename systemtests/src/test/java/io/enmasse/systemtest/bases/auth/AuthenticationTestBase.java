@@ -6,7 +6,6 @@ package io.enmasse.systemtest.bases.auth;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 
 import java.util.ArrayList;
@@ -16,14 +15,14 @@ import java.util.List;
 @Tag("isolated")
 public abstract class AuthenticationTestBase extends TestBase {
 
+    protected static final String mqttAddress = "t1";
+    protected static final String anonymousUser = "anonymous";
+    protected static final String anonymousPswd = "anonymous";
     protected final List<Destination> amqpAddressList = Arrays.asList(
             Destination.queue("auth-queue", getDefaultPlan(AddressType.QUEUE)),
             Destination.topic("auth-topic", getDefaultPlan(AddressType.TOPIC)),
             Destination.anycast("auth-anycast"),
             Destination.multicast("auth-multicast"));
-    protected static final String mqttAddress = "t1";
-    protected static final String anonymousUser = "anonymous";
-    protected static final String anonymousPswd = "anonymous";
 
     @Override
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {

@@ -51,22 +51,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * Base class for all tests
  */
 public abstract class TestBase extends SystemTestRunListener {
-    private static Logger log = CustomLogger.getLogger();
-
     protected static final Environment environment = new Environment();
-
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
-    private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
-            new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
     protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
-
+    private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
+            new File(environment.testLogDir()));
+    private static Logger log = CustomLogger.getLogger();
     protected String username;
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
-    private List<AddressSpace> addressSpaceList = new ArrayList<>();
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
+    private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private BrokerManagement brokerManagement = new ArtemisManagement();
     private KeycloakClient keycloakApiClient;
 

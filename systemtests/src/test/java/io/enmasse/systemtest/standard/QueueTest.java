@@ -5,7 +5,10 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.Count;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.StandardTestBase;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -13,8 +16,14 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,6 +32,36 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class QueueTest extends StandardTestBase {
+
+    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runQueueTest(client, dest, 1024);
+    }
+
+    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        List<String> msgs = TestUtils.generateMessages(countMessages);
+        Count<Message> predicate = new Count<>(msgs.size());
+        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
+
+        assertNotNull(numSent, "Sending messages didn't start");
+        int actual = 0;
+        try {
+            actual = numSent.get(1, TimeUnit.MINUTES);
+        } catch (TimeoutException t) {
+            fail("Sending messages timed out after sending " + predicate.actual());
+        }
+        assertThat("Wrong count of messages sent", actual, is(msgs.size()));
+
+        predicate = new Count<>(msgs.size());
+        Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
+        actual = 0;
+        try {
+            actual = received.get(1, TimeUnit.MINUTES).size();
+        } catch (TimeoutException t) {
+            fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
+        }
+
+        assertThat("Wrong count of messages received", actual, is(msgs.size()));
+    }
 
     @Test
     public void testColocatedQueues() throws Exception {
@@ -154,36 +193,6 @@ public class QueueTest extends StandardTestBase {
 
         assertThat("Wrong count of messages received",
                 received.get(1, TimeUnit.MINUTES).size(), is(3500));
-    }
-
-    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        runQueueTest(client, dest, 1024);
-    }
-
-    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        List<String> msgs = TestUtils.generateMessages(countMessages);
-        Count<Message> predicate = new Count<>(msgs.size());
-        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
-
-        assertNotNull(numSent, "Sending messages didn't start");
-        int actual = 0;
-        try {
-            actual = numSent.get(1, TimeUnit.MINUTES);
-        } catch (TimeoutException t) {
-            fail("Sending messages timed out after sending " + predicate.actual());
-        }
-        assertThat("Wrong count of messages sent", actual, is(msgs.size()));
-
-        predicate = new Count<>(msgs.size());
-        Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
-        actual = 0;
-        try {
-            actual = received.get(1, TimeUnit.MINUTES).size();
-        } catch (TimeoutException t) {
-            fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
-        }
-
-        assertThat("Wrong count of messages received", actual, is(msgs.size()));
     }
 
     //    @Test // disabled due to issue: #903

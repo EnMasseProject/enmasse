@@ -5,28 +5,44 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.StandardTestBase;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
-import org.junit.jupiter.api.Tag;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class AnycastTest extends StandardTestBase {
+
+    public static void runAnycastTest(Destination dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+        if (clients.length == 0) {
+            throw new IllegalStateException("Clients are required for this test");
+        }
+        List<String> msgs = new ArrayList<>();
+        for (int i = 0; i < clients.length; i++) {
+            msgs.add("message-anycast-" + i);
+        }
+        List<Future<List<Message>>> received = new ArrayList<>();
+        for (AmqpClient client : clients) {
+            received.add(client.recvMessages(dest.getAddress(), 1));
+        }
+        Future<Integer> sendResult = clients[0].sendMessages(dest.getAddress(), msgs);
+        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        for (int i = 0; i < received.size(); i++) {
+            assertThat("Wrong count of messages received: receiver" + i,
+                    received.get(i).get(1, TimeUnit.MINUTES).size(), is(1));
+        }
+    }
 
     @Test
     public void testMultipleReceivers() throws Exception {
@@ -87,25 +103,5 @@ public class AnycastTest extends StandardTestBase {
         //remove all destinations
         setAddresses();
         waitForRouterReplicas(sharedAddressSpace, 1);
-    }
-
-    public static void runAnycastTest(Destination dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
-        if (clients.length == 0) {
-            throw new IllegalStateException("Clients are required for this test");
-        }
-        List<String> msgs = new ArrayList<>();
-        for (int i = 0; i < clients.length; i++) {
-            msgs.add("message-anycast-" + i);
-        }
-        List<Future<List<Message>>> received = new ArrayList<>();
-        for (AmqpClient client : clients) {
-            received.add(client.recvMessages(dest.getAddress(), 1));
-        }
-        Future<Integer> sendResult = clients[0].sendMessages(dest.getAddress(), msgs);
-        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        for (int i = 0; i < received.size(); i++) {
-            assertThat("Wrong count of messages received: receiver" + i,
-                    received.get(i).get(1, TimeUnit.MINUTES).size(), is(1));
-        }
     }
 }

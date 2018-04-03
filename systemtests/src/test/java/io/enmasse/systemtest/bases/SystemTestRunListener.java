@@ -17,6 +17,20 @@ import java.util.Map;
 public class SystemTestRunListener extends RunListener {
     private static Logger log = CustomLogger.getLogger();
 
+    public static void printThreadDump() {
+        Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
+        Iterator<Thread> iterator = allThreads.keySet().iterator();
+        while (iterator.hasNext()) {
+            StringBuilder sb = new StringBuilder();
+            Thread key = iterator.next();
+            StackTraceElement[] trace = allThreads.get(key);
+            sb.append(key + "\r\n");
+            for (int i = 0; i < trace.length; i++) {
+                sb.append(" " + trace[i] + "\r\n");
+            }
+            log.error(sb.toString());
+        }
+    }
 
     @Override
     public void testStarted(Description description) throws Exception {
@@ -54,21 +68,6 @@ public class SystemTestRunListener extends RunListener {
             printThreadDump();
         } else {
             log.error("Caught exception {}", ex);
-        }
-    }
-
-    public static void printThreadDump() {
-        Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
-        Iterator<Thread> iterator = allThreads.keySet().iterator();
-        while (iterator.hasNext()) {
-            StringBuilder sb = new StringBuilder();
-            Thread key = iterator.next();
-            StackTraceElement[] trace = allThreads.get(key);
-            sb.append(key + "\r\n");
-            for (int i = 0; i < trace.length; i++) {
-                sb.append(" " + trace[i] + "\r\n");
-            }
-            log.error(sb.toString());
         }
     }
 }

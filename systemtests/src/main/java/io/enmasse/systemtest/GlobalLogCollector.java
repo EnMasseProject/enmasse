@@ -15,10 +15,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class GlobalLogCollector {
+    private static Logger log = CustomLogger.getLogger();
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
     private final Kubernetes kubernetes;
     private final File logDir;
-    private static Logger log = CustomLogger.getLogger();
 
     public GlobalLogCollector(Kubernetes kubernetes, File logDir) {
         this.kubernetes = kubernetes;
@@ -89,7 +89,7 @@ public class GlobalLogCollector {
         log.info("Collecting events in {}", namespace);
 
         File eventLog = new File(logDir, namespace + ".events");
-        try (FileWriter fileWriter = new FileWriter(eventLog)){
+        try (FileWriter fileWriter = new FileWriter(eventLog)) {
             process = processBuilder.start();
             InputStream stdout = process.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));

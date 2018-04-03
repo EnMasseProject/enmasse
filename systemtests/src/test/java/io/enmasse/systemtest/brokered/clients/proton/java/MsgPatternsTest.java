@@ -8,7 +8,7 @@ import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientSender;
 import org.junit.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest{
+public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 
     @Test
     public void testBasicMessage() throws Exception {
@@ -36,12 +36,12 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     }
 
     @Test
-    public void testMessageSelectorQueue() throws Exception{
+    public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic() throws Exception{
+    public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath),
                 new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
     }

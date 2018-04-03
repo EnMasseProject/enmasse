@@ -16,13 +16,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AmqpClientFactory {
+    private static Logger log = CustomLogger.getLogger();
     private final Kubernetes kubernetes;
     private final Environment environment;
     private final AddressSpace defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
-    private static Logger log = CustomLogger.getLogger();
 
     public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, String defaultUsername, String defaultPassword) {
         this.kubernetes = kubernetes;
