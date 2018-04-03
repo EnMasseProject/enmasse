@@ -91,7 +91,7 @@ public class Main extends AbstractVerticle {
         });
 
         options.getStandardAuthService().ifPresent(authService -> {
-            resolverMap.put(AuthenticationServiceType.STANDARD, new StandardAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort(), kubernetes.getRouteHost("keycloak")));
+            resolverMap.put(AuthenticationServiceType.STANDARD, new StandardAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
 
         resolverMap.put(AuthenticationServiceType.EXTERNAL, new ExternalAuthenticationServiceResolver());

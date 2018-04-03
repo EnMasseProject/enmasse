@@ -15,12 +15,10 @@ import java.util.Optional;
 public class StandardAuthenticationServiceResolver implements AuthenticationServiceResolver {
     private final String host;
     private final int port;
-    private final String oAuthUrl;
 
-    public StandardAuthenticationServiceResolver(String host, int port, String keycloakRouteHost) {
+    public StandardAuthenticationServiceResolver(String host, int port) {
         this.host = host;
         this.port = port;
-        this.oAuthUrl = keycloakRouteHost == null ? null : "https://" + keycloakRouteHost + "/auth";
     }
 
     @Override
@@ -60,9 +58,11 @@ public class StandardAuthenticationServiceResolver implements AuthenticationServ
 
     @Override
     public Optional<String> getOAuthURL(AuthenticationService authService) {
-        //note: the second test is an ugly hack to allow running on a
-        //local cluster e.g. oc cluster up without having
-        //--public-hostname set
-        return oAuthUrl == null || oAuthUrl.contains("127.0.0.1") ? Optional.of("https://"+ getHost(authService) + ":8443/auth") : Optional.of(oAuthUrl);
+        String oAuthUrl = (String) authService.getDetails().get("oauthURL");
+        if (oAuthUrl != null) {
+            return Optional.of(oAuthUrl);
+        } else {
+            return Optional.of("https://" + getHost(authService) + ":8443/auth");
+        }
     }
 }
