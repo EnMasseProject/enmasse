@@ -121,10 +121,6 @@
                 <version>2.19.1</version>
                 <configuration>
                     <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>io.enmasse.systemtest.bases.SystemTestRunListener</value>
-                        </property>
                         <includeTags>${tests}</includeTags>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>

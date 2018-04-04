@@ -45,12 +45,14 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import io.enmasse.systemtest.ability.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Base class for all tests
  */
-public abstract class TestBase extends SystemTestRunListener {
+public abstract class TestBase implements ITestSeparator {
     protected static final Environment environment = new Environment();
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
@@ -69,12 +71,8 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            logCollector.collectEvents(addressSpace.getNamespace());
-            logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
-            logCollector.collectConfigMaps(addressSpace.getNamespace());
-            addressApiClient.deleteAddressSpace(addressSpace);
+            TestUtils.deleteAddressSpace(addressApiClient, addressSpace, logCollector);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
-            logCollector.stopCollecting(addressSpace.getNamespace());
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
@@ -160,7 +158,6 @@ public abstract class TestBase extends SystemTestRunListener {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace);
-            logCollector.startCollecting(addressSpace.getNamespace());
             addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
