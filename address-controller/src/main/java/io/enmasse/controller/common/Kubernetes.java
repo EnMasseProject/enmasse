@@ -38,6 +38,8 @@ public interface Kubernetes {
 
     Optional<Secret> getSecret(String secretName);
 
+    Optional<Secret> getSecret(String secretName, String namespace);
+
     TokenReview performTokenReview(String token);
 
     SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);

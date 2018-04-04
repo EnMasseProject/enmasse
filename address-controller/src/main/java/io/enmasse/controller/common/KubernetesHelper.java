@@ -307,6 +307,13 @@ public class KubernetesHelper implements Kubernetes {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
     }
 
+
+    @Override
+    public Optional<Secret> getSecret(String secretName, String namespace) {
+        return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
+    }
+
+
     private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk, String impersonateUser) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 

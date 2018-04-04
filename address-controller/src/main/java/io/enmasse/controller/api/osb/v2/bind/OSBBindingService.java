@@ -129,6 +129,25 @@ public class OSBBindingService extends OSBServiceBase {
             addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("messaging")).findFirst().ifPresent(e -> {
                 credentials.put("host", e.getHost().get());
                 credentials.put("port", String.valueOf(e.getPort()));
+                e.getCertSpec().ifPresent(certSpec -> {
+                    Secret secret = getKubernetes().getSecret(certSpec.getSecretName(), addressSpace.getNamespace()).orElseThrow(() -> new InternalServerErrorException("Cannot get secret " + certSpec.getSecretName()));
+                    String cert = getCertFromSecret(secret);
+                    credentials.put("certificate.pem", cert);
+                    /*try {
+                        StringWriter keyStoreAsString = new StringWriter();
+                        KeyStore keyStore = convertCertToKeyStore(cert);
+                        keyStore.store(new OutputStream() {
+                            @Override
+                            public void write(int i) throws IOException {
+                                keyStoreAsString.write(i);
+                            }
+                        }, new char[0]);
+                        credentials.put("keystore.jks", keyStoreAsString.toString());
+                    } catch (IOException | GeneralSecurityException e1) {
+                        // ignore
+                    }
+*/
+                });
             });
             return Response.status(Response.Status.CREATED).entity(new BindResponse(credentials)).build();
 
@@ -324,10 +343,19 @@ public class OSBBindingService extends OSBServiceBase {
         return (String) obj.get("access_token");
     }
 
-    private SSLSocketFactory getSslSocketFactoryForAuthService() throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
-        Optional<Secret> authServiceCa = getKubernetes().getSecret("standard-authservice-cert");
-        Map<String, String> authServiceCaData = authServiceCa.orElseThrow(() -> new InternalServerErrorException("Cannot read keycloak credentials")).getData();
-        String cert = new String(Base64.getDecoder().decode(authServiceCaData.get("tls.crt")), StandardCharsets.UTF_8);
+    private SSLSocketFactory getSslSocketFactoryForAuthService() throws IOException, GeneralSecurityException {
+        String secretName = "standard-authservice-cert";
+        Secret secret = getKubernetes().getSecret(secretName).orElseThrow(() -> new InternalServerErrorException("Cannot get secret " + secretName));
+        String cert = getCertFromSecret(secret);
+        KeyStore inMemoryKeyStore = convertCertToKeyStore(cert);
+        SSLContext sc = SSLContext.getInstance("TLS");
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(inMemoryKeyStore);
+        sc.init(null, tmf.getTrustManagers(), null);
+        return sc.getSocketFactory();
+    }
+
+    private KeyStore convertCertToKeyStore(String cert) throws IOException, GeneralSecurityException {
         List<X509Certificate> certs = new ArrayList<>();
         try (InputStream is = new ByteArrayInputStream(cert.getBytes(StandardCharsets.UTF_8))) {
             try {
@@ -337,22 +365,23 @@ public class OSBBindingService extends OSBServiceBase {
                 } while(is.available() != 0);
             } catch (CertificateException e) {
                 if(certs.isEmpty()) {
-                    throw new InternalServerErrorException("No auth service cerificate found in secret", e);
+                    throw new InternalServerErrorException("No auth service certificate found in secret", e);
                 }
             }
         }
 
-        SSLContext sc = SSLContext.getInstance("TLS");
         KeyStore inMemoryKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         inMemoryKeyStore.load(null, null);
         int i = 1;
         for(X509Certificate crt : certs) {
             inMemoryKeyStore.setCertificateEntry(String.valueOf(i++), crt);
         }
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        tmf.init(inMemoryKeyStore);
-        sc.init(null, tmf.getTrustManagers(), null);
-        return sc.getSocketFactory();
+        return inMemoryKeyStore;
+    }
+
+    private String getCertFromSecret(Secret secret) {
+        Map<String, String> caData = secret.getData();
+        return new String(Base64.getDecoder().decode(caData.get("tls.crt")), StandardCharsets.UTF_8);
     }
 
     @DELETE
