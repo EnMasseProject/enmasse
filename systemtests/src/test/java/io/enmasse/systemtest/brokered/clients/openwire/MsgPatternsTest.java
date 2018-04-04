@@ -6,7 +6,7 @@ package io.enmasse.systemtest.brokered.clients.openwire;
 
 import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientReceiver;
 import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 

@@ -8,6 +8,8 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import org.openqa.selenium.WebDriver;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class ChromeWebConsoleTest extends StandardWebConsoleTest {
 
     //@Test
@@ -120,9 +122,9 @@ public class ChromeWebConsoleTest extends StandardWebConsoleTest {
         doTestViewAddressesWildcards();
     }
 
-    //@Test(expected = IllegalAccessException.class)
+    //@Test()
     public void testCannotOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage("pepa", "pepaPa555");
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage("pepa", "pepaPa555"));
     }
 
     //@Test

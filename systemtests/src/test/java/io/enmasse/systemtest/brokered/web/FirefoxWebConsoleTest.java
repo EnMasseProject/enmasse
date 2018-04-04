@@ -6,8 +6,10 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
@@ -117,9 +119,9 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestViewAddressesWildcards();
     }
 
-    @Test(expected = IllegalAccessException.class)
+    @Test()
     public void testCannotOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage("pepa", "pepaPa555");
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage("pepa", "pepaPa555"));
     }
 
     @Test

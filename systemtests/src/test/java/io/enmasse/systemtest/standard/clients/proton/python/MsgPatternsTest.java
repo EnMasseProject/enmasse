@@ -6,7 +6,7 @@ package io.enmasse.systemtest.standard.clients.proton.python;
 
 import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.clients.proton.python.PythonClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 

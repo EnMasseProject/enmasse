@@ -12,8 +12,8 @@ import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import io.enmasse.systemtest.selenium.*;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -41,11 +41,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     private ConsoleWebPage consoleWebPage;
 
-    @AfterAll
-    public static void TearDownDrivers() {
-        selenium.tearDownDrivers();
-    }
-
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         if (selenium.getDriver() == null)
@@ -64,6 +59,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             stopClients(clientsList);
             clientsList.clear();
         }
+    }
+
+    @AfterAll
+    public static void TearDownDrivers() {
+        selenium.tearDownDrivers();
     }
 
     @Override

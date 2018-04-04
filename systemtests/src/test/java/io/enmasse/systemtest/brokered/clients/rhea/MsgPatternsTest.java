@@ -6,7 +6,7 @@ package io.enmasse.systemtest.brokered.clients.rhea;
 
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 

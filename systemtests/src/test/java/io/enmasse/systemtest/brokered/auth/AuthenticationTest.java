@@ -6,7 +6,7 @@ package io.enmasse.systemtest.brokered.auth;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 public class AuthenticationTest extends AuthenticationTestBase {
