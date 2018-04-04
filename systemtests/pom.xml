@@ -149,6 +149,7 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
+                <tests>shared,isolated</tests>
             </properties>
         </profile>
         <profile>
