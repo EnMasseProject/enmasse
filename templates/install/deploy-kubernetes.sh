@@ -126,7 +126,7 @@ do
         runcmd "kubectl create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD -n $NAMESPACE" "Create secret with keycloak admin credentials"
         runcmd "kubectl apply -f $KEYCLOAK_TEMPLATE -n $NAMESPACE" "Create standard authservice"
         httpUrl="https://$(kubectl get service standard-authservice -o jsonpath={.spec.clusterIP}):8443/auth"
-        runcmd "kubectl create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=httpUrl=$httpUrl --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
+        runcmd "kubectl create configmap keycloak-config --from-literal=hostname=standard-authservice.${NAMESPACE}.svc --from-literal=httpUrl=$httpUrl --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
     fi
 done
 

@@ -22,4 +22,4 @@
   when: config_exists.failed and (keycloak_http_url is not defined)
 - name: Create configmap with the keycloak info
   when: config_exists.failed and (keycloak_http_url is defined)
-  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }}
+  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }}
