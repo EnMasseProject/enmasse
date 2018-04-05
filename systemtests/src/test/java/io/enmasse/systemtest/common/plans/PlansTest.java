@@ -7,9 +7,6 @@ package io.enmasse.systemtest.common.plans;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.Argument;
-import io.enmasse.systemtest.clients.ArgumentMap;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
@@ -228,8 +225,7 @@ public class PlansTest extends TestBase {
         AddressSpace addressSpace = new AddressSpace("test-quota-limits-sharded", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-
-        getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
+        createUser(addressSpace, username, password);
 
         //check broker limits
         checkLimits(addressSpace,
@@ -254,8 +250,10 @@ public class PlansTest extends TestBase {
 
     @Test
     public void testGlobalSizeLimitations() throws Exception {
-        String username = "test";
-        String password = "test";
+        KeycloakCredentials user = new KeycloakCredentials("test", "test");
+        String messageContent = String.join("", Collections.nCopies(1024, "F"));
+
+        //redefine global max size for queue
         ResourceDefinition limitedResource = new ResourceDefinition(
                 "broker",
                 "queue-persisted",
@@ -264,27 +262,49 @@ public class PlansTest extends TestBase {
                 ));
         plansProvider.replaceResourceDefinitionConfig(limitedResource);
 
+        //define address plans
+        AddressPlan queuePlan = new AddressPlan("limited-queue", AddressType.QUEUE,
+                Collections.singletonList(new AddressResource("broker", 0.1))); //should reserve 100Kb
+
+        plansProvider.createAddressPlanConfig(queuePlan);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 1.0),
+                new AddressSpaceResource("router", 1.0, 1.0),
+                new AddressSpaceResource("aggregate", 0.0, 2.0));
+
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan(
+                "limited-space",
+                "limited-space",
+                "standard-space",
+                AddressSpaceType.STANDARD,
+                resources,
+                Collections.singletonList(queuePlan));
+        plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
+
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("global-size-limited-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace addressSpace = new AddressSpace("global-size-limited-space", AddressSpaceType.STANDARD,
+                addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
+        createUser(addressSpace, user.getUsername(), user.getPassword());
 
+        Destination queue = Destination.queue("test-queue", queuePlan.getName());
+        Destination queue2 = Destination.queue("test-queue2", queuePlan.getName());
+        Destination queue3 = Destination.queue("test-queue3", queuePlan.getName());
+        setAddresses(addressSpace, queue, queue2, queue3);
 
-        Destination queue = Destination.queue("test-queue", "sharded-queue");
-        setAddresses(addressSpace, queue);
+        assertFalse("Client does not fail",
+                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue.getAddress(), messageContent, 100, false));
 
-        AbstractClient client = new RheaClientSender();
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.MSG_CONTENT, String.join("", Collections.nCopies(1024, "F")));
-        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(Argument.ADDRESS, queue.getAddress());
-        arguments.put(Argument.COUNT, "1000");
-        client.setArguments(arguments);
+        assertFalse("Client does not fail",
+                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue2.getAddress(), messageContent, 100, false));
 
-        assertFalse("Client does not fail", client.run(false));
+        assertTrue("Client fails",
+                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue3.getAddress(), messageContent, 50, false));
     }
 
     //------------------------------------------------------------------------------------------------
