@@ -73,6 +73,11 @@ public class OSBBindingService extends OSBServiceBase {
             allGroups.add("monitor");
         }
 
+        if(parameters.containsKey("consoleAdmin")
+                && Boolean.valueOf(parameters.get("consoleAdmin"))) {
+            allGroups.add("manage");
+        }
+
         try {
 
             AuthenticationServiceResolver resolver = authenticationResolverFactory.getResolver(addressSpace.getAuthenticationService().getType());
@@ -117,13 +122,13 @@ public class OSBBindingService extends OSBServiceBase {
             try(OutputStream o = conn.getOutputStream()) {
                 objectMapper.writeValue(o, userRep);
             }
-            log.info("User rep: {}", objectMapper.writeValueAsString(userRep));
             int responseCode = conn.getResponseCode();
             String responseMsg = conn.getResponseMessage();
             log.info("Create user request: response - " + responseCode + " : " + responseMsg);
 
             String userId = getUserId(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, username);
 
+            resetPassword(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, password);
             createGroupMapping(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, groupIds);
 
             Map<String,String> credentials = new LinkedHashMap<>();
@@ -163,6 +168,33 @@ public class OSBBindingService extends OSBServiceBase {
 
  // TODO: return 200 OK, when binding already exists
 
+    }
+
+    private void resetPassword(String keycloakAdminUser, String keycloakAdminPassword, String host, AddressSpace addressSpace, String userId, String password) throws IOException, GeneralSecurityException  {
+        String accessToken = getAccessToken(keycloakAdminUser, keycloakAdminPassword, host);
+
+        URL url = new URL(host + "/admin/realms/"+addressSpace.getName()+"/users/"+userId+"/reset-password");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setSSLSocketFactory(getSslSocketFactoryForAuthService());
+        conn.setHostnameVerifier((s, sslSession) -> true);
+        conn.setInstanceFollowRedirects( false );
+        conn.setRequestMethod( "PUT" );
+        conn.setRequestProperty( "Authorization", "bearer " + accessToken );
+        conn.setUseCaches( false );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> credential = new LinkedHashMap<>();
+        credential.put("type","password");
+        credential.put("value", password);
+        credential.put("temporary", false);
+        try(OutputStream o = conn.getOutputStream()) {
+            objectMapper.writeValue(o, credential);
+        }
+        int responseCode = conn.getResponseCode();
+        String responseMsg = conn.getResponseMessage();
+        log.info("User password reset: response - " + responseCode + " : " + responseMsg);
     }
 
     private void createGroupMapping(String keycloakAdminUser, String keycloakAdminPassword, String host, AddressSpace addressSpace, String userId, List<String> groupIds) throws IOException, GeneralSecurityException  {
