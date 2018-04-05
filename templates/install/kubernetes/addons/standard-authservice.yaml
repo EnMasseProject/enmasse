@@ -129,15 +129,10 @@ items:
       spec:
         containers:
         - env:
-          - name: KEYCLOAK_HOSTNAME
+          - name: KEYCLOAK_URI
             valueFrom:
               configMapKeyRef:
-                key: hostname
-                name: keycloak-config
-          - name: KEYCLOAK_PORT
-            valueFrom:
-              configMapKeyRef:
-                key: httpPort
+                key: oauthUri
                 name: keycloak-config
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:

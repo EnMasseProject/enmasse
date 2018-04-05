@@ -127,20 +127,11 @@ local images = import "images.jsonnet";
                 },
                 "env": [
                   {
-                    "name": "KEYCLOAK_HOSTNAME",
+                    "name": "KEYCLOAK_URI",
                     "valueFrom": {
                       "configMapKeyRef": {
                         "name": keycloak_configmap,
-                        "key": "hostname"
-                      }
-                    }
-                  },
-                  {
-                    "name": "KEYCLOAK_PORT",
-                    "valueFrom": {
-                      "configMapKeyRef": {
-                        "name": keycloak_configmap,
-                        "key": "httpPort"
+                        "key": "oauthUri"
                       }
                     }
                   },

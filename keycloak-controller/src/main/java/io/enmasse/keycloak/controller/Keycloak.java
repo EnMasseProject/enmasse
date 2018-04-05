@@ -73,7 +73,7 @@ public class Keycloak implements KeycloakApi {
 
         CloseableKeycloak(KeycloakParams params) {
             this.keycloak = KeycloakBuilder.builder()
-                .serverUrl("https://" + params.getHost() + ":" + params.getHttpPort() + "/auth")
+                .serverUrl(params.getKeycloakUri())
                 .realm("master")
                 .username(params.getAdminUser())
                 .password(params.getAdminPassword())

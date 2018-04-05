@@ -127,15 +127,10 @@ objects:
       spec:
         containers:
         - env:
-          - name: KEYCLOAK_HOSTNAME
+          - name: KEYCLOAK_URI
             valueFrom:
               configMapKeyRef:
-                key: hostname
-                name: ${KEYCLOAK_CONFIGMAP_NAME}
-          - name: KEYCLOAK_PORT
-            valueFrom:
-              configMapKeyRef:
-                key: httpPort
+                key: oauthUri
                 name: ${KEYCLOAK_CONFIGMAP_NAME}
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:

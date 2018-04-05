@@ -5,17 +5,21 @@
 - name: Create secret with the keycloak credentials
   when: secret_exists.failed
   shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
-- name: Check if keycloak config exists
-  shell: oc get configmap -n {{ namespace }} keycloak-config
-  register: config_exists
-  ignore_errors: True
-- name: Create configmap with the keycloak info
-  when: config_exists.failed and (keycloak_oauth_url is defined)
-  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=amqpPort=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=oauthUrl={{ keycloak_oauth_url }}
-- name: Create configmap with the keycloak info
-  when: config_exists.failed and (keycloak_oauth_url is not defined)
-  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=amqpPort=5671 --from-literal=caSecretName=standard-authservice-cert
 - name: Give view permissions for the keycloak controller
   shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
 - name: Create the standard authentication service
   shell: oc process -f {{ playbook_dir }}/templates/addons/standard-authservice.yaml | oc apply -n {{ namespace }} -f -
+- name: Check if keycloak config exists
+  shell: oc get configmap -n {{ namespace }} keycloak-config
+  register: config_exists
+  ignore_errors: True
+- name: Retrieve service cluster ip
+  when: config_exists.failed and (keycloak_oauth_url is not defined)
+  shell: oc get service -n {{ namespace }} standard-authservice -o jsonpath={.spec.clusterIP}
+  register: authservice_clusterip
+- set_fact:
+    keycloak_oauth_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
+  when: config_exists.failed and (keycloak_oauth_url is not defined)
+- name: Create configmap with the keycloak info
+  when: config_exists.failed and (keycloak_oauth_url is defined)
+  shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=amqpPort=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=oauthUrl={{ keycloak_oauth_url }}
