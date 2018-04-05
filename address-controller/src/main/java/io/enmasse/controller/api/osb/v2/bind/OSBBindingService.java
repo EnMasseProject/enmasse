@@ -107,7 +107,8 @@ public class OSBBindingService extends OSBServiceBase {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String,Object> userRep = new LinkedHashMap<>();
             userRep.put("username", username);
-            Map<String,Object> credential = new LinkedHashMap<>();
+            userRep.put("enabled", true);
+            Map<String, Object> credential = new LinkedHashMap<>();
             credential.put("type","password");
             credential.put("value", password);
             credential.put("temporary", false);
@@ -116,6 +117,7 @@ public class OSBBindingService extends OSBServiceBase {
             try(OutputStream o = conn.getOutputStream()) {
                 objectMapper.writeValue(o, userRep);
             }
+            log.info("User rep: {}", objectMapper.writeValueAsString(userRep));
             int responseCode = conn.getResponseCode();
             String responseMsg = conn.getResponseMessage();
             log.info("Create user request: response - " + responseCode + " : " + responseMsg);
@@ -128,9 +130,8 @@ public class OSBBindingService extends OSBServiceBase {
             credentials.put("username",username);
             credentials.put("password", password);
             addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("messaging")).findFirst().ifPresent(e -> {
-                credentials.put("host", e.getHost().get());
-
-                credentials.put("port", String.valueOf(e.getPort()));
+                credentials.put("host", String.format("%s.%s.svc", e.getService(), addressSpace.getNamespace()));
+                credentials.put("port", "5671");
                 e.getCertSpec().ifPresent(certSpec -> {
                     Secret secret = getKubernetes().getSecret(certSpec.getSecretName(), addressSpace.getNamespace()).orElseThrow(() -> new InternalServerErrorException("Cannot get secret " + certSpec.getSecretName()));
                     String cert = getCertFromSecret(secret);
