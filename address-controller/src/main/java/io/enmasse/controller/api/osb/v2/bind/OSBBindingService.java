@@ -181,6 +181,9 @@ public class OSBBindingService extends OSBServiceBase {
         conn.setHostnameVerifier((s, sslSession) -> true);
         conn.setInstanceFollowRedirects( false );
         conn.setRequestMethod( "PUT" );
+        conn.setRequestProperty( "Content-Type", "application/json");
+        conn.addRequestProperty( "Accept", "application/json");
+        conn.setRequestProperty( "charset", "utf-8");
         conn.setRequestProperty( "Authorization", "bearer " + accessToken );
         conn.setUseCaches( false );
 
