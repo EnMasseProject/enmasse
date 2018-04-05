@@ -132,7 +132,7 @@ items:
           - name: KEYCLOAK_URI
             valueFrom:
               configMapKeyRef:
-                key: oauthUri
+                key: httpUrl
                 name: keycloak-config
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:

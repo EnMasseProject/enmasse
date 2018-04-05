@@ -130,7 +130,7 @@ objects:
           - name: KEYCLOAK_URI
             valueFrom:
               configMapKeyRef:
-                key: oauthUri
+                key: httpUrl
                 name: ${KEYCLOAK_CONFIGMAP_NAME}
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:
