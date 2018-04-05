@@ -634,6 +634,21 @@ public abstract class TestBase extends SystemTestRunListener {
         return addresses;
     }
 
+    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, String username, String password,
+                                  String address, String content, int count, boolean logToOutput) throws Exception {
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.MSG_CONTENT, content);
+        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
+        arguments.put(Argument.ADDRESS, address);
+        arguments.put(Argument.COUNT, Integer.toString(count));
+        client.setArguments(arguments);
+
+        return client.run(logToOutput);
+    }
+
     /**
      * attach N receivers into one address with default username/password
      */
