@@ -251,7 +251,7 @@ local images = import "images.jsonnet";
                     "valueFrom": {
                       "configMapKeyRef": {
                         "name": keycloak_configmap,
-                        "key": "oauthUrl"
+                        "key": "httpUrl"
                       }
                     }
                   },

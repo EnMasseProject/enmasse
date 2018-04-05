@@ -44,7 +44,7 @@ items:
           - name: KEYCLOAK_SASL_XOAUTH_BASE_URI
             valueFrom:
               configMapKeyRef:
-                key: oauthUrl
+                key: httpUrl
                 name: keycloak-config
           image: jboss/keycloak-openshift:3.4.3.Final
           livenessProbe:

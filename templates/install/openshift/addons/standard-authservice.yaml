@@ -45,7 +45,7 @@ objects:
           - name: KEYCLOAK_SASL_XOAUTH_BASE_URI
             valueFrom:
               configMapKeyRef:
-                key: oauthUrl
+                key: httpUrl
                 name: ${KEYCLOAK_CONFIGMAP_NAME}
           image: ${STANDARD_AUTHSERVICE_IMAGE}
           livenessProbe:

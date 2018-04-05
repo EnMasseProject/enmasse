@@ -179,8 +179,8 @@ do
         create_self_signed_cert "oc" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
         runcmd "oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
         runcmd "oc process -f $KEYCLOAK_TEMPLATE | oc create -n $NAMESPACE -f -" "Create standard authservice"
-        oauthUrl="https://$(oc get service standard-authservice -o jsonpath={.spec.clusterIP}):8443/auth"
-        runcmd "oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=oauthUrl=$oauthUrl --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
+        httpUrl="https://$(oc get service standard-authservice -o jsonpath={.spec.clusterIP}):8443/auth"
+        runcmd "oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=httpUrl=$httpUrl --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
     fi
 done
 
