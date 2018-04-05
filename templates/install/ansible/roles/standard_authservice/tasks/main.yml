@@ -10,10 +10,10 @@
   register: config_exists
   ignore_errors: True
 - name: Create configmap with the keycloak info
-  when: config_exists.failed && keycloak_oauth_url is defined
+  when: config_exists.failed and (keycloak_oauth_url is defined)
   shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=amqpPort=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=oauthUrl={{ keycloak_oauth_url }}
 - name: Create configmap with the keycloak info
-  when: config_exists.failed && keycloak_oauth_url is not defined
+  when: config_exists.failed and (keycloak_oauth_url is not defined)
   shell: oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=amqpPort=5671 --from-literal=caSecretName=standard-authservice-cert
 - name: Give view permissions for the keycloak controller
   shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
