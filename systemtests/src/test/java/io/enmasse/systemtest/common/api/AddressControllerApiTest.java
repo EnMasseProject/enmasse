@@ -119,7 +119,7 @@ public class AddressControllerApiTest extends TestBase {
                 new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt")));
         createAddressSpace(addressSpace);
 
-        KeycloakCredentials luckyUser = new KeycloakCredentials("hovnovolenasersi", "luckyPswd");
+        KeycloakCredentials luckyUser = new KeycloakCredentials("Lucky", "luckyPswd");
         getKeycloakClient().createUser(addressSpace.getName(), luckyUser.getUsername(), luckyUser.getPassword());
 
         //try to get all external endpoints
@@ -184,7 +184,7 @@ public class AddressControllerApiTest extends TestBase {
 
         setAddresses(addressSpace, dest1);
         Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getAddress())).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals("Address uuid is not equal", uuid, dest1AddressObj.getUuid());
+        assertEquals(uuid, dest1AddressObj.getUuid(), "Address uuid is not equal");
 
         logWithSeparator(log, "Check if name is optional");
         Destination dest2 = new Destination(null, null, addressSpace.getName(),
@@ -193,8 +193,8 @@ public class AddressControllerApiTest extends TestBase {
         setAddresses(addressSpace, dest2);
 
         Address dest2AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals("Address name is empty",
-                String.format("%s-%s", dest2AddressObj.getAddress(), dest2AddressObj.getUuid()), dest2AddressObj.getName());
+        assertEquals(String.format("%s-%s", dest2AddressObj.getAddress(), dest2AddressObj.getUuid()), dest2AddressObj.getName(),
+                "Address name is empty");
 
         logWithSeparator(log, "Check if adddressSpace is optional");
         Destination dest3 = new Destination(null, null, null,
@@ -203,8 +203,7 @@ public class AddressControllerApiTest extends TestBase {
         setAddresses(addressSpace, dest3);
 
         Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals("Addressspace name is empty",
-                addressSpace.getName(), dest3AddressObj.getAddressSpace());
+        assertEquals(addressSpace.getName(), dest3AddressObj.getAddressSpace(), "Addressspace name is empty");
 
         logWithSeparator(log, "Check if behavior when addressSpace is set to another existing address space");
         Destination dest4 = new Destination(null, null, addressSpace2.getName(),
@@ -213,7 +212,7 @@ public class AddressControllerApiTest extends TestBase {
             setAddresses(addressSpace, dest4);
         } catch (java.util.concurrent.ExecutionException ex) {
             assertTrue(ex.getMessage().contains("does not match address space in url"),
-                    "Exception does not contain right information");
+                    "Exception does not contain correct information");
         }
 
         try { //missing address
@@ -221,8 +220,8 @@ public class AddressControllerApiTest extends TestBase {
             setAddresses(addressSpace, destWithouAddress);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Incorrect response from server on missing address!",
-                    serverResponse.getString("description"), "Missing 'address' string field in 'spec'");
+            assertEquals(serverResponse.getString("description"), "Missing 'address' string field in 'spec'",
+                    "Incorrect response from server on missing address!");
         }
 
         try { //missing type
@@ -230,8 +229,8 @@ public class AddressControllerApiTest extends TestBase {
             setAddresses(addressSpace, destWithoutType);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Incorrect response from serveron missing type!",
-                    serverResponse.getString("description"), "Missing 'type' string field in 'spec'");
+            assertEquals(serverResponse.getString("description"), "Missing 'type' string field in 'spec'",
+                    "Incorrect response from serveron missing type!");
         }
 
         try { //missing plan
@@ -239,8 +238,8 @@ public class AddressControllerApiTest extends TestBase {
             setAddresses(addressSpace, destWithouPlan);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Incorrect response from server on missing plan!",
-                    serverResponse.getString("description"), "Missing 'plan' string field in 'spec'");
+            assertEquals(serverResponse.getString("description"), "Missing 'plan' string field in 'spec'",
+                    "Incorrect response from server on missing plan!");
         }
     }
 }

@@ -31,7 +31,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class WebConsoleTest extends TestBaseWithShared implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();

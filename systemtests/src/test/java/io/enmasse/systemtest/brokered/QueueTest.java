@@ -59,12 +59,13 @@ public class QueueTest extends BrokeredTestBase {
         assertThat("Wrong count of messages received from group A",
                 receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB));
 
+        String assertMessage = "Group id is different";
         for (Message m : receivedGroupA.get()) {
-            assertEquals("Group id is different", m.getGroupId(), "group A");
+            assertEquals(m.getGroupId(), "group A", assertMessage);
         }
 
         for (Message m : receivedGroupB.get()) {
-            assertEquals("Group id is different", m.getGroupId(), "group B");
+            assertEquals(m.getGroupId(), "group B", assertMessage);
         }
     }
 

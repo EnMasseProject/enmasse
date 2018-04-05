@@ -34,7 +34,6 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 
 @Tag("marathon")
-@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class MarathonTestBase extends TestBase implements ISeleniumProvider {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();

@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("isolated")
-@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
@@ -109,9 +108,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         consoleWebPage.createAddressesWebConsole(q1, t2, q3);
 
         String assertMessage = "Address plan wasn't set properly";
-        assertEquals(assertMessage, q1.getPlan(), consoleWebPage.getAddressItem(q1).getPlan());
-        assertEquals(assertMessage, t2.getPlan(), consoleWebPage.getAddressItem(t2).getPlan());
-        assertEquals(assertMessage, q3.getPlan(), consoleWebPage.getAddressItem(q3).getPlan());
+        assertEquals(q1.getPlan(), consoleWebPage.getAddressItem(q1).getPlan(), assertMessage);
+        assertEquals(t2.getPlan(), consoleWebPage.getAddressItem(t2).getPlan(), assertMessage);
+        assertEquals(q3.getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
 
         //simple send/receive
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, consoleAddrSpace, username, password);

@@ -24,7 +24,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("shared")
-@ExtendWith(ExtensionContextParameterResolver.class)
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
     private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");

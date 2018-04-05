@@ -84,10 +84,10 @@ public class PlansTest extends TestBase {
         Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getAddress()));
 
         String assertMessage = "Queue plan wasn't set properly";
-        assertEquals(assertMessage, getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                weakQueuePlan.getName());
-        assertEquals(assertMessage, getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                weakTopicPlan.getName());
+        assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                weakQueuePlan.getName(), assertMessage);
+        assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                weakTopicPlan.getName(), assertMessage);
 
         //simple send/receive
         String username = "test_newplan_name";
@@ -508,7 +508,7 @@ public class PlansTest extends TestBase {
             Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
             log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
             String assertMessage = String.format("Address from allowed %s is not ready", address.getName());
-            assertEquals(assertMessage, "Active", address.getPhase());
+            assertEquals("Active", address.getPhase(), assertMessage);
         }
 
         assertCanConnect(addressSpace, username, password, allowedDest);
@@ -531,7 +531,7 @@ public class PlansTest extends TestBase {
                 Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
                 log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
-                assertEquals(assertMessage, "Pending", address.getPhase());
+                assertEquals("Pending", address.getPhase(), assertMessage);
                 assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
             }
         }
