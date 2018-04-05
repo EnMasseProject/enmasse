@@ -4,7 +4,6 @@
     multitenant: true
     enable_rbac: true
     keycloak_admin_password: admin
-    keycloak_oauth_url: https://keycloak-{{ namespace }}.127.0.0.1.nip.io:443/auth
     authentication_services:
       - standard
       - none
