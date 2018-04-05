@@ -4,8 +4,6 @@
  */
 package io.enmasse.controller.api.osb.v2;
 
-import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
-import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
 import com.fasterxml.jackson.module.jsonSchema.types.BooleanSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
@@ -13,14 +11,38 @@ import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
 import io.enmasse.controller.api.osb.v2.catalog.*;
-import io.enmasse.k8s.api.SchemaApi;
 
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.*;
 
 public class ServiceMapping {
     private final Map<AddressSpaceType, Service> services;
     private final Schema schema;
+
+    private final String SERVICE_NAME_PATTERN = getStringFromEnv("SERVICE_BROKER_SERVICE_NAME_PATTERN", "enmasse-{0}");
+    private final String[] TAGS = getStringsFromEnv("SERVICE_BROKER_SERVICE_TAGS", new String[] {"middleware", "messaging", "amqp", "mqtt", "enmasse"});
+    private final String SERVICE_DISPLAY_NAME_PATTERN = getStringFromEnv("SERVICE_BROKER_SERVICE_DISPLAY_NAME_PATTERN", "EnMasse ({0})");
+
+    private final String SERVICE_PROVIDER_NAME = getStringFromEnv("SERVICE_BROKER_SERVICE_PROVIDER_NAME", "EnMasse");
+    private final String IMAGE_URL = getStringFromEnv("SERVICE_BROKER_SERVICE_IMAGE_URL", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/images/logo/enmasse_icon.png");
+    private final String DOCUMENTATION_URL = getStringFromEnv("SERVICE_BROKER_DOCUMENTATION_URL", "https://github.com/EnMasseProject/enmasse");
+
+    private String getStringFromEnv(String varName, String defaultValue) {
+        if(System.getenv().containsKey(varName)) {
+            return System.getenv().get(varName);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    private String[] getStringsFromEnv(String varName, String[] defaultValue) {
+        if(System.getenv().containsKey(varName)) {
+            return System.getenv().get(varName).split(",");
+        } else {
+            return defaultValue;
+        }
+    }
 
     public ServiceMapping(Schema schema) {
         this.schema = schema;
@@ -29,26 +51,20 @@ public class ServiceMapping {
 
     private Map<AddressSpaceType, Service> populateServices(Schema schema) {
         Map<AddressSpaceType, Service> services = new LinkedHashMap<>();
+        MessageFormat messageFormat = new MessageFormat(SERVICE_NAME_PATTERN);
+
         for(AddressSpaceType addressSpaceType : schema.getAddressSpaceTypes()) {
             Service service = new Service(getUuidForAddressSpaceType(addressSpaceType),
-                    "enmasse-"+addressSpaceType.getName(),
+                    MessageFormat.format(SERVICE_NAME_PATTERN,addressSpaceType.getName()),
                     addressSpaceType.getDescription(),
                     true);
 
-            // TODO - from config
-            service.getTags().add("middleware");
-            service.getTags().add("amq");
-            service.getTags().add("messaging");
-            service.getTags().add("enmasse");
-            // TODO - from config
-            service.getMetadata().put("displayName", addressSpaceType.getName());
-            // TODO - from config
-            service.getMetadata().put("providerDisplayName", "EnMasse");
+            service.getTags().addAll(Arrays.asList(TAGS));
+            service.getMetadata().put("displayName", MessageFormat.format(SERVICE_DISPLAY_NAME_PATTERN, addressSpaceType.getName()));
+            service.getMetadata().put("providerDisplayName", SERVICE_PROVIDER_NAME);
             //service.getMetadata().put("longDescription", addressSpaceType.getDescription());
-            // TODO - from config
-            service.getMetadata().put("imageUrl", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/images/logo/enmasse_icon.png");
-            // TODO - from config
-            service.getMetadata().put("documentationUrl", "https://github.com/EnMasseProject/enmasse");
+            service.getMetadata().put("imageUrl", IMAGE_URL);
+            service.getMetadata().put("documentationUrl", DOCUMENTATION_URL);
 
             service.setPlans(populatePlans(schema, addressSpaceType));
             // TODO - should come from config data

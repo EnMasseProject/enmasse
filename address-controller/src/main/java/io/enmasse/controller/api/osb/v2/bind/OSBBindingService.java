@@ -107,11 +107,12 @@ public class OSBBindingService extends OSBServiceBase {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String,Object> userRep = new LinkedHashMap<>();
             userRep.put("username", username);
-            Map<String,String> credential = new LinkedHashMap<>();
+            Map<String,Object> credential = new LinkedHashMap<>();
             credential.put("type","password");
             credential.put("value", password);
+            credential.put("temporary", false);
             userRep.put("credentials", Collections.singletonList(credential));
-            userRep.put("groups", allGroups);
+            userRep.put("enabled", true);
             try(OutputStream o = conn.getOutputStream()) {
                 objectMapper.writeValue(o, userRep);
             }
@@ -128,6 +129,7 @@ public class OSBBindingService extends OSBServiceBase {
             credentials.put("password", password);
             addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("messaging")).findFirst().ifPresent(e -> {
                 credentials.put("host", e.getHost().get());
+
                 credentials.put("port", String.valueOf(e.getPort()));
                 e.getCertSpec().ifPresent(certSpec -> {
                     Secret secret = getKubernetes().getSecret(certSpec.getSecretName(), addressSpace.getNamespace()).orElseThrow(() -> new InternalServerErrorException("Cannot get secret " + certSpec.getSecretName()));
