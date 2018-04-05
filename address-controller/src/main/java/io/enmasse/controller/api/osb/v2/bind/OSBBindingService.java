@@ -128,7 +128,10 @@ public class OSBBindingService extends OSBServiceBase {
 
             String userId = getUserId(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, username);
 
-            resetPassword(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, password);
+            if (responseCode == 201) {
+                resetPassword(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, password);
+            }
+
             createGroupMapping(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, groupIds);
 
             Map<String,String> credentials = new LinkedHashMap<>();
