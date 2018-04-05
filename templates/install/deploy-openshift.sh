@@ -225,19 +225,22 @@ runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPA
 if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
 then
     runcmd "oc login -u system:admin" "Logging in as system:admin"
-    runcmd "oc create secret generic enmasse-broker-auth --from-literal=username=foo --from-literal=password=bar -n service-catalog" "Creating Secret with EnMasse Service Broker auth credentials"
+    ENMASSE_SECRET=$(oc describe sa enmasse-admin | tr -d '\n' | sed -e 's/^.*Mountable secrets:\(.*\)Tokens:.*$/\1/' | sed -e 's/.*\(enmasse-admin-token-[a-z0-9]*\).*$/\1/')
+    CA_BUNDLE=$(oc get secret address-controller-cert -n ${NAMESPACE} -o yaml | grep tls.crt | sed -e 's/^ *tls.crt: *//')
     runcmd "cat <<EOF | oc create -f -
-apiVersion: servicecatalog.k8s.io/v1alpha1
-kind: Broker
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ClusterServiceBroker
 metadata:
   name: enmasse
+  uid: 53bd3760-1576-11e8-8bc3-0242ac110007
 spec:
-  url: http://address-controller.${NAMESPACE}.svc.cluster.local:8080/osbapi
+  url: https://address-controller.${NAMESPACE}.svc:443/osbapi/
   authInfo:
-    basicAuthSecret:
-      namespace: service-catalog
-      name: enmasse-broker-auth
+    bearer:
+      secretRef:
+        name: ${ENMASSE_SECRET}
+        namespace: ${NAMESPACE}
+  caBundle: ${CA_BUNDLE}
 EOF" "Registering EnMasse Service Broker in Service Catalog"
-
-#    runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
+    runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
 fi
