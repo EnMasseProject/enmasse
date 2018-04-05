@@ -31,7 +31,7 @@ public abstract class AuthenticationTestBase extends TestBase {
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
         }
-        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
@@ -43,7 +43,7 @@ public abstract class AuthenticationTestBase extends TestBase {
             if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
                 brokeredAddressList = amqpAddressList.subList(0, 2);
             }
-            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
             //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         }
 

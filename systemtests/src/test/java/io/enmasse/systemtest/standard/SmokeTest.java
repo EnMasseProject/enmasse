@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -116,7 +117,7 @@ public class SmokeTest extends StandardTestBase {
 
     private void testMulticast() throws Exception {
         AmqpClient client = amqpClientFactory.createBroadcastClient();
-        List<String> msgs = Arrays.asList("foo");
+        List<String> msgs = Collections.singletonList("foo");
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(multicast.getAddress(), msgs.size()),

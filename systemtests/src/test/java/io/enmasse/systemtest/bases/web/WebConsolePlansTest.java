@@ -9,7 +9,6 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
@@ -22,7 +21,6 @@ import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 

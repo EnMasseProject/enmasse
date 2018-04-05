@@ -6,41 +6,43 @@ package io.enmasse.systemtest.brokered.clients.artemis;
 
 import io.enmasse.systemtest.clients.artemis.ArtemisJMSClientReceiver;
 import io.enmasse.systemtest.clients.artemis.ArtemisJMSClientSender;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
+@Disabled("core client has still issue with trustAll")
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 
-    //Disabled until we create mechanism for fetch clients certificates
-    //@Test
+    @Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver(), true);
     }
 
-    //@Test
+    @Test
     public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testDrainQueue() throws Exception {
         doDrainQueueTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver());
     }
 
-    //@Test
+    @Test
     public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(),
                 new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver(), true);

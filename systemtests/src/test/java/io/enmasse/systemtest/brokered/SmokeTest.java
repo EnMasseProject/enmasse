@@ -9,6 +9,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.BrokeredTestBase;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SmokeTest extends BrokeredTestBase {
 
@@ -92,7 +94,8 @@ public class SmokeTest extends BrokeredTestBase {
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
     }
 
-    //@Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
+    @Test()
+    @Disabled("disabled until #346 will be fixed")
     public void testCreateAlreadyExistingAddress() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(addressSpaceA);
@@ -100,6 +103,7 @@ public class SmokeTest extends BrokeredTestBase {
         setAddresses(addressSpaceA, queueA);
 
         Destination topicA = Destination.topic("brokeredTopicA", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpaceA, topicA); //address already exist exception
+        assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(addressSpaceA, topicA),
+                "setAddresses does not throw right exception");
     }
 }

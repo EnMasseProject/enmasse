@@ -14,12 +14,11 @@ import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -40,9 +39,10 @@ public class PlansTest extends StandardTestBase {
         plansProvider.tearDown();
     }
 
-    //@Test //test disabled because feature for appending address-plan is not implemented yet, issue: #904
+    @Test
+    @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
     public void testAppendAddressPlan() throws Exception {
-        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.1));
+        List<AddressResource> addressResources = Collections.singletonList(new AddressResource("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
         plansProvider.createAddressPlanConfig(weakQueuePlan);

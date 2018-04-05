@@ -11,11 +11,11 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import org.junit.jupiter.api.Test;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -49,7 +49,7 @@ public class PlansTest extends TestBase {
     @Test
     public void testCreateAddressSpacePlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 1.0));
         List<AddressResource> addressResourcesTopic = Arrays.asList(
                 new AddressResource("broker", 1.0),
                 new AddressResource("router", 1.0));
@@ -259,7 +259,7 @@ public class PlansTest extends TestBase {
         ResourceDefinition limitedResource = new ResourceDefinition(
                 "broker",
                 "queue-persisted",
-                Arrays.asList(
+                Collections.singletonList(
                         new ResourceParameter("GLOBAL_MAX_SIZE", "1Mb")
                 ));
         plansProvider.replaceResourceDefinitionConfig(limitedResource);
@@ -297,15 +297,15 @@ public class PlansTest extends TestBase {
         setAddresses(addressSpace, queue, queue2, queue3);
 
         assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                                queue.getAddress(), messageContent, 100, false),
+                queue.getAddress(), messageContent, 100, false),
                 "Client does not fail");
 
         assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                                queue2.getAddress(), messageContent, 100, false),
+                queue2.getAddress(), messageContent, 100, false),
                 "Client does not fail");
 
         assertTrue(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                                queue3.getAddress(), messageContent, 50, false),
+                queue3.getAddress(), messageContent, 50, false),
                 "Client fails");
     }
 

@@ -13,6 +13,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.StandardTestBase;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class QueueTest extends StandardTestBase {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
-        runRestApiTest(q1, q2);
+        runRestApiTest(sharedAddressSpace, q1, q2);
     }
 
     @Test
@@ -143,7 +144,7 @@ public class QueueTest extends StandardTestBase {
         }
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(),
-                listOfMessages.toArray(new Message[listOfMessages.size()]));
+                listOfMessages.toArray(new Message[0]));
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), msgsCount);
@@ -158,7 +159,8 @@ public class QueueTest extends StandardTestBase {
         }
     }
 
-    //@Test test disabled due to issue: #851
+    @Test
+    @Disabled("disabled due to issue #851")
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue", "sharded-queue");
         setAddresses(dest);
@@ -195,7 +197,8 @@ public class QueueTest extends StandardTestBase {
                 received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
-    //    @Test // disabled due to issue: #903
+    @Test
+    @Disabled("disabled due to issue #903")
     public void testScalePooledQueueAutomatically() throws Exception {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 2000;

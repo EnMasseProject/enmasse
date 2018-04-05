@@ -74,6 +74,6 @@ public class QueueTest extends BrokeredTestBase {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
-        runRestApiTest(q1, q2);
+        runRestApiTest(sharedAddressSpace, q1, q2);
     }
 }

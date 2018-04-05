@@ -13,6 +13,7 @@ import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -58,7 +59,8 @@ public class InteroperabilityTest extends StandardTestBase {
         }
     }
 
-    //@Test
+    @Test
+    @Disabled("disabled due to problems with mqtt in standard address space")
     public void testSendAmqpReceiveMqtt() throws Exception {
         Destination mqttTopic = Destination.topic("amqp-mqtt-topic", "sharded-topic");
         setAddresses(mqttTopic);

@@ -60,7 +60,7 @@ public class AnycastTest extends StandardTestBase {
         Destination a1 = Destination.anycast("anycastRest1");
         Destination a2 = Destination.anycast("anycastRest2");
 
-        runRestApiTest(a1, a2);
+        runRestApiTest(sharedAddressSpace, a1, a2);
     }
 
     @Test

@@ -10,6 +10,7 @@ import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.StandardTestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -77,7 +78,8 @@ public class PublishTest extends StandardTestBase {
         this.publish(messages, publisherQos, 2);
     }
 
-    //@Test
+    @Test
+    @Disabled("related issue: #?")
     public void testRetainedMessages() throws Exception {
         Destination topic = Destination.topic("retained-message-topic", "sharded-topic");
         setAddresses(topic);

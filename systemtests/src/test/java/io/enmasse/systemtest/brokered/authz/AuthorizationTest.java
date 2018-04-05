@@ -7,6 +7,7 @@ package io.enmasse.systemtest.brokered.authz;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class AuthorizationTest extends AuthorizationTestBase {
@@ -41,7 +42,8 @@ public class AuthorizationTest extends AuthorizationTestBase {
         doTestReceiveAuthz();
     }
 
-    //@Test
+    @Test
+    @Disabled("disabled due to issue #786")
     public void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }

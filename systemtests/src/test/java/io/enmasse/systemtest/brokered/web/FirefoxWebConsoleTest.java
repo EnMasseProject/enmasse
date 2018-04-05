@@ -6,6 +6,7 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
@@ -13,13 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
-
-    //@Test related issue: #1074
+    @Test
+    @Disabled("related issue: #1074")
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
-    //@Test related issue: #1074
+    @Test
+    @Disabled("related issue: #1074")
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
@@ -54,7 +56,8 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByReceivers();
     }
 
-    //@Test disabled due to issue: #669
+    @Test
+    @Disabled("disabled due to #669")
     public void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
@@ -74,12 +77,14 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByHostname();
     }
 
-    //@Test disabled due to https://github.com/EnMasseProject/enmasse/issues/634
+    @Test
+    @Disabled("disabled due to https://github.com/EnMasseProject/enmasse/issues/634")
     public void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId();
     }
 
-    //@Test disabled due to https://github.com/EnMasseProject/enmasse/issues/634
+    @Test
+    @Disabled("disabled due to https://github.com/EnMasseProject/enmasse/issues/634")
     public void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
     }
@@ -89,7 +94,8 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestMessagesMetrics();
     }
 
-    //@Test disabled due to #649
+    @Test
+    @Disabled("disabled due to #649")
     public void testClientsMetrics() throws Exception {
         doTestClientsMetrics();
     }
@@ -114,7 +120,8 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestViewConnections();
     }
 
-    //@Test
+    @Test
+    @Disabled("not implemented yet")
     public void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();
     }

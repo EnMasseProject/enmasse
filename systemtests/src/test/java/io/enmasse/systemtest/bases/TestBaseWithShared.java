@@ -8,20 +8,15 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("shared")
 public abstract class TestBaseWithShared extends TestBase {
@@ -119,7 +114,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * get all addresses except 'dummy-address'
      */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     /**
@@ -136,11 +131,11 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     protected Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
-        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     /**
@@ -219,44 +214,5 @@ public abstract class TestBaseWithShared extends TestBase {
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
         return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
-    }
-
-    /**
-     * body for rest api tests
-     */
-    public void runRestApiTest(Destination d1, Destination d2) throws Exception {
-        List<String> destinationsNames = Arrays.asList(d1.getAddress(), d2.getAddress());
-        setAddresses(d1);
-        appendAddresses(d2);
-
-        //d1, d2
-        Future<List<String>> response = getAddresses(Optional.empty());
-        assertThat("Rest api does not return all addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames));
-        log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
-
-        //get specific address d2
-        response = getAddresses(Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
-        assertThat("Rest api does not return specific address", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-
-        deleteAddresses(d1);
-
-        //d2
-        response = getAddresses(Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
-        assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-        log.info("address {} successfully deleted", d1.getAddress());
-
-        deleteAddresses(d2);
-
-        //empty
-        response = getAddresses(Optional.empty());
-        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", d2.getAddress());
-
-        setAddresses(d1, d2);
-        deleteAddresses(d1, d2);
-
-        response = getAddresses(Optional.empty());
-        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 }

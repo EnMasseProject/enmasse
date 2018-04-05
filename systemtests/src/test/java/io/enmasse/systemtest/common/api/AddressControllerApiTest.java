@@ -17,10 +17,7 @@ import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.standard.mqtt.PublishTest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -89,7 +86,8 @@ public class AddressControllerApiTest extends TestBase {
                 .contains("test-schema-rest-api-addr-plan"));
     }
 
-    //@Test disabled due to issue: #947
+    @Test
+    @Disabled("disabled due to issue: #947")
     public void testVerifyRoutes() throws Exception {
         AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
         AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);

@@ -15,6 +15,6 @@ public class MulticastTest extends StandardTestBase {
         Destination m1 = Destination.multicast("multicastRest1");
         Destination m2 = Destination.multicast("multicastRest2");
 
-        runRestApiTest(m1, m2);
+        runRestApiTest(sharedAddressSpace, m1, m2);
     }
 }

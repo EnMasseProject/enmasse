@@ -6,8 +6,11 @@ package io.enmasse.systemtest.common.plans.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.web.WebConsolePlansTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
+@Disabled("Chrome driver does not work properly")
 public class ChromeWebConsolePlansTest extends WebConsolePlansTest {
 
     @Override
@@ -20,7 +23,7 @@ public class ChromeWebConsolePlansTest extends WebConsolePlansTest {
         return getChromeDriver();
     }
 
-    //@Test
+    @Test
     public void testCreateAddressPlan() throws Exception {
         doTestCreateAddressPlan();
     }

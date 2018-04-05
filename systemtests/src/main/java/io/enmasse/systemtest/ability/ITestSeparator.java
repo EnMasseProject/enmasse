@@ -66,7 +66,7 @@ public interface ITestSeparator {
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
     }
 
-    public static void printThreadDump() {
+    static void printThreadDump() {
         Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
         Iterator<Thread> iterator = allThreads.keySet().iterator();
         while (iterator.hasNext()) {
@@ -80,5 +80,4 @@ public interface ITestSeparator {
             log.error(sb.toString());
         }
     }
-
 }
