@@ -105,9 +105,6 @@ public class OSBBindingService extends OSBServiceBase {
             conn.setUseCaches( false );
 
             String username = "user-" + bindingId;
-            byte[] passwordBytes = new byte[32];
-            this.random.nextBytes(passwordBytes);
-            String password = Base64.getEncoder().encodeToString(passwordBytes);
 
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String,Object> userRep = new LinkedHashMap<>();
@@ -122,9 +119,10 @@ public class OSBBindingService extends OSBServiceBase {
 
             String userId = getUserId(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, username);
 
-            if (responseCode == 201) {
-                resetPassword(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, password);
-            }
+            byte[] passwordBytes = new byte[32];
+            this.random.nextBytes(passwordBytes);
+            String password = Base64.getEncoder().encodeToString(passwordBytes);
+            resetPassword(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, password);
 
             createGroupMapping(keycloakAdminUser, keycloakAdminPassword, host, addressSpace, userId, groupIds);
 
