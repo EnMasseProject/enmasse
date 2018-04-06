@@ -113,12 +113,6 @@ public class OSBBindingService extends OSBServiceBase {
             Map<String,Object> userRep = new LinkedHashMap<>();
             userRep.put("username", username);
             userRep.put("enabled", true);
-            Map<String, Object> credential = new LinkedHashMap<>();
-            credential.put("type","password");
-            credential.put("value", password);
-            credential.put("temporary", false);
-            userRep.put("credentials", Collections.singletonList(credential));
-            userRep.put("enabled", true);
             try(OutputStream o = conn.getOutputStream()) {
                 objectMapper.writeValue(o, userRep);
             }
