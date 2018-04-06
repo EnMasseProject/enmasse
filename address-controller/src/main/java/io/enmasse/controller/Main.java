@@ -12,6 +12,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -21,8 +22,11 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main extends AbstractVerticle {
+    private static final Logger log = LoggerFactory.getLogger(Main.class.getName());
     private final NamespacedOpenShiftClient controllerClient;
     private final ControllerOptions options;
     private final Kubernetes kubernetes;
@@ -91,7 +95,16 @@ public class Main extends AbstractVerticle {
         });
 
         options.getStandardAuthService().ifPresent(authService -> {
-            resolverMap.put(AuthenticationServiceType.STANDARD, new StandardAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort(), kubernetes.getRouteHost("keycloak")));
+            ConfigMap config = controllerClient.configMaps().withName(authService.getConfigMap()).get();
+            if (config != null) {
+                resolverMap.put(AuthenticationServiceType.STANDARD, new StandardAuthenticationServiceResolver(
+                        config.getData().get("hostname"),
+                        Integer.parseInt(config.getData().get("port")),
+                        config.getData().get("httpUrl"),
+                        config.getData().get("caSecretName")));
+            } else {
+                log.warn("Skipping standard authentication service: configmap {} not found", authService.getConfigMap());
+            }
         });
 
         resolverMap.put(AuthenticationServiceType.EXTERNAL, new ExternalAuthenticationServiceResolver());

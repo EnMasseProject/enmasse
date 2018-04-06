@@ -15,37 +15,29 @@ import java.util.Optional;
 public class StandardAuthenticationServiceResolver implements AuthenticationServiceResolver {
     private final String host;
     private final int port;
-    private final String oAuthUrl;
+    private final String oauthUrl;
+    private final String caSecretName;
 
-    public StandardAuthenticationServiceResolver(String host, int port, String keycloakRouteHost) {
+    public StandardAuthenticationServiceResolver(String host, int port, String oauthUrl, String caSecretName) {
         this.host = host;
         this.port = port;
-        this.oAuthUrl = keycloakRouteHost == null ? null : "https://" + keycloakRouteHost + "/auth";
+        this.oauthUrl = oauthUrl;
+        this.caSecretName = caSecretName;
     }
 
     @Override
     public String getHost(AuthenticationService authService) {
-        String overrideHost = (String) authService.getDetails().get("host");
-        if (overrideHost != null) {
-            return overrideHost;
-        } else {
-            return host;
-        }
+        return host;
     }
 
     @Override
     public int getPort(AuthenticationService authService) {
-        String overridePort = (String) authService.getDetails().get("port");
-        if (overridePort != null) {
-            return Integer.parseInt(overridePort);
-        } else {
-            return port;
-        }
+        return port;
     }
 
     @Override
     public Optional<String> getCaSecretName(AuthenticationService authService) {
-        return Optional.of("standard-authservice-cert");
+        return Optional.ofNullable(caSecretName);
     }
 
     @Override
@@ -60,9 +52,6 @@ public class StandardAuthenticationServiceResolver implements AuthenticationServ
 
     @Override
     public Optional<String> getOAuthURL(AuthenticationService authService) {
-        //note: the second test is an ugly hack to allow running on a
-        //local cluster e.g. oc cluster up without having
-        //--public-hostname set
-        return oAuthUrl == null || oAuthUrl.contains("127.0.0.1") ? Optional.of("https://"+ getHost(authService) + ":8443/auth") : Optional.of(oAuthUrl);
+        return Optional.ofNullable(oauthUrl);
     }
 }

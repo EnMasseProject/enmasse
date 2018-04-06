@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,10 +20,7 @@ public class KeycloakParamsTest {
         Map<String, String> env = new HashMap<>();
         assertThrows(env);
 
-        env.put("KEYCLOAK_HOSTNAME", "localhost");
-        assertThrows(env);
-
-        env.put("KEYCLOAK_PORT", "1234");
+        env.put("KEYCLOAK_URI", "https://localhost:8443/auth");
         assertThrows(env);
 
         env.put("KEYCLOAK_ADMIN_USER", "admin");
@@ -35,8 +31,7 @@ public class KeycloakParamsTest {
         env.put("KEYCLOAK_CERT", new String(Files.readAllBytes(new File("src/test/resources/ca.crt").toPath()), "UTF-8"));
 
         KeycloakParams params = KeycloakParams.fromEnv(env);
-        assertEquals("localhost", params.getHost());
-        assertEquals(1234, params.getHttpPort());
+        assertEquals("https://localhost:8443/auth", params.getKeycloakUri());
         assertEquals("admin", params.getAdminUser());
         assertEquals("password", params.getAdminPassword());
     }

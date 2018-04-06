@@ -8,41 +8,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.util.Map;
-import java.util.Optional;
 
 public class KeycloakParams {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakParams.class);
 
-    private final String host;
-    private final int httpPort;
+    private final String keycloakUri;
     private final String adminUser;
     private final String adminPassword;
     private final KeyStore keyStore;
 
-    public KeycloakParams(String host, int httpPort, String adminUser, String adminPassword, KeyStore keyStore) {
-        this.host = host;
-        this.httpPort = httpPort;
+    public KeycloakParams(String keycloakUri, String adminUser, String adminPassword, KeyStore keyStore) {
+        this.keycloakUri = keycloakUri;
         this.adminUser = adminUser;
         this.adminPassword = adminPassword;
         this.keyStore = keyStore;
     }
 
     public static KeycloakParams fromEnv(Map<String, String> env) throws Exception {
-        String host = getEnvOrThrow(env, "KEYCLOAK_HOSTNAME");
-        int httpPort = Integer.parseInt(getEnvOrThrow(env, "KEYCLOAK_PORT"));
+        String keycloakUri = getEnvOrThrow(env, "KEYCLOAK_URI");
         String adminUser = getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER");
         String adminPassword = getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD");
         KeyStore keyStore = createKeyStore(env);
 
-        return new KeycloakParams(host, httpPort, adminUser, adminPassword, keyStore);
+        return new KeycloakParams(keycloakUri, adminUser, adminPassword, keyStore);
     }
 
     private static KeyStore createKeyStore(Map<String, String> env) throws Exception {
@@ -70,12 +62,8 @@ public class KeycloakParams {
         return value;
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public int getHttpPort() {
-        return httpPort;
+    public String getKeycloakUri() {
+        return keycloakUri;
     }
 
     public String getAdminUser() {

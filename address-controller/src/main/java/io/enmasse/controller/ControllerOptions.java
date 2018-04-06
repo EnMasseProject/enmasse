@@ -23,8 +23,8 @@ public final class ControllerOptions {
 
     private final String certDir;
     private final File templateDir;
-    private final AuthServiceInfo noneAuthService;
-    private final AuthServiceInfo standardAuthService;
+    private final NoneAuthServiceInfo noneAuthService;
+    private final StandardAuthServiceInfo standardAuthService;
     private final boolean enableRbac;
     private final boolean enableEventLogger;
 
@@ -41,7 +41,7 @@ public final class ControllerOptions {
 
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File templateDir, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
+                              NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -80,11 +80,11 @@ public final class ControllerOptions {
         return certDir;
     }
 
-    public Optional<AuthServiceInfo> getNoneAuthService() {
+    public Optional<NoneAuthServiceInfo> getNoneAuthService() {
         return Optional.ofNullable(noneAuthService);
     }
 
-    public Optional<AuthServiceInfo> getStandardAuthService() {
+    public Optional<StandardAuthServiceInfo> getStandardAuthService() {
         return Optional.ofNullable(standardAuthService);
     }
 
@@ -144,8 +144,8 @@ public final class ControllerOptions {
             templateDir = null;
         }
 
-        AuthServiceInfo noneAuthService = getAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
-        AuthServiceInfo standardAuthService = getAuthService(env, "STANDARD_AUTHSERVICE_SERVICE_HOST", "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQPS").orElse(null);
+        NoneAuthServiceInfo noneAuthService = getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
+        StandardAuthServiceInfo standardAuthService = getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG").orElse(null);
 
         String certDir = getEnv(env, "CERT_DIR").orElse("/address-controller-cert");
 
@@ -192,10 +192,20 @@ public final class ControllerOptions {
     }
 
 
-    private static Optional<AuthServiceInfo> getAuthService(Map<String, String> env, String hostEnv, String portEnv) {
+    private static Optional<NoneAuthServiceInfo> getNoneAuthService(Map<String, String> env, String hostEnv, String portEnv) {
 
         return getEnv(env, hostEnv)
-                .map(host -> new AuthServiceInfo(host, Integer.parseInt(getEnvOrThrow(env, portEnv))));
+                .map(host -> new NoneAuthServiceInfo(host, Integer.parseInt(getEnvOrThrow(env, portEnv))));
+    }
+
+    private static Optional<StandardAuthServiceInfo> getStandardAuthService(Map<String, String> env, String configMapEnv) {
+        return getEnv(env, configMapEnv).map(e -> {
+            if (e.isEmpty()) {
+                return null;
+            } else {
+                return new StandardAuthServiceInfo(e);
+            }
+        });
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {

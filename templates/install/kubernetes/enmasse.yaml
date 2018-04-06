@@ -1179,6 +1179,8 @@ items:
             value: enmasse-admin
           - name: ADDRESS_SPACE_ADMIN_SA
             value: address-space-admin
+          - name: STANDARD_AUTHSERVICE_CONFIG
+            value: keycloak-config
           - name: WILDCARD_ENDPOINT_CERT_SECRET
             value: ''
           - name: RESYNC_INTERVAL

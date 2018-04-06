@@ -39,6 +39,6 @@ public class ExternalAuthenticationServiceResolver implements AuthenticationServ
 
     @Override
     public Optional<String> getOAuthURL(AuthenticationService authService) {
-        return Optional.ofNullable((String) authService.getDetails().get("oauthURL"));
+        return Optional.ofNullable((String) authService.getDetails().get("oauthUrl"));
     }
 }

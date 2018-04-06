@@ -3274,6 +3274,8 @@ objects:
             value: ${ADDRESS_CONTROLLER_SA}
           - name: ADDRESS_SPACE_ADMIN_SA
             value: ${ADDRESS_SPACE_ADMIN_SA}
+          - name: STANDARD_AUTHSERVICE_CONFIG
+            value: ${STANDARD_AUTHSERVICE_CONFIG}
           - name: WILDCARD_ENDPOINT_CERT_SECRET
             value: ${WILDCARD_ENDPOINT_CERT_SECRET}
           - name: RESYNC_INTERVAL
@@ -3373,3 +3375,7 @@ parameters:
 - description: User to impersonate when creating resources (uses service-account if
     not set)
   name: IMPERSONATE_USER
+  value: developer
+- description: Name of configmap containing standard authservice config
+  name: STANDARD_AUTHSERVICE_CONFIG
+  value: keycloak-config
