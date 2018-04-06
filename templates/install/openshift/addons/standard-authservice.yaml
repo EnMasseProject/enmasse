@@ -53,7 +53,7 @@ objects:
               path: /auth
               port: https
               scheme: HTTPS
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
           name: keycloak
           ports:
           - containerPort: 5671
