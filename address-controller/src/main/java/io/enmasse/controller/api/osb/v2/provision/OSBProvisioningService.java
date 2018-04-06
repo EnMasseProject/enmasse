@@ -98,7 +98,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         List<Endpoint> endpoints = maasInstance.getEndpoints();
         return endpoints == null ? Optional.empty() : endpoints.stream()
                 .filter(endpoint -> endpoint.getName().equals("console"))
-                .findAny().flatMap(e -> e.getHost()).map(s -> "http://" + s);
+                .findAny().flatMap(e -> e.getHost()).map(s -> "https://" + s);
     }
 
     private boolean isValidPlan(Service service, UUID planId) {

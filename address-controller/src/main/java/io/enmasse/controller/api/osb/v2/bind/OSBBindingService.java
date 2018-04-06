@@ -129,6 +129,12 @@ public class OSBBindingService extends OSBServiceBase {
             Map<String,String> credentials = new LinkedHashMap<>();
             credentials.put("username",username);
             credentials.put("password", password);
+            if ((parameters.containsKey("consoleAccess") && Boolean.valueOf(parameters.get("consoleAccess"))) ||
+               (parameters.containsKey("consoleAdmin") && Boolean.valueOf(parameters.get("consoleADmin")))) {
+                addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("console")).findFirst().ifPresent(e -> {
+                    e.getHost().ifPresent(h-> credentials.put("console", "https://" + h));
+                });
+            }
             addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("messaging")).findFirst().ifPresent(e -> {
                 credentials.put("host", String.format("%s.%s.svc", e.getService(), addressSpace.getNamespace()));
                 credentials.put("port", "5671");
