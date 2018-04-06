@@ -1,0 +1,37 @@
+---
+- shell: oc policy can-i create clusterservicebrokers
+  register: can_create
+  failed_when: can_create.stdout == "no"
+- shell: oc sa get-token -n {{ namespace }} enmasse-admin
+  register: token_result
+- set_fact:
+    enmasse_admin_token: "{{ token_result.stdout }}"
+- name: Check if secret exists
+  shell: oc get secret -n {{ namespace }} service-catalog-credentials
+  register: secret_exists
+  ignore_errors: True
+- name: Create secret for catalog credentials
+  when: secret_exists.failed
+  shell: oc create secret generic -n {{ namespace }} service-catalog-credentials --from-literal=token={{ enmasse_admin_token }}
+- shell: oc extract secret/address-controller-cert --keys=tls.crt --to=-
+  register: secret_result
+- set_fact:
+    ca_bundle: "{{ secret_result.stdout }}"
+- name: Register Service Broker with Service Catalog
+  shell:
+    cmd: |
+      cat <<EOF | oc create -f -
+      apiVersion: servicecatalog.k8s.io/v1beta1
+      kind: ClusterServiceBroker
+      metadata:
+        name: enmasse
+        uid: 53bd3760-1576-11e8-8bc3-0242ac110007
+      spec:
+        url: "https://address-controller.{{ namespace }}.svc:443/osbapi/"
+        authInfo:
+          bearer:
+            secretRef:
+              name: service-catalog-credentials
+              namespace: "{{ namespace }}"
+        caBundle: "{{ ca_bundle | b64encode }}"
+      EOF

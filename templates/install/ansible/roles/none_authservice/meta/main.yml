@@ -1,3 +1,3 @@
 ---
 dependencies:
-  - { role: openssl_certs, cert_secret: none-authservice-cert, cert_cn: "none-authservice.{{ namespace }}.svc.cluster.local" }
+  - { role: ssl_certs, cert_secret: none-authservice-cert, cert_cn: "none-authservice.{{ namespace }}.svc.cluster.local", cert_sans: "DNS:none-authservice.{{ namespace }}.svc.cluster,DNS:none-authservice.{{ namespace }}.svc,DNS:none-authservice" }

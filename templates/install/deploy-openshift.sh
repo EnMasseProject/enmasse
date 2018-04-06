@@ -100,7 +100,6 @@ while getopts a:c:de:gm:n:o:p:st:u:yvh opt; do
             echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"
             echo "  -o mode              Deploy in given mode, 'singletenant' or 'multitenant'.  (default: \"singletenant\")"
             echo "  -p PARAMS            Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
-            echo "  -s                   Experimental: Only applicable when also using -d option. Starts OpenShift with Service Catalog enabled and registers EnMasse Service Broker"
             echo "  -t TEMPLATE          An alternative OpenShift template file to deploy EnMasse"
             echo "  -u USER              OpenShift user to run commands as (default: $DEFAULT_USER)"
             echo
@@ -221,26 +220,3 @@ else
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
-
-if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
-then
-    runcmd "oc login -u system:admin" "Logging in as system:admin"
-    ENMASSE_SECRET=$(oc describe sa enmasse-admin | tr -d '\n' | sed -e 's/^.*Mountable secrets:\(.*\)Tokens:.*$/\1/' | sed -e 's/.*\(enmasse-admin-token-[a-z0-9]*\).*$/\1/')
-    CA_BUNDLE=$(oc get secret address-controller-cert -n ${NAMESPACE} -o yaml | grep tls.crt | sed -e 's/^ *tls.crt: *//')
-    runcmd "cat <<EOF | oc create -f -
-apiVersion: servicecatalog.k8s.io/v1beta1
-kind: ClusterServiceBroker
-metadata:
-  name: enmasse
-  uid: 53bd3760-1576-11e8-8bc3-0242ac110007
-spec:
-  url: https://address-controller.${NAMESPACE}.svc:443/osbapi/
-  authInfo:
-    bearer:
-      secretRef:
-        name: ${ENMASSE_SECRET}
-        namespace: ${NAMESPACE}
-  caBundle: ${CA_BUNDLE}
-EOF" "Registering EnMasse Service Broker in Service Catalog"
-    runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
-fi
