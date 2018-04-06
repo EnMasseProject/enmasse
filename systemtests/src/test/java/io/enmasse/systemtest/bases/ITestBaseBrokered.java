@@ -1,22 +1,21 @@
 /*
- * Copyright 2016-2018, EnMasse authors.
+ * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-
 package io.enmasse.systemtest.bases;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 
-public abstract class BrokeredTestBase extends TestBaseWithShared {
+public interface ITestBaseBrokered extends ITestBase {
 
     @Override
-    protected AddressSpaceType getAddressSpaceType() {
+    default AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.BROKERED;
     }
 
     @Override
-    protected String getDefaultPlan(AddressType addressType) {
+    default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
                 return "brokered-queue";
@@ -27,7 +26,7 @@ public abstract class BrokeredTestBase extends TestBaseWithShared {
     }
 
     @Override
-    protected boolean skipDummyAddress() {
+    default boolean skipDummyAddress() {
         return true;
     }
 }

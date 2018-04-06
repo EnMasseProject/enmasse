@@ -5,23 +5,13 @@
 package io.enmasse.systemtest.brokered.auth;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-public class AuthenticationTest extends AuthenticationTestBase {
+public class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
-
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        switch (addressType) {
-            case QUEUE:
-                return "brokered-queue";
-            case TOPIC:
-                return "brokered-topic";
-        }
-        return null;
-    }
 
     /**
      * related github issue: #523

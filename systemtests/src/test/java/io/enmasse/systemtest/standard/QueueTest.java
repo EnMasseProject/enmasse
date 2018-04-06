@@ -10,7 +10,8 @@ import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Disabled;
@@ -32,7 +33,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class QueueTest extends StandardTestBase {
+public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runQueueTest(client, dest, 1024);

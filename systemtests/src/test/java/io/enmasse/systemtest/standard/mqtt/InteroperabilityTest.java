@@ -8,7 +8,8 @@ package io.enmasse.systemtest.standard.mqtt;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -28,11 +29,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Tests related to interoperability mqtt with amqp
  */
-public class InteroperabilityTest extends StandardTestBase {
+public class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
     @Override
-    protected boolean skipDummyAddress() {
+    public boolean skipDummyAddress() {
         return true;
     }
 

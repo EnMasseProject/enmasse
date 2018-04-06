@@ -7,7 +7,8 @@ package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class AnycastTest extends StandardTestBase {
+public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard {
 
     public static void runAnycastTest(Destination dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
         if (clients.length == 0) {

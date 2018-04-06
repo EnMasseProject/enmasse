@@ -5,7 +5,8 @@
 package io.enmasse.systemtest.brokered.jms;
 
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.slf4j.Logger;
 
 import javax.jms.*;
@@ -20,7 +21,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JMSTestBase extends BrokeredTestBase {
+public class JMSTestBase extends TestBaseWithShared implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
     protected String jmsUsername = "test";
     protected String jmsPassword = "test";

@@ -41,11 +41,6 @@ public class PlansTest extends TestBase {
         plansProvider.tearDown();
     }
 
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        return null;
-    }
-
     @Test
     public void testCreateAddressSpacePlan() throws Exception {
         //define and create address plans

@@ -7,7 +7,8 @@ package io.enmasse.systemtest.brokered;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class QueueTest extends BrokeredTestBase {
+public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     /**
      * related github issue: #387

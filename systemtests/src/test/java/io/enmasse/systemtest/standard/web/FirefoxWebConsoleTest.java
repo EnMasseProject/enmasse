@@ -6,13 +6,15 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
+public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
 
     @Test
     @Disabled("related issue: #1074")
@@ -157,5 +159,10 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
     @Override
     public WebDriver buildDriver() {
         return getFirefoxDriver();
+    }
+
+    @Override
+    public boolean skipDummyAddress() {
+        return true;
     }
 }

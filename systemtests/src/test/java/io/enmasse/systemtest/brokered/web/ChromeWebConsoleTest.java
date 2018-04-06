@@ -6,6 +6,8 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
@@ -13,7 +15,7 @@ import org.openqa.selenium.WebDriver;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Disabled("chrome driver does not work properly")
-public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
+public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered {
 
     @Test
     public void testCreateDeleteQueue() throws Exception {

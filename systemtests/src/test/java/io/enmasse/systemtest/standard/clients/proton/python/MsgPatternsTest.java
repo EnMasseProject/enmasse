@@ -4,12 +4,14 @@
  */
 package io.enmasse.systemtest.standard.clients.proton.python;
 
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
 import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.clients.proton.python.PythonClientSender;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
+public class MsgPatternsTest extends MsgPatternsTestBase implements ITestBaseStandard {
 
     @Test
     public void testBasicMessage() throws Exception {

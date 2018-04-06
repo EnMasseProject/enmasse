@@ -6,7 +6,8 @@ package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Disabled;
@@ -21,7 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SmokeTest extends BrokeredTestBase {
+public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     /**
      * related github issue: #335

@@ -63,11 +63,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
-    @Override
-    protected boolean skipDummyAddress() {
-        return true;
-    }
-
     //============================================================================================
     //============================ do test methods ===============================================
     //============================================================================================

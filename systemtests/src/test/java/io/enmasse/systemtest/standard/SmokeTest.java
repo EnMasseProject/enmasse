@@ -7,7 +7,8 @@ package io.enmasse.systemtest.standard;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This is a simple smoketest of EnMasse. If this passes, the chances of something being
  * very wrong is minimized. The test should not take to long too execute
  */
-public class SmokeTest extends StandardTestBase {
+public class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private Destination queue = Destination.queue("smokeQueue_1", "pooled-queue");
     private Destination topic = Destination.topic("smoketopic", "pooled-topic");

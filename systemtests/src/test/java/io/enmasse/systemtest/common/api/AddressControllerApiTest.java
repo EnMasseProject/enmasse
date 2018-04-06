@@ -36,11 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AddressControllerApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
 
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        return null;
-    }
-
     @BeforeEach
     public void setUp() {
         plansProvider.setUp();

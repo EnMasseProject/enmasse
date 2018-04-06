@@ -5,26 +5,11 @@
 package io.enmasse.systemtest.standard.auth;
 
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
 import org.junit.jupiter.api.Test;
 
-public class AuthenticationTest extends AuthenticationTestBase {
-
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        switch (addressType) {
-            case QUEUE:
-                return "sharded-queue";
-            case TOPIC:
-                return "sharded-topic";
-            case ANYCAST:
-                return "standard-anycast";
-            case MULTICAST:
-                return "standard-multicast";
-        }
-        return null;
-    }
+public class AuthenticationTest extends AuthenticationTestBase implements ITestBaseStandard {
 
     @Test
     public void testStandardAuthenticationService() throws Exception {

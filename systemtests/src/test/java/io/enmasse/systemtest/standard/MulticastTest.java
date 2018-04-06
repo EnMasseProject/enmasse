@@ -5,10 +5,11 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.junit.jupiter.api.Test;
 
-public class MulticastTest extends StandardTestBase {
+public class MulticastTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     public void testRestApi() throws Exception {

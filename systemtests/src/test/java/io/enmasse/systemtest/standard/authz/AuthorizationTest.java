@@ -4,37 +4,12 @@
  */
 package io.enmasse.systemtest.standard.authz;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class AuthorizationTest extends AuthorizationTestBase {
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.STANDARD;
-    }
-
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        switch (addressType) {
-            case QUEUE:
-                return "pooled-queue";
-            case TOPIC:
-                return "pooled-topic";
-            case ANYCAST:
-                return "standard-anycast";
-            case MULTICAST:
-                return "standard-multicast";
-        }
-        return null;
-    }
-
-    @Override
-    protected boolean skipDummyAddress() {
-        return false;
-    }
+public class AuthorizationTest extends AuthorizationTestBase implements ITestBaseStandard {
 
     @Test
     public void testSendAuthz() throws Exception {

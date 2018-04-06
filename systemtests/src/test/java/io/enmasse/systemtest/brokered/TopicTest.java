@@ -8,7 +8,8 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class TopicTest extends BrokeredTestBase {
+public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     @Disabled("disable due to authorization exception with create queue on topic address with wildcards")

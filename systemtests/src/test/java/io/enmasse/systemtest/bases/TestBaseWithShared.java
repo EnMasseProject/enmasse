@@ -32,10 +32,6 @@ public abstract class TestBaseWithShared extends TestBase {
         TestBase.deleteAddressSpace(addressSpace);
     }
 
-    protected abstract AddressSpaceType getAddressSpaceType();
-
-    protected abstract boolean skipDummyAddress();
-
     public AddressSpace getSharedAddressSpace() {
         return sharedAddressSpace;
     }

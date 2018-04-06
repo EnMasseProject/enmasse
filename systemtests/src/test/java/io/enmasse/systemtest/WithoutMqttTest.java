@@ -39,7 +39,7 @@ public class WithoutMqttTest extends TestBase {
     }
 
     @Override
-    protected String getDefaultPlan(AddressType addressType) {
+    public String getDefaultPlan(AddressType addressType) {
         return "standard-anycast";
     }
 

@@ -8,7 +8,8 @@ import io.enmasse.systemtest.Address;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
@@ -18,14 +19,17 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PlansTest extends StandardTestBase {
+public class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static Logger log = CustomLogger.getLogger();
 

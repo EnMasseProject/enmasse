@@ -7,7 +7,8 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Disabled;
@@ -30,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Tests related to publish messages via MQTT
  */
-public class PublishTest extends StandardTestBase {
+public class PublishTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
     public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
@@ -48,7 +49,7 @@ public class PublishTest extends StandardTestBase {
     }
 
     @Override
-    protected boolean skipDummyAddress() {
+    public boolean skipDummyAddress() {
         return true;
     }
 

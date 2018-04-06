@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Base class for all tests
  */
-public abstract class TestBase implements ITestSeparator {
+public abstract class TestBase implements ITestSeparator, ITestBase {
     protected static final Environment environment = new Environment();
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
@@ -82,8 +82,6 @@ public abstract class TestBase implements ITestSeparator {
     protected AddressSpace getSharedAddressSpace() {
         return null;
     }
-
-    protected abstract String getDefaultPlan(AddressType addressType);
 
 
     @BeforeEach

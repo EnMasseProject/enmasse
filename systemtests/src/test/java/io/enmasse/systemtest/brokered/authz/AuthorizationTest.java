@@ -4,33 +4,12 @@
  */
 package io.enmasse.systemtest.brokered.authz;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class AuthorizationTest extends AuthorizationTestBase {
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
-    }
-
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        switch (addressType) {
-            case QUEUE:
-                return "brokered-queue";
-            case TOPIC:
-                return "brokered-topic";
-        }
-        return null;
-    }
-
-    @Override
-    protected boolean skipDummyAddress() {
-        return true;
-    }
+public class AuthorizationTest extends AuthorizationTestBase implements ITestBaseBrokered {
 
     @Test
     public void testSendAuthz() throws Exception {

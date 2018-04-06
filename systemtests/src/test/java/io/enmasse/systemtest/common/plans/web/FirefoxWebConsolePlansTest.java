@@ -4,17 +4,11 @@
  */
 package io.enmasse.systemtest.common.plans.web;
 
-import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.bases.web.WebConsolePlansTest;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
 public class FirefoxWebConsolePlansTest extends WebConsolePlansTest {
-
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        return null;
-    }
 
     @Override
     public WebDriver buildDriver() {

@@ -11,7 +11,8 @@ import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -34,7 +35,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TopicTest extends StandardTestBase {
+public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
     public static void runTopicTest(AmqpClient client, Destination dest)

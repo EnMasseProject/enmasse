@@ -4,11 +4,13 @@
  */
 package io.enmasse.systemtest.brokered.clients.proton.java;
 
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
 import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientSender;
 import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
+public class MsgPatternsTest extends MsgPatternsTestBase implements ITestBaseBrokered {
 
     @Test
     public void testBasicMessage() throws Exception {
