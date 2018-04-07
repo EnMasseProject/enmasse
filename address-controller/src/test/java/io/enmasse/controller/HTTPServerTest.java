@@ -6,9 +6,9 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.SubjectAccessReview;
-import io.enmasse.controller.common.TokenReview;
+import io.enmasse.api.auth.AuthApi;
+import io.enmasse.api.auth.SubjectAccessReview;
+import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -22,7 +22,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.net.URI;
@@ -47,12 +46,13 @@ public class HTTPServerTest {
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
-        Kubernetes kubernetes = mock(Kubernetes.class);
-        when(kubernetes.getNamespace()).thenReturn("controller");
-        when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
-        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", kubernetes, true, null), context.asyncAssertSuccess());
+
+        AuthApi authApi = mock(AuthApi.class);
+        when(authApi.getNamespace()).thenReturn("controller");
+        when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
+        when(authApi.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(authApi.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", authApi, true), context.asyncAssertSuccess());
     }
 
     @After
@@ -254,28 +254,6 @@ public class HTTPServerTest {
         }
     }
     */
-
-    @Test
-    @Ignore
-    public void testOpenServiceBrokerAPI(TestContext context) throws InterruptedException {
-        HttpClientOptions options = new HttpClientOptions();
-        HttpClient client = vertx.createHttpClient(options);
-        try {
-            Async async = context.async();
-            HttpClientRequest request = client.get(8080, "localhost", "/osbapi/v2/catalog", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    context.assertTrue(data.containsKey("services"));
-                    async.complete();
-                });
-            });
-            putAuthzToken(request);
-            request.end();
-            async.awaitSuccess(60_000);
-        } finally {
-            client.close();
-        }
-    }
 
     @Test
     public void testOpenApiSpec(TestContext context) throws InterruptedException {

@@ -5,8 +5,8 @@
 package io.enmasse.controller.api.v1.http;
 
 import io.enmasse.address.model.v1.Either;
-import io.enmasse.controller.SchemaProvider;
-import io.enmasse.controller.api.osb.v2.OSBExceptions;
+import io.enmasse.api.common.Exceptions;
+import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.controller.api.v1.AddressApiHelper;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
@@ -69,7 +69,7 @@ public class HttpAddressService {
     public Response getAddress(@Context SecurityContext securityContext, @PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address) throws Exception {
         return doRequest("Error getting address",
                 () -> Response.ok(apiHelper.getAddress(securityContext, addressSpaceName, address)
-                        .orElseThrow(() -> OSBExceptions.notFoundException("Address " + address + " not found")))
+                        .orElseThrow(() -> Exceptions.notFoundException("Address " + address + " not found")))
                         .build());
     }
 

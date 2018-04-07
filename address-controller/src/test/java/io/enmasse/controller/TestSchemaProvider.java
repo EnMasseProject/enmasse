@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.Schema;
+import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.k8s.api.TestSchemaApi;
 
 public class TestSchemaProvider implements SchemaProvider {
