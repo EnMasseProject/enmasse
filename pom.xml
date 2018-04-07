@@ -46,7 +46,9 @@
      <module>mqtt-gateway</module>
      <module>mqtt-lwt</module>
      <module>standard-controller</module>
+     <module>api-common</module>
      <module>address-controller</module>
+     <module>service-broker</module>
      <module>keycloak-plugin</module>
      <module>keycloak-controller</module>
      <module>systemtests</module>

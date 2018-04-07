@@ -7,10 +7,10 @@ package io.enmasse.controller.api.v1.http;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.controller.SchemaProvider;
-import io.enmasse.controller.api.RbacSecurityContext;
-import io.enmasse.controller.api.ResourceVerb;
-import io.enmasse.controller.api.osb.v2.OSBExceptions;
+import io.enmasse.api.common.Exceptions;
+import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.auth.RbacSecurityContext;
+import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class HttpAddressSpaceService {
     private void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
         String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : null;
         if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb))) {
-            throw OSBExceptions.notAuthorizedException();
+            throw Exceptions.notAuthorizedException();
         }
     }
 

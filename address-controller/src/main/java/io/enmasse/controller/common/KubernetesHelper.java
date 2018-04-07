@@ -6,6 +6,8 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.api.auth.SubjectAccessReview;
+import io.enmasse.api.auth.TokenReview;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
@@ -348,73 +350,6 @@ public class KubernetesHelper implements Kubernetes {
         }
     }
 
-
-    @Override
-    public TokenReview performTokenReview(String token) {
-        if (client.isAdaptable(OkHttpClient.class)) {
-            JsonObject body = new JsonObject();
-
-            body.put("kind", "TokenReview");
-            body.put("apiVersion", "authentication.k8s.io/v1beta1");
-
-            JsonObject spec = new JsonObject();
-            spec.put("token", token);
-            body.put("spec", spec);
-
-            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false, null);
-            JsonObject status = responseBody.getJsonObject("status");
-            boolean authenticated = false;
-            String userName = null;
-            if (status != null) {
-                Boolean auth = status.getBoolean("authenticated");
-                authenticated = auth == null ? false : auth;
-                JsonObject user = status.getJsonObject("user");
-                if (user != null) {
-                    userName = user.getString("username");
-                }
-            }
-            return new TokenReview(userName, authenticated);
-        } else {
-            return new TokenReview(null, false);
-        }
-    }
-
-    @Override
-    public SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb) {
-        if (client.isAdaptable(OkHttpClient.class)) {
-            JsonObject body = new JsonObject();
-
-            body.put("kind", "LocalSubjectAccessReview");
-            body.put("apiVersion", "authorization.k8s.io/v1beta1");
-
-            JsonObject metadata = new JsonObject();
-            metadata.put("namespace", namespace);
-            body.put("metadata", metadata);
-
-            JsonObject spec = new JsonObject();
-
-            JsonObject resourceAttributes = new JsonObject();
-            resourceAttributes.put("namespace", namespace);
-            resourceAttributes.put("resource", "configmaps");
-            resourceAttributes.put("verb", verb);
-
-            spec.put("resourceAttributes", resourceAttributes);
-            spec.put("user", user);
-
-            body.put("spec", spec);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/namespaces/" + namespace + "/localsubjectaccessreviews", "POST", body, false, impersonateUser);
-
-            JsonObject status = responseBody.getJsonObject("status");
-            boolean allowed = false;
-            if (status != null) {
-                Boolean allowedMaybe = status.getBoolean("allowed");
-                allowed = allowedMaybe == null ? false : allowedMaybe;
-            }
-            return new SubjectAccessReview(user, allowed);
-        } else {
-            return new SubjectAccessReview(user, false);
-        }
-    }
 
     @Override
     public boolean isRBACEnabled() {

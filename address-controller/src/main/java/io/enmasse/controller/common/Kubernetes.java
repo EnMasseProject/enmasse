@@ -6,6 +6,8 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.api.auth.SubjectAccessReview;
+import io.enmasse.api.auth.TokenReview;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
@@ -39,10 +41,6 @@ public interface Kubernetes {
     Optional<Secret> getSecret(String secretName);
 
     Optional<Secret> getSecret(String secretName, String namespace);
-
-    TokenReview performTokenReview(String token);
-
-    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
 
     boolean isRBACEnabled();
     void addAddressSpaceRoleBindings(AddressSpace namespace);
