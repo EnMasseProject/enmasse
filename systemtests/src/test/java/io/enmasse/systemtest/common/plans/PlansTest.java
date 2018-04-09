@@ -347,6 +347,79 @@ public class PlansTest extends TestBase {
         TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
+    @Test
+    public void testMessagePersistenceAfterAutoScale() throws Exception {
+        //define and create address plans
+        List<AddressResource> addressResourcesQueueAlpha = Arrays.asList(new AddressResource("broker", 0.3));
+        List<AddressResource> addressResourcesQueueBeta = Arrays.asList(new AddressResource("broker", 0.6));
+
+        AddressPlan queuePlanAlpha = new AddressPlan("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
+        plansProvider.createAddressPlanConfig(queuePlanAlpha);
+        AddressPlan queuePlanBeta = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
+        plansProvider.createAddressPlanConfig(queuePlanBeta);
+
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 3.0),
+                new AddressSpaceResource("router", 1.0, 5.0),
+                new AddressSpaceResource("aggregate", 0.0, 5.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlanAlpha, queuePlanBeta);
+        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
+                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
+
+        //create address space plan with new plan
+        AddressSpace messagePersistAddressSpace = new AddressSpace("persist-messages-space-standard", AddressSpaceType.STANDARD,
+                scaleSpacePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(messagePersistAddressSpace);
+
+        //deploy destinations
+        Destination queue1 = Destination.queue("queue1-beta", queuePlanBeta.getName());
+        Destination queue2 = Destination.queue("queue2-beta", queuePlanBeta.getName());
+        Destination queue3 = Destination.queue("queue3-alpha", queuePlanAlpha.getName());
+        Destination queue4 = Destination.queue("queue4-alpha", queuePlanAlpha.getName());
+
+        setAddresses(messagePersistAddressSpace, queue1, queue2);
+        appendAddresses(messagePersistAddressSpace, queue3, queue4);
+
+        //send 1000 messages to each queue
+        String username = "test_scale_user_name";
+        String password = "test_scale_user_pswd";
+        createUser(messagePersistAddressSpace, username, password);
+
+        AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
+        queueClient.getConnectOptions().setUsername(username);
+        queueClient.getConnectOptions().setPassword(password);
+
+        List<String> msgs = TestUtils.generateMessages(1000);
+        Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getAddress(), msgs);
+        Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getAddress(), msgs);
+        Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getAddress(), msgs);
+        Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getAddress(), msgs);
+        assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Incorrect count of messages sent", sendResult3.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        //remove addresses from first pod and wait for scale down
+        deleteAddresses(messagePersistAddressSpace, queue1, queue2);
+        TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
+        //test failed in command above ^, functionality of test code below wasn't verified :)
+
+        //validate count of addresses
+        Future<List<String>> addresses = getAddresses(messagePersistAddressSpace, Optional.empty());
+        List<String> addressNames = addresses.get(15, TimeUnit.SECONDS);
+        assertThat(String.format("Unexpected count of destinations, got following: %s", addressNames),
+                addressNames.size(), is(2));
+
+        //receive messages from remaining addresses
+        Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getAddress(), msgs.size());
+        Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getAddress(), msgs.size());
+        assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
+
     //------------------------------------------------------------------------------------------------
     // Help methods
     //------------------------------------------------------------------------------------------------
