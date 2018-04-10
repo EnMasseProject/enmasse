@@ -7,6 +7,7 @@ package io.enmasse.systemtest;
 
 import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.resources.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -731,6 +732,29 @@ public class TestUtils {
                 throw ex;
             }
         }
+    }
+
+    /**
+     * Replace address plan in ConfigMap of already existing address
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @param addrSpace  address space which contains ConfigMap
+     * @param dest       destination which will be modified
+     * @param plan       definition of AddressPlan
+     */
+    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Destination dest, AddressPlan plan) {
+        String mapKey = "config.json";
+        ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getNamespace(), dest.getAddress());
+
+        JsonObject data = new JsonObject(destConfigMap.getData().get(mapKey));
+        log.info(data.toString());
+        data.getJsonObject("spec").remove("plan");
+        data.getJsonObject("spec").put("plan", plan.getName());
+
+        Map<String, String> modifiedData = new LinkedHashMap<>();
+        modifiedData.put(mapKey, data.toString());
+        destConfigMap.setData(modifiedData);
+        kubernetes.replaceConfigMap(addrSpace.getNamespace(), destConfigMap);
     }
 
     /**

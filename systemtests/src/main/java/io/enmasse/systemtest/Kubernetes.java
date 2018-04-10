@@ -175,6 +175,16 @@ public abstract class Kubernetes {
         return client.configMaps().inNamespace(namespace).list();
     }
 
+    public ConfigMap getConfigMap(String namespace, String configMapName) {
+        return getAllConfigMaps(namespace).getItems().stream()
+                .filter(configMap -> configMap.getMetadata().getName().equals(configMapName))
+                .findFirst().get();
+    }
+
+    public void replaceConfigMap(String namespace, ConfigMap newConfigMap) {
+        client.configMaps().inNamespace(namespace).createOrReplace(newConfigMap);
+    }
+
     //------------------------------------------------------------------------------------------------
     // Create config maps
     //------------------------------------------------------------------------------------------------

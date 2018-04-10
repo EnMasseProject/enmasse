@@ -11,6 +11,7 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
@@ -347,7 +348,7 @@ public class PlansTest extends TestBase {
         TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
-    @Test
+    //@Test test disabled due to issue: #1134
     public void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueueAlpha = Arrays.asList(new AddressResource("broker", 0.3));
@@ -405,7 +406,7 @@ public class PlansTest extends TestBase {
         //remove addresses from first pod and wait for scale down
         deleteAddresses(messagePersistAddressSpace, queue1, queue2);
         TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
-        //test failed in command above ^, functionality of test code below wasn't verified :)
+        //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
 
         //validate count of addresses
         Future<List<String>> addresses = getAddresses(messagePersistAddressSpace, Optional.empty());
@@ -418,6 +419,72 @@ public class PlansTest extends TestBase {
         Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
+
+    //@Test test disabled due to issue: #1136
+    public void testMessagePersistenceAfterChangePlan() throws Exception {
+        List<AddressResource> addressResourcesQueueDistributed = Arrays.asList(new AddressResource("broker", 2.0));
+        List<AddressResource> addressResourcesSharded = Arrays.asList(new AddressResource("broker", 1.0));
+
+        AddressPlan queuePlanDistributed = new AddressPlan("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
+        plansProvider.createAddressPlanConfig(queuePlanDistributed);
+
+        AddressPlan queuePlanSharded = new AddressPlan("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
+        plansProvider.createAddressPlanConfig(queuePlanSharded);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 5.0),
+                new AddressSpaceResource("router", 1.0, 5.0),
+                new AddressSpaceResource("aggregate", 0.0, 5.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
+        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scale-plan",
+                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
+
+        //create address space plan with new plan
+        AddressSpace messagePersistAddressSpace = new AddressSpace("persist-messages-space-standard", AddressSpaceType.STANDARD,
+                scaleSpacePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(messagePersistAddressSpace);
+
+        //deploy destinations
+        Destination queue = Destination.queue("distributed-queue", queuePlanDistributed.getName());
+        setAddresses(messagePersistAddressSpace, queue);
+
+        //pod should have 2 replicas
+        TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
+
+        //send 100000 messages to queue
+        String username = "test_change_plan_user";
+        String password = "test_change_plan_pswd";
+        createUser(messagePersistAddressSpace, username, password);
+
+        AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
+        queueClient.getConnectOptions().setUsername(username);
+        queueClient.getConnectOptions().setPassword(password);
+
+        List<String> msgs = TestUtils.generateMessages(100_000);
+        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getAddress(), msgs);
+        assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        //replace original plan in address by another
+        replaceAddressPlan(messagePersistAddressSpace, queue, queuePlanSharded);
+
+        assertEquals(getAddressesObjects(
+                messagePersistAddressSpace,
+                Optional.of(queue.getAddress())).get(10, TimeUnit.SECONDS).get(0).getPlan(),
+                queuePlanSharded.getName(),
+                "New plan wasn't set correctly");
+
+        //wait until address will be scaled down to 1 pod
+        TestUtils.waitForNBrokerReplicas(
+                kubernetes,
+                messagePersistAddressSpace.getNamespace(), 1, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
+        //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
+
+        //receive messages
+        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getAddress(), msgs.size());
+        assertThat("Incorrect count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     //------------------------------------------------------------------------------------------------

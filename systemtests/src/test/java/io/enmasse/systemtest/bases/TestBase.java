@@ -835,6 +835,13 @@ public abstract class TestBase extends SystemTestRunListener {
     //===================
     //Address config-maps
     //===================
+    protected void replaceAddressPlan(AddressSpace addressSpace, Destination dest, AddressPlan plan){
+        TestUtils.replaceAddressConfig(kubernetes, addressSpace, dest, plan);
+    }
+
+    //===================
+    //Address plans config-maps
+    //===================
     protected void createAddressPlanConfig(AddressPlan addressPlan) {
         createAddressPlanConfig(addressPlan, false);
     }
@@ -860,7 +867,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     //=========================
-    //Address space config-maps
+    //Address space plans config-maps
     //=========================
 
     protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
