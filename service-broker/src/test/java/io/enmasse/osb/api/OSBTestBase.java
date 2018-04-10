@@ -46,7 +46,7 @@ public class OSBTestBase {
         addressSpaceApi = new TestAddressSpaceApi();
         String brokerId = "myspace";
         provisioningService = new OSBProvisioningService(addressSpaceApi, null, null);
-        bindingService = new OSBBindingService(addressSpaceApi, null, null, null, null, null);
+        bindingService = new OSBBindingService(addressSpaceApi, null, null, null);
         lastOperationService = new OSBLastOperationService(addressSpaceApi, null, null);
     }
 

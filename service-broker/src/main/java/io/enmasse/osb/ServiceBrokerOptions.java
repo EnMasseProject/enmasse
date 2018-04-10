@@ -15,6 +15,7 @@ public class ServiceBrokerOptions {
     private String keycloakUrl = null;
     private String keycloakAdminUser = null;
     private String keycloakAdminPassword = null;
+    private String keycloakCa = null;
     private int listenPort = 8080;
 
     public Duration getResyncInterval() {
@@ -48,6 +49,10 @@ public class ServiceBrokerOptions {
 
     public String getKeycloakAdminPassword() {
         return keycloakAdminPassword;
+    }
+
+    public String getKeycloakCa() {
+        return keycloakCa;
     }
 
     public int getListenPort() {
@@ -84,6 +89,11 @@ public class ServiceBrokerOptions {
         return this;
     }
 
+    private ServiceBrokerOptions setKeycloakCa(String keycloakCa) {
+        this.keycloakCa = keycloakCa;
+        return this;
+    }
+
     private ServiceBrokerOptions setListenPort(int listenPort) {
         this.listenPort = listenPort;
         return this;
@@ -95,6 +105,7 @@ public class ServiceBrokerOptions {
         options.setKeycloakUrl(getEnvOrThrow(env, "KEYCLOAK_URL"));
         options.setKeycloakAdminUser(getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER"));
         options.setKeycloakAdminPassword(getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD"));
+        options.setKeycloakCa(getEnvOrThrow(env, "KEYCLOAK_CA"));
 
         String resyncInterval = env.get("RESYNC_INTERVAL");
         if (resyncInterval != null) {

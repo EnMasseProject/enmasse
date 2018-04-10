@@ -51,7 +51,7 @@ public class HTTPServerTest {
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
         when(authApi.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         when(authApi.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        httpServer = new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, null, false, null, null, null, 0);
+        httpServer = new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, null, false, null, 0);
         vertx.deployVerticle(httpServer, context.asyncAssertSuccess());
     }
 

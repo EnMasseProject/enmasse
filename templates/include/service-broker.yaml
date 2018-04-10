@@ -53,6 +53,11 @@ objects:
                   value: "${ENABLE_RBAC}"
                 - name: IMPERSONATE_USER
                   value: "${IMPERSONATE_USER}"
+                - name: KEYCLOAK_CA
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${KEYCLOAK_CA_SECRET}
+                      key: tls.crt
                 - name: KEYCLOAK_ADMIN_USER
                   valueFrom:
                     secretKeyRef:
@@ -96,6 +101,9 @@ parameters:
   - name: KEYCLOAK_CREDENTIALS_SECRET
     description: Secret containing credentials for keycloak
     value: keycloak-credentials
+  - name: KEYCLOAK_CA_SECRET
+    description: Secret containing keycloak certificate
+    value: standard-authservice-cert
   - name: ENABLE_RBAC
     description: Enable RBAC authentication and authorization of API
     value: "false"

@@ -22,6 +22,12 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-admin-client</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>amqp-utils</artifactId>
       <version>${project.version}</version>
@@ -144,6 +150,16 @@
                   <mainClass>io.enmasse.osb.ServiceBroker</mainClass>
                 </transformer>
               </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>
