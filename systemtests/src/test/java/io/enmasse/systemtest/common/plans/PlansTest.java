@@ -11,6 +11,7 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 @Category(IsolatedAddressSpace.class)
@@ -89,8 +91,7 @@ public class PlansTest extends TestBase {
         //simple send/receive
         String username = "test_newplan_name";
         String password = "test_newplan_password";
-        getKeycloakClient().createUser(weakAddressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
-
+        createUser(weakAddressSpace, username, password);
         AmqpClient queueClient = amqpClientFactory.createQueueClient(weakAddressSpace);
         queueClient.getConnectOptions().setUsername(username);
         queueClient.getConnectOptions().setPassword(password);
@@ -305,6 +306,45 @@ public class PlansTest extends TestBase {
         assertTrue("Client fails",
                 sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
                         queue3.getAddress(), messageContent, 50, false));
+    }
+
+    @Test
+    public void testAutoScaleAfterManualScale() throws Exception {
+        //define and create address plans
+        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.4));
+        AddressPlan queuePlan = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueue);
+        plansProvider.createAddressPlanConfig(queuePlan);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 9.0),
+                new AddressSpaceResource("router", 1.0, 5.0),
+                new AddressSpaceResource("aggregate", 0.0, 10.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan);
+        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
+                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
+
+        //create address space plan with new plan
+        AddressSpace scaleAddressSpace = new AddressSpace("scale-space-standard", AddressSpaceType.STANDARD,
+                scaleSpacePlan.getName(), AuthService.STANDARD);
+        createAddressSpace(scaleAddressSpace);
+
+        //deploy destinations
+        Destination queue1 = Destination.queue("queue1", queuePlan.getName());
+        Destination queue2 = Destination.queue("queue2", queuePlan.getName());
+        Destination queue3 = Destination.queue("queue3", queuePlan.getName());
+        Destination queue4 = Destination.queue("queue4", queuePlan.getName());
+
+        setAddresses(scaleAddressSpace, queue1, queue2, queue3, queue4);
+
+        //scale broker down and wait until broker StatefulSet will be scaled up to 2 automatically
+        scale(scaleAddressSpace, queue4, 1, 10);
+        TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
+
+        //scale broker to 3 pods and wait until broker StatefulSet will be scaled down to 2 automatically
+        scale(scaleAddressSpace, queue4, 3, 10);
+        TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     //------------------------------------------------------------------------------------------------

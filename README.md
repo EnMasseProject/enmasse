@@ -32,7 +32,7 @@ See the our [documentation](http://enmasse.io/documentation) for up to date docu
 
 See [contributing](http://enmasse.io/contributing) for more info on how to get help from the community.
 
-If you encounter some issues during deployment, please check the following [page](documentation/design_docs/issues/issues.md) with
+If you encounter some issues during deployment, please check the following [page](documentation/design_docs/issues/issues.adoc) with
 well known issues and related fixes/workaround.
 
 # Developing
