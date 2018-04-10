@@ -1,3 +1,9 @@
+## 0.18.0 (April 10, 2018)
+* Support OAUTH (when used with standard or external address space) in messaging console
+* Performance improvements to reduce load on the Kubernetes/OpenShift API server
+* Per-address memory usage limits on queues/topics in standard address space. This is based on the amount of memory configured for the broker and the credits used in the address plans. 
+* Allow configuring standard authentication service using configmap
+
 ## 0.17.1 (February 22, 2018)
 * Bug fixes to console UI
 * Update router image with bugfixes
