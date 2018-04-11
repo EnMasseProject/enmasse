@@ -7,6 +7,7 @@ package io.enmasse.systemtest;
 
 import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.resources.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -28,9 +29,13 @@ public class TestUtils {
     /**
      * scale up/down specific Destination (type: StatefulSet) in address space
      */
-    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
-        waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, destination, budget);
+        waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, destination, budget, checkInterval);
+    }
+
+    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        setReplicas(kubernetes, addressSpace, destination, numReplicas, budget, 5000);
     }
 
     /**
@@ -53,13 +58,18 @@ public class TestUtils {
     /**
      * wait for expected count of Destination replicas in address space
      */
-    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         waitForNReplicas(kubernetes,
                 tenantNamespace,
                 expectedReplicas,
                 Collections.singletonMap("role", "broker"),
                 Collections.singletonMap("cluster_id", destination.getDeployment()),
-                budget);
+                budget,
+                checkInterval);
+    }
+
+    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
+        waitForNBrokerReplicas(kubernetes, tenantNamespace, expectedReplicas, destination, budget, 5000);
     }
 
 
@@ -74,7 +84,7 @@ public class TestUtils {
      * @param budget             timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
@@ -86,8 +96,8 @@ public class TestUtils {
             }
             actualReplicas = numReady(pods);
             log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
-            if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
-                Thread.sleep(5000);
+            if (actualReplicas != expectedReplicas) {
+                Thread.sleep(checkInterval);
             } else {
                 done = true;
             }
@@ -96,6 +106,10 @@ public class TestUtils {
         if (!done) {
             throw new RuntimeException("Only " + actualReplicas + " out of " + expectedReplicas + " in state 'Running' before timeout");
         }
+    }
+
+    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, annotationSelector, budget, 5000);
     }
 
     /**
@@ -718,6 +732,29 @@ public class TestUtils {
                 throw ex;
             }
         }
+    }
+
+    /**
+     * Replace address plan in ConfigMap of already existing address
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @param addrSpace  address space which contains ConfigMap
+     * @param dest       destination which will be modified
+     * @param plan       definition of AddressPlan
+     */
+    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Destination dest, AddressPlan plan) {
+        String mapKey = "config.json";
+        ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getNamespace(), dest.getAddress());
+
+        JsonObject data = new JsonObject(destConfigMap.getData().get(mapKey));
+        log.info(data.toString());
+        data.getJsonObject("spec").remove("plan");
+        data.getJsonObject("spec").put("plan", plan.getName());
+
+        Map<String, String> modifiedData = new LinkedHashMap<>();
+        modifiedData.put(mapKey, data.toString());
+        destConfigMap.setData(modifiedData);
+        kubernetes.replaceConfigMap(addrSpace.getNamespace(), destConfigMap);
     }
 
     /**

@@ -287,9 +287,13 @@ public abstract class TestBase extends SystemTestRunListener {
     /**
      * scale up/down destination (StatefulSet) to count of replicas, includes waiting for expected replicas
      */
-    protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
+    protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas, long checkInterval) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas, budget);
+        TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas, budget, checkInterval);
+    }
+
+    protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
+        scale(addressSpace, destination, numReplicas, 5000);
     }
 
     protected void scaleKeycloak(int numReplicas) throws Exception {
@@ -831,6 +835,13 @@ public abstract class TestBase extends SystemTestRunListener {
     //===================
     //Address config-maps
     //===================
+    protected void replaceAddressPlan(AddressSpace addressSpace, Destination dest, AddressPlan plan){
+        TestUtils.replaceAddressConfig(kubernetes, addressSpace, dest, plan);
+    }
+
+    //===================
+    //Address plans config-maps
+    //===================
     protected void createAddressPlanConfig(AddressPlan addressPlan) {
         createAddressPlanConfig(addressPlan, false);
     }
@@ -856,7 +867,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     //=========================
-    //Address space config-maps
+    //Address space plans config-maps
     //=========================
 
     protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
