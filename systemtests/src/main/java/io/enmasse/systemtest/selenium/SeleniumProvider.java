@@ -124,11 +124,11 @@ public class SeleniumProvider {
         executeJavaScript(script, null);
     }
 
-    protected void executeJavaScript(String script, String textToLog) throws Exception {
+    protected void executeJavaScript(String script, String textToLog, String... arguments) throws Exception {
         takeScreenShot();
         assertNotNull("Selenium provider failed, script to execute is null", script);
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
-        ((JavascriptExecutor) driver).executeScript(script);
+        ((JavascriptExecutor) driver).executeScript(script, arguments);
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }

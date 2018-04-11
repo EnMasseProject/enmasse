@@ -58,6 +58,10 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+        doBasicMessageTest(sender, receiver, false);
+    }
+
+    protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver, boolean websocket) throws Exception {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 10;
 
@@ -69,6 +73,8 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        if (websocket)
+            arguments.put(Argument.CONN_WEB_SOCKET, "true");
 
         sender.setArguments(arguments);
         arguments.remove(Argument.MSG_CONTENT);

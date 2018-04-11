@@ -18,6 +18,11 @@ public class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
     }
 
+    //@Test
+    public void testBasicMessageWebScoket() throws Exception {
+        doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
+    }
+
     @Test
     public void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
