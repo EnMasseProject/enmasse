@@ -8,6 +8,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -33,22 +34,23 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private final Kubernetes kubernetes;
     private final BrokerSetGenerator clusterGenerator;
     private Watch watch;
-    private final String certDir;
     private final EventLogger eventLogger;
     private final SchemaProvider schemaProvider;
     private final Duration recheckInterval;
     private final Duration resyncInterval;
+    private final RouterStatusCollectorApi routerStatusCollector;
 
-    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, String certDir, EventLogger eventLogger, SchemaProvider schemaProvider, Duration recheckInterval, Duration resyncInterval) {
+
+    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Duration recheckInterval, Duration resyncInterval, RouterStatusCollectorApi routerStatusCollector) {
         this.addressSpaceName = addressSpaceName;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
-        this.certDir = certDir;
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
         this.recheckInterval = recheckInterval;
         this.resyncInterval = resyncInterval;
+        this.routerStatusCollector = routerStatusCollector;
     }
 
     @Override
@@ -112,11 +114,12 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             log.debug("Addresses in pending : {}", filterByPhases(addressSet, Arrays.asList(Pending)));
         }
 
-        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
+        Set<Address> statusQuo = filterStatusQuo(addressSet);
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(statusQuo);
 
         long calculatedUsage = System.nanoTime();
-        Set<Address> pendingAddresses = filterByPhases(addressSet, Arrays.asList(Pending));
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses);
+        Set<Address> toProvision = filterToProvision(addressSet);
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, toProvision);
 
         log.info("Usage: {}, Needed: {}", usageMap, neededMap);
 
@@ -126,13 +129,14 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         RouterCluster routerCluster = kubernetes.getRouterCluster();
         long listClusters = System.nanoTime();
 
-        provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses);
+        provisioner.provisionResources(routerCluster, clusterList, neededMap, toProvision);
 
         long provisionResources = System.nanoTime();
 
         checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
         long checkStatuses = System.nanoTime();
         for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
+            address.getStatus().setActivePlan(address.getPlan());
             if (address.getStatus().isReady()) {
                 address.getStatus().setPhase(Active);
             }
@@ -152,6 +156,41 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         long gcTerminating = System.nanoTime();
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, replaceAddresses - deprovisionUnused, gcTerminating - replaceAddresses);
 
+    }
+
+    private Set<Address> filterStatusQuo(Set<Address> addressSet) {
+        Set<Address> statusQuo = new HashSet<>();
+        for (Address address : addressSet) {
+            switch (address.getStatus().getPhase()) {
+                case Failed:
+                case Terminating:
+                case Active:
+                case Configuring:
+                    if (address.getStatus().getActivePlan() == null || address.getStatus().getActivePlan().equals(address.getPlan())) {
+                        statusQuo.add(address);
+                    }
+                    break;
+            }
+        }
+        return statusQuo;
+    }
+
+    private Set<Address> filterToProvision(Set<Address> addressSet) {
+        Set<Address> toProvision = new HashSet<>();
+        for (Address address : addressSet) {
+            switch (address.getStatus().getPhase()) {
+                case Active:
+                case Configuring:
+                    if (address.getStatus().getActivePlan() != null && !address.getStatus().getActivePlan().equals(address.getPlan())) {
+                        toProvision.add(address);
+                    }
+                    break;
+                case Pending:
+                    toProvision.add(address);
+                    break;
+            }
+        }
+        return toProvision;
     }
 
     private void deprovisionUnused(List<BrokerCluster> clusters, Set<Address> addressSet) {
@@ -221,9 +260,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         for (Address address : addresses) {
             address.getStatus().setReady(true).clearMessages();
         }
-        // TODO: Instead of going to the routers directly, list routers, and perform a request against the
-        // router agent to do the check
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, certDir);
+
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (Readiness.isPodReady(router)) {

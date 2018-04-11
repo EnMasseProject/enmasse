@@ -33,6 +33,8 @@ public class SerializationTest {
                 .putAnnotation("my", "annotation")
                 .build();
 
+        address.getStatus().setActivePlan("inmemory");
+
         byte [] serialized = CodecV1.getMapper().writeValueAsBytes(address);
 
         Address deserialized = CodecV1.getMapper().readValue(serialized, Address.class);
@@ -45,6 +47,7 @@ public class SerializationTest {
         assertThat(deserialized.getPlan(), is(address.getPlan()));
         assertThat(deserialized.getAddress(), is(address.getAddress()));
         assertThat(deserialized.getAnnotations(), is(address.getAnnotations()));
+        assertThat(deserialized.getStatus().getActivePlan(), is("inmemory"));
     }
 
     @Test

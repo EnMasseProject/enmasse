@@ -56,21 +56,24 @@ public class Main {
         EventLogger eventLogger = enableEventLogger ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
                 : new LogEventLogger();
 
+        Vertx vertx = Vertx.vertx();
+
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, certDir);
+
 
         AddressController addressController = new AddressController(
                 addressSpace,
                 new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace()),
                 kubernetes,
                 clusterGenerator,
-                certDir,
                 eventLogger,
                 schemaProvider,
                 recheckInterval,
-                resyncInterval
+                resyncInterval,
+                routerStatusCollector
         );
 
         log.info("Deploying address space controller for " + addressSpace);
-        Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(addressController, result -> {
             if (result.succeeded()) {
                 log.info("Address space controller for {} deployed", addressSpace);

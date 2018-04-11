@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-class RouterStatusCollector {
+class RouterStatusCollector implements RouterStatusCollectorApi {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusCollector.class);
     private final Vertx vertx;
     private final String certDir;

@@ -421,7 +421,7 @@ public class PlansTest extends TestBase {
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    //@Test test disabled due to issue: #1136
+    @Test
     public void testMessagePersistenceAfterChangePlan() throws Exception {
         List<AddressResource> addressResourcesQueueDistributed = Arrays.asList(new AddressResource("broker", 2.0));
         List<AddressResource> addressResourcesSharded = Arrays.asList(new AddressResource("broker", 1.0));

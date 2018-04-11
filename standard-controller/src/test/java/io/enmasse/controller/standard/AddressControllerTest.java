@@ -13,6 +13,8 @@ import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
@@ -22,6 +24,11 @@ import org.mockito.internal.util.collections.Sets;
 import java.time.Duration;
 import java.util.*;
 
+import static io.enmasse.address.model.Status.Phase.Active;
+import static io.enmasse.address.model.Status.Phase.Configuring;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class AddressControllerTest {
@@ -30,6 +37,7 @@ public class AddressControllerTest {
     private AddressController controller;
     private OpenShiftClient mockClient;
     private BrokerSetGenerator mockGenerator;
+    private RouterStatusCollectorApi routerStatusCollector;
 
     @Before
     public void setUp() {
@@ -37,10 +45,11 @@ public class AddressControllerTest {
         mockGenerator = mock(BrokerSetGenerator.class);
         mockApi = mock(AddressApi.class);
         mockClient = mock(OpenShiftClient.class);
+        routerStatusCollector = mock(RouterStatusCollectorApi.class);
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1));
-        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5));
+        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5), routerStatusCollector);
     }
 
     @Test
@@ -63,6 +72,39 @@ public class AddressControllerTest {
         controller.onUpdate(Sets.newSet(alive, terminating));
         verify(mockApi).deleteAddress(any());
         verify(mockApi).deleteAddress(eq(terminating));
+    }
+
+    @Test
+    public void testPlanChangeScaledown() throws Exception {
+        Address initial = new Address.Builder()
+                .setName("q1")
+                .setAddress("q1")
+                .setType("queue")
+                .setPlan("xlarge-queue")
+                .build();
+
+        BrokerCluster cluster = new BrokerCluster("q1", new KubernetesListBuilder().addToStatefulSetItems(new StatefulSetBuilder().editOrNewSpec().withReplicas(2).endSpec().build()).build());
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(cluster));
+        when(mockHelper.isDestinationClusterReady(startsWith("q1"))).thenReturn(true);
+        when(mockHelper.listRouters()).thenReturn(Arrays.asList(new PodBuilder().editOrNewMetadata().withName("r1").endMetadata().editOrNewStatus().addNewCondition().withType("Ready").withStatus("True").endCondition().endStatus().build()));
+
+        when(routerStatusCollector.collect(any())).thenReturn(new RouterStatus("q1", Collections.singletonList("q1"),
+                Arrays.asList(Arrays.asList("q1", null, "in", "active"), Arrays.asList("q1", null, "out", "active")), null, null));
+
+        controller.onUpdate(Sets.newSet(initial));
+
+        assertThat(initial.getStatus().getMessages().toString(), initial.getStatus().getPhase(), is(Active));
+        assertThat(initial.getStatus().getActivePlan(), is("xlarge-queue"));
+
+        Address updated = new Address.Builder(initial)
+                .setPlan("large-queue")
+                .build();
+
+        controller.onUpdate(Sets.newSet(updated));
+
+        assertThat(cluster.getNewReplicas(), is(1));
+        assertThat(updated.getStatus().getMessages().toString(), initial.getStatus().getPhase(), is(Active));
+        assertThat(updated.getStatus().getActivePlan(), is("large-queue"));
     }
 
     @Test
