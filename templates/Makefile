@@ -17,6 +17,7 @@ NONE_AUTHSERVICE_IMAGE ?= "none-authservice"
 KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.4.3.Final"
 KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
 KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
+SERVICE_BROKER_IMAGE ?= "service-broker"
 
 KEYCLOAK_HOME ?= "/opt/jboss/keycloak"
 ADD_KEYCLOAK_USER ?= "false"
@@ -40,6 +41,7 @@ INSTALLDIR=enmasse-$(TAG)
 		-V QUEUE_SCHEDULER_IMAGE=$(QUEUE_SCHEDULER_IMAGE) \
 		-V RAGENT_IMAGE=$(RAGENT_IMAGE) \
 		-V SUBSERV_IMAGE=$(SUBSERV_IMAGE) \
+		-V SERVICE_BROKER_IMAGE=$(SERVICE_BROKER_IMAGE) \
 		-V AGENT_IMAGE=$(AGENT_IMAGE) \
 		-V MQTT_GATEWAY_IMAGE=$(MQTT_GATEWAY_IMAGE) \
 		-V MQTT_LWT_IMAGE=$(MQTT_LWT_IMAGE) \
@@ -65,7 +67,6 @@ prepare:
 	cp -f include/*-plans.yaml install/kubernetes/addons/
 	cp -f include/*-plans.yaml install/openshift/addons/
 	cp -f include/address.yaml include/address-space.yaml install/openshift/
-	cp -f include/service-broker.yaml install/openshift/addons/
 
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
