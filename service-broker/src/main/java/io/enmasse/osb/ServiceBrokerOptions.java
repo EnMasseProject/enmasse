@@ -16,6 +16,7 @@ public class ServiceBrokerOptions {
     private String keycloakAdminUser = null;
     private String keycloakAdminPassword = null;
     private String keycloakCa = null;
+    private String consolePrefix = null;
     private int listenPort = 8080;
 
     public Duration getResyncInterval() {
@@ -89,6 +90,11 @@ public class ServiceBrokerOptions {
         return this;
     }
 
+    private ServiceBrokerOptions setConsolePrefix(String consolePrefix) {
+        this.consolePrefix = consolePrefix;
+        return this;
+    }
+
     private ServiceBrokerOptions setKeycloakCa(String keycloakCa) {
         this.keycloakCa = keycloakCa;
         return this;
@@ -106,6 +112,7 @@ public class ServiceBrokerOptions {
         options.setKeycloakAdminUser(getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER"));
         options.setKeycloakAdminPassword(getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD"));
         options.setKeycloakCa(getEnvOrThrow(env, "KEYCLOAK_CA"));
+        options.setConsolePrefix(getEnvOrThrow(env, "CONSOLE_PREFIX"));
 
         String resyncInterval = env.get("RESYNC_INTERVAL");
         if (resyncInterval != null) {
@@ -142,5 +149,9 @@ public class ServiceBrokerOptions {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
         }
         return var;
+    }
+
+    public String getConsolePrefix() {
+        return consolePrefix;
     }
 }

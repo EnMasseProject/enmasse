@@ -86,6 +86,15 @@ local images = import "images.jsonnet";
                   }
                 },
                 {
+                  "name": "CONSOLE_PREFIX",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "service-broker-config",
+                      "key": "consolePrefix"
+                    }
+                  }
+                },
+                {
                   "name": "KEYCLOAK_CA",
                   "valueFrom": {
                     "secretKeyRef": {

@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 import io.enmasse.api.common.ConflictException;
 import io.enmasse.api.common.GoneException;
@@ -29,6 +30,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 @Ignore
 public class ProvisionServiceTest extends OSBTestBase {
@@ -38,6 +40,7 @@ public class ProvisionServiceTest extends OSBTestBase {
 
     public static final String ADDRESS = "my-queue";
     public static final String TRANSACTIONAL = "transactional";
+    private UriInfo uriInfo = mock(UriInfo.class);
 
     @Test(expected = UnprocessableEntityException.class)
     public void testSyncProvisioningRequest() throws Exception {
