@@ -8,6 +8,7 @@ package io.enmasse.osb.api;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 import io.enmasse.api.common.ConflictException;
 import io.enmasse.api.common.GoneException;
@@ -23,6 +24,7 @@ import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 @Ignore
 public class BindingServiceTest extends OSBTestBase {
@@ -37,7 +39,8 @@ public class BindingServiceTest extends OSBTestBase {
 
     @Test(expected = UnprocessableEntityException.class)
     public void testSyncProvisioningRequest() throws Exception {
-        provisioningService.provisionService(getSecurityContext(),null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        UriInfo uriInfo = mock(UriInfo.class);
+        provisioningService.provisionService(getSecurityContext(), null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
     }
 
     @Test

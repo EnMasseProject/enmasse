@@ -6,17 +6,12 @@ package io.enmasse.osb.api.provision;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.*;
 
 import io.enmasse.address.model.AddressSpaceType;
-import io.enmasse.address.model.Endpoint;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.SchemaProvider;
@@ -28,16 +23,17 @@ import io.enmasse.osb.api.ServiceMapping;
 import io.enmasse.osb.api.catalog.Plan;
 import io.enmasse.osb.api.catalog.Service;
 import io.enmasse.k8s.api.AddressSpaceApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider) {
+    private final String consolePrefix;
+
+    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, String consolePrefix) {
         super(addressSpaceApi, authApi, schemaProvider);
+        this.consolePrefix = consolePrefix;
     }
 
     @PUT
@@ -76,7 +72,7 @@ public class OSBProvisioningService extends OSBServiceBase {
             if (desiredService.isPresent() && desiredService.get().equals(service)) {
                 Optional<Plan> plan = service.getPlan(request.getPlanId());
                 if (plan.isPresent() && plan.get().getName().equals(existingAddressSpace.get().getPlan())) {
-                    String dashboardUrl = getConsoleURL(existingAddressSpace.get()).orElse(null);
+                    String dashboardUrl = getConsoleURL(existingAddressSpace.get());
                     return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
                 }
             }
@@ -88,7 +84,8 @@ public class OSBProvisioningService extends OSBServiceBase {
         }
         AddressSpaceType addressSpaceType = serviceMapping.getAddressSpaceTypeForService(service);
         AddressSpace addressSpace = createAddressSpace(instanceId, name, addressSpaceType.getName(), service.getPlan(request.getPlanId()).get().getName());
-        String dashboardUrl = getConsoleURL(addressSpace).orElse(null);
+
+        String dashboardUrl = getConsoleURL(addressSpace);
 
         log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
         return Response.status(Response.Status.ACCEPTED)
@@ -96,12 +93,8 @@ public class OSBProvisioningService extends OSBServiceBase {
                 .build();
     }
 
-    private Optional<String> getConsoleURL(AddressSpace maasInstance) {
-        // TODO
-        List<Endpoint> endpoints = maasInstance.getEndpoints();
-        return endpoints == null ? Optional.empty() : endpoints.stream()
-                .filter(endpoint -> endpoint.getName().equals("console"))
-                .findAny().flatMap(e -> e.getHost()).map(s -> "https://" + s);
+    private String getConsoleURL(AddressSpace addressSpace) {
+        return consolePrefix + "/" + addressSpace.getName();
     }
 
     private boolean isValidPlan(Service service, UUID planId) {
