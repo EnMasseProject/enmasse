@@ -22,16 +22,17 @@ pipeline {
         stage('cleanup registry') {
             environment {
                 REGISTRY_URL = credentials('docker-registry-host')
+                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
+                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
+                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
             }
             when {
                 expression { params.CLEAN_REGISTRY == 'true' }
             }
             steps {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh "sleep 60 && oc login --insecure-skip-tls-verify --token $DOCKER_PASS ${env.REGISTRY_URL}"
-                    sh 'oc project enmasseproject'
-                    sh 'oc delete imagestreamtags --all'
-                }
+                sh "sleep 60 && oc login --insecure-skip-tls-verify --token ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
+                sh 'oc project enmasseproject'
+                sh 'oc delete imagestreamtags --all'
             }
         }
         stage('clean') {
