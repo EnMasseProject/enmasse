@@ -9,6 +9,7 @@ pipeline {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
         PLANS_JOB_NAME = 'enmasse-master-common'
+        CLEAN_REGISTRY = 'true'
         MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
@@ -19,10 +20,18 @@ pipeline {
     }
     stages {
         stage('cleanup registry') {
-            withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                sh 'sleep 60 && oc login --insecure-skip-tls-verify --token $DOCKER_PASS internal-registry.host.prod.eng.rdu2.redhat.com:8443'
-                sh 'oc project enmasseproject'
-                sh 'oc delete imagestreamtags --all'
+            environment {
+                REGISTRY_URL = credentials('docker-registry-host')
+            }
+            when {
+                expression { params.CLEAN_REGISTRY == 'true' }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh "sleep 60 && oc login --insecure-skip-tls-verify --token $DOCKER_PASS ${env.REGISTRY_URL}"
+                    sh 'oc project enmasseproject'
+                    sh 'oc delete imagestreamtags --all'
+                }
             }
         }
         stage('clean') {
