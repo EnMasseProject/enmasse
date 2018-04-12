@@ -18,6 +18,13 @@ pipeline {
         timeout(time: 1, unit: 'HOURS')
     }
     stages {
+        stage('cleanup registry') {
+            withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                sh 'sleep 60 && oc login --insecure-skip-tls-verify --token $DOCKER_PASS internal-registry.host.prod.eng.rdu2.redhat.com:8443'
+                sh 'oc project enmasseproject'
+                sh 'oc delete imagestreamtags --all'
+            }
+        }
         stage('clean') {
             steps {
                 cleanWs()
