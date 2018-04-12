@@ -1,5 +1,5 @@
 ---
 - name: Deploy the address controller
-  shell: oc process -f {{ playbook_dir }}/templates/enmasse.yaml ENABLE_RBAC={{ enable_rbac }} ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert IMPERSONATE_USER={{ admin_user }} | oc apply -n {{ namespace }} -f -
+  shell: oc process -f {{ playbook_dir }}/templates/enmasse.yaml ENABLE_RBAC={{ enable_rbac }} ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc apply -n {{ namespace }} -f -
 
 

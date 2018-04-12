@@ -2,20 +2,64 @@
 - shell: oc policy can-i create clusterservicebrokers
   register: can_create
   failed_when: can_create.stdout == "no"
-- name: Deploy EnMasse Service Broker
-  shell: oc process -f {{ playbook_dir }}/templates/addons/service-broker.yaml ENABLE_RBAC={{ enable_rbac }} IMPERSONATE_USER={{ admin_user }} | oc apply -f -
+- name: Create EnMasse Service Broker Deployment
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/service-broker/deployment.yaml"
+- name: Create EnMasse Service Broker Service
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/service-broker/service.yaml"
+- shell: oc extract secret/standard-authservice-cert -n {{ namespace }} --keys=tls.crt --to=-
+  register: secret_result
+  when: (keycloak_ca_cert is not defined)
+- set_fact:
+    keycloak_ca_cert: "{{ secret_result.stdout }}"
+  when: (keycloak_ca_cert is not defined)
+- name: Check if broker secret exists
+  shell: oc get secret -n {{ namespace }} service-broker-secret
+  register: broker_secret_exists
+  ignore_errors: True
+- name: Create service-broker-secret for secure info
+  when: broker_secret_exists.failed
+  shell:
+    cmd: |
+      cat <<EOF | oc create -n {{ namespace }} -f -
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: service-broker-secret
+      type: Opaque
+      data:
+        keycloak.username: "{{ keycloak_admin_user | b64encode }}"
+        keycloak.password: "{{ keycloak_admin_password | b64encode }}"
+        keycloakCa.crt: "{{ keycloak_ca_cert | b64encode }}"
+      EOF
+- name: Retrieve keycloak service cluster ip
+  when: (keycloak_http_url is not defined)
+  shell: oc get service -n {{ namespace }} standard-authservice -o jsonpath={.spec.clusterIP}
+  register: authservice_clusterip
+- set_fact:
+    keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
+  when: (keycloak_http_url is not defined)
+
+- name: Check if service-broker-config exists
+  shell: oc get configmap -n {{ namespace }} service-broker-config
+  register: config_exists
+  ignore_errors: True
+- name: Create service-broker-config for configuration data
+  when: config_exists.failed
+  shell: oc create configmap service-broker-config -n {{ namespace }} --from-literal=keycloakUrl={{ keycloak_http_url }} --from-literal=enableRbac={{ enable_rbac }}
+
 - shell: oc sa get-token -n {{ namespace }} enmasse-admin
   register: token_result
 - set_fact:
     enmasse_admin_token: "{{ token_result.stdout }}"
 - name: Check if secret exists
   shell: oc get secret -n {{ namespace }} service-catalog-credentials
-  register: secret_exists
+  register: catalog_secret_exists
   ignore_errors: True
 - name: Create secret for catalog credentials
-  when: secret_exists.failed
   shell: oc create secret generic -n {{ namespace }} service-catalog-credentials --from-literal=token={{ enmasse_admin_token }}
-- shell: oc extract secret/service-broker-cert --keys=tls.crt --to=-
+  when: catalog_secret_exists.failed
+
+- shell: oc extract secret/service-broker-cert -n {{ namespace }} --keys=tls.crt --to=-
   register: secret_result
 - set_fact:
     ca_bundle: "{{ secret_result.stdout }}"

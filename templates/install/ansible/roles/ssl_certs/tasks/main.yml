@@ -7,7 +7,7 @@
   shell: oc get secret -n {{ namespace }} {{ cert_secret }}
   register: secret_exists
   ignore_errors: True
-- name: Create temp folder for address controller certificates
+- name: Create temp folder for certificates
   when: secret_exists.failed
   register: cert_temp
   tempfile:
@@ -31,6 +31,6 @@
     privatekey_path: "{{ cert_temp.path }}/tls.key"
     csr_path: "{{ cert_temp.path }}/tls.csr"
     provider: selfsigned
-- name: Create a secret containing the address-controller certificate
+- name: Create a secret containing the certificate
   shell: oc create secret tls {{ cert_secret }} -n {{ namespace }} --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
   when: secret_exists.failed
