@@ -1,5 +1,5 @@
 #!/bin/bash
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.25.2/minikube-linux-amd64 && chmod +x minikube
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.8.7/bin/linux/amd64/kubectl && chmod +x kubectl
 
 mkdir -p /tmp/openshift
