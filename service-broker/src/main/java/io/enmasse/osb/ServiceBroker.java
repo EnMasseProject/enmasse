@@ -58,7 +58,7 @@ public class ServiceBroker extends AbstractVerticle {
         AuthApi authApi = new KubeAuthApi(controllerClient, options.getImpersonateUser(), controllerClient.getConfiguration().getOauthToken());
         KeycloakApi keycloakApi = createKeycloakApi(options);
 
-        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), keycloakApi, options.getListenPort()),
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), keycloakApi, options.getListenPort(), options.getConsolePrefix()),
                 result -> {
                     if (result.succeeded()) {
                         log.info("EnMasse Service Broker started");

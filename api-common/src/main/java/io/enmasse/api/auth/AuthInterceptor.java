@@ -7,6 +7,9 @@ package io.enmasse.api.auth;
 import io.enmasse.api.common.Exceptions;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
@@ -15,17 +18,19 @@ public class AuthInterceptor implements ContainerRequestFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
     private final AuthApi authApi;
-    private final String healthPath;
+    private final String [] omittedPaths;
 
-    public AuthInterceptor(AuthApi authApi, String healthPath) {
+    public AuthInterceptor(AuthApi authApi, String ... omittedPaths) {
         this.authApi = authApi;
-        this.healthPath = healthPath;
+        this.omittedPaths = omittedPaths;
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        if (requestContext.getUriInfo().getPath().equals(healthPath)) {
-            return;
+        for (String omittedPath : omittedPaths) {
+            if (requestContext.getUriInfo().getPath().startsWith(omittedPath)) {
+                return;
+            }
         }
         boolean isAuthenticated = false;
         String auth = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);

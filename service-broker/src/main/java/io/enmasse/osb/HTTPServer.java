@@ -13,6 +13,7 @@ import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.catalog.OSBCatalogService;
+import io.enmasse.osb.api.console.HttpConsoleService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -38,12 +39,13 @@ public class HTTPServer extends AbstractVerticle {
     private final SchemaProvider schemaProvider;
     private final KeycloakApi keycloakApi;
     private final int listenPort;
+    private final String consolePrefix;
 
     private HttpServer httpServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider,
                       AuthApi authApi, String certDir, boolean enableRbac,
-                      KeycloakApi keycloakApi, int listenPort) {
+                      KeycloakApi keycloakApi, int listenPort, String consolePrefix) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
@@ -51,6 +53,7 @@ public class HTTPServer extends AbstractVerticle {
         this.enableRbac = enableRbac;
         this.keycloakApi = keycloakApi;
         this.listenPort = listenPort;
+        this.consolePrefix = consolePrefix;
     }
 
     @Override
@@ -63,15 +66,16 @@ public class HTTPServer extends AbstractVerticle {
 
         if (enableRbac) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, HttpHealthService.BASE_URI));
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, HttpHealthService.BASE_URI, HttpConsoleService.BASE_URI));
         } else {
             log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
         }
 
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
+        deployment.getRegistry().addSingletonResource(new HttpConsoleService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consolePrefix));
         deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, keycloakApi));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi, authApi, schemaProvider));
 

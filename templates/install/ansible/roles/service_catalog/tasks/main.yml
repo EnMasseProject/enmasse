@@ -31,6 +31,7 @@
         keycloak.password: "{{ keycloak_admin_password | b64encode }}"
         keycloakCa.crt: "{{ keycloak_ca_cert | b64encode }}"
       EOF
+
 - name: Retrieve keycloak service cluster ip
   when: (keycloak_http_url is not defined)
   shell: oc get service -n {{ namespace }} standard-authservice -o jsonpath={.spec.clusterIP}
@@ -39,13 +40,21 @@
     keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
   when: (keycloak_http_url is not defined)
 
+- name: Retrieve service broker cluster ip
+  when: (osb_console_prefix is not defined)
+  shell: oc get service -n {{ namespace }} service-broker -o jsonpath={.spec.clusterIP}
+  register: osbservice_clusterip
+- set_fact:
+    osb_console_prefix: "https://{{ osbservice_clusterip.stdout }}:8443/console"
+  when: (osb_console_prefix is not defined)
+
 - name: Check if service-broker-config exists
   shell: oc get configmap -n {{ namespace }} service-broker-config
   register: config_exists
   ignore_errors: True
 - name: Create service-broker-config for configuration data
   when: config_exists.failed
-  shell: oc create configmap service-broker-config -n {{ namespace }} --from-literal=keycloakUrl={{ keycloak_http_url }} --from-literal=enableRbac={{ enable_rbac }}
+  shell: oc create configmap service-broker-config -n {{ namespace }} --from-literal=keycloakUrl={{ keycloak_http_url }} --from-literal=enableRbac={{ enable_rbac }} --from-literal=consolePrefix={{ osb_console_prefix }}
 
 - shell: oc sa get-token -n {{ namespace }} enmasse-admin
   register: token_result

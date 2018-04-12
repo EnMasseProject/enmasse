@@ -15,6 +15,7 @@ import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.util.UUID;
 
 import static org.mockito.Matchers.any;
@@ -45,7 +46,7 @@ public class OSBTestBase {
     public void setup() throws Exception {
         addressSpaceApi = new TestAddressSpaceApi();
         String brokerId = "myspace";
-        provisioningService = new OSBProvisioningService(addressSpaceApi, null, null);
+        provisioningService = new OSBProvisioningService(addressSpaceApi, null, null, "http://localhost/console");
         bindingService = new OSBBindingService(addressSpaceApi, null, null, null);
         lastOperationService = new OSBLastOperationService(addressSpaceApi, null, null);
     }
@@ -67,6 +68,7 @@ public class OSBTestBase {
         provisionRequest.putParameter("name", "my-queue");
         provisionRequest.putParameter("group", "my-group");
 
+        UriInfo uriInfo = mock(UriInfo.class);
         provisioningService.provisionService(getSecurityContext(), null, serviceInstanceId, true, provisionRequest);
         // TODO: wait for provisioning to finish (poll lastOperation endpoint)
         return serviceInstanceId;
