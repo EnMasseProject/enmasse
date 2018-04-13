@@ -29,20 +29,15 @@
     keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
   when: config_exists.failed and (keycloak_http_url is not defined)
 
-- name: Create Oauth client
-  shell:
-    cmd: |
-      cat <<EOF | oc create -f -
-      apiVersion: v1
-      kind: OAuthClient
-      metadata:
-        name: kc-client
-      secret: mysecret # TODO: create SA and use token instead
-      redirectURIs:
-        - {{ keycloak_http_url }}
-      grantMethod: prompt
-      EOF
+- name: Create OAUTH service account
+  shell: oc create sa -n {{ namespace }} kc-oauth
+- name: Annotate OAUTH service account
+  shell: oc annotate sa -n {{ namespace }} kc-oauth serviceaccounts.openshift.io/oauth-redirecturi.first={{ keycloak_http_url }}
+- shell: oc sa get-token -n {{ namespace }} kc-oauth
+  register: token_result
+- set_fact:
+    oauth_token: "{{ token_result.stdout }}"
 
 - name: Create configmap with the keycloak info
   when: config_exists.failed and (keycloak_http_url is defined)
-  shell: oc create configmap keycloak-config -n {{ namespace }} --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }} --from-literal=identityProviderClientId=kc-client --from-literal=identityProviderClientSecret=mysecret
+  shell: oc create configmap keycloak-config -n {{ namespace }} --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }} --from-literal=identityProviderClientId=system:serviceaccount:{{ namespace }}:kc-oauth --from-literal=identityProviderClientSecret={{ oauth_token }}
