@@ -12,12 +12,29 @@ pipeline {
         MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
+        string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
         string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
         timeout(time: 1, unit: 'HOURS')
     }
     stages {
+        stage('cleanup registry') {
+            environment {
+                REGISTRY_URL = credentials('docker-registry-host')
+                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
+                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
+                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
+            }
+            when {
+                expression { params.CLEAN_REGISTRY == 'true' }
+            }
+            steps {
+                sh "sleep 60 && oc login --insecure-skip-tls-verify --token ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
+                sh 'oc project enmasseproject'
+                sh 'oc delete imagestreamtags --all'
+            }
+        }
         stage('clean') {
             steps {
                 cleanWs()
