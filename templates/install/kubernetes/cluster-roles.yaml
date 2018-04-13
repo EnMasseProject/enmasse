@@ -23,6 +23,13 @@ items:
     name: enmasse-admin
   rules:
   - apiGroups:
+    - user.openshift.io
+    - ''
+    resources:
+    - users
+    verbs:
+    - get
+  - apiGroups:
     - project.openshift.io
     - ''
     resources:

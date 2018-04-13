@@ -23,6 +23,8 @@ import io.enmasse.osb.api.ServiceMapping;
 import io.enmasse.osb.api.catalog.Plan;
 import io.enmasse.osb.api.catalog.Service;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})
@@ -45,9 +47,16 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         verifyAuthorized(securityContext, ResourceVerb.create);
 
-        log.info("Originating identity: " + originatingIdentity);
+        String userName = null;
+        String userId = null;
         if(originatingIdentity != null && originatingIdentity.split(" +").length>1) {
             log.info("identity: " + new String(Base64.getDecoder().decode(originatingIdentity.split(" +")[1])), StandardCharsets.UTF_8);
+            JsonObject object = new JsonObject(Buffer.buffer(Base64.getDecoder().decode(originatingIdentity.split(" +")[1])));
+            userName = object.getString("username");
+            userId = object.getString("uid");
+            if (userId == null || userId.isEmpty()) {
+                userId = getAuthApi().getUserId(userName);
+            }
         }
 
         if (!acceptsIncomplete) {
@@ -83,7 +92,7 @@ public class OSBProvisioningService extends OSBServiceBase {
             throw Exceptions.conflictException("Service addressspace with name " + name + " already exists");
         }
         AddressSpaceType addressSpaceType = serviceMapping.getAddressSpaceTypeForService(service);
-        AddressSpace addressSpace = createAddressSpace(instanceId, name, addressSpaceType.getName(), service.getPlan(request.getPlanId()).get().getName());
+        AddressSpace addressSpace = createAddressSpace(instanceId, name, addressSpaceType.getName(), service.getPlan(request.getPlanId()).get().getName(), userId, userName);
 
         String dashboardUrl = getConsoleURL(addressSpace);
 

@@ -58,4 +58,5 @@ interface Fields {
     String ANNOTATIONS = "annotations";
     String ADDRESS_SPACE_TYPE = "addressSpaceType";
     String PHASE = "phase";
+    String CREATED_BY_UID = "createdByUid";
 }

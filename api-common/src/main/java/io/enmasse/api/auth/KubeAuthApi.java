@@ -5,6 +5,7 @@
 package io.enmasse.api.auth;
 
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.json.JsonObject;
 import okhttp3.*;
@@ -79,17 +80,19 @@ public class KubeAuthApi implements AuthApi {
             JsonObject status = responseBody.getJsonObject("status");
             boolean authenticated = false;
             String userName = null;
+            String userId = null;
             if (status != null) {
                 Boolean auth = status.getBoolean("authenticated");
                 authenticated = auth == null ? false : auth;
                 JsonObject user = status.getJsonObject("user");
                 if (user != null) {
                     userName = user.getString("username");
+                    userId = user.getString("uid");
                 }
             }
-            return new TokenReview(userName, authenticated);
+            return new TokenReview(userName, userId, authenticated);
         } else {
-            return new TokenReview(null, false);
+            return new TokenReview(null, null, false);
         }
     }
 
@@ -143,6 +146,15 @@ public class KubeAuthApi implements AuthApi {
     @Override
     public String getNamespace() {
         return client.getNamespace();
+    }
+
+    @Override
+    public String getUserId(String userName) {
+        User user = client.users().withName(userName).get();
+        if (user != null) {
+            return user.getMetadata().getUid();
+        }
+        return null;
     }
 
 }

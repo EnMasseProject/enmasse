@@ -60,9 +60,9 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 keycloak.deleteRealm(realmName);
             }
         }
-        for(String name : standardAuthSvcSpaces.keySet()) {
-            log.info("Creating realm {}", name);
-            keycloak.createRealm(name, name + "-admin", getConsoleRedirectURI(standardAuthSvcSpaces.get(name)));
+        for(AddressSpace addressSpace : standardAuthSvcSpaces.values()) {
+            log.info("Creating realm {}", addressSpace.getName());
+            keycloak.createRealm(addressSpace.getName(), addressSpace.getCreatedBy(), addressSpace.getCreatedByUid(), getConsoleRedirectURI(standardAuthSvcSpaces.get(addressSpace.getName())));
         }
     }
 }

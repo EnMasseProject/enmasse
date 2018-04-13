@@ -7,6 +7,7 @@ package io.enmasse.controller.api.v1.http;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.controller.TestSchemaProvider;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -39,7 +40,7 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(),"controller");
         securityContext = mock(SecurityContext.class);
-        when(securityContext.getUserPrincipal()).thenReturn(new BasicUserPrincipal("me"));
+        when(securityContext.getUserPrincipal()).thenReturn(RbacSecurityContext.getUserPrincipal("me", "myid"));
         when(securityContext.isUserInRole(any())).thenReturn(true);
         when(securityContext.getAuthenticationScheme()).thenReturn("unknown");
         a1 = new AddressSpace.Builder()

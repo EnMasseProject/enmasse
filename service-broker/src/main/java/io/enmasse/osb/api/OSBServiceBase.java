@@ -61,7 +61,7 @@ public abstract class OSBServiceBase {
         return addressSpaceApi.listAddressSpaces().stream().filter(a -> a.getName().equals(name)).findAny();
     }
 
-    protected AddressSpace createAddressSpace(String instanceId, String name, String type, String plan) throws Exception {
+    protected AddressSpace createAddressSpace(String instanceId, String name, String type, String plan, String userId, String userName) throws Exception {
         AuthenticationService authService = new AuthenticationService.Builder()
                 .setType(AuthenticationServiceType.STANDARD)
                 .setDetails(Collections.emptyMap())
@@ -70,6 +70,8 @@ public abstract class OSBServiceBase {
                 .setName(name)
                 .setType(type)
                 .setPlan(plan)
+                .setCreatedBy(userName)
+                .setCreatedByUid(userId)
                 .setAuthenticationService(authService)
                 .setEndpointList(null)
                 .build();
