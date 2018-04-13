@@ -61,7 +61,7 @@ public class Keycloak implements KeycloakApi {
                 openshiftIdProvider.setAlias("openshift-v3");
                 openshiftIdProvider.setDisplayName("OpenShift");
                 openshiftIdProvider.setTrustEmail(true);
-                openshiftIdProvider.setFirstBrokerLoginFlowAlias("first broker login");
+                openshiftIdProvider.setFirstBrokerLoginFlowAlias("direct grant");
 
                 newRealm.addIdentityProvider(openshiftIdProvider);
 
