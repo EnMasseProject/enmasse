@@ -32,6 +32,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -53,7 +54,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Base class for all tests
  */
-public abstract class TestBase implements ITestSeparator, ITestBase {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = new Environment();
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);

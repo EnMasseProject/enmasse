@@ -4,46 +4,23 @@
  */
 package io.enmasse.systemtest.ability;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
 @ExtendWith(ExtensionContextParameterResolver.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public interface ITestSeparator {
     Logger log = CustomLogger.getLogger();
     String separatorChar = "#";
-
-    @AfterAll
-    default void afterAllTests() throws Exception {
-        Environment env = new Environment();
-        if (!env.skipCleanup()) {
-            Kubernetes kube = Kubernetes.create(env);
-            AddressApiClient apiClient = new AddressApiClient(kube);
-            GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));
-            TestUtils.getAddressSpacesObjects(apiClient).forEach((addrSpace) -> {
-                log.info("address space '{}' will be removed", addrSpace);
-                try {
-                    TestUtils.deleteAddressSpace(apiClient, addrSpace, logCollector);
-                    TestUtils.waitForAddressSpaceDeleted(kube, addrSpace);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            apiClient.close();
-        } else {
-            log.warn("Remove address spaces when test run finished - SKIPPED!");
-        }
-        log.info("After all tests");
-    }
 
     @BeforeEach
     default void beforeEachTest(TestInfo testInfo) {

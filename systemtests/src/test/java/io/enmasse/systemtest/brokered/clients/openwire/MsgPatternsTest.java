@@ -44,6 +44,7 @@ public class MsgPatternsTest extends MsgPatternsTestBase implements ITestBaseBro
         doMessageSelectorQueueTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver());
     }
 
+    @Test
     @Disabled("disabled due to issue #660")
     public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
