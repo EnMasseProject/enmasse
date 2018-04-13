@@ -17,6 +17,8 @@ import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.util.Optional;
 
 public class Main {
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String [] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
@@ -44,7 +47,9 @@ public class Main {
             params.setIdentityProviderUrl(getPublicOpenShiftUrl(client));
         }
 
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(KeycloakParams.fromEnv(System.getenv())));
+        log.info("Started with params: {}", params);
+
+        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(params));
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))

@@ -64,6 +64,14 @@ public class KeycloakParams {
         return value;
     }
 
+    @Override
+    public String toString() {
+        return "{keycloakUrl=" + keycloakUri + "," +
+                "adminUser=" + adminUser + "," +
+                "identityProviderUrl=" + identityProviderUrl + "," +
+                "identityProviderClientId=" + identityProviderClientId + "}";
+    }
+
     public String getKeycloakUri() {
         return keycloakUri;
     }
