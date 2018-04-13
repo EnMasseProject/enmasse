@@ -496,6 +496,15 @@
                     </properties>
                 </provider>
             </spi>
+            <spi name="truststore">
+              <provider name="file" enabled="true">
+                <properties>
+                  <property name="file" value="${jboss.server.config.dir}/truststore.jks" />
+                  <property name="password" value="enmasse"/>
+                  <property name="hostname-verification-policy" value="ANY"/>
+                </properties>
+              </provider>
+            </spi>
             <spi name="userCache">
                 <provider name="default" enabled="true"/>
             </spi>
