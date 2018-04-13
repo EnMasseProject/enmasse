@@ -9,10 +9,10 @@ pipeline {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
         PLANS_JOB_NAME = 'enmasse-master-common'
-        CLEAN_REGISTRY = 'true'
         MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
+        string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
         string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
