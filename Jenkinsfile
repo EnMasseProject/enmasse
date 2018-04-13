@@ -21,7 +21,7 @@ pipeline {
     stages {
         stage('cleanup registry') {
             environment {
-                REGISTRY_URL = credentials('docker-registry-host')
+                REGISTRY_URL = credentials('internal-registry')
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
                 DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
