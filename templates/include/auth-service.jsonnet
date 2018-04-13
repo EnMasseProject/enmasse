@@ -139,6 +139,7 @@ local images = import "images.jsonnet";
                     "name": "OAUTH_IDENTITY_PROVIDER_CLIENT_ID",
                     "valueFrom": {
                       "configMapKeyRef": {
+                        "optional": true,
                         "name": keycloak_configmap,
                         "key": "identityProviderClientId"
                       }
@@ -148,6 +149,7 @@ local images = import "images.jsonnet";
                     "name": "OAUTH_IDENTITY_PROVIDER_CLIENT_SECRET",
                     "valueFrom": {
                       "configMapKeyRef": {
+                        "optional": true,
                         "name": keycloak_configmap,
                         "key": "identityProviderClientSecret"
                       }
