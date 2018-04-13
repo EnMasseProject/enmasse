@@ -132,6 +132,16 @@ objects:
               configMapKeyRef:
                 key: httpUrl
                 name: ${KEYCLOAK_CONFIGMAP_NAME}
+          - name: OAUTH_IDENTITY_PROVIDER_CLIENT_ID
+            valueFrom:
+              configMapKeyRef:
+                key: identityProviderClientId
+                name: ${KEYCLOAK_CONFIGMAP_NAME}
+          - name: OAUTH_IDENTITY_PROVIDER_CLIENT_SECRET
+            valueFrom:
+              configMapKeyRef:
+                key: identityProviderClientSecret
+                name: ${KEYCLOAK_CONFIGMAP_NAME}
           - name: KEYCLOAK_ADMIN_USER
             valueFrom:
               secretKeyRef:

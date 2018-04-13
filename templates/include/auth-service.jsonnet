@@ -136,6 +136,24 @@ local images = import "images.jsonnet";
                     }
                   },
                   {
+                    "name": "OAUTH_IDENTITY_PROVIDER_CLIENT_ID",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "name": keycloak_configmap,
+                        "key": "identityProviderClientId"
+                      }
+                    }
+                  },
+                  {
+                    "name": "OAUTH_IDENTITY_PROVIDER_CLIENT_SECRET",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "name": keycloak_configmap,
+                        "key": "identityProviderClientSecret"
+                      }
+                    }
+                  },
+                  {
                     "name": "KEYCLOAK_ADMIN_USER",
                     "valueFrom": {
                       "secretKeyRef": {
