@@ -33,36 +33,45 @@ public class Keycloak implements KeycloakApi {
     }
 
     @Override
-    public void createRealm(String realmName, String realmAdminUser, String consoleRedirectURI) {
+    public void createRealm(String realmName, String realmAdminUser, String realmAdminUserId, String consoleRedirectURI) {
         final RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setRealm(realmName);
         newRealm.setEnabled(true);
         newRealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
 
-        if (realmAdminUser != null && params.getIdentityProviderUrl() != null && params.getIdentityProviderClientId() != null && params.getIdentityProviderClientSecret() != null) {
-            IdentityProviderRepresentation openshiftIdProvider = new IdentityProviderRepresentation();
-
-            Map<String, String> config = new HashMap<>();
-
-            config.put("baseUrl", params.getIdentityProviderUrl());
-            config.put("clientId", params.getIdentityProviderClientId());
-            config.put("clientSecret", params.getIdentityProviderClientSecret());
-
-            openshiftIdProvider.setConfig(config);
-            openshiftIdProvider.setEnabled(true);
-            openshiftIdProvider.setProviderId("openshift-v3");
-            openshiftIdProvider.setAlias("openshift-v3");
-            openshiftIdProvider.setDisplayName("OpenShift");
-            openshiftIdProvider.setTrustEmail(true);
-            openshiftIdProvider.setFirstBrokerLoginFlowAlias("first broker login");
-
-            newRealm.addIdentityProvider(openshiftIdProvider);
+        if (realmAdminUser != null) {
 
             final UserRepresentation newUser = new UserRepresentation();
             newUser.setUsername(realmAdminUser);
-
             newUser.setEnabled(true);
             newUser.setClientRoles(Collections.singletonMap("realm-management", Collections.singletonList("manage-users")));
+
+            if (params.getIdentityProviderUrl() != null && params.getIdentityProviderClientId() != null && params.getIdentityProviderClientSecret() != null) {
+                IdentityProviderRepresentation openshiftIdProvider = new IdentityProviderRepresentation();
+
+                Map<String, String> config = new HashMap<>();
+
+                config.put("baseUrl", params.getIdentityProviderUrl());
+                config.put("clientId", params.getIdentityProviderClientId());
+                config.put("clientSecret", params.getIdentityProviderClientSecret());
+
+                openshiftIdProvider.setConfig(config);
+                openshiftIdProvider.setEnabled(true);
+                openshiftIdProvider.setProviderId("openshift-v3");
+                openshiftIdProvider.setAlias("openshift-v3");
+                openshiftIdProvider.setDisplayName("OpenShift");
+                openshiftIdProvider.setTrustEmail(true);
+                openshiftIdProvider.setFirstBrokerLoginFlowAlias("first broker login");
+
+                newRealm.addIdentityProvider(openshiftIdProvider);
+
+                FederatedIdentityRepresentation openshiftFederatedIdentity = new FederatedIdentityRepresentation();
+                openshiftFederatedIdentity.setUserName(realmAdminUser);
+                openshiftFederatedIdentity.setUserId(realmAdminUserId);
+                openshiftFederatedIdentity.setIdentityProvider("openshift-v3");
+                newUser.setFederatedIdentities(Collections.singletonList(openshiftFederatedIdentity));
+            }
+
             newRealm.setUsers(Collections.singletonList(newUser));
         }
 
@@ -76,7 +85,7 @@ public class Keycloak implements KeycloakApi {
 
         try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
             wrapper.get().realms().create(newRealm);
-            String realmAdminUserId = wrapper.get().realm(realmName).users().search(realmAdminUser).stream()
+            String realmAdminKcUserId = wrapper.get().realm(realmName).users().search(realmAdminUser).stream()
                     .findFirst()
                     .map(UserRepresentation::getId)
                     .orElse(null);
@@ -87,9 +96,9 @@ public class Keycloak implements KeycloakApi {
             addGroup(wrapper, realmName, "recv_*");
             addGroup(wrapper, realmName, "view_*");
             addGroup(wrapper, realmName, "browse_*");
-            if (realmAdminUserId != null) {
-                wrapper.get().realm(realmName).users().get(realmAdminUserId).joinGroup(adminGroupId);
-                wrapper.get().realm(realmName).users().get(realmAdminUserId).joinGroup(manageGroupId);
+            if (realmAdminKcUserId != null) {
+                wrapper.get().realm(realmName).users().get(realmAdminKcUserId).joinGroup(adminGroupId);
+                wrapper.get().realm(realmName).users().get(realmAdminKcUserId).joinGroup(manageGroupId);
             }
         }
     }

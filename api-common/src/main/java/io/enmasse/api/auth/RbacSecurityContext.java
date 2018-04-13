@@ -23,7 +23,26 @@ public class RbacSecurityContext implements SecurityContext {
 
     @Override
     public Principal getUserPrincipal() {
-        return tokenReview::getUserName;
+        return getUserPrincipal(tokenReview.getUserName(), tokenReview.getUserId());
+    }
+
+    public static Principal getUserPrincipal(String username, String uid) {
+        return () -> {
+            JsonObject object = new JsonObject();
+            object.put("username", username);
+            object.put("uid", uid);
+            return object.encode();
+        };
+    }
+
+    public static String getUserName(Principal principal) {
+        JsonObject object = new JsonObject(principal.getName());
+        return object.getString("username");
+    }
+
+    public static String getUserId(Principal principal) {
+        JsonObject object = new JsonObject(principal.getName());
+        return object.getString("uid");
     }
 
     @Override

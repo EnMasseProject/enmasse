@@ -95,6 +95,8 @@ public class SerializationTest {
                 .setNamespace("mynamespace")
                 .setPlan("defaultplan")
                 .setType("standard")
+                .setCreatedBy("me")
+                .setCreatedByUid("myid")
                 .setStatus(new Status(true).appendMessage("hello"))
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("myendpoint")
@@ -120,6 +122,8 @@ public class SerializationTest {
         assertThat(deserialized.getNamespace(), is(addressSpace.getNamespace()));
         assertThat(deserialized.getType(), is(addressSpace.getType()));
         assertThat(deserialized.getPlan(), is(addressSpace.getPlan()));
+        assertThat(deserialized.getCreatedBy(), is(addressSpace.getCreatedBy()));
+        assertThat(deserialized.getCreatedByUid(), is(addressSpace.getCreatedByUid()));
         assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
         assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
