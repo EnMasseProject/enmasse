@@ -12,10 +12,7 @@ import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -343,11 +340,12 @@ public class PlansTest extends TestBase {
         TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
-    //@Test test disabled due to issue: #1134
+    @Test
+    @Disabled("test disabled due to issue: #1134")
     public void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueueAlpha = Arrays.asList(new AddressResource("broker", 0.3));
-        List<AddressResource> addressResourcesQueueBeta = Arrays.asList(new AddressResource("broker", 0.6));
+        List<AddressResource> addressResourcesQueueAlpha = Collections.singletonList(new AddressResource("broker", 0.3));
+        List<AddressResource> addressResourcesQueueBeta = Collections.singletonList(new AddressResource("broker", 0.6));
 
         AddressPlan queuePlanAlpha = new AddressPlan("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
         plansProvider.createAddressPlanConfig(queuePlanAlpha);
@@ -416,10 +414,11 @@ public class PlansTest extends TestBase {
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    //@Test test disabled due to issue: #1136
+    @Test
+    @Disabled("test disabled due to issue: #1136")
     public void testMessagePersistenceAfterChangePlan() throws Exception {
-        List<AddressResource> addressResourcesQueueDistributed = Arrays.asList(new AddressResource("broker", 2.0));
-        List<AddressResource> addressResourcesSharded = Arrays.asList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesQueueDistributed = Collections.singletonList(new AddressResource("broker", 2.0));
+        List<AddressResource> addressResourcesSharded = Collections.singletonList(new AddressResource("broker", 1.0));
 
         AddressPlan queuePlanDistributed = new AddressPlan("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
         plansProvider.createAddressPlanConfig(queuePlanDistributed);

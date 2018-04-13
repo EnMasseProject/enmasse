@@ -22,6 +22,20 @@ public interface ITestSeparator {
     Logger log = CustomLogger.getLogger();
     String separatorChar = "#";
 
+    static void printThreadDump() {
+        Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
+        for (Thread thread : allThreads.keySet()) {
+            StringBuilder sb = new StringBuilder();
+            Thread key = thread;
+            StackTraceElement[] trace = allThreads.get(key);
+            sb.append(key).append("\r\n");
+            for (StackTraceElement aTrace : trace) {
+                sb.append(" ").append(aTrace).append("\r\n");
+            }
+            log.error(sb.toString());
+        }
+    }
+
     @BeforeEach
     default void beforeEachTest(TestInfo testInfo) {
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
@@ -41,20 +55,5 @@ public interface ITestSeparator {
         }
         log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
-    }
-
-    static void printThreadDump() {
-        Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
-        Iterator<Thread> iterator = allThreads.keySet().iterator();
-        while (iterator.hasNext()) {
-            StringBuilder sb = new StringBuilder();
-            Thread key = iterator.next();
-            StackTraceElement[] trace = allThreads.get(key);
-            sb.append(key + "\r\n");
-            for (int i = 0; i < trace.length; i++) {
-                sb.append(" " + trace[i] + "\r\n");
-            }
-            log.error(sb.toString());
-        }
     }
 }

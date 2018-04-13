@@ -23,12 +23,10 @@ public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
     private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
     protected static AddressSpace sharedAddressSpace;
-    protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
     private static Logger log = CustomLogger.getLogger();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
-        sharedAddressSpaces.remove(addressSpace.getName());
         TestBase.deleteAddressSpace(addressSpace);
     }
 
@@ -98,7 +96,6 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     protected void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
-        sharedAddressSpaces.put(addressSpace.getName(), addressSpace);
         super.createAddressSpace(addressSpace);
     }
 
