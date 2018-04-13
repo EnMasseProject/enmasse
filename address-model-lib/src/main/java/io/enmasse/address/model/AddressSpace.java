@@ -19,8 +19,9 @@ public class AddressSpace {
     private final Status status;
     private final String uid;
     private final String createdBy;
+    private final String createdByUid;
 
-    private AddressSpace(String name, String namespace, String typeName, List<Endpoint> endpointList, String planName, AuthenticationService authenticationService, Status status, String uid, String createdBy) {
+    private AddressSpace(String name, String namespace, String typeName, List<Endpoint> endpointList, String planName, AuthenticationService authenticationService, Status status, String uid, String createdBy, String createdByUid) {
         this.name = name;
         this.namespace = namespace;
         this.typeName = typeName;
@@ -30,6 +31,7 @@ public class AddressSpace {
         this.status = status;
         this.uid = uid;
         this.createdBy = createdBy;
+        this.createdByUid = createdByUid;
     }
 
     public String getName() {
@@ -65,6 +67,10 @@ public class AddressSpace {
 
     public String getCreatedBy() {
         return createdBy;
+    }
+
+    public String getCreatedByUid() {
+        return createdByUid;
     }
 
     @Override
@@ -107,6 +113,7 @@ public class AddressSpace {
         private Status status = new Status(false);
         private String uid;
         private String createdBy;
+        private String createdByUid;
 
         public Builder() {
         }
@@ -125,6 +132,7 @@ public class AddressSpace {
             this.authenticationService = addressSpace.getAuthenticationService();
             this.uid = addressSpace.getUid();
             this.createdBy = addressSpace.getCreatedBy();
+            this.createdByUid = addressSpace.getCreatedByUid();
         }
 
         public Builder setName(String name) {
@@ -184,13 +192,18 @@ public class AddressSpace {
             return this;
         }
 
+        public Builder setCreatedByUid(String createdByUid) {
+            this.createdByUid = createdByUid;
+            return this;
+        }
+
         public AddressSpace build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(namespace, "namespace not set");
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(authenticationService, "authentication service not set");
             Objects.requireNonNull(status, "status not set");
-            return new AddressSpace(name, namespace, type, endpointList, plan, authenticationService, status, uid, createdBy);
+            return new AddressSpace(name, namespace, type, endpointList, plan, authenticationService, status, uid, createdBy, createdByUid);
         }
 
         public String getNamespace() {

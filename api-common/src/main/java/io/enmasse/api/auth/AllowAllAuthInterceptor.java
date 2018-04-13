@@ -17,7 +17,7 @@ public class AllowAllAuthInterceptor implements ContainerRequestFilter {
         requestContext.setSecurityContext(new SecurityContext() {
             @Override
             public Principal getUserPrincipal() {
-                return () -> "anonymous";
+                return RbacSecurityContext.getUserPrincipal("anonymous", "");
             }
 
             @Override

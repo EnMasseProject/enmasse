@@ -20,6 +20,7 @@
   shell: oc get configmap -n {{ namespace }} keycloak-config
   register: config_exists
   ignore_errors: True
+
 - name: Retrieve service cluster ip
   when: config_exists.failed and (keycloak_http_url is not defined)
   shell: oc get service -n {{ namespace }} standard-authservice -o jsonpath={.spec.clusterIP}
@@ -27,6 +28,16 @@
 - set_fact:
     keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
   when: config_exists.failed and (keycloak_http_url is not defined)
+
+- name: Create OAUTH service account
+  shell: oc create sa -n {{ namespace }} kc-oauth
+- name: Annotate OAUTH service account
+  shell: oc annotate sa -n {{ namespace }} kc-oauth serviceaccounts.openshift.io/oauth-redirecturi.first={{ keycloak_http_url }}
+- shell: oc sa get-token -n {{ namespace }} kc-oauth
+  register: token_result
+- set_fact:
+    oauth_token: "{{ token_result.stdout }}"
+
 - name: Create configmap with the keycloak info
   when: config_exists.failed and (keycloak_http_url is defined)
-  shell: oc create configmap keycloak-config -n {{ namespace }} --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }}
+  shell: oc create configmap keycloak-config -n {{ namespace }} --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }} --from-literal=identityProviderClientId=system:serviceaccount:{{ namespace }}:kc-oauth --from-literal=identityProviderClientSecret={{ oauth_token }}

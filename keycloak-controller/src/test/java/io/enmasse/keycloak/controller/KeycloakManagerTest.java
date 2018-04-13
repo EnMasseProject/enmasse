@@ -31,7 +31,7 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String realmName, String realmAdminUser, String consoleRedirectURI) {
+            public void createRealm(String realmName, String realmAdminUser, String realmAdminUserId, String consoleRedirectURI) {
                 realms.add(realmName);
                 realmAdminUsers.put(realmName, realmAdminUser);
             }
@@ -83,6 +83,6 @@ public class KeycloakManagerTest {
     }
 
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {
-        return new AddressSpace.Builder().setName(name).setType("standard").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
+        return new AddressSpace.Builder().setName(name).setType("standard").setCreatedBy("developer").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
     }
 }

@@ -84,7 +84,8 @@ public class HttpAddressSpaceService {
             AddressSpace addressSpace = input;
             if (securityContext.getUserPrincipal() != null) {
                 addressSpace = new AddressSpace.Builder(addressSpace)
-                        .setCreatedBy(securityContext.getUserPrincipal().getName())
+                        .setCreatedBy(RbacSecurityContext.getUserName(securityContext.getUserPrincipal()))
+                        .setCreatedByUid(RbacSecurityContext.getUserId(securityContext.getUserPrincipal()))
                         .build();
             }
             addressSpaceApi.createAddressSpace(addressSpace);

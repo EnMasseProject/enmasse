@@ -39,6 +39,18 @@
       "rules": [
         {
           "apiGroups": [
+            "user.openshift.io",
+            ""
+          ],
+          "resources": [
+            "users"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
             "project.openshift.io",
             ""
           ],
