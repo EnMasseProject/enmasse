@@ -83,6 +83,6 @@ public class KeycloakManagerTest {
     }
 
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {
-        return new AddressSpace.Builder().setName(name).setType("standard").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
+        return new AddressSpace.Builder().setName(name).setType("standard").setCreatedBy("developer").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
     }
 }

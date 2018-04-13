@@ -16,25 +16,27 @@ public class KeycloakParams {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakParams.class);
 
-    private final String keycloakUri;
-    private final String adminUser;
-    private final String adminPassword;
-    private final KeyStore keyStore;
-
-    public KeycloakParams(String keycloakUri, String adminUser, String adminPassword, KeyStore keyStore) {
-        this.keycloakUri = keycloakUri;
-        this.adminUser = adminUser;
-        this.adminPassword = adminPassword;
-        this.keyStore = keyStore;
-    }
+    private String keycloakUri;
+    private String adminUser;
+    private String adminPassword;
+    private KeyStore keyStore;
+    private String identityProviderUrl;
+    private String identityProviderClientId;
+    private String identityProviderClientSecret;
 
     public static KeycloakParams fromEnv(Map<String, String> env) throws Exception {
-        String keycloakUri = getEnvOrThrow(env, "KEYCLOAK_URI");
-        String adminUser = getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER");
-        String adminPassword = getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD");
-        KeyStore keyStore = createKeyStore(env);
+        KeycloakParams params = new KeycloakParams();
+        params.setKeycloakUri(getEnvOrThrow(env, "KEYCLOAK_URI"));
+        params.setAdminUser(getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER"));
+        params.setAdminPassword(getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD"));
 
-        return new KeycloakParams(keycloakUri, adminUser, adminPassword, keyStore);
+        params.setKeyStore(createKeyStore(env));
+
+        params.setIdentityProviderUrl(env.get("OAUTH_IDENTITY_PROVIDER_URL"));
+        params.setIdentityProviderClientId(env.get("OAUTH_IDENTITY_PROVIDER_CLIENT_ID"));
+        params.setIdentityProviderClientSecret(env.get("OAUTH_IDENTITY_PROVIDER_CLIENT_SECRET"));
+
+        return params;
     }
 
     private static KeyStore createKeyStore(Map<String, String> env) throws Exception {
@@ -78,4 +80,43 @@ public class KeycloakParams {
         return keyStore;
     }
 
+    public String getIdentityProviderUrl() {
+        return identityProviderUrl;
+    }
+
+    public String getIdentityProviderClientId() {
+        return identityProviderClientId;
+    }
+
+    public String getIdentityProviderClientSecret() {
+        return identityProviderClientSecret;
+    }
+
+    public void setKeycloakUri(String keycloakUri) {
+        this.keycloakUri = keycloakUri;
+    }
+
+    public void setAdminUser(String adminUser) {
+        this.adminUser = adminUser;
+    }
+
+    public void setAdminPassword(String adminPassword) {
+        this.adminPassword = adminPassword;
+    }
+
+    public void setKeyStore(KeyStore keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public void setIdentityProviderUrl(String identityProviderUrl) {
+        this.identityProviderUrl = identityProviderUrl;
+    }
+
+    public void setIdentityProviderClientId(String identityProviderClientId) {
+        this.identityProviderClientId = identityProviderClientId;
+    }
+
+    public void setIdentityProviderClientSecret(String identityProviderClientSecret) {
+        this.identityProviderClientSecret = identityProviderClientSecret;
+    }
 }

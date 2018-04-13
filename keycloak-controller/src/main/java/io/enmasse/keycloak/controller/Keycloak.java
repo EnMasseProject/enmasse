@@ -6,11 +6,11 @@ package io.enmasse.keycloak.controller;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.representations.idm.ClientRepresentation;
-import org.keycloak.representations.idm.RealmRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.representations.idm.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -39,13 +39,27 @@ public class Keycloak implements KeycloakApi {
         newRealm.setEnabled(true);
         newRealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
 
-        final UserRepresentation newUser = new UserRepresentation();
-        newUser.setUsername(realmAdminUser);
+        if (realmAdminUser != null && params.getIdentityProviderUrl() != null && params.getIdentityProviderClientId() != null && params.getIdentityProviderClientSecret() != null) {
+            IdentityProviderRepresentation openshiftIdProvider = new IdentityProviderRepresentation();
 
-        newUser.setEnabled(true);
-        newUser.setClientRoles(Collections.singletonMap("realm-management", Collections.singletonList("manage-users")));
+            Map<String, String> config = new HashMap<>();
 
-        newRealm.setUsers(Collections.singletonList(newUser));
+            config.put("baseUrl", params.getIdentityProviderUrl());
+            config.put("clientId", params.getIdentityProviderClientId());
+            config.put("clientSecret", params.getIdentityProviderClientSecret());
+
+            openshiftIdProvider.setConfig(config);
+            openshiftIdProvider.setEnabled(true);
+
+            newRealm.addIdentityProvider(openshiftIdProvider);
+
+            final UserRepresentation newUser = new UserRepresentation();
+            newUser.setUsername(realmAdminUser);
+
+            newUser.setEnabled(true);
+            newUser.setClientRoles(Collections.singletonMap("realm-management", Collections.singletonList("manage-users")));
+            newRealm.setUsers(Collections.singletonList(newUser));
+        }
 
         if (consoleRedirectURI != null) {
             final ClientRepresentation console = new ClientRepresentation();
@@ -57,7 +71,34 @@ public class Keycloak implements KeycloakApi {
 
         try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
             wrapper.get().realms().create(newRealm);
+            String realmAdminUserId = wrapper.get().realm(realmName).users().search(realmAdminUser).stream()
+                    .findFirst()
+                    .map(UserRepresentation::getId)
+                    .orElse(null);
+
+            String adminGroupId = addGroup(wrapper, realmName, "admin");
+            String manageGroupId = addGroup(wrapper, realmName, "manage");
+            addGroup(wrapper, realmName, "send_*");
+            addGroup(wrapper, realmName, "recv_*");
+            addGroup(wrapper, realmName, "view_*");
+            addGroup(wrapper, realmName, "browse_*");
+            if (realmAdminUserId != null) {
+                wrapper.get().realm(realmName).users().get(realmAdminUserId).joinGroup(adminGroupId);
+                wrapper.get().realm(realmName).users().get(realmAdminUserId).joinGroup(manageGroupId);
+            }
         }
+    }
+
+    private String addGroup(CloseableKeycloak keycloak, String realmName, String groupName) {
+        GroupRepresentation groupRep = new GroupRepresentation();
+        groupRep.setName(groupName);
+        keycloak.get().realm(realmName).groups().add(groupRep);
+        for (GroupRepresentation group : keycloak.get().realm(realmName).groups().groups()) {
+            if (group.getName().equals(groupName)) {
+                return group.getId();
+            }
+        }
+        return null;
     }
 
     @Override
