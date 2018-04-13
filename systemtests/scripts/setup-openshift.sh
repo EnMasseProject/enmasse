@@ -1,5 +1,12 @@
 #!/bin/bash
-SCRIPTDIR=`dirname $0`
+SCRIPTDIR=$(dirname $0)
+#parameters:
+# {1} path to folder with installation scripts, roles,... (usually templates/install)
+# {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
+ENMASSE_DIR=${1}
+OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
+ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
+    --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift
 
 oc cluster down #for the case that cluster is already running
 

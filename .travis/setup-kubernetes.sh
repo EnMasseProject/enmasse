@@ -1,7 +1,7 @@
 #!/bin/bash
 #script for deploy and setup kubernetes
 #parameters:
-# {1} path to installation scripts, roles,... (usually templates/install)
+# {1} path to folder with installation scripts, roles,... (usually templates/install)
 # {2} url to OpenShift origin client
 # {3} url to minikube
 # {4} url to kubectl
