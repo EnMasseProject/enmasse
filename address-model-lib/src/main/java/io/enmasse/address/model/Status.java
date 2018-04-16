@@ -14,6 +14,7 @@ import java.util.Set;
 public class Status {
     private boolean isReady = false;
     private Phase phase = Phase.Pending;
+    private String activePlan = null;
     private Set<String> messages = new HashSet<>();
 
     public Status(boolean isReady) {
@@ -23,6 +24,7 @@ public class Status {
     public Status(io.enmasse.address.model.Status other) {
         this.isReady = other.isReady();
         this.phase = other.getPhase();
+        this.activePlan = other.getActivePlan();
         this.messages.addAll(other.getMessages());
     }
 
@@ -32,6 +34,15 @@ public class Status {
 
     public Phase getPhase() {
         return phase;
+    }
+
+    public String getActivePlan() {
+        return activePlan;
+    }
+
+    public Status setActivePlan(String activePlan) {
+        this.activePlan = activePlan;
+        return this;
     }
 
     public Status setReady(boolean isReady) {
@@ -70,20 +81,21 @@ public class Status {
         Status status = (Status) o;
         return isReady == status.isReady &&
                 phase == status.phase &&
+                Objects.equals(activePlan, status.activePlan) &&
                 Objects.equals(messages, status.messages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isReady, phase, messages);
+        return Objects.hash(isReady, phase, activePlan, messages);
     }
-
 
     @Override
     public String toString() {
         return new StringBuilder()
                 .append("{isReady=").append(isReady)
                 .append(",").append("phase=").append(phase)
+                .append(",").append("activePlan=").append(activePlan)
                 .append(",").append("messages=").append(messages)
                 .append("}")
                 .toString();
