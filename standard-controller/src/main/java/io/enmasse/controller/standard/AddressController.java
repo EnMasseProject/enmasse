@@ -147,6 +147,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         for (Address address : addressSet) {
             if (!previousStatus.get(address.getAddress()).equals(address.getStatus())) {
+                log.info("Address has changed: {} to {}", previousStatus.get(address.getAddress()), address.getStatus());
                 addressApi.replaceAddress(address);
             }
         }

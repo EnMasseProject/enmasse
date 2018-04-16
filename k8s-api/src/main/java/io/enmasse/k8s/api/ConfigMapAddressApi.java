@@ -96,6 +96,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         String name = address.getName();
         ConfigMap map = create(address);
         if (map != null) {
+            log.info("Creating address {}", name);
             client.configMaps().inNamespace(namespace).withName(name).create(map);
         }
     }
@@ -109,7 +110,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         }
         ConfigMap newMap = create(address);
         if (newMap != null) {
-            client.configMaps().inNamespace(namespace).withName(name).replace(newMap);
+            log.info("Replacing address {} version {}", name, newMap.getMetadata().getResourceVersion());
+            client.configMaps().inNamespace(namespace).withName(name).lockResourceVersion(newMap.getMetadata().getResourceVersion()).replace(newMap);
         }
     }
 
