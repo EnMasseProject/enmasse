@@ -13,7 +13,7 @@ oc project "enmasseproject"
 DATE_FORMAT='+%Y-%m-%dT%H:%M:%SZ'
 TARGET_DATE="$(date -d "-${HOURS} hours")" #now - hours
 TARGET_DATE="$(date -d "${TARGET_DATE}" "${DATE_FORMAT}")" #format date
-echo "all image streams tags older then ${HOURS} hours will be removed! ${TARGET_DATE}"
+echo "All image streams tags older then ${HOURS} hours will be removed! ${TARGET_DATE}"
 
 ITEMS_COUNT="$(oc get imagestreamtags -o json | jq  '.items | length')"
 ALL_STREAMS="$(oc get imagestreamtags -o json)"
@@ -28,12 +28,15 @@ do
 
     if (( creation_stamp_seconds < target_date_seconds )); then
         img_stream_tag=$(echo  "${ALL_STREAMS}" | jq ".items[${i}].metadata.name")
-        echo "image stream :'${img_stream_tag}' is older then ${HOURS} and will be removed"
+        echo "Image stream :'${img_stream_tag}' is older then ${HOURS} and will be removed"
         OLD_IMAGES="${OLD_IMAGES} ${img_stream_tag}"
     fi
 done
 
-OLD_IMAGES="${OLD_IMAGES//\"/}" #remove quotas from OLD_IMAGES
-echo "execute: oc delete imagestreamtags ${OLD_IMAGES}"
-
-oc delete imagestreamtags ${OLD_IMAGES}
+if [[ ! -z ${OLD_IMAGES} ]]; then
+    OLD_IMAGES="${OLD_IMAGES//\"/}" #remove quotas from OLD_IMAGES
+    echo "Execute: oc delete imagestreamtags ${OLD_IMAGES}"
+    oc delete imagestreamtags ${OLD_IMAGES}
+else
+    echo "There are no images that should be removed!"
+fi
