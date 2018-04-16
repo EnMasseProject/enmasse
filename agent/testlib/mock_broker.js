@@ -193,7 +193,7 @@ function MockBroker (name) {
             }
         },
         getConnectorServices : function () {
-            return JSON.stringify(self.get('connector'));
+            return self.get('connector').map(function (c) { return c.name; });
         }
     });
 }

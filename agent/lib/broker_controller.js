@@ -21,6 +21,7 @@ var events = require('events');
 var rhea = require('rhea');
 var artemis = require('./artemis.js');
 var myevents = require('./events.js');
+var myutils = require('./utils.js');
 
 function BrokerController(event_sink, get_address_settings) {
     events.EventEmitter.call(this);
@@ -34,7 +35,7 @@ function BrokerController(event_sink, get_address_settings) {
     } else {
         this.get_address_settings = function () { return Promise.resolve(); };
     }
-    this.serial_sync = require('./utils.js').serialize(this._sync_broker_addresses.bind(this));
+    this.serial_sync = require('./utils.js').serialize(this._sync_addresses_and_connectors.bind(this));
     this.addresses_synchronized = false;
     this.busy_count = 0;
     this.retrieve_count = 0;
@@ -350,24 +351,11 @@ BrokerController.prototype.delete_address_and_settings = function (a) {
     });
 };
 
-BrokerController.prototype.destroy_connector = function (a) {
-    if (this.need_connector) {
-        var self = this;
-        log.info('[%s] Deleted connector for "%s"...', self.id, a.address);
-        return self.broker.destroyConnectorService(a.address).then(function() {
-            log.info('[%s] Deleted connector for "%s"', self.id, a.address);
-        }).catch(function (error) {
-            log.error('[%s] Failed to delete connector for "%s": %s', self.id, a.address, error);
-        });
-    }
-};
-
 BrokerController.prototype.delete_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         return self.get_address_settings(a).then(function (settings) {
-            var p = settings ? self.delete_address_and_settings(a) : self.delete_address(a);
-            return p.then(function () { self.destroy_connector(a) });
+            return settings ? self.delete_address_and_settings(a) : self.delete_address(a);
         });
     }));
 };
@@ -407,24 +395,11 @@ BrokerController.prototype.create_address_and_settings = function (a, settings) 
     });
 };
 
-BrokerController.prototype.ensure_connector = function (a) {
-    if (this.need_connector) {
-        var self = this;
-        log.info('[%s] Ensuring connector exists for "%s"...', self.id, a.address);
-        return self.broker.ensureConnectorService(a.address).then(function() {
-            log.info('[%s] Connector exists for "%s"', self.id, a.address);
-        }).catch(function (error) {
-            log.info('[%s] Check for connector for "%s" failed: %s', self.id, a.address, error);
-        });
-    }
-};
-
 BrokerController.prototype.create_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         return self.get_address_settings(a).then(function (settings) {
-            var p = settings ? self.create_address_and_settings(a, settings) : self.create_address(a);
-            return p.then(function () { self.ensure_connector(a) });
+            return settings ? self.create_address_and_settings(a, settings) : self.create_address(a);
         }).catch(function (error) {
             log.error('[%s] Failed to create address for "%s": %s', self.id, a.address, error);
         });
@@ -482,8 +457,6 @@ BrokerController.prototype._sync_broker_addresses = function () {
         var missing = values(difference(self.addresses, actual, same_address));
         log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
                   stale.map(address_and_type), missing.map(address_and_type));
-        log.info('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
-                  stale.map(address_and_type), missing.map(address_and_type));
         self._set_sync_status(stale.length, missing.length);
         return self.delete_addresses(stale).then(
             function () {
@@ -493,6 +466,64 @@ BrokerController.prototype._sync_broker_addresses = function () {
         log.error('[%s] failed to retrieve addresses: %s', self.id, e);
     });
 };
+
+BrokerController.prototype.destroy_connector = function (address) {
+    var self = this;
+    log.info('[%s] Deleting connector for "%s"...', self.id, address);
+    return self.broker.destroyConnectorService(address).then(function() {
+        log.info('[%s] Deleted connector for "%s"', self.id, address);
+    }).catch(function (error) {
+        log.error('[%s] Failed to delete connector for "%s": %s', self.id, address, error);
+    });
+};
+
+BrokerController.prototype.create_connector = function (address) {
+    var self = this;
+    log.info('[%s] Creating connector for "%s"...', self.id, address);
+    return self.broker.createConnectorService(address).then(function() {
+        log.info('[%s] Created connector for "%s"', self.id, address);
+    }).catch(function (error) {
+        log.error('[%s] Failed to create connector for "%s": %s', self.id, address, error);
+    });
+};
+
+BrokerController.prototype.destroy_connectors = function (addresses) {
+    return Promise.all(addresses.map(this.destroy_connector.bind(this)));
+};
+
+BrokerController.prototype.create_connectors = function (addresses) {
+    return Promise.all(addresses.map(this.create_connector.bind(this)));
+};
+
+function connectors_of_interest(name) {
+    return name !== 'amqp-connector' && name !== 'router-connector';
+}
+
+BrokerController.prototype._ensure_connectors = function () {
+    var self = this;
+    return this.broker.getConnectorServices().then(function (results) {
+        var actual = results.filter(connectors_of_interest);
+        actual.sort();
+        var desired = Object.keys(self.addresses);
+        desired.sort();
+
+        var difference = myutils.changes(actual, desired, myutils.string_compare);
+        if (difference) {
+            log.info('[%s] %d connectors missing, %d to be removed', self.id, difference.added.length, difference.removed.length);
+            return self.destroy_connectors(difference.removed).then(function () {
+                return self.create_connectors(difference.added);
+            });
+        } else {
+            log.info('[%s] all connectors exist', self.id);
+        }
+    }).catch(function (e) {
+        log.error('[%s] failed to retrieve connectors: %s', self.id, e);
+    });
+};
+
+BrokerController.prototype._sync_addresses_and_connectors = function () {
+    return this._sync_broker_addresses().then(this._ensure_connectors.bind(this));
+}
 
 module.exports.create_controller = function (connection, get_address_settings, event_sink) {
     var bc = new BrokerController(event_sink, get_address_settings);
