@@ -10,6 +10,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -29,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class TopicTest extends JMSTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -111,7 +113,8 @@ public class TopicTest extends JMSTestBase {
         messageProducer.close();
     }
 
-    //TODO: this test can be enabled when ENTMQBR-910 will be fixed
+    @Test
+    @Disabled("this test can be enabled when ENTMQBR-910 will be fixed")
     public void testMessageDurableSubscription() throws Exception {
         log.info("testMessageDurableSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -196,8 +199,9 @@ public class TopicTest extends JMSTestBase {
         log.info(sub1ID + " :messages received");
         log.info(sub2ID + " :messages received");
 
-        assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
-        assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
+        assertAll(
+                () -> assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count)),
+                () -> assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count)));
 
         subscriber1.close();
         subscriber2.close();

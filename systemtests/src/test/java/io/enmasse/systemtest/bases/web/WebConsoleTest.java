@@ -462,10 +462,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             client = attachConnector(dest, 1, senderCount, receiverCount);
             selenium.waitUntilPropertyPresent(60, senderCount, consoleWebPage.getAddressItem(dest)::getSendersCount);
 
-            assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount(),
-                    String.format("Console failed, does not contain %d receivers", 10));
-            assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount(),
-                    String.format("Console failed, does not contain %d senders", 5));
+            assertAll(
+                    () -> assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount(),
+                            String.format("Console failed, does not contain %d receivers", 10)),
+                    () -> assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount(),
+                            String.format("Console failed, does not contain %d senders", 5)));
         } finally {
             client.stop();
         }

@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -75,18 +76,20 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages sent",
                 client.sendMessages(topic.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertThat("Wrong count of messages received: receiver0",
-                recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver1",
-                recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver2",
-                recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver3",
-                recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver4",
-                recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat("Wrong count of messages received: receiver5",
-                recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertAll("Every subscriber should receive all messages",
+                () -> assertThat("Wrong count of messages received: receiver0",
+                        recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                () -> assertThat("Wrong count of messages received: receiver1",
+                        recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                () -> assertThat("Wrong count of messages received: receiver2",
+                        recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                () -> assertThat("Wrong count of messages received: receiver3",
+                        recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                () -> assertThat("Wrong count of messages received: receiver4",
+                        recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                () -> assertThat("Wrong count of messages received: receiver5",
+                        recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()))
+        );
     }
 
     private void testMqtt() throws Exception {
@@ -130,11 +133,13 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages sent",
                 client.sendMessages(multicast.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
-                "Wrong count of messages received: receiver0");
-        assertTrue(recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
-                "Wrong count of messages received: receiver1");
-        assertTrue(recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
-                "Wrong count of messages received: receiver2");
+        assertAll("All receivers should receive all messages",
+                () -> assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
+                        "Wrong count of messages received: receiver0"),
+                () -> assertTrue(recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
+                        "Wrong count of messages received: receiver1"),
+                () -> assertTrue(recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
+                        "Wrong count of messages received: receiver2")
+        );
     }
 }

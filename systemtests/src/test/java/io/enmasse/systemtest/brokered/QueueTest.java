@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
@@ -55,10 +56,11 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
                 listOfMessages.toArray(new Message[listOfMessages.size()]));
 
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
-        assertThat("Wrong count of messages received from group A",
-                receivedGroupA.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupA));
-        assertThat("Wrong count of messages received from group A",
-                receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB));
+        assertAll(
+                () -> assertThat("Wrong count of messages received from group A",
+                        receivedGroupA.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupA)),
+                () -> assertThat("Wrong count of messages received from group B",
+                        receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB)));
 
         String assertMessage = "Group id is different";
         for (Message m : receivedGroupA.get()) {

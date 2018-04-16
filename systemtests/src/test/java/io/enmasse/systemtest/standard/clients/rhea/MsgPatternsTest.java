@@ -5,13 +5,13 @@
 package io.enmasse.systemtest.standard.clients.rhea;
 
 import io.enmasse.systemtest.bases.ITestBaseStandard;
-import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends MsgPatternsTestBase implements ITestBaseStandard {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
 
     @Test
     public void testBasicMessage() throws Exception {

@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
@@ -33,7 +34,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         setAddresses(queueA);
 
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(sharedAddressSpace);
-        amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
+        amqpQueueCli.getConnectOptions().setUsername(username).setPassword(password);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
         amqpQueueCli.close();
 
@@ -41,7 +42,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         setAddresses(topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(sharedAddressSpace);
-        amqpTopicCli.getConnectOptions().setUsername("test").setPassword("test");
+        amqpTopicCli.getConnectOptions().setUsername(username).setPassword(username);
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000));
@@ -49,16 +50,17 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         List<String> msgsBatch = TestUtils.generateMessages(600);
         List<String> msgsBatch2 = TestUtils.generateMessages(400);
 
-        assertThat("Wrong count of messages sent: batch1",
-                amqpTopicCli.sendMessages(topicB.getAddress(), msgsBatch).get(1, TimeUnit.MINUTES), is(msgsBatch.size()));
-        assertThat("Wrong count of messages sent: batch2",
-                amqpTopicCli.sendMessages(topicB.getAddress(), msgsBatch2).get(1, TimeUnit.MINUTES), is(msgsBatch2.size()));
+        assertAll("All senders should send all messages",
+                () -> assertThat("Wrong count of messages sent: batch1",
+                        amqpTopicCli.sendMessages(topicB.getAddress(), msgsBatch).get(1, TimeUnit.MINUTES), is(msgsBatch.size())),
+                () -> assertThat("Wrong count of messages sent: batch2",
+                        amqpTopicCli.sendMessages(topicB.getAddress(), msgsBatch2).get(1, TimeUnit.MINUTES), is(msgsBatch2.size())));
 
-        assertThat("Wrong count of messages received",
-                recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size()));
-        assertThat("Wrong count of messages received",
-                recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size()));
-        amqpTopicCli.close();
+        assertAll("All receivers should receive all messages",
+                () -> assertThat("Wrong count of messages received",
+                        recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())),
+                () -> assertThat("Wrong count of messages received",
+                        recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())));
     }
 
     /**
@@ -75,7 +77,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
-        getKeycloakClient().createUser(addressSpaceA.getName(), "test", "test");
+        createUser(addressSpaceA, "test", "test");
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
@@ -83,7 +85,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         amqpQueueCliA.close();
 
         setAddresses(addressSpaceC, queueB);
-        getKeycloakClient().createUser(addressSpaceC.getName(), "test", "test");
+        createUser(addressSpaceC, "test", "test");
 
         AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");

@@ -5,12 +5,12 @@
 package io.enmasse.systemtest.brokered.clients.proton.python;
 
 import io.enmasse.systemtest.bases.ITestBaseBrokered;
-import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.clients.proton.python.PythonClientSender;
 import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends MsgPatternsTestBase implements ITestBaseBrokered {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
     public void testBasicMessage() throws Exception {

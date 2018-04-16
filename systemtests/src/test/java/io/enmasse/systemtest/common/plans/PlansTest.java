@@ -19,9 +19,9 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.hamcrest.CoreMatchers.is;
 
 @Tag("isolated")
 public class PlansTest extends TestBase {
@@ -76,10 +76,11 @@ public class PlansTest extends TestBase {
         Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getAddress()));
 
         String assertMessage = "Queue plan wasn't set properly";
-        assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                weakQueuePlan.getName(), assertMessage);
-        assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                weakTopicPlan.getName(), assertMessage);
+        assertAll("Both destination should contain right addressPlan",
+                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                        weakQueuePlan.getName(), assertMessage),
+                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                        weakTopicPlan.getName(), assertMessage));
 
         //simple send/receive
         String username = "test_newplan_name";
@@ -288,17 +289,16 @@ public class PlansTest extends TestBase {
         Destination queue3 = Destination.queue("test-queue3", queuePlan.getName());
         setAddresses(addressSpace, queue, queue2, queue3);
 
-        assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                queue.getAddress(), messageContent, 100, false),
-                "Client does not fail");
-
-        assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                queue2.getAddress(), messageContent, 100, false),
-                "Client does not fail");
-
-        assertTrue(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                queue3.getAddress(), messageContent, 50, false),
-                "Client fails");
+        assertAll(
+                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue.getAddress(), messageContent, 100, false),
+                        "Client does not fail"),
+                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue2.getAddress(), messageContent, 100, false),
+                        "Client does not fail"),
+                () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue3.getAddress(), messageContent, 50, false),
+                        "Client fails"));
     }
 
     @Test
@@ -391,10 +391,11 @@ public class PlansTest extends TestBase {
         Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getAddress(), msgs);
         Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getAddress(), msgs);
         Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getAddress(), msgs);
-        assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Incorrect count of messages sent", sendResult3.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertAll("All senders should send all messages",
+                () -> assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size())),
+                () -> assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size())),
+                () -> assertThat("Incorrect count of messages sent", sendResult3.get(1, TimeUnit.MINUTES), is(msgs.size())),
+                () -> assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size())));
 
         //remove addresses from first pod and wait for scale down
         deleteAddresses(messagePersistAddressSpace, queue1, queue2);

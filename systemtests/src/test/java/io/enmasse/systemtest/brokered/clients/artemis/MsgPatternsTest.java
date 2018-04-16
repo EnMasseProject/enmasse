@@ -5,14 +5,14 @@
 package io.enmasse.systemtest.brokered.clients.artemis;
 
 import io.enmasse.systemtest.bases.ITestBaseBrokered;
-import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.artemis.ArtemisJMSClientReceiver;
 import io.enmasse.systemtest.clients.artemis.ArtemisJMSClientSender;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @Disabled("core client has still issue with trustAll")
-public class MsgPatternsTest extends MsgPatternsTestBase implements ITestBaseBrokered {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
     public void testBasicMessage() throws Exception {
