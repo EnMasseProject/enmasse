@@ -13,6 +13,7 @@ pipeline {
     }
     parameters {
         string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
+        string(name: 'REGISTRY_AGE', defaultValue: 20, description: 'registry older then REGISTRY_AGE (in hours) will be removed')
         string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
@@ -30,9 +31,7 @@ pipeline {
                 expression { params.CLEAN_REGISTRY == 'true' }
             }
             steps {
-                sh "sleep 60 && oc login --insecure-skip-tls-verify --token ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
-                sh 'oc project enmasseproject'
-                sh 'oc delete imagestreamtags --all'
+                sh "./systemtests/scripts/reg_cleaner.sh ${params.REGISTRY_AGE} ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
             }
         }
         stage('clean') {
