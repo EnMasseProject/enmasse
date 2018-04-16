@@ -8,12 +8,14 @@ package io.enmasse.systemtest.standard.mqtt;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -22,16 +24,16 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Tests related to interoperability mqtt with amqp
  */
-public class InteroperabilityTest extends StandardTestBase {
+public class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
     @Override
-    protected boolean skipDummyAddress() {
+    public boolean skipDummyAddress() {
         return true;
     }
 
@@ -58,7 +60,8 @@ public class InteroperabilityTest extends StandardTestBase {
         }
     }
 
-    //@Test
+    @Test
+    @Disabled("disabled due to problems with mqtt in standard address space")
     public void testSendAmqpReceiveMqtt() throws Exception {
         Destination mqttTopic = Destination.topic("amqp-mqtt-topic", "sharded-topic");
         setAddresses(mqttTopic);

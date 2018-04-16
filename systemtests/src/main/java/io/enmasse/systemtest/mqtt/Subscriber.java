@@ -7,12 +7,7 @@ package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -23,11 +18,11 @@ import java.util.function.Predicate;
 
 public class Subscriber extends ClientHandlerBase<List<MqttMessage>> {
 
+    private static Logger log = CustomLogger.getLogger();
     private final List<MqttMessage> messages = new ArrayList<>();
     private final int qos;
     private final Predicate<MqttMessage> done;
     private final CountDownLatch connectLatch;
-    private static Logger log = CustomLogger.getLogger();
 
     public Subscriber(Endpoint endpoint,
                       final MqttConnectOptions options,

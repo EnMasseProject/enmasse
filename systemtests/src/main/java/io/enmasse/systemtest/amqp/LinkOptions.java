@@ -4,16 +4,16 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import java.util.Optional;
-
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
+
+import java.util.Optional;
 
 public class LinkOptions {
     private final Source source;
     private final Target target;
     private final Optional<String> linkName;
-    
+
     public LinkOptions(Source source, Target target, Optional<String> linkName) {
         this.source = source;
         this.target = target;

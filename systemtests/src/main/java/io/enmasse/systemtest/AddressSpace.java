@@ -85,34 +85,6 @@ public class AddressSpace {
         this(name, name, type, plan, authService);
     }
 
-
-    public AddressSpace setName(String name) {
-        this.name = name;
-        return this;
-    }
-
-    public AddressSpace setNamespace(String namespace) {
-        this.namespace = namespace;
-        return this;
-    }
-
-    public AddressSpace setPlan(String plan) {
-        this.plan = plan;
-        return this;
-    }
-
-    public AddressSpace setType(AddressSpaceType type) {
-        this.type = type;
-        if (plan == null) {
-            if (type.equals(AddressSpaceType.BROKERED)) {
-                plan = "unlimited-brokered";
-            } else {
-                plan = "unlimited-standard";
-            }
-        }
-        return this;
-    }
-
     public Endpoint getEndpoint(String endpointService) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
             if (addrSpaceEndpoint.getService().equals(endpointService)) {
@@ -127,36 +99,63 @@ public class AddressSpace {
                 endpointService, name));
     }
 
-    public void setEndpoints(List<AddressSpaceEndpoint> endpoints) {
-        this.endpoints = endpoints;
-    }
-
-    public void setAuthService(AuthService authService) {
-        this.authService = authService;
-    }
-
     public List<AddressSpaceEndpoint> getEndpoints() {
         return endpoints;
+    }
+
+    public void setEndpoints(List<AddressSpaceEndpoint> endpoints) {
+        this.endpoints = endpoints;
     }
 
     public String getName() {
         return name;
     }
 
+    public AddressSpace setName(String name) {
+        this.name = name;
+        return this;
+    }
+
     public String getNamespace() {
         return namespace;
+    }
+
+    public AddressSpace setNamespace(String namespace) {
+        this.namespace = namespace;
+        return this;
     }
 
     public String getPlan() {
         return plan;
     }
 
+    public AddressSpace setPlan(String plan) {
+        this.plan = plan;
+        return this;
+    }
+
     public AddressSpaceType getType() {
         return type;
     }
 
+    public AddressSpace setType(AddressSpaceType type) {
+        this.type = type;
+        if (plan == null) {
+            if (type.equals(AddressSpaceType.BROKERED)) {
+                plan = "unlimited-brokered";
+            } else {
+                plan = "unlimited-standard";
+            }
+        }
+        return this;
+    }
+
     public AuthService getAuthService() {
         return authService;
+    }
+
+    public void setAuthService(AuthService authService) {
+        this.authService = authService;
     }
 
     @Override

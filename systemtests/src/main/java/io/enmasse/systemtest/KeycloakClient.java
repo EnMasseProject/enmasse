@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 
 public class KeycloakClient {
 
+    private static Logger log = CustomLogger.getLogger();
     private final Endpoint endpoint;
     private final KeycloakCredentials credentials;
     private final KeyStore trustStore;
-    private static Logger log = CustomLogger.getLogger();
 
     public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials, String keycloakCaCert) throws Exception {
         this.endpoint = endpoint;

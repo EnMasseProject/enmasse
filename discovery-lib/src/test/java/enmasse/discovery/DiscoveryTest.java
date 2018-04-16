@@ -6,13 +6,13 @@ package enmasse.discovery;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.concurrent.*;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
 public class DiscoveryTest {
@@ -43,9 +43,9 @@ public class DiscoveryTest {
         client.resourcesUpdated(Collections.singletonList(createPod("True", "Running")));
         try {
             Set<Host> actual = changedHosts.get(2, TimeUnit.MINUTES);
-            assertThat(actual.size(), is(1));
+            assertEquals(actual.size(), 1);
             Host actualHost = actual.iterator().next();
-            assertThat(actualHost.getHostname(), is("10.0.0.1"));
+            assertEquals(actualHost.getHostname(), "10.0.0.1");
         } catch (Exception e) {
             fail("Unexpected exception" + e.getMessage());
             e.printStackTrace();

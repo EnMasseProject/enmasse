@@ -8,6 +8,7 @@ package io.enmasse.systemtest.mqtt;
 import io.enmasse.systemtest.*;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -20,15 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.X509TrustManager;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MqttClientFactory {
 
@@ -47,6 +41,18 @@ public class MqttClientFactory {
         this.password = password;
     }
 
+    public static SSLContext tryGetSSLContext(final String... protocols) throws NoSuchAlgorithmException {
+        for (String protocol : protocols) {
+            try {
+                return SSLContext.getInstance(protocol);
+            } catch (NoSuchAlgorithmException e) {
+                // pass and try the next protocol in the list
+            }
+        }
+        throw new NoSuchAlgorithmException(String.format("Could not create SSLContext with one of the requested protocols: %s",
+                Arrays.toString(protocols)));
+    }
+
     public void close() throws Exception {
 
         for (MqttClient client : this.clients) {
@@ -56,7 +62,7 @@ public class MqttClientFactory {
     }
 
     public MqttClient createClient() throws Exception {
-        assertNotNull("Address space is null", defaultAddressSpace);
+        assertNotNull(defaultAddressSpace, "Address space is null");
         return createClient(defaultAddressSpace);
     }
 
@@ -108,19 +114,6 @@ public class MqttClientFactory {
         MqttClient client = new MqttClient(mqttEndpoint, options);
         this.clients.add(client);
         return client;
-    }
-
-
-    public static SSLContext tryGetSSLContext(final String... protocols) throws NoSuchAlgorithmException {
-        for (String protocol : protocols) {
-            try {
-                return SSLContext.getInstance(protocol);
-            } catch (NoSuchAlgorithmException e) {
-                // pass and try the next protocol in the list
-            }
-        }
-        throw new NoSuchAlgorithmException(String.format("Could not create SSLContext with one of the requested protocols: %s",
-                Arrays.toString(protocols)));
     }
 
     private static class SNISettingSSLSocketFactory extends SSLSocketFactory {

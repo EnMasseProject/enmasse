@@ -22,10 +22,10 @@ import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<Message>> {
 
+    private static Logger log = CustomLogger.getLogger();
     private final List<Message> messages = new ArrayList<>();
     private final Predicate<Message> done;
     private final CountDownLatch connectLatch;
-    private static Logger log = CustomLogger.getLogger();
 
     public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<Message>> promise, LinkOptions linkOptions, CountDownLatch connectLatch) {
         super(clientOptions, linkOptions, promise);

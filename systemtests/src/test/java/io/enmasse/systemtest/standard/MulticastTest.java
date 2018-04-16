@@ -5,19 +5,17 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.StandardTestBase;
-import org.junit.Test;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
+import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
-public class MulticastTest extends StandardTestBase {
+public class MulticastTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     public void testRestApi() throws Exception {
         Destination m1 = Destination.multicast("multicastRest1");
         Destination m2 = Destination.multicast("multicastRest2");
 
-        runRestApiTest(m1, m2);
+        runRestApiTest(sharedAddressSpace, m1, m2);
     }
 }

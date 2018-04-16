@@ -5,19 +5,21 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 public class ArtemisManagement extends BrokerManagement {
     private static Logger log = CustomLogger.getLogger();
@@ -40,8 +42,7 @@ public class ArtemisManagement extends BrokerManagement {
         requestMessage.setBody(new AmqpValue("[]"));
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
-        assertThat(String.format("Sender failed, expected %d messages", 1),
-                sent.get(30, TimeUnit.SECONDS), is(1));
+        assertThat(String.format("Sender failed, expected %d messages", 1), sent.get(30, TimeUnit.SECONDS), is(1));
         log.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);

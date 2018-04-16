@@ -16,10 +16,10 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
+    private static Logger log = CustomLogger.getLogger();
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
     protected final CompletableFuture<T> promise;
-    private static Logger log = CustomLogger.getLogger();
 
     public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise) {
         this.clientOptions = clientOptions;
@@ -61,7 +61,9 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     }
 
     protected abstract void connectionOpened(ProtonConnection conn);
+
     protected abstract void connectionClosed(ProtonConnection conn);
+
     protected abstract void connectionDisconnected(ProtonConnection conn);
 
     protected void handleError(ProtonConnection connection, ErrorCondition error) {

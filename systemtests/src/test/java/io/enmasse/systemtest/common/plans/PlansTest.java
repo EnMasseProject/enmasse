@@ -11,12 +11,8 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -24,32 +20,28 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
-@Category(IsolatedAddressSpace.class)
+@Tag("isolated")
 public class PlansTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         plansProvider.setUp();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         plansProvider.tearDown();
-    }
-
-    @Override
-    protected String getDefaultPlan(AddressType addressType) {
-        return null;
     }
 
     @Test
     public void testCreateAddressSpacePlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 1.0));
         List<AddressResource> addressResourcesTopic = Arrays.asList(
                 new AddressResource("broker", 1.0),
                 new AddressResource("router", 1.0));
@@ -84,10 +76,11 @@ public class PlansTest extends TestBase {
         Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getAddress()));
 
         String assertMessage = "Queue plan wasn't set properly";
-        assertEquals(assertMessage, getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                weakQueuePlan.getName());
-        assertEquals(assertMessage, getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                weakTopicPlan.getName());
+        assertAll("Both destination should contain right addressPlan",
+                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                        weakQueuePlan.getName(), assertMessage),
+                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                        weakTopicPlan.getName(), assertMessage));
 
         //simple send/receive
         String username = "test_newplan_name";
@@ -259,7 +252,7 @@ public class PlansTest extends TestBase {
         ResourceDefinition limitedResource = new ResourceDefinition(
                 "broker",
                 "queue-persisted",
-                Arrays.asList(
+                Collections.singletonList(
                         new ResourceParameter("GLOBAL_MAX_SIZE", "1Mb")
                 ));
         plansProvider.replaceResourceDefinitionConfig(limitedResource);
@@ -296,17 +289,16 @@ public class PlansTest extends TestBase {
         Destination queue3 = Destination.queue("test-queue3", queuePlan.getName());
         setAddresses(addressSpace, queue, queue2, queue3);
 
-        assertFalse("Client does not fail",
-                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                        queue.getAddress(), messageContent, 100, false));
-
-        assertFalse("Client does not fail",
-                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                        queue2.getAddress(), messageContent, 100, false));
-
-        assertTrue("Client fails",
-                sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
-                        queue3.getAddress(), messageContent, 50, false));
+        assertAll(
+                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue.getAddress(), messageContent, 100, false),
+                        "Client does not fail"),
+                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue2.getAddress(), messageContent, 100, false),
+                        "Client does not fail"),
+                () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                        queue3.getAddress(), messageContent, 50, false),
+                        "Client fails"));
     }
 
     @Test
@@ -348,11 +340,12 @@ public class PlansTest extends TestBase {
         TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
-    //@Test test disabled due to issue: #1134
+    @Test
+    @Disabled("test disabled due to issue: #1134")
     public void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueueAlpha = Arrays.asList(new AddressResource("broker", 0.3));
-        List<AddressResource> addressResourcesQueueBeta = Arrays.asList(new AddressResource("broker", 0.6));
+        List<AddressResource> addressResourcesQueueAlpha = Collections.singletonList(new AddressResource("broker", 0.3));
+        List<AddressResource> addressResourcesQueueBeta = Collections.singletonList(new AddressResource("broker", 0.6));
 
         AddressPlan queuePlanAlpha = new AddressPlan("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
         plansProvider.createAddressPlanConfig(queuePlanAlpha);
@@ -398,10 +391,11 @@ public class PlansTest extends TestBase {
         Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getAddress(), msgs);
         Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getAddress(), msgs);
         Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getAddress(), msgs);
-        assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Incorrect count of messages sent", sendResult3.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertAll("All senders should send all messages",
+                () -> assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size())),
+                () -> assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size())),
+                () -> assertThat("Incorrect count of messages sent", sendResult3.get(1, TimeUnit.MINUTES), is(msgs.size())),
+                () -> assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size())));
 
         //remove addresses from first pod and wait for scale down
         deleteAddresses(messagePersistAddressSpace, queue1, queue2);
@@ -421,10 +415,11 @@ public class PlansTest extends TestBase {
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    //@Test test disabled due to issue: #1136
+    @Test
+    @Disabled("test disabled due to issue: #1136")
     public void testMessagePersistenceAfterChangePlan() throws Exception {
-        List<AddressResource> addressResourcesQueueDistributed = Arrays.asList(new AddressResource("broker", 2.0));
-        List<AddressResource> addressResourcesSharded = Arrays.asList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesQueueDistributed = Collections.singletonList(new AddressResource("broker", 2.0));
+        List<AddressResource> addressResourcesSharded = Collections.singletonList(new AddressResource("broker", 1.0));
 
         AddressPlan queuePlanDistributed = new AddressPlan("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
         plansProvider.createAddressPlanConfig(queuePlanDistributed);
@@ -508,7 +503,7 @@ public class PlansTest extends TestBase {
             Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
             log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
             String assertMessage = String.format("Address from allowed %s is not ready", address.getName());
-            assertEquals(assertMessage, "Active", address.getPhase());
+            assertEquals("Active", address.getPhase(), assertMessage);
         }
 
         assertCanConnect(addressSpace, username, password, allowedDest);
@@ -531,8 +526,8 @@ public class PlansTest extends TestBase {
                 Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
                 log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
-                assertEquals(assertMessage, "Pending", address.getPhase());
-                assertTrue("No status message is present", address.getStatusMessages().contains("Quota exceeded"));
+                assertEquals("Pending", address.getPhase(), assertMessage);
+                assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
             }
         }
 

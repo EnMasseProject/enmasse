@@ -4,11 +4,12 @@
  */
 package io.enmasse.systemtest.brokered.jms;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import javax.jms.*;
@@ -18,8 +19,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class QueueTest extends JMSTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -32,7 +33,7 @@ public class QueueTest extends JMSTestBase {
     private String queue = "jmsQueue";
     private Destination addressQueue;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         addressQueue = Destination.queue(queue, getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
@@ -47,7 +48,7 @@ public class QueueTest extends JMSTestBase {
         connection.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.stop();
@@ -83,7 +84,7 @@ public class QueueTest extends JMSTestBase {
         //receive commit messages
         recvd = receiveMessages(receiver, count, 1000);
         for (Message message : recvd) {
-            assertNotNull("No message received", message);
+            assertNotNull(message, "No message received");
         }
         session.commit();
         log.info("messages received commit");
@@ -95,7 +96,7 @@ public class QueueTest extends JMSTestBase {
 
         //check if queue is empty
         Message received = receiver.receive(1000);
-        assertNull("Queue should be empty", received);
+        assertNull(received, "Queue should be empty");
         log.info("queue is empty");
 
         //send messages
@@ -107,7 +108,7 @@ public class QueueTest extends JMSTestBase {
         recvd.clear();
         recvd = receiveMessages(receiver, count, 1000);
         for (Message message : recvd) {
-            assertNotNull("No message received", message);
+            assertNotNull(message, "No message received");
         }
         session.rollback();
         log.info("messages received rollback");
@@ -116,7 +117,7 @@ public class QueueTest extends JMSTestBase {
         recvd.clear();
         recvd = receiveMessages(receiver, count, 1000);
         for (Message message : recvd) {
-            assertNotNull("No message received", message);
+            assertNotNull(message, "No message received");
         }
         session.commit();
         log.info("messages received commit");

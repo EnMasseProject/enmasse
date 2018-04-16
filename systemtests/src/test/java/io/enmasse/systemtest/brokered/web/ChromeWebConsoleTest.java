@@ -6,116 +6,123 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.web.WebConsoleTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
-public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-    //@Test
+@Disabled("chrome driver does not work properly")
+public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered {
+
+    @Test
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
-    //@Test
+    @Test
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
-    //@Test
+    @Test
     public void testFilterAddressesByType() throws Exception {
         doTestFilterAddressesByType();
     }
 
-    //@Test
+    @Test
     public void testFilterAddressesByName() throws Exception {
         doTestFilterAddressesByName();
     }
 
-    //@Test
+    @Test
     public void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }
 
-    //@Test
+    @Test
     public void testSortConnectionsBySenders() throws Exception {
         doTestSortConnectionsBySenders();
     }
 
-    //@Test
+    @Test
     public void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers();
     }
 
-    //@Test
+    @Test
     public void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
 
-    //@Test
+    @Test
     public void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
 
-    //@Test
+    @Test
     public void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
 
-    //@Test
+    @Test
     public void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }
 
-    //@Test
+    @Test
     public void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId();
     }
 
-    //@Test
+    @Test
     public void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
     }
 
-    //@Test
+    @Test
     public void testMessagesMetrics() throws Exception {
         doTestMessagesMetrics();
     }
 
-    //@Test
+    @Test
     public void testClientsMetrics() throws Exception {
         doTestClientsMetrics();
     }
 
-    //@Test
+    @Test
     public void testCannotCreateAddresses() throws Exception {
         doTestCannotCreateAddresses();
     }
 
-    //@Test
+    @Test
     public void testCannotDeleteAddresses() throws Exception {
         doTestCannotDeleteAddresses();
     }
 
-    //@Test
+    @Test
     public void testViewAddresses() throws Exception {
         doTestViewAddresses();
     }
 
-    //@Test
+    @Test
     public void testViewConnections() throws Exception {
         doTestViewConnections();
     }
 
-    //@Test
+    @Test
     public void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();
     }
 
-    //@Test(expected = IllegalAccessException.class)
+    @Test()
     public void testCannotOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage("pepa", "pepaPa555");
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage("pepa", "pepaPa555"));
     }
 
-    //@Test
+    @Test
     public void testCanOpenConsolePage() throws Exception {
         doTestCanOpenConsolePage(username, password);
     }

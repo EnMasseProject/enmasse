@@ -4,11 +4,14 @@
  */
 package io.enmasse.systemtest.standard.clients.proton.python;
 
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.clients.proton.python.PythonClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
 
     @Test
     public void testBasicMessage() throws Exception {
@@ -25,23 +28,14 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doTopicSubscribeTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
 
-    //@Test
-    public void testMessageBrowse() throws Exception {
-        doMessageBrowseTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
-    }
-
-    //@Test
-    public void testDrainQueue() throws Exception {
-        doDrainQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
-    }
-
-    //@Test
-    public void testMessageSelectorQueue() throws Exception{
+    @Test
+    @Disabled("selectors for queue does not work")
+    public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic() throws Exception{
+    public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath),
                 new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }

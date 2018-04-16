@@ -2,15 +2,20 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.standard.clients;
+package io.enmasse.systemtest.bases;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.bases.clients.MsgPatternsTestBase;
 
-public abstract class MsgPatternsTest extends MsgPatternsTestBase {
+public interface ITestBaseStandard extends ITestBase {
+
     @Override
-    protected String getDefaultPlan(AddressType addressType) {
+    default AddressSpaceType getAddressSpaceType() {
+        return AddressSpaceType.STANDARD;
+    }
+
+    @Override
+    default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
                 return "pooled-queue";
@@ -25,12 +30,7 @@ public abstract class MsgPatternsTest extends MsgPatternsTestBase {
     }
 
     @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.STANDARD;
-    }
-
-    @Override
-    protected boolean skipDummyAddress() {
+    default boolean skipDummyAddress() {
         return false;
     }
 }

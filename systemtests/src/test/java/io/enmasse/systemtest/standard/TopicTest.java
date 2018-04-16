@@ -5,16 +5,23 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
-
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.*;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -25,11 +32,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TopicTest extends StandardTestBase {
+public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
+
+    public static void runTopicTest(AmqpClient client, Destination dest)
+            throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runTopicTest(client, dest, 1024);
+    }
+
+    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount)
+            throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        List<String> msgs = TestUtils.generateMessages(msgCount);
+        Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
+
+        assertThat("Wrong count of messages sent",
+                client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received",
+                recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
 
     @Test
     public void testColocatedTopics() throws Exception {
@@ -53,28 +76,12 @@ public class TopicTest extends StandardTestBase {
         runTopicTest(topicClient, t1, 2048);
     }
 
-    public static void runTopicTest(AmqpClient client, Destination dest)
-            throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        runTopicTest(client, dest, 1024);
-    }
-
-    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount)
-            throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        List<String> msgs = TestUtils.generateMessages(msgCount);
-        Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
-
-        assertThat("Wrong count of messages sent",
-                client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Wrong count of messages received",
-                recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
-
     @Test
     public void testRestApi() throws Exception {
         Destination t1 = Destination.topic("topicRest1", getDefaultPlan(AddressType.TOPIC));
         Destination t2 = Destination.topic("topicRest2", getDefaultPlan(AddressType.TOPIC));
 
-        runRestApiTest(t1, t2);
+        runRestApiTest(sharedAddressSpace, t1, t2);
     }
 
     @Test
@@ -198,9 +205,7 @@ public class TopicTest extends StandardTestBase {
 
         //set property for last message
         String groupID = "testGroupID";
-        if (msgsCount > 0) {
-            listOfMessages.get(msgsCount - 1).setGroupId(groupID);
-        }
+        listOfMessages.get(msgsCount - 1).setGroupId(groupID);
 
         Source source = new Source();
         source.setAddress(selTopic.getAddress());
@@ -212,7 +217,7 @@ public class TopicTest extends StandardTestBase {
         AmqpClient client = amqpClientFactory.createTopicClient();
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
 
-        Future<Integer> sent = client.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
+        Future<Integer> sent = client.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[0]));
 
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
@@ -222,6 +227,8 @@ public class TopicTest extends StandardTestBase {
                 received.get(1, TimeUnit.MINUTES).get(0).getGroupId(), is(groupID));
     }
 
+    @Test
+    @Disabled("topic wildcards are not supported")
     public void testTopicWildcards() throws Exception {
         Destination t1 = Destination.topic("topic/No1", "sharded-topic");
         Destination t2 = Destination.topic("topic/No2", "sharded-topic");
@@ -246,6 +253,8 @@ public class TopicTest extends StandardTestBase {
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }
 
+    @Test
+    @Disabled("durable subscriptions are not supported")
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic", "sharded-topic");
         String linkName = "systest-durable";
@@ -289,10 +298,12 @@ public class TopicTest extends StandardTestBase {
             log.info("received " + body);
             return "twelve".equals(body);
         });
-        assertTrue("Wrong count of messages received: batch2",
-                recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
+        assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2),
+                "Wrong count of messages received: batch2");
     }
 
+    @Test
+    @Disabled("durable subscriptions are not supported")
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mrtopic", "sharded-topic");
         String address = "myaddress";

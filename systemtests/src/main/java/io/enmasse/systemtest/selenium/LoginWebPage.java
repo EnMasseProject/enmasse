@@ -48,7 +48,7 @@ public class LoginWebPage {
         try {
             getAlertMessage();
             return false;
-        }catch (Exception ignored) {
+        } catch (Exception ignored) {
             return true;
         }
     }

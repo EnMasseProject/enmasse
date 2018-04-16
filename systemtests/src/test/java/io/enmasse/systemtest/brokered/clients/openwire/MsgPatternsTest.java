@@ -4,11 +4,14 @@
  */
 package io.enmasse.systemtest.brokered.clients.openwire;
 
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientReceiver;
 import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
     public void testBasicMessage() throws Exception {
@@ -20,7 +23,8 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doRoundRobinReceiverTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
     }
 
-    //@Test disabled due to #660
+    @Test
+    @Disabled("disabled due to issue #660")
     public void testTopicSubscribe() throws Exception {
         doTopicSubscribeTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
@@ -40,7 +44,8 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
         doMessageSelectorQueueTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver());
     }
 
-    //@Test disabled due to #660
+    @Test
+    @Disabled("disabled due to issue #660")
     public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);

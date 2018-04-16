@@ -4,44 +4,49 @@
  */
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.Address;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PlansTest extends StandardTestBase {
+public class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static Logger log = CustomLogger.getLogger();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         plansProvider.setUp();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         plansProvider.tearDown();
     }
 
-    //@Test //test disabled because feature for appending address-plan is not implemented yet, issue: #904
+    @Test
+    @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
     public void testAppendAddressPlan() throws Exception {
-        List<AddressResource> addressResources = Arrays.asList(new AddressResource("broker", 0.1));
+        List<AddressResource> addressResources = Collections.singletonList(new AddressResource("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
         plansProvider.createAddressPlanConfig(weakQueuePlan);

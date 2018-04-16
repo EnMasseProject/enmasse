@@ -6,16 +6,11 @@
 package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.Endpoint;
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.*;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import javax.net.ssl.SSLSocketFactory;
 
 public abstract class ClientHandlerBase<T> {
 

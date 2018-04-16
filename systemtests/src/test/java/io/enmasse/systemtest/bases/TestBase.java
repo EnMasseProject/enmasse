@@ -8,6 +8,7 @@ package io.enmasse.systemtest.bases;
 import com.google.common.collect.Ordering;
 import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
@@ -29,8 +30,9 @@ import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -45,39 +47,35 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Base class for all tests
  */
-public abstract class TestBase extends SystemTestRunListener {
-    private static Logger log = CustomLogger.getLogger();
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = new Environment();
-
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
-    private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
-            new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
     protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
-
+    private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
+            new File(environment.testLogDir()));
+    private static Logger log = CustomLogger.getLogger();
     protected String username;
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
-    private List<AddressSpace> addressSpaceList = new ArrayList<>();
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
+    private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private BrokerManagement brokerManagement = new ArtemisManagement();
     private KeycloakClient keycloakApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            logCollector.collectEvents(addressSpace.getNamespace());
-            logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
-            logCollector.collectConfigMaps(addressSpace.getNamespace());
-            addressApiClient.deleteAddressSpace(addressSpace);
+            TestUtils.deleteAddressSpace(addressApiClient, addressSpace, logCollector);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
-            logCollector.stopCollecting(addressSpace.getNamespace());
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
@@ -87,17 +85,15 @@ public abstract class TestBase extends SystemTestRunListener {
         return null;
     }
 
-    protected abstract String getDefaultPlan(AddressType addressType);
 
-
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         try {
             mqttClientFactory.close();
@@ -163,7 +159,6 @@ public abstract class TestBase extends SystemTestRunListener {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace);
-            logCollector.startCollecting(addressSpace.getNamespace());
             addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
@@ -355,16 +350,16 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue("Client failed, cannot connect under user " + username,
-                canConnectWithAmqp(addressSpace, username, password, destinations));
+        assertTrue(canConnectWithAmqp(addressSpace, username, password, destinations),
+                "Client failed, cannot connect under user " + username);
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
     protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
         try {
-            assertFalse("Client failed, can connect under user " + username,
-                    canConnectWithAmqp(addressSpace, username, password, destinations));
+            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations),
+                    "Client failed, can connect under user " + username);
             fail("Expected connection to timeout");
         } catch (ConnectTimeoutException e) {
         }
@@ -379,18 +374,18 @@ public abstract class TestBase extends SystemTestRunListener {
             String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), username);
             switch (destination.getType()) {
                 case "queue":
-                    assertTrue(message, canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()), message);
                     break;
                 case "topic":
-                    assertTrue(message, canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()), message);
                     break;
                 case "multicast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(message, canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()));
+                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()), message);
                     break;
                 case "anycast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(message, canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()));
+                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()), message);
                     break;
             }
         }
@@ -405,7 +400,7 @@ public abstract class TestBase extends SystemTestRunListener {
         options.setPassword(password.toCharArray());
 
         Future<List<MqttMessage>> received = client.recvMessages("t1", 1);
-        Future<Integer> sent = client.sendMessages("t1", Arrays.asList("msgt1"));
+        Future<Integer> sent = client.sendMessages("t1", Collections.singletonList("msgt1"));
 
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
@@ -414,7 +409,7 @@ public abstract class TestBase extends SystemTestRunListener {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
-        Future<Integer> sent = client.sendMessages(queueAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(queueAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
         Future<List<Message>> received = client.recvMessages(queueAddress, 1, 10, TimeUnit.SECONDS);
 
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
@@ -425,7 +420,7 @@ public abstract class TestBase extends SystemTestRunListener {
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
-        Future<Integer> sent = client.sendMessages(anycastAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(anycastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
 
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
@@ -435,7 +430,7 @@ public abstract class TestBase extends SystemTestRunListener {
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
-        Future<Integer> sent = client.sendMessages(multicastAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(multicastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
 
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
@@ -445,7 +440,7 @@ public abstract class TestBase extends SystemTestRunListener {
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);
-        Future<Integer> sent = client.sendMessages(topicAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(topicAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
 
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
@@ -921,17 +916,17 @@ public abstract class TestBase extends SystemTestRunListener {
     public void assertSorted(String message, Iterable list, boolean reverse) throws Exception {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
-            assertTrue(message, Ordering.natural().isOrdered(list));
+            assertTrue(Ordering.natural().isOrdered(list), message);
         else
-            assertTrue(message, Ordering.natural().reverse().isOrdered(list));
+            assertTrue(Ordering.natural().reverse().isOrdered(list), message);
     }
 
     public void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) throws Exception {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
-            assertTrue(message, Ordering.from(comparator).isOrdered(list));
+            assertTrue(Ordering.from(comparator).isOrdered(list), message);
         else
-            assertTrue(message, Ordering.from(comparator).reverse().isOrdered(list));
+            assertTrue(Ordering.from(comparator).reverse().isOrdered(list), message);
     }
 
     protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {
@@ -949,5 +944,44 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected void assertWaitForValue(int expected, Callable<Integer> fn) throws Exception {
         assertWaitForValue(expected, fn, new TimeoutBudget(2, TimeUnit.SECONDS));
+    }
+
+    /**
+     * body for rest api tests
+     */
+    public void runRestApiTest(AddressSpace addressSpace, Destination d1, Destination d2) throws Exception {
+        List<String> destinationsNames = Arrays.asList(d1.getAddress(), d2.getAddress());
+        setAddresses(addressSpace, d1);
+        appendAddresses(addressSpace, d2);
+
+        //d1, d2
+        Future<List<String>> response = getAddresses(addressSpace, Optional.empty());
+        assertThat("Rest api does not return all addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames));
+        log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
+
+        //get specific address d2
+        response = getAddresses(addressSpace, Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
+        assertThat("Rest api does not return specific address", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
+
+        deleteAddresses(addressSpace, d1);
+
+        //d2
+        response = getAddresses(addressSpace, Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
+        assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
+        log.info("address {} successfully deleted", d1.getAddress());
+
+        deleteAddresses(addressSpace, d2);
+
+        //empty
+        response = getAddresses(addressSpace, Optional.empty());
+        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
+        log.info("addresses {} successfully deleted", d2.getAddress());
+
+        setAddresses(addressSpace, d1, d2);
+        deleteAddresses(addressSpace, d1, d2);
+
+        response = getAddresses(addressSpace, Optional.empty());
+        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
+        log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 }

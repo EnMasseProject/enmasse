@@ -7,11 +7,7 @@ package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 
 import java.util.Queue;
@@ -21,10 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Publisher extends ClientHandlerBase<Integer> {
 
+    private static Logger log = CustomLogger.getLogger();
     private final AtomicInteger numSent = new AtomicInteger(0);
     private final Queue<MqttMessage> messageQueue;
     private final CountDownLatch connectLatch;
-    private static Logger log = CustomLogger.getLogger();
 
     public Publisher(Endpoint endpoint,
                      final MqttConnectOptions options,

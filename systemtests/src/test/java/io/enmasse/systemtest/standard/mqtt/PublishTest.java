@@ -7,10 +7,12 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -24,16 +26,30 @@ import java.util.concurrent.TimeoutException;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Tests related to publish messages via MQTT
  */
-public class PublishTest extends StandardTestBase {
+public class PublishTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
+    public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
+        List<String> messages = new ArrayList<>();
+        for (int i = 0; i < msgCount; i++) {
+            messages.add(String.format("mqtt-simple-send-receive-%s", i));
+        }
+        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
+        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, Collections.nCopies(msgCount, 0));
+
+        assertThat("Incorrect count of messages sent",
+                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
+        assertThat("Incorrect count of messages received",
+                recvResult.get(1, TimeUnit.MINUTES).size(), is(msgCount));
+    }
+
     @Override
-    protected boolean skipDummyAddress() {
+    public boolean skipDummyAddress() {
         return true;
     }
 
@@ -63,7 +79,8 @@ public class PublishTest extends StandardTestBase {
         this.publish(messages, publisherQos, 2);
     }
 
-    //@Test
+    @Test
+    @Disabled("related issue: #?")
     public void testRetainedMessages() throws Exception {
         Destination topic = Destination.topic("retained-message-topic", "sharded-topic");
         setAddresses(topic);
@@ -107,19 +124,5 @@ public class PublishTest extends StandardTestBase {
                 sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
         assertThat("Wrong count of messages received",
                 recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
-    }
-
-    public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
-        List<String> messages = new ArrayList<>();
-        for (int i = 0; i < msgCount; i++) {
-            messages.add(String.format("mqtt-simple-send-receive-%s", i));
-        }
-        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
-        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, Collections.nCopies(msgCount, 0));
-
-        assertThat("Incorrect count of messages sent",
-                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat("Incorrect count of messages received",
-                recvResult.get(1, TimeUnit.MINUTES).size(), is(msgCount));
     }
 }
