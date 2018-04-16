@@ -95,7 +95,7 @@ public class OSBBindingService extends OSBServiceBase {
                     continue;
                 }
                 String prefix = endpoint.getName();
-                if (parameters.containsKey("externalAccess") && endpoint.getHost().isPresent()) {
+                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpoint.getHost().isPresent()) {
                     endpoint.getHost().ifPresent(host -> {
                         String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
                         credentials.put(externalPrefix + "Host", host);
