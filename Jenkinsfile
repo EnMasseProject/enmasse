@@ -13,7 +13,7 @@ pipeline {
     }
     parameters {
         string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
-        string(name: 'REGISTRY_AGE', defaultValue: 20, description: 'registry older then REGISTRY_AGE (in hours) will be removed')
+        string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
         string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
