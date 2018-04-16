@@ -28,7 +28,8 @@ get_kubernetes_info ${LOG_DIR} pods default "-before"
 ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
 STATS_PID=$!
 
-${CURDIR}/docker-logs.sh ${ARTIFACTS_DIR}/docker-logs > /dev/null 2> /dev/null &
+DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
+${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
 LOGS_PID=$!
 
 echo "process for checking system resources is running with PID: ${STATS_PID}"
@@ -46,6 +47,8 @@ kill ${STATS_PID}
 
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill ${LOGS_PID}
+
+categorize_dockerlogs "${DOCKER_LOG_DIR}"
 
 if [ $failure -gt 0 ]
 then
