@@ -4,15 +4,22 @@
  */
 package io.enmasse.systemtest.brokered.clients.rhea;
 
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
+    }
+
+    @Test
+    public void testBasicMessageWebScoket() throws Exception {
+        doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }
 
     @Test
@@ -36,12 +43,12 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     }
 
     @Test
-    public void testMessageSelectorQueue() throws Exception{
+    public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic() throws Exception{
+    public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath),
                 new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
     }

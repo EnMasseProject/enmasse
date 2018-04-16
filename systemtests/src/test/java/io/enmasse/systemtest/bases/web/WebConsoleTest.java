@@ -11,12 +11,10 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.selenium.*;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
@@ -28,7 +26,8 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class WebConsoleTest extends TestBaseWithShared implements ISeleniumProvider {
 
@@ -36,17 +35,15 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     private static SeleniumProvider selenium = new SeleniumProvider();
     private List<AbstractClient> clientsList;
 
-    @Rule
-    public TestWatcher watchman = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            selenium.onFailed(e, description);
-        }
-    };
 
     private ConsoleWebPage consoleWebPage;
 
-    @Before
+    @AfterAll
+    public static void TearDownDrivers() {
+        selenium.tearDownDrivers();
+    }
+
+    @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         if (selenium.getDriver() == null)
             selenium.setupDriver(environment, kubernetes, buildDriver());
@@ -55,22 +52,15 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         super.setAddresses(sharedAddressSpace);
     }
 
-    @After
-    public void tearDownWebConsoleTests() throws Exception {
+    @AfterEach
+    public void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) { //test failed
+            selenium.onFailed(context);
+        }
         if (clientsList != null) {
             stopClients(clientsList);
             clientsList.clear();
         }
-    }
-
-    @AfterClass
-    public static void TearDownDrivers() {
-        selenium.tearDownDrivers();
-    }
-
-    @Override
-    protected boolean skipDummyAddress() {
-        return true;
     }
 
     //============================================================================================
@@ -96,8 +86,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         TestUtils.waitForDestinationsReady(addressApiClient, sharedAddressSpace,
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
 
-        assertEquals("Console failed, expected READY state",
-                AddressStatus.READY, consoleWebPage.getAddressItem(destination).getStatus());
+        assertEquals(AddressStatus.READY, consoleWebPage.getAddressItem(destination).getStatus(),
+                "Console failed, expected READY state");
     }
 
     protected void doTestFilterAddressesByType() throws Exception {
@@ -144,34 +134,34 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         String subText = "web";
         consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
         List<AddressWebItem> items = consoleWebPage.getAddressItems();
-        assertEquals(String.format("Console failed, does not contain %d addresses", addressCount),
-                addressCount, items.size());
+        assertEquals(addressCount, items.size(),
+                String.format("Console failed, does not contain %d addresses", addressCount));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         subText = "via";
         consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
         items = consoleWebPage.getAddressItems();
-        assertEquals(String.format("Console failed, does not contain %d addresses", addressCount),
-                addressCount, items.size());
+        assertEquals(addressCount, items.size(),
+                String.format("Console failed, does not contain %d addresses", addressCount));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         subText = "web";
         consoleWebPage.removeFilterByName(subText);
         items = consoleWebPage.getAddressItems();
-        assertEquals(String.format("Console failed, does not contain %d addresses", addressCount),
-                addressCount, items.size());
+        assertEquals(addressCount, items.size(),
+                String.format("Console failed, does not contain %d addresses", addressCount));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         subText = "queue";
         consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
         items = consoleWebPage.getAddressItems();
-        assertEquals(String.format("Console failed, does not contain %d addresses", addressCount / 2),
-                addressCount / 2, items.size());
+        assertEquals(addressCount / 2, items.size(),
+                String.format("Console failed, does not contain %d addresses", addressCount / 2));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         consoleWebPage.clearAllFilters();
-        assertEquals(String.format("Console failed, does not contain %d addresses", addressCount),
-                addressCount, consoleWebPage.getAddressItems().size());
+        assertEquals(addressCount, consoleWebPage.getAddressItems().size(),
+                String.format("Console failed, does not contain %d addresses", addressCount));
     }
 
     protected void doTestSortAddressesByName() throws Exception {
@@ -444,17 +434,17 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
         selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
-        assertEquals(String.format("Console failed, does not contain %d messagesIN", sent),
-                sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
+        assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn(),
+                String.format("Console failed, does not contain %d messagesIN", sent));
 
         selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesStored());
-        assertEquals(String.format("Console failed, does not contain %d messagesStored", msgCount),
-                msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
+        assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored(),
+                String.format("Console failed, does not contain %d messagesStored", msgCount));
 
         int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
         selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
-        assertEquals(String.format("Console failed, does not contain %d messagesOUT", received),
-                received, consoleWebPage.getAddressItem(dest).getMessagesOut());
+        assertEquals(received, consoleWebPage.getAddressItem(dest).getMessagesOut(),
+                String.format("Console failed, does not contain %d messagesOUT", received));
 
     }
 
@@ -472,10 +462,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             client = attachConnector(dest, 1, senderCount, receiverCount);
             selenium.waitUntilPropertyPresent(60, senderCount, consoleWebPage.getAddressItem(dest)::getSendersCount);
 
-            assertEquals(String.format("Console failed, does not contain %d receivers", 10),
-                    10, consoleWebPage.getAddressItem(dest).getReceiversCount());
-            assertEquals(String.format("Console failed, does not contain %d senders", 5),
-                    5, consoleWebPage.getAddressItem(dest).getSendersCount());
+            assertAll(
+                    () -> assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount(),
+                            String.format("Console failed, does not contain %d receivers", 10)),
+                    () -> assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount(),
+                            String.format("Console failed, does not contain %d senders", 5)));
         } finally {
             client.stop();
         }
@@ -557,8 +548,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
 
         log.info("Check if connection count is {}", connections);
-        assertEquals(String.format("Console failed, does not contain %d connections", connections),
-                connections, consoleWebPage.getConnectionItems().size());
+        assertEquals(connections, consoleWebPage.getConnectionItems().size(),
+                String.format("Console failed, does not contain %d connections", connections));
         assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", username),
                 "view_user_connections", consoleWebPage.getConnectionItems());
 
@@ -643,11 +634,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     private void assertElementDisabled(String message, WebElement element) {
-        assertFalse(message, element.isEnabled());
+        assertFalse(element.isEnabled(), message);
     }
 
     private void assertElementEnabled(String message, WebElement element) {
-        assertTrue(message, element.isEnabled());
+        assertTrue(element.isEnabled(), message);
     }
 
     private void assertViewOnlyUsersAddresses(String message, String group, List<AddressWebItem> addresses) {
@@ -659,9 +650,9 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 String rights = username.replace("user_view_", "")
                         .replace("*", "")
                         .replace("#", "");
-                assertTrue(message, rights.equals("") || item.getName().contains(rights));
+                assertTrue(rights.equals("") || item.getName().contains(rights), message);
             } else {
-                assertTrue(message, item.getName().equals(group.replace("view_", "")));
+                assertTrue(item.getName().equals(group.replace("view_", "")), message);
             }
         }
     }
@@ -671,7 +662,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         if (connections == null || connections.size() == 0)
             fail("No connection items in console under user " + username);
         for (ConnectionWebItem conn : connections) {
-            assertTrue(message, conn.getUser().equals(username));
+            assertTrue(conn.getUser().equals(username), message);
         }
     }
 

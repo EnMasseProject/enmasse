@@ -7,7 +7,9 @@ package io.enmasse.systemtest;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
 public class Minikube extends Kubernetes {
@@ -15,14 +17,6 @@ public class Minikube extends Kubernetes {
         super(environment, new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
                 .withOauthToken(environment.openShiftToken())
                 .withUsername(environment.openShiftUser()).build()), globalNamespace);
-    }
-
-    private String getIp(String namespace, String serviceName) {
-        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName);
-    }
-
-    private String getPort(String namespace, String serviceName) {
-        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName);
     }
 
     private static String runCommand(String... cmd) {
@@ -46,6 +40,14 @@ public class Minikube extends Kubernetes {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getIp(String namespace, String serviceName) {
+        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName);
+    }
+
+    private String getPort(String namespace, String serviceName) {
+        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName);
     }
 
     @Override

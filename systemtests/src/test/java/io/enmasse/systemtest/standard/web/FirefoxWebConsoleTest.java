@@ -6,28 +6,36 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import org.junit.Test;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.web.WebConsoleTest;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
-public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
 
-    //@Test related issue: #1074
+    @Test
+    @Disabled("related issue: #1074")
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
-    //@Test related issue: #1074
+    @Test
+    @Disabled("related issue: #1074")
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
-    //@Test related issue: #1074
+    @Test
+    @Disabled("related issue: #1074")
     public void testCreateDeleteAnycast() throws Exception {
         doTestCreateDeleteAddress(Destination.anycast("test-anycast-firefox"));
     }
 
-    //@Test related issue: #1074
+    @Test
+    @Disabled("related issue: #1074")
     public void testCreateDeleteMulticast() throws Exception {
         doTestCreateDeleteAddress(Destination.multicast("test-multicast-firefox"));
     }
@@ -67,7 +75,8 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestFilterConnectionsByEncrypted();
     }
 
-    //@Test disabled due to issue: #667
+    @Test
+    @Disabled("related issue: #667")
     public void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
@@ -117,19 +126,21 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestViewAddresses();
     }
 
-    //@Test disabled due to issue #818
+    @Test
+    @Disabled("related issue: #818")
     public void testViewConnections() throws Exception {
         doTestViewConnections();
     }
 
-    //@Test disabled due to issue #819
+    @Test
+    @Disabled("related issue: #819")
     public void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();
     }
 
-    @Test(expected = IllegalAccessException.class)
+    @Test()
     public void testCannotOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage("pepa", "pepaPa555");
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage("pepa", "pepaPa555"));
     }
 
     @Test
@@ -148,5 +159,10 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
     @Override
     public WebDriver buildDriver() {
         return getFirefoxDriver();
+    }
+
+    @Override
+    public boolean skipDummyAddress() {
+        return true;
     }
 }

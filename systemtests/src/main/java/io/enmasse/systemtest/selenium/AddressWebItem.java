@@ -8,8 +8,6 @@ import io.enmasse.systemtest.AddressStatus;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import java.util.Arrays;
-
 public class AddressWebItem extends WebItem implements Comparable<AddressWebItem> {
 
 

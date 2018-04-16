@@ -8,72 +8,33 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-@Category(SharedAddressSpace.class)
+@Tag("shared")
 public abstract class TestBaseWithShared extends TestBase {
-    private static Logger log = CustomLogger.getLogger();
     private static final String defaultAddressTemplate = "-shared-";
-    protected static AddressSpace sharedAddressSpace;
-    protected static HashMap<String, AddressSpace> sharedAddressSpaces = new HashMap<>();
-    private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
-
-    @Rule
-    public TestWatcher watcher = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            if (!environment.skipCleanup()) {
-                log.info("test failed:" + description);
-                log.info("shared address space '{}' will be removed", sharedAddressSpace);
-                try {
-                    deleteSharedAddressSpace(sharedAddressSpace);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                } finally {
-                    spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
-                }
-            } else {
-                log.warn("Remove address spaces when test failed - SKIPPED!");
-            }
-        }
-
-        @Override
-        protected void succeeded(Description description) {
-            try {
-                setAddresses();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
+    protected static AddressSpace sharedAddressSpace;
+    private static Logger log = CustomLogger.getLogger();
+    private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
 
     protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
-        sharedAddressSpaces.remove(addressSpace.getName());
         TestBase.deleteAddressSpace(addressSpace);
     }
-
-    protected abstract AddressSpaceType getAddressSpaceType();
-
-    protected abstract boolean skipDummyAddress();
 
     public AddressSpace getSharedAddressSpace() {
         return sharedAddressSpace;
     }
 
-    @Before
+    @BeforeEach
     public void setupShared() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
         sharedAddressSpace = new AddressSpace(
@@ -107,8 +68,34 @@ public abstract class TestBaseWithShared extends TestBase {
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
     }
 
+    @AfterEach
+    public void tearDownShared(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) { //test failed
+            if (!environment.skipCleanup()) {
+                log.info(String.format("test failed: %s.%s",
+                        context.getTestClass().get().getName(),
+                        context.getTestMethod().get().getName()));
+                log.info("shared address space '{}' will be removed", sharedAddressSpace);
+                try {
+                    deleteSharedAddressSpace(sharedAddressSpace);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
+                }
+            } else {
+                log.warn("Remove address spaces when test failed - SKIPPED!");
+            }
+        } else { //succeed
+            try {
+                setAddresses();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     protected void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
-        sharedAddressSpaces.put(addressSpace.getName(), addressSpace);
         super.createAddressSpace(addressSpace);
     }
 
@@ -120,7 +107,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * get all addresses except 'dummy-address'
      */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     /**
@@ -137,11 +124,11 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     protected Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
-        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Arrays.asList(dummyAddress.getAddress()));
+        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     /**
@@ -220,44 +207,5 @@ public abstract class TestBaseWithShared extends TestBase {
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
         return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
-    }
-
-    /**
-     * body for rest api tests
-     */
-    public void runRestApiTest(Destination d1, Destination d2) throws Exception {
-        List<String> destinationsNames = Arrays.asList(d1.getAddress(), d2.getAddress());
-        setAddresses(d1);
-        appendAddresses(d2);
-
-        //d1, d2
-        Future<List<String>> response = getAddresses(Optional.empty());
-        assertThat("Rest api does not return all addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames));
-        log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
-
-        //get specific address d2
-        response = getAddresses(Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
-        assertThat("Rest api does not return specific address", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-
-        deleteAddresses(d1);
-
-        //d2
-        response = getAddresses(Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
-        assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-        log.info("address {} successfully deleted", d1.getAddress());
-
-        deleteAddresses(d2);
-
-        //empty
-        response = getAddresses(Optional.empty());
-        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", d2.getAddress());
-
-        setAddresses(d1, d2);
-        deleteAddresses(d1, d2);
-
-        response = getAddresses(Optional.empty());
-        assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 }

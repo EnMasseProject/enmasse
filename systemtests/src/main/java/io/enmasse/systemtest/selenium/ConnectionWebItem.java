@@ -84,7 +84,7 @@ public class ConnectionWebItem extends WebItem implements Comparable {
         return headerText;
     }
 
-    public  String getContainerID() {
+    public String getContainerID() {
         String[] types = headerText.split(" +");
         return types[0];
     }

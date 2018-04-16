@@ -15,15 +15,13 @@ import java.util.HashMap;
 
 public class PlansProvider {
 
+    private static Logger log = CustomLogger.getLogger();
     private Kubernetes kubernetes;
-
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
     private ArrayList<ResourceDefinition> resourceDefinitionConfigs;
     private ArrayList<ResourceDefinition> resourceDefinitionForRestore;
     private HashMap<AddressPlan, AddressSpacePlan> addressXSpaceBinding;
-
-    private static Logger log = CustomLogger.getLogger();
 
     public PlansProvider(Kubernetes kubernetes) {
         this.kubernetes = kubernetes;

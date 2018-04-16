@@ -27,16 +27,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class AddressApiClient {
+    private static Logger log = CustomLogger.getLogger();
     private final WebClient client;
     private final Kubernetes kubernetes;
-    private Endpoint endpoint;
     private final Vertx vertx;
     private final int initRetry = 10;
     private final String schemaPath = "/apis/enmasse.io/v1/schema";
     private final String addressSpacesPath = "/apis/enmasse.io/v1/addressspaces";
     private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
-    private static Logger log = CustomLogger.getLogger();
+    private Endpoint endpoint;
 
     public AddressApiClient(Kubernetes kubernetes) {
         this.vertx = VertxFactory.create();

@@ -6,23 +6,23 @@ package io.enmasse.systemtest.bases.auth;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Category(IsolatedAddressSpace.class)
+@Tag("isolated")
 public abstract class AuthenticationTestBase extends TestBase {
 
+    protected static final String mqttAddress = "t1";
+    protected static final String anonymousUser = "anonymous";
+    protected static final String anonymousPswd = "anonymous";
     protected final List<Destination> amqpAddressList = Arrays.asList(
             Destination.queue("auth-queue", getDefaultPlan(AddressType.QUEUE)),
             Destination.topic("auth-topic", getDefaultPlan(AddressType.TOPIC)),
             Destination.anycast("auth-anycast"),
             Destination.multicast("auth-multicast"));
-    protected static final String mqttAddress = "t1";
-    protected static final String anonymousUser = "anonymous";
-    protected static final String anonymousPswd = "anonymous";
 
     @Override
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -31,7 +31,7 @@ public abstract class AuthenticationTestBase extends TestBase {
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
         }
-        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
@@ -43,7 +43,7 @@ public abstract class AuthenticationTestBase extends TestBase {
             if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
                 brokeredAddressList = amqpAddressList.subList(0, 2);
             }
-            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
             //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         }
 

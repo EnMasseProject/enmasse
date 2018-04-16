@@ -19,11 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 class Sender extends ClientHandlerBase<Integer> {
+    private static Logger log = CustomLogger.getLogger();
     private final AtomicInteger numSent = new AtomicInteger(0);
     private final Iterator<Message> messageQueue;
     private final CountDownLatch connectLatch;
     private final Predicate<Message> predicate;
-    private static Logger log = CustomLogger.getLogger();
 
     public Sender(AmqpConnectOptions clientOptions,
                   LinkOptions linkOptions,
@@ -54,7 +54,7 @@ class Sender extends ClientHandlerBase<Integer> {
     @Override
     protected void connectionClosed(ProtonConnection conn) {
         conn.close();
-        if(!promise.isDone()) {
+        if (!promise.isDone()) {
             promise.completeExceptionally(new RuntimeException("Connection closed after " + numSent.get() + " messages sent"));
         }
     }
@@ -62,7 +62,7 @@ class Sender extends ClientHandlerBase<Integer> {
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
         conn.close();
-        if(!promise.isDone()) {
+        if (!promise.isDone()) {
             promise.completeExceptionally(new RuntimeException("Connection disconnected after " + numSent.get() + " messages sent"));
         }
     }
@@ -74,7 +74,7 @@ class Sender extends ClientHandlerBase<Integer> {
             if (sender.getQoS().equals(ProtonQoS.AT_MOST_ONCE)) {
                 sender.send(message);
                 numSent.incrementAndGet();
-                if(predicate.test(message)) {
+                if (predicate.test(message)) {
                     promise.complete(numSent.get());
                 } else {
                     vertx.runOnContext(id -> sendNext(connection, sender));
@@ -83,20 +83,20 @@ class Sender extends ClientHandlerBase<Integer> {
                 sender.send(message, protonDelivery -> {
                     if (protonDelivery.getRemoteState().equals(Accepted.getInstance())) {
                         numSent.incrementAndGet();
-                        if(predicate.test(message)) {
+                        if (predicate.test(message)) {
                             promise.complete(numSent.get());
                             connection.close();
                         } else {
                             sendNext(connection, sender);
                         }
                     } else {
-                        promise.completeExceptionally(new IllegalStateException("Message not accepted (remote state: "+protonDelivery.getRemoteState()+") after " + numSent.get() + " messages sent"));
+                        promise.completeExceptionally(new IllegalStateException("Message not accepted (remote state: " + protonDelivery.getRemoteState() + ") after " + numSent.get() + " messages sent"));
                         connection.close();
                     }
                 });
             }
         } else {
-            if(predicate.test(null)) {
+            if (predicate.test(null)) {
                 promise.complete(numSent.get());
             } else {
                 promise.completeExceptionally(new RuntimeException("No more messages to send after + " + numSent.get() + " messages sent"));

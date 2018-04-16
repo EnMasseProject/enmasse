@@ -175,3 +175,14 @@ function get_docker_info() {
     FILENAME_STDERR="docker_${CONTAINER}.stderr.log"
     docker logs ${CONTAINER} > ${FILENAME_STDOUT} 2> ${FILENAME_STDERR}
 }
+
+function categorize_dockerlogs {
+    LOG_DIR=${1}
+    for x in ${LOG_DIR}/*; do
+        ADDR_SPACE="$(echo "${x}" | sed -e 's/^[^_]\+_\([^_]\+\)_[^_]\+\.log$/\1/')";
+        if [[ ! -d "${LOG_DIR}/${ADDR_SPACE}" ]]; then
+            mkdir "${LOG_DIR}/${ADDR_SPACE}";
+        fi
+        mv "${x}" "${LOG_DIR}/${ADDR_SPACE}"
+    done
+}

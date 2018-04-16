@@ -13,11 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class MqttClient implements AutoCloseable {
 
@@ -36,13 +32,13 @@ public class MqttClient implements AutoCloseable {
         return this;
     }
 
+    public MqttConnectOptions getMqttConnectOptions() {
+        return options;
+    }
+
     public MqttClient setMqttConnectOptions(MqttConnectOptions options) {
         this.options = options;
         return this;
-    }
-
-    public MqttConnectOptions getMqttConnectOptions() {
-        return options;
     }
 
     public Future<List<MqttMessage>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {

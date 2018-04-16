@@ -8,9 +8,9 @@ import java.util.List;
 
 public class ResourceDefinition {
 
+    List<ResourceParameter> parameters;
     private String name;
     private String template;
-    List<ResourceParameter> parameters;
 
     public ResourceDefinition(String name, String template, List<ResourceParameter> parameters) {
         this.name = name;

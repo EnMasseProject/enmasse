@@ -1,0 +1,47 @@
+<html>
+<head>
+    <title>cli-rhea client</title>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <script type="text/javascript" src="../../../client_executable/rhea/dist/rhea.js"></script>
+</head>
+
+<body>
+<h1>Browser based testing</h1>
+
+<script type="text/javascript">
+        var connect_to_enmasse = function(server, address, count, username, password){
+            var requests = parseInt(count);
+            var current = 1;
+            var sender;
+            var client = require('rhea');
+            function next_request() {
+                var msg = 'request-' + current;
+                sender.send({body:msg})
+                append('sent: ' + msg);
+            }
+            client.on('connection_open', function (context) {
+                next_request();
+            });
+            function append(txt) {
+                var node = document.createTextNode(txt);
+                var div = document.createElement("div");
+                div.appendChild(node);
+                document.body.appendChild(div);
+            }
+            client.on("message", function (context) {
+                append('received: ' + context.message.body);
+                if (current++ < requests) {
+                    next_request();
+                } else {
+                    context.connection.close();
+                }
+            });
+            var ws = client.websocket_connect(WebSocket);
+            var connection = client.connect({"connection_details":ws(server, ["binary", "AMQPWSB10", "amqp"]), transport: 'tls',
+                username: username, password: password, "reconnect":false});
+            connection.open_receiver(address);
+            sender = connection.open_sender(address);
+        }
+    </script>
+</body>
+</html>

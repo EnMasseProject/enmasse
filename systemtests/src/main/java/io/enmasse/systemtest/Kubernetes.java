@@ -21,24 +21,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public abstract class Kubernetes {
+    private static Logger log = CustomLogger.getLogger();
     protected final Environment environment;
     protected final KubernetesClient client;
     protected final String globalNamespace;
-    private static Logger log = CustomLogger.getLogger();
 
     protected Kubernetes(Environment environment, KubernetesClient client, String globalNamespace) {
         this.environment = environment;
         this.client = client;
         this.globalNamespace = globalNamespace;
-    }
-
-    public String getApiToken() {
-        return environment.openShiftToken();
-    }
-
-    public Endpoint getEndpoint(String namespace, String serviceName, String port) {
-        Service service = client.services().inNamespace(namespace).withName(serviceName).get();
-        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
     private static int getPort(Service service, String portName) {
@@ -50,6 +41,23 @@ public abstract class Kubernetes {
         }
         throw new IllegalArgumentException(
                 "Unable to find port " + portName + " for service " + service.getMetadata().getName());
+    }
+
+    public static Kubernetes create(Environment environment) {
+        if (environment.useMinikube()) {
+            return new Minikube(environment, environment.namespace());
+        } else {
+            return new OpenShift(environment, environment.namespace());
+        }
+    }
+
+    public String getApiToken() {
+        return environment.openShiftToken();
+    }
+
+    public Endpoint getEndpoint(String namespace, String serviceName, String port) {
+        Service service = client.services().inNamespace(namespace).withName(serviceName).get();
+        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
     public abstract Endpoint getRestEndpoint();
@@ -155,14 +163,6 @@ public abstract class Kubernetes {
             throw new IllegalStateException("Unable to find CA cert for keycloak");
         }
         return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), "UTF-8");
-    }
-
-    public static Kubernetes create(Environment environment) {
-        if (environment.useMinikube()) {
-            return new Minikube(environment, environment.namespace());
-        } else {
-            return new OpenShift(environment, environment.namespace());
-        }
     }
 
     private ConfigMapList listConfigMaps(String type) {

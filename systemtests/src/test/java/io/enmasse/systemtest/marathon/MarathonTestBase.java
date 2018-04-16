@@ -13,11 +13,10 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Rule;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ErrorCollector;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 
@@ -32,29 +31,26 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 
-@Category({IsolatedAddressSpace.class, MarathonTests.class})
+@Tag("marathon")
 public abstract class MarathonTestBase extends TestBase implements ISeleniumProvider {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
     private SeleniumProvider selenium = new SeleniumProvider();
     private ConsoleWebPage consoleWebPage;
+    private ErrorCollector collector = new ErrorCollector();
 
     @Override
     public WebDriver buildDriver() {
         return getFirefoxDriver();
     }
 
-    @Rule
-    public TestWatcher watchman = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            selenium.onFailed(e, description);
+    @AfterEach
+    public void after(ExtensionContext context) {
+        if (context.getExecutionException().isPresent()) { //test failed
+            selenium.onFailed(context);
             selenium.tearDownDrivers();
         }
-    };
-
-    @Rule
-    public ErrorCollector collector = new ErrorCollector();
+    }
 
     //========================================================================================================
     // Runner tests methods

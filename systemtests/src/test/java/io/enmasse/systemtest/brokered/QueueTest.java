@@ -7,10 +7,11 @@ package io.enmasse.systemtest.brokered;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.BrokeredTestBase;
+import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class QueueTest extends BrokeredTestBase {
+public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     /**
      * related github issue: #387
@@ -54,17 +56,19 @@ public class QueueTest extends BrokeredTestBase {
                 listOfMessages.toArray(new Message[listOfMessages.size()]));
 
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
-        assertThat("Wrong count of messages received from group A",
-                receivedGroupA.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupA));
-        assertThat("Wrong count of messages received from group A",
-                receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB));
+        assertAll(
+                () -> assertThat("Wrong count of messages received from group A",
+                        receivedGroupA.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupA)),
+                () -> assertThat("Wrong count of messages received from group B",
+                        receivedGroupB.get(1, TimeUnit.MINUTES).size(), is(msgCountGroupB)));
 
+        String assertMessage = "Group id is different";
         for (Message m : receivedGroupA.get()) {
-            assertEquals("Group id is different", m.getGroupId(), "group A");
+            assertEquals(m.getGroupId(), "group A", assertMessage);
         }
 
         for (Message m : receivedGroupB.get()) {
-            assertEquals("Group id is different", m.getGroupId(), "group B");
+            assertEquals(m.getGroupId(), "group B", assertMessage);
         }
     }
 
@@ -73,6 +77,6 @@ public class QueueTest extends BrokeredTestBase {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
-        runRestApiTest(q1, q2);
+        runRestApiTest(sharedAddressSpace, q1, q2);
     }
 }

@@ -5,23 +5,65 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.Count;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.StandardTestBase;
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class QueueTest extends StandardTestBase {
+public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
+
+    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runQueueTest(client, dest, 1024);
+    }
+
+    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        List<String> msgs = TestUtils.generateMessages(countMessages);
+        Count<Message> predicate = new Count<>(msgs.size());
+        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
+
+        assertNotNull(numSent, "Sending messages didn't start");
+        int actual = 0;
+        try {
+            actual = numSent.get(1, TimeUnit.MINUTES);
+        } catch (TimeoutException t) {
+            fail("Sending messages timed out after sending " + predicate.actual());
+        }
+        assertThat("Wrong count of messages sent", actual, is(msgs.size()));
+
+        predicate = new Count<>(msgs.size());
+        Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
+        actual = 0;
+        try {
+            actual = received.get(1, TimeUnit.MINUTES).size();
+        } catch (TimeoutException t) {
+            fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
+        }
+
+        assertThat("Wrong count of messages received", actual, is(msgs.size()));
+    }
 
     @Test
     public void testColocatedQueues() throws Exception {
@@ -53,7 +95,7 @@ public class QueueTest extends StandardTestBase {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
-        runRestApiTest(q1, q2);
+        runRestApiTest(sharedAddressSpace, q1, q2);
     }
 
     @Test
@@ -103,7 +145,7 @@ public class QueueTest extends StandardTestBase {
         }
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(),
-                listOfMessages.toArray(new Message[listOfMessages.size()]));
+                listOfMessages.toArray(new Message[0]));
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), msgsCount);
@@ -112,13 +154,14 @@ public class QueueTest extends StandardTestBase {
         int sub = 1;
         for (Message m : received.get()) {
             for (Message mSub : received.get().subList(sub, received.get().size())) {
-                assertTrue("Wrong order of messages", m.getPriority() >= mSub.getPriority());
+                assertTrue(m.getPriority() >= mSub.getPriority(), "Wrong order of messages");
             }
             sub++;
         }
     }
 
-    //@Test test disabled due to issue: #851
+    @Test
+    @Disabled("disabled due to issue #851")
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue", "sharded-queue");
         setAddresses(dest);
@@ -132,14 +175,16 @@ public class QueueTest extends StandardTestBase {
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("baz", 1000)),
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("quux", 1000)));
 
-        assertThat("Wrong count of messages sent: sender0",
-                sent.get(0).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat("Wrong count of messages sent: sender1",
-                sent.get(1).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat("Wrong count of messages sent: sender2",
-                sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
-        assertThat("Wrong count of messages sent: sender3",
-                sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
+        assertAll("All sender should send all messages",
+                () -> assertThat("Wrong count of messages sent: sender0",
+                        sent.get(0).get(1, TimeUnit.MINUTES), is(1000)),
+                () -> assertThat("Wrong count of messages sent: sender1",
+                        sent.get(1).get(1, TimeUnit.MINUTES), is(1000)),
+                () -> assertThat("Wrong count of messages sent: sender2",
+                        sent.get(2).get(1, TimeUnit.MINUTES), is(1000)),
+                () -> assertThat("Wrong count of messages sent: sender3",
+                        sent.get(3).get(1, TimeUnit.MINUTES), is(1000))
+        );
 
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), 500);
         assertThat("Wrong count of messages received",
@@ -155,37 +200,8 @@ public class QueueTest extends StandardTestBase {
                 received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
-    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        runQueueTest(client, dest, 1024);
-    }
-
-    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        List<String> msgs = TestUtils.generateMessages(countMessages);
-        Count<Message> predicate = new Count<>(msgs.size());
-        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
-
-        assertNotNull("Sending messages didn't start", numSent);
-        int actual = 0;
-        try {
-            actual = numSent.get(1, TimeUnit.MINUTES);
-        } catch (TimeoutException t) {
-            fail("Sending messages timed out after sending " + predicate.actual());
-        }
-        assertThat("Wrong count of messages sent", actual, is(msgs.size()));
-
-        predicate = new Count<>(msgs.size());
-        Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
-        actual = 0;
-        try {
-            actual = received.get(1, TimeUnit.MINUTES).size();
-        } catch (TimeoutException t) {
-            fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
-        }
-
-        assertThat("Wrong count of messages received", actual, is(msgs.size()));
-    }
-
-//    @Test // disabled due to issue: #903
+    @Test
+    @Disabled("disabled due to issue #903")
     public void testScalePooledQueueAutomatically() throws Exception {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 2000;

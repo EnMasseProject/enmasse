@@ -4,15 +4,23 @@
  */
 package io.enmasse.systemtest.standard.clients.rhea;
 
+import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
+public class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
 
     @Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
+    }
+
+    //@Test
+    public void testBasicMessageWebScoket() throws Exception {
+        doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }
 
     @Test
@@ -25,23 +33,14 @@ public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgP
         doTopicSubscribeTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
     }
 
-    //@Test
-    public void testMessageBrowse() throws Exception {
-        doMessageBrowseTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
-    }
-
-    //@Test
-    public void testDrainQueue() throws Exception {
-        doDrainQueueTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
-    }
-
-    //@Test
-    public void testMessageSelectorQueue() throws Exception{
+    @Test
+    @Disabled("selectors for queue does not work")
+    public void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic() throws Exception{
+    public void testMessageSelectorTopic() throws Exception {
         doMessageSelectorTopicTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath),
                 new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
     }

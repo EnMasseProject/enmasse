@@ -16,8 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ConsoleWebPage {
 
@@ -64,7 +64,7 @@ public class ConsoleWebPage {
         List<WebElement> items = getNavigateMenu()
                 .findElement(By.className("list-group"))
                 .findElements(ByAngular.repeater("item in items"));
-        assertNotNull("Console failed, does not contain left menu items", items);
+        assertNotNull(items, "Console failed, does not contain left menu items");
         WebElement returnedItem = null;
         for (WebElement item : items) {
             log.info("Got item: " + item.getText());
@@ -565,7 +565,7 @@ public class ConsoleWebPage {
 
         selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
 
-        assertNotNull("Console failed, does not contain created address item", getAddressItem(destination));
+        assertNotNull(getAddressItem(destination), "Console failed, does not contain created address item");
 
         if (waitForReady)
             TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
@@ -608,7 +608,7 @@ public class ConsoleWebPage {
         selenium.waitUntilItemNotPresent(60, () -> getAddressItem(destination));
 
         //check if address deleted
-        assertNull("Console failed, still contains deleted address item ", getAddressItem(destination));
+        assertNull(getAddressItem(destination), "Console failed, still contains deleted address item ");
     }
 
     public void logout() throws Exception {
