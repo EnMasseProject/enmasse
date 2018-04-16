@@ -186,7 +186,7 @@ module.exports.changes = function (last, current, compare, unchanged, stringify)
             switch (compare(last[i], current[j])) {
             case 0:
                 //same address, has it changed?
-                if (!unchanged(last[i], current[j])) {
+                if (unchanged && !unchanged(last[i], current[j])) {
                     d.modified.push(current[j]);
                 }
                 i++; j++;
