@@ -27,6 +27,7 @@ public class ServiceMapping {
     private final String SERVICE_PROVIDER_NAME = getStringFromEnv("SERVICE_BROKER_SERVICE_PROVIDER_NAME", "EnMasse");
     private final String IMAGE_URL = getStringFromEnv("SERVICE_BROKER_SERVICE_IMAGE_URL", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/images/logo/enmasse_icon.png");
     private final String DOCUMENTATION_URL = getStringFromEnv("SERVICE_BROKER_DOCUMENTATION_URL", "https://github.com/EnMasseProject/enmasse");
+    static final String addressRegexp = "^\\s*(([a-zA-Z0-9_-]+(([/.])[a-zA-Z0-9_-]+)*(([/.])?[#*])?)|[#*])(\\s*,\\s*(([a-zA-Z0-9_-]+([/.][a-zA-Z0-9_-]+)*([/.]?[#*])?)|[#*]))*\\s*$";
 
     private String getStringFromEnv(String varName, String defaultValue) {
         if(System.getenv().containsKey(varName)) {
@@ -79,6 +80,7 @@ public class ServiceMapping {
         return UUID.nameUUIDFromBytes(("service-enmasse-"+addressSpaceType.getName()).getBytes(StandardCharsets.US_ASCII));
     }
 
+
     private List<Plan> populatePlans(AddressSpaceType addressSpaceType) {
         List<Plan> plans = new ArrayList<>();
         for(AddressSpacePlan addressSpacePlan : addressSpaceType.getPlans()) {
@@ -91,13 +93,13 @@ public class ServiceMapping {
             StringSchema sendAddressProperty = new StringSchema();
             sendAddressProperty.setDescription("Addresses which the bound application will have permission to send to");
             sendAddressProperty.setRequired(false);
-            sendAddressProperty.setPattern("^\\s*(([a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*(\\.?[#*])?)|[#*])(\\s*,\\s*(([a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*(\\.?[#*])?)|[#*]))*\\s*$");
+            sendAddressProperty.setPattern(addressRegexp);
             sendAddressProperty.setDefault("*");
 
             StringSchema receiveAddressProperty = new StringSchema();
             receiveAddressProperty.setDescription("Addresses which the bound application will have permission to receive from");
             receiveAddressProperty.setRequired(false);
-            receiveAddressProperty.setPattern("^\\s*(([a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*(\\.?[#*])?)|[#*])(\\s*,\\s*(([a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*(\\.?[#*])?)|[#*]))*\\s*$");
+            receiveAddressProperty.setPattern(addressRegexp);
             receiveAddressProperty.setDefault("*");
 
 
