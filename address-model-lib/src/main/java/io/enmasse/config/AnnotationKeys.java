@@ -11,7 +11,8 @@ public interface AnnotationKeys {
     String CERT_SECRET_NAME = "enmasse.io/cert-secret";
     String CERT_CN = "enmasse.io/cert-cn";
     String ENDPOINT_PORT = "io.enmasse.endpointPort";
-    String SERVICE_NAME = "io.enmasse.serviceName";
+    String SERVICE_NAME = "enmasse.io/service-name";
+    String SERVICE_PORT_PREFIX = "enmasse.io/service-port.";
     String CREATED_BY = "io.enmasse.createdBy";
     String DEFINED_BY = "enmasse.io/defined-by";
     String BROKER_ID = "enmasse.io/broker-id";

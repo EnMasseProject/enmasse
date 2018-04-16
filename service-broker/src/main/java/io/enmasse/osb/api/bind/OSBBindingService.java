@@ -4,6 +4,7 @@
  */
 package io.enmasse.osb.api.bind;
 
+import io.enmasse.address.model.Endpoint;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.SchemaProvider;
@@ -88,28 +89,29 @@ public class OSBBindingService extends OSBServiceBase {
                     e.getHost().ifPresent(h-> credentials.put("console", "https://" + h));
                 });
             }
-            addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("messaging")).findFirst().ifPresent(e -> {
-                credentials.put("host", String.format("%s.%s.svc", e.getService(), addressSpace.getNamespace()));
-                credentials.put("port", "5671");
-                e.getCertSpec().ifPresent(certSpec -> {
+
+            for (Endpoint endpoint : addressSpace.getEndpoints()) {
+                if ("console".equals(endpoint.getService())) {
+                    continue;
+                }
+                String prefix = endpoint.getName();
+                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpoint.getHost().isPresent()) {
+                    endpoint.getHost().ifPresent(host -> {
+                        String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
+                        credentials.put(externalPrefix + "Host", host);
+                        credentials.put(externalPrefix + "Port", String.format("%d", endpoint.getPort()));
+                    });
+                }
+                credentials.put(prefix + "Host", String.format("%s.%s.svc", endpoint.getService(), addressSpace.getNamespace()));
+                for (Map.Entry<String, Integer> servicePort : endpoint.getServicePorts().entrySet()) {
+                    String portName = servicePort.getKey().substring(0, 1).toUpperCase() + servicePort.getKey().substring(1);
+                    credentials.put(prefix + portName + "Port", String.format("%d", servicePort.getValue()));
+                }
+                endpoint.getCertSpec().ifPresent(certSpec -> {
                     String cert = getAuthApi().getCert(certSpec.getSecretName(), addressSpace.getNamespace());
-                    credentials.put("certificate.pem", cert);
-                    /*try {
-                        StringWriter keyStoreAsString = new StringWriter();
-                        KeyStore keyStore = convertCertToKeyStore(cert);
-                        keyStore.store(new OutputStream() {
-                            @Override
-                            public void write(int i) throws IOException {
-                                keyStoreAsString.write(i);
-                            }
-                        }, new char[0]);
-                        credentials.put("keystore.jks", keyStoreAsString.toString());
-                    } catch (IOException | GeneralSecurityException e1) {
-                        // ignore
-                    }
-*/
+                    credentials.put(prefix + "Cert.pem", cert);
                 });
-            });
+            }
             return Response.status(Response.Status.CREATED).entity(new BindResponse(credentials)).build();
 
         } catch (Exception e) {

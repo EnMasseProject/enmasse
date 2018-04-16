@@ -6,8 +6,6 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.api.auth.SubjectAccessReview;
-import io.enmasse.api.auth.TokenReview;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
@@ -207,6 +205,7 @@ public class KubernetesHelper implements Kubernetes {
                     .withName(endpoint.getName())
                     .withNamespace(namespace)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
+                    .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
                     .endMetadata()
                     .editOrNewSpec()
                     .withHost(endpoint.getHost().orElse(""))
@@ -220,6 +219,15 @@ public class KubernetesHelper implements Kubernetes {
                     .endTargetPort()
                     .endPort()
                     .endSpec();
+
+            Map<String, String> serviceAnnotations = service.getMetadata().getAnnotations();
+            for (Map.Entry<String, String> annotationEntry : serviceAnnotations.entrySet()) {
+                if (annotationEntry.getKey().startsWith(AnnotationKeys.SERVICE_PORT_PREFIX)) {
+                    route.editOrNewMetadata()
+                            .addToAnnotations(annotationEntry.getKey(), annotationEntry.getValue())
+                            .endMetadata();
+                }
+            }
 
             if (endpoint.getCertSpec().isPresent()) {
                 route.editOrNewMetadata()

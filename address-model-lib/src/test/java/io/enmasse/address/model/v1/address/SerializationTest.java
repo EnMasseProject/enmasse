@@ -101,6 +101,7 @@ public class SerializationTest {
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
+                        .setServicePorts(Collections.singletonMap("amqp", 5672))
                         .setCertSpec(new CertSpec("provider").setSecretName("secret"))
                         .build()))
                 .setAuthenticationService(new AuthenticationService.Builder()
@@ -129,6 +130,7 @@ public class SerializationTest {
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
         assertThat(deserialized.getEndpoints().get(0).getName(), is(addressSpace.getEndpoints().get(0).getName()));
         assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
+        assertThat(deserialized.getEndpoints().get(0).getServicePorts().get("amqp"), is(5672));
         assertThat(deserialized.getEndpoints().get(0).getCertSpec().get().getProvider(), is(addressSpace.getEndpoints().get(0).getCertSpec().get().getProvider()));
         assertThat(deserialized.getEndpoints().get(0).getCertSpec().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertSpec().get().getSecretName()));
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
