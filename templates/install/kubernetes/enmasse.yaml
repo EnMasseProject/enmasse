@@ -110,7 +110,8 @@ items:
     standard-space-infra-without-mqtt.json: '{"apiVersion": "v1", "kind": "Template",
       "metadata": {"labels": {"app": "enmasse"}, "name": "standard-space-infra-without-mqtt"},
       "objects": [{"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
+      {"addressSpace": "${ADDRESS_SPACE}", "enmasse.io/service-port.amqp": 5672, "enmasse.io/service-port.amqps":
+      5671, "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
       "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
       {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
       \"Service\", \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\",
@@ -606,6 +607,7 @@ items:
     standard-space-infra.json: '{"apiVersion": "v1", "kind": "Template", "metadata":
       {"labels": {"app": "enmasse"}, "name": "standard-space-infra"}, "objects": [{"apiVersion":
       "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "enmasse.io/service-port.amqp": 5672, "enmasse.io/service-port.amqps": 5671,
       "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
       "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
       {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
@@ -1067,11 +1069,12 @@ items:
       [{"mountPath": "/etc/enmasse-certs", "name": "subserv-internal-cert", "readOnly":
       true}]}], "volumes": [{"name": "subserv-internal-cert", "secret": {"secretName":
       "subserv-internal-cert"}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
-      {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort":
-      "secure-mqtt"}, "labels": {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports":
-      [{"name": "mqtt", "port": 1883, "protocol": "TCP", "targetPort": 1883}, {"name":
-      "secure-mqtt", "port": 8883, "protocol": "TCP", "targetPort": 8883}], "selector":
-      {"name": "mqtt-gateway"}, "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1",
+      {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "enmasse.io/service-port.mqtt":
+      1883, "enmasse.io/service-port.mqtts": 8883, "io.enmasse.endpointPort": "secure-mqtt"},
+      "labels": {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt",
+      "port": 1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt",
+      "port": 8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name":
+      "mqtt-gateway"}, "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "name": "mqtt-gateway"}, "name": "mqtt-gateway"},
       "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace":

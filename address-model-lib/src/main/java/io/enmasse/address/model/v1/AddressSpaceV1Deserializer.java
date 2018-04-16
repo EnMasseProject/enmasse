@@ -79,6 +79,15 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                     b.setPort(endpoint.get(Fields.PORT).asInt());
                 }
 
+                if (endpoint.hasNonNull(Fields.SERVICE_PORTS)) {
+                    Map<String, Integer> servicePorts = new HashMap<>();
+                    ArrayNode ports = (ArrayNode) endpoint.get(Fields.SERVICE_PORTS);
+                    for (int p = 0; p < ports.size(); p++) {
+                        ObjectNode portEntry = (ObjectNode) ports.get(p);
+                        servicePorts.put(portEntry.get(Fields.NAME).asText(), portEntry.get(Fields.PORT).asInt());
+                    }
+                    b.setServicePorts(servicePorts);
+                }
 
                 if (endpoint.hasNonNull(Fields.CERT)) {
                     ObjectNode cert = (ObjectNode) endpoint.get(Fields.CERT);

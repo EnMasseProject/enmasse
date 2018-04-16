@@ -66,13 +66,28 @@ public class EndpointController implements Controller {
     }
 
     private Endpoint routeToEndpoint(Route route) {
-        String providerName = route.getMetadata().getAnnotations().get(AnnotationKeys.CERT_PROVIDER);
+        Map<String, String> annotations = route.getMetadata().getAnnotations();
+
+        String providerName = annotations.get(AnnotationKeys.CERT_PROVIDER);
+        // TODO: After 0.19.0: Switch to use this instead of route.to
+        String serviceName = annotations.get(AnnotationKeys.SERVICE_NAME);
+
+        Map<String, Integer> servicePorts = new HashMap<>();
+        for (String annotationKey : annotations.keySet()) {
+            if (annotationKey.startsWith(AnnotationKeys.SERVICE_PORT_PREFIX)) {
+                String portName = annotationKey.substring(AnnotationKeys.SERVICE_PORT_PREFIX.length());
+                int portValue = Integer.parseInt(annotations.get(annotationKey));
+                servicePorts.put(portName, portValue);
+            }
+        }
+
         String secretName = route.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
         Endpoint.Builder builder = new Endpoint.Builder()
                 .setName(route.getMetadata().getName())
                 .setHost(route.getSpec().getHost())
                 .setPort(443)
-                .setService(route.getSpec().getTo().getName());
+                .setService(route.getSpec().getTo().getName())
+                .setServicePorts(servicePorts);
 
         if (secretName != null) {
             builder.setCertSpec(new CertSpec(providerName, secretName));
