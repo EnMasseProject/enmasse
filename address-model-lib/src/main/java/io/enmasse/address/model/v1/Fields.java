@@ -59,4 +59,5 @@ interface Fields {
     String ADDRESS_SPACE_TYPE = "addressSpaceType";
     String PHASE = "phase";
     String CREATED_BY_UID = "createdByUid";
+    String SERVICE_PORTS = "servicePorts";
 }

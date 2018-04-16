@@ -4,8 +4,7 @@
  */
 package io.enmasse.address.model;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * An endpoint
@@ -15,13 +14,15 @@ public class Endpoint {
     private final String service;
     private final String host;
     private final int port;
+    private final Map<String, Integer> servicePorts;
     private final CertSpec certSpec;
 
-    public Endpoint(String name, String service, String host, int port, CertSpec certSpec) {
+    public Endpoint(String name, String service, String host, int port, Map<String, Integer> servicePorts, CertSpec certSpec) {
         this.name = name;
         this.service = service;
         this.host = host;
         this.port = port;
+        this.servicePorts = servicePorts;
         this.certSpec = certSpec;
     }
 
@@ -35,6 +36,10 @@ public class Endpoint {
 
     public int getPort() {
         return port;
+    }
+
+    public Map<String, Integer> getServicePorts() {
+        return Collections.unmodifiableMap(servicePorts);
     }
 
     public Optional<String> getHost() {
@@ -62,6 +67,7 @@ public class Endpoint {
         private String host;
         private int port = 0;
         private CertSpec certSpec;
+        private Map<String, Integer> servicePorts = new HashMap<>();
 
         public Builder() {}
 
@@ -71,6 +77,7 @@ public class Endpoint {
             this.service = endpoint.getService();
             this.host = endpoint.getHost().orElse(null);
             this.certSpec = endpoint.getCertSpec().orElse(null);
+            this.servicePorts = new HashMap<>(endpoint.getServicePorts());
         }
 
         public Builder setName(String name) {
@@ -93,6 +100,12 @@ public class Endpoint {
             return this;
         }
 
+
+        public Builder setServicePorts(Map<String, Integer> servicePorts) {
+            this.servicePorts = new HashMap<>(servicePorts);
+            return this;
+        }
+
         public Builder setCertSpec(CertSpec certSpec) {
             this.certSpec = certSpec;
             return this;
@@ -101,7 +114,7 @@ public class Endpoint {
         public Endpoint build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(service, "service not set");
-            return new Endpoint(name, service, host, port, certSpec);
+            return new Endpoint(name, service, host, port, servicePorts, certSpec);
         }
     }
 }

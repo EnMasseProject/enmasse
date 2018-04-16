@@ -56,6 +56,16 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                 ObjectNode e = endpoints.addObject();
                 e.put(Fields.NAME, endpoint.getName());
                 e.put(Fields.SERVICE, endpoint.getService());
+
+                if (!endpoint.getServicePorts().isEmpty()) {
+                    ArrayNode ports = e.putArray(Fields.SERVICE_PORTS);
+                    for (Map.Entry<String, Integer> portEntry : endpoint.getServicePorts().entrySet()) {
+                        ObjectNode entry = ports.addObject();
+                        entry.put(Fields.NAME, portEntry.getKey());
+                        entry.put(Fields.PORT, portEntry.getValue());
+                    }
+                }
+
                 endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
                 if (endpoint.getPort() != 0) {
                     e.put(Fields.PORT, endpoint.getPort());

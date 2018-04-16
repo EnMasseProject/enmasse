@@ -109,10 +109,15 @@ public class ServiceMapping {
             consoleAdminProperty.setRequired(true);
             consoleAdminProperty.setDefault("false");
 
+            BooleanSchema externalAccessProperty = new BooleanSchema();
+            externalAccessProperty.setRequired(true);
+            externalAccessProperty.setDefault("false");
+
             bindParameters.putProperty("sendAddresses", sendAddressProperty);
             bindParameters.putProperty("receiveAddresses", receiveAddressProperty);
             bindParameters.putProperty("consoleAccess", consoleAccessProperty);
             bindParameters.putProperty("consoleAdmin", consoleAdminProperty);
+            bindParameters.putProperty("externalAccess", externalAccessProperty);
             InputParameters bindParametersSchema = new InputParameters(bindParameters);
             ServiceBindingSchema bindSchema = new ServiceBindingSchema(bindParametersSchema);
             ObjectSchema serviceCreateParameters = new ObjectSchema();

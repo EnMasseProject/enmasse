@@ -74,6 +74,8 @@
         "annotations": {
           "addressSpace": addressSpace,
           "io.enmasse.endpointPort": "amqps",
+          "enmasse.io/service-port.amqps": 5671,
+          "enmasse.io/service-port.amqp": 5672,
           "service.alpha.openshift.io/infrastructure": "true",
           "service.alpha.openshift.io/dependencies": std.toString(admin_deps)
         }
