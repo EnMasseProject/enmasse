@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.standard.clients.rhea;
 
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
@@ -16,6 +16,12 @@ public class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard
     @Test
     public void testBasicMessage() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath));
+    }
+
+    @Test
+    @Disabled("tests is disabled until websocket will be enabled in standard addr space")
+    public void testBasicMessageWebScoket() throws Exception {
+        doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }
 
     @Test

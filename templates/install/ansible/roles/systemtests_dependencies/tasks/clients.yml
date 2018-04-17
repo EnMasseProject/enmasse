@@ -1,25 +1,25 @@
 ---
 # tasks file for clients installation and compilation
-- name: delete old clients executables
+- name: CLIENTS | delete old clients executables
   file:
     path: "{{ client_executable_folder }}"
     state: absent
 
-- name: create client_executable folder
+- name: CLIENTS | create client_executable folder
   file:
     path: "{{ client_executable_folder }}"
     state: directory
 
-- name: Install cli-rhea client globally
+- name: CLIENTS | Install cli-rhea client globally
   npm:
     name: cli-rhea
     global: yes
 
-- name: Install cli-proton-python client globally
+- name: CLIENTS | Install cli-proton-python client globally
   pip:
     name: cli-proton-python
 
-- name: Clone cli-java repo
+- name: CLIENTS | Clone cli-java repo
   git:
     repo: 'https://github.com/rh-messaging/cli-java.git'
     dest: "{{ cli_java_git_path }}"
@@ -27,18 +27,36 @@
     clone: yes
     force: yes
 
-- name: Compile cli-java clients
+- name: CLIENTS | Compile cli-java clients
   shell: 'mvn package -B -DskipTests=true'
   args:
     chdir: "{{ cli_java_git_path }}"
   environment:
       PATH: "{{ ansible_env.PATH }}:{{ maven_path }}"
 
-- name: Move cli-qpid-jms
+- name: CLIENTS | Move cli-qpid-jms
   shell: 'cp {{ cli_java_git_path }}/cli-qpid-jms/target/cli-qpid-jms-*.jar {{ client_executable_folder }}/cli-qpid-jms.jar'
 
-- name: Move cli-artemis-jms
+- name: CLIENTS | Move cli-artemis-jms
   shell: 'cp {{ cli_java_git_path }}/cli-artemis-jms/target/cli-artemis-jms-*.jar {{ client_executable_folder }}/cli-artemis-jms.jar'
 
-- name: Move cli-activemq
+- name: CLIENTS | Move cli-activemq
   shell: 'cp {{ cli_java_git_path }}/cli-activemq/target/cli-activemq-*.jar {{ client_executable_folder }}/cli-activemq.jar'
+
+- name: CLIENTS | Clone rhea repo
+  git:
+    repo: 'https://github.com/amqp/rhea.git'
+    dest: "{{ rhea_path }}"
+    update: yes
+    clone: yes
+    force: yes
+
+- name: CLIENTS | Install rhea npm dependency modules
+  shell: 'npm install'
+  args:
+    chdir: "{{ rhea_path }}"
+
+- name: CLIENTS | create rhea.js using browserify
+  shell: 'npm run-script browserify'
+  args:
+    chdir: "{{ rhea_path }}"

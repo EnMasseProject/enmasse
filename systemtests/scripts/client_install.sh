@@ -20,6 +20,17 @@ function install_java_client(){
 	cp ./cli-activemq/target/cli-activemq-*.jar ../systemtests/client_executable/cli-activemq.jar
 }
 
+function install_browserified_rhea(){
+    rm -rf ../systemtests/client_executable/rhea
+    git clone https://github.com/amqp/rhea.git ../systemtests/client_executable/rhea
+    CURRENT=$(pwd)
+    cd ../systemtests/client_executable/rhea
+    npm install
+    npm run-script browserify
+    cd $CURRENT
+}
+
 install_rhea_client
 install_python_proton_client
 install_java_client
+install_browserified_rhea

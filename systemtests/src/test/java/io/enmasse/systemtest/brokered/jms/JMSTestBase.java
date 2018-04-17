@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.brokered.jms;
 
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.slf4j.Logger;
 

@@ -8,6 +8,7 @@ package io.enmasse.systemtest.bases;
 import com.google.common.collect.Ordering;
 import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -469,25 +470,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return consoleRoute;
     }
 
-    protected FirefoxDriver getFirefoxDriver() {
-        FirefoxOptions opts = new FirefoxOptions();
-        opts.setHeadless(true);
-        return new FirefoxDriver(opts);
-    }
-
-    protected ChromeDriver getChromeDriver() {
-        ChromeOptions opts = new ChromeOptions();
-        opts.setHeadless(true);
-        opts.addArguments("--no-sandbox");
-        return new ChromeDriver(opts);
-    }
-
     /**
      * selenium provider with Firefox webdriver
      */
     protected SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
         SeleniumProvider seleniumProvider = new SeleniumProvider();
-        seleniumProvider.setupDriver(environment, kubernetes, getFirefoxDriver());
+        seleniumProvider.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
         return seleniumProvider;
     }
 

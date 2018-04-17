@@ -7,7 +7,7 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AuthService;
-import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import org.junit.jupiter.api.Test;
 
 public class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered {

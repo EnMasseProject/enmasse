@@ -12,6 +12,10 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -894,5 +898,18 @@ public class TestUtils {
         logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         logCollector.collectConfigMaps(addressSpace.getNamespace());
         addressApiClient.deleteAddressSpace(addressSpace);
+    }
+
+    public static FirefoxDriver getFirefoxDriver() {
+        FirefoxOptions opts = new FirefoxOptions();
+        opts.setHeadless(true);
+        return new FirefoxDriver(opts);
+    }
+
+    public static ChromeDriver getChromeDriver() {
+        ChromeOptions opts = new ChromeOptions();
+        opts.setHeadless(true);
+        opts.addArguments("--no-sandbox");
+        return new ChromeDriver(opts);
     }
 }
