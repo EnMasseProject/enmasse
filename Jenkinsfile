@@ -20,6 +20,14 @@ pipeline {
         timeout(time: 1, unit: 'HOURS')
     }
     stages {
+        stage('wait for agent ready') {
+            environment {
+                EXPECTED_DIR = '/tmp/agent_ready'
+            }
+            steps {
+                sh "./systemtests/scripts/wait_until_agent_ready.sh ${env.EXPECTED_DIR}"
+            }
+        }
         stage('cleanup registry') {
             environment {
                 REGISTRY_URL = credentials('internal-registry')
