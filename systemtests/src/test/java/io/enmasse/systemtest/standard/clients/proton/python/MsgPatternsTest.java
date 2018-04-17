@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.standard.clients.proton.python;
 
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.clients.proton.python.PythonClientSender;

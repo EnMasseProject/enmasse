@@ -7,7 +7,7 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AuthService;
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import org.junit.jupiter.api.Test;
 
 public class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard {

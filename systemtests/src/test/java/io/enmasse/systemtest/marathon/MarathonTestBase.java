@@ -9,6 +9,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
@@ -32,17 +33,12 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 
 @Tag("marathon")
-public abstract class MarathonTestBase extends TestBase implements ISeleniumProvider {
+public abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFirefox {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
     private SeleniumProvider selenium = new SeleniumProvider();
     private ConsoleWebPage consoleWebPage;
     private ErrorCollector collector = new ErrorCollector();
-
-    @Override
-    public WebDriver buildDriver() {
-        return getFirefoxDriver();
-    }
 
     @AfterEach
     public void after(ExtensionContext context) {

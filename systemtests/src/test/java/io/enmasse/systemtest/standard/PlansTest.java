@@ -8,7 +8,7 @@ import io.enmasse.systemtest.Address;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;

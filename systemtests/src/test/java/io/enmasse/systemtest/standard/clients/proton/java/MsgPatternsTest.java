@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.standard.clients.proton.java;
 
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientSender;

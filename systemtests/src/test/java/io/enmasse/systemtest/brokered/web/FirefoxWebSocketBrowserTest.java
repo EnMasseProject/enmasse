@@ -6,12 +6,13 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
+import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
-public class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseBrokered {
+public class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseBrokered, ISeleniumProviderFirefox {
 
 
     @Test
@@ -22,10 +23,5 @@ public class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements
     @Test
     public void testWebSocketSendReceiveTopic() throws Exception {
         doWebSocketSendReceive(Destination.topic("websocket-topic", getDefaultPlan(AddressType.TOPIC)));
-    }
-
-    @Override
-    public WebDriver buildDriver() {
-        return getFirefoxDriver();
     }
 }

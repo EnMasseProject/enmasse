@@ -6,8 +6,9 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
+import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
@@ -15,7 +16,7 @@ import org.openqa.selenium.WebDriver;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Disabled("chromedriver does not wotk properly")
-public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
+public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderChrome {
 
     @Test
     public void testCreateDeleteQueue() throws Exception {
@@ -135,11 +136,6 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     @Test
     public void testCanOpenConsolePage() throws Exception {
         doTestCanOpenConsolePage(username, password);
-    }
-
-    @Override
-    public WebDriver buildDriver() {
-        return getChromeDriver();
     }
 
     @Override

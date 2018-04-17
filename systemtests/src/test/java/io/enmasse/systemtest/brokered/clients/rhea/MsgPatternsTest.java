@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.brokered.clients.rhea;
 
-import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;

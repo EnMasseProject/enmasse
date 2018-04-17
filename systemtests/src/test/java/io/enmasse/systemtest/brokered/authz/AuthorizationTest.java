@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.brokered.authz;
 
-import io.enmasse.systemtest.bases.ITestBaseBrokered;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

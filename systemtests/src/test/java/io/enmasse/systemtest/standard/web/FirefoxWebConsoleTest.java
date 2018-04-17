@@ -6,15 +6,16 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
+import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
+public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderFirefox {
 
     @Test
     @Disabled("related issue: #1074")
@@ -154,11 +155,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
         doTestAddressStatus(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
         doTestAddressStatus(Destination.anycast("test-anycast"));
         doTestAddressStatus(Destination.multicast("test-multicast"));
-    }
-
-    @Override
-    public WebDriver buildDriver() {
-        return getFirefoxDriver();
     }
 
     @Override

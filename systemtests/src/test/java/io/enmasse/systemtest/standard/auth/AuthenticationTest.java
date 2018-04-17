@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.standard.auth;
 
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.bases.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
 import org.junit.jupiter.api.Test;
 
