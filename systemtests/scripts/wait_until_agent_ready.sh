@@ -26,4 +26,3 @@ do
     sleep 5
 done
 info "All dependencies successfully installed"
-sudo rm -f "${EXPECTED_FILE}"
