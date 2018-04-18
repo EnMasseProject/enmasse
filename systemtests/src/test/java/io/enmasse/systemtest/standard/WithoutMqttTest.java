@@ -2,12 +2,16 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.standard;
 
+import io.enmasse.systemtest.AddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AuthService;
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.ability.ITestBaseWithoutMqqt;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -22,26 +26,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag(isolated)
-public class WithoutMqttTest extends TestBase {
+public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqqt {
     private AddressSpace addressSpace;
 
     @BeforeEach
     public void setupSpace() throws Exception {
-        addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt",
+        addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
                 AuthService.STANDARD);
         createAddressSpace(addressSpace, false);
-        createUser(addressSpace, "test", "test");
+        username = "test";
+        password = "test";
+        createUser(addressSpace, username, password);
         setAddresses(addressSpace, Destination.anycast("a1"));
-    }
-
-    @AfterEach
-    public void teardownSpace() throws Exception {
-        deleteAddressSpace(addressSpace);
-    }
-
-    @Override
-    public String getDefaultPlan(AddressType addressType) {
-        return "standard-anycast";
     }
 
     @Test
@@ -50,8 +46,8 @@ public class WithoutMqttTest extends TestBase {
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions()
-                .setUsername("test")
-                .setPassword("test");
+                .setUsername(username)
+                .setPassword(password);
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
