@@ -26,10 +26,6 @@ function is_pod_ready(pod) {
     return pod.ready === 'True' && pod.phase === 'Running';
 }
 
-function list_queues(broker) {
-    return broker.listQueues();
-}
-
 function list_addresses(broker) {
     return broker.getAllQueuesAndTopics();
 }

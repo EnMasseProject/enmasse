@@ -93,8 +93,8 @@ describe('configmap backed address source', function() {
                     source.watcher.close().then(function () {
                         done();
                     });
-                }, 100);
-            }, 100);
+                }, 200);
+            }, 200);
         });
     });
     it('watches for changes even on error', function(done) {
@@ -126,8 +126,8 @@ describe('configmap backed address source', function() {
                     source.watcher.close().then(function () {
                         done();
                     });
-                }, 100);
-            }, 100);
+                }, 200);
+            }, 200);
         });
     });
     it('updates readiness', function(done) {

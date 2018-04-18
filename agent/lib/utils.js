@@ -223,3 +223,35 @@ module.exports.changes = function (last, current, compare, unchanged, stringify)
         }
     }
 };
+
+module.exports.coalesce = function (f, delay, max_delay) {
+    var start, scheduled, timeout = undefined;
+    var timeout = undefined;
+
+    function fire() {
+        start = undefined;
+        timeout = undefined;
+        f();
+    }
+
+    function can_delay() {
+        return start && scheduled < (start + max_delay);
+    }
+
+    function schedule() {
+        timeout = setTimeout(fire, delay);
+        scheduled = Date.now() + delay;
+    }
+
+    return function () {
+        if (timeout) {
+            if (can_delay()) {
+                clearTimeout(timeout);
+                schedule();
+            } // else just wait for previously scheduled call
+        } else {
+            start = Date.now();
+            schedule();
+        }
+    }
+};

@@ -27,15 +27,15 @@ function StandardStats () {
 StandardStats.prototype.init = function (console_server) {
     var self = this;
     setInterval(function () {
-        log.info('triggering router stats retrieval');
+        log.debug('triggering router stats retrieval');
         self.router_stats.retrieve(console_server.addresses, console_server.connections);
-        log.info('router stats retrieval triggered');
+        log.debug('router stats retrieval triggered');
     }, 10000);
 
     setInterval(function () {
-        log.info('triggering broker stats retrieval');
+        log.debug('triggering broker stats retrieval');
         self.broker_stats.retrieve(console_server.addresses);
-        log.info('broker stats retrieval triggered');
+        log.debug('broker stats retrieval triggered');
     }, 10000);
 };
 
