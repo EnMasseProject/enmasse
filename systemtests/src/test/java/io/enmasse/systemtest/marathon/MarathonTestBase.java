@@ -30,9 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import static io.enmasse.systemtest.TestTag.marathon;
 import static org.hamcrest.CoreMatchers.is;
 
-@Tag("marathon")
+@Tag(marathon)
 public abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFirefox {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();

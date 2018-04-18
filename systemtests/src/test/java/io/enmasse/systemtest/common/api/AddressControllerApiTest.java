@@ -26,13 +26,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("isolated")
+@Tag(isolated)
 public class AddressControllerApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
 

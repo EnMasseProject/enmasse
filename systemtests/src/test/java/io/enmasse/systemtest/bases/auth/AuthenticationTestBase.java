@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Tag("isolated")
+import static io.enmasse.systemtest.TestTag.isolated;
+
+@Tag(isolated)
 public abstract class AuthenticationTestBase extends TestBase {
 
     protected static final String mqttAddress = "t1";
