@@ -1,0 +1,5 @@
+---
+# tasks file with dependencies
+
+- include_tasks: dependencies.yml
+  tags: always

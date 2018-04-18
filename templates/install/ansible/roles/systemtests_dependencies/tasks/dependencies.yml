@@ -72,7 +72,7 @@
 
 ######################################################
 # Task for install maven
-- name: MAVEN | Chceck if maven is present
+- name: MAVEN | Check if maven is present
   command: "mvn --version || cd {{ maven_path }}"
   ignore_errors: true
   register: mvn_is_installed

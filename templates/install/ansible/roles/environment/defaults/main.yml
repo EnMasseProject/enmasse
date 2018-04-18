@@ -1,0 +1,14 @@
+---
+enmasse_tmp_dir: '/tmp/enmasse/'
+
+# vars for OpenShift
+openshift_path: "{{ enmasse_tmp_dir }}/openshift/"
+openshift_client_url: 'https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz'
+
+# vars for Minikube
+minikube_path: "{{ enmasse_tmp_dir }}/minikube/"
+minikube_url: 'https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64'
+
+# vars for Kubectl
+kubectl_path: "{{ enmasse_tmp_dir }}/kubectl/"
+kubectl_url: "https://storage.googleapis.com/kubernetes-release/release/v1.8.7/bin/linux/amd64/kubectl"
