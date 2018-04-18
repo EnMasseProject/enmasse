@@ -102,6 +102,9 @@ function configure() {
 
     export ARTEMIS_INSTANCE=${instanceDir}
     export ARTEMIS_INSTANCE_URI=file:${instanceDir}/
+    export ARTEMIS_DATA_DIR=${instanceDir}/data
+    export ARTEMIS_INSTANCE_ETC_URI=file:${instanceDir}/etc/
+
     envsubst < $CONFIG_TEMPLATES/artemis.profile > $instanceDir/etc/artemis.profile
 
     if [ "$DEBUG_LOGGING" == "true" ]; then
