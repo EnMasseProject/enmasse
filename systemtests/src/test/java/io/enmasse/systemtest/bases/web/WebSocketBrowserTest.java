@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class WebSocketBrowserTest extends TestBaseWithShared implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private static SeleniumProvider selenium = new SeleniumProvider();
     private RheaWebPage rheaWebPage;
 
     @BeforeEach
@@ -33,13 +32,6 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
             selenium.clearScreenShots();
         rheaWebPage = new RheaWebPage(selenium);
         super.setAddresses(sharedAddressSpace);
-    }
-
-    @AfterEach
-    public void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            selenium.onFailed(context);
-        }
     }
 
     @AfterAll

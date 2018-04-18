@@ -35,8 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private SeleniumProvider selenium = new SeleniumProvider();
-
     private ConsoleWebPage consoleWebPage;
 
     @BeforeEach
@@ -47,12 +45,8 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
     }
 
     @AfterEach
-    public void tearDownDrivers(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            selenium.onFailed(context);
-        } else {
-            selenium.tearDownDrivers();
-        }
+    public void tearDownDrivers() throws Exception {
+        selenium.tearDownDrivers();
         plansProvider.tearDown();
     }
 
