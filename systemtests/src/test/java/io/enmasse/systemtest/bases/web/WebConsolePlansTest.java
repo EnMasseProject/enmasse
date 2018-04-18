@@ -35,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
+    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+
     private ConsoleWebPage consoleWebPage;
 
     @BeforeEach

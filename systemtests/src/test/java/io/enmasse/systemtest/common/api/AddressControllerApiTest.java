@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(isolated)
 public class AddressControllerApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
+    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
     public void setUp() {

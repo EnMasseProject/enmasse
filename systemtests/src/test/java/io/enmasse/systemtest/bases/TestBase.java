@@ -34,10 +34,6 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -59,10 +55,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = new Environment();
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
-    protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
+    protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
     private static Logger log = CustomLogger.getLogger();
     protected String username;
     protected String password;
@@ -70,7 +65,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected MqttClientFactory mqttClientFactory;
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
-    private BrokerManagement brokerManagement = new ArtemisManagement();
     private KeycloakClient keycloakApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -514,12 +508,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @param expectedCount count of expected subscribers
      * @throws Exception
      */
-    protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount) throws Exception {
+    protected void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, int expectedCount) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        waitForSubscribers(addressSpace, topic, expectedCount, budget);
+        waitForSubscribers(brokerManagement, addressSpace, topic, expectedCount, budget);
     }
 
-    protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
+    protected void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
         AmqpClient queueClient = null;
         try {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
@@ -533,7 +527,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             boolean done = false;
             int actualSubscribers = 0;
             do {
-                actualSubscribers = getSubscriberCount(queueClient, replyQueue, topic);
+                actualSubscribers = getSubscriberCount(brokerManagement, queueClient, replyQueue, topic);
                 log.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
                 if (actualSubscribers != expectedCount) {
                     Thread.sleep(1000);
@@ -570,7 +564,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    protected List<String> getBrokerQueueNames(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+    protected List<String> getBrokerQueueNames(BrokerManagement brokerManagement, AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
         return brokerManagement.getQueueNames(queueClient, replyQueue, topic);
     }
 
@@ -583,8 +577,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    protected int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
-        List<String> queueNames = getBrokerQueueNames(queueClient, replyQueue, topic);
+    protected int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+        List<String> queueNames = getBrokerQueueNames(brokerManagement, queueClient, replyQueue, topic);
 
         AtomicInteger subscriberCount = new AtomicInteger(0);
         queueNames.forEach((String queue) -> {

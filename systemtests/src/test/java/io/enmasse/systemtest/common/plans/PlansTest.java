@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PlansTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
+    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
     public void setUp() {
