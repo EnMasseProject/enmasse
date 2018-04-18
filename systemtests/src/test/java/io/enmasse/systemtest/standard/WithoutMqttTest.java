@@ -8,7 +8,7 @@ import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AuthService;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.ability.ITestBaseWithoutMqqt;
+import io.enmasse.systemtest.ability.ITestBaseWithoutMqtt;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
@@ -26,7 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag(isolated)
-public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqqt {
+public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
     private AddressSpace addressSpace;
 
     @BeforeEach

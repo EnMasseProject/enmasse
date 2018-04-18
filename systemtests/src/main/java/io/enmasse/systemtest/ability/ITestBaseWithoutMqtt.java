@@ -6,7 +6,7 @@ package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.AddressType;
 
-public interface ITestBaseWithoutMqqt extends ITestBase {
+public interface ITestBaseWithoutMqtt extends ITestBase {
 
     @Override
     default String getDefaultPlan(AddressType addressType) {
