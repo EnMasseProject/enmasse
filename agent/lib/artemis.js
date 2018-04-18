@@ -17,6 +17,7 @@
 
 var util = require('util');
 var log = require('./log.js').logger();
+var myutils = require('./utils.js');
 
 var Artemis = function (connection) {
     this.connection = connection;
@@ -208,47 +209,84 @@ for (var key in extra_queue_attributes) {
     add_queue_method(extra_queue_attributes[key]);
 }
 
-Artemis.prototype.listQueues = function (attribute_list) {
-    var attributes = attribute_list || Object.keys(queue_attributes);
-    var agent = this;
-    return new Promise(function (resolve, reject) {
-        agent.getQueueNames().then(function (results) {
-            if (results && !util.isArray(results)) {
-                log.info('[%s] unexpected result for queue names: %j', agent.id, results);
-            }
-            var allnames = util.isArray(results) ? results : [];
-            var names = allnames.filter(function (n) { return n !== agent.address; } );
-            Promise.all(
-                names.map(function (name) {
-                    return Promise.all(
-                        attributes.map(function (attribute) {
-                            var method_name = queue_attributes[attribute] || extra_queue_attributes[attribute];
-                            if (method_name) {
-                                return agent[method_name](name);
-                            } else {
-                                return Promise.reject('Invalid attribute for queue: ' + attribute);
-                            }
-                        })
-                    );
-                })
-            ).then(function (results) {
-                var queues = {};
-                for (var i = 0; i < results.length; i++) {
-                    var q = {name: names[i]};
-                    if (results[i]) {
-                        for (var j = 0; j < results[i].length; j++) {
-                            q[attributes[j]] = results[i][j];
-                        }
-                    }
-                    queues[q.name] = q;
-                }
-                resolve(queues);
-            }).catch(function (e) {
-                reject(e);
-            });
-        });
-    });
+var queue_attribute_aliases = {
+    'isTemporary': 'temporary',
+    'isDurable': 'durable',
+    'messageCount': 'messages',
+    'consumerCount': 'consumers',
+    'messagesAdded': 'enqueued',
+    'deliveringCount': 'delivering',
+    'messagesAcked': 'acknowledged',
+    'messagesExpired': 'expired',
+    'messagesKilled': 'killed'
+};
+
+function correct_type(o) {
+    var i = Number(o);
+    if (!Number.isNaN(i)) return i;
+    else if (o === 'true') return true;
+    else if (o === 'false') return false;
+    else if (o === null) return undefined;
+    else return o;
 }
+
+function set_queue_aliases(q) {
+    for (var f in queue_attribute_aliases) {
+        var a = queue_attribute_aliases[f];
+        if (q[f] !== undefined) {
+            q[a] = q[f];
+            delete q[f];
+        }
+    }
+}
+
+function fix_types(o) {
+    for (var k in o) {
+        o[k] = correct_type(o[k]);
+    }
+}
+
+function process_queue_stats(q) {
+    fix_types(q);
+    set_queue_aliases(q);
+}
+
+Artemis.prototype.listQueues = function () {
+    return this._request('broker', 'listQueues', ['{"field":"","operation":"","value":"","sortOrder":"","sortBy":"","sortColumn":""}', 1, 2147483647/*MAX_INT*/]).then(function (result) {
+        var queues = JSON.parse(result).data;
+        queues.forEach(process_queue_stats);
+        return queues;
+    });
+};
+
+function routing_type_to_type(t) {
+    if (t === 'MULTICAST') return 'topic';
+    if (t === 'ANYCAST') return 'queue';
+    return t;
+}
+
+function routing_types_to_type(t) {
+    if (t.indexOf('MULTICAST') >= 0) {
+        return 'topic';
+    } else if (t.indexOf('ANYCAST') >= 0) {
+        return 'queue';
+    } else {
+        return undefined;
+    }
+}
+
+function address_to_queue_or_topic(a) {
+    return {
+        name: a.name,
+        type: routing_types_to_type(a.routingTypes)
+    };
+}
+
+Artemis.prototype.getAddresses = function () {
+    return this._request('broker', 'listAddresses', ['{"field":"","operation":"","value":"","sortOrder":"","sortBy":"","sortColumn":""}', 1, 2147483647/*MAX_INT*/]).then(function (result) {
+        return JSON.parse(result).data.map(address_to_queue_or_topic);
+    });
+};
 
 Artemis.prototype.getQueueDetails = function (name, attribute_list) {
     var attributes = attribute_list || Object.keys(queue_attributes);
@@ -269,65 +307,119 @@ Artemis.prototype.getQueueDetails = function (name, attribute_list) {
     });
 }
 
+function initialise_topic_stats(a) {
+    a.enqueued = 0;
+    a.messages = 0;
+    a.subscriptions = [];
+    a.subscription_count = 0;
+    a.durable_subscription_count = 0;
+    a.inactive_durable_subscription_count = 0;
+}
+
+function update_topic_stats(a, q) {
+    a.enqueued += q.enqueued;
+    a.messages += q.messages;
+    a.subscriptions.push(q);
+    a.subscription_count++;
+    if (q.durable) {
+        a.durable_subscription_count++;
+        if (q.consumers === 0) {
+            a.inactive_durable_subscription_count++;
+        }
+    }
+}
+
+function queues_to_addresses(addresses, queues, include_topic_stats, include_reverse_index) {
+    var index = {};
+    var reverse_index = include_reverse_index ? {} : undefined;
+    for (var i = 0; i < addresses.length; i++) {
+        var a = addresses[i];
+        var b = index[a.name];
+        if (b === undefined) {
+            index[a.name] = a;
+            if (include_topic_stats && a.type === 'topic') {
+                initialise_topic_stats(a);
+            }
+        } else {
+            log.warn('Duplicate address: %s (%s)', a.name, a.type);
+        }
+    }
+    for (var i = 0; i < queues.length; i++) {
+        var q = queues[i];
+        if (reverse_index) {
+            reverse_index[q.name] = q.address;
+        }
+        var a = index[q.address];
+        if (q.routingType === 'MULTICAST') {
+            if (a === undefined) {
+                log.warn('Missing address %s for topic queue %s', q.address, q.name);
+                a = {
+                    name: q.address,
+                    type: 'topic'
+                };
+                index[q.address] = a;
+                if (include_topic_stats) {
+                    initialise_topic_stats(a);
+                }
+            } else if (a.type !== 'topic') {
+                log.warn('Unexpected address type: queue %s has type %s, address %s has type %s', q.name, q.routingType, q.address, a.type);
+            }
+            if (include_topic_stats) {
+                update_topic_stats(a, q);
+            }
+        } else if (q.routingType === 'ANYCAST') {
+            if (a === undefined) {
+                a = {
+                    name: q.address,
+                    type: 'queue'
+                };
+                index[q.address] = a;
+                log.warn('Missing address %s for queue %s', q.address, q.name);
+            } else if (q.name !== q.address) {
+                log.warn('Mismatched address %s for queue %s', q.address, q.name);
+            } else if (a.routingType !== undefined) {
+                log.warn('Duplicate queue for address %s: %j %j', q.address, a, q);
+            }
+            myutils.merge(a, q);
+        } else {
+            log.error('Unknown routingType: %s', q.routingType);
+        }
+    }
+    return {
+        addresses: addresses,
+        queues: queues,
+        index: index,
+        reverse_index: reverse_index
+    };
+}
+
+Artemis.prototype._get_address_data = function (include_topic_stats, include_reverse_index) {
+    return Promise.all([this.getAddresses(), this.listQueues()]).then(function (results) {
+        return queues_to_addresses(results[0], results[1], include_topic_stats, include_reverse_index);
+    });
+};
+
+Artemis.prototype.listAddresses = function () {
+    return this._get_address_data().then(function (data) {
+        return data.index;
+    });
+};
+
+Artemis.prototype.getAllAddressData = function () {
+    return this._get_address_data(true, true).then(function (data) {
+        return data;
+    });
+};
+
+Artemis.prototype.getAllQueuesAndTopics = function () {
+    return this._get_address_data(true, false).then(function (data) {
+        return data.index;
+    });
+};
+
 Artemis.prototype.getAddressNames = function () {
     return this._request('broker', 'getAddressNames', []);
 }
-
-var address_attributes = {delivery_modes: 'getRoutingTypesAsJSON',
-                          messages: 'getNumberOfMessages',
-                          queues: 'getQueueNames',
-                          enqueued: 'getMessageCount'};
-
-Artemis.prototype.listAddresses = function () {
-    var attributes = Object.keys(address_attributes);
-    var agent = this;
-    return agent.getAddressNames().then(function (allnames) {
-        var names = allnames.filter(function (n) { return n && n !== agent.address; } );
-        return Promise.all(
-            names.map(function (name) {
-                return Promise.all(
-                    attributes.map(function (attribute) {
-                        return agent._request('address.'+name, address_attributes[attribute], []);
-                    })
-                ).then(function (results) {
-                    var a = {'name': name};
-                    for (var i = 0; i < results.length; i++) {
-                        if (attributes[i] === 'delivery_modes') {
-                            if (results[i]) {
-                                if (results[i].indexOf('MULTICAST') >= 0) {
-                                    a.multicast = true;
-                                }
-                                if (results[i].indexOf('ANYCAST') >= 0) {
-                                    a.anycast = true;
-                                }
-                            } else {
-                                log.info('unexpected result for delivery_modes: %j', results[i]);
-                            }
-                        } else {
-                            a[attributes[i]] = results[i];
-                        }
-                    }
-                    return a;
-                });
-            })
-        ).then(function (results) {
-            return Promise.all(results.map(function (address) {
-                return Promise.all(address.queues.map(function (queue) {
-                    return agent.getQueueDetails(queue);
-                })).then(function (results) {
-                    address.queues = results;
-                    return address;
-                });
-            })).then(function (results) {
-                var address_map = {};
-                for (var i = 0; i < results.length; i++) {
-                    address_map[results[i].name] = results[i];
-                }
-                return address_map;
-            });
-        });
-    });
-};
 
 Artemis.prototype.createAddress = function (name, type) {
     var routing_types = [];
@@ -392,27 +484,6 @@ Artemis.prototype.deleteBindingsFor = function (address) {
     var self = this;
     return this.getBoundQueues(address).then(function (results) {
         return Promise.all(results.map(function (q) { return self.destroyQueue(q); }));
-    });
-};
-
-Artemis.prototype.getAllQueuesAndTopics = function () {
-    return this.listAddresses().then(function (addresses) {
-        for (var name in addresses) {
-            var address = addresses[name];
-            if (address.anycast && address.queues.length === 1 && address.name === address.queues[0].name) {
-                addresses[name] = address.queues[0];
-                addresses[name].is_queue = true;
-            } else if (address.multicast) {
-                address.is_topic = true;
-                address.subscription_count = address.queues.length;
-                address.durable_subscription_count = address.queues.filter(function (q) { return q.durable; }).length;
-                address.inactive_durable_subscription_count = address.queues.filter(function (q) { return q.durable && q.consumers === 0; }).length;
-                address.subscriptions = address.queues;
-                delete address['queues'];
-                delete address['multicast'];
-            }
-        }
-        return addresses;
     });
 };
 

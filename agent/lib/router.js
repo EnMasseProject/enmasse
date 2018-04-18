@@ -36,7 +36,7 @@ function has_inter_router_role (record) {
 }
 
 function matches_qualifier (record) {
-    return record.name.indexOf(ID_QUALIFIER) === 0;
+    return record.name && record.name.indexOf(ID_QUALIFIER) === 0;
 }
 
 function to_host_port (record) {

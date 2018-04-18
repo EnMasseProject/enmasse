@@ -76,7 +76,7 @@ describe('broker stats', function() {
                                      consumerCount:3,
                                      messagesAdded:44,
                                      deliveringCount:5,
-                                     messagesAcknowledged:8,
+                                     messagesAcked:8,
                                      messagesExpired:4,
                                      messagesKilled: 2
                                  });
@@ -95,7 +95,7 @@ describe('broker stats', function() {
                 assert.equal(results.myqueue.shards[0].killed, 2);
                 stats.watcher.close();
                 done();
-            });
+            }).catch(done);
         });
     });
     it('aggregates queue stats from multiple brokers', function(done) {
@@ -106,7 +106,7 @@ describe('broker stats', function() {
                                      consumerCount:3,
                                      messagesAdded:44,
                                      deliveringCount:5,
-                                     messagesAcknowledged:8,
+                                     messagesAcked:8,
                                      messagesExpired:4,
                                      messagesKilled: 2
                                  });
@@ -118,7 +118,7 @@ describe('broker stats', function() {
                                      consumerCount:1,
                                      messagesAdded:88,
                                      deliveringCount:9,
-                                     messagesAcknowledged:58,
+                                     messagesAcked:58,
                                      messagesExpired:7,
                                      messagesKilled: 3
                                  });
@@ -156,7 +156,7 @@ describe('broker stats', function() {
                 assert.equal(results.myqueue.shards[b2].killed, 3);
                 stats.watcher.close();
                 done();
-            });
+            }).catch(done);
         });
     });
 
@@ -164,25 +164,25 @@ describe('broker stats', function() {
     it('aggregates topic stats from multiple brokers', function(done) {
         broker.add_topic_address('mytopic',
                                  {
-                                     'dsub1':{durable:true, messageCount:10, consumerCount:9, messagesAdded:8, deliveringCount:7, messagesAcknowledged:6, messagesExpired:5, messagesKilled: 4},
-                                     'sub2':{durable:false, messageCount:11, consumerCount:10, messagesAdded:9, deliveringCount:8, messagesAcknowledged:7, messagesExpired:6, messagesKilled: 5},
-                                 }, 21);
+                                     'dsub1':{durable:true, messageCount:10, consumerCount:9, messagesAdded:8, deliveringCount:7, messagesAcked:6, messagesExpired:5, messagesKilled: 4},
+                                     'sub2':{durable:false, messageCount:11, consumerCount:10, messagesAdded:9, deliveringCount:8, messagesAcked:7, messagesExpired:6, messagesKilled: 5},
+                                 });
         var broker2 = discovery.add_broker();
         broker2.add_topic_address('mytopic',
                                  {
-                                     'sub3':{durable:false, messageCount:9, consumerCount:8, messagesAdded:7, deliveringCount:6, messagesAcknowledged:5, messagesExpired:4, messagesKilled: 3}
-                                 }, 9);
+                                     'sub3':{durable:false, messageCount:9, consumerCount:8, messagesAdded:7, deliveringCount:6, messagesAcked:5, messagesExpired:4, messagesKilled: 3}
+                                 });
         var broker3 = discovery.add_broker();
         broker3.add_topic_address('mytopic',
                                  {
-                                     'dsub4':{durable:true, messageCount:7, consumerCount:0, messagesAdded:7, deliveringCount:7, messagesAcknowledged:7, messagesExpired:7, messagesKilled: 7},
-                                     'dsub5':{durable:true, messageCount:1, consumerCount:1, messagesAdded:1, deliveringCount:1, messagesAcknowledged:1, messagesExpired:1, messagesKilled: 1},
-                                     'sub6':{durable:false, messageCount:2, consumerCount:2, messagesAdded:2, deliveringCount:2, messagesAcknowledged:2, messagesExpired:2, messagesKilled: 2}
-                                 }, 14);
+                                     'dsub4':{durable:true, messageCount:7, consumerCount:0, messagesAdded:7, deliveringCount:7, messagesAcked:7, messagesExpired:7, messagesKilled: 7},
+                                     'dsub5':{durable:true, messageCount:1, consumerCount:1, messagesAdded:1, deliveringCount:1, messagesAcked:1, messagesExpired:1, messagesKilled: 1},
+                                     'sub6':{durable:false, messageCount:2, consumerCount:2, messagesAdded:2, deliveringCount:2, messagesAcked:2, messagesExpired:2, messagesKilled: 2}
+                                 });
         var stats = new BrokerStats({port:discovery.resource_server.port, host:'localhost', namespace:'default', token: 'foo'});
         broker3.on('connected', function () {
             stats._retrieve().then(function (results) {
-                assert.equal(results.mytopic.depth, 44);
+                assert.equal(results.mytopic.depth, 40);
                 assert.equal(results.mytopic.shards.length, 3);
 
                 var b1, b2, b3;
@@ -258,7 +258,7 @@ describe('broker stats', function() {
                 }
                 stats.watcher.close();
                 done();
-            });
+            }).catch(done);
         });
     });
 
@@ -270,7 +270,7 @@ describe('broker stats', function() {
                                      consumerCount:3,
                                      messagesAdded:44,
                                      deliveringCount:5,
-                                     messagesAcknowledged:8,
+                                     messagesAcked:8,
                                      messagesExpired:4,
                                      messagesKilled: 2
                                  });
@@ -282,7 +282,7 @@ describe('broker stats', function() {
                                      consumerCount:1,
                                      messagesAdded:88,
                                      deliveringCount:9,
-                                     messagesAcknowledged:58,
+                                     messagesAcked:58,
                                      messagesExpired:7,
                                      messagesKilled: 3
                                  });

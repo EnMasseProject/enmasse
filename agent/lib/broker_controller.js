@@ -88,13 +88,21 @@ BrokerController.prototype.sync_addresses = function (addresses) {
     return this.serial_sync();
 };
 
+function total() {
+    var result = 0;
+    for (var i in arguments) {
+        if (arguments[i]) result += arguments[i];
+    }
+    return result;
+}
+
 function transform_queue_stats(queue) {
     return {
         receivers: queue.consumers,
         senders: 0,/*add this later*/
         depth: queue.messages,
         messages_in: queue.enqueued,
-        messages_out: (queue.acknowledged + queue.expired + queue.killed),
+        messages_out: total(queue.acknowledged, queue.expired, queue.killed),
         propagated: 100,
         shards: [queue],
         outcomes: {
@@ -120,8 +128,7 @@ function transform_topic_stats(topic) {
     return {
         receivers: topic.subscription_count,
         senders: 0,/*add this later*/
-        depth: topic.messages,
-        //messages_in: topic.enqueued,//doesn't seem to work as expected
+        depth: topic.enqueued,
         /*this isn't really correct; what we want is the total number of messages sent to the topic (independent of the number of subscribers)*/
         messages_in: sum('enqueued', topic.subscriptions),
         messages_out: sum('acknowledged', topic.subscriptions),
@@ -143,7 +150,7 @@ function transform_topic_stats(topic) {
 }
 
 function transform_address_stats(address) {
-    return address.is_queue ? transform_queue_stats(address) : transform_topic_stats(address);
+    return address.type == 'queue' ? transform_queue_stats(address) : transform_topic_stats(address);
 }
 
 function transform_connection_stats(raw) {
@@ -209,21 +216,21 @@ BrokerController.prototype.retrieve_stats = function () {
     var self = this;
     if (this.broker !== undefined) {
         return Promise.all([
-            this.broker.getAllQueuesAndTopics(),
-            this.broker.listQueues(['address']),//for queue->address mapping
+            this.broker.getAllAddressData(),
             this.broker.listConnectionsWithSessions(),
             this.broker.listProducers(),
             this.broker.listConsumers()]).then(function (results) {
                 var address_stats = {};
-                for (var name in results[0]) {
-                    address_stats[name] = transform_address_stats(results[0][name]);
+                for (var name in results[0].index) {
+                    address_stats[name] = transform_address_stats(results[0].index[name]);
                 }
-                var connection_stats = index_by(results[2].map(transform_connection_stats).filter(is_not_internal), 'id');
-                var senders = results[3].map(transform_producer_stats);
-                var receivers = results[4].map(transform_consumer_stats);
+                var connection_stats = index_by(results[1].map(transform_connection_stats).filter(is_not_internal), 'id');
+                var senders = results[2].map(transform_producer_stats);
+                var receivers = results[3].map(transform_consumer_stats);
                 receivers.forEach(function (r) {
-                    if (results[1][r.address]) {
-                        r.address = results[1][r.address].address;
+                    var q = results[0].reverse_index[r.address];
+                    if (q) {
+                        r.address = q.address;
                     }
                 });
 
@@ -286,7 +293,7 @@ function excluded_addresses(address) {
 }
 
 function is_temp_queue(a) {
-    return a.anycast && a.queues && a.queues.length === 1 && a.queues[0].temporary;
+    return a.type === 'queue' && a.temporary;
 }
 
 /**
@@ -303,7 +310,7 @@ function translate(addresses_in, exclude) {
             continue;
         }
         if (a.name) {
-            addresses_out[name] = {address:a.name, type: a.multicast ? 'topic' : 'queue'};
+            addresses_out[name] = {address:a.name, type: a.type};
         } else {
             log.warn('Skipping address with no name: %j', a);
         }

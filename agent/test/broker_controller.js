@@ -98,23 +98,24 @@ describe('broker controller', function() {
     });
     it('retrieves topic stats', function(done) {
         broker.add_topic_address('foo', {
-            's1':{durable:true, messageCount:10, consumerCount:9, messagesAdded:8, deliveringCount:7, messagesAcknowledged:6, messagesExpired:5, messagesKilled: 4},
-            's2':{durable:false, messageCount:11, consumerCount:10, messagesAdded:9, deliveringCount:8, messagesAcknowledged:7, messagesExpired:6, messagesKilled: 5},
+            's1':{durable:true, messageCount:10, consumerCount:9, messagesAdded:8, deliveringCount:7, messagesAcked:6, messagesExpired:5, messagesKilled: 4},
+            's2':{durable:false, messageCount:11, consumerCount:10, messagesAdded:9, deliveringCount:8, messagesAcked:7, messagesExpired:6, messagesKilled: 5},
         }, 21);
         for (var i = 0; i < 5; i++) broker.add_connection({}, [{destination:'foo'}]);
         Promise.all([
             new Promise(function (resolve, reject) {
                 controller.on('address_stats_retrieved', function (stats) {
-                    assert.equal(stats.foo.propagated, 100);
-                    assert.equal(stats.foo.messages_in, 17);
-                    assert.equal(stats.foo.messages_out, 13);
-                    assert.equal(stats.foo.receivers, 2);
-                    assert.equal(stats.foo.senders, 5);
-                    resolve();
+                    resolve(stats);
                 });
             }),
             controller.retrieve_stats()
-        ]).then(function () {
+        ]).then(function (results) {
+            var stats = results[0];
+            assert.equal(stats.foo.propagated, 100);
+            assert.equal(stats.foo.messages_in, 17);
+            assert.equal(stats.foo.messages_out, 13);
+            assert.equal(stats.foo.receivers, 2);
+            assert.equal(stats.foo.senders, 5);
             done();
         }).catch(done);
     });

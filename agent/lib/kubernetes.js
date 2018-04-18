@@ -19,6 +19,7 @@ var fs = require('fs');
 var util = require('util');
 var events = require('events');
 var querystring = require('querystring');
+var set = require('./set.js');
 var myutils = require('./utils.js');
 var myevents = require('./events.js');
 
@@ -139,21 +140,26 @@ function do_delete(resource, options) {
     return do_request('DELETE', resource, undefined, options);
 };
 
+function name_compare(a, b) {
+    return myutils.string_compare(a.metadata.name, b.metadata.name);
+};
+
 function Watcher (resource, options) {
     events.EventEmitter.call(this);
     this.closed = false;
     this.resource = resource;
     this.options = options;
-    this.objects = [];
+    this.set = set.sorted_object_set(name_compare);
     this.delay = 0;
+    this.notify = myutils.coalesce(this._notify.bind(this), 100, 5000);
 }
 
 util.inherits(Watcher, events.EventEmitter);
 
-Watcher.prototype.notify = function () {
+Watcher.prototype._notify = function () {
     var self = this;
     setImmediate( function () {
-        self.emit('updated', self.objects);
+        self.emit('updated', self.set.to_array());
     });
 };
 
@@ -161,7 +167,7 @@ Watcher.prototype.list = function () {
     var self = this;
     do_get(this.resource, this.options).then(function (result) {
         self.delay = 0;
-        self.objects = result.items;
+        self.set.reset(result.items);
         self.notify();
         if (!self.closed) {
             log.debug('list retrieved; watching...');
@@ -199,20 +205,30 @@ function matcher(object) {
 };
 
 Watcher.prototype.added = function (object) {
-    if (!this.objects.some(matcher(object))) {
-        this.objects.push(object);
+    if (this.set.insert(object)) {
         this.notify();
+        return true;
+    } else {
+        return false;
     }
 };
 
 Watcher.prototype.modified = function (object) {
-    myutils.replace(this.objects, object, matcher(object));
-    this.notify();
+    if (this.set.replace(object)) {
+        this.notify();
+        return true;
+    } else {
+        return false;
+    }
 };
 
 Watcher.prototype.deleted = function (object) {
-    myutils.remove(this.objects, matcher(object));
-    this.notify();
+    if (this.set.remove(object)) {
+        this.notify();
+        return true;
+    } else {
+        return false;
+    }
 };
 
 Watcher.prototype.close = function () {

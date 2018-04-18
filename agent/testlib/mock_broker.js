@@ -168,6 +168,14 @@ function MockBroker (name) {
                 throw new Error('error deleting address settings ' + match);
             }
         },
+        listAddresses : function () {
+            var items = self.get('address');
+            return JSON.stringify({data:items, count:items.length});
+        },
+        listQueues : function () {
+            var items = self.get('queue');
+            return JSON.stringify({data:items, count:items.length});
+        },
         listConnectionsAsJSON : function () {
             return JSON.stringify(self.get('connection'));
         },
@@ -306,9 +314,9 @@ MockBroker.prototype.add_connection = function (properties, senders, receivers, 
 };
 
 var queue_accessors = ['isTemporary', 'isDurable', 'getMessageCount', 'getConsumerCount', 'getMessagesAdded',
-                       'getDeliveringCount', 'getMessagesAcknowledged', 'getMessagesExpired', 'getMessagesKilled',
+                       'getDeliveringCount', 'getMessagesAcked', 'getMessagesExpired', 'getMessagesKilled',
                        'getAddress', 'getRoutingType'];
-var address_accessors = ['getRoutingTypesAsJSON','getNumberOfMessages','getQueueNames', 'getMessageCount'];
+var address_accessors = ['getRoutingTypesAsJSON','getRoutingTypes','getNumberOfMessages','getQueueNames', 'getMessageCount'];
 
 MockBroker.prototype.add_queue = function (name, properties) {
     var queue = new Resource(name, 'queue', queue_accessors, properties);
@@ -321,6 +329,7 @@ MockBroker.prototype.add_address = function (name, is_multicast, messages, queue
         queueNames: queue_names || [],
         numberOfMessages: messages || 0,
         routingTypesAsJSON: [is_multicast ? 'MULTICAST' : 'ANYCAST'],
+        routingTypes: [is_multicast ? 'MULTICAST' : 'ANYCAST'],
         messageCount: messages || 0
     });
     this.objects.push(address);
@@ -334,14 +343,14 @@ MockBroker.prototype.add_address_settings = function (name, settings) {
 };
 
 MockBroker.prototype.add_queue_address = function (name, properties) {
-    this.add_queue(name, properties);
+    this.add_queue(name, myutils.merge({address: name, routingType:'ANYCAST'}, properties));
     var addr = this.add_address(name, false, 0, [name]);
     return addr;
 };
 
 MockBroker.prototype.add_topic_address = function (name, subscribers, messages) {
     for (var s in subscribers) {
-        this.add_queue(s, subscribers[s]);
+        this.add_queue(s, myutils.merge({address: name, routingType:'MULTICAST'}, subscribers[s]));
     }
     return this.add_address(name, true, messages, Object.keys(subscribers));
 };

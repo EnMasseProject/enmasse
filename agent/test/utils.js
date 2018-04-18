@@ -292,3 +292,36 @@ describe('changes', function () {
         done();
     });
 });
+
+describe('coalesce', function () {
+    it ('merges frequent calls', function (done) {
+        var count = 0;
+        function test() {
+            assert.equal(count, 5);
+            done();
+        }
+        var f = myutils.coalesce(test, 10, 1000);
+        for (var i = 0; i < 5; i++) {
+            count++;
+            f();
+        }
+    });
+    it ('does not exceed max delay', function (done) {
+        var triggered = 0;
+        var fired = 0;
+        function fire() {
+            fired++;
+            if (triggered === 10) {
+                assert.equal(fired, 2);
+                done();
+            }
+        }
+        var f = myutils.coalesce(fire, 200, 500);
+        var interval = setInterval(function () {
+            f();
+            if (++triggered === 10) {
+                clearInterval(interval);
+            }
+        }, 100);
+    });
+});

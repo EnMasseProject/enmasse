@@ -142,7 +142,6 @@ AddressSource.prototype.update_readiness = function (changes) {
 };
 
 AddressSource.prototype.updated = function (objects) {
-    objects.sort(configmap_compare);
     log.debug('addresses updated: %j', objects);
     var addresses = objects.map(extract_address).filter(is_defined).map(extract_spec);
     var changes = this.get_changes('addresses_defined', addresses, same_address_definition_and_status);

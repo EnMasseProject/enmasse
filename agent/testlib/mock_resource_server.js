@@ -375,7 +375,7 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
     if (params.required_resources) {
         plan.requiredResources = params.required_resources;
     }
-    this.add_resource(get_config_map(plan.name, 'address-plan', 'definition', plan));
+    this.add_resource(get_config_map(plan.metadata.name, 'address-plan', 'definition', plan));
 };
 
 ConfigMapServer.prototype.resource_initialiser = function (resource) {
