@@ -4,8 +4,18 @@
  */
 package io.enmasse.systemtest.selenium;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.WebDriver;
 
 public interface ISeleniumProvider {
+    SeleniumProvider selenium = new SeleniumProvider();
     WebDriver buildDriver();
+
+    @AfterEach
+    default void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) {
+            selenium.onFailed(context);
+        }
+    }
 }

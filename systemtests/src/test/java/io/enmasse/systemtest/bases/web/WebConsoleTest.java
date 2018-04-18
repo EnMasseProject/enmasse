@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public abstract class WebConsoleTest extends TestBaseWithShared implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private static SeleniumProvider selenium = new SeleniumProvider();
     private List<AbstractClient> clientsList;
 
 
@@ -54,9 +53,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     @AfterEach
     public void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            selenium.onFailed(context);
-        }
         if (clientsList != null) {
             stopClients(clientsList);
             clientsList.clear();
