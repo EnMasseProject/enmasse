@@ -662,7 +662,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         for (int i = 0; i < receiverCount; i++) {
             RheaClientReceiver rec = new RheaClientReceiver();
             rec.setArguments(arguments);
-            rec.runAsync();
+            rec.runAsync(false);
             receivers.add(rec);
         }
 
@@ -694,7 +694,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             for (int j = 0; j < i + 1; j++) {
                 AbstractClient send = new RheaClientSender();
                 send.setArguments(arguments);
-                send.runAsync();
+                send.runAsync(false);
                 senders.add(send);
             }
         }
@@ -723,7 +723,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             for (int j = 0; j < i + 1; j++) {
                 AbstractClient rec = new RheaClientReceiver();
                 rec.setArguments(arguments);
-                rec.runAsync();
+                rec.runAsync(false);
                 receivers.add(rec);
             }
         }
@@ -752,7 +752,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
         AbstractClient cli = new RheaClientConnector();
         cli.setArguments(arguments);
-        cli.runAsync();
+        cli.runAsync(false);
 
         return cli;
     }

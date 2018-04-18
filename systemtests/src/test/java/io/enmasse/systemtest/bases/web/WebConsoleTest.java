@@ -14,7 +14,6 @@ import io.enmasse.systemtest.selenium.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
@@ -52,7 +51,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     @AfterEach
-    public void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
+    public void tearDownWebConsoleTests() throws Exception {
         if (clientsList != null) {
             stopClients(clientsList);
             clientsList.clear();
