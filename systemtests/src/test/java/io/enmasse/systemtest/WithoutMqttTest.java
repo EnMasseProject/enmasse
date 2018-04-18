@@ -17,10 +17,11 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@Tag("isolated")
+@Tag(isolated)
 public class WithoutMqttTest extends TestBase {
     private AddressSpace addressSpace;
 

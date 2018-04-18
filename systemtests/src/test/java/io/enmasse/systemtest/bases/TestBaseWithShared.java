@@ -18,7 +18,9 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-@Tag("shared")
+import static io.enmasse.systemtest.TestTag.shared;
+
+@Tag(shared)
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
     private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
@@ -207,5 +209,9 @@ public abstract class TestBaseWithShared extends TestBase {
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
         return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
+    }
+
+    public static String tagValue(String a) {
+        return a;
     }
 }

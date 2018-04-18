@@ -28,9 +28,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag("isolated")
+@Tag(isolated)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
