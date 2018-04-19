@@ -55,13 +55,12 @@ INSTALLDIR=enmasse-$(TAG)
 		-m build $<
 
 yaml:
-	for d in kubernetes openshift service-broker; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
+	for d in kubernetes openshift; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
 
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
 	mkdir -p build/kubernetes/addons
-	mkdir -p build/openshift/addons
-	mkdir -p build/service-broker
+	mkdir -p build/openshift/addons/service-broker
 	cp include/*.json build
 	cp -f include/resource-definitions.yaml install/kubernetes/addons/
 	cp -f include/resource-definitions.yaml install/openshift/addons/

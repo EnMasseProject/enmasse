@@ -3,9 +3,9 @@
   register: can_create
   failed_when: can_create.stdout == "no"
 - name: Create EnMasse Service Broker Deployment
-  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/service-broker/deployment.yaml"
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/templates/addons/service-broker/deployment.yaml"
 - name: Create EnMasse Service Broker Service
-  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/service-broker/service.yaml"
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/templates/addons/service-broker/service.yaml"
 - shell: oc extract secret/standard-authservice-cert -n {{ namespace }} --keys=tls.crt --to=-
   register: secret_result
   when: (keycloak_ca_cert is not defined)
