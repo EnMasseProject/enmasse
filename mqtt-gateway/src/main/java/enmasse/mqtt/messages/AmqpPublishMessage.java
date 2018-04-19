@@ -27,6 +27,7 @@ public class AmqpPublishMessage {
 
     private static final String AMQP_RETAIN_ANNOTATION = "x-opt-retain-message";
     private static final String AMQP_QOS_ANNOTATION = "x-opt-mqtt-qos";
+    private static final String AMQ_ORIG_ADDRESS_ANNOTATION = "_AMQ_ORIG_ADDRESS";
 
     private final Object messageId;
     private final MqttQoS qos;
@@ -66,6 +67,8 @@ public class AmqpPublishMessage {
         boolean isRetain = false;
         MqttQoS qos = MqttQoS.AT_MOST_ONCE;
 
+        String topic = message.getAddress();
+
         // raw AMQP messages published from native AMQP clients could not have annotations
         MessageAnnotations messageAnnotations = message.getMessageAnnotations();
         if (messageAnnotations == null) {
@@ -77,6 +80,10 @@ public class AmqpPublishMessage {
             }
 
         } else {
+
+            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQ_ORIG_ADDRESS_ANNOTATION))) {
+                topic = (String) messageAnnotations.getValue().get(Symbol.valueOf(AMQ_ORIG_ADDRESS_ANNOTATION));
+            }
 
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_RETAIN_ANNOTATION))) {
                 isRetain = (boolean) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_RETAIN_ANNOTATION));
@@ -96,8 +103,6 @@ public class AmqpPublishMessage {
         }
 
         boolean isDup = (message.getDeliveryCount() > 0);
-
-        String topic = message.getAddress();
 
         // TODO: to remove
         // workaround for the Artemis broker which change the original "To" property
