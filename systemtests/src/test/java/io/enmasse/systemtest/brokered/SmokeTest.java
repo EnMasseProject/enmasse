@@ -34,7 +34,6 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         setAddresses(queueA);
 
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(sharedAddressSpace);
-        amqpQueueCli.getConnectOptions().setUsername(username).setPassword(password);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
         amqpQueueCli.close();
 
@@ -42,7 +41,6 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         setAddresses(topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(sharedAddressSpace);
-        amqpTopicCli.getConnectOptions().setUsername(username).setPassword(username);
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000));
@@ -77,18 +75,19 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
-        createUser(addressSpaceA, "test", "test");
+        KeycloakCredentials user = new KeycloakCredentials("test", "test");
+        createUser(addressSpaceA, user);
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
-        amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
+        amqpQueueCliA.getConnectOptions().setCredentials(user);
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
         amqpQueueCliA.close();
 
         setAddresses(addressSpaceC, queueB);
-        createUser(addressSpaceC, "test", "test");
+        createUser(addressSpaceC, user);
 
         AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
-        amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");
+        amqpQueueCliC.getConnectOptions().setCredentials(user);
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
         amqpQueueCliC.close();
 

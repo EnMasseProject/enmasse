@@ -15,18 +15,15 @@ import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,12 +87,11 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         createAddressSpace(consoleAddrSpace);
 
         //create new user
-        String username = "test_newplan_name";
-        String password = "test_newplan_password";
-        getKeycloakClient().createUser(consoleAddrSpace.getName(), username, password, 20, TimeUnit.SECONDS);
+        KeycloakCredentials user = new KeycloakCredentials("test_newplan_name", "test_newplan_password");
+        createUser(consoleAddrSpace, user);
 
         //create addresses
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, username, password);
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, user);
         consoleWebPage.openWebConsolePage();
         Destination q1 = Destination.queue("new-queue-instance-1", consoleQueuePlan1.getName());
         Destination t2 = Destination.topic("new-topic-instance-2", consoleTopicPlan2.getName());
@@ -108,14 +104,12 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         assertEquals(q3.getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
 
         //simple send/receive
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, consoleAddrSpace, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, consoleAddrSpace, user);
         AmqpClient queueClient = amqpClientFactory.createQueueClient(consoleAddrSpace);
-        queueClient.getConnectOptions().setUsername(username);
-        queueClient.getConnectOptions().setPassword(password);
+        queueClient.getConnectOptions().setCredentials(user);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient(consoleAddrSpace);
-        topicClient.getConnectOptions().setUsername(username);
-        topicClient.getConnectOptions().setPassword(password);
+        topicClient.getConnectOptions().setCredentials(user);
 
         QueueTest.runQueueTest(queueClient, q1, 333);
         TopicTest.runTopicTest(topicClient, t2, 333);

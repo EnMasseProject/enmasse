@@ -45,9 +45,9 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         AmqpClient client = amqpClientFactory.createTopicClient(sharedAddressSpace);
-        client.getConnectOptions().setUsername("test").setPassword("test");
+        client.getConnectOptions().setCredentials(defaultCredentials);
 
-        //attach subscibers
+        //attach subscribers
         List<Future<List<Message>>> recvResults = new ArrayList<>();
         for (int i = 0; i < recvCount; i++) {
             recvResults.add(client.recvMessages(String.format("test-topic-pubsub%d.*", i), msgCount * 2));

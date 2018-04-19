@@ -85,24 +85,20 @@ public class PlansTest extends TestBase {
                         weakTopicPlan.getName(), assertMessage));
 
         //simple send/receive
-        String username = "test_newplan_name";
-        String password = "test_newplan_password";
-        createUser(weakAddressSpace, username, password);
+        KeycloakCredentials user = new KeycloakCredentials("test_newplan_name", "test_newplan_password");
+        createUser(weakAddressSpace, user);
+
         AmqpClient queueClient = amqpClientFactory.createQueueClient(weakAddressSpace);
-        queueClient.getConnectOptions().setUsername(username);
-        queueClient.getConnectOptions().setPassword(password);
+        queueClient.getConnectOptions().setCredentials(user);
         QueueTest.runQueueTest(queueClient, weakQueueDest, 42);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient(weakAddressSpace);
-        topicClient.getConnectOptions().setUsername(username);
-        topicClient.getConnectOptions().setPassword(password);
+        topicClient.getConnectOptions().setCredentials(user);
         TopicTest.runTopicTest(topicClient, weakTopicDest, 42);
     }
 
     @Test
     public void testQuotaLimitsPooled() throws Exception {
-        String username = "quota_user";
-        String password = "quotaPa55";
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-pooled-test1", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 0.6)));
@@ -141,8 +137,8 @@ public class PlansTest extends TestBase {
         AddressSpace addressSpace = new AddressSpace("test-quota-limits-pooled", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-
-        getKeycloakClient().createUser(addressSpace.getName(), username, password, 20, TimeUnit.SECONDS);
+        KeycloakCredentials user = new KeycloakCredentials("quota_user", "quotaPa55");
+        createUser(addressSpace, user);
 
         //check router limits
         checkLimits(addressSpace,
@@ -153,7 +149,7 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.anycast("a4", anycastPlan.getName())
-                ), username, password);
+                ), user);
 
         //check broker limits
         checkLimits(addressSpace,
@@ -163,7 +159,7 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.queue("q3", queuePlan.getName())
-                ), username, password);
+                ), user);
 
         checkLimits(addressSpace,
                 Arrays.asList(
@@ -179,7 +175,7 @@ public class PlansTest extends TestBase {
                         Destination.queue("q10", queuePlan3.getName()), // 0.05
                         Destination.queue("q11", queuePlan3.getName()), // 0.05
                         Destination.queue("q12", queuePlan3.getName()) // 0.05
-                ), Collections.emptyList(), username, password);
+                ), Collections.emptyList(), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
@@ -189,13 +185,11 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.topic("t3", topicPlan.getName())
-                ), username, password);
+                ), user);
     }
 
     @Test
     public void testQuotaLimitsSharded() throws Exception {
-        String username = "quota_user";
-        String password = "quotaPa55";
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-sharded-test1", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 1.0)));
@@ -222,7 +216,8 @@ public class PlansTest extends TestBase {
         AddressSpace addressSpace = new AddressSpace("test-quota-limits-sharded", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        createUser(addressSpace, username, password);
+        KeycloakCredentials user = new KeycloakCredentials("quota_user", "quotaPa55");
+        createUser(addressSpace, user);
 
         //check broker limits
         checkLimits(addressSpace,
@@ -232,7 +227,7 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.queue("q3", queuePlan.getName())
-                ), username, password);
+                ), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
@@ -242,7 +237,7 @@ public class PlansTest extends TestBase {
                 ),
                 Collections.singletonList(
                         Destination.topic("t3", topicPlan.getName())
-                ), username, password);
+                ), user);
     }
 
     @Test
@@ -284,7 +279,7 @@ public class PlansTest extends TestBase {
         AddressSpace addressSpace = new AddressSpace("global-size-limited-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        createUser(addressSpace, user.getUsername(), user.getPassword());
+        createUser(addressSpace, user);
 
         Destination queue = Destination.queue("test-queue", queuePlan.getName());
         Destination queue2 = Destination.queue("test-queue2", queuePlan.getName());
@@ -380,13 +375,11 @@ public class PlansTest extends TestBase {
         appendAddresses(messagePersistAddressSpace, queue3, queue4);
 
         //send 1000 messages to each queue
-        String username = "test_scale_user_name";
-        String password = "test_scale_user_pswd";
-        createUser(messagePersistAddressSpace, username, password);
+        KeycloakCredentials user = new KeycloakCredentials("test_scale_user_name", "test_scale_user_pswd");
+        createUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
-        queueClient.getConnectOptions().setUsername(username);
-        queueClient.getConnectOptions().setPassword(password);
+        queueClient.getConnectOptions().setCredentials(user);
 
         List<String> msgs = TestUtils.generateMessages(1000);
         Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getAddress(), msgs);
@@ -452,13 +445,11 @@ public class PlansTest extends TestBase {
         TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //send 100000 messages to queue
-        String username = "test_change_plan_user";
-        String password = "test_change_plan_pswd";
-        createUser(messagePersistAddressSpace, username, password);
+        KeycloakCredentials user = new KeycloakCredentials("test_change_plan_user", "test_change_plan_pswd");
+        createUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
-        queueClient.getConnectOptions().setUsername(username);
-        queueClient.getConnectOptions().setPassword(password);
+        queueClient.getConnectOptions().setCredentials(user);
 
         List<String> msgs = TestUtils.generateMessages(100_000);
         Future<Integer> sendResult1 = queueClient.sendMessages(queue.getAddress(), msgs);
@@ -488,7 +479,7 @@ public class PlansTest extends TestBase {
     // Help methods
     //------------------------------------------------------------------------------------------------
 
-    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, String username, String password)
+    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, KeycloakCredentials credentials)
             throws Exception {
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
@@ -508,7 +499,7 @@ public class PlansTest extends TestBase {
             assertEquals("Active", address.getPhase(), assertMessage);
         }
 
-        assertCanConnect(addressSpace, username, password, allowedDest);
+        assertCanConnect(addressSpace, credentials, allowedDest);
 
         getAddresses.clear();
         if (notAllowedDest.size() > 0) {

@@ -31,14 +31,14 @@ public class ConsoleWebPage {
     private String username;
     private String password;
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, String username, String password) {
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
         this.selenium = selenium;
         this.consoleRoute = consoleRoute;
         this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
         this.loginWebPage = new LoginWebPage(selenium);
-        this.username = username;
-        this.password = password;
+        this.username = credentials.getUsername();
+        this.password = credentials.getPassword();
     }
 
     public void openWebConsolePage() throws Exception {

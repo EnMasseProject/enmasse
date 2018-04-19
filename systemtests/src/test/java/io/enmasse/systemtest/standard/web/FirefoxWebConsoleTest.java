@@ -6,12 +6,12 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.KeycloakCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -141,12 +141,13 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
 
     @Test()
     public void testCannotOpenConsolePage() throws Exception {
-        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage("pepa", "pepaPa555"));
+        assertThrows(IllegalAccessException.class,
+                () -> doTestCanOpenConsolePage(new KeycloakCredentials("pepa", "pepaPa555")));
     }
 
     @Test
     public void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(username, password);
+        doTestCanOpenConsolePage(defaultCredentials);
     }
 
     @Test

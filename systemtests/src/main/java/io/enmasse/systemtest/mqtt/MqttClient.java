@@ -7,6 +7,7 @@ package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.KeycloakCredentials;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
@@ -30,6 +31,16 @@ public class MqttClient implements AutoCloseable {
     public MqttClient setEndpoint(Endpoint endpoint) {
         this.endpoint = endpoint;
         return this;
+    }
+
+    public MqttConnectOptions setCredentials(KeycloakCredentials credentials) {
+        options.setUserName(credentials.getUsername());
+        if (credentials.getPassword() != null) {
+            options.setPassword(credentials.getPassword().toCharArray());
+        } else {
+            options.setPassword(null);
+        }
+        return options;
     }
 
     public MqttConnectOptions getMqttConnectOptions() {

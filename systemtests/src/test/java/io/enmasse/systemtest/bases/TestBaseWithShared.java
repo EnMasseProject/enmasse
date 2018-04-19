@@ -51,9 +51,9 @@ public abstract class TestBaseWithShared extends TestBase {
                 super.setAddresses(sharedAddressSpace, dummyAddress);
             }
         }
-        this.defaultCredentials.setUsername("test");
-        this.defaultCredentials.setPassword("test");
-        createUser(sharedAddressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        defaultCredentials.setUsername("test");
+        defaultCredentials.setPassword("test");
+        createUser(sharedAddressSpace, defaultCredentials);
 
         this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
         getKeycloakClient().createUser(sharedAddressSpace.getName(),
@@ -65,8 +65,8 @@ public abstract class TestBaseWithShared extends TestBase {
                 Group.VIEW_ALL_BROKERED.toString(),
                 Group.MANAGE_ALL_BROKERED.toString());
 
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials);
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials);
     }
 
     @AfterEach

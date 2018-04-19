@@ -126,17 +126,16 @@ public class AddressControllerApiTest extends TestBase {
         Destination anycast = Destination.anycast("test-routes-anycast");
         setAddresses(addressSpace, anycast);
         AmqpClient client1 = amqpClientFactory.createQueueClient(addressSpace);
-        client1.getConnectOptions().setUsername(luckyUser.getUsername()).setPassword(luckyUser.getPassword());
+        client1.getConnectOptions().setCredentials(luckyUser);
         AmqpClient client2 = amqpClientFactory.createQueueClient(addressSpace);
-        client2.getConnectOptions().setUsername(luckyUser.getUsername()).setPassword(luckyUser.getPassword());
+        client2.getConnectOptions().setCredentials(luckyUser);
         AnycastTest.runAnycastTest(anycast, client1, client2);
 
         //mqtt
         Destination topic = Destination.topic("mytopic", "sharded-topic");
         appendAddresses(addressSpace, topic);
         Thread.sleep(10_000);
-        MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace,
-                luckyUser.getUsername(), luckyUser.getPassword());
+        MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace, luckyUser);
         MqttClient mqttClient = mqttFactory.createClient();
         try {
             PublishTest.simpleMQTTSendReceive(topic, mqttClient, 3);
@@ -154,7 +153,8 @@ public class AddressControllerApiTest extends TestBase {
                     selenium,
                     getConsoleRoute(addressSpace),
                     addressApiClient,
-                    addressSpace, luckyUser.getUsername(), luckyUser.getPassword());
+                    addressSpace,
+                    luckyUser);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
         } catch (Exception ex) {

@@ -26,7 +26,6 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,8 +78,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @BeforeEach
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials.getUsername(), defaultCredentials.getPassword());
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials);
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials);
     }
 
     @AfterEach
@@ -314,8 +313,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         getKeycloakClient().leaveGroup(addressSpace.getName(), groupName, username);
     }
 
-    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception {
-        getKeycloakClient().createUser(addressSpace.getName(), username, password);
+    protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials) throws Exception {
+        getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
@@ -325,7 +324,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
             throws Exception {
         for (int i = from; i < to; i++) {
-            createUser(addressSpace, prefixName + i, prefixPswd + i);
+            createUser(addressSpace, new KeycloakCredentials(prefixName + i, prefixPswd + i));
         }
     }
 
@@ -339,17 +338,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
-    protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue(canConnectWithAmqp(addressSpace, username, password, destinations),
-                "Client failed, cannot connect under user " + username);
+    protected void assertCanConnect(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
+        assertTrue(canConnectWithAmqp(addressSpace, credentials, destinations),
+                "Client failed, cannot connect under user " + credentials);
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
-    protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+    protected void assertCannotConnect(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
         try {
-            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations),
-                    "Client failed, can connect under user " + username);
+            assertFalse(canConnectWithAmqp(addressSpace, credentials, destinations),
+                    "Client failed, can connect under user " + credentials);
             fail("Expected connection to timeout");
         } catch (ConnectTimeoutException e) {
         }
@@ -359,35 +358,33 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+    private boolean canConnectWithAmqp(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), username);
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
             switch (destination.getType()) {
                 case "queue":
-                    assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()), message);
+                    assertTrue(canConnectWithAmqpToQueue(addressSpace, credentials, destination.getAddress()), message);
                     break;
                 case "topic":
-                    assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()), message);
+                    assertTrue(canConnectWithAmqpToTopic(addressSpace, credentials, destination.getAddress()), message);
                     break;
                 case "multicast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()), message);
+                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, credentials, destination.getAddress()), message);
                     break;
                 case "anycast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()), message);
+                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, credentials, destination.getAddress()), message);
                     break;
             }
         }
         return true;
     }
 
-    private boolean canConnectWithMqtt(String name, String username, String password) throws Exception {
+    private boolean canConnectWithMqtt(String name, KeycloakCredentials credentials) throws Exception {
         AddressSpace addressSpace = new AddressSpace(name);
         MqttClient client = mqttClientFactory.createClient(addressSpace);
-        MqttConnectOptions options = client.getMqttConnectOptions();
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
+        client.setCredentials(credentials);
 
         Future<List<MqttMessage>> received = client.recvMessages("t1", 1);
         Future<Integer> sent = client.sendMessages("t1", Collections.singletonList("msgt1"));
@@ -395,9 +392,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
-    protected boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, KeycloakCredentials credentials, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<Integer> sent = client.sendMessages(queueAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
         Future<List<Message>> received = client.recvMessages(queueAddress, 1, 10, TimeUnit.SECONDS);
@@ -405,9 +402,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, KeycloakCredentials credentials, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(anycastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
@@ -415,9 +412,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, KeycloakCredentials credentials, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(multicastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
@@ -425,9 +422,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, KeycloakCredentials credentials, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(topicAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
@@ -482,7 +479,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         SeleniumProvider selenium = null;
         try {
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
             selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
@@ -512,9 +509,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         AmqpClient queueClient = null;
         try {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
-            queueClient.setConnectOptions(queueClient.getConnectOptions()
-                    .setUsername(managementCredentials.getUsername())
-                    .setPassword(managementCredentials.getPassword()));
+            queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(managementCredentials));
             String replyQueueName = "reply-queue";
             Destination replyQueue = Destination.queue(replyQueueName, getDefaultPlan(AddressType.QUEUE));
             appendAddresses(addressSpace, replyQueue);
