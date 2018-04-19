@@ -33,7 +33,6 @@
   shell: oc get sa -n {{ namespace }} kc-oauth
   register: oauth_sa_exists
   ignore_errors: True
-  when: enable_keycloak_openshift_identity_provider
 - name: Create OAUTH service account
   shell: oc create sa -n {{ namespace }} kc-oauth
   when: oauth_sa_exists.failed and enable_keycloak_openshift_identity_provider
