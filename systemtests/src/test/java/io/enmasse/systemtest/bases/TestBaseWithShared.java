@@ -51,10 +51,9 @@ public abstract class TestBaseWithShared extends TestBase {
                 super.setAddresses(sharedAddressSpace, dummyAddress);
             }
         }
-
-        this.username = "test";
-        this.password = "test";
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
+        this.defaultCredentials.setUsername("test");
+        this.defaultCredentials.setPassword("test");
+        createUser(sharedAddressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
 
         this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
         getKeycloakClient().createUser(sharedAddressSpace.getName(),
@@ -66,8 +65,8 @@ public abstract class TestBaseWithShared extends TestBase {
                 Group.VIEW_ALL_BROKERED.toString(),
                 Group.MANAGE_ALL_BROKERED.toString());
 
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
     }
 
     @AfterEach
@@ -178,7 +177,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * attach N receivers into one address with default username/password
      */
     protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(sharedAddressSpace, destination, receiverCount, username, password);
+        return attachReceivers(sharedAddressSpace, destination, receiverCount, defaultCredentials.getUsername(), defaultCredentials.getPassword());
     }
 
     /**
@@ -208,7 +207,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
-        return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, username, password);
+        return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials.getUsername(), defaultCredentials.getPassword());
     }
 
     public static String tagValue(String a) {

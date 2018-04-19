@@ -55,11 +55,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
     private static Logger log = CustomLogger.getLogger();
-    protected String username;
-    protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
+    protected KeycloakCredentials defaultCredentials = new KeycloakCredentials(null, null);
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private KeycloakClient keycloakApiClient;
 
@@ -80,8 +79,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @BeforeEach
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials.getUsername(), defaultCredentials.getPassword());
     }
 
     @AfterEach
@@ -483,7 +482,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         SeleniumProvider selenium = null;
         try {
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, username, password);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
             selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
@@ -630,7 +629,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * attach N receivers into one address with default username/password
      */
     protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(addressSpace, destination, receiverCount, username, password);
+        return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials.getUsername(), defaultCredentials.getPassword());
     }
 
     /**
@@ -670,8 +669,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.MSG_CONTENT, "msg no.%d");
         arguments.put(Argument.COUNT, "30");
@@ -702,8 +701,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
         arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");

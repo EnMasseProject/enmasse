@@ -206,9 +206,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         logWithSeparator(log,
                 String.format("Try send message under user %s from %s %s", username, destination.getType(), destination.getAddress()),
                 String.format("***** Try to open sender client under user %s", username),
-                String.format("***** Try to open receiver client under user %s", this.username));
+                String.format("***** Try to open receiver client under user %s", defaultCredentials.getUsername()));
         AmqpClient sender = createClient(destination, username, password);
-        AmqpClient receiver = createClient(destination, this.username, this.password);
+        AmqpClient receiver = createClient(destination, defaultCredentials.getUsername(), defaultCredentials.getPassword());
         logWithSeparator(log);
         return canAuth(sender, receiver, destination);
     }
@@ -216,10 +216,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
         logWithSeparator(log,
                 String.format("Try receive message under user %s from %s %s", username, destination.getType(), destination.getAddress()),
-                String.format("***** Try to open sender client under user %s", this.username),
+                String.format("***** Try to open sender client under user %s", defaultCredentials.getUsername()),
                 String.format("***** Try to open receiver client under user %s", username));
 
-        AmqpClient sender = createClient(destination, this.username, this.password);
+        AmqpClient sender = createClient(destination, defaultCredentials.getUsername(), defaultCredentials.getPassword());
         AmqpClient receiver = createClient(destination, username, password);
         logWithSeparator(log);
         return canAuth(sender, receiver, destination);
