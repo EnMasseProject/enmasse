@@ -29,10 +29,16 @@
     keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
   when: config_exists.failed and (keycloak_http_url is not defined)
 
+- name: Check if OAUTH service account exists
+  shell: oc get sa -n {{ namespace }} kc-oauth
+  register: oauth_sa_exists
+  ignore_errors: True
 - name: Create OAUTH service account
   shell: oc create sa -n {{ namespace }} kc-oauth
+  when: oauth_sa_exists.failed
 - name: Annotate OAUTH service account
   shell: oc annotate sa -n {{ namespace }} kc-oauth serviceaccounts.openshift.io/oauth-redirecturi.first={{ keycloak_http_url }}
+  when: oauth_sa_exists.failed
 - shell: oc sa get-token -n {{ namespace }} kc-oauth
   register: token_result
 - set_fact:
