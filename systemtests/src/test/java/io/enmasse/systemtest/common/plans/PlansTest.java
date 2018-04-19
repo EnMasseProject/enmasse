@@ -465,7 +465,7 @@ public class PlansTest extends TestBase {
         assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         //replace original plan in address by another
-        replaceAddressPlan(messagePersistAddressSpace, queue, queuePlanSharded);
+        plansProvider.replaceAddressPlan(messagePersistAddressSpace, queue, queuePlanSharded);
 
         assertEquals(getAddressesObjects(
                 messagePersistAddressSpace,

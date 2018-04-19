@@ -83,6 +83,10 @@ public class PlansProvider {
         return removed;
     }
 
+    public void replaceAddressPlan(AddressSpace addressSpace, Destination dest, AddressPlan plan) {
+        TestUtils.replaceAddressConfig(kubernetes, addressSpace, dest, plan);
+    }
+
     //------------------------------------------------------------------------------------------------
     // Address space plans
     //------------------------------------------------------------------------------------------------
@@ -102,6 +106,10 @@ public class PlansProvider {
             addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getName().equals(addressSpacePlan.getName()));
         }
         return removed;
+    }
+
+    public AddressSpacePlan getAddressSpacePlanConfig(String config) {
+        return TestUtils.getAddressSpacePlanConfig(kubernetes, config);
     }
 
     //------------------------------------------------------------------------------------------------

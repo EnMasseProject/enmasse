@@ -20,9 +20,6 @@ import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.resources.AddressPlan;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.ResourceDefinition;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -35,7 +32,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -804,85 +800,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         for (String message : messages)
             logger.info(message);
     }
-
-    //================================================================================================
-    //==================================== Config maps operations ====================================
-    //================================================================================================
-
-    //===================
-    //Address config-maps
-    //===================
-    protected void replaceAddressPlan(AddressSpace addressSpace, Destination dest, AddressPlan plan){
-        TestUtils.replaceAddressConfig(kubernetes, addressSpace, dest, plan);
-    }
-
-    //===================
-    //Address plans config-maps
-    //===================
-    protected void createAddressPlanConfig(AddressPlan addressPlan) {
-        createAddressPlanConfig(addressPlan, false);
-    }
-
-    protected void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
-        TestUtils.createAddressPlanConfig(kubernetes, addressPlan, replaceExisting);
-    }
-
-    protected AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
-        return TestUtils.getAddressPlanConfig(configName);
-    }
-
-    protected boolean removeAddressPlanConfig(AddressPlan addressPlan) throws NotImplementedException {
-        return TestUtils.removeAddressPlanConfig(kubernetes, addressPlan);
-    }
-
-    protected void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        TestUtils.appendAddressPlan(kubernetes, addressPlan, addressSpacePlan);
-    }
-
-    protected boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        return TestUtils.removeAddressPlan(kubernetes, addressPlan, addressSpacePlan);
-    }
-
-    //=========================
-    //Address space plans config-maps
-    //=========================
-
-    protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        createAddressSpacePlanConfig(addressSpacePlan, false);
-    }
-
-    protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
-        TestUtils.createAddressSpacePlanConfig(kubernetes, addressSpacePlan, replaceExisting);
-    }
-
-    protected AddressSpacePlan getAddressSpacePlanConfig(String config) {
-        return TestUtils.getAddressSpacePlanConfig(kubernetes, config);
-    }
-
-    protected boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        return TestUtils.removeAddressSpacePlanConfig(kubernetes, addressSpacePlan);
-    }
-
-    //=========================
-    //Resource definition config-maps
-    //=========================
-
-    protected void createResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        createResourceDefinitionConfig(resourceDefinition, false);
-    }
-
-    protected void createResourceDefinitionConfig(ResourceDefinition resourceDefinition, boolean replaceExisting) {
-        TestUtils.createResourceDefinitionConfig(kubernetes, resourceDefinition, replaceExisting);
-    }
-
-    protected ResourceDefinition getResourceDefinitionConfig(String config) {
-        return TestUtils.getResourceDefinitionConfig(kubernetes, config);
-    }
-
-    protected boolean removeResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        return TestUtils.removeResourceDefinitionConfig(kubernetes, resourceDefinition);
-    }
-
 
     //================================================================================================
     //==================================== Asserts methods ===========================================

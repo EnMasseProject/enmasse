@@ -49,7 +49,7 @@ public class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
         plansProvider.createAddressPlanConfig(weakQueuePlan);
 
-        AddressSpacePlan standardPlan = getAddressSpacePlanConfig("standard");
+        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlanConfig("standard");
         plansProvider.appendAddressPlan(weakQueuePlan, standardPlan);
 
         ArrayList<Destination> dest = new ArrayList<>();
