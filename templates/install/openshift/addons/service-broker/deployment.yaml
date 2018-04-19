@@ -1,0 +1,72 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+    component: service-broker
+  name: service-broker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        component: service-broker
+    spec:
+      containers:
+      - env:
+        - name: ENABLE_RBAC
+          valueFrom:
+            configMapKeyRef:
+              key: enableRbac
+              name: service-broker-config
+        - name: KEYCLOAK_URL
+          valueFrom:
+            configMapKeyRef:
+              key: keycloakUrl
+              name: service-broker-config
+        - name: CONSOLE_PREFIX
+          valueFrom:
+            configMapKeyRef:
+              key: consolePrefix
+              name: service-broker-config
+        - name: KEYCLOAK_CA
+          valueFrom:
+            secretKeyRef:
+              key: keycloakCa.crt
+              name: service-broker-secret
+        - name: KEYCLOAK_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              key: keycloak.username
+              name: service-broker-secret
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: keycloak.password
+              name: service-broker-secret
+        - name: CERT_DIR
+          value: /service-broker-cert
+        - name: LISTEN_PORT
+          value: '8443'
+        image: docker.io/enmasseproject/service-broker:latest
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: https
+            scheme: HTTPS
+        name: service-broker
+        ports:
+        - containerPort: 8443
+          name: https
+        volumeMounts:
+        - mountPath: /service-broker-cert
+          name: service-broker-cert
+          readOnly: true
+      serviceAccount: enmasse-admin
+      volumes:
+      - name: service-broker-cert
+        secret:
+          secretName: service-broker-cert
