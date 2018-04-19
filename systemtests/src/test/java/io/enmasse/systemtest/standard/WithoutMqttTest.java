@@ -34,9 +34,9 @@ public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
         addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
                 AuthService.STANDARD);
         createAddressSpace(addressSpace, false);
-        username = "test";
-        password = "test";
-        createUser(addressSpace, username, password);
+        defaultCredentials.setUsername("test");
+        defaultCredentials.setUsername("test");
+        createUser(addressSpace, defaultCredentials.getUsername(), defaultCredentials.getPassword());
         setAddresses(addressSpace, Destination.anycast("a1"));
     }
 
@@ -46,8 +46,8 @@ public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions()
-                .setUsername(username)
-                .setPassword(password);
+                .setUsername(defaultCredentials.getUsername())
+                .setPassword(defaultCredentials.getPassword());
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
