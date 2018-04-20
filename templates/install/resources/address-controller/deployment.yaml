@@ -1,0 +1,101 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+    name: address-controller
+  name: address-controller
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        name: address-controller
+    spec:
+      containers:
+      - env:
+        - name: ENABLE_RBAC
+          valueFrom:
+            configMapKeyRef:
+              key: enableRbac
+              name: address-controller-config
+              optional: true
+        - name: ENABLE_EVENT_LOGGER
+          valueFrom:
+            configMapKeyRef:
+              key: enableEventLogger
+              name: address-controller-config
+              optional: true
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              key: environment
+              name: address-controller-config
+              optional: true
+        - name: IMPERSONATE_USER
+          valueFrom:
+            configMapKeyRef:
+              key: impersonateUser
+              name: address-controller-config
+              optional: true
+        - name: ADDRESS_CONTROLLER_SA
+          value: enmasse-admin
+        - name: ADDRESS_SPACE_ADMIN_SA
+          value: address-space-admin
+        - name: TEMPLATE_DIR
+          value: /address-space-definitions
+        - name: STANDARD_AUTHSERVICE_CONFIG
+          value: keycloak-config
+        - name: WILDCARD_ENDPOINT_CERT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              key: wildEndpointCertSecret
+              name: address-controller-config
+              optional: true
+        - name: RESYNC_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              key: resyncInterval
+              name: address-controller-config
+              optional: true
+        - name: RECHECK_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              key: recheckInterval
+              name: address-controller-config
+              optional: true
+        image: docker.io/enmasseproject/address-controller:latest
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: https
+            scheme: HTTPS
+        name: address-controller
+        ports:
+        - containerPort: 8081
+          name: https
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: https
+            scheme: HTTPS
+        volumeMounts:
+        - mountPath: /address-controller-cert
+          name: address-controller-cert
+          readOnly: true
+        - mountPath: /address-space-definitions
+          name: address-space-definitions
+          readOnly: true
+      serviceAccount: enmasse-admin
+      volumes:
+      - name: address-controller-cert
+        secret:
+          secretName: address-controller-cert
+      - configMap:
+          name: address-space-definitions
+        name: address-space-definitions

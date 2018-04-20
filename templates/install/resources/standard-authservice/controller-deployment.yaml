@@ -1,0 +1,55 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+  name: keycloak-controller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        name: keycloak-controller
+    spec:
+      containers:
+      - env:
+        - name: KEYCLOAK_URI
+          valueFrom:
+            configMapKeyRef:
+              key: httpUrl
+              name: keycloak-config
+        - name: OAUTH_IDENTITY_PROVIDER_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              key: identityProviderClientId
+              name: keycloak-config
+              optional: true
+        - name: OAUTH_IDENTITY_PROVIDER_CLIENT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              key: identityProviderClientSecret
+              name: keycloak-config
+              optional: true
+        - name: KEYCLOAK_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              key: admin.username
+              name: keycloak-credentials
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: admin.password
+              name: keycloak-credentials
+        - name: KEYCLOAK_CERT
+          valueFrom:
+            secretKeyRef:
+              key: tls.crt
+              name: standard-authservice-cert
+        image: docker.io/enmasseproject/keycloak-controller:latest
+        name: keycloak-controller
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            memory: 256Mi

@@ -30,9 +30,10 @@ public class Main {
         Map<String, String> env = System.getenv();
 
         TemplateOptions templateOptions = new TemplateOptions(env);
-        File templateDir = getEnv(env, "TEMPLATE_DIR")
-                .map(File::new)
-                .orElse(null);
+        File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
+        if (!templateDir.exists()) {
+            throw new IllegalArgumentException("Template directory " + templateDir.getAbsolutePath() + " not found");
+        }
 
         String certDir = getEnvOrThrow(env, "CERT_DIR");
         String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");

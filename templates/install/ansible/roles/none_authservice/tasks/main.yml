@@ -1,2 +1,4 @@
-- name: Create the none authentication service
-  shell: oc process -f {{ playbook_dir }}/templates/addons/none-authservice.yaml | oc apply -n {{ namespace }} -f -
+- name: Apply the none authentication service service
+  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/none-authservice/service.yaml
+- name: Apply the none authentication service deployment
+  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/none-authservice/deployment.yaml

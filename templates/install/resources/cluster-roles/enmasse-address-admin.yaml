@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ClusterRole
+metadata:
+  name: enmasse-address-admin
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - list
+  - get
+  - watch
+  - update
+  - patch

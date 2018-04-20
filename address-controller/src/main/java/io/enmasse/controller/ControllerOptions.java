@@ -72,8 +72,8 @@ public final class ControllerOptions {
         return token;
     }
 
-    public Optional<File> getTemplateDir() {
-        return Optional.ofNullable(templateDir);
+    public File getTemplateDir() {
+        return templateDir;
     }
 
     public String getCertDir() {
@@ -136,12 +136,10 @@ public final class ControllerOptions {
         String token = getEnv(env, "TOKEN")
                 .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "token")));
 
-        File templateDir = getEnv(env, "TEMPLATE_DIR")
-                .map(File::new)
-                .orElse(new File("/enmasse-templates"));
+        File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
 
         if (!templateDir.exists()) {
-            templateDir = null;
+            throw new IllegalArgumentException("Template directory " + templateDir.getAbsolutePath() + " not found");
         }
 
         NoneAuthServiceInfo noneAuthService = getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Template
+objects:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    labels:
+      app: enmasse
+      type: local
+    name: ${NAME}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+    capacity:
+      storage: ${STORAGE_CAPACITY}
+    hostPath:
+      path: ${HOST_DIR}
+    persistentVolumeReclaimPolicy: Recycle
+parameters:
+- description: Storage
+  name: STORAGE_CAPACITY
+  value: 10Gi
+- description: Directory
+  name: HOST_DIR
+  required: true
+- description: Resource name
+  name: NAME
+  required: true

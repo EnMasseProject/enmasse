@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
     private final File templateDir;
-    private static final String TEMPLATE_SUFFIX = ".json";
+    private static final String TEMPLATE_SUFFIX = ".yaml";
     private final OpenShiftClient client;
 
     public KubernetesHelper(OpenShiftClient client, File templateDir) {
@@ -137,11 +137,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
-        if (templateDir != null) {
-            File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-            return client.templates().load(templateFile).processLocally(parameterValues);
-        } else {
-            return client.templates().withName(templateName).process(parameterValues);
-        }
+        File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
+        return client.templates().load(templateFile).processLocally(parameterValues);
     }
 }

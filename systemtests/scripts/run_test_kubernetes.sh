@@ -25,9 +25,9 @@ export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 kubectl create namespace $OPENSHIFT_PROJECT
 kubectl config set-context $(kubectl config current-context) --namespace=$OPENSHIFT_PROJECT
 
-${ENMASSE_DIR}/deploy-kubernetes.sh -n $OPENSHIFT_PROJECT -o multitenant -a "none standard"
+${ENMASSE_DIR}/deploy.sh -n $OPENSHIFT_PROJECT -o multitenant -a "none standard" -t kubernetes
 
-kubectl apply -f ${ENMASSE_DIR}/kubernetes/addons/external-lb.yaml -n ${OPENSHIFT_PROJECT}
+kubectl apply -f ${ENMASSE_DIR}/resources/address-controller/external-service.yaml -n ${OPENSHIFT_PROJECT}
 
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
