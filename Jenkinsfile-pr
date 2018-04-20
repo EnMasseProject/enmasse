@@ -50,7 +50,6 @@ pipeline {
         stage('build') {
             steps {
                 sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
-                sh 'cat templates/install/openshift/enmasse.yaml'
                 sh 'make docker_tag'
             }
         }

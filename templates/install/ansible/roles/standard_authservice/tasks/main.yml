@@ -14,8 +14,16 @@
   shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
 - name: Give view permissions for the keycloak controller
   shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
-- name: Create the standard authentication service
-  shell: oc process -f {{ playbook_dir }}/templates/addons/standard-authservice.yaml | oc apply -n {{ namespace }} -f -
+- name: Create the standard authentication service service
+  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/service.yaml
+- name: Create the standard authentication service deployment
+  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/keycloak-deployment.yaml
+- name: Create the standard authentication service controller
+  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/controller-deployment.yaml
+- name: Create the standard authentication service persistent volume claim
+  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/pvc.yaml
+- name: Create the standard authentication service route
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/route.yaml
 - name: Check if keycloak config exists
   shell: oc get configmap -n {{ namespace }} keycloak-config
   register: config_exists

@@ -34,19 +34,19 @@ import java.util.stream.Collectors;
  */
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
-    private static final String TEMPLATE_SUFFIX = ".json";
+    private static final String TEMPLATE_SUFFIX = ".yaml";
 
     private final NamespacedOpenShiftClient client;
     private final String namespace;
     private final String controllerToken;
     private final String environment;
-    private final Optional<File> templateDir;
+    private final File templateDir;
     private final String addressControllerSa;
     private final String addressSpaceAdminSa;
     private final boolean enableRbac;
     private final String impersonateUser;
 
-    public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa, boolean enableRbac, String impersonateUser) {
+    public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, String environment, File templateDir, String addressControllerSa, String addressSpaceAdminSa, boolean enableRbac, String impersonateUser) {
         this.client = client;
         this.namespace = namespace;
         this.controllerToken = token;
@@ -122,12 +122,8 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
-        if (templateDir.isPresent()) {
-            File templateFile = new File(templateDir.get(), templateName + TEMPLATE_SUFFIX);
-            return client.templates().load(templateFile).processLocally(parameterValues);
-        } else {
-            return client.templates().withName(templateName).process(parameterValues);
-        }
+        File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
+        return client.templates().load(templateFile).processLocally(parameterValues);
     }
 
     @Override

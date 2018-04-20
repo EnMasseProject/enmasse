@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: enmasse
+  name: none-authservice
+spec:
+  ports:
+  - name: amqps
+    port: 5671
+    protocol: TCP
+    targetPort: amqps
+  selector:
+    name: none-authservice

@@ -19,10 +19,6 @@ KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
 KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
 SERVICE_BROKER_IMAGE ?= "service-broker"
 
-KEYCLOAK_HOME ?= "/opt/jboss/keycloak"
-ADD_KEYCLOAK_USER ?= "false"
-NODE_CMD="node"
-
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
 INSTALLDIR=enmasse-$(TAG)
@@ -49,24 +45,45 @@ INSTALLDIR=enmasse-$(TAG)
 		-V KEYCLOAK_IMAGE=$(KEYCLOAK_IMAGE) \
 		-V KEYCLOAK_PLUGIN_IMAGE=$(KEYCLOAK_PLUGIN_IMAGE) \
 		-V KEYCLOAK_CONTROLLER_IMAGE=$(KEYCLOAK_CONTROLLER_IMAGE) \
-		-V KEYCLOAK_HOME=$(KEYCLOAK_HOME) \
-		-V ADD_KEYCLOAK_USER=$(ADD_KEYCLOAK_USER) \
-		-V NODE_CMD=$(NODE_CMD) \
 		-m build $<
 
 yaml:
-	for d in kubernetes openshift; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
+	for i in `find build/ -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done
 
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
-	mkdir -p build/kubernetes/addons
-	mkdir -p build/openshift/addons/service-broker
-	cp include/*.json build
-	cp -f include/resource-definitions.yaml install/kubernetes/addons/
-	cp -f include/resource-definitions.yaml install/openshift/addons/
-	cp -f include/*-plans.yaml install/kubernetes/addons/
-	cp -f include/*-plans.yaml install/openshift/addons/
-	cp -f include/address.yaml include/address-space.yaml install/openshift/
+	mkdir -p build/resources/address-controller
+	mkdir -p build/resources/service-broker
+	mkdir -p build/resources/prometheus
+	mkdir -p build/resources/grafana
+	mkdir -p build/resources/standard-authservice
+	mkdir -p build/resources/none-authservice
+	mkdir -p build/resources/external-lb
+	mkdir -p build/resources/plans
+	mkdir -p build/resources/cluster-roles
+	mkdir -p build/resources/resource-definitions
+	mkdir -p build/resources/templates
+	cp -r include/persistent-volume.json build/resources/templates
+
+	mkdir -p install/resources/templates
+	mkdir -p install/resources/address-controller
+	mkdir -p install/resources/resource-definitions
+	mkdir -p install/resources/plans
+	cp -f include/resource-definitions.yaml install/resources/resource-definitions
+	cat include/address-space-definitions.yaml | \
+		STANDARD_CONTROLLER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(STANDARD_CONTROLLER_IMAGE):$(COMMIT) \
+		ROUTER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_IMAGE):$(COMMIT) \
+		BROKER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ARTEMIS_IMAGE):$(COMMIT) \
+		TOPIC_FORWARDER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(TOPIC_FORWARDER_IMAGE):$(COMMIT) \
+		ROUTER_METRICS_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_METRICS_IMAGE):$(COMMIT) \
+		SUBSERV_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SUBSERV_IMAGE):$(COMMIT) \
+		SERVICE_BROKER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SERVICE_BROKER_IMAGE):$(COMMIT) \
+		AGENT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(AGENT_IMAGE):$(COMMIT) \
+		MQTT_GATEWAY_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_GATEWAY_IMAGE):$(COMMIT) \
+		MQTT_LWT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_LWT_IMAGE):$(COMMIT) \
+		envsubst '$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${BROKER_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > install/resources/address-controller/address-space-definitions.yaml
+	cp -f include/*-plans.yaml install/resources/plans/
+	cp -f include/address.yaml include/address-space.yaml install/resources/templates
 
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               

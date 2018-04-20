@@ -4,7 +4,7 @@
   register: is_admin
   failed_when: is_admin.stdout == "no"
 - name: Create cluster wide roles used by enmasse-admin service account
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/templates/cluster-roles.yaml
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/enmasse-admin.yaml
 - name: Grant cluster admin privileges to service account
   shell: oc adm policy add-cluster-role-to-user enmasse-admin -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
 - name: Grant view policy to default SA
