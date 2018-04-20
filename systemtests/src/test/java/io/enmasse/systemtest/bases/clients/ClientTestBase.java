@@ -41,14 +41,14 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 info.getTestClass().get().getName(),
                 info.getTestMethod().get().getName());
 
-        arguments.put(Argument.USERNAME, "test");
-        arguments.put(Argument.PASSWORD, "test");
+        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_SSL, "true");
     }
 
     @AfterEach
-    public void teardownClient(ExtensionContext context) {
+    public void teardownClient() {
         arguments.clear();
         clients.forEach(AbstractClient::stop);
         clients.clear();
