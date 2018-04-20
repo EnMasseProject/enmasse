@@ -88,3 +88,6 @@
     dest: "{{ maven_root_path }}"
   when: mvn_is_installed.rc != 0
 
+- name: MAVEN | Copy maven to path
+  shell: 'cp {{ maven_root_path }}/apache-maven-3.5.2/bin/mvn /usr/bin/'
+  when: mvn_is_installed.rc != 0
