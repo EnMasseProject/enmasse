@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest;
 
-import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -17,10 +16,10 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -220,11 +219,11 @@ public class TestUtils {
      * @return list of rest-api paths
      * @throws Exception
      */
-    public static List<Uri> getAddressesPaths(AddressApiClient apiClient) throws Exception {
+    public static List<URL> getAddressesPaths(AddressApiClient apiClient) throws Exception {
         JsonArray addressPaths = apiClient.getAddressesPaths();
-        List<Uri> paths = new ArrayList<>();
+        List<URL> paths = new ArrayList<>();
         for (int i = 0; i < addressPaths.size(); i++) {
-            paths.add(new Uri(addressPaths.getString(i)));
+            paths.add(new URL(addressPaths.getString(i)));
         }
         return paths;
     }
@@ -234,14 +233,14 @@ public class TestUtils {
      *
      * @param apiClient client for sending http requests to address controller
      * @param method    http method PUT, POST, DELETE, GET
-     * @param uri       api route
+     * @param url       api route
      * @param payload   JsonObject as a payload
      * @return JsonObject
      * @throws Exception
      */
-    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, Uri uri,
+    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, URL url,
                                                 Optional<JsonObject> payload) throws Exception {
-        return apiClient.sendRequest(method, uri, payload);
+        return apiClient.sendRequest(method, url, payload);
     }
 
 
@@ -777,8 +776,8 @@ public class TestUtils {
      * @param configName name attribute within ConfigMap object
      * @return AddressPlan definition
      */
-    public static AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
-        throw new NotImplementedException();
+    public static AddressPlan getAddressPlanConfig(String configName) throws RuntimeException {
+        throw new RuntimeException("This method is not implemented!");
     }
 
     /**
@@ -787,9 +786,8 @@ public class TestUtils {
      * @param kubernetes  client for manipulation with kubernetes cluster
      * @param addressPlan AddressPlan object
      * @return true if AddressPlan was removed successfully
-     * @throws NotImplementedException
      */
-    public static boolean removeAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan) throws NotImplementedException {
+    public static boolean removeAddressPlanConfig(Kubernetes kubernetes, AddressPlan addressPlan) {
         return kubernetes.removeAddressPlanConfig(addressPlan);
     }
 

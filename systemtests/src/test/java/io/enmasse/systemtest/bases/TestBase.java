@@ -6,7 +6,6 @@
 package io.enmasse.systemtest.bases;
 
 import com.google.common.collect.Ordering;
-import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
@@ -34,6 +33,7 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -217,12 +217,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
     }
 
-    protected List<Uri> getAddressesPaths() throws Exception {
+    protected List<URL> getAddressesPaths() throws Exception {
         return TestUtils.getAddressesPaths(addressApiClient);
     }
 
-    protected JsonObject sendRestApiRequest(HttpMethod method, Uri uri, Optional<JsonObject> payload) throws Exception {
-        return TestUtils.sendRestApiRequest(addressApiClient, method, uri, payload);
+    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {
+        return TestUtils.sendRestApiRequest(addressApiClient, method, url, payload);
     }
 
     /**

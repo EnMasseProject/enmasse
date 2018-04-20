@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.common.api;
 
-import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -20,6 +19,7 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -89,15 +89,15 @@ public class AddressControllerApiTest extends TestBase {
         AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
         AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);
         createAddressSpaceList(addrSpaceAlfa, addrSpaceBeta);
-        List<Uri> paths = getAddressesPaths();
-        for (Uri uri : paths) {
-            log.info("uri: {}", uri);
+        List<URL> paths = getAddressesPaths();
+        for (URL url : paths) {
+            log.info("url: {}", url);
         }
         assertThat(String.format("Unexpected count of paths: '%s'", paths), paths.size(), is(2));
-        for (Uri uri : paths) {
+        for (URL url : paths) {
             assertThat("No addresses were created, so list should be empty!",
                     TestUtils.convertToListAddress(
-                            sendRestApiRequest(HttpMethod.GET, uri, Optional.empty()),
+                            sendRestApiRequest(HttpMethod.GET, url, Optional.empty()),
                             new ArrayList<>(),
                             Address.class).size(),
                     is(0));

@@ -8,7 +8,6 @@ import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.ResourceDefinition;
 import org.slf4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +61,7 @@ public class PlansProvider {
         addressPlans.add(addressPlan);
     }
 
-    public boolean removeAddressPlanConfig(AddressPlan addressPlan) throws NotImplementedException {
+    public boolean removeAddressPlanConfig(AddressPlan addressPlan) {
         boolean removed = TestUtils.removeAddressPlanConfig(kubernetes, addressPlan);
         if (removed) {
             addressPlans.removeIf(addressPlanIter -> addressPlanIter.getName().equals(addressPlan.getName()));
