@@ -1,13 +1,17 @@
 apiVersion: v1
 kind: ClusterRole
 metadata:
-  name: cluster-reader
+  name: enmasse-address-admin
 rules:
 - apiGroups:
   - ''
   resources:
-  - pods
+  - configmaps
   verbs:
+  - create
+  - delete
+  - list
   - get
   - watch
-  - list
+  - update
+  - patch

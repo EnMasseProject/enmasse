@@ -55,18 +55,26 @@ INSTALLDIR=enmasse-$(TAG)
 		-m build $<
 
 yaml:
-	for d in kubernetes openshift; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
+	for i in `find build/ -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done
 
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
-	mkdir -p build/kubernetes/addons
-	mkdir -p build/openshift/addons/service-broker
+	mkdir -p build/resources/address-controller
+	mkdir -p build/resources/service-broker
+	mkdir -p build/resources/prometheus
+	mkdir -p build/resources/grafana
+	mkdir -p build/resources/standard-authservice
+	mkdir -p build/resources/none-authservice
+	mkdir -p build/resources/external-lb
+	mkdir -p build/resources/plans
+	mkdir -p build/resources/cluster-roles
+	mkdir -p build/resources/resource-definitions
+	mkdir -p build/resources/templates
 	cp include/*.json build
-	cp -f include/resource-definitions.yaml install/kubernetes/addons/
-	cp -f include/resource-definitions.yaml install/openshift/addons/
-	cp -f include/*-plans.yaml install/kubernetes/addons/
-	cp -f include/*-plans.yaml install/openshift/addons/
-	cp -f include/address.yaml include/address-space.yaml install/openshift/
+	cp -f include/resource-definitions.yaml build/resources/resource-definitions
+	KEYCLOAK_HOME=$(KEYCLOAK_HOME) cat include/address-space-definition.yaml | envsubst > build/resources/resource-definitions/address-space-definition.yaml
+	cp -f include/*-plans.yaml build/resources/plans/
+	cp -f include/address.yaml include/address-space.yaml build/resources/templates
 
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               

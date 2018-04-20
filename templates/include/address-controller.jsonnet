@@ -1,15 +1,14 @@
-local common = import "common.jsonnet";
+local images = import "images.jsonnet";
 {
-  common_service(name, type, annotations)::
+  service::
   {
     "apiVersion": "v1",
     "kind": "Service",
     "metadata": {
-      "name": name,
+      "name": "address-controller",
       "labels": {
         "app": "enmasse"
-      },
-      "annotations": annotations
+      }
     },
     "spec": {
       "ports": [
@@ -23,84 +22,199 @@ local common = import "common.jsonnet";
       "selector": {
         "name": "address-controller"
       },
-      "type": type
+      "type": "ClusterIP"
+    }
+  },
+
+  external_service::
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "name": "restapi-external",
+      "labels": {
+        "app": "enmasse"
+      }
+    },
+    "spec": {
+      "ports": [
+        {
+          "name": "https",
+          "port": 443,
+          "protocol": "TCP",
+          "targetPort": "https"
+        }
+      ],
+      "selector": {
+        "name": "address-controller"
+      },
+      "type": "LoadBalancer"
     }
   },
   
-  internal_service::
-    self.common_service("address-controller", "ClusterIP", {}),
-
-  external_service::
-    self.common_service("restapi-external", "LoadBalancer", {}),
-
-  deployment(image, template_config, cert_secret, environment, enable_rbac, enable_event_logger, address_controller_sa, address_space_admin_sa, wildcard_endpoint_cert_secret, resync_interval, check_interval, impersonate_user, standard_authservice_config)::
-    {
-      "apiVersion": "extensions/v1beta1",
-      "kind": "Deployment",
-      "metadata": {
-        "labels": {
-          "name": "address-controller",
-          "app": "enmasse",
-          "environment": environment
-        },
-        "name": "address-controller"
+  deployment::
+  {
+    "apiVersion": "extensions/v1beta1",
+    "kind": "Deployment",
+    "metadata": {
+      "labels": {
+        "name": "address-controller",
+        "app": "enmasse"
       },
-      "spec": {
-        "replicas": 1,
-        "strategy": {
-          "type": "Recreate"
-        },
-        "template": {
-          "metadata": {
-            "labels": {
-              "name": "address-controller",
-              "app": "enmasse",
-              "environment": environment
-            }
-          },
-
-          "spec": {
-            "serviceAccount": address_controller_sa,
-            "containers": [
-              {
-                "image": image,
-                "name": "address-controller",
-                "env": [
-                  common.env("ENABLE_RBAC", enable_rbac),
-                  common.env("ENABLE_EVENT_LOGGER", enable_event_logger),
-                  common.env("ENVIRONMENT", environment),
-                  common.env("IMPERSONATE_USER", impersonate_user),
-                  common.env("ADDRESS_CONTROLLER_SA", address_controller_sa),
-                  common.env("ADDRESS_SPACE_ADMIN_SA", address_space_admin_sa),
-                  common.env("STANDARD_AUTHSERVICE_CONFIG", standard_authservice_config),
-                  common.env("WILDCARD_ENDPOINT_CERT_SECRET", wildcard_endpoint_cert_secret),
-                  common.env("RESYNC_INTERVAL", resync_interval),
-                  common.env("CHECK_INTERVAL", check_interval)
-                ],
-                "volumeMounts": [
-                  common.volume_mount("address-controller-cert", "/address-controller-cert", true),
-                ] + if template_config != "" then [ common.volume_mount("templates", "/enmasse-templates") ] else [],
-                "resources": {
-                    "requests": {
-                        "memory": "512Mi",
-                    },
-                    "limits": {
-                        "memory": "512Mi",
-                    }
-                },
-                "ports": [
-                  common.container_port("https", 8081),
-                  common.container_port("http", 8080)
-                ],
-               "livenessProbe": common.http_probe("https", "/apis/enmasse.io/v1/health", "HTTPS", 30),
-                "readinessProbe": common.http_probe("https", "/apis/enmasse.io/v1/health", "HTTPS", 30),
-              }
-            ],
-            "volumes": [
-              common.secret_volume("address-controller-cert", cert_secret)
-            ] + if template_config != "" then [ common.configmap_volume("templates", template_config) ] else [],
+      "name": "address-controller"
+    },
+    "spec": {
+      "replicas": 1,
+      "strategy": {
+        "type": "Recreate"
+      },
+      "template": {
+        "metadata": {
+          "labels": {
+            "name": "address-controller",
+            "app": "enmasse"
           }
+        },
+
+        "spec": {
+          "serviceAccount": "enmasse-admin",
+          "containers": [
+            {
+              "image": images.address_controller,
+              "name": "address-controller",
+              "env": [
+                {
+                  "name": "ENABLE_RBAC",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "enableRbac",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "ENABLE_EVENT_LOGGER",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "enableEventLogger",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "ENVIRONMENT",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "environment",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "IMPERSONATE_USER",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "impersonateUser",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "ADDRESS_CONTROLLER_SA",
+                  "value": "enmasse-admin"
+                },
+                {
+                  "name": "ADDRESS_SPACE_ADMIN_SA",
+                  "value": "address-space-admin"
+                },
+                {
+                  "name": "STANDARD_AUTHSERVICE_CONFIG",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "standardAuthserviceConfigmap",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "WILDCARD_ENDPOINT_CERT_SECRET",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "wildEndpointCertSecret",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "RESYNC_INTERVAL",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "resyncInterval",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "RECHECK_INTERVAL",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-controller-config",
+                      "key": "recheckInterval",
+                      "optional": true
+                    }
+                  }
+                }
+              ],
+              "volumeMounts": [
+                {
+                  "name": "address-controller-cert",
+                  "mountPath": "/address-controller-cert",
+                  "readOnly": true
+                },
+              ],
+              "ports": [
+                {
+                  "name": "https",
+                  "containerPort": 8081
+                },
+                {
+                  "name": "http",
+                  "containerPort": 8080
+                }
+              ],
+              "livenessProbe": {
+                "httpGet": {
+                  "path": "/healthz",
+                  "scheme": "HTTPS",
+                  "port": "https"
+                }
+              },
+              "readinessProbe": {
+                "httpGet": {
+                  "path": "/healthz",
+                  "scheme": "HTTPS",
+                  "port": "https"
+                }
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "name": "address-controller-cert",
+              "secret": {
+                "secretName": "address-controller-cert"
+              }
+            }
+          ]
         }
       }
     }
+  }
 }

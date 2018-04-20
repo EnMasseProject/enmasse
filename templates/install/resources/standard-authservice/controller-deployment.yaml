@@ -45,7 +45,7 @@ spec:
           valueFrom:
             secretKeyRef:
               key: tls.crt
-              name: keycloak-cert
+              name: standard-authservice-cert
         image: docker.io/enmasseproject/keycloak-controller:latest
         name: keycloak-controller
         resources:

@@ -1,16 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: {}
   labels:
     app: enmasse
-  name: restapi-external
+  name: standard-authservice-external
 spec:
   ports:
   - name: https
-    port: 443
+    port: 8443
     protocol: TCP
     targetPort: https
   selector:
-    name: address-controller
+    name: keycloak
   type: LoadBalancer
