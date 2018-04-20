@@ -313,8 +313,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         getKeycloakClient().leaveGroup(addressSpace.getName(), groupName, username);
     }
 
+
     protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials, String... groups) throws Exception {
-        getKeycloakClient().createUser(addressSpace.getName(), credentials, groups);
+        if (groups != null && groups.length > 0) {
+            getKeycloakClient().createUser(addressSpace.getName(), credentials, groups);
+        } else {
+            getKeycloakClient().createUser(addressSpace.getName(), credentials);
+        }
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
