@@ -34,9 +34,9 @@ public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
         addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
                 AuthService.STANDARD);
         createAddressSpace(addressSpace, false);
-        username = "test";
-        password = "test";
-        createUser(addressSpace, username, password);
+        defaultCredentials.setUsername("test");
+        defaultCredentials.setUsername("test");
+        createUser(addressSpace, defaultCredentials);
         setAddresses(addressSpace, Destination.anycast("a1"));
     }
 
@@ -45,9 +45,7 @@ public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
         assertThat(kubernetes.listPods(addressSpace.getNamespace()).size(), is(2));
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions()
-                .setUsername(username)
-                .setPassword(password);
+        client.getConnectOptions().setCredentials(defaultCredentials);
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 

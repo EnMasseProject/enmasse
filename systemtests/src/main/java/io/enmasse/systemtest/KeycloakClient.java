@@ -75,7 +75,7 @@ public class KeycloakClient {
     public void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
                                GroupMethod<RealmResource, String, String> groupMethod) throws Exception {
         int maxRetries = 10;
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
             for (int retries = 0; retries < maxRetries; retries++) {
                 try {
@@ -129,7 +129,7 @@ public class KeycloakClient {
 
     public void createGroup(String realm, String groupName, long timeout, TimeUnit timeUnit) throws Exception {
         int maxRetries = 10;
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             waitForRealm(keycloak.get(), realm, timeout, timeUnit);
             if (!groupExist(keycloak, realm, groupName)) {
                 for (int retries = 0; retries < maxRetries; retries++) {
@@ -150,8 +150,8 @@ public class KeycloakClient {
         }
     }
 
-    public void createUser(String realm, String userName, String password) throws Exception {
-        createUser(realm, userName, password, 3, TimeUnit.MINUTES,
+    public void createUser(String realm, KeycloakCredentials credentials) throws Exception {
+        createUser(realm, credentials, 3, TimeUnit.MINUTES,
                 Group.SEND_ALL_BROKERED.toString(),
                 Group.RECV_ALL_BROKERED.toString(),
                 Group.MANAGE_ALL_BROKERED.toString(),
@@ -160,13 +160,13 @@ public class KeycloakClient {
                 Group.MANAGE.toString());
     }
 
-    public void createUser(String realm, String userName, String password, String... groups) throws Exception {
-        createUser(realm, userName, password, 3, TimeUnit.MINUTES, groups);
+    public void createUser(String realm, KeycloakCredentials credentials, String... groups) throws Exception {
+        createUser(realm, credentials, 3, TimeUnit.MINUTES, groups);
     }
 
-    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit)
+    public void createUser(String realm, KeycloakCredentials credentials, long timeout, TimeUnit timeUnit)
             throws Exception {
-        createUser(realm, userName, password, timeout, timeUnit,
+        createUser(realm, credentials, timeout, timeUnit,
                 Group.SEND_ALL_BROKERED.toString(),
                 Group.RECV_ALL_BROKERED.toString(),
                 Group.MANAGE_ALL_BROKERED.toString(),
@@ -175,21 +175,21 @@ public class KeycloakClient {
                 Group.MANAGE.toString());
     }
 
-    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit, String... groups)
+    public void createUser(String realm, KeycloakCredentials credentials, long timeout, TimeUnit timeUnit, String... groups)
             throws Exception {
 
         int maxRetries = 10;
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
 
             for (int retries = 0; retries < maxRetries; retries++) {
                 try {
-                    if (realmResource.users().search(userName).isEmpty()) {
+                    if (realmResource.users().search(credentials.getUsername()).isEmpty()) {
                         UserRepresentation userRep = new UserRepresentation();
-                        userRep.setUsername(userName);
+                        userRep.setUsername(credentials.getUsername());
                         CredentialRepresentation cred = new CredentialRepresentation();
                         cred.setType(CredentialRepresentation.PASSWORD);
-                        cred.setValue(password);
+                        cred.setValue(credentials.getPassword());
                         cred.setTemporary(false);
                         userRep.setCredentials(Arrays.asList(cred));
                         userRep.setEnabled(true);
@@ -198,7 +198,7 @@ public class KeycloakClient {
                             throw new RuntimeException("Unable to create user: " + response.getStatus());
                         }
                     } else {
-                        log.info("User " + userName + " already created, skipping");
+                        log.info("User '{}' already created, skipping", credentials);
                     }
                     break;
                 } catch (Exception e) {
@@ -210,7 +210,7 @@ public class KeycloakClient {
 
         for (String group : groups) {
             createGroup(realm, group);
-            joinGroup(realm, group, userName);
+            joinGroup(realm, group, credentials.getUsername());
         }
     }
 
@@ -250,7 +250,7 @@ public class KeycloakClient {
     }
 
     public void deleteUser(String realm, String userName) throws Exception {
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName));
         }
     }

@@ -56,13 +56,13 @@ public abstract class AuthenticationTestBase extends TestBase {
         AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, AuthService.STANDARD);
         createAddressSpaceList(s3standard, s4standard);
 
-        assertCanConnect(s3standard, emptyUser, emptyPassword, amqpAddressList);
-        assertCanConnect(s3standard, "bob", "pass", amqpAddressList);
+        assertCanConnect(s3standard, new KeycloakCredentials(emptyUser, emptyPassword), amqpAddressList);
+        assertCanConnect(s3standard, new KeycloakCredentials("bob", "pass"), amqpAddressList);
 
-        assertCanConnect(s3standard, emptyUser, emptyPassword, amqpAddressList);
-        assertCanConnect(s3standard, "bob", "pass", amqpAddressList);
-        assertCannotConnect(s4standard, emptyUser, emptyPassword, amqpAddressList);
-        assertCannotConnect(s4standard, "bob", "pass", amqpAddressList);
+        assertCanConnect(s3standard, new KeycloakCredentials(emptyUser, emptyPassword), amqpAddressList);
+        assertCanConnect(s3standard, new KeycloakCredentials("bob", "pass"), amqpAddressList);
+        assertCannotConnect(s4standard, new KeycloakCredentials(emptyUser, emptyPassword), amqpAddressList);
+        assertCannotConnect(s4standard, new KeycloakCredentials("bob", "pass"), amqpAddressList);
     }
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
@@ -71,40 +71,41 @@ public abstract class AuthenticationTestBase extends TestBase {
         createAddressSpaceList(s1brokered, s2brokered);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials
-        assertCannotConnect(s1brokered, null, null, amqpAddressList);
-        assertCannotConnect(s1brokered, "bob", "s1pass", amqpAddressList);
+        assertCannotConnect(s1brokered, new KeycloakCredentials(null, null), amqpAddressList);
+        assertCannotConnect(s1brokered, new KeycloakCredentials("bob", "s1pass"), amqpAddressList);
 
         KeycloakCredentials s1Bob = new KeycloakCredentials("bob", "s1pass");
-        getKeycloakClient().createUser(s1brokered.getName(), s1Bob.getUsername(), s1Bob.getPassword());
+        createUser(s1brokered, s1Bob);
 
         KeycloakCredentials s1Carol = new KeycloakCredentials("carol", "s2pass");
-        getKeycloakClient().createUser(s1brokered.getName(), s1Carol.getUsername(), s1Carol.getPassword());
+        createUser(s1brokered, s1Carol);
 
-        assertCannotConnect(s1brokered, null, null, amqpAddressList);
+        assertCannotConnect(s1brokered, new KeycloakCredentials(null, null), amqpAddressList);
 
         // Validate successful authentication with enmasse authentication service and valid credentials
-        assertCanConnect(s1brokered, s1Bob.getUsername(), s1Bob.getPassword(), amqpAddressList);
-        assertCanConnect(s1brokered, s1Carol.getUsername(), s1Carol.getPassword(), amqpAddressList);
+        assertCanConnect(s1brokered, s1Bob, amqpAddressList);
+        assertCanConnect(s1brokered, s1Carol, amqpAddressList);
 
         // Validate unsuccessful authentication with enmasse authentication service with incorrect credentials
-        assertCannotConnect(s1brokered, s1Bob.getUsername(), "s2pass", amqpAddressList);
-        assertCannotConnect(s1brokered, "alice", "s1pass", amqpAddressList);
+        KeycloakCredentials bobWrongPassword = new KeycloakCredentials(s1Bob.getUsername(), "s2pass");
+        assertCannotConnect(s1brokered, bobWrongPassword, amqpAddressList);
+        assertCannotConnect(s1brokered, new KeycloakCredentials("alice", "s1pass"), amqpAddressList);
 
 
         KeycloakCredentials s2Bob = new KeycloakCredentials("bob", "s2pass");
-        getKeycloakClient().createUser(s2brokered.getName(), s2Bob.getUsername(), s2Bob.getPassword());
+        createUser(s2brokered, s2Bob);
 
         //create user with the same credentials in different address spaces
         KeycloakCredentials s2Carol = new KeycloakCredentials("carol", "s2pass");
-        getKeycloakClient().createUser(s2brokered.getName(), s1Carol.getUsername(), s1Carol.getPassword());
+        createUser(s2brokered, s1Carol);
 
-        assertCanConnect(s1brokered, s1Bob.getUsername(), s1Bob.getPassword(), amqpAddressList);
-        assertCanConnect(s1brokered, s2Carol.getUsername(), s2Carol.getPassword(), amqpAddressList);
-        assertCanConnect(s2brokered, s2Bob.getUsername(), s2Bob.getPassword(), amqpAddressList);
-        assertCanConnect(s2brokered, s2Carol.getUsername(), s2Carol.getPassword(), amqpAddressList);
+        assertCanConnect(s1brokered, s1Bob, amqpAddressList);
+        assertCanConnect(s1brokered, s2Carol, amqpAddressList);
+        assertCanConnect(s2brokered, s2Bob, amqpAddressList);
+        assertCanConnect(s2brokered, s2Carol, amqpAddressList);
 
-        assertCannotConnect(s2brokered, s1Bob.getUsername(), s1Bob.getPassword(), amqpAddressList);
-        assertCannotConnect(s1brokered, s2Bob.getUsername(), s2Bob.getPassword(), amqpAddressList);
+        assertCannotConnect(s2brokered, s1Bob, amqpAddressList);
+        assertCannotConnect(s1brokered, s2Bob, amqpAddressList);
     }
 
 }

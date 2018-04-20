@@ -6,7 +6,6 @@
 package io.enmasse.systemtest.bases;
 
 import com.google.common.collect.Ordering;
-import com.sun.jndi.toolkit.url.Uri;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
@@ -20,29 +19,21 @@ import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.resources.AddressPlan;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.ResourceDefinition;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.slf4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,18 +50,15 @@ import static org.junit.jupiter.api.Assertions.*;
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = new Environment();
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
-    protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
+    protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
     private static Logger log = CustomLogger.getLogger();
-    protected String username;
-    protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
+    protected KeycloakCredentials defaultCredentials = new KeycloakCredentials(null, null);
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
-    private BrokerManagement brokerManagement = new ArtemisManagement();
     private KeycloakClient keycloakApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -90,8 +78,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @BeforeEach
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials);
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials);
     }
 
     @AfterEach
@@ -191,7 +179,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return TestUtils.getAddressSpacesObjects(addressApiClient);
     }
 
-    protected KeycloakClient getKeycloakClient() throws Exception {
+    private KeycloakClient getKeycloakClient() throws Exception {
         if (keycloakApiClient == null) {
             KeycloakCredentials creds = environment.keycloakCredentials();
             if (creds == null) {
@@ -229,12 +217,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
     }
 
-    protected List<Uri> getAddressesPaths() throws Exception {
+    protected List<URL> getAddressesPaths() throws Exception {
         return TestUtils.getAddressesPaths(addressApiClient);
     }
 
-    protected JsonObject sendRestApiRequest(HttpMethod method, Uri uri, Optional<JsonObject> payload) throws Exception {
-        return TestUtils.sendRestApiRequest(addressApiClient, method, uri, payload);
+    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {
+        return TestUtils.sendRestApiRequest(addressApiClient, method, url, payload);
     }
 
     /**
@@ -325,8 +313,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         getKeycloakClient().leaveGroup(addressSpace.getName(), groupName, username);
     }
 
-    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception {
-        getKeycloakClient().createUser(addressSpace.getName(), username, password);
+
+    protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials, String... groups) throws Exception {
+        if (groups != null && groups.length > 0) {
+            getKeycloakClient().createUser(addressSpace.getName(), credentials, groups);
+        } else {
+            getKeycloakClient().createUser(addressSpace.getName(), credentials);
+        }
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
@@ -336,7 +329,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
             throws Exception {
         for (int i = from; i < to; i++) {
-            createUser(addressSpace, prefixName + i, prefixPswd + i);
+            createUser(addressSpace, new KeycloakCredentials(prefixName + i, prefixPswd + i));
         }
     }
 
@@ -350,17 +343,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
-    protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue(canConnectWithAmqp(addressSpace, username, password, destinations),
-                "Client failed, cannot connect under user " + username);
+    protected void assertCanConnect(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
+        assertTrue(canConnectWithAmqp(addressSpace, credentials, destinations),
+                "Client failed, cannot connect under user " + credentials);
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
-    protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+    protected void assertCannotConnect(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
         try {
-            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations),
-                    "Client failed, can connect under user " + username);
+            assertFalse(canConnectWithAmqp(addressSpace, credentials, destinations),
+                    "Client failed, can connect under user " + credentials);
             fail("Expected connection to timeout");
         } catch (ConnectTimeoutException e) {
         }
@@ -370,35 +363,33 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+    private boolean canConnectWithAmqp(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), username);
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
             switch (destination.getType()) {
                 case "queue":
-                    assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()), message);
+                    assertTrue(canConnectWithAmqpToQueue(addressSpace, credentials, destination.getAddress()), message);
                     break;
                 case "topic":
-                    assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()), message);
+                    assertTrue(canConnectWithAmqpToTopic(addressSpace, credentials, destination.getAddress()), message);
                     break;
                 case "multicast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()), message);
+                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, credentials, destination.getAddress()), message);
                     break;
                 case "anycast":
                     if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()), message);
+                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, credentials, destination.getAddress()), message);
                     break;
             }
         }
         return true;
     }
 
-    private boolean canConnectWithMqtt(String name, String username, String password) throws Exception {
+    private boolean canConnectWithMqtt(String name, KeycloakCredentials credentials) throws Exception {
         AddressSpace addressSpace = new AddressSpace(name);
         MqttClient client = mqttClientFactory.createClient(addressSpace);
-        MqttConnectOptions options = client.getMqttConnectOptions();
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
+        client.setCredentials(credentials);
 
         Future<List<MqttMessage>> received = client.recvMessages("t1", 1);
         Future<Integer> sent = client.sendMessages("t1", Collections.singletonList("msgt1"));
@@ -406,9 +397,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
-    protected boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, KeycloakCredentials credentials, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<Integer> sent = client.sendMessages(queueAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
         Future<List<Message>> received = client.recvMessages(queueAddress, 1, 10, TimeUnit.SECONDS);
@@ -416,9 +407,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, KeycloakCredentials credentials, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(anycastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
@@ -426,9 +417,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, KeycloakCredentials credentials, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(multicastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
@@ -436,9 +427,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    protected boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    protected boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, KeycloakCredentials credentials, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
-        client.getConnectOptions().setUsername(username).setPassword(password);
+        client.getConnectOptions().setCredentials(credentials);
 
         Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(topicAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
@@ -493,7 +484,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         SeleniumProvider selenium = null;
         try {
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, username, password);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
             selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
@@ -514,18 +505,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @param expectedCount count of expected subscribers
      * @throws Exception
      */
-    protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount) throws Exception {
+    protected void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, int expectedCount) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        waitForSubscribers(addressSpace, topic, expectedCount, budget);
+        waitForSubscribers(brokerManagement, addressSpace, topic, expectedCount, budget);
     }
 
-    protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
+    protected void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
         AmqpClient queueClient = null;
         try {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
-            queueClient.setConnectOptions(queueClient.getConnectOptions()
-                    .setUsername(managementCredentials.getUsername())
-                    .setPassword(managementCredentials.getPassword()));
+            queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(managementCredentials));
             String replyQueueName = "reply-queue";
             Destination replyQueue = Destination.queue(replyQueueName, getDefaultPlan(AddressType.QUEUE));
             appendAddresses(addressSpace, replyQueue);
@@ -533,7 +522,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             boolean done = false;
             int actualSubscribers = 0;
             do {
-                actualSubscribers = getSubscriberCount(queueClient, replyQueue, topic);
+                actualSubscribers = getSubscriberCount(brokerManagement, queueClient, replyQueue, topic);
                 log.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
                 if (actualSubscribers != expectedCount) {
                     Thread.sleep(1000);
@@ -570,7 +559,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    protected List<String> getBrokerQueueNames(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+    protected List<String> getBrokerQueueNames(BrokerManagement brokerManagement, AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
         return brokerManagement.getQueueNames(queueClient, replyQueue, topic);
     }
 
@@ -583,8 +572,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    protected int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
-        List<String> queueNames = getBrokerQueueNames(queueClient, replyQueue, topic);
+    protected int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+        List<String> queueNames = getBrokerQueueNames(brokerManagement, queueClient, replyQueue, topic);
 
         AtomicInteger subscriberCount = new AtomicInteger(0);
         queueNames.forEach((String queue) -> {
@@ -621,11 +610,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addresses;
     }
 
-    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, String username, String password,
+    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, KeycloakCredentials credentials,
                                   String address, String content, int count, boolean logToOutput) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, credentials.getUsername());
+        arguments.put(Argument.PASSWORD, credentials.getPassword());
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.MSG_CONTENT, content);
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
@@ -640,19 +629,19 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * attach N receivers into one address with default username/password
      */
     protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(addressSpace, destination, receiverCount, username, password);
+        return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials);
     }
 
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, String username, String password) throws Exception {
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, KeycloakCredentials credentials) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, credentials.getUsername());
+        arguments.put(Argument.PASSWORD, credentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.ADDRESS, destination.getAddress());
         arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
@@ -680,8 +669,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.MSG_CONTENT, "msg no.%d");
         arguments.put(Argument.COUNT, "30");
@@ -712,8 +701,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
         arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
@@ -735,13 +724,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
-                                             int senderCount, int receiverCount, String username, String password) throws Exception {
+                                             int senderCount, int receiverCount, KeycloakCredentials credentials) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, credentials.getUsername());
+        arguments.put(Argument.PASSWORD, credentials.getPassword());
         arguments.put(Argument.OBJECT_CONTROL, "CESR");
         arguments.put(Argument.ADDRESS, destination.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(connectionCount));
@@ -789,10 +778,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
 
         for (KeycloakCredentials cred : users) {
-            getKeycloakClient().createUser(addressSpace.getName(), cred.getUsername(), cred.getPassword(),
-                    cred.getUsername().replace("user_", ""));
+            createUser(addressSpace, cred, cred.getUsername().replace("user_", ""));
         }
-
         return users;
     }
 
@@ -810,85 +797,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         for (String message : messages)
             logger.info(message);
     }
-
-    //================================================================================================
-    //==================================== Config maps operations ====================================
-    //================================================================================================
-
-    //===================
-    //Address config-maps
-    //===================
-    protected void replaceAddressPlan(AddressSpace addressSpace, Destination dest, AddressPlan plan){
-        TestUtils.replaceAddressConfig(kubernetes, addressSpace, dest, plan);
-    }
-
-    //===================
-    //Address plans config-maps
-    //===================
-    protected void createAddressPlanConfig(AddressPlan addressPlan) {
-        createAddressPlanConfig(addressPlan, false);
-    }
-
-    protected void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
-        TestUtils.createAddressPlanConfig(kubernetes, addressPlan, replaceExisting);
-    }
-
-    protected AddressPlan getAddressPlanConfig(String configName) throws NotImplementedException {
-        return TestUtils.getAddressPlanConfig(configName);
-    }
-
-    protected boolean removeAddressPlanConfig(AddressPlan addressPlan) throws NotImplementedException {
-        return TestUtils.removeAddressPlanConfig(kubernetes, addressPlan);
-    }
-
-    protected void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        TestUtils.appendAddressPlan(kubernetes, addressPlan, addressSpacePlan);
-    }
-
-    protected boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        return TestUtils.removeAddressPlan(kubernetes, addressPlan, addressSpacePlan);
-    }
-
-    //=========================
-    //Address space plans config-maps
-    //=========================
-
-    protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        createAddressSpacePlanConfig(addressSpacePlan, false);
-    }
-
-    protected void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
-        TestUtils.createAddressSpacePlanConfig(kubernetes, addressSpacePlan, replaceExisting);
-    }
-
-    protected AddressSpacePlan getAddressSpacePlanConfig(String config) {
-        return TestUtils.getAddressSpacePlanConfig(kubernetes, config);
-    }
-
-    protected boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        return TestUtils.removeAddressSpacePlanConfig(kubernetes, addressSpacePlan);
-    }
-
-    //=========================
-    //Resource definition config-maps
-    //=========================
-
-    protected void createResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        createResourceDefinitionConfig(resourceDefinition, false);
-    }
-
-    protected void createResourceDefinitionConfig(ResourceDefinition resourceDefinition, boolean replaceExisting) {
-        TestUtils.createResourceDefinitionConfig(kubernetes, resourceDefinition, replaceExisting);
-    }
-
-    protected ResourceDefinition getResourceDefinitionConfig(String config) {
-        return TestUtils.getResourceDefinitionConfig(kubernetes, config);
-    }
-
-    protected boolean removeResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        return TestUtils.removeResourceDefinitionConfig(kubernetes, resourceDefinition);
-    }
-
 
     //================================================================================================
     //==================================== Asserts methods ===========================================

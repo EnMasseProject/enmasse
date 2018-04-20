@@ -33,12 +33,12 @@ public class MqttClientFactory {
     private final String password;
     private final List<MqttClient> clients = new ArrayList<>();
 
-    public MqttClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, String username, String password) {
+    public MqttClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
         this.kubernetes = kubernetes;
         this.environment = environment;
         this.defaultAddressSpace = defaultAddressSpace;
-        this.username = username;
-        this.password = password;
+        this.username = credentials.getUsername();
+        this.password = credentials.getPassword();
     }
 
     public static SSLContext tryGetSSLContext(final String... protocols) throws NoSuchAlgorithmException {

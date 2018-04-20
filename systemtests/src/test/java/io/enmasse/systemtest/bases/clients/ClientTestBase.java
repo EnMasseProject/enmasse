@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
@@ -40,14 +41,14 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 info.getTestClass().get().getName(),
                 info.getTestMethod().get().getName());
 
-        arguments.put(Argument.USERNAME, "test");
-        arguments.put(Argument.PASSWORD, "test");
+        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_SSL, "true");
     }
 
     @AfterEach
-    public void teardownClient(ExtensionContext context) {
+    public void teardownClient() {
         arguments.clear();
         clients.forEach(AbstractClient::stop);
         clients.clear();
@@ -129,7 +130,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                         String.format("Expected %d sent messages", expectedMsgCount / 2)));
     }
 
-    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
+    protected void doTopicSubscribeTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
                                         boolean hasTopicPrefix) throws Exception {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
@@ -153,7 +154,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(sharedAddressSpace, dest.getAddress(), 2);
+            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getAddress(), 2);
         } else {
             waitForSubscribersConsole(sharedAddressSpace, dest, 2);
         }
@@ -298,7 +299,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                         String.format("Expected %d received messages 'a OR b'", expectedMsgCount)));
     }
 
-    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
+    protected void doMessageSelectorTopicTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2, subscriber3));
         int expectedMsgCount = 10;
@@ -340,7 +341,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         Future<Boolean> result3 = subscriber3.runAsync();
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(sharedAddressSpace, topic.getAddress(), 3);
+            waitForSubscribers(artemisManagement, sharedAddressSpace, topic.getAddress(), 3);
         } else {
             waitForSubscribersConsole(sharedAddressSpace, topic, 3);
         }

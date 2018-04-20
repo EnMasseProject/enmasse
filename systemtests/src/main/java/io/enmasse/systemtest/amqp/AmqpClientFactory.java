@@ -24,12 +24,12 @@ public class AmqpClientFactory {
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, String defaultUsername, String defaultPassword) {
+    public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
         this.kubernetes = kubernetes;
         this.environment = environment;
         this.defaultAddressSpace = defaultAddressSpace;
-        this.defaultUsername = defaultUsername;
-        this.defaultPassword = defaultPassword;
+        this.defaultUsername = credentials.getUsername();
+        this.defaultPassword = credentials.getPassword();
     }
 
     public void close() throws Exception {

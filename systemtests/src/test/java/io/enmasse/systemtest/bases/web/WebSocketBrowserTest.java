@@ -10,11 +10,8 @@ import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.RheaWebPage;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,7 +48,8 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
     protected void doWebSocketSendReceive(Destination destination) throws Exception {
         setAddresses(destination);
 
-        rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(), 10, username, password);
+        rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(),
+                10, defaultCredentials);
         Thread.sleep(5000);
         log.info("Check if client sent and received right count of messages");
         assertEquals(20, rheaWebPage.readMessageCount(), "Browser client didn't sent and received all messages");

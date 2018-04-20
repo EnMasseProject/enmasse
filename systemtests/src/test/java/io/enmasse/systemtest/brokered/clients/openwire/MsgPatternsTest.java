@@ -4,13 +4,17 @@
  */
 package io.enmasse.systemtest.brokered.clients.openwire;
 
+import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientReceiver;
 import io.enmasse.systemtest.clients.openwire.OpenwireJMSClientSender;
+import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(ArtemisManagementParameterResolver.class)
 public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
@@ -25,8 +29,8 @@ public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered
 
     @Test
     @Disabled("disabled due to issue #660")
-    public void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
+    public void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
+        doTopicSubscribeTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
 
     @Test
@@ -46,8 +50,8 @@ public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered
 
     @Test
     @Disabled("disabled due to issue #660")
-    public void testMessageSelectorTopic() throws Exception {
-        doMessageSelectorTopicTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
+    public void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
+        doMessageSelectorTopicTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
 }

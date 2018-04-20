@@ -4,10 +4,7 @@
  */
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.Address;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resources.AddressPlan;
@@ -32,6 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static Logger log = CustomLogger.getLogger();
+    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
     public void setUp() {
@@ -51,7 +49,7 @@ public class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
         plansProvider.createAddressPlanConfig(weakQueuePlan);
 
-        AddressSpacePlan standardPlan = getAddressSpacePlanConfig("standard");
+        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlanConfig("standard");
         plansProvider.appendAddressPlan(weakQueuePlan, standardPlan);
 
         ArrayList<Destination> dest = new ArrayList<>();
