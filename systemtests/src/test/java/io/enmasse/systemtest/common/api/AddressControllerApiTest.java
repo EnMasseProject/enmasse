@@ -115,7 +115,7 @@ public class AddressControllerApiTest extends TestBase {
         createAddressSpace(addressSpace);
 
         KeycloakCredentials luckyUser = new KeycloakCredentials("Lucky", "luckyPswd");
-        getKeycloakClient().createUser(addressSpace.getName(), luckyUser.getUsername(), luckyUser.getPassword());
+        createUser(addressSpace, luckyUser);
 
         //try to get all external endpoints
         kubernetes.getExternalEndpoint(addressSpace.getNamespace(), endpointPrefix + "messaging");

@@ -461,7 +461,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int senderCount = 5;
         int receiverCount = 10;
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
-                sharedAddressSpace,  defaultCredentials);
+                sharedAddressSpace, defaultCredentials);
         consoleWebPage.openWebConsolePage();
         Destination dest = Destination.queue("queue-via-web", getDefaultPlan(AddressType.QUEUE));
         consoleWebPage.createAddressWebConsole(dest);
@@ -486,8 +486,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Destination destination = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(),
-                monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
+        createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
 
         consoleWebPage = new ConsoleWebPage(selenium,
                 getConsoleRoute(sharedAddressSpace),
@@ -503,8 +502,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(),
-                monitorUser.getUsername(), monitorUser.getPassword(), Group.MONITOR.toString());
+        createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
         setAddresses(destination);
 
         consoleWebPage = new ConsoleWebPage(selenium,
@@ -682,9 +680,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         prepareAddress(allowedAddress, noAllowedAddress);
 
         KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
-        getKeycloakClient().createUser(sharedAddressSpace.getName(),
-                monitorUser.getUsername(), monitorUser.getPassword(),
-                "view_" + allowedAddress.getAddress(), "send_*");
+        createUser(sharedAddressSpace, monitorUser, "view_" + allowedAddress.getAddress(), "send_*");
 
         consoleWebPage = new ConsoleWebPage(selenium,
                 getConsoleRoute(sharedAddressSpace),

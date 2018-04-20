@@ -23,7 +23,7 @@ public class AuthenticationTest extends AuthenticationTestBase implements ITestB
         createAddressSpace(addressSpace);
 
         KeycloakCredentials credentials = new KeycloakCredentials("Pavel", "Novak");
-        getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
+        createUser(addressSpace, credentials);
 
         assertCanConnect(addressSpace, credentials, amqpAddressList);
 

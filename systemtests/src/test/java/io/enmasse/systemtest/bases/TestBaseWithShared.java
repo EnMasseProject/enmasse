@@ -56,9 +56,8 @@ public abstract class TestBaseWithShared extends TestBase {
         createUser(sharedAddressSpace, defaultCredentials);
 
         this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
-        getKeycloakClient().createUser(sharedAddressSpace.getName(),
-                managementCredentials.getUsername(),
-                managementCredentials.getPassword(),
+        createUser(sharedAddressSpace,
+                managementCredentials,
                 Group.ADMIN.toString(),
                 Group.SEND_ALL_BROKERED.toString(),
                 Group.RECV_ALL_BROKERED.toString(),

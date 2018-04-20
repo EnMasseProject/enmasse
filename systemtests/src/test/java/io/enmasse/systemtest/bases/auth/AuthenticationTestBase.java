@@ -75,10 +75,10 @@ public abstract class AuthenticationTestBase extends TestBase {
         assertCannotConnect(s1brokered, new KeycloakCredentials("bob", "s1pass"), amqpAddressList);
 
         KeycloakCredentials s1Bob = new KeycloakCredentials("bob", "s1pass");
-        getKeycloakClient().createUser(s1brokered.getName(), s1Bob.getUsername(), s1Bob.getPassword());
+        createUser(s1brokered, s1Bob);
 
         KeycloakCredentials s1Carol = new KeycloakCredentials("carol", "s2pass");
-        getKeycloakClient().createUser(s1brokered.getName(), s1Carol.getUsername(), s1Carol.getPassword());
+        createUser(s1brokered, s1Carol);
 
         assertCannotConnect(s1brokered, new KeycloakCredentials(null, null), amqpAddressList);
 
@@ -93,11 +93,11 @@ public abstract class AuthenticationTestBase extends TestBase {
 
 
         KeycloakCredentials s2Bob = new KeycloakCredentials("bob", "s2pass");
-        getKeycloakClient().createUser(s2brokered.getName(), s2Bob.getUsername(), s2Bob.getPassword());
+        createUser(s2brokered, s2Bob);
 
         //create user with the same credentials in different address spaces
         KeycloakCredentials s2Carol = new KeycloakCredentials("carol", "s2pass");
-        getKeycloakClient().createUser(s2brokered.getName(), s1Carol.getUsername(), s1Carol.getPassword());
+        createUser(s2brokered, s1Carol);
 
         assertCanConnect(s1brokered, s1Bob, amqpAddressList);
         assertCanConnect(s1brokered, s2Carol, amqpAddressList);

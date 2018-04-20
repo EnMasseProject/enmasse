@@ -179,7 +179,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return TestUtils.getAddressSpacesObjects(addressApiClient);
     }
 
-    protected KeycloakClient getKeycloakClient() throws Exception {
+    private KeycloakClient getKeycloakClient() throws Exception {
         if (keycloakApiClient == null) {
             KeycloakCredentials creds = environment.keycloakCredentials();
             if (creds == null) {
@@ -313,8 +313,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         getKeycloakClient().leaveGroup(addressSpace.getName(), groupName, username);
     }
 
-    protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials) throws Exception {
-        getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
+    protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials, String... groups) throws Exception {
+        getKeycloakClient().createUser(addressSpace.getName(), credentials, groups);
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
@@ -773,10 +773,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
 
         for (KeycloakCredentials cred : users) {
-            getKeycloakClient().createUser(addressSpace.getName(), cred.getUsername(), cred.getPassword(),
-                    cred.getUsername().replace("user_", ""));
+            createUser(addressSpace, cred, cred.getUsername().replace("user_", ""));
         }
-
         return users;
     }
 

@@ -44,22 +44,22 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         KeycloakCredentials allowedUser = new KeycloakCredentials("sender", "senderPa55");
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedSender", "nobodyPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, allowedUser, Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
         assertSend(allowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
+        removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(),
+        createUser(sharedAddressSpace, allowedUser,
                 addresses.stream().map(s -> "send_" + s.getAddress()).toArray(String[]::new));
         assertSend(allowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
+        removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), "null");
+        createUser(sharedAddressSpace, noAllowedUser, "null");
         assertCannotSend(noAllowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), noAllowedUser.getUsername());
+        removeUser(sharedAddressSpace, noAllowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, noAllowedUser, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertCannotSend(noAllowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), noAllowedUser.getUsername());
+        removeUser(sharedAddressSpace, noAllowedUser.getUsername());
     }
 
     protected void doTestReceiveAuthz() throws Exception {
@@ -67,31 +67,31 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedReceiver", "nobodyPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, allowedUser, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertReceive(allowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
+        removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(),
+        createUser(sharedAddressSpace, allowedUser,
                 addresses.stream().map(s -> "recv_" + s.getAddress()).toArray(String[]::new));
         assertReceive(allowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), allowedUser.getUsername());
+        removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, noAllowedUser, Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
         assertCannotReceive(noAllowedUser);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), noAllowedUser.getUsername());
+        removeUser(sharedAddressSpace, noAllowedUser.getUsername());
     }
 
     protected void doTestUserPermissionAfterRemoveAuthz() throws Exception {
         initAddresses();
         KeycloakCredentials user = new KeycloakCredentials("pepa", "pepaPa55");
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), user.getUsername(), user.getPassword(), Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, user, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertReceive(user);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), user.getUsername());
+        removeUser(sharedAddressSpace, user.getUsername());
 
-        getKeycloakClient().createUser(sharedAddressSpace.getName(), user.getUsername(), user.getPassword(), "pepa_group");
+        createUser(sharedAddressSpace, user, "pepa_group");
         assertCannotReceive(user);
-        getKeycloakClient().deleteUser(sharedAddressSpace.getName(), user.getUsername());
+        removeUser(sharedAddressSpace, user.getUsername());
     }
 
     protected void doTestSendAuthzWithWIldcards() throws Exception {
