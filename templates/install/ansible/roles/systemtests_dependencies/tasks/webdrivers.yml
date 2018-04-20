@@ -5,7 +5,7 @@
     path: "{{ webdriver_folder }}"
     state: absent
 
-- name: WEBDRIVERS | create webdriver folder folder
+- name: WEBDRIVERS | create webdriver folder
   file:
     path: "{{ webdriver_folder }}"
     state: directory
