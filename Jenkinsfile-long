@@ -14,7 +14,7 @@ def tearDownOpenshift() {
 pipeline {
     agent {
         node {
-            label 'enmasse'
+            label 'enmasse-long'
         }
     }
     options {
