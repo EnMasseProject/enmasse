@@ -47,9 +47,10 @@
 
 ######################################################
 # Install dependencies by yum
-- name: YUM | Install redhat-rpm-config, bzip2, unzip, python-devel, openssl, Xvfb, gtk3
+- name: YUM | Install gcc, redhat-rpm-config, bzip2, unzip, python-devel, openssl, Xvfb, gtk3
   yum:
     name:
+      - gcc
       - redhat-rpm-config
       - bzip2
       - unzip
