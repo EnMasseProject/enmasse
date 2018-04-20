@@ -5,18 +5,18 @@ role contains tasks for dependencies, browsers and clients for frunning full sys
 Role Variables
 --------------
 
-geckodriver_version
-chromedriver_version
-nodejs_version
-firefox_version
+- geckodriver_version
+- chromedriver_version
+- nodejs_version
+- firefox_version
 
 Tags
 --------------
 
-dependencies
-clients
-webdrivers
-firefox
+- dependencies
+- clients
+- webdrivers
+- firefox
 
 Example Playbook
 ----------------
