@@ -1,7 +1,10 @@
 ---
 # tasks file with dependencies
-- include_tasks: epel.yml
-- include_tasks: dependencies.yml
-- include_tasks: firefox.yml
-- include_tasks: clients.yml
-- include_tasks: webdrivers.yml
+- import_tasks: dependencies.yml
+  tags: [dependencies, always]
+- import_tasks: firefox.yml
+  tags: firefox
+- import_tasks: clients.yml
+  tags: clients
+- import_tasks: webdrivers.yml
+  tags: webdrivers
