@@ -605,11 +605,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addresses;
     }
 
-    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, String username, String password,
+    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, KeycloakCredentials credentials,
                                   String address, String content, int count, boolean logToOutput) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, credentials.getUsername());
+        arguments.put(Argument.PASSWORD, credentials.getPassword());
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.MSG_CONTENT, content);
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
@@ -624,19 +624,19 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * attach N receivers into one address with default username/password
      */
     protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials);
     }
 
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, String username, String password) throws Exception {
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, KeycloakCredentials credentials) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, credentials.getUsername());
+        arguments.put(Argument.PASSWORD, credentials.getPassword());
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.ADDRESS, destination.getAddress());
         arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
@@ -719,13 +719,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
-                                             int senderCount, int receiverCount, String username, String password) throws Exception {
+                                             int senderCount, int receiverCount, KeycloakCredentials credentials) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.USERNAME, credentials.getUsername());
+        arguments.put(Argument.PASSWORD, credentials.getPassword());
         arguments.put(Argument.OBJECT_CONTROL, "CESR");
         arguments.put(Argument.ADDRESS, destination.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(connectionCount));

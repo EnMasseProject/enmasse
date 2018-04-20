@@ -28,8 +28,7 @@ public class ConsoleWebPage {
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
     private LoginWebPage loginWebPage;
-    private String username;
-    private String password;
+    private KeycloakCredentials credentials;
 
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
         this.selenium = selenium;
@@ -37,21 +36,21 @@ public class ConsoleWebPage {
         this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
         this.loginWebPage = new LoginWebPage(selenium);
-        this.username = credentials.getUsername();
-        this.password = credentials.getPassword();
+        this.credentials = credentials;
+
     }
 
     public void openWebConsolePage() throws Exception {
-        openWebConsolePage(username, password);
+        openWebConsolePage(credentials);
     }
 
-    public void openWebConsolePage(String username, String password) throws Exception {
+    public void openWebConsolePage(KeycloakCredentials credentials) throws Exception {
         log.info("Opening console web page");
         logout();
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (!loginWebPage.login(username, password))
+        if (!loginWebPage.login(credentials.getUsername(), credentials.getPassword()))
             throw new IllegalAccessException(loginWebPage.getAlertMessage());
     }
 

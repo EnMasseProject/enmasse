@@ -303,7 +303,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         try {
             int receiversBatch1 = 5;
             int receiversBatch2 = 10;
-            receiversPavel = attachReceivers(queue, receiversBatch1, pavel.getUsername(), pavel.getPassword());
+            receiversPavel = attachReceivers(queue, receiversBatch1, pavel);
             receiversTest = attachReceivers(queue, receiversBatch2);
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1 + receiversBatch2),
                     consoleWebPage.getConnectionItems().size(), is(receiversBatch1 + receiversBatch2));
@@ -312,7 +312,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch2),
                     items.size(), is(receiversBatch2));
-            assertConnectionUsers("Console failed, does not contain connections for user " + defaultCredentials.getUsername(),
+            assertConnectionUsers(
+                    String.format("Console failed, does not contain connections for user '%s'", defaultCredentials),
                     items, defaultCredentials.getUsername());
 
             consoleWebPage.addConnectionsFilter(FilterType.USER, pavel.getUsername());
@@ -323,7 +324,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             items = consoleWebPage.getConnectionItems();
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1),
                     items.size(), is(receiversBatch1));
-            assertConnectionUsers("Console failed, does not contain connections for user " + pavel.getUsername(),
+            assertConnectionUsers(
+                    String.format("Console failed, does not contain connections for user '%s'", pavel),
                     items, pavel.getUsername());
 
             consoleWebPage.clearAllFilters();
@@ -494,7 +496,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertElementDisabled("Console failed, create button is enabled for user " + monitorUser.getUsername(),
+        assertElementDisabled(String.format("Console failed, create button is enabled for user '%s'", monitorUser),
                 consoleWebPage.getCreateButton());
     }
 
@@ -511,17 +513,16 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertElementDisabled("Console failed, delete button is enabled for user " + monitorUser.getUsername(),
+        assertElementDisabled(String.format("Console failed, delete button is enabled for user '%s'", monitorUser),
                 consoleWebPage.getRemoveButton());
     }
 
     protected void doTestViewAddresses() throws Exception {
         Destination allowedDestination = Destination.queue("test-view-queue", getDefaultPlan(AddressType.QUEUE));
         Destination notAllowedDestination = Destination.queue("test-not-view-queue", getDefaultPlan(AddressType.QUEUE));
-        String username = "view_user_addresses";
-        String password = "viewPa55";
+        KeycloakCredentials viewUser = new KeycloakCredentials("view_user_addresses", "viewPa55");
 
-        prepareViewItemTest(username, password, allowedDestination, notAllowedDestination);
+        prepareViewItemTest(viewUser, allowedDestination, notAllowedDestination);
 
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
@@ -532,15 +533,14 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         assertThat(String.format("Console failed, does not contain %d addresses", 1),
                 consoleWebPage.getAddressItems().size(), is(1));
-        assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", username),
+        assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", viewUser),
                 "view_test-view-queue", consoleWebPage.getAddressItems());
     }
 
     protected void doTestViewConnections() throws Exception {
         Destination destination = Destination.queue("test-queue-view-connections", getDefaultPlan(AddressType.QUEUE));
-        String username = "view_user_connections";
-        String password = "viewPa55";
-        prepareViewItemTest(username, password, destination, null);
+        KeycloakCredentials viewUser = new KeycloakCredentials("view_user_connections", "viewPa55");
+        prepareViewItemTest(viewUser, destination, null);
 
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openConnectionsPageWebConsole();
@@ -548,7 +548,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int connections = 5;
         AbstractClient noUsersConnections = attachConnector(destination, connections, 1, 0);
         AbstractClient usersConnections = attachConnector(sharedAddressSpace, destination,
-                connections, 1, 0, "view_user_connections", "viewPa55");
+                connections, 1, 0, viewUser);
         selenium.waitUntilPropertyPresent(60, 5, () -> consoleWebPage.getConnectionItems().size());
 
         assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
@@ -558,7 +558,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         log.info("Check if connection count is {}", connections);
         assertEquals(connections, consoleWebPage.getConnectionItems().size(),
                 String.format("Console failed, does not contain %d connections", connections));
-        assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", username),
+        assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", viewUser),
                 "view_user_connections", consoleWebPage.getConnectionItems());
 
         noUsersConnections.stop();
@@ -577,7 +577,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.openWebConsolePage();
             consoleWebPage.openAddressesPageWebConsole();
 
-            assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", user.getUsername()),
+            assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", user),
                     user.getUsername().replace("user_", ""), consoleWebPage.getAddressItems());
         }
     }
@@ -587,10 +587,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                     sharedAddressSpace, credentials);
             consoleWebPage.openWebConsolePage();
-            log.info(String.format("User %s successfully authenticated", credentials.getUsername()));
+            log.info(String.format("User %s successfully authenticated", credentials));
         } catch (IllegalAccessException | org.openqa.selenium.UnhandledAlertException ex) {
             selenium.tearDownDrivers();
-            log.info(String.format("User %s can't authenticate", credentials.getUsername()));
+            log.info(String.format("User %s can't authenticate", credentials));
             throw new IllegalAccessException();
         }
     }
@@ -651,7 +651,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     private void assertViewOnlyUsersAddresses(String message, String group, List<AddressWebItem> addresses) {
-        log.info("Check if user {} see only addresses he has rights on", defaultCredentials.getUsername());
+        log.info("Check if user {} see only addresses he has rights on", defaultCredentials);
         if (addresses == null || addresses.size() == 0)
             fail("No address items in console for group " + group);
         for (AddressWebItem item : addresses) {
@@ -675,11 +675,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
-    private void prepareViewItemTest(String username, String password, Destination allowedAddress,
+    private void prepareViewItemTest(KeycloakCredentials monitorUser, Destination allowedAddress,
                                      Destination noAllowedAddress) throws Exception {
         prepareAddress(allowedAddress, noAllowedAddress);
 
-        KeycloakCredentials monitorUser = new KeycloakCredentials(username, password);
         createUser(sharedAddressSpace, monitorUser, "view_" + allowedAddress.getAddress(), "send_*");
 
         consoleWebPage = new ConsoleWebPage(selenium,

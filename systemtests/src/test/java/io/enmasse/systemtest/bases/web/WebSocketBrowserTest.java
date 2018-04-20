@@ -49,7 +49,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         setAddresses(destination);
 
         rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(),
-                10, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+                10, defaultCredentials);
         Thread.sleep(5000);
         log.info("Check if client sent and received right count of messages");
         assertEquals(20, rheaWebPage.readMessageCount(), "Browser client didn't sent and received all messages");

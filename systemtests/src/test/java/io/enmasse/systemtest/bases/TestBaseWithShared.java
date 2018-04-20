@@ -176,15 +176,14 @@ public abstract class TestBaseWithShared extends TestBase {
      * attach N receivers into one address with default username/password
      */
     protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(sharedAddressSpace, destination, receiverCount, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        return attachReceivers(sharedAddressSpace, destination, receiverCount, defaultCredentials);
     }
 
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String
-            username, String password) throws Exception {
-        return attachReceivers(sharedAddressSpace, destination, receiverCount, username, password);
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, KeycloakCredentials credentials) throws Exception {
+        return attachReceivers(sharedAddressSpace, destination, receiverCount, credentials);
     }
 
     /**
@@ -206,7 +205,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
-        return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials.getUsername(), defaultCredentials.getPassword());
+        return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials);
     }
 
     public static String tagValue(String a) {

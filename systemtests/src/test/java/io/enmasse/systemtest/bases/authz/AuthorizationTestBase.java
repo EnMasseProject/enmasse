@@ -206,7 +206,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         logWithSeparator(log,
                 String.format("Try send message under user %s from %s %s", credentials, destination.getType(), destination.getAddress()),
                 String.format("***** Try to open sender client under user %s", credentials),
-                String.format("***** Try to open receiver client under user %s", defaultCredentials.getUsername()));
+                String.format("***** Try to open receiver client under user %s", defaultCredentials));
         AmqpClient sender = createClient(destination, credentials);
         AmqpClient receiver = createClient(destination, defaultCredentials);
         logWithSeparator(log);
@@ -216,7 +216,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     private boolean canReceive(Destination destination, KeycloakCredentials credentials) throws Exception {
         logWithSeparator(log,
                 String.format("Try receive message under user %s from %s %s", credentials, destination.getType(), destination.getAddress()),
-                String.format("***** Try to open sender client under user %s", defaultCredentials.getUsername()),
+                String.format("***** Try to open sender client under user %s", defaultCredentials),
                 String.format("***** Try to open receiver client under user %s", credentials));
 
         AmqpClient sender = createClient(destination, defaultCredentials);

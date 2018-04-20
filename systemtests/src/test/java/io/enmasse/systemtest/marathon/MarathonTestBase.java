@@ -306,7 +306,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
 
         selenium.setupDriver(environment, kubernetes, buildDriver());
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
-        consoleWebPage.openWebConsolePage(user.getUsername(), user.getPassword());
+        consoleWebPage.openWebConsolePage(user);
 
         int addressCount = 5;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));

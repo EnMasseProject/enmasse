@@ -6,6 +6,7 @@ package io.enmasse.systemtest.selenium;
 
 
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.KeycloakCredentials;
 import org.openqa.selenium.By;
 import org.slf4j.Logger;
 
@@ -29,10 +30,10 @@ public class RheaWebPage {
         selenium.takeScreenShot();
     }
 
-    public void sendReceiveMessages(String server, String address, int count, String username, String password) throws Exception {
+    public void sendReceiveMessages(String server, String address, int count, KeycloakCredentials credentials) throws Exception {
         openRheaWebPage();
         String command = String.format("connect_to_enmasse(\"wss://%s\", \"%s\", \"%s\", \"%s\", \"%s\")",
-                server, address, count, username, password);
+                server, address, count, credentials.getUsername(), credentials.getPassword());
         selenium.executeJavaScript(command);
     }
 

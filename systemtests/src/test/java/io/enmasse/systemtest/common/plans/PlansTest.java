@@ -287,13 +287,13 @@ public class PlansTest extends TestBase {
         setAddresses(addressSpace, queue, queue2, queue3);
 
         assertAll(
-                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
                         queue.getAddress(), messageContent, 100, false),
                         "Client does not fail"),
-                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
                         queue2.getAddress(), messageContent, 100, false),
                         "Client does not fail"),
-                () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user.getUsername(), user.getPassword(),
+                () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user,
                         queue3.getAddress(), messageContent, 50, false),
                         "Client fails"));
     }
