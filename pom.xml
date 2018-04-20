@@ -6,7 +6,7 @@
     <groupId>io.enmasse</groupId>
     <artifactId>enmasse</artifactId>
     <packaging>pom</packaging>
-    <version>0.19-SNAPSHOT</version>
+    <version>0.19.0-rc1</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
