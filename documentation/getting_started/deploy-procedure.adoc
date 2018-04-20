@@ -6,13 +6,13 @@ Invoke the deployment script to deploy {ProductName}
 
 [options="nowrap",subs=attributes+]
 ....
-./deploy-{ClusterManager}.sh -m "https://{DeployHost}:8443" -n enmasse {DeployOptions}
+./deploy.sh -m "https://{DeployHost}:8443" -n enmasse {DeployOptions} -t {ClusterManager}
 ....
 
 ===== Using ansible
 [options="nowrap",subs=attributes+]
 ....
-ansible-playbook ansible/playbooks/openshift/singletenant.yml
+ansible-playbook ansible/playbooks/openshift/singletenant-standard.yml
 ....
 
 
