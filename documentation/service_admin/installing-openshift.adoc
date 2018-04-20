@@ -50,7 +50,8 @@ oc create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt 
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/addons/none-authservice.yaml | oc create -f -
+oc create -f ./resources/none-authservice/service.yaml
+oc create -f ./resources/none-authservice/deployment.yaml
 ----
 
 ===== Deploying the standard authentication service
@@ -90,7 +91,11 @@ oc adm policy add-role-to-user view system:serviceaccount:enmasse:default
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/addons/standard-authservice.yaml | oc create -f -
+oc create -f ./resources/standard-authservice/service.yaml
+oc create -f ./resources/standard-authservice/keycloak-deployment.yaml
+oc create -f ./resources/standard-authservice/controller-deployment.yaml
+oc create -f ./resources/standard-authservice/pvc.yaml
+oc create -f ./resources/standard-authservice/route.yaml
 ----
 
 . Create keycloak configuration used by controller and service. To make the standard authservice
@@ -138,7 +143,7 @@ oc create sa enmasse-admin
 [options="nowrap"]
 ----
 oc login -u system:admin
-oc create -f ./openshift/cluster-roles.yaml
+oc create -f ./resources/cluster-roles/enmasse-admin.yaml
 ----
 
 . Grant cluster-admin privileges to service account:
@@ -167,20 +172,29 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address
 oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
 ----
 
+. Create address controller config:
++
+[options="nowrap"]
+----
+oc create configmap address-controller-config --from-literal=enableRbac=true
+----
+
 . Install default plan and resource configuration
 +
 [options="nowrap"]
 ----
-oc create -f ./openshift/addons/resource-definitions.yaml
-oc create -f ./openshift/addons/standard-plans.yaml
-oc create -f ./openshift/addons/brokered-plans.yaml
+oc create -f ./resources/resource-definitions/resource-definitions.yaml
+oc create -f ./resources/plans/standard-plans.yaml
+oc create -f ./resources/plans/brokered-plans.yaml
 ----
 
 . Deploy the address-controller:
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=true ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -f -
+oc create -f ./resources/address-controller/deployment.yaml
+oc create -f ./resources/address-controller/service.yaml
+oc create -f ./resources/address-controller/route.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
@@ -218,15 +232,15 @@ oc policy add-role-to-user admin system:serviceaccount:enmasse:address-space-adm
 +
 [options="nowrap"]
 ----
-oc create -f ./openshift/addons/resource-definitions.yaml
-oc create -f ./openshift/addons/standard-plans.yaml
+oc create -f ./resources/resource-definitions/resource-definitions.yaml
+oc create -f ./resources/plans/standard-plans.yaml
 ----
 
 . Deploy default address space
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/address-space.yaml NAME=default NAMESPACE=enmasse TYPE=standard PLAN=unlimited-standard | oc create -f -
+oc process -f ./resources/templates/address-space.yaml NAME=default NAMESPACE=enmasse TYPE=standard PLAN=unlimited-standard | oc create -f -
 ----
 
 . Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
@@ -244,11 +258,21 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address
 oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
 ----
 
+. Create address controller config:
++
+[options="nowrap"]
+----
+oc create configmap address-controller-config --from-literal=enableRbac=true
+----
+
 . Deploy address-controller:
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=false ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -f -
+oc create -f ./resources/address-controller/deployment.yaml
+oc create -f ./resources/address-controller/service.yaml
+oc create -f ./resources/address-controller/route.yaml
+oc create -f ./resources/address-controller/address-space-definitions.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
