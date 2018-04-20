@@ -75,7 +75,7 @@ public class KeycloakClient {
     public void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
                                GroupMethod<RealmResource, String, String> groupMethod) throws Exception {
         int maxRetries = 10;
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
             for (int retries = 0; retries < maxRetries; retries++) {
                 try {
@@ -129,7 +129,7 @@ public class KeycloakClient {
 
     public void createGroup(String realm, String groupName, long timeout, TimeUnit timeUnit) throws Exception {
         int maxRetries = 10;
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             waitForRealm(keycloak.get(), realm, timeout, timeUnit);
             if (!groupExist(keycloak, realm, groupName)) {
                 for (int retries = 0; retries < maxRetries; retries++) {
@@ -179,7 +179,7 @@ public class KeycloakClient {
             throws Exception {
 
         int maxRetries = 10;
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
 
             for (int retries = 0; retries < maxRetries; retries++) {
@@ -250,7 +250,7 @@ public class KeycloakClient {
     }
 
     public void deleteUser(String realm, String userName) throws Exception {
-        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
+        try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName));
         }
     }
