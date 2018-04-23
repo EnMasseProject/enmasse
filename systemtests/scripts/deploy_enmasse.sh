@@ -6,6 +6,6 @@ KUBEADM=${3}
 
 download_enmasse
 
-if [[ ${SKIP_SETUP} == 'true' ]]; then
+if [[ ${SKIP_SETUP} != 'true' ]]; then
     setup_test ${ENMASSE_DIR} ${KUBEADM}
 fi
