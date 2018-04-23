@@ -91,11 +91,11 @@ public class ConsoleWebPage {
     }
 
     public WebElement getCreateButton() throws Exception {
-        return selenium.getDriver().findElement(ByAngular.buttonText("Create"));
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Create")));
     }
 
     public WebElement getRemoveButton() throws Exception {
-        return selenium.getDriver().findElement(ByAngular.buttonText("Delete"));
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
     }
 
     public void clickOnCreateButton() throws Exception {
@@ -547,17 +547,17 @@ public class ConsoleWebPage {
         clickOnCreateButton();
 
         //fill address name
-        selenium.fillInputItem(selenium.getDriver().findElement(By.id("new-name")), destination.getAddress());
+        selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))), destination.getAddress());
 
         //select address type
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id(destination.getType())), "Radio button " + destination.getType());
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getType()))), "Radio button " + destination.getType());
 
-        WebElement nextButton = selenium.getDriver().findElement(By.id("nextButton"));
+        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
 
         selenium.clickOnItem(nextButton);
 
         //select address plan
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id(destination.getPlan())), "Radio button " + destination.getPlan());
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getPlan()))), "Radio button " + destination.getPlan());
 
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
