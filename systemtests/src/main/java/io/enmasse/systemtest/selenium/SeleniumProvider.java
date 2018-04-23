@@ -22,7 +22,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -170,6 +172,41 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
+    private <T> T getElement(Supplier<T> webElement, int attempts, int count) throws Exception {
+        T result = null;
+        int i = 0;
+        while (++i <= attempts) {
+            try {
+                result = webElement.get();
+                if (result == null) {
+                    log.warn("Element was not found, go to next iteration: {}", i);
+                } else if (result instanceof WebElement) {
+                    if (((WebElement) result).isEnabled()) {
+                        break;
+                    }
+                    log.warn("Element was found, but it is not enabled, go to next iteration: {}", i);
+                } else if (result instanceof List) {
+                    if (((List) result).size() == count) {
+                        break;
+                    }
+                    log.warn("Elements were not found, go to next iteration: {}", i);
+                }
+            } catch (Exception ex) {
+                log.warn("Element was not found, go to next iteration: {}", i);
+            }
+            Thread.sleep(1000);
+        }
+        return result;
+    }
+
+    public WebElement getWebElement(Supplier<WebElement> webElement) throws Exception {
+        return getElement(webElement, 30, 0);
+    }
+
+    public List<WebElement> getWebElements(Supplier<List<WebElement>> webElements, int count) throws Exception {
+        return getElement(webElements, 30, count);
+    }
+
     public void waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, true);
     }
@@ -206,7 +243,8 @@ public class SeleniumProvider {
         log.info("End of waiting");
     }
 
-    public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws Exception {
+    public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws
+            Exception {
         log.info("Waiting until data will be present");
         int attempts = 0;
         while (attempts < timeoutInSeconds) {

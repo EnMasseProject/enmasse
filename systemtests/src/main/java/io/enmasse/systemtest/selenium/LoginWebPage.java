@@ -21,7 +21,7 @@ public class LoginWebPage {
     }
 
     private WebElement getContentElement() throws Exception {
-        return selenium.getDriver().findElement(By.id("kc-content"));
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("kc-content")));
     }
 
     private WebElement getUsernameTextInput() throws Exception {

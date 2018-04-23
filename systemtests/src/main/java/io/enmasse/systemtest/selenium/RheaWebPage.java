@@ -37,7 +37,7 @@ public class RheaWebPage {
         selenium.executeJavaScript(command);
     }
 
-    public int readMessageCount() throws Exception {
-        return selenium.getDriver().findElements(By.tagName("div")).size();
+    public boolean checkCountMessage(int count) throws Exception {
+        return selenium.getWebElements(() -> selenium.getDriver().findElements(By.tagName("div")), count).size() == count;
     }
 }

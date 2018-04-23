@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class WebSocketBrowserTest extends TestBaseWithShared implements ISeleniumProvider {
 
@@ -47,11 +47,10 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
 
     protected void doWebSocketSendReceive(Destination destination) throws Exception {
         setAddresses(destination);
+        int count = 10;
 
         rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(),
-                10, defaultCredentials);
-        Thread.sleep(5000);
-        log.info("Check if client sent and received right count of messages");
-        assertEquals(20, rheaWebPage.readMessageCount(), "Browser client didn't sent and received all messages");
+                count, defaultCredentials);
+        assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }
 }
