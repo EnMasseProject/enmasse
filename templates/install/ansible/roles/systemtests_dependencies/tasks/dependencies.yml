@@ -88,3 +88,10 @@
     dest: "{{ maven_root_path }}"
   when: mvn_is_installed.rc != 0
 
+- name: MAVEN | Create symlink
+  file:
+    force: yes
+    src: "{{ maven_root_path }}/apache-maven-3.5.2/bin/mvn"
+    dest: '/usr/bin/mvn'
+    state: link
+  when: mvn_is_installed.rc != 0
