@@ -34,6 +34,7 @@
 
 - name: OpenShift | Create symlink
   file:
+    force: yes
     src: "{{ openshift_path }}/oc"
     dest: '/usr/bin/oc'
     state: link
@@ -63,6 +64,7 @@
 
 - name: Kubectl | Create symlink
   file:
+    force: yes
     src: "{{ kubectl_path }}/kubectl"
     dest: '/usr/bin/kubectl'
     state: link
@@ -92,6 +94,7 @@
 
 - name: Minikube | Create symlink
   file:
+    force: yes
     src: "{{ minikube_path }}/minikube"
     dest: '/usr/bin/minikube'
     state: link
