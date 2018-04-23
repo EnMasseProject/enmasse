@@ -32,8 +32,11 @@
     extra_opts: [--strip-components=1]
   tags: openshift
 
-- name: OpenShift | Copy OpenShift client to PATH
-  shell: 'cp {{ openshift_path }}/oc /usr/bin/'
+- name: OpenShift | Create symlink
+  file:
+    src: "{{ openshift_path }}/oc"
+    dest: '/usr/bin/oc'
+    state: link
   tags: openshift
 
 
@@ -58,8 +61,11 @@
     mode: "a+x"
   tags: kubectl
 
-- name: Kubectl | Copy kubectl to PATH
-  shell: 'cp {{ kubectl_path }}/kubectl /usr/bin/'
+- name: Kubectl | Create symlink
+  file:
+    src: "{{ kubectl_path }}/kubectl"
+    dest: '/usr/bin/kubectl'
+    state: link
   tags: kubectl
 
 
@@ -84,6 +90,9 @@
     mode: "a+x"
   tags: minikube
 
-- name: Minikube | Copy minikube to PATH
-  shell: 'cp {{ minikube_path }}/minikube /usr/bin/'
+- name: Minikube | Create symlink
+  file:
+    src: "{{ minikube_path }}/minikube"
+    dest: '/usr/bin/minikube'
+    state: link
   tags: minikube
