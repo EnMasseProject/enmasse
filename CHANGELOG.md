@@ -1,3 +1,11 @@
+## 0.19.0 (April 23, 2018)
+* Support OpenShift identity brokering in Keycloak. This allows you to authenticate an address space
+  admin user using OpenShift credentials.
+* Create common groups for authorization and have realm admin user join these groups
+* Reworked service broker implementation to support deploying address spaces
+* Add support for service broker bind requests to create user and credentials
+* Upgraded to Artemis 2.5.0 broker
+
 ## 0.18.0 (April 10, 2018)
 * Support OAUTH (when used with standard or external address space) in messaging console
 * Performance improvements to reduce load on the Kubernetes/OpenShift API server
