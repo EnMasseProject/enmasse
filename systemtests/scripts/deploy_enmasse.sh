@@ -4,11 +4,8 @@ SKIP_SETUP=${1:-false}
 ENMASSE_DIR=${2}
 KUBEADM=${3}
 
-#download_enmasse
-
-#download_enmasse
+download_enmasse
 
 if [[ ${SKIP_SETUP} == 'true' ]]; then
-    echo "in"
-#    setup_test ${ENMASSE_DIR} ${KUBEADM}
+    setup_test ${ENMASSE_DIR} ${KUBEADM}
 fi
