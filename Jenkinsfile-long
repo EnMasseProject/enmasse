@@ -47,12 +47,11 @@ pipeline {
                 }
             }
         }
-        stage('deploy enmasse') {
+        stage('download enmasse') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh 'sudo chmod 777 -R ./systemtests/scripts/'
                     sh 'OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/deploy_enmasse.sh true'
-                    sh './systemtests/scripts/wait_until_up.sh 4 $BUILD_TAG'
                 }
             }
         }
