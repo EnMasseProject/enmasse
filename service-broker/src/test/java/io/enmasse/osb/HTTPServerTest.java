@@ -49,8 +49,8 @@ public class HTTPServerTest {
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
-        when(authApi.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        when(authApi.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(authApi.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(authApi.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         httpServer = new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, null, false, null, 0, "http://localhost/console");
         vertx.deployVerticle(httpServer, context.asyncAssertSuccess());
     }

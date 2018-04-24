@@ -1,0 +1,78 @@
+---
+- name: Ensure user has cluster admin access
+  shell: oc policy can-i create clusterroles
+  register: is_admin
+  failed_when: is_admin.stdout == "no"
+- name: Create cluster wide roles used by api server
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/api-server.yaml
+- name: Grant api-server cluster role privileges to service account
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:api-server -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+- name: Grant auth delegation privileges to service account
+  shell: oc adm policy add-cluster-role-to-user system:auth-delegator -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+  when: enable_rbac
+- name: Check if api-server-config exists
+  shell: oc get configmap -n {{ namespace }} api-server-config
+  register: config_exists
+  ignore_errors: True
+- name: Create API Server Config
+  when: config_exists.failed
+  shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }}
+- name: Create EnMasse API Server Deployment
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/api-server/deployment.yaml"
+- name: Create EnMasse API Server Service
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/api-server/service.yaml"
+- name: Check if API client CA secret exists
+  when: secure_api_server
+  shell: oc get secret -n {{ namespace }} api-server-client-ca
+  register: secret_exists
+  ignore_errors: True
+- name: Extract API Client CA
+  when: secure_api_server and secret_exists.failed
+  shell: oc get configmap extension-apiserver-authentication -n kube-system -o jsonpath={.data.client-ca-file}
+  register: clientca_result 
+- set_fact:
+    client_ca: "{{ clientca_result.stdout }}"
+  when: secure_api_server and secret_exists.failed
+- name: Store API Client CA in secret
+  when: secure_api_server and secret_exists.failed
+  shell:
+    cmd: |
+      cat <<EOF | oc apply -n {{ namespace }} -f -
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: api-server-client-ca
+        namespace: "{{ namespace }}"
+      type: tls
+      data:
+        ca.crt: "{{ client_ca | b64encode }}"
+      EOF
+- name: Create route for API server
+  shell: oc create route passthrough restapi -n {{ namespace }} --service=api-server
+  when: not register_api_server
+- name: Extract API Server CA
+  when: register_api_server
+  shell: oc extract secret/api-server-cert -n {{ namespace }} --keys=tls.crt --to=-
+  register: secret_result
+- set_fact:
+    ca_bundle: "{{ secret_result.stdout }}"
+  when: register_api_server
+- name: Register API Server with API Aggregator
+  when: register_api_server
+  shell:
+    cmd: |
+      cat <<EOF | oc apply -f -
+      apiVersion: apiregistration.k8s.io/v1beta1
+      kind: APIService
+      metadata:
+        name: v1.enmasse.io
+      spec:
+        group: enmasse.io
+        groupPriorityMinimum: 1000
+        caBundle: "{{ ca_bundle | b64encode }}"
+        version: v1
+        versionPriority: 10
+        service:
+          name: api-server
+          namespace: "{{ namespace }}"
+      EOF

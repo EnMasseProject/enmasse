@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
@@ -25,7 +26,7 @@ public class StatusControllerTest {
     public void testStatusControllerSetsReady() throws Exception {
         InfraResourceFactory infraResourceFactory = mock(InfraResourceFactory.class);
         Kubernetes kubernetes = mock(Kubernetes.class);
-        when(kubernetes.withNamespace(eq("mynamespace"))).thenReturn(kubernetes);
+        when(kubernetes.withNamespace(eq("enmasse-mynamespace-myspace"))).thenReturn(kubernetes);
 
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
@@ -42,7 +43,7 @@ public class StatusControllerTest {
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
-                .setNamespace("mynamespace")
+                .putAnnotation(AnnotationKeys.NAMESPACE, "enmasse-mynamespace-myspace")
                 .setType("type1")
                 .setPlan("myplan")
                 .build();
@@ -58,7 +59,7 @@ public class StatusControllerTest {
     public void testStatusControllerSetsNotReady() throws Exception {
         InfraResourceFactory infraResourceFactory = mock(InfraResourceFactory.class);
         Kubernetes kubernetes = mock(Kubernetes.class);
-        when(kubernetes.withNamespace(eq("mynamespace"))).thenReturn(kubernetes);
+        when(kubernetes.withNamespace(eq("enmasse-mynamespace-myspace"))).thenReturn(kubernetes);
 
         Deployment deployment = new DeploymentBuilder()
                 .withNewMetadata()
@@ -76,7 +77,7 @@ public class StatusControllerTest {
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
-                .setNamespace("mynamespace")
+                .putAnnotation(AnnotationKeys.NAMESPACE, "enmasse-mynamespace-myspace")
                 .setType("type1")
                 .setPlan("myplan")
                 .build();

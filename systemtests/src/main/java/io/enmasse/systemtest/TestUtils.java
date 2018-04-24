@@ -23,11 +23,13 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
+    private static Set<String> validDestinationTypes = new HashSet<>(Arrays.asList("queue", "topic", "anycast", "multicast"));
 
     /**
      * scale up/down specific Destination (type: StatefulSet) in address space
@@ -180,7 +182,7 @@ public class TestUtils {
      */
     public static String printPods(List<Pod> pods) {
         return pods.stream()
-                .map(pod -> pod.getMetadata().getName())
+                .map(pod -> "{" + pod.getMetadata().getName() + ", " + pod.getStatus().getPhase() + "}")
                 .collect(Collectors.joining(","));
     }
 
@@ -216,23 +218,33 @@ public class TestUtils {
      * @param kubernetes   client for manipulation with kubernetes cluster
      * @param budget       timeout for deploy
      * @param addressSpace AddressSpace for deploy destinations
-     * @param httpMethod   PUT, POST
      * @param destinations
      * @throws Exception
      */
-    public static void deploy(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
-        apiClient.deploy(addressSpace, httpMethod, destinations);
-        JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
-        if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
-            if (destinations.length == 0) {
-                waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+    public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+        apiClient.setAddresses(addressSpace, destinations);
+        if (wait) {
+            JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
+            if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
+                if (destinations.length == 0) {
+                    waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+                }
             }
+            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
-        waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
-    public static void deploy(AddressApiClient apiClient, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
-        apiClient.deploy(addressSpace, httpMethod, destinations);
+    public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+        apiClient.appendAddresses(addressSpace, destinations);
+        if (wait) {
+            JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
+            if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
+                if (destinations.length == 0) {
+                    waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+                }
+            }
+            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+        }
     }
 
     /**
@@ -377,7 +389,7 @@ public class TestUtils {
                                                     Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, skipAddresses, String.class));
+        listOfAddresses.complete(convertToListAddress(response, String.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
         return listOfAddresses;
     }
 
@@ -388,7 +400,7 @@ public class TestUtils {
                                                             Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, skipAddresses, Address.class));
+        listOfAddresses.complete(convertToListAddress(response, Address.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
         return listOfAddresses;
     }
 
@@ -399,7 +411,7 @@ public class TestUtils {
                                                                    Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<Destination>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, skipAddresses, Destination.class));
+        listOfAddresses.complete(convertToListAddress(response, Destination.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
         return listOfAddresses;
     }
 
@@ -433,17 +445,15 @@ public class TestUtils {
      * @param htmlResponse JsonObject with specified structure returned from rest api
      * @return list of addresses
      */
-    public static <T> List<T> convertToListAddress(JsonObject htmlResponse, List<String> skipAddresses, Class<T> clazz) {
+    public static <T> List<T> convertToListAddress(JsonObject htmlResponse, Class<T> clazz, Predicate<JsonObject> filter) {
         if (htmlResponse != null) {
             String kind = htmlResponse.getString("kind");
             List<T> addresses = new ArrayList<>();
-            String destinationAddr;
             switch (kind) {
                 case "Address":
-                    destinationAddr = htmlResponse.getJsonObject("spec").getString("address");
-                    if (!skipAddresses.contains(destinationAddr)) {
+                    if (filter.test(htmlResponse)) {
                         if (clazz.equals(String.class)) {
-                            addresses.add((T) destinationAddr);
+                            addresses.add((T) htmlResponse.getJsonObject("spec").getString("address"));
                         } else if (clazz.equals(Address.class)) {
                             addresses.add((T) getAddressObject(htmlResponse));
                         } else if (clazz.equals(Destination.class)) {
@@ -455,10 +465,9 @@ public class TestUtils {
                     JsonArray items = htmlResponse.getJsonArray("items");
                     if (items != null) {
                         for (int i = 0; i < items.size(); i++) {
-                            destinationAddr = items.getJsonObject(i).getJsonObject("spec").getString("address");
-                            if (!skipAddresses.contains(destinationAddr)) {
+                            if (filter.test(items.getJsonObject(i))) {
                                 if (clazz.equals(String.class)) {
-                                    addresses.add((T) destinationAddr);
+                                    addresses.add((T) items.getJsonObject(i).getJsonObject("spec").getString("address"));
                                 } else if (clazz.equals(Address.class)) {
                                     addresses.add((T) getAddressObject(items.getJsonObject(i)));
                                 } else if (clazz.equals(Destination.class)) {
@@ -513,7 +522,7 @@ public class TestUtils {
      */
     private static AddressSpace convertJsonToAddressSpace(JsonObject addressSpaceJson) {
         String name = addressSpaceJson.getJsonObject("metadata").getString("name");
-        String namespace = addressSpaceJson.getJsonObject("metadata").getString("namespace");
+        String namespace = addressSpaceJson.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/namespace");
         AddressSpaceType type = AddressSpaceType.valueOf(
                 addressSpaceJson.getJsonObject("spec")
                         .getString("type").toUpperCase());
@@ -555,7 +564,7 @@ public class TestUtils {
 
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
-        String uuid = metadata.getString("uuid");
+        String uid = metadata.getString("uid");
         String addressSpaceName = metadata.getString("addressSpace");
 
         JsonObject status = addressJsonObject.getJsonObject("status");
@@ -569,7 +578,7 @@ public class TestUtils {
             }
         } catch (Exception ignored) {
         }
-        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages, uuid);
+        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages, uid);
     }
 
     /**
@@ -598,22 +607,18 @@ public class TestUtils {
      */
     private static Destination getDestinationObject(JsonObject addressJsonObject) {
         log.info("Got address object: {}", addressJsonObject.toString());
+        JsonObject metadata = addressJsonObject.getJsonObject("metadata");
+        String name = metadata.getString("name");
+        String uid = metadata.getString("uid");
+        String addressSpace = metadata.getString("addressSpace");
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         String address = spec.getString("address");
         String type = spec.getString("type");
         String plan = spec.getString("plan");
-        switch (type) {
-            case "queue":
-                return Destination.queue(address, plan);
-            case "topic":
-                return Destination.topic(address, plan);
-            case "anycast":
-                return Destination.anycast(address, plan);
-            case "multicast":
-                return Destination.multicast(address, plan);
-            default:
-                throw new IllegalStateException(String.format("Unknown Destination type'%s'", type));
+        if (!validDestinationTypes.contains(type)) {
+            throw new IllegalStateException(String.format("Unknown Destination type'%s'", type));
         }
+        return new Destination(name, uid, addressSpace, address, type, plan);
     }
 
     /**

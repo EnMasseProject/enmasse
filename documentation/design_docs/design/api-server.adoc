@@ -1,0 +1,82 @@
+== why
+
+The proposed change is to remove the REST API from the address-controller and introduce a new
+component called 'api-server' which will provide a kubernetes API extension.
+
+The extension will allow users to configure address spaces and addresses as if they were native
+kubernetes resources.
+
+As a tenant on an OpenShift cluster, the following workflow would be supported:
+
+```
+oc new-project app1
+cat <<EOF | oc create -f -
+apiVersion: enmasse.io/v1
+kind: AddressSpace
+metadata:
+  name: space1
+spec:
+  type: standard
+  plan: unlimited-standard
+EOF
+
+cat <<EOF | oc create -f -
+apiVersion: enmasse.io/v1
+kind: Address
+metadata:
+  addressSpace: space1
+spec:
+  address: myqueue
+  type: queue
+  plan: pooled-queue
+EOF
+```
+
+== what/how
+
+The change will involve removing the existing REST API from the address-controller. The address
+controller will the only be responsible for the creation and deletion of address space
+infrastructure and for generating certificates.
+
+A new component named `api-server` will be introduced. The name is chose due to the kubernetes
+concept being called `extension api server`. The api-server component will provide the following
+REST API methods and resource urls:
+
+```
+GET /apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces[?labelSelector=...]
+POST /apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces
+PUT/DELETE /apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces/[:addressSpace]
+```
+
+```
+GET /apis/enmasse.io/v1/namespaces/[:namespace]/addresses[?labelSelector=...]
+POST /apis/enmasse.io/v1/namespaces/[:namespace]/addresses
+PUT/DELETE /apis/enmasse.io/v1/namespaces/[:namespace]/addresses/[:address]
+```
+
+The namespace in the above urls refer to the 'project namespace' of the user. Since the kubernetes
+API server uses RBAC, this will allow address spaces used by different projects to be isolated from
+eachother. The api-server itself does not use RBAC, but can either be used without authenticating
+clients, or using a TLS client certificate when registering with the kubernetes API server. 
+
+Other notable changes to existing API:
+
+* `addressSpace` field is now mandatory for addresses
+* The `namespace` field of an address space will now be the `project namespace` of the user creating
+  the instance. An annotation will be added to the address space.
+* AddressSpace and Address objects now get more metadata associated with them such as labels and
+  annotations
+
+Upgrading to this version means that the address space configmaps needs to have the existing
+'namespace' field updated to whatever project it should 'belong' to. The `enmasse.io/namespace`
+annotation must be added to the address space.
+
+== testing
+
+Systemtests should be change to use kubernetes as the API server for creating address spaces and
+addresses.
+
+== documentation
+
+Documentation involving deploying and registering the api-server must be created. The REST api
+instructions should be replaced with native kubernetes resource examples.

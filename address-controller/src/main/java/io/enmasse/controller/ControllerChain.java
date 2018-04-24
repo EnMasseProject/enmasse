@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NamespaceInfo;
@@ -128,12 +129,12 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     }
 
     private void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
-        if (desiredAddressSpaces.size() == 1 && desiredAddressSpaces.iterator().next().getNamespace().equals(kubernetes.getNamespace())) {
+        if (desiredAddressSpaces.size() == 1 && desiredAddressSpaces.iterator().next().getAnnotation(AnnotationKeys.NAMESPACE).equals(kubernetes.getNamespace())) {
             return;
         }
         Set<NamespaceInfo> actual = kubernetes.listAddressSpaces();
         Set<NamespaceInfo> desired = desiredAddressSpaces.stream()
-                .map(space -> new NamespaceInfo(space.getUid(), space.getName(), space.getNamespace(), space.getCreatedBy()))
+                .map(space -> new NamespaceInfo(space.getUid(), space.getName(), space.getAnnotation(AnnotationKeys.NAMESPACE), space.getAnnotation(AnnotationKeys.CREATED_BY)))
                 .collect(Collectors.toSet());
 
         actual.removeAll(desired);

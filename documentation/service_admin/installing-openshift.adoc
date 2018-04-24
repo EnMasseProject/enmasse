@@ -143,41 +143,21 @@ oc create sa enmasse-admin
 [options="nowrap"]
 ----
 oc login -u system:admin
-oc create -f ./resources/cluster-roles/enmasse-admin.yaml
+oc create -f ./resources/cluster-roles/api-server.yaml
+oc create -f ./resources/cluster-roles/address-controller.yaml
 ----
 
-. Grant cluster-admin privileges to service account:
+. Grant privileges to service account:
 +
 [options="nowrap"]
 ----
 oc login -u system:admin
 oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:address-controller system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
 ----
 +
 *Note*: You can log back in as the regular user after this step.
-
-. Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap"]
-----
-mkdir -p address-controller-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out address-controller-cert/tls.crt -keyout address-controller-cert/tls.key
-----
-
-. Create a secret containing the address-controller certificate:
-+
-[options="nowrap"]
-----
-oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
-----
-
-. Create address controller config:
-+
-[options="nowrap"]
-----
-oc create configmap address-controller-config --from-literal=enableRbac=true
-----
 
 . Install default plan and resource configuration
 +
@@ -188,13 +168,48 @@ oc create -f ./resources/plans/standard-plans.yaml
 oc create -f ./resources/plans/brokered-plans.yaml
 ----
 
+. Create a certificate to use for the api server. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p api-server-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+----
+
+. Create a secret containing the api-server certificate:
++
+[options="nowrap"]
+----
+oc create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
+----
+
+. Create API server config:
++
+[options="nowrap"]
+----
+oc create configmap api-server-config --from-literal=enableRbac=true
+----
+
+. Deploy the api-server:
++
+[options="nowrap"]
+----
+oc create -f ./resources/api-server/deployment.yaml
+oc create -f ./resources/api-server/service.yaml
+----
+
+. Create routes exposing the API server:
++
+[options="nowrap"]
+----
+oc create route passthrough restapi --service=api-server -n enmasse
+----
+
 . Deploy the address-controller:
 +
 [options="nowrap"]
 ----
 oc create -f ./resources/address-controller/deployment.yaml
-oc create -f ./resources/address-controller/service.yaml
-oc create -f ./resources/address-controller/route.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
@@ -243,26 +258,11 @@ oc create -f ./resources/plans/standard-plans.yaml
 oc process -f ./resources/templates/address-space.yaml NAME=default NAMESPACE=enmasse TYPE=standard PLAN=unlimited-standard | oc create -f -
 ----
 
-. Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
+. Deploy template for creating addresses. You can use this later for creating addresses from the command line
 +
 [options="nowrap"]
 ----
-mkdir -p address-controller-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out address-controller-cert/tls.crt -keyout address-controller-cert/tls.key
-----
-
-. Create secret with address-controller certificate:
-+
-[options="nowrap"]
-----
-oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
-----
-
-. Create address controller config:
-+
-[options="nowrap"]
-----
-oc create configmap address-controller-config --from-literal=enableRbac=true
+oc create -f ./resources/templates/address.yaml -n enmasse
 ----
 
 . Deploy address-controller:
@@ -271,8 +271,6 @@ oc create configmap address-controller-config --from-literal=enableRbac=true
 ----
 oc create -f ./resources/address-controller/address-space-definitions.yaml
 oc create -f ./resources/address-controller/deployment.yaml
-oc create -f ./resources/address-controller/service.yaml
-oc create -f ./resources/address-controller/route.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.

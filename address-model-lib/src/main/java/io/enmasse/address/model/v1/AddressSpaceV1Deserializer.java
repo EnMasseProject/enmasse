@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
 import io.enmasse.address.model.*;
+import io.enmasse.config.AnnotationKeys;
 
 import java.io.IOException;
 import java.util.*;
@@ -51,16 +52,55 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             builder.setPlan(planName);
         }
 
-        if (metadata.hasNonNull(Fields.NAMESPACE)) {
+        if (metadata.hasNonNull(Fields.NAMESPACE) && !metadata.get(Fields.NAMESPACE).asText().isEmpty()) {
             builder.setNamespace(metadata.get(Fields.NAMESPACE).asText());
         }
 
+        if (metadata.hasNonNull(Fields.UID)) {
+            builder.setUid(metadata.get(Fields.UID).asText());
+        }
+
+        if (metadata.hasNonNull(Fields.RESOURCE_VERSION)) {
+            builder.setResourceVersion(metadata.get(Fields.RESOURCE_VERSION).asText());
+        }
+
+        if (metadata.hasNonNull(Fields.CREATION_TIMESTAMP)) {
+            builder.setCreationTimestamp(metadata.get(Fields.CREATION_TIMESTAMP).asText());
+        }
+
+        if (metadata.hasNonNull(Fields.SELF_LINK)) {
+            builder.setSelfLink(metadata.get(Fields.SELF_LINK).asText());
+        }
+
+        // TODO: Remove the CREATED_BY and CREATED_BY_UID field parsing
         if (metadata.hasNonNull(Fields.CREATED_BY)) {
-            builder.setCreatedBy(metadata.get(Fields.CREATED_BY).asText());
+            builder.putAnnotation(AnnotationKeys.CREATED_BY, metadata.get(Fields.CREATED_BY).asText());
         }
 
         if (metadata.hasNonNull(Fields.CREATED_BY_UID)) {
-            builder.setCreatedByUid(metadata.get(Fields.CREATED_BY_UID).asText());
+            builder.putAnnotation(AnnotationKeys.CREATED_BY_UID, metadata.get(Fields.CREATED_BY_UID).asText());
+        }
+
+        if (metadata.hasNonNull(Fields.LABELS)) {
+            ObjectNode labelObject = metadata.with(Fields.LABELS);
+            Iterator<String> labelIt = labelObject.fieldNames();
+            while (labelIt.hasNext()) {
+                String key = labelIt.next();
+                if (labelObject.get(key).isTextual()) {
+                    builder.putLabel(key, labelObject.get(key).asText());
+                }
+            }
+        }
+
+        if (metadata.hasNonNull(Fields.ANNOTATIONS)) {
+            ObjectNode annotationObject = metadata.with(Fields.ANNOTATIONS);
+            Iterator<String> annotationIt = annotationObject.fieldNames();
+            while (annotationIt.hasNext()) {
+                String key = annotationIt.next();
+                if (annotationObject.get(key).isTextual()) {
+                    builder.putAnnotation(key, annotationObject.get(key).asText());
+                }
+            }
         }
 
         if (spec.hasNonNull(Fields.ENDPOINTS)) {

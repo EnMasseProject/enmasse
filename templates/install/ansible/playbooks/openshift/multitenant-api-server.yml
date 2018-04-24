@@ -1,0 +1,13 @@
+- hosts: localhost
+  vars:
+    namespace: myproject
+    multitenant: true
+    enable_rbac: true
+    api_server: true
+    register_api_server: true
+    secure_api_server: true
+    keycloak_admin_password: admin
+    authentication_services:
+      - standard
+  roles:
+    - enmasse

@@ -1,6 +1,7 @@
 include ../Makefile.common
 
 ADDRESS_CONTROLLER_IMAGE ?= "address-controller"
+API_SERVER_IMAGE ?= "api-server"
 STANDARD_CONTROLLER_IMAGE ?= "standard-controller"
 ROUTER_IMAGE ?= "router"
 ARTEMIS_IMAGE ?= "artemis"
@@ -28,6 +29,7 @@ INSTALLDIR=enmasse-$(TAG)
 		-V REGISTRY=$(DOCKER_REGISTRY) \
 		-V PROJECT=$(DOCKER_ORG) \
 		-V ADDRESS_CONTROLLER_IMAGE=$(ADDRESS_CONTROLLER_IMAGE) \
+		-V API_SERVER_IMAGE=$(API_SERVER_IMAGE) \
 		-V STANDARD_CONTROLLER_IMAGE=$(STANDARD_CONTROLLER_IMAGE) \
 		-V ROUTER_IMAGE=$(ROUTER_IMAGE) \
 		-V ARTEMIS_IMAGE=$(ARTEMIS_IMAGE) \
@@ -53,6 +55,7 @@ yaml:
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
 	mkdir -p build/resources/address-controller
+	mkdir -p build/resources/api-server
 	mkdir -p build/resources/service-broker
 	mkdir -p build/resources/prometheus
 	mkdir -p build/resources/grafana
@@ -60,16 +63,16 @@ prepare:
 	mkdir -p build/resources/none-authservice
 	mkdir -p build/resources/external-lb
 	mkdir -p build/resources/plans
-	mkdir -p build/resources/cluster-roles
 	mkdir -p build/resources/resource-definitions
 	mkdir -p build/resources/templates
 	cp -r include/persistent-volume.json build/resources/templates
 
 	mkdir -p install/resources/templates
 	mkdir -p install/resources/address-controller
+	mkdir -p install/resources/api-server
 	mkdir -p install/resources/resource-definitions
+	mkdir -p install/resources/cluster-roles
 	mkdir -p install/resources/plans
-	cp -f include/resource-definitions.yaml install/resources/resource-definitions
 	cat include/address-space-definitions.yaml | \
 		STANDARD_CONTROLLER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(STANDARD_CONTROLLER_IMAGE):$(COMMIT) \
 		ROUTER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_IMAGE):$(COMMIT) \
@@ -82,6 +85,8 @@ prepare:
 		MQTT_GATEWAY_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_GATEWAY_IMAGE):$(COMMIT) \
 		MQTT_LWT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_LWT_IMAGE):$(COMMIT) \
 		envsubst '$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${BROKER_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > install/resources/address-controller/address-space-definitions.yaml
+	cp -f include/resource-definitions.yaml install/resources/resource-definitions
+	cp -f include/cluster-roles/*.yaml install/resources/cluster-roles
 	cp -f include/*-plans.yaml install/resources/plans/
 	cp -f include/address.yaml include/address-space.yaml install/resources/templates
 

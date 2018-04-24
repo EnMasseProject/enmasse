@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -98,8 +99,8 @@ class AddressControllerApiTest extends TestBase {
             assertThat("No addresses were created, so list should be empty!",
                     TestUtils.convertToListAddress(
                             sendRestApiRequest(HttpMethod.GET, url, Optional.empty()),
-                            new ArrayList<>(),
-                            Address.class).size(),
+                            Address.class,
+                            object -> true).size(),
                     is(0));
         }
     }
@@ -184,10 +185,6 @@ class AddressControllerApiTest extends TestBase {
                 "test-rest-api-queue2", AddressType.QUEUE.toString(), "brokered-queue");
         deleteAddresses(addressSpace);
         setAddresses(addressSpace, dest2);
-
-        Address dest2AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals(String.format("%s-%s", dest2AddressObj.getAddress(), dest2AddressObj.getUuid()), dest2AddressObj.getName(),
-                "Address name is empty");
 
         logWithSeparator(log, "Check if adddressSpace is optional");
         Destination dest3 = new Destination(null, null, null,

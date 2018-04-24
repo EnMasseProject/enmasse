@@ -4,6 +4,8 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.config.AnnotationKeys;
+
 import java.util.*;
 
 /**
@@ -13,25 +15,32 @@ public class AddressSpace {
     private final String name;
     private final String namespace;
     private final String typeName;
+    private final String selfLink;
+    private final String uid;
+    private final String creationTimestamp;
+    private final String resourceVersion;
+    private final Map<String, String> labels;
+    private final Map<String, String> annotations;
+
     private final List<Endpoint> endpointList;
     private final String planName;
     private final AuthenticationService authenticationService;
     private final Status status;
-    private final String uid;
-    private final String createdBy;
-    private final String createdByUid;
 
-    private AddressSpace(String name, String namespace, String typeName, List<Endpoint> endpointList, String planName, AuthenticationService authenticationService, Status status, String uid, String createdBy, String createdByUid) {
+    private AddressSpace(String name, String namespace, String typeName, String selfLink, String creationTimestamp, String resourceVersion, List<Endpoint> endpointList, String planName, AuthenticationService authenticationService, Status status, String uid, Map<String, String> labels, Map<String, String> annotations) {
         this.name = name;
         this.namespace = namespace;
         this.typeName = typeName;
+        this.selfLink = selfLink;
+        this.creationTimestamp = creationTimestamp;
+        this.resourceVersion = resourceVersion;
         this.endpointList = endpointList;
         this.planName = planName;
         this.authenticationService = authenticationService;
         this.status = status;
         this.uid = uid;
-        this.createdBy = createdBy;
-        this.createdByUid = createdByUid;
+        this.labels = labels;
+        this.annotations = annotations;
     }
 
     public String getName() {
@@ -65,12 +74,20 @@ public class AddressSpace {
         return status;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public Map<String, String> getAnnotations() {
+        return annotations;
     }
 
-    public String getCreatedByUid() {
-        return createdByUid;
+    public String getAnnotation(String key) {
+        return annotations.get(key);
+    }
+
+    public void putAnnotation(String key, String value) {
+        this.annotations.put(key, value);
+    }
+
+    public Map<String, String> getLabels() {
+        return labels;
     }
 
     @Override
@@ -103,17 +120,33 @@ public class AddressSpace {
         return authenticationService;
     }
 
+    public String getSelfLink() {
+        return selfLink;
+    }
+
+    public String getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public String getResourceVersion() {
+        return resourceVersion;
+    }
+
     public static class Builder {
         private String name;
         private String namespace;
+        private String selfLink;
+        private String creationTimestamp;
+        private String resourceVersion;
+
         private String type;
         private List<io.enmasse.address.model.Endpoint> endpointList = new ArrayList<>();
         private String plan;
         private AuthenticationService authenticationService = new AuthenticationService.Builder().build();
         private Status status = new Status(false);
         private String uid;
-        private String createdBy;
-        private String createdByUid;
+        private Map<String, String> labels = new HashMap<>();
+        private Map<String, String> annotations = new HashMap<>();
 
         public Builder() {
         }
@@ -131,20 +164,39 @@ public class AddressSpace {
             this.status = new Status(addressSpace.getStatus());
             this.authenticationService = addressSpace.getAuthenticationService();
             this.uid = addressSpace.getUid();
-            this.createdBy = addressSpace.getCreatedBy();
-            this.createdByUid = addressSpace.getCreatedByUid();
+            this.labels = new HashMap<>(addressSpace.getLabels());
+            this.annotations = new HashMap<>(addressSpace.getAnnotations());
+            this.selfLink = addressSpace.getSelfLink();
+            this.creationTimestamp = addressSpace.getCreationTimestamp();
+            this.resourceVersion = addressSpace.getResourceVersion();
+        }
+
+        public Map<String, String> getAnnotations() {
+            return annotations;
         }
 
         public Builder setName(String name) {
             this.name = name;
-            if (this.namespace == null) {
-                this.namespace = "enmasse-" + name;
-            }
             return this;
         }
 
         public Builder setNamespace(String namespace) {
             this.namespace = namespace;
+            return this;
+        }
+
+        public Builder setSelfLink(String selfLink) {
+            this.selfLink = selfLink;
+            return this;
+        }
+
+        public Builder setCreationTimestamp(String creationTimestamp) {
+            this.creationTimestamp = creationTimestamp;
+            return this;
+        }
+
+        public Builder setResourceVersion(String resourceVersion) {
+            this.resourceVersion = resourceVersion;
             return this;
         }
 
@@ -187,23 +239,34 @@ public class AddressSpace {
             return this;
         }
 
-        public Builder setCreatedBy(String createdBy) {
-            this.createdBy = createdBy;
+        public Builder setAnnotations(Map<String, String> annotations) {
+            this.annotations = new HashMap<>(annotations);
             return this;
         }
 
-        public Builder setCreatedByUid(String createdByUid) {
-            this.createdByUid = createdByUid;
+        public Builder putAnnotation(String key, String value) {
+            this.annotations.put(key, value);
+            return this;
+        }
+
+        public Builder setLabels(Map<String, String> labels) {
+            this.labels = new HashMap<>(labels);
+            return this;
+        }
+
+        public Builder putLabel(String key, String value) {
+            this.labels.put(key, value);
             return this;
         }
 
         public AddressSpace build() {
             Objects.requireNonNull(name, "name not set");
-            Objects.requireNonNull(namespace, "namespace not set");
             Objects.requireNonNull(type, "type not set");
+            Objects.requireNonNull(plan, "plan not set");
             Objects.requireNonNull(authenticationService, "authentication service not set");
             Objects.requireNonNull(status, "status not set");
-            return new AddressSpace(name, namespace, type, endpointList, plan, authenticationService, status, uid, createdBy, createdByUid);
+
+            return new AddressSpace(name, namespace, type, selfLink, creationTimestamp, resourceVersion, endpointList, plan, authenticationService, status, uid, labels, annotations);
         }
 
         public String getNamespace() {

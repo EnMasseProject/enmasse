@@ -72,8 +72,8 @@ public class KeycloakClient {
         }
     }
 
-    public void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
-                               GroupMethod<RealmResource, String, String> groupMethod) throws Exception {
+    private void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
+                                GroupMethod<RealmResource, String, String> groupMethod) throws Exception {
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
@@ -127,7 +127,7 @@ public class KeycloakClient {
         createGroup(realm, groupName, 3, TimeUnit.MINUTES);
     }
 
-    public void createGroup(String realm, String groupName, long timeout, TimeUnit timeUnit) throws Exception {
+    private void createGroup(String realm, String groupName, long timeout, TimeUnit timeUnit) throws Exception {
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             waitForRealm(keycloak.get(), realm, timeout, timeUnit);

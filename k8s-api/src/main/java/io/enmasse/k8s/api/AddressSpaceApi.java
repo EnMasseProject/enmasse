@@ -16,14 +16,13 @@ import java.util.Set;
  * API for managing address spaces.
  */
 public interface AddressSpaceApi {
-    Optional<AddressSpace> getAddressSpaceWithName(String id);
+    Optional<AddressSpace> getAddressSpaceWithName(String namespace, String id);
     void createAddressSpace(AddressSpace addressSpace) throws Exception;
-    void createAddressSpaceWithLabels(AddressSpace addressSpace, Map<String, String> labels) throws Exception;
 
     void replaceAddressSpace(AddressSpace addressSpace) throws Exception;
     void deleteAddressSpace(AddressSpace addressSpace);
-    Set<AddressSpace> listAddressSpaces();
-    Set<AddressSpace> listAddressSpacesWithLabels(Map<String, String> labels);
+    Set<AddressSpace> listAddressSpaces(String namespace);
+    Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels);
 
     Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception;
 

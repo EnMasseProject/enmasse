@@ -9,8 +9,6 @@ import java.time.Clock;
 import java.util.*;
 
 import io.enmasse.address.model.*;
-import io.enmasse.api.auth.AuthApi;
-import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
@@ -48,7 +46,6 @@ public class Main extends AbstractVerticle {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         Kubernetes kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac(), options.getImpersonateUser());
-        AuthApi authApi = new KubeAuthApi(controllerClient, options.getImpersonateUser(), options.getToken());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
@@ -67,9 +64,9 @@ public class Main extends AbstractVerticle {
         controllerChain.addController(new EndpointController(controllerClient));
         controllerChain.addController(authController);
 
-        deployVerticles(startPromise,
-                new Deployment(controllerChain),
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), authApi, kubernetes.isRBACEnabled()), new DeploymentOptions().setWorker(true)));
+        HTTPServer httpServer = new HTTPServer(8080);
+
+        deployVerticles(startPromise, new Deployment(controllerChain), new Deployment(httpServer));
     }
 
     private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {

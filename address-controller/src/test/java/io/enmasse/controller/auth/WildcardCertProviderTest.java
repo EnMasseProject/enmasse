@@ -7,6 +7,7 @@ package io.enmasse.controller.auth;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -40,7 +41,9 @@ public class WildcardCertProviderTest {
 
         AddressSpace space = new AddressSpace.Builder()
                 .setName("myspace")
+                .putAnnotation(AnnotationKeys.NAMESPACE, "ns")
                 .setType("standard")
+                .setPlan("myplan")
                 .build();
 
         Endpoint endpoint = new Endpoint.Builder()
@@ -57,7 +60,8 @@ public class WildcardCertProviderTest {
 
         AddressSpace space = new AddressSpace.Builder()
                 .setName("myspace")
-                .setNamespace("myspace")
+                .putAnnotation(AnnotationKeys.NAMESPACE, "myspace")
+                .setPlan("myplan")
                 .setType("standard")
                 .build();
 
@@ -77,7 +81,7 @@ public class WildcardCertProviderTest {
 
         certProvider.provideCert(space, endpoint);
 
-        Secret cert = client.secrets().inNamespace("myspace").withName("mycerts").get();
+        Secret cert = client.secrets().inNamespace(space.getAnnotation(AnnotationKeys.NAMESPACE)).withName("mycerts").get();
         assertThat(cert.getData().get("tls.key"), is("mykey"));
         assertThat(cert.getData().get("tls.crt"), is("myvalue"));
     }

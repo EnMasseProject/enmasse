@@ -12,6 +12,8 @@ import javax.ws.rs.ext.Provider;
 import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.address.model.UnresolvedAddressSpaceException;
 import io.enmasse.address.model.v1.DeserializeException;
+import io.fabric8.kubernetes.api.model.Status;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,12 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             status = Response.Status.BAD_REQUEST;
             response = Response.status(status)
                     .entity(new ErrorResponse(null, exception.getMessage()))
+                    .build();
+        } else if (exception instanceof KubernetesClientException) {
+            Status kubeStatus = ((KubernetesClientException) exception).getStatus();
+            status = Response.Status.fromStatusCode(kubeStatus.getCode());
+            response = Response.status(kubeStatus.getCode())
+                    .entity(new ErrorResponse(null, kubeStatus.getMessage()))
                     .build();
         } else {
             status = Response.Status.INTERNAL_SERVER_ERROR;

@@ -54,6 +54,7 @@
         <module>mqtt-lwt</module>
         <module>standard-controller</module>
         <module>address-controller</module>
+        <module>api-server</module>
         <module>keycloak-plugin</module>
         <module>keycloak-controller</module>
         <module>systemtests</module>

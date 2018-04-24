@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+    component: api-server
+  name: api-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        component: api-server
+    spec:
+      containers:
+      - env:
+        - name: CLIENT_CA
+          valueFrom:
+            secretKeyRef:
+              key: ca.crt
+              name: api-server-client-ca
+              optional: true
+        - name: CERT_DIR
+          value: /api-server-cert
+        - name: ENABLE_RBAC
+          valueFrom:
+            configMapKeyRef:
+              key: enableRbac
+              name: api-server-config
+              optional: true
+        image: docker.io/enmasseproject/api-server:latest
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+        name: api-server
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8443
+          name: https
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 500m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /api-server-cert
+          name: api-server-cert
+          readOnly: true
+      serviceAccount: enmasse-admin
+      volumes:
+      - name: api-server-cert
+        secret:
+          secretName: api-server-cert

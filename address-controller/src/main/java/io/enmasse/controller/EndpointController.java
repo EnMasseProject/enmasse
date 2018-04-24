@@ -46,12 +46,12 @@ public class EndpointController implements Controller {
         /* Watch for routes and lb services */
         if (client.isAdaptable(OpenShiftClient.class)) {
             OpenShiftClient openShiftClient = client.adapt(OpenShiftClient.class);
-            endpoints = openShiftClient.routes().inNamespace(builder.getNamespace()).list().getItems().stream()
+            endpoints = openShiftClient.routes().inNamespace(builder.getAnnotations().get(AnnotationKeys.NAMESPACE)).list().getItems().stream()
                     .filter(route -> isPartOfAddressSpace(builder.getName(), route))
                     .map(this::routeToEndpoint)
                     .collect(Collectors.toList());
         } else {
-            endpoints = client.services().inNamespace(builder.getNamespace()).withLabel(LabelKeys.TYPE, "loadbalancer").list().getItems().stream()
+            endpoints = client.services().inNamespace(builder.getAnnotations().get(AnnotationKeys.NAMESPACE)).withLabel(LabelKeys.TYPE, "loadbalancer").list().getItems().stream()
                     .filter(service -> isPartOfAddressSpace(builder.getName(), service))
                     .map(this::serviceToEndpoint)
                     .collect(Collectors.toList());

@@ -41,26 +41,12 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public Optional<Address> getAddressWithName(String name) {
-        ConfigMap map = client.configMaps().inNamespace(namespace).withName(name).get();
+    public Optional<Address> getAddressWithName(String namespace, String name) {
+        ConfigMap map = client.configMaps().inNamespace(this.namespace).withName(getConfigMapName(name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
             return Optional.of(getAddressFromConfig(map));
-        }
-    }
-
-    @Override
-    public Optional<Address> getAddressWithUuid(String uuid) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "address-config");
-        labels.put(LabelKeys.UUID, uuid);
-
-        ConfigMapList list = client.configMaps().inNamespace(namespace).withLabels(labels).list();
-        if (list.getItems().isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(getAddressFromConfig(list.getItems().get(0)));
         }
     }
 
@@ -69,8 +55,24 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         Map<String, String> data = configMap.getData();
 
         try {
-            Address.Builder builder = new Address.Builder(mapper.readValue(data.get("config.json"), Address.class));
-            builder.setVersion(configMap.getMetadata().getResourceVersion());
+            Address address = mapper.readValue(data.get("config.json"), Address.class);
+            Address.Builder builder = new Address.Builder(address);
+
+            if (address.getUid() == null) {
+                builder.setUid(configMap.getMetadata().getUid());
+            }
+
+            if (address.getResourceVersion() == null) {
+                builder.setResourceVersion(configMap.getMetadata().getResourceVersion());
+            }
+
+            if (address.getCreationTimestamp() == null) {
+                builder.setCreationTimestamp(configMap.getMetadata().getCreationTimestamp());
+            }
+
+            if (address.getSelfLink() == null) {
+                builder.setSelfLink("/apis/enmasse.io/v1/namespaces/" + address.getNamespace() + "/addressspaces/" + address.getAddressSpace());
+            }
             return builder.build();
         } catch (Exception e) {
             log.warn("Unable to decode address", e);
@@ -79,21 +81,29 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public Set<Address> listAddresses() {
-        Map<String, String> labels = new LinkedHashMap<>();
+    public Set<Address> listAddresses(String namespace) {
+        return listAddressesWithLabels(namespace, Collections.emptyMap());
+    }
+
+    @Override
+    public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labelSelector) {
+        Map<String, String> labels = new LinkedHashMap<>(labelSelector);
         labels.put(LabelKeys.TYPE, "address-config");
 
         Set<Address> addresses = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().inNamespace(namespace).withLabels(labels).list();
+        ConfigMapList list = client.configMaps().inNamespace(this.namespace).withLabels(labels).list();
         for (ConfigMap config : list.getItems()) {
-            addresses.add(getAddressFromConfig(config));
+            Address address = getAddressFromConfig(config);
+            if (address.getNamespace().equals(namespace)) {
+                addresses.add(address);
+            }
         }
         return addresses;
     }
 
     @Override
     public void createAddress(Address address) {
-        String name = address.getName();
+        String name = getConfigMapName(address.getName());
         ConfigMap map = create(address);
         if (map != null) {
             client.configMaps().inNamespace(namespace).withName(name).create(map);
@@ -102,7 +112,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public void replaceAddress(Address address) {
-        String name = address.getName();
+        String name = getConfigMapName(address.getName());
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
             return;
@@ -113,20 +123,25 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         }
     }
 
+    private static String getConfigMapName(String name) {
+        return name;
+    }
+
     private ConfigMap create(Address address) {
-        String name = address.getName();
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .editOrNewMetadata()
-                .withName(name)
+                .withName(getConfigMapName(address.getName()))
+                .addToLabels(address.getLabels())
                 .addToLabels(LabelKeys.TYPE, "address-config")
+                .addToAnnotations(address.getAnnotations())
                 // TODO: Support other ways of doing this
-                .addToAnnotations(AnnotationKeys.CLUSTER_ID, name)
+                .addToAnnotations(AnnotationKeys.CLUSTER_ID, address.getName())
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
                 .endMetadata();
 
-        if (address.getVersion() != null) {
+        if (address.getResourceVersion() != null) {
             builder.editOrNewMetadata()
-                    .withResourceVersion(address.getVersion());
+                    .withResourceVersion(address.getResourceVersion());
         }
 
         try {
@@ -140,8 +155,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public void deleteAddress(Address address) {
-        String name = address.getName();
-        client.configMaps().inNamespace(namespace).withName(name).delete();
+        client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getName())).delete();
     }
 
     @Override

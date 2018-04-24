@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.CertProviderFactory;
 import io.enmasse.controller.Controller;
 import io.enmasse.controller.common.ControllerKind;
@@ -49,7 +50,7 @@ public class AuthController implements Controller {
                     try {
                         CertProvider certProvider = certProviderFactory.createProvider(endpoint.getCertSpec().get());
                         Secret secret = certProvider.provideCert(addressSpace, endpoint);
-                        certManager.grantServiceAccountAccess(secret, "default", addressSpace.getNamespace());
+                        certManager.grantServiceAccountAccess(secret, "default", addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
                     } catch (Exception e) {
                         log.warn("Error providing certificate for {}: {}", endpoint, e.getMessage(), e);
                     }
@@ -63,9 +64,9 @@ public class AuthController implements Controller {
     {
         try {
             final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
-            Secret secret = certManager.getCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
+            Secret secret = certManager.getCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
             if (secret == null) {
-                secret = certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), addressSpaceCaSecretName);
+                secret = certManager.createSelfSignedCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
                 //put crt into address space
                 eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             }
@@ -79,7 +80,7 @@ public class AuthController implements Controller {
 
     public void issueComponentCertificates(AddressSpace addressSpace, Secret addressSpaceCaSecret) {
         try {
-            List<Cert> certs = certManager.listComponents(addressSpace.getNamespace()).stream()
+            List<Cert> certs = certManager.listComponents(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).stream()
                     .filter(component -> !certManager.certExists(component))
                     .map(certManager::createCsr)
                     .map(request -> certManager.signCsr(request, addressSpaceCaSecret))

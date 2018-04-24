@@ -60,4 +60,8 @@ interface Fields {
     String PHASE = "phase";
     String CREATED_BY_UID = "createdByUid";
     String SERVICE_PORTS = "servicePorts";
+    String LABELS = "labels";
+    String SELF_LINK = "selfLink";
+    String CREATION_TIMESTAMP = "creationTimestamp";
+    String RESOURCE_VERSION = "resourceVersion";
 }

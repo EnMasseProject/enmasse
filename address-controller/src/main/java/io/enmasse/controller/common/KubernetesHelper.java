@@ -6,12 +6,12 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -78,13 +78,11 @@ public class KubernetesHelper implements Kubernetes {
         if (client.isAdaptable(OpenShiftClient.class)) {
             ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
             try {
-                client.withRequestConfig(new RequestConfigBuilder()
-                        .withImpersonateUsername(impersonateUser)
-                        .build()).call(c -> c.projectrequests().createNew()
+                client.projectrequests().createNew()
                         .editOrNewMetadata()
-                        .withName(addressSpace.getNamespace())
+                        .withName(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))
                         .endMetadata()
-                        .done());
+                        .done();
 
                 client.configMaps().inNamespace(namespace).createNew()
                         .editOrNewMetadata()
@@ -93,8 +91,8 @@ public class KubernetesHelper implements Kubernetes {
                         .addToLabels(LabelKeys.TYPE, "namespace")
                         .addToLabels(LabelKeys.ENVIRONMENT, environment)
                         .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
-                        .addToAnnotations(AnnotationKeys.NAMESPACE, addressSpace.getNamespace())
-                        .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getCreatedBy())
+                        .addToAnnotations(AnnotationKeys.NAMESPACE, addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))
+                        .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getAnnotation(AnnotationKeys.CREATED_BY))
                         .endMetadata()
                         .done();
             } finally {
@@ -104,7 +102,7 @@ public class KubernetesHelper implements Kubernetes {
         } else {
             client.namespaces().createNew()
                     .editOrNewMetadata()
-                    .withName(addressSpace.getNamespace())
+                    .withName(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "namespace")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
@@ -131,7 +129,7 @@ public class KubernetesHelper implements Kubernetes {
         if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
             try {
                 ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
-                String groupName = "system:serviceaccounts:" + addressSpace.getNamespace();
+                String groupName = "system:serviceaccounts:" + addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
                 log.info("Adding system:image-pullers policy for {}", groupName);
                 client.roleBindings()
                         .inNamespace(namespace)
@@ -155,9 +153,7 @@ public class KubernetesHelper implements Kubernetes {
             try {
                 ImpersonatorInterceptor.setImpersonateUser(impersonateUser);
                 client.configMaps().inNamespace(namespace).withName(namespaceInfo.getConfigName()).delete();
-                client.withRequestConfig(new RequestConfigBuilder()
-                        .withImpersonateUsername(impersonateUser)
-                        .build()).call(c -> c.inNamespace(namespace).projects().withName(namespaceInfo.getNamespace()).delete());
+                client.inNamespace(namespace).projects().withName(namespaceInfo.getNamespace()).delete();
             } finally {
                 ImpersonatorInterceptor.setImpersonateUser(null);
             }
@@ -411,7 +407,7 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
         if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
-            createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
+            createRoleBinding("addressspace-admins", addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), "ClusterRole", "admin", Arrays.asList(
                     new Subject("ServiceAccount", addressControllerSa, namespace)));
         }
     }
@@ -439,7 +435,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addAddressSpaceRoleBindings(AddressSpace addressSpace) {
-        String namespace = addressSpace.getNamespace();
+        String namespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
 
         if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
             createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(

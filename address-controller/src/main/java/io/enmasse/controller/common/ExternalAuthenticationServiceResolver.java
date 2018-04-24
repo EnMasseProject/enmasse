@@ -5,6 +5,7 @@
 
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceResolver;
 
@@ -33,7 +34,7 @@ public class ExternalAuthenticationServiceResolver implements AuthenticationServ
     }
 
     @Override
-    public Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService) {
+    public Optional<String> getSaslInitHost(AddressSpace addressSpace, AuthenticationService authService) {
         return Optional.ofNullable((String) authService.getDetails().get("saslInitHost"));
     }
 

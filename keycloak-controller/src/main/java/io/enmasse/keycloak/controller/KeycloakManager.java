@@ -8,6 +8,7 @@ package io.enmasse.keycloak.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.cache.Store;
 import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -50,7 +52,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
                              .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getEndpoints() != null)
-                             .collect(Collectors.toMap(AddressSpace::getName, Function.identity()));
+                             .collect(Collectors.toMap(addressSpace -> Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getName()), Function.identity()));
 
         Set<String> realmNames = keycloak.getRealmNames();
         log.info("Actual: {}, Desired: {}", realmNames, standardAuthSvcSpaces.keySet());
@@ -60,9 +62,11 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 keycloak.deleteRealm(realmName);
             }
         }
-        for(AddressSpace addressSpace : standardAuthSvcSpaces.values()) {
-            log.info("Creating realm {}", addressSpace.getName());
-            keycloak.createRealm(addressSpace.getName(), addressSpace.getCreatedBy(), addressSpace.getCreatedByUid(), getConsoleRedirectURI(standardAuthSvcSpaces.get(addressSpace.getName())));
+        for(Map.Entry<String, AddressSpace> entry : standardAuthSvcSpaces.entrySet()) {
+            AddressSpace addressSpace = entry.getValue();
+            String realmName = entry.getKey();
+            log.info("Creating realm {}", realmName);
+            keycloak.createRealm(realmName, addressSpace.getAnnotation(AnnotationKeys.CREATED_BY), addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID), getConsoleRedirectURI(addressSpace));
         }
     }
 }

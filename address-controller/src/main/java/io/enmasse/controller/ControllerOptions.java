@@ -21,7 +21,6 @@ public final class ControllerOptions {
     private final String namespace;
     private final String token;
 
-    private final String certDir;
     private final File templateDir;
     private final NoneAuthServiceInfo noneAuthService;
     private final StandardAuthServiceInfo standardAuthService;
@@ -40,13 +39,11 @@ public final class ControllerOptions {
     private final String impersonateUser;
 
     private ControllerOptions(String masterUrl, String namespace, String token,
-                              File templateDir, String certDir,
-                              NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
+                              File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
         this.templateDir = templateDir;
-        this.certDir = certDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
         this.enableRbac = enableRbac;
@@ -74,10 +71,6 @@ public final class ControllerOptions {
 
     public File getTemplateDir() {
         return templateDir;
-    }
-
-    public String getCertDir() {
-        return certDir;
     }
 
     public Optional<NoneAuthServiceInfo> getNoneAuthService() {
@@ -145,8 +138,6 @@ public final class ControllerOptions {
         NoneAuthServiceInfo noneAuthService = getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
         StandardAuthServiceInfo standardAuthService = getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG").orElse(null);
 
-        String certDir = getEnv(env, "CERT_DIR").orElse("/address-controller-cert");
-
         boolean enableRbac = getEnv(env, "ENABLE_RBAC").map(Boolean::parseBoolean).orElse(false);
 
         boolean enableEventLogger = getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false);
@@ -176,7 +167,6 @@ public final class ControllerOptions {
                 namespace,
                 token,
                 templateDir,
-                certDir,
                 noneAuthService,
                 standardAuthService,
                 enableRbac,

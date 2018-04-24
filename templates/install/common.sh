@@ -35,7 +35,7 @@ function create_address_space() {
   local name=$2
   local namespace=$3
 
-  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"$namespace\\\" }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\", \\\"plan\\\": \\\"unlimited-standard\\\" } }"
+  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"${NAMESPACE}\\\", \\\"annotations\\\": {\\\"enmasse.io/namespace\\\": \\\"$namespace\\\"} }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\", \\\"plan\\\": \\\"unlimited-standard\\\" } }"
 
   runcmd "cat <<EOF | $CMD create -n ${NAMESPACE} -f -
 {
@@ -44,7 +44,8 @@ function create_address_space() {
     \"metadata\": {
         \"name\": \"${name}\",
         \"labels\": {
-            \"type\": \"address-space\"
+            \"type\": \"address-space\",
+            \"namespace\": "${NAMESPACE}"
         }
     },
     \"data\": {

@@ -15,7 +15,6 @@
 # further it will use the user `developer` and project `myproject`, asking
 # for a login when appropriate.
 # for further parameters please see the help text.
-
 SCRIPTDIR=`dirname $0`
 RESOURCE_DIR=${SCRIPTDIR}/resources
 TEMPLATE_NAME=enmasse
@@ -177,8 +176,6 @@ if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 fi
 
-create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller.${NAMESPACE}.svc.cluster" "address-controller.${NAMESPACE}.svc" "address-controller-cert"
-
 for auth_service in $AUTH_SERVICES
 do
     if [ "$auth_service" == "none" ]; then
@@ -217,6 +214,9 @@ elif [ $MODE == "multitenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/brokered-plans.yaml" "Create brokered address space plans"
+    if [ "$USE_OPENSHIFT" == "true" ]; then
+        runcmd "$CMD create -n ${NAMESPACE} configmap api-server-config --from-literal=enableRbac=true" "Create api-server configmap"
+    fi
 else
     echo "Unknown deployment mode $MODE"
     exit 1
@@ -225,21 +225,31 @@ fi
 runcmd "$CMD create -n ${NAMESPACE} configmap address-controller-config -n ${NAMESPACE}" "Create address-controller configmap"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/address-space-definitions.yaml" "Create address space definitions"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/deployment.yaml" "Create address controller deployment"
-runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/service.yaml" "Create address controller service"
 
-if [ -n "$USE_OPENSHIFT" ]; then
-    runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/route.yaml" "Create address controller route"
+create_self_signed_cert "$CMD" "api-server.${NAMESPACE}.svc.cluster.local" "api-server-cert"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/deployment.yaml" "Create api server deployment"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/service.yaml" "Create api server service"
+
+if [ "$USE_OPENSHIFT" == "true" ]; then
+    runcmd "oc create route passthrough restapi -n ${NAMESPACE} --service=api-server" "Create restapi route"
+else
+    runcmd "kubectl expose service api-server -n ${NAMESPACE} --port=443 --target-port=8443 --name=restapi --type=LoadBalancer" "Create external restapi service"
 fi
 
 if [ $MODE == "multitenant" ]; then
     if [ -n "$OS_ALLINONE" ] && [ -n "$USE_OPENSHIFT" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
-        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/enmasse-admin.yaml -n $NAMESPACE" "Create cluster roles needed for RBAC"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting admin rights to enmasse-admin"
+        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/address-controller.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant address controller"
+        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/api-server.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant api server"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-controller rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting api-server rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting auth-delegator rights to enmasse-admin"
         runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
     elif [ -n "$USE_OPENSHIFT" ]; then
-        echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/enmasse-admin.yaml'"
-        echo "Please add enmasse-admin role to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse-admin system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+        echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/*.yaml'"
+        echo "Please add enmasse.io:address-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+        echo "Please add enmasse.io:api-server to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+        echo "Please add system:auth-delegator to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin'"
     fi
 fi

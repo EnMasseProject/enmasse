@@ -29,7 +29,7 @@ public class HttpConsoleService {
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{addressSpace}")
     public Response getConsole(@PathParam("addressSpace") String addressSpaceName) {
-        return addressSpaceApi.getAddressSpaceWithName(addressSpaceName)
+        return addressSpaceApi.getAddressSpaceWithName("enmasse", addressSpaceName)
                 .map(addressSpace -> getConsoleURL(addressSpace)
                         .map(uri -> Response.temporaryRedirect(uri).build())
                         .orElse(Response.status(404).build()))

@@ -27,8 +27,6 @@ kubectl config set-context $(kubectl config current-context) --namespace=$OPENSH
 
 ${ENMASSE_DIR}/deploy.sh -n $OPENSHIFT_PROJECT -o multitenant -a "none standard" -t kubernetes
 
-kubectl apply -f ${ENMASSE_DIR}/resources/address-controller/external-service.yaml -n ${OPENSHIFT_PROJECT}
-
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
 mkdir -p ${LOG_DIR}
@@ -43,6 +41,8 @@ echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
 #execute test
 run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
+
+kubectl get events --all-namespaces
 
 #stop docker logging
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"

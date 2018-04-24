@@ -5,32 +5,34 @@
 package io.enmasse.api.auth;
 
 import io.enmasse.api.common.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
 
 public class AuthInterceptor implements ContainerRequestFilter {
+    private static final Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
 
     public static final String BEARER_PREFIX = "Bearer ";
     private final AuthApi authApi;
-    private final String [] omittedPaths;
+    private final Predicate<String> pathFilter;
 
-    public AuthInterceptor(AuthApi authApi, String ... omittedPaths) {
+    public AuthInterceptor(AuthApi authApi, Predicate<String> pathFilter) {
         this.authApi = authApi;
-        this.omittedPaths = omittedPaths;
+        this.pathFilter = pathFilter;
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        for (String omittedPath : omittedPaths) {
-            if (requestContext.getUriInfo().getPath().startsWith(omittedPath)) {
-                return;
-            }
+        if (pathFilter.test(requestContext.getUriInfo().getPath())) {
+            return;
         }
         boolean isAuthenticated = false;
         String auth = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);

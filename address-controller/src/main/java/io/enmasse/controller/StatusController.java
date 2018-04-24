@@ -5,6 +5,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
 
@@ -30,7 +31,7 @@ public class StatusController implements Controller {
     }
 
     private boolean isReady(AddressSpace addressSpace) {
-        Set<String> readyDeployments = kubernetes.withNamespace(addressSpace.getNamespace()).getReadyDeployments().stream()
+        Set<String> readyDeployments = kubernetes.withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).getReadyDeployments().stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .collect(Collectors.toSet());
 

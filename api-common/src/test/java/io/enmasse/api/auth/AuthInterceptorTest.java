@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.function.Predicate;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -41,7 +42,12 @@ public class AuthInterceptorTest {
         tokenFile = File.createTempFile("token", "");
         mockAuthApi = mock(AuthApi.class);
         when(mockAuthApi.getNamespace()).thenReturn("myspace");
-        handler = new AuthInterceptor(mockAuthApi, "/healthz");
+        handler = new AuthInterceptor(mockAuthApi, new Predicate<String>() {
+            @Override
+            public boolean test(String s) {
+                return "/healthz".equals(s);
+            }
+        });
         mockRequestContext = mock(ContainerRequestContext.class);
 
         mockUriInfo = mock(UriInfo.class);
@@ -85,7 +91,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -99,7 +105,7 @@ public class AuthInterceptorTest {
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("foo"));
         assertThat(RbacSecurityContext.getUserId(rbacSecurityContext.getUserPrincipal()), is("myid"));
-        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create)));
+        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "configmaps")));
     }
 
     @Test
@@ -113,7 +119,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -126,6 +132,6 @@ public class AuthInterceptorTest {
         assertThat(context.getAuthenticationScheme(), is("RBAC"));
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("foo"));
-        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create)));
+        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "configmaps")));
     }
 }

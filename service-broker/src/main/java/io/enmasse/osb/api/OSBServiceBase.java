@@ -13,6 +13,7 @@ import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -30,6 +31,8 @@ public abstract class OSBServiceBase {
     private final AddressSpaceApi addressSpaceApi;
     private final AuthApi authApi;
     private final SchemaProvider schemaProvider;
+    // TODO: Make configurable
+    private final String namespace = "enmasse";
 
     public OSBServiceBase(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider) {
         this.addressSpaceApi = addressSpaceApi;
@@ -47,18 +50,18 @@ public abstract class OSBServiceBase {
     }
 
     protected void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(authApi.getNamespace(), verb))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(authApi.getNamespace(), verb, "configmaps"))) {
             throw Exceptions.notAuthorizedException();
         }
     }
 
 
     protected Optional<AddressSpace> findAddressSpaceByInstanceId(String serviceInstanceId) {
-        return addressSpaceApi.listAddressSpacesWithLabels(Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, serviceInstanceId)).stream().findAny();
+        return addressSpaceApi.listAddressSpacesWithLabels(namespace, Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, serviceInstanceId)).stream().findAny();
     }
 
     protected Optional<AddressSpace> findAddressSpaceByName(String name) {
-        return addressSpaceApi.listAddressSpaces().stream().filter(a -> a.getName().equals(name)).findAny();
+        return addressSpaceApi.listAddressSpaces(namespace).stream().filter(a -> a.getName().equals(name)).findAny();
     }
 
     protected AddressSpace createAddressSpace(String instanceId, String name, String type, String plan, String userId, String userName) throws Exception {
@@ -70,12 +73,13 @@ public abstract class OSBServiceBase {
                 .setName(name)
                 .setType(type)
                 .setPlan(plan)
-                .setCreatedBy(userName)
-                .setCreatedByUid(userId)
+                .putAnnotation(AnnotationKeys.CREATED_BY, userName)
+                .putAnnotation(AnnotationKeys.CREATED_BY_UID, userId)
                 .setAuthenticationService(authService)
+                .putLabel(LabelKeys.SERVICE_INSTANCE_ID, instanceId)
                 .setEndpointList(null)
                 .build();
-        addressSpaceApi.createAddressSpaceWithLabels(addressSpace, Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, instanceId));
+        addressSpaceApi.createAddressSpace(addressSpace);
         log.info("Created MaaS addressspace {}", addressSpace.getName());
         return addressSpace;
     }

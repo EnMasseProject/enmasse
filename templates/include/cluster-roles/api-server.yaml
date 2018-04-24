@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:api-server
+rules:
+  - apiGroups: [ "v1.enmasse.io" ]
+    resources: [ "addresses", "addressspaces" ]
+    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]

@@ -8,6 +8,7 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.osb.api.EmptyResponse;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.osb.api.OSBServiceBase;
@@ -102,13 +103,13 @@ public class OSBBindingService extends OSBServiceBase {
                         credentials.put(externalPrefix + "Port", String.format("%d", endpoint.getPort()));
                     });
                 }
-                credentials.put(prefix + "Host", String.format("%s.%s.svc", endpoint.getService(), addressSpace.getNamespace()));
+                credentials.put(prefix + "Host", String.format("%s.%s.svc", endpoint.getService(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)));
                 for (Map.Entry<String, Integer> servicePort : endpoint.getServicePorts().entrySet()) {
                     String portName = servicePort.getKey().substring(0, 1).toUpperCase() + servicePort.getKey().substring(1);
                     credentials.put(prefix + portName + "Port", String.format("%d", servicePort.getValue()));
                 }
                 endpoint.getCertSpec().ifPresent(certSpec -> {
-                    String cert = getAuthApi().getCert(certSpec.getSecretName(), addressSpace.getNamespace());
+                    String cert = getAuthApi().getCert(certSpec.getSecretName(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
                     credentials.put(prefix + "Cert.pem", cert);
                 });
             }
