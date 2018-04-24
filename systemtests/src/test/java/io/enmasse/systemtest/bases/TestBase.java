@@ -315,6 +315,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
 
     protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials, String... groups) throws Exception {
+        log.info("User {} will be created", credentials);
         if (groups != null && groups.length > 0) {
             getKeycloakClient().createUser(addressSpace.getName(), credentials, groups);
         } else {

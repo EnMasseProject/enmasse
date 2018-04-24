@@ -35,7 +35,7 @@ public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
                 AuthService.STANDARD);
         createAddressSpace(addressSpace, false);
         defaultCredentials.setUsername("test");
-        defaultCredentials.setUsername("test");
+        defaultCredentials.setPassword("test");
         createUser(addressSpace, defaultCredentials);
         setAddresses(addressSpace, Destination.anycast("a1"));
     }
