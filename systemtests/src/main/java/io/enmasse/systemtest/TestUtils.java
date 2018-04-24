@@ -34,7 +34,14 @@ public class TestUtils {
      */
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
-        waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, destination, budget, checkInterval);
+        waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, true, destination, budget, checkInterval);
+    }
+
+    /**
+     * scale up/down specific Destination (type: StatefulSet) in address space WITHOUT WAIT
+     */
+    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas) throws InterruptedException {
+        kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
     }
 
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
@@ -61,10 +68,12 @@ public class TestUtils {
     /**
      * wait for expected count of Destination replicas in address space
      */
-    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, boolean readyRequired,
+                                              Destination destination, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         waitForNReplicas(kubernetes,
                 tenantNamespace,
                 expectedReplicas,
+                readyRequired,
                 Collections.singletonMap("role", "broker"),
                 Collections.singletonMap("cluster_id", destination.getDeployment()),
                 budget,
@@ -72,7 +81,7 @@ public class TestUtils {
     }
 
     public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
-        waitForNBrokerReplicas(kubernetes, tenantNamespace, expectedReplicas, destination, budget, 5000);
+        waitForNBrokerReplicas(kubernetes, tenantNamespace, expectedReplicas, true, destination, budget, 5000);
     }
 
 
@@ -87,7 +96,8 @@ public class TestUtils {
      * @param budget             timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, boolean readyRequired,
+                                        Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
@@ -97,11 +107,16 @@ public class TestUtils {
             } else {
                 pods = kubernetes.listPods(tenantNamespace, labelSelector, annotationSelector);
             }
-            actualReplicas = numReady(pods);
             log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
+            if (!readyRequired) {
+                actualReplicas = pods.size();
+            } else {
+                actualReplicas = numReady(pods);
+            }
+
             if (actualReplicas != expectedReplicas) {
                 Thread.sleep(checkInterval);
-            } else {
+            } else if (!readyRequired || actualReplicas == pods.size()) {
                 done = true;
             }
         } while (budget.timeLeft() >= 0 && !done);
@@ -109,6 +124,10 @@ public class TestUtils {
         if (!done) {
             throw new RuntimeException("Only " + actualReplicas + " out of " + expectedReplicas + " in state 'Running' before timeout");
         }
+    }
+
+    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
     }
 
     public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
