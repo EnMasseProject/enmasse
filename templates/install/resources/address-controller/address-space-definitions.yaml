@@ -55,22 +55,6 @@ data:
         selector:
           capability: router
     - apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-        labels:
-          app: enmasse
-        name: subscription
-      spec:
-        ports:
-        - name: amqp
-          port: 5672
-          protocol: TCP
-          targetPort: 5672
-        selector:
-          name: subserv
-    - apiVersion: v1
       data:
         config.yaml: '{"hostPort": "127.0.0.1:1099", "rules": [{"labels": {"address":
           "$2", "broker": "$1"}, "name": "artemis_message_count", "pattern": "org.apache.activemq.artemis<broker=\"(.+)\",
