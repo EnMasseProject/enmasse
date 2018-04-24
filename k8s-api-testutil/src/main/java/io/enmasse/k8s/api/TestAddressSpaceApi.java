@@ -7,7 +7,6 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Status;
-import io.enmasse.k8s.api.cache.Store;
 
 import java.time.Duration;
 import java.util.*;
@@ -19,7 +18,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     public boolean throwException = false;
 
     @Override
-    public Optional<AddressSpace> getAddressSpaceWithName(String addressSpaceId) {
+    public Optional<AddressSpace> getAddressSpaceWithName(String namespace, String addressSpaceId) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
@@ -32,11 +31,6 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
             throw new RuntimeException("foo");
         }
         addressSpaces.put(addressSpace.getName(), addressSpace);
-    }
-
-    @Override
-    public void createAddressSpaceWithLabels(AddressSpace addressSpace, Map<String, String> labels) throws Exception {
-
     }
 
     @Override
@@ -53,7 +47,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public Set<AddressSpace> listAddressSpaces() {
+    public Set<AddressSpace> listAddressSpaces(String namespace) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
@@ -61,7 +55,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public Set<AddressSpace> listAddressSpacesWithLabels(Map<String, String> labels) {
+    public Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels) {
         return null;
     }
 
@@ -81,16 +75,6 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
 
     public TestAddressApi getAddressApi(String id) {
         return addressApiMap.get(id);
-    }
-
-    public Set<Address> getAddresses() {
-        return getAddressApis().stream()
-                .flatMap(d -> d.listAddresses().stream())
-                .collect(Collectors.toSet());
-    }
-
-    public Set<String> getAddressUuids() {
-        return getAddresses().stream().map(d -> d.getUuid()).collect(Collectors.toSet());
     }
 
     public Collection<TestAddressApi> getAddressApis() {

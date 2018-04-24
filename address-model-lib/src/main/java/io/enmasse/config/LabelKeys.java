@@ -17,4 +17,5 @@ public interface LabelKeys {
     String APP = "app";
     String CAPABILITY = "capability";
     String ENVIRONMENT = "environment";
+    String NAMESPACE = "namespace";
 }

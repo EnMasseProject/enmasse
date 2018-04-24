@@ -58,6 +58,8 @@ public class AddressProvisionerTest {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
                 .setAddress("a1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
@@ -70,6 +72,8 @@ public class AddressProvisionerTest {
 
         addresses.add(new Address.Builder()
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
@@ -85,6 +89,8 @@ public class AddressProvisionerTest {
 
         addresses.add(new Address.Builder()
                 .setAddress("q2")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
@@ -104,18 +110,24 @@ public class AddressProvisionerTest {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .build());
         addresses.add(new Address.Builder()
                 .setAddress("q2")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .build());
         addresses.add(new Address.Builder()
                 .setAddress("q3")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-1")
@@ -126,6 +138,8 @@ public class AddressProvisionerTest {
 
         Address largeQueue = new Address.Builder()
                 .setAddress("q4")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("xlarge-queue")
                 .build();
@@ -136,6 +150,8 @@ public class AddressProvisionerTest {
 
         Address smallQueue = new Address.Builder()
                 .setAddress("q4")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
                 .build();
@@ -151,6 +167,8 @@ public class AddressProvisionerTest {
         for (int i = 0; i < 200; i++) {
             addresses.put("a" + i, new Address.Builder()
                     .setAddress("a" + i)
+                    .setAddressSpace("myspace")
+                    .setNamespace("ns")
                     .setPlan("small-anycast")
                     .setType("anycast")
                     .build());
@@ -177,11 +195,15 @@ public class AddressProvisionerTest {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
                 .setAddress("a1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
         addresses.add(new Address.Builder()
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .setPlan("small-queue")
                 .setType("queue")
@@ -193,6 +215,8 @@ public class AddressProvisionerTest {
 
         Address queue = new Address.Builder()
                 .setAddress("q2")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build();
@@ -215,17 +239,23 @@ public class AddressProvisionerTest {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
                 .setAddress("a1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
         addresses.add(new Address.Builder()
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
                 .build());
         addresses.add(new Address.Builder()
                 .setAddress("q2")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
@@ -237,6 +267,8 @@ public class AddressProvisionerTest {
 
         Address queue = new Address.Builder()
                 .setAddress("q3")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
                 .build();
@@ -259,18 +291,18 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("aggregate", 0, 2)));
 
         Set<Address> addressSet = Sets.newSet(
-                createAddress("q1", "pooled-queue-large"),
-                createAddress("q2", "pooled-queue-large"),
-                createAddress("q3", "pooled-queue-small"),
-                createAddress("q4", "pooled-queue-small"),
-                createAddress("q5", "pooled-queue-small"),
-                createAddress("q6", "pooled-queue-small"),
-                createAddress("q7", "pooled-queue-tiny"),
-                createAddress("q8", "pooled-queue-tiny"),
                 createAddress("q9", "pooled-queue-tiny"),
-                createAddress("q10", "pooled-queue-tiny"),
+                createAddress("q8", "pooled-queue-tiny"),
                 createAddress("q11", "pooled-queue-tiny"),
-                createAddress("q12", "pooled-queue-tiny"));
+                createAddress("q12", "pooled-queue-tiny"),
+                createAddress("q10", "pooled-queue-tiny"),
+                createAddress("q1", "pooled-queue-large"),
+                createAddress("q7", "pooled-queue-tiny"),
+                createAddress("q6", "pooled-queue-small"),
+                createAddress("q5", "pooled-queue-small"),
+                createAddress("q4", "pooled-queue-small"),
+                createAddress("q3", "pooled-queue-small"),
+                createAddress("q2", "pooled-queue-large"));
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet);
@@ -304,6 +336,8 @@ public class AddressProvisionerTest {
     private Address createAddress(String address, String plan) {
         return new Address.Builder()
                 .setAddress(address)
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan(plan)
                 .setType("queue")
                 .build();
@@ -314,6 +348,8 @@ public class AddressProvisionerTest {
         Set<Address> addresses = new HashSet<>();
         addresses.add(new Address.Builder()
                 .setAddress("a1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("small-anycast")
                 .setType("anycast")
                 .build());
@@ -327,11 +363,15 @@ public class AddressProvisionerTest {
 
         Address q1 = new Address.Builder()
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("xlarge-queue")
                 .setType("queue")
                 .build();
         Address q2 = new Address.Builder()
                 .setAddress("q2")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setPlan("large-queue")
                 .setType("queue")
                 .build();
@@ -358,6 +398,8 @@ public class AddressProvisionerTest {
         for (int i = 0; i < 199; i++) {
             addresses.add(new Address.Builder()
                     .setAddress("a" + i)
+                    .setAddressSpace("myspace")
+                    .setNamespace("ns")
                     .setPlan("small-anycast")
                     .setType("anycast")
                     .build());

@@ -27,10 +27,14 @@ public class SerializationTest {
                 .setName("a1")
                 .setAddress("addr1")
                 .setAddressSpace("as1")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("inmemory")
-                .setUuid(uuid)
+                .setUid(uuid)
                 .putAnnotation("my", "annotation")
+                .setResourceVersion("1234")
+                .setSelfLink("/my/link")
+                .setCreationTimestamp("my stamp")
                 .build();
 
         byte [] serialized = CodecV1.getMapper().writeValueAsBytes(address);
@@ -41,7 +45,10 @@ public class SerializationTest {
         assertThat(deserialized.getName(), is(address.getName()));
         assertThat(deserialized.getAddressSpace(), is(address.getAddressSpace()));
         assertThat(deserialized.getType(), is(address.getType()));
-        assertThat(deserialized.getUuid(), is(address.getUuid()));
+        assertThat(deserialized.getUid(), is(address.getUid()));
+        assertThat(deserialized.getResourceVersion(), is(address.getResourceVersion()));
+        assertThat(deserialized.getSelfLink(), is(address.getSelfLink()));
+        assertThat(deserialized.getCreationTimestamp(), is(address.getCreationTimestamp()));
         assertThat(deserialized.getPlan(), is(address.getPlan()));
         assertThat(deserialized.getAddress(), is(address.getAddress()));
         assertThat(deserialized.getAnnotations(), is(address.getAnnotations()));
@@ -52,6 +59,7 @@ public class SerializationTest {
         Address addr1 = new Address.Builder()
                 .setAddress("addr1")
                 .setAddressSpace("a1")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("myplan")
                 .build();
@@ -60,6 +68,7 @@ public class SerializationTest {
                 .setName("a2")
                 .setAddressSpace("a1")
                 .setAddress("addr2")
+                .setNamespace("ns")
                 .setType("anycast")
                 .setPlan("myplan")
                 .build();
@@ -95,8 +104,9 @@ public class SerializationTest {
                 .setNamespace("mynamespace")
                 .setPlan("defaultplan")
                 .setType("standard")
-                .setCreatedBy("me")
-                .setCreatedByUid("myid")
+                .setCreationTimestamp("some date")
+                .setResourceVersion("1234")
+                .setSelfLink("/my/resource")
                 .setStatus(new Status(true).appendMessage("hello"))
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("myendpoint")
@@ -123,8 +133,9 @@ public class SerializationTest {
         assertThat(deserialized.getNamespace(), is(addressSpace.getNamespace()));
         assertThat(deserialized.getType(), is(addressSpace.getType()));
         assertThat(deserialized.getPlan(), is(addressSpace.getPlan()));
-        assertThat(deserialized.getCreatedBy(), is(addressSpace.getCreatedBy()));
-        assertThat(deserialized.getCreatedByUid(), is(addressSpace.getCreatedByUid()));
+        assertThat(deserialized.getSelfLink(), is(addressSpace.getSelfLink()));
+        assertThat(deserialized.getCreationTimestamp(), is(addressSpace.getCreationTimestamp()));
+        assertThat(deserialized.getResourceVersion(), is(addressSpace.getResourceVersion()));
         assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
         assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));

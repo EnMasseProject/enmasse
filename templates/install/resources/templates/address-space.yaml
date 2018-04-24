@@ -16,7 +16,9 @@ objects:
           "kind": "AddressSpace",
           "metadata": {
             "name": "${NAME}",
-            "namespace": "${NAMESPACE}"
+            "annotations": {
+              "enmasse.io/namespace": "${NAMESPACE}"
+            }
           },
           "spec": {
             "type": "${TYPE}",

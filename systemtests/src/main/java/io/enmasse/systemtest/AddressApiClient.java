@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import com.google.common.collect.Sets;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -19,12 +20,12 @@ import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
 import java.net.URL;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class AddressApiClient {
     private static Logger log = CustomLogger.getLogger();
@@ -33,8 +34,8 @@ public class AddressApiClient {
     private final Vertx vertx;
     private final int initRetry = 10;
     private final String schemaPath = "/apis/enmasse.io/v1/schema";
-    private final String addressSpacesPath = "/apis/enmasse.io/v1/addressspaces";
-    private final String addressPath = "/apis/enmasse.io/v1/addresses";
+    private final String addressSpacesPath;
+    private final String addressPathPattern;
     private final String authzString;
     private Endpoint endpoint;
 
@@ -46,6 +47,8 @@ public class AddressApiClient {
                 .setTrustAll(true)
                 .setVerifyHost(false));
         this.kubernetes = kubernetes;
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace());
+        this.addressPathPattern = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
         this.endpoint = kubernetes.getRestEndpoint();
         this.authzString = "Bearer " + kubernetes.getApiToken();
     }
@@ -66,7 +69,10 @@ public class AddressApiClient {
         JsonObject metadata = new JsonObject();
         metadata.put("name", addressSpace.getName());
         if (addressSpace.getNamespace() != null) {
-            metadata.put("namespace", addressSpace.getNamespace());
+            JsonObject annotations = new JsonObject();
+            annotations.put("enmasse.io/namespace", addressSpace.getNamespace());
+            annotations.put("enmasse.io/realm-name", addressSpace.getNamespace());
+            metadata.put("annotations", annotations);
         }
         return metadata;
     }
@@ -181,10 +187,10 @@ public class AddressApiClient {
     }
 
     public JsonArray getAddressesPaths() throws Exception {
-        log.info("GET-addresses-paths: path {}; ", addressPath);
+        log.info("GET-addresses-paths: path {}; ", addressPathPattern);
         return doRequestNTimes(initRetry, () -> {
             CompletableFuture<JsonArray> responsePromise = new CompletableFuture<>();
-            client.get(endpoint.getPort(), endpoint.getHost(), addressPath)
+            client.get(endpoint.getPort(), endpoint.getHost(), addressPathPattern)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonArray())
                     .timeout(20_000)
@@ -196,20 +202,18 @@ public class AddressApiClient {
     /**
      * give you JsonObject with AddressesList or Address kind
      *
-     * @param addressSpace name of instance, this is used only if isMultitenant is set to true
+     *
      * @param addressName  name of address
      * @return
      * @throws Exception
      */
     public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        StringBuilder path = new StringBuilder();
-        path.append(addressPath).append("/").append(addressSpace.getName());
-        path.append(addressName.isPresent() ? "/" + addressName.get() : "");
+        String path = getAddressPath(addressSpace.getName()) + (addressName.map(s -> "/" + s).orElse(""));
         log.info("GET-addresses: path {}; ", path);
 
         return doRequestNTimes(initRetry, () -> {
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-            client.get(endpoint.getPort(), endpoint.getHost(), path.toString())
+            client.get(endpoint.getPort(), endpoint.getHost(), path)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .timeout(20_000)
@@ -246,17 +250,23 @@ public class AddressApiClient {
      * @throws Exception
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        StringBuilder path = new StringBuilder();
         if (destinations.length == 0) {
-            path.append(addressPath).append("/").append(addressSpace.getName());
-            doDelete(path.toString());
+            for (Destination destination : TestUtils.convertToListAddress(getAddresses(addressSpace, Optional.empty()), Destination.class, object -> true)) {
+                deleteAddress(addressSpace.getName(), destination);
+            }
         } else {
             for (Destination destination : destinations) {
-                path.append(addressPath).append("/").append(addressSpace.getName()).append("/").append(destination.getName());
-                doDelete(path.toString());
-                path.setLength(0);
+                deleteAddress(addressSpace.getName(), destination);
             }
         }
+    }
+
+    private String getAddressPath(String addressSpace) {
+        return String.format(addressPathPattern, addressSpace);
+    }
+
+    public void deleteAddress(String addressSpace, Destination destination) throws Exception {
+        doDelete(getAddressPath(addressSpace) + "/" + destination.getName());
     }
 
     private void doDelete(String path) throws Exception {
@@ -272,62 +282,79 @@ public class AddressApiClient {
         });
     }
 
-    public void deploy(AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
-        JsonObject config = new JsonObject();
-        config.put("apiVersion", "v1");
-        config.put("kind", "AddressList");
-        JsonArray items = new JsonArray();
-        for (Destination destination : destinations) {
-            JsonObject entry = new JsonObject();
-            JsonObject metadata = new JsonObject();
-            if (destination.getName() != null) {
-                metadata.put("name", destination.getName());
-            }
-            if (destination.getUuid() != null) {
-                metadata.put("uuid", destination.getUuid());
-            }
-            if (destination.getAddressSpace() != null) {
-                metadata.put("addressSpace", destination.getAddressSpace());
-            }
-            entry.put("metadata", metadata);
+    public void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        JsonObject response = getAddresses(addressSpace, Optional.empty());
+        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
 
-            JsonObject spec = new JsonObject();
-            if (destination.getAddress() != null) {
-                spec.put("address", destination.getAddress());
-            }
-            if (destination.getType() != null) {
-                spec.put("type", destination.getType());
-            }
-            if (destination.getPlan() != null) {
-                spec.put("plan", destination.getPlan());
-            }
-            entry.put("spec", spec);
+        Set<Destination> desired = Sets.newHashSet(destinations);
 
-            items.add(entry);
+        Set<Destination> toCreate = Sets.difference(desired, current);
+
+        for (Destination destination : toCreate) {
+            createAddress(addressSpace, destination);
         }
-        config.put("items", items);
-        deploy(addressSpace, httpMethod, config);
     }
 
-    /**
-     * deploying addresses via rest api
-     *
-     * @param addressSpace name of instance
-     * @param httpMethod   PUT, POST and DELETE method are supported
-     * @throws Exception
-     */
-    private void deploy(AddressSpace addressSpace, HttpMethod httpMethod, JsonObject config) throws Exception {
-        StringBuilder path = new StringBuilder();
-        path.append(addressPath).append("/").append(addressSpace.getName()).append("/");
-        log.info("{}-address: path {}; body: {}", httpMethod, path, config.toString());
+    public void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        JsonObject response = getAddresses(addressSpace, Optional.empty());
+        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
+
+        Set<Destination> desired = Sets.newHashSet(destinations);
+
+        Set<Destination> toCreate = Sets.difference(desired, current);
+        Set<Destination> toDelete = Sets.difference(current, desired);
+
+        log.info("Creating {}", toCreate);
+
+        for (Destination destination : toCreate) {
+            createAddress(addressSpace, destination);
+        }
+
+        log.info("Deleting {}", toDelete);
+        for (Destination destination : toDelete) {
+            deleteAddress(addressSpace.getName(), destination);
+        }
+    }
+
+    public void createAddress(AddressSpace addressSpace, Destination destination) throws Exception {
+        JsonObject entry = new JsonObject();
+        entry.put("apiVersion", "enmasse.io/v1");
+        entry.put("kind", "Address");
+        JsonObject metadata = new JsonObject();
+        if (destination.getName() != null) {
+            metadata.put("name", destination.getName());
+        }
+        if (destination.getUuid() != null) {
+            metadata.put("uid", destination.getUuid());
+        }
+        if (destination.getAddressSpace() != null) {
+            metadata.put("addressSpace", destination.getAddressSpace());
+        } else {
+            metadata.put("addressSpace", addressSpace.getName());
+        }
+        entry.put("metadata", metadata);
+
+        JsonObject spec = new JsonObject();
+        if (destination.getAddress() != null) {
+            spec.put("address", destination.getAddress());
+        }
+        if (destination.getType() != null) {
+            spec.put("type", destination.getType());
+        }
+        if (destination.getPlan() != null) {
+            spec.put("plan", destination.getPlan());
+        }
+        entry.put("spec", spec);
+
+        log.info("post-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-            client.request(httpMethod, endpoint.getPort(), endpoint.getHost(), path.toString())
+            client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getName()))
                     .timeout(20_000)
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
-                    .sendJsonObject(config, ar -> responseHandler(ar,
+                    .sendJsonObject(entry, ar -> responseHandler(ar,
                             responsePromise,
                             "Error: deploy addresses"));
             return responsePromise.get(30, TimeUnit.SECONDS);

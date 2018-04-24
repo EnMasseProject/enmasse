@@ -39,7 +39,7 @@ function wait_until_up(){
 function run_test() {
     TESTCASE=$1
     PROFILE=${2:-systemtests}
-    wait_until_up 4 ${OPENSHIFT_PROJECT}
+    wait_until_up 5 ${OPENSHIFT_PROJECT}
     wait_code=$?
     if [ $wait_code -ne 0 ]; then
         echo "SYSTEM-TESTS WILL BE NOT EXECUTED (TESTCASE=${TESTCASE}; PROFILE=${PROFILE})"

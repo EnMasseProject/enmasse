@@ -71,31 +71,30 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: https
-            scheme: HTTPS
+            port: http
+            scheme: HTTP
         name: address-controller
         ports:
-        - containerPort: 8081
-          name: https
         - containerPort: 8080
           name: http
         readinessProbe:
           httpGet:
             path: /healthz
-            port: https
-            scheme: HTTPS
+            port: http
+            scheme: HTTP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 500m
+            memory: 128Mi
         volumeMounts:
-        - mountPath: /address-controller-cert
-          name: address-controller-cert
-          readOnly: true
         - mountPath: /address-space-definitions
           name: address-space-definitions
           readOnly: true
       serviceAccount: enmasse-admin
       volumes:
-      - name: address-controller-cert
-        secret:
-          secretName: address-controller-cert
       - configMap:
           name: address-space-definitions
         name: address-space-definitions

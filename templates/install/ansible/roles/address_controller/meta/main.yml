@@ -1,3 +1,0 @@
----
-dependencies:
-  - { role: ssl_certs, cert_secret: address-controller-cert, cert_cn: "address-controller.{{ namespace }}.svc.cluster.local", cert_sans: "DNS:address-controller.{{ namespace }}.svc.cluster,DNS:address-controller.{{ namespace }}.svc,DNS:address-controller" }

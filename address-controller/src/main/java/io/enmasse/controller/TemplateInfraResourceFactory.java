@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
@@ -53,7 +54,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
             authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
             authResolver.getClientSecretName(authService).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
-            authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));
+            authResolver.getSaslInitHost(addressSpace, authService).ifPresent(saslInitHost -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));
             authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
 
             // Step 1: Validate endpoints and remove unknown
@@ -133,7 +134,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                         break;
                     }
                 }
-                HasMetadata item = kubernetes.createEndpoint(endpoint, service, addressSpace.getName(), addressSpace.getNamespace());
+                HasMetadata item = kubernetes.createEndpoint(endpoint, service, addressSpace.getName(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
                 if (item != null) {
                     resourceList.add(item);
                 }

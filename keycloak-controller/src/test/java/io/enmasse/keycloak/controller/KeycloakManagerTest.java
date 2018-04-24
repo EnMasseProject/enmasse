@@ -7,6 +7,7 @@ package io.enmasse.keycloak.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.config.AnnotationKeys;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -83,6 +84,6 @@ public class KeycloakManagerTest {
     }
 
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {
-        return new AddressSpace.Builder().setName(name).setType("standard").setCreatedBy("developer").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
+        return new AddressSpace.Builder().setName(name).setPlan("myplan").setType("standard").putAnnotation(AnnotationKeys.CREATED_BY, "developer").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
     }
 }

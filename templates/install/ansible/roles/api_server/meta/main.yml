@@ -1,0 +1,3 @@
+---
+dependencies:
+  - { role: ssl_certs, cert_secret: api-server-cert, cert_cn: "api-server.{{ namespace }}.svc.cluster.local", cert_sans: "DNS:api-server.{{ namespace }}.svc.cluster,DNS:api-server.{{ namespace }}.svc,DNS:api-server" }

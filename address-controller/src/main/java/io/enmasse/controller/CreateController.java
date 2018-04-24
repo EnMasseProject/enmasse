@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
 import io.enmasse.address.model.Schema;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
@@ -39,26 +40,26 @@ public class CreateController implements Controller {
 
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
-        Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
+        Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
 
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         addressSpaceResolver.validate(addressSpace);
 
-        if (namespace.equals(addressSpace.getNamespace())) {
+        if (namespace.equals(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))) {
             if (instanceClient.hasService("messaging")) {
                 return addressSpace;
             }
         } else {
-            if (kubernetes.existsNamespace(addressSpace.getNamespace())) {
+            if (kubernetes.existsNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))) {
                 return addressSpace;
             }
             kubernetes.createNamespace(addressSpace);
             kubernetes.addAddressSpaceAdminRoleBinding(addressSpace);
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
             kubernetes.addAddressSpaceRoleBindings(addressSpace);
-            kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
-            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getNamespace());
+            kubernetes.createServiceAccount(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), kubernetes.getAddressSpaceAdminSa());
+            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
         }
         log.info("Creating address space {}", addressSpace);
 
@@ -72,7 +73,7 @@ public class CreateController implements Controller {
             }
         }
 
-        kubernetes.create(resourceList, addressSpace.getNamespace());
+        kubernetes.create(resourceList, addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
         eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
         return addressSpace;
     }

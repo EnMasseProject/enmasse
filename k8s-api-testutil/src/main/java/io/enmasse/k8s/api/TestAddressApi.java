@@ -11,6 +11,7 @@ import io.enmasse.k8s.api.cache.Store;
 
 import java.time.Duration;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
-    public Optional<Address> getAddressWithName(String address) {
+    public Optional<Address> getAddressWithName(String namespace, String address) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -55,19 +56,16 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
-    public Optional<Address> getAddressWithUuid(String uuid) {
-        if (throwException) {
-            throw new RuntimeException("exception");
-        }
-        return addresses.stream().filter(d -> d.getUuid().equals(uuid)).findAny();
-    }
-
-    @Override
-    public Set<Address> listAddresses() {
+    public Set<Address> listAddresses(String namespace) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
         return new LinkedHashSet<>(addresses);
+    }
+
+    @Override
+    public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labels) {
+        return listAddresses(namespace);
     }
 
     public void setAllAddressesReady(boolean ready) {

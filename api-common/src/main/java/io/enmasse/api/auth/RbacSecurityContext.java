@@ -51,14 +51,16 @@ public class RbacSecurityContext implements SecurityContext {
 
         String namespace = data.getString("namespace");
         String verb = data.getString("verb");
-        SubjectAccessReview accessReview = authApi.performSubjectAccessReview(tokenReview.getUserName(), namespace, verb);
+        String resource = data.getString("resource");
+        SubjectAccessReview accessReview = authApi.performSubjectAccessReview(tokenReview.getUserName(), namespace, verb, resource);
         return accessReview.isAllowed();
     }
 
-    public static String rbacToRole(String namespace, ResourceVerb verb) {
+    public static String rbacToRole(String namespace, ResourceVerb verb, String resource) {
         JsonObject object = new JsonObject();
         object.put("namespace", namespace);
         object.put("verb", verb);
+        object.put("resource", resource);
         return object.toString();
     }
 

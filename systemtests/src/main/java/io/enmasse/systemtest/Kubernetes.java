@@ -32,6 +32,10 @@ public abstract class Kubernetes {
         this.globalNamespace = globalNamespace;
     }
 
+    public String getNamespace() {
+        return globalNamespace;
+    }
+
     private static int getPort(Service service, String portName) {
         List<ServicePort> ports = service.getSpec().getPorts();
         for (ServicePort port : ports) {

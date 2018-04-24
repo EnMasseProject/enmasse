@@ -1,6 +1,6 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 BUILD_DIRS     = agent none-authservice templates
-DOCKER_DIRS	   = topic-forwarder artemis address-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
+DOCKER_DIRS	   = topic-forwarder artemis api-server address-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io
 OPENSHIFT_PROJECT ?= $(shell oc project -q)

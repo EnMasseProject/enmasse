@@ -52,7 +52,7 @@ public class Minikube extends Kubernetes {
 
     @Override
     public Endpoint getRestEndpoint() {
-        return getExternalEndpoint(globalNamespace, "restapi");
+        return new Endpoint(getIp(globalNamespace, "restapi"), Integer.parseInt(getPort(globalNamespace, "restapi")));
     }
 
     @Override

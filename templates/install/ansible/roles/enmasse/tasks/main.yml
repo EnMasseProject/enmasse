@@ -22,3 +22,6 @@
 - import_role:
     name: service_catalog
   when: service_catalog
+- import_role:
+    name: api_server
+  when: api_server

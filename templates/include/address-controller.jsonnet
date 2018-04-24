@@ -1,78 +1,5 @@
 local images = import "images.jsonnet";
 {
-  route::
-  {
-    "kind": "Route",
-    "apiVersion": "route.openshift.io/v1",
-    "metadata": {
-      "labels": {
-        "app": "enmasse"
-      },
-      "name": "restapi"
-    },
-    "spec": {
-      "to": {
-        "kind": "Service",
-        "name": "address-controller"
-      },
-      "tls": {
-        "termination": "passthrough"
-      }
-    }
-  },
-
-  service::
-  {
-    "apiVersion": "v1",
-    "kind": "Service",
-    "metadata": {
-      "name": "address-controller",
-      "labels": {
-        "app": "enmasse"
-      }
-    },
-    "spec": {
-      "ports": [
-        {
-          "name": "https",
-          "port": 443,
-          "protocol": "TCP",
-          "targetPort": "https"
-        }
-      ],
-      "selector": {
-        "name": "address-controller"
-      },
-      "type": "ClusterIP"
-    }
-  },
-
-  external_service::
-  {
-    "apiVersion": "v1",
-    "kind": "Service",
-    "metadata": {
-      "name": "restapi-external",
-      "labels": {
-        "app": "enmasse"
-      }
-    },
-    "spec": {
-      "ports": [
-        {
-          "name": "https",
-          "port": 443,
-          "protocol": "TCP",
-          "targetPort": "https"
-        }
-      ],
-      "selector": {
-        "name": "address-controller"
-      },
-      "type": "LoadBalancer"
-    }
-  },
-  
   deployment::
   {
     "apiVersion": "extensions/v1beta1",
@@ -193,21 +120,12 @@ local images = import "images.jsonnet";
               ],
               "volumeMounts": [
                 {
-                  "name": "address-controller-cert",
-                  "mountPath": "/address-controller-cert",
-                  "readOnly": true
-                },
-                {
                   "name": "address-space-definitions",
                   "mountPath": "/address-space-definitions",
                   "readOnly": true
                 }
               ],
               "ports": [
-                {
-                  "name": "https",
-                  "containerPort": 8081
-                },
                 {
                   "name": "http",
                   "containerPort": 8080
@@ -216,26 +134,30 @@ local images = import "images.jsonnet";
               "livenessProbe": {
                 "httpGet": {
                   "path": "/healthz",
-                  "scheme": "HTTPS",
-                  "port": "https"
+                  "scheme": "HTTP",
+                  "port": "http"
                 }
               },
               "readinessProbe": {
                 "httpGet": {
                   "path": "/healthz",
-                  "scheme": "HTTPS",
-                  "port": "https"
+                  "scheme": "HTTP",
+                  "port": "http"
+                }
+              },
+              "resources": {
+                "requests": {
+                  "cpu": "500m",
+                  "memory": "128Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "256Mi"
                 }
               }
             }
           ],
           "volumes": [
-            {
-              "name": "address-controller-cert",
-              "secret": {
-                "secretName": "address-controller-cert"
-              }
-            },
             {
               "name": "address-space-definitions",
               "configMap": {

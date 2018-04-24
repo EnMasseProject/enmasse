@@ -5,12 +5,30 @@
 
 package io.enmasse.systemtest;
 
+import java.util.Objects;
+
 public class Destination {
     private static final String QUEUE = "queue";
     private static final String TOPIC = "topic";
     private static final String ANYCAST = "anycast";
     private static final String MULTICAST = "multicast";
     private final String name;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Destination that = (Destination) o;
+        return Objects.equals(address, that.address) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(plan, that.plan);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(address, type, plan);
+    }
+
     private final String address;
     private final String type;
     private final String plan;
@@ -107,27 +125,6 @@ public class Destination {
         } else {
             return address;
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Destination that = (Destination) o;
-
-        if (!type.equals(that.type)) return false;
-        if (!address.equals(that.address)) return false;
-        return plan.equals(that.plan);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = address.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + plan.hashCode();
-        return result;
     }
 
     @Override

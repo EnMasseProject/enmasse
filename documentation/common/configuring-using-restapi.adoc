@@ -2,14 +2,17 @@
 
 == Configuring {ProductName} using a REST API
 
-{ProductName} provides a REST API that can be used for configuring address spaces and addresses
-within those address spaces. When running {ProductName} in multitenant mode, clients are
-authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] by default.
+{ProductName} provides an API that can be used for configuring address spaces and addresses
+within those address spaces. Clients can be configured to authenticate using
+https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^]. 
+
+All API URIs are namespaced. This means that address spaces are scoped within a particular
+namespace. Addresses are scoped within an address space. This means that an address
+space in address space A may have the same name as an address in address space B.
+
+Likewise, an address space in namespace A can have the same name as an address space in namespace B.
 
 === Creating an Address Space
-
-
-* Creating address spaces is only applicable for multitenant deployments of {ProductName}.
 
 .Procedure
 
@@ -18,7 +21,7 @@ authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] 
 [source,json,options="nowrap"]
 ----
 {
-    "apiVersion": "v1/enmasse",
+    "apiVersion": "enmasse.io/v1",
     "kind": "AddressSpace",
     "metadata": {
         "name": "myspace"
@@ -30,15 +33,16 @@ authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] 
 }
 ----
 +
-. POST the address space definition to the REST API using curl:
+. POST the address space definition to the API using curl:
 +
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces
+curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces
 ----
 +
-This will create the infrastructure required for that address space. Starting up the address space
+This will create the infrastructure required for that address space. Replace the namespace with the
+namespace of the application requesting the address space to be created. Starting up the address space
 will take a while, usually depending on how fast it is able to download the Docker images for the
 various components.
 
@@ -46,12 +50,12 @@ various components.
 
 .Procedure
 
-* You can use the REST API to check the status of the address space:
+* You can use the API to check the status of the address space:
 +
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces/myspace
+curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces/myspace
 ----
 +
 You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON
@@ -61,52 +65,30 @@ object.
 
 .Procedure
 
-. To create addresses in the standard address space, save the following to a file:
+. To create addresses in the standard address space, save the address definition to a file:
 +
 [source,json,options="nowrap"]
 ----
 {
   "apiVersion": "enmasse.io/v1",
-  "kind": "AddressList",
-  "items": [
-    {
-      "spec": {
-        "address": "myqueue",
-        "type": "queue",
-        "plan": "sharded-queue"
-      }
-    },
-    {
-      "spec": {
-        "address": "mytopic",
-        "type": "topic",
-        "plan": "sharded-topic"
-      }
-    },
-    {
-      "spec": {
-        "address": "myanycast",
-        "type": "anycast",
-        "plan": "standard-anycast"
-      }
-    },
-    {
-      "spec": {
-        "address": "mymulticast",
-        "type": "multicast",
-        "plan": "standard-multicast"
-      }
-    }
-  ]
+  "kind": "Address",
+  "metadata": {
+      "addressSpace": "myspace"
+  },
+  "spec": {
+    "address": "myqueue",
+    "type": "queue",
+    "plan": "pooled-queue"
+  }
 }
 ----
 
-. You can then create those addresses using the following REST API command. Replace `default` with the name of your address space:
+. You can then create the address using the following API. Replace the namespace with the same as for the address space:
 +
 [source,bash,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X PUT -T addresses.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addresses/default
+curl -X PUT -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces/myspace/addresses
 ----
 
 === Viewing Configured Addresses
@@ -117,7 +99,7 @@ curl -X PUT -T addresses.json -H "content-type: application/json" -H "Authorizat
 +
 [source,bash,options="nowrap"]
 ----
-curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addresses/default
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspace/myspace/addresses
 ----
 +
 The addresses are ready to be used by messaging clients once the `status.isReady` field of each

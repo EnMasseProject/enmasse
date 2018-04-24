@@ -42,7 +42,7 @@ public class EndpointControllerTest {
         Route route = new RouteBuilder()
                 .editOrNewMetadata()
                 .withName("myservice-external")
-                .withNamespace(addressSpace.getNamespace())
+                .withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))
                 .addToLabels(LabelKeys.TYPE, "loadbalancer")
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, "messaging")

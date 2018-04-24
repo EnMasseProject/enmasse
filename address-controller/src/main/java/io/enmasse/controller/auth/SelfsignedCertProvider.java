@@ -7,6 +7,7 @@ package io.enmasse.controller.auth;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
@@ -26,10 +27,10 @@ public class SelfsignedCertProvider implements CertProvider {
 
     @Override
     public Secret provideCert(AddressSpace addressSpace, Endpoint endpoint) {
-        Secret secret = client.secrets().inNamespace(addressSpace.getNamespace()).withName(certSpec.getSecretName()).get();
+        Secret secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withName(certSpec.getSecretName()).get();
         if (secret == null) {
             log.info("Creating self-signed certificates for {}", endpoint);
-            secret = certManager.createSelfSignedCertSecret(addressSpace.getNamespace(), certSpec.getSecretName());
+            secret = certManager.createSelfSignedCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), certSpec.getSecretName());
         }
         return secret;
     }

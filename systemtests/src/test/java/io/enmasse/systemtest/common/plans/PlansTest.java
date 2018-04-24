@@ -111,7 +111,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
                 Collections.singletonList(new AddressResource("broker", 0.1)));
 
         AddressPlan queuePlan3 = new AddressPlan("queue-pooled-test3", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.05)));
+                Collections.singletonList(new AddressResource("broker", 0.049)));
 
         AddressPlan topicPlan = new AddressPlan("topic-pooled-test1", AddressType.TOPIC,
                 Arrays.asList(
@@ -173,12 +173,12 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
                         Destination.queue("q4", queuePlan2.getName()), // 0.1
                         Destination.queue("q5", queuePlan2.getName()), // 0.1
                         Destination.queue("q6", queuePlan2.getName()), // 0.1
-                        Destination.queue("q7", queuePlan3.getName()), // 0.05
-                        Destination.queue("q8", queuePlan3.getName()), // 0.05
-                        Destination.queue("q9", queuePlan3.getName()), // 0.05
-                        Destination.queue("q10", queuePlan3.getName()), // 0.05
-                        Destination.queue("q11", queuePlan3.getName()), // 0.05
-                        Destination.queue("q12", queuePlan3.getName()) // 0.05
+                        Destination.queue("q7", queuePlan3.getName()), // 0.049
+                        Destination.queue("q8", queuePlan3.getName()), // 0.049
+                        Destination.queue("q9", queuePlan3.getName()), // 0.049
+                        Destination.queue("q10", queuePlan3.getName()), // 0.049
+                        Destination.queue("q11", queuePlan3.getName()), // 0.049
+                        Destination.queue("q12", queuePlan3.getName()) // 0.049
                 ), Collections.emptyList(), user);
 
         //check aggregate limits

@@ -142,6 +142,16 @@ local images = import "images.jsonnet";
                   "scheme": "HTTPS",
                   "port": "https"
                 }
+              },
+              "resources": {
+                "requests": {
+                  "cpu": "250m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "128Mi"
+                }
               }
             }
           ],

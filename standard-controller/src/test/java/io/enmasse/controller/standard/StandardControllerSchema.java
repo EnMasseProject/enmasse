@@ -73,7 +73,7 @@ public class StandardControllerSchema {
                                                 .setName("pooled-queue-tiny")
                                                 .setAddressType("queue")
                                                 .setRequestedResources(Arrays.asList(
-                                                        new ResourceRequest("broker", 0.05)))
+                                                        new ResourceRequest("broker", 0.049)))
                                                 .build(),
                                         new AddressPlan.Builder()
                                                 .setName("small-queue")

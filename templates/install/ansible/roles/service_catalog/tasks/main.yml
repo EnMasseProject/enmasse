@@ -2,6 +2,16 @@
 - shell: oc policy can-i create clusterservicebrokers
   register: can_create
   failed_when: can_create.stdout == "no"
+- name: Ensure user has cluster admin access
+  shell: oc policy can-i create clusterroles
+  register: is_admin
+  failed_when: is_admin.stdout == "no"
+- name: Create cluster wide roles used by service broker
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/service-broker.yaml
+- name: Grant service-broker cluster role privileges to service account
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:service-broker -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+- name: Grant auth delegation privileges to service account
+  shell: oc adm policy add-cluster-role-to-user system:auth-delegator -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
 - name: Create EnMasse Service Broker Deployment
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/deployment.yaml"
 - name: Create EnMasse Service Broker Service

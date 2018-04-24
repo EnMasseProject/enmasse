@@ -124,30 +124,37 @@ kubectl create sa enmasse-admin
 kubectl apply -f ./resources/resource-definitions/resource-definitions.yaml
 kubectl apply -f ./resources/plans/standard-plans.yaml
 kubectl apply -f ./resources/plans/brokered-plans.yaml
-----
-
-. Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap"]
-----
-mkdir -p address-controller-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out address-controller-cert/tls.crt -keyout address-controller-cert/tls.key
-----
-
-. Create secret with address-controller certificate:
-+
-[options="nowrap"]
-----
-kubectl secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
-----
-
-. Deploy address-controller:
-+
-[options="nowrap"]
-----
 kubectl apply -f ./resources/address-controller/address-space-definitions.yaml
-kubectl apply -f ./resources/address-controller/deployment.yaml
-kubectl apply -f ./resources/address-controller/service.yaml
+----
+
+. Create a certificate to use for the api server. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p api-server-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+----
+
+. Create a secret containing the api-server certificate:
++
+[options="nowrap"]
+----
+kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
+----
+
+. Deploy the api-server:
++
+[options="nowrap"]
+----
+kubectl create -f ./resources/api-server/deployment.yaml
+kubectl create -f ./resources/api-server/service.yaml
+----
+
+. Deploy the address-controller:
++
+[options="nowrap"]
+----
+kubectl create -f ./resources/address-controller/deployment.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.

@@ -47,6 +47,8 @@ public class AddressControllerTest {
     public void testAddressGarbageCollection() throws Exception {
         Address alive = new Address.Builder()
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
@@ -54,6 +56,8 @@ public class AddressControllerTest {
                 .build();
         Address terminating = new Address.Builder()
                 .setAddress("q2")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
@@ -70,6 +74,8 @@ public class AddressControllerTest {
         Address alive = new Address.Builder()
                 .setName("q1")
                 .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
                 .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")

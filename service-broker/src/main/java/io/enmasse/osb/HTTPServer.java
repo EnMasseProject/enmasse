@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.function.Predicate;
 
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
@@ -66,7 +67,9 @@ public class HTTPServer extends AbstractVerticle {
 
         if (enableRbac) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, HttpHealthService.BASE_URI, HttpConsoleService.BASE_URI));
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
+                    path.startsWith(HttpHealthService.BASE_URI) ||
+                    path.startsWith(HttpConsoleService.BASE_URI)));
         } else {
             log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());

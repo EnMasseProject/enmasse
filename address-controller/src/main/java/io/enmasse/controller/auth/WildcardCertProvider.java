@@ -7,6 +7,7 @@ package io.enmasse.controller.auth;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class WildcardCertProvider implements CertProvider {
 
     @Override
     public Secret provideCert(AddressSpace addressSpace, Endpoint endpoint) {
-        Secret secret = client.secrets().inNamespace(addressSpace.getNamespace()).withName(certSpec.getSecretName()).get();
+        Secret secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withName(certSpec.getSecretName()).get();
         if (secret == null) {
             Secret wildcardSecret = null;
             if (wildcardSecretName != null) {
@@ -45,7 +46,7 @@ public class WildcardCertProvider implements CertProvider {
             data.put("tls.key", wildcardSecret.getData().get("tls.key"));
             data.put("tls.crt", wildcardSecret.getData().get("tls.crt"));
 
-            secret = client.secrets().inNamespace(addressSpace.getNamespace()).createNew()
+            secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).createNew()
                     .editOrNewMetadata()
                     .withName(certSpec.getSecretName())
                     .endMetadata()

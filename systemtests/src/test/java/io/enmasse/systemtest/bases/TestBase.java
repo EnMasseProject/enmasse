@@ -215,11 +215,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        if (wait) {
-            TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.POST, destinations);
-        } else {
-            TestUtils.deploy(addressApiClient, addressSpace, HttpMethod.POST, destinations);
-        }
+        TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, destinations);
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
@@ -231,7 +227,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
+        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, destinations);
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
@@ -324,29 +320,33 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void createGroup(AddressSpace addressSpace, String groupName) throws Exception {
-        getKeycloakClient().createGroup(addressSpace.getName(), groupName);
+        getKeycloakClient().createGroup(getRealmName(addressSpace), groupName);
     }
 
     protected void joinGroup(AddressSpace addressSpace, String groupName, String username) throws Exception {
-        getKeycloakClient().joinGroup(addressSpace.getName(), groupName, username);
+        getKeycloakClient().joinGroup(getRealmName(addressSpace), groupName, username);
     }
 
     protected void leaveGroup(AddressSpace addressSpace, String groupName, String username) throws Exception {
-        getKeycloakClient().leaveGroup(addressSpace.getName(), groupName, username);
+        getKeycloakClient().leaveGroup(getRealmName(addressSpace), groupName, username);
     }
 
 
     protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials, String... groups) throws Exception {
         log.info("User {} will be created", credentials);
         if (groups != null && groups.length > 0) {
-            getKeycloakClient().createUser(addressSpace.getName(), credentials, groups);
+            getKeycloakClient().createUser(getRealmName(addressSpace), credentials, groups);
         } else {
-            getKeycloakClient().createUser(addressSpace.getName(), credentials);
+            getKeycloakClient().createUser(getRealmName(addressSpace), credentials);
         }
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
-        getKeycloakClient().deleteUser(addressSpace.getName(), username);
+        getKeycloakClient().deleteUser(getRealmName(addressSpace), username);
+    }
+
+    private static String getRealmName(AddressSpace addressSpace) {
+        return addressSpace.getName();
     }
 
     protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
