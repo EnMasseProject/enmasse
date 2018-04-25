@@ -107,13 +107,13 @@ public class TestUtils {
             } else {
                 pods = kubernetes.listPods(tenantNamespace, labelSelector, annotationSelector);
             }
-            log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (!readyRequired) {
                 actualReplicas = pods.size();
             } else {
                 actualReplicas = numReady(pods);
             }
-
+            log.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}",
+                    actualReplicas, pods.size(), expectedReplicas, readyRequired);
             if (actualReplicas != expectedReplicas) {
                 Thread.sleep(checkInterval);
             } else if (!readyRequired || actualReplicas == pods.size()) {
