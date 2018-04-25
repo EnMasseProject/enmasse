@@ -56,11 +56,11 @@ function verify_topic(name, all_linkroutes, containerId) {
         assert.equal(linkroutes[0].containerId, containerId);
         assert.equal(linkroutes[1].containerId, containerId);
     }
-    if (linkroutes[0].dir === 'in') {
-        assert.equal(linkroutes[1].dir, 'out');
+    if (linkroutes[0].direction === 'in') {
+        assert.equal(linkroutes[1].direction, 'out');
     } else {
-        assert.equal(linkroutes[0].dir, 'out');
-        assert.equal(linkroutes[1].dir, 'in');
+        assert.equal(linkroutes[0].direction, 'out');
+        assert.equal(linkroutes[1].direction, 'in');
     }
 }
 
@@ -77,11 +77,11 @@ function verify_queue(name, all_addresses, all_autolinks, containerId) {
     assert.equal(autolinks[1].addr, name);
     assert.equal(autolinks[0].containerId, containerId || name);
     assert.equal(autolinks[1].containerId, containerId || name);
-    if (autolinks[0].dir === 'in') {
-        assert.equal(autolinks[1].dir, 'out');
+    if (autolinks[0].direction === 'in') {
+        assert.equal(autolinks[1].direction, 'out');
     } else {
-        assert.equal(autolinks[0].dir, 'out');
-        assert.equal(autolinks[1].dir, 'in');
+        assert.equal(autolinks[0].direction, 'out');
+        assert.equal(autolinks[1].direction, 'in');
     }
 }
 
@@ -349,15 +349,15 @@ describe('basic router configuration', function() {
     it('removes unwanted address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', dir:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', dir:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', direction:'in'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', direction:'out'});
        }));
     it('removes or updates address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-a', {prefix:'a', distribution:'closest', 'waypoint':false});
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', dir:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', dir:'out'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', dir:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', direction:'in'});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', direction:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', direction:'out'});
        }));
     it('configures addresses on multiple routers', multi_router_address_test(3, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
@@ -513,13 +513,13 @@ describe('basic router configuration', function() {
     it('ignores link route override', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
        function (routers, address_list) {
            verify_addresses(address_list, routers, function (objects) {
-               var extra_linkroutes = remove(objects.linkroutes, function (o) { return o.prefix === 'foo' && o.dir === 'in'; });
+               var extra_linkroutes = remove(objects.linkroutes, function (o) { return o.prefix === 'foo' && o.direction === 'in'; });
                assert.equal(extra_linkroutes.length, 1);
                assert.equal(extra_linkroutes[0].name, 'override-foo');
            });
        },
        function (router) {
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'override-foo', {prefix:'foo', dir:'in'});
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'override-foo', {prefix:'foo', direction:'in'});
        }));
 
     it('handles message with no correlation', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}], undefined,

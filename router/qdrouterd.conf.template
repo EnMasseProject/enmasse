@@ -30,14 +30,15 @@ router {
 
 sslProfile {
     name: auth_service_ssl
-    certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+    caCertFile: /etc/qpid-dispatch/authservice-ca/tls.crt
 }
 
 authServicePlugin {
     name: auth_service
-    authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
-    saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-    authSslProfile: auth_service_ssl
+    host: ${AUTHENTICATION_SERVICE_HOST}
+    port: ${AUTHENTICATION_SERVICE_PORT}
+    realm: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+    sslProfile: auth_service_ssl
 }
 
 listener {
@@ -59,7 +60,7 @@ listener {
 sslProfile {
    name: ssl_details
    certFile: /etc/qpid-dispatch/ssl/tls.crt
-   keyFile: /etc/qpid-dispatch/ssl/tls.key
+   privateKeyFile: /etc/qpid-dispatch/ssl/tls.key
 }
 
 listener {
@@ -73,8 +74,8 @@ listener {
 sslProfile {
    name: ssl_internal_details
    certFile: /etc/enmasse-certs/tls.crt
-   keyFile: /etc/enmasse-certs/tls.key
-   certDb: /etc/enmasse-certs/ca.crt
+   privateKeyFile: /etc/enmasse-certs/tls.key
+   caCertFile: /etc/enmasse-certs/ca.crt
 }
 
 listener {
@@ -98,20 +99,20 @@ connector {
     host: ${RAGENT_SERVICE_HOST}
     port: ${RAGENT_SERVICE_PORT}
     sslProfile: ssl_internal_details
-    verifyHostName: no
+    verifyHostname: no
 }
 
 linkRoute {
     name: override.lwt_in
     prefix: ${DOLLAR}lwt
-    dir: in
+    direction: in
     containerId: lwt-service
 }
 
 linkRoute {
     name: override.lwt_out
     prefix: ${DOLLAR}lwt
-    dir: out
+    direction: out
     containerId: lwt-service
 }
 

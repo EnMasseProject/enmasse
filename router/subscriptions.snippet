@@ -23,13 +23,13 @@ connector {
     name: subscription-service
     role: route-container
     sslProfile: ssl_internal_details
-    verifyHostName: no
+    verifyHostname: no
 }
 
 linkRoute {
     name: override.locate
     prefix: locate
-    dir: out
+    direction: out
     connection: subscription-service
 }
 

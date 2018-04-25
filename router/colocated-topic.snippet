@@ -23,27 +23,27 @@ connector {
     name: localbroker
     role: route-container
     sslProfile: ssl_internal_details
-    verifyHostName: no
+    verifyHostname: no
 }
 
 linkRoute {
     name: override.main_in
     prefix: ${ADDRESS_NAME}
-    dir: in
+    direction: in
     connection: localbroker
 }
 
 linkRoute {
     name: override.main_out
     prefix: ${ADDRESS_NAME}
-    dir: out
+    direction: out
     connection: localbroker
 }
 
 linkRoute {
     name: override.qualified_out
     prefix: ${ADDRESS_NAME}/${HOSTNAME}
-    dir: out
+    direction: out
     connection: localbroker
 }
 

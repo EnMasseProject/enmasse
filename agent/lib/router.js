@@ -58,7 +58,7 @@ function address_equivalence(a, b) {
 
 function link_route_equivalence(a, b) {
     if (a === undefined) return b === undefined;
-    return a.prefix === b.prefix && a.dir === b.dir;
+    return a.prefix === b.prefix && a.direction === b.direction;
 }
 
 /**
@@ -165,7 +165,7 @@ function is_topic(address) {
 }
 
 function to_link_route(direction, address) {
-    return {name:address.name + '_' + direction, prefix:address.address, dir:direction, containerId: address.allocated_to ? address.address : undefined};
+    return {name:address.name + '_' + direction, prefix:address.address, direction:direction, containerId: address.allocated_to ? address.address : undefined};
 }
 
 function to_in_link_route(address) {
@@ -256,7 +256,7 @@ ConnectedRouter.prototype.create_connector = function (host_port, connector_name
     log.info('[%s] creating connector %s to %s', this.container_id, connector_name, host_port);
     var parts = host_port.split(':');
     return this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1],
-                                                            sslProfile:'ssl_internal_details', verifyHostName:'no'});
+                                                            sslProfile:'ssl_internal_details', verifyHostname:'no'});
 };
 
 ConnectedRouter.prototype.delete_connector = function (host_port, connector_name) {
@@ -302,7 +302,7 @@ ConnectedRouter.prototype.delete_address = function (address) {
 ConnectedRouter.prototype.define_autolink = function (address, direction) {
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
     log.info('[%s] defining %s autolink for %s', this.container_id, direction, address.name);
-    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.address, containerId:address.address});
+    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {direction:direction, addr:address.address, containerId:address.address});
 }
 
 ConnectedRouter.prototype.delete_autolink = function (address, direction) {
@@ -312,14 +312,14 @@ ConnectedRouter.prototype.delete_autolink = function (address, direction) {
 }
 
 ConnectedRouter.prototype.define_link_route = function (route) {
-    log.info('[%s] defining %s link route %s', this.container_id, route.dir, route.prefix);
-    var props = {'prefix':route.prefix, dir:route.dir};
+    log.info('[%s] defining %s link route %s', this.container_id, route.direction, route.prefix);
+    var props = {'prefix':route.prefix, direction:route.direction};
     if (route.containerId) props.containerId = route.containerId;
     return this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, props);
 };
 
 ConnectedRouter.prototype.delete_link_route = function (route) {
-    log.info('[%s] deleting %s link route %s', this.container_id, route.dir, route.prefix);
+    log.info('[%s] deleting %s link route %s', this.container_id, route.direction, route.prefix);
     return this.delete_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name);
 };
 
