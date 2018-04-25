@@ -22,6 +22,7 @@ var rhea = require('rhea');
 var artemis = require('./artemis.js');
 var myevents = require('./events.js');
 var myutils = require('./utils.js');
+var BrokerAddressSettings = require('./broker_address_settings.js');
 
 function BrokerController(event_sink, get_address_settings) {
     events.EventEmitter.call(this);
@@ -35,7 +36,7 @@ function BrokerController(event_sink, get_address_settings) {
     } else {
         this.get_address_settings = function () { return Promise.resolve(); };
     }
-    this.serial_sync = require('./utils.js').serialize(this._sync_addresses_and_connectors.bind(this));
+    this.serial_sync = require('./utils.js').serialize(this._sync_broker_addresses.bind(this));
     this.addresses_synchronized = false;
     this.busy_count = 0;
     this.retrieve_count = 0;
@@ -59,6 +60,9 @@ BrokerController.prototype.close = function () {
     if (this.polling) {
         clearInterval(this.polling);
         this.polling = undefined;
+    }
+    if (this.address_settings_controller) {
+        this.address_settings_controller.close();
     }
     return this.broker.close();
 };
@@ -474,67 +478,14 @@ BrokerController.prototype._sync_broker_addresses = function () {
     });
 };
 
-BrokerController.prototype.destroy_connector = function (address) {
-    var self = this;
-    log.info('[%s] Deleting connector for "%s"...', self.id, address);
-    return self.broker.destroyConnectorService(address).then(function() {
-        log.info('[%s] Deleted connector for "%s"', self.id, address);
-    }).catch(function (error) {
-        log.error('[%s] Failed to delete connector for "%s": %s', self.id, address, error);
-    });
-};
-
-BrokerController.prototype.create_connector = function (address) {
-    var self = this;
-    log.info('[%s] Creating connector for "%s"...', self.id, address);
-    return self.broker.createConnectorService(address).then(function() {
-        log.info('[%s] Created connector for "%s"', self.id, address);
-    }).catch(function (error) {
-        log.error('[%s] Failed to create connector for "%s": %s', self.id, address, error);
-    });
-};
-
-BrokerController.prototype.destroy_connectors = function (addresses) {
-    return Promise.all(addresses.map(this.destroy_connector.bind(this)));
-};
-
-BrokerController.prototype.create_connectors = function (addresses) {
-    return Promise.all(addresses.map(this.create_connector.bind(this)));
-};
-
-function connectors_of_interest(name) {
-    return name !== 'amqp-connector' && name !== 'router-connector';
+BrokerController.prototype.control_address_settings = function (env) {
+    this.address_settings_controller = new BrokerAddressSettings(env, this.broker);
 }
 
-BrokerController.prototype._ensure_connectors = function () {
-    var self = this;
-    return this.broker.getConnectorServices().then(function (results) {
-        var actual = results.filter(connectors_of_interest);
-        actual.sort();
-        var desired = Object.keys(self.addresses);
-        desired.sort();
-
-        var difference = myutils.changes(actual, desired, myutils.string_compare);
-        if (difference) {
-            log.info('[%s] %d connectors missing, %d to be removed', self.id, difference.added.length, difference.removed.length);
-            return self.destroy_connectors(difference.removed).then(function () {
-                return self.create_connectors(difference.added);
-            });
-        } else {
-            log.info('[%s] all connectors exist', self.id);
-        }
-    }).catch(function (e) {
-        log.error('[%s] failed to retrieve connectors: %s', self.id, e);
-    });
-};
-
-BrokerController.prototype._sync_addresses_and_connectors = function () {
-    return this._sync_broker_addresses().then(this._ensure_connectors.bind(this));
-}
-
-module.exports.create_controller = function (connection, get_address_settings, event_sink) {
-    var bc = new BrokerController(event_sink, get_address_settings);
+module.exports.create_controller = function (connection, env, event_sink) {
+    var bc = new BrokerController(event_sink);
     bc.set_connection(connection);
+    if (env) bc.control_address_settings(env);
     return bc;
 };
 

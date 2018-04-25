@@ -58,7 +58,7 @@ function address_equivalence(a, b) {
 
 function link_route_equivalence(a, b) {
     if (a === undefined) return b === undefined;
-    return a.prefix === b.prefix && a.dir === b.dir;
+    return a.prefix === b.prefix && a.dir === b.dir && a.addExternalPrefix === b.addExternalPrefix;
 }
 
 /**
@@ -165,7 +165,12 @@ function is_topic(address) {
 }
 
 function to_link_route(direction, address) {
-    return {name:address.name + '_' + direction, prefix:address.address, dir:direction, containerId: address.allocated_to ? address.address : undefined};
+    var lr = { name:address.name + '_' + direction, prefix:address.address, dir:direction };
+    if (address.allocated_to) {
+        lr.containerId = address.allocated_to;
+        lr.addExternalPrefix = 'topic://' + address.plan + '/';
+    }
+    return lr;
 }
 
 function to_in_link_route(address) {
@@ -302,7 +307,14 @@ ConnectedRouter.prototype.delete_address = function (address) {
 ConnectedRouter.prototype.define_autolink = function (address, direction) {
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
     log.info('[%s] defining %s autolink for %s', this.container_id, direction, address.name);
-    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.address, containerId:address.address});
+    var props = {dir:direction, addr:address.address};
+    if (address.allocated_to) {
+        props.containerId = address.allocated_to;
+        props.externalAddr = 'queue://' + address.plan + '/' + address.address;
+    } else {
+        props.containerId = address.address;
+    }
+    return this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, props);
 }
 
 ConnectedRouter.prototype.delete_autolink = function (address, direction) {
@@ -315,6 +327,7 @@ ConnectedRouter.prototype.define_link_route = function (route) {
     log.info('[%s] defining %s link route %s', this.container_id, route.dir, route.prefix);
     var props = {'prefix':route.prefix, dir:route.dir};
     if (route.containerId) props.containerId = route.containerId;
+    if (route.addExternalPrefix) props.addExternalPrefix = route.addExternalPrefix;
     return this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, props);
 };
 

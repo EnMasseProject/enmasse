@@ -238,11 +238,20 @@ ConsoleServer.prototype.listen_probe = function (env) {
 ConsoleServer.prototype.subscribe = function (name, sender) {
     this.listeners[name] = sender;
     this.addresses.for_each(function (address) {
-        sender.send({subject:'address', body:address});
+        try {
+            sender.send({subject:'address', body:address});
+        } catch (e) {
+            log.error('error on sending %j: %s', address, e);
+        }
     }, this.authz.address_filter(sender.connection));
     this.connections.for_each(function (conn) {
-        sender.send({subject:'connection', body:conn});
+        try {
+            sender.send({subject:'connection', body:conn});
+        } catch (e) {
+            log.error('error on sending %j: %s', conn, e);
+        }
     }, this.authz.connection_filter(sender.connection));
+
     //TODO: poll for changes in address_types
     var self = this;
     this.address_ctrl.get_address_types().then(function (address_types) {
@@ -263,7 +272,11 @@ ConsoleServer.prototype.publish = function (message) {
     for (var name in this.listeners) {
         var sender = this.listeners[name];
         if (this.authz.can_publish(sender, message)) {
-            sender.send(message);
+            try {
+                sender.send(message);
+            } catch (e) {
+                log.error('error on sending %j: %s', message, e);
+            }
         }
     }
 };
