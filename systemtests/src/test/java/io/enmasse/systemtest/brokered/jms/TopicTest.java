@@ -122,7 +122,6 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    @Disabled("this test can be enabled when ENTMQBR-910 will be fixed")
     public void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
         log.info("testMessageDurableSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -152,7 +151,6 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         log.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
-        Thread.sleep(30000); //!TODO: this row can be removed when ENTMQBR-910 will be fixed
         log.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
