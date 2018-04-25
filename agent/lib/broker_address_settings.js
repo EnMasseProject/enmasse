@@ -26,8 +26,8 @@ function match_compare(a, b) {
     return myutils.string_compare(a.match, b.match);
 }
 
-function get_match(name) {
-    return name + '/#';
+function get_match(plan) {
+    return plan.addressType + '://' + plan.metadata.name + '/#';
 }
 
 function extract_match(o) {
@@ -51,25 +51,13 @@ function equivalent_settings(a, b) {
     return a.maxSizeBytes === b.maxSizeBytes && a.addressFullMessagePolicy === b.addressFullMessagePolicy;
 }
 
-function to_routing_type(address_type) {
-    if (address_type === 'queue') {
-        return 'ANYCAST';
-    } else if (address_type === 'topic') {
-        return 'MULTICAST';
-    } else {
-        return undefined;
-    }
-}
-
 function to_address_setting(global_max_size, plan) {
     var r = required_broker_resource(plan);
-    var routing_type = to_routing_type(plan.addressType);
-    if (r && r > 0 && r < 1 && routing_type) {
+    if (r && r > 0 && r < 1) {
         return {
-            match: get_match(plan.metadata.name),
+            match: get_match(plan),
             maxSizeBytes: r * global_max_size,
-            addressFullMessagePolicy: 'FAIL',
-            defaultAddressRoutingType: routing_type
+            addressFullMessagePolicy: 'FAIL'
         }
     } else {
         log.info('not applying address settings for %s', plan.metadata.name);
@@ -130,7 +118,7 @@ AddressSettingsController.prototype.on_changed = function (plans) {
             log.info('no global max size retrieved for %s, will not create address-settings', id);
         }
     }).catch(function (error) {
-        log.info('could not retrieve global max size for %s: %s', id, error);
+        log.error('could not retrieve global max size for %s: %s', id, error);
     });
 };
 

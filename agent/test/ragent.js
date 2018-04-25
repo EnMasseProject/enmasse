@@ -1051,10 +1051,10 @@ describe('broker configuration', function() {
         broker_a.global_max_size = 100;
         connect_broker(broker_a).then(function () {
             address_source.add_address_plan({plan_name:'small', address_type:'queue', required_resources:[{name:'broker',credit:0.2}]});
-            address_source.add_address_plan({plan_name:'medium', address_type:'queue', required_resources:[{name:'broker',credit:0.5}]});
+            address_source.add_address_plan({plan_name:'medium', address_type:'topic', required_resources:[{name:'broker',credit:0.5}]});
             setTimeout(function () {
                 //verify address settings:
-                broker_a.verify_address_settings([{match:'small/#', maxSizeBytes:20, addressFullMessagePolicy:'FAIL'}, {match:'medium/#', maxSizeBytes:50, addressFullMessagePolicy:'FAIL'}]);
+                broker_a.verify_address_settings([{match:'queue://small/#', maxSizeBytes:20, addressFullMessagePolicy:'FAIL'}, {match:'topic://medium/#', maxSizeBytes:50, addressFullMessagePolicy:'FAIL'}]);
                 done();
             }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         }).catch(done);
