@@ -8,10 +8,15 @@ package io.enmasse.systemtest.brokered.jms;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.JmsProvider;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.*;
@@ -32,7 +37,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-public class TopicTest extends JMSTestBase {
+@ExtendWith(JmsProviderParameterResolver.class)
+public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
 
     private Hashtable<Object, Object> env;
@@ -44,11 +50,12 @@ public class TopicTest extends JMSTestBase {
     private Destination addressTopic;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp(JmsProvider jmsProvider) throws Exception {
         addressTopic = Destination.topic(topic, getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
-        env = setUpEnv("amqps://" + getMessagingRoute(sharedAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = jmsProvider.setUpEnv("amqps://" + getMessagingRoute(sharedAddressSpace).toString(),
+                defaultCredentials.getUsername(), defaultCredentials.getPassword(), "testJmsCliId",
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -72,8 +79,9 @@ public class TopicTest extends JMSTestBase {
 
     }
 
-    private Context createContextForShared() throws JMSException, NamingException {
-        Hashtable env2 = setUpEnv("amqps://" + getMessagingRoute(sharedAddressSpace).toString(), jmsUsername, jmsPassword,
+    private Context createContextForShared(JmsProvider jmsProvider) throws JMSException, NamingException {
+        Hashtable env2 = jmsProvider.setUpEnv("amqps://" + getMessagingRoute(sharedAddressSpace).toString(),
+                defaultCredentials.getUsername(), defaultCredentials.getPassword(),
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -81,7 +89,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     @Test
-    public void testMessageSubscription() throws Exception {
+    public void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
         log.info("testMessageSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic testTopic = (Topic) context.lookup(topic);
@@ -89,7 +97,7 @@ public class TopicTest extends JMSTestBase {
         MessageProducer messageProducer = session.createProducer(testTopic);
 
         int count = 1000;
-        List<Message> listMsgs = generateMessages(session, count);
+        List<Message> listMsgs = jmsProvider.generateMessages(session, count);
 
         CompletableFuture<List<Message>> received = new CompletableFuture<>();
 
@@ -103,7 +111,7 @@ public class TopicTest extends JMSTestBase {
         };
         subscriber1.setMessageListener(myListener);
 
-        sendMessages(messageProducer, listMsgs);
+        jmsProvider.sendMessages(messageProducer, listMsgs);
         log.info("messages sent");
 
         assertThat("Wrong count of messages received", received.get(30, TimeUnit.SECONDS).size(), is(count));
@@ -115,7 +123,7 @@ public class TopicTest extends JMSTestBase {
 
     @Test
     @Disabled("this test can be enabled when ENTMQBR-910 will be fixed")
-    public void testMessageDurableSubscription() throws Exception {
+    public void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
         log.info("testMessageDurableSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic testTopic = (Topic) context.lookup(topic);
@@ -128,19 +136,19 @@ public class TopicTest extends JMSTestBase {
 
         int count = 100;
         String batchPrefix = "First";
-        List<Message> listMsgs = generateMessages(session, batchPrefix, count);
-        sendMessages(messageProducer, listMsgs);
+        List<Message> listMsgs = jmsProvider.generateMessages(session, batchPrefix, count);
+        jmsProvider.sendMessages(messageProducer, listMsgs);
         log.info("First batch messages sent");
 
-        List<Message> recvd1 = receiveMessages(subscriber1, count);
-        List<Message> recvd2 = receiveMessages(subscriber2, count);
+        List<Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count);
+        List<Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count);
 
         assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
-        assertMessageContent(recvd1, batchPrefix);
+        jmsProvider.assertMessageContent(recvd1, batchPrefix);
         log.info(sub1ID + " :First batch messages received");
 
         assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
-        assertMessageContent(recvd2, batchPrefix);
+        jmsProvider.assertMessageContent(recvd2, batchPrefix);
         log.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
@@ -148,21 +156,21 @@ public class TopicTest extends JMSTestBase {
         log.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
-        listMsgs = generateMessages(session, batchPrefix, count);
-        sendMessages(messageProducer, listMsgs);
+        listMsgs = jmsProvider.generateMessages(session, batchPrefix, count);
+        jmsProvider.sendMessages(messageProducer, listMsgs);
         log.info("Second batch messages sent");
 
-        recvd2 = receiveMessages(subscriber2, count);
+        recvd2 = jmsProvider.receiveMessages(subscriber2, count);
         assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
-        assertMessageContent(recvd2, batchPrefix);
+        jmsProvider.assertMessageContent(recvd2, batchPrefix);
         log.info(sub2ID + " :Second batch messages received");
 
         subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         log.info(sub1ID + " :connected");
 
-        recvd1 = receiveMessages(subscriber1, count);
+        recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
-        assertMessageContent(recvd1, batchPrefix);
+        jmsProvider.assertMessageContent(recvd1, batchPrefix);
         log.info(sub1ID + " :Second batch messages received");
 
         subscriber1.close();
@@ -173,7 +181,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     @Test
-    public void testMessageDurableSubscriptionTransacted() throws Exception {
+    public void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
         log.info("testMessageDurableSubscriptionTransacted");
         session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Topic testTopic = (Topic) context.lookup(topic);
@@ -186,14 +194,14 @@ public class TopicTest extends JMSTestBase {
         MessageProducer messageProducer = session.createProducer(testTopic);
 
         int count = 100;
-        List<Message> listMsgs = generateMessages(session, count);
-        sendMessages(messageProducer, listMsgs);
+        List<Message> listMsgs = jmsProvider.generateMessages(session, count);
+        jmsProvider.sendMessages(messageProducer, listMsgs);
         session.commit();
         log.info("messages sent");
 
-        List<Message> recvd1 = receiveMessages(subscriber1, count);
+        List<Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         session.commit();
-        List<Message> recvd2 = receiveMessages(subscriber2, count);
+        List<Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count);
         session.commit();
 
         log.info(sub1ID + " :messages received");
@@ -211,13 +219,13 @@ public class TopicTest extends JMSTestBase {
     }
 
     @Test
-    public void testSharedDurableSubscription() throws Exception {
+    public void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
         log.info("testSharedDurableSubscription");
 
-        Context context1 = createContextForShared();
+        Context context1 = createContextForShared(jmsProvider);
         ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
         Connection connection1 = connectionFactory1.createConnection();
-        Context context2 = createContextForShared();
+        Context context2 = createContextForShared(jmsProvider);
         ConnectionFactory connectionFactory2 = (ConnectionFactory) context2.lookup("qpidConnectionFactory");
         Connection connection2 = connectionFactory2.createConnection();
         connection1.start();
@@ -236,12 +244,12 @@ public class TopicTest extends JMSTestBase {
         messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
         int count = 10;
-        List<Message> listMsgs = generateMessages(session, count);
-        sendMessages(messageProducer, listMsgs);
+        List<Message> listMsgs = jmsProvider.generateMessages(session, count);
+        jmsProvider.sendMessages(messageProducer, listMsgs);
         log.info("messages sent");
 
-        List<Message> recvd1 = receiveMessages(subscriber1, count, 1);
-        List<Message> recvd2 = receiveMessages(subscriber2, count, 1);
+        List<Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count, 1);
+        List<Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count, 1);
 
         log.info(subID + " :messages received");
 
@@ -261,13 +269,13 @@ public class TopicTest extends JMSTestBase {
     }
 
     @Test
-    public void testSharedNonDurableSubscription() throws JMSException, NamingException, InterruptedException, ExecutionException, TimeoutException {
+    public void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws JMSException, NamingException, InterruptedException, ExecutionException, TimeoutException {
         log.info("testSharedNonDurableSubscription");
 
-        Context context1 = createContextForShared();
+        Context context1 = createContextForShared(jmsProvider);
         ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
         Connection connection1 = connectionFactory1.createConnection();
-        Context context2 = createContextForShared();
+        Context context2 = createContextForShared(jmsProvider);
         ConnectionFactory connectionFactory2 = (ConnectionFactory) context2.lookup("qpidConnectionFactory");
         Connection connection2 = connectionFactory2.createConnection();
         connection1.start();
@@ -285,9 +293,9 @@ public class TopicTest extends JMSTestBase {
         messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
         int count = 10;
-        List<Message> listMsgs = generateMessages(session, count);
-        List<CompletableFuture<List<Message>>> results = receiveMessagesAsync(count, subscriber1, subscriber2, subscriber3);
-        sendMessages(messageProducer, listMsgs);
+        List<Message> listMsgs = jmsProvider.generateMessages(session, count);
+        List<CompletableFuture<List<Message>>> results = jmsProvider.receiveMessagesAsync(count, subscriber1, subscriber2, subscriber3);
+        jmsProvider.sendMessages(messageProducer, listMsgs);
         log.info("messages sent");
 
         assertThat("Each message should be received only by one consumer",

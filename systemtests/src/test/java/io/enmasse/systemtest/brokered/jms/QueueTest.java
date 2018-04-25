@@ -7,9 +7,14 @@ package io.enmasse.systemtest.brokered.jms;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.JmsProvider;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.*;
@@ -22,7 +27,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class QueueTest extends JMSTestBase {
+@ExtendWith(JmsProviderParameterResolver.class)
+public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
 
     private Hashtable<Object, Object> env;
@@ -34,11 +40,12 @@ public class QueueTest extends JMSTestBase {
     private Destination addressQueue;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp(JmsProvider jmsProvider) throws Exception {
         addressQueue = Destination.queue(queue, getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
-        env = setUpEnv("amqps://" + getMessagingRoute(sharedAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = jmsProvider.setUpEnv("amqps://" + getMessagingRoute(sharedAddressSpace).toString(),
+                defaultCredentials.getUsername(), defaultCredentials.getPassword(), "testJmsCliId",
                 new HashMap<String, String>() {{
                     put("queue." + queue, queue);
                 }});
@@ -63,7 +70,7 @@ public class QueueTest extends JMSTestBase {
 
 
     @Test
-    public void transactionCommitRejectTest() throws Exception {
+    public void transactionCommitRejectTest(JmsProvider jmsProvider) throws Exception {
         log.info("testTransactionCommitReject");
         session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue testQueue = (Queue) context.lookup(queue);
@@ -74,15 +81,15 @@ public class QueueTest extends JMSTestBase {
 
         int count = 50;
 
-        List<Message> listMsgs = generateMessages(session, count);
+        List<Message> listMsgs = jmsProvider.generateMessages(session, count);
 
         //send messages and commit
-        sendMessages(sender, listMsgs);
+        jmsProvider.sendMessages(sender, listMsgs);
         session.commit();
         log.info("messages sent commit");
 
         //receive commit messages
-        recvd = receiveMessages(receiver, count, 1000);
+        recvd = jmsProvider.receiveMessages(receiver, count, 1000);
         for (Message message : recvd) {
             assertNotNull(message, "No message received");
         }
@@ -90,7 +97,7 @@ public class QueueTest extends JMSTestBase {
         log.info("messages received commit");
 
         //send messages rollback
-        sendMessages(sender, listMsgs);
+        jmsProvider.sendMessages(sender, listMsgs);
         session.rollback();
         log.info("messages sent rollback");
 
@@ -100,13 +107,13 @@ public class QueueTest extends JMSTestBase {
         log.info("queue is empty");
 
         //send messages
-        sendMessages(sender, listMsgs);
+        jmsProvider.sendMessages(sender, listMsgs);
         session.commit();
         log.info("messages sent commit");
 
         //receive messages rollback
         recvd.clear();
-        recvd = receiveMessages(receiver, count, 1000);
+        recvd = jmsProvider.receiveMessages(receiver, count, 1000);
         for (Message message : recvd) {
             assertNotNull(message, "No message received");
         }
@@ -115,7 +122,7 @@ public class QueueTest extends JMSTestBase {
 
         //receive messages
         recvd.clear();
-        recvd = receiveMessages(receiver, count, 1000);
+        recvd = jmsProvider.receiveMessages(receiver, count, 1000);
         for (Message message : recvd) {
             assertNotNull(message, "No message received");
         }
