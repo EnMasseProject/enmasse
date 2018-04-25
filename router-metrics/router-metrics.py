@@ -138,14 +138,14 @@ class RouterCollector(object):
 
     def create_collector_map(self):
         metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
-                    MetricCollector('connectionCount', 'Total number of connections to router', ['routerId'], id="totalConnectionCount"),
+                    MetricCollector('connectionCount', 'Total number of connections to router', ['id'], id="totalConnectionCount"),
                     MetricCollector('linkCount', 'Number of links to router', ['address']),
                     MetricCollector('linkCount', 'Number of consumers to router', ['address'], id="consumerCount", filter={"linkDir": "out"}),
                     MetricCollector('linkCount', 'Number of producers to router', ['address'], id="producerCount", filter={"linkDir": "in"}),
-                    MetricCollector('linkCount', 'Total number of links to router', ['routerId'], id="totalLinkCount"),
-                    MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
-                    MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
-                    MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId']),
+                    MetricCollector('linkCount', 'Total number of links to router', ['id'], id="totalLinkCount"),
+                    MetricCollector('addrCount', 'Number of addresses defined in router', ['id']),
+                    MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['id']),
+                    MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['id']),
                     MetricCollector('unsettledCount', 'Number of unsettled messages', ['address']),
                     MetricCollector('deliveryCount', 'Number of delivered messages', ['address'], "COUNTER"),
                     MetricCollector('releasedCount', 'Number of released messages', ['address'], "COUNTER"),
@@ -169,7 +169,7 @@ class RouterCollector(object):
                                   collector_map['consumerCount'], collector_map['producerCount']] }
 
     def get_router(self):
-        return self.collect_metric('org.apache.qpid.dispatch.router')
+        return self.collect_metric('org.apache.qpid.dispatch.routerStats')
 
     def get_links(self):
         links = self.collect_metric('org.apache.qpid.dispatch.router.link')
@@ -224,19 +224,21 @@ class RouterCollector(object):
             properties["entityType"] = entityType
             properties["operation"] = "QUERY"
             properties["name"] = "self"
-            message = Message(body=None, properties=properties)
+            message = Message(body={"attributeNames":[]}, properties=properties)
             response = self.client.call(message)
             if response == None:
                 return response
-            else:
+            elif response.properties["statusCode"] == 200:
                 return RouterResponse(response)
+            else:
+                print("Error querying router for %s metrics: %s" % (entityType, response.properties["statusDescription"]));
         except NameError as e:
             print("Error querying router for metrics: %s" % e)
             return None
 
 if __name__ == '__main__':
     # Start up the server to expose the metrics.
-    REGISTRY.register(RouterCollector(os.environ['ROUTER_HOST'], int(os.environ['ROUTER_PORT']), os.environ['CERT_DIR']))
+    REGISTRY.register(RouterCollector(os.environ.get('ROUTER_HOST') or 'localhost', int(os.environ.get('ROUTER_PORT') or 5672), os.environ.get('CERT_DIR')))
     start_http_server(8080)
     while True:
         time.sleep(5)
