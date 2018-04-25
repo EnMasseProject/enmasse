@@ -197,24 +197,24 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, kubernetes, budget, addressSpace, HttpMethod.POST, destinations);
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        appendAddresses(addressSpace, budget, destinations);
     }
 
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, kubernetes, budget, addressSpace, HttpMethod.PUT, destinations);
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        setAddresses(addressSpace, budget, destinations);
     }
 
     protected void appendAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
         TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.POST, destinations);
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
         TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
     protected List<URL> getAddressesPaths() throws Exception {
@@ -274,6 +274,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas, long checkInterval) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas, budget, checkInterval);
+    }
+
+    protected void scaleWithoutWait(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
+        TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas);
     }
 
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
@@ -541,14 +545,44 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws InterruptedException {
-        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, destination, budget);
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, readyRequired, destination, budget, checkInterval);
     }
 
-    protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws InterruptedException {
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget) throws InterruptedException {
+        waitForBrokerReplicas(addressSpace, destination, expectedReplicas, readyRequired, budget, 5000);
+    }
+
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination,
+                                         int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+        waitForBrokerReplicas(addressSpace, destination, expectedReplicas, true, budget, 5000);
+    }
+
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
+            InterruptedException {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
+    }
+
+    protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws
+            InterruptedException {
         TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
         TestUtils.waitForNReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, Collections.singletonMap("name", "qdrouterd"), budget);
+    }
+
+    protected void waitForAutoScale(AddressSpace addressSpace, Destination dest, int setValue, int expectedValue) throws Exception {
+        log.info("Set '{}' replicas and wait for autoscale to '{}'", setValue, expectedValue);
+        CompletableFuture<Void> scaleCheckerDown = CompletableFuture.runAsync(() -> {
+            try {
+                waitForBrokerReplicas(addressSpace, dest, setValue, false, new TimeoutBudget(2, TimeUnit.MINUTES), 1);
+                log.info("Waiting for expected replicas {} finished!", setValue);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        scaleWithoutWait(addressSpace, dest, setValue);
+        scaleCheckerDown.get(3, TimeUnit.MINUTES);
+        waitForBrokerReplicas(addressSpace, dest, expectedValue, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     /**
@@ -560,7 +594,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    protected List<String> getBrokerQueueNames(BrokerManagement brokerManagement, AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+    protected List<String> getBrokerQueueNames(BrokerManagement brokerManagement, AmqpClient
+            queueClient, Destination replyQueue, String topic) throws Exception {
         return brokerManagement.getQueueNames(queueClient, replyQueue, topic);
     }
 
@@ -573,7 +608,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    protected int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+    protected int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Destination
+            replyQueue, String topic) throws Exception {
         List<String> queueNames = getBrokerQueueNames(brokerManagement, queueClient, replyQueue, topic);
 
         AtomicInteger subscriberCount = new AtomicInteger(0);
@@ -611,7 +647,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addresses;
     }
 
-    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, KeycloakCredentials credentials,
+    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, KeycloakCredentials
+            credentials,
                                   String address, String content, int count, boolean logToOutput) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.USERNAME, credentials.getUsername());
@@ -629,14 +666,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach N receivers into one address with default username/password
      */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount) throws Exception {
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination,
+                                                   int receiverCount) throws Exception {
         return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials);
     }
 
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, KeycloakCredentials credentials) throws Exception {
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination,
+                                                   int receiverCount, KeycloakCredentials credentials) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(Argument.TIMEOUT, "120");
@@ -663,7 +702,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
-    protected List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Destination> destinations) throws Exception {
+    protected List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Destination> destinations) throws
+            Exception {
         List<AbstractClient> senders = new ArrayList<>();
 
         ArgumentMap arguments = new ArgumentMap();
@@ -695,7 +735,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach receivers to destinations (for N-th destination is attached N+1 senders)
      */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Destination> destinations) throws Exception {
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Destination> destinations) throws
+            Exception {
         List<AbstractClient> receivers = new ArrayList<>();
 
         ArgumentMap arguments = new ArgumentMap();
@@ -724,7 +765,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * create M connections with N receivers and K senders
      */
-    protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
+    protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination,
+                                             int connectionCount,
                                              int senderCount, int receiverCount, KeycloakCredentials credentials) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
@@ -758,7 +800,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * create users and groups for wildcard authz tests
      */
-    protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws Exception {
+    protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws
+            Exception {
         List<KeycloakCredentials> users = new ArrayList<>();
         if (addressSpace.getType() == AddressSpaceType.BROKERED) {
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_#", "password"));

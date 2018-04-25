@@ -326,15 +326,10 @@ public class PlansTest extends TestBase {
         Destination queue3 = Destination.queue("queue3", queuePlan.getName());
         Destination queue4 = Destination.queue("queue4", queuePlan.getName());
 
-        setAddresses(scaleAddressSpace, queue1, queue2, queue3, queue4);
+        setAddresses(scaleAddressSpace, new TimeoutBudget(8, TimeUnit.MINUTES), queue1, queue2, queue3, queue4);
 
-        //scale broker down and wait until broker StatefulSet will be scaled up to 2 automatically
-        scale(scaleAddressSpace, queue4, 1, 10);
-        TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
-
-        //scale broker to 3 pods and wait until broker StatefulSet will be scaled down to 2 automatically
-        scale(scaleAddressSpace, queue4, 3, 10);
-        TestUtils.waitForNBrokerReplicas(kubernetes, scaleAddressSpace.getNamespace(), 2, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
+        waitForAutoScale(scaleAddressSpace, queue4, 1, 2);
+        waitForAutoScale(scaleAddressSpace, queue4, 3, 2);
     }
 
     @Test
