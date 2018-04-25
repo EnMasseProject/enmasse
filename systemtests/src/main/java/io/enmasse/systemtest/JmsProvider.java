@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 
 import javax.jms.*;
 import javax.naming.Context;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -47,7 +44,7 @@ public class JmsProvider {
     }
 
     public List<Message> generateMessages(Session session, String prefix, int count) {
-        List<Message> messages = new ArrayList<>();
+        List<Message> messages = new LinkedList<>();
         StringBuilder sb = new StringBuilder();
         IntStream.range(0, count).forEach(i -> {
             try {
@@ -60,11 +57,15 @@ public class JmsProvider {
         return messages;
     }
 
-
     public void sendMessages(MessageProducer producer, List<Message> messages) {
+        sendMessages(producer, messages, DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+    }
+
+
+    public void sendMessages(MessageProducer producer, List<Message> messages, int mode, int priority, long ttl) {
         messages.forEach(m -> {
             try {
-                producer.send(m);
+                producer.send(m, mode, priority, ttl);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -74,7 +75,7 @@ public class JmsProvider {
     public List<CompletableFuture<List<Message>>> receiveMessagesAsync(int count, MessageConsumer... consumer) throws JMSException {
         AtomicInteger totalCount = new AtomicInteger(count);
         List<CompletableFuture<List<Message>>> resultsList = new ArrayList<>();
-        List<List<Message>> receivedResList = new ArrayList<>();
+        List<List<Message>> receivedResList = new LinkedList<>();
 
         for (int i = 0; i < consumer.length; i++) {
             final int index = i;
@@ -96,7 +97,7 @@ public class JmsProvider {
 
     public CompletableFuture<List<Message>> receiveMessagesAsync(MessageConsumer consumer, AtomicInteger totalCount) throws JMSException {
         CompletableFuture<List<Message>> received = new CompletableFuture<>();
-        List<Message> recvd = new ArrayList<>();
+        List<Message> recvd = new LinkedList<>();
         MessageListener myListener = message -> {
             log.info("Mesages received" + message + " count: " + totalCount.get());
             recvd.add(message);
@@ -113,7 +114,7 @@ public class JmsProvider {
     }
 
     public List<Message> receiveMessages(MessageConsumer consumer, int count, long timeout) {
-        List<Message> recvd = new ArrayList<>();
+        List<Message> recvd = new LinkedList<>();
         IntStream.range(0, count).forEach(i -> {
             try {
                 recvd.add(timeout > 0 ? consumer.receive(timeout) : consumer.receive());

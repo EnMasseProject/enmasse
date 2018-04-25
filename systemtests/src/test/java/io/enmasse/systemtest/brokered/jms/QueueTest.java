@@ -24,8 +24,11 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
@@ -128,6 +131,43 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
         }
         session.commit();
         log.info("messages received commit");
+
+        sender.close();
+        receiver.close();
+    }
+
+    @Test
+    public void testLoadMessages(JmsProvider jmsProvider) throws Exception {
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue testQueue = (Queue) context.lookup(queue);
+
+        MessageProducer sender = session.createProducer(testQueue);
+        MessageConsumer receiver = session.createConsumer(testQueue);
+        List<Message> recvd;
+        List<Message> recvd2;
+
+        int count = 60_895;
+        int batch = new java.util.Random().nextInt(count) + 1;
+
+        List<Message> listMsgs = jmsProvider.generateMessages(session, count);
+
+        jmsProvider.sendMessages(sender, listMsgs, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+        log.info("{} messages sent", count);
+
+        recvd = jmsProvider.receiveMessages(receiver, batch, 1000);
+        assertThat("Wrong count fo received messages", recvd.size(), is(batch));
+        log.info("{} messages received", batch);
+
+        recvd2 = jmsProvider.receiveMessages(receiver, count - batch, 1000);
+        assertThat("Wrong count fo received messages", recvd2.size(), is(count - batch));
+        log.info("{} messages received", count - batch);
+
+        jmsProvider.sendMessages(sender, listMsgs, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+        log.info("{} messages sent", count);
+
+        recvd = jmsProvider.receiveMessages(receiver, count, 1000);
+        assertThat("Wrong count fo received messages", recvd.size(), is(count));
+        log.info("{} messages received", count);
 
         sender.close();
         receiver.close();
