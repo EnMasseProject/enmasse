@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 
 import javax.jms.*;
 import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +18,61 @@ import java.util.stream.IntStream;
 
 public class JmsProvider {
     private static Logger log = CustomLogger.getLogger();
+    private Context context;
+    private Connection connection;
+
+    public Context getContext() {
+        return context;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public javax.jms.Destination getDestination(String address) throws NamingException {
+        return (javax.jms.Destination) context.lookup(address);
+    }
+
+    private HashMap<String, String> createAddressMap(Destination destination) {
+        String identification;
+        if (destination.getType().equals(AddressType.QUEUE.toString())) {
+            identification = "queue.";
+        } else {
+            identification = "topic.";
+        }
+
+        return new HashMap<String, String>() {{
+            put(identification + destination.getAddress(), destination.getAddress());
+        }};
+    }
+
+    public Context createContext(String route, KeycloakCredentials credentials, String cliID, Destination address) throws Exception {
+        Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(), cliID,
+                createAddressMap(address));
+        context = new InitialContext(env);
+        return context;
+    }
+
+    public Context createContextForShared(String route, KeycloakCredentials credentials, Destination address) throws Exception {
+        Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(),
+                createAddressMap(address));
+        return new InitialContext(env);
+    }
+
+    public Connection createConnection(String route, KeycloakCredentials credentials, String cliID, Destination address) throws Exception {
+        context = createContext(route, credentials, cliID, address);
+        ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
+        connection = connectionFactory.createConnection();
+        return connection;
+    }
+
+    public Connection createConnection(Context context) throws Exception {
+        this.context = context;
+        ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
+        connection = connectionFactory.createConnection();
+        return connection;
+    }
+
 
     public Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
         return setUpEnv(url, username, password, "", prop);
@@ -58,7 +115,7 @@ public class JmsProvider {
     }
 
     public void sendMessages(MessageProducer producer, List<Message> messages) {
-        sendMessages(producer, messages, DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+        sendMessages(producer, messages, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
     }
 
 
