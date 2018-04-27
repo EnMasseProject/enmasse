@@ -49,6 +49,16 @@ function merge() {
     return c;
 }
 
+function strip_prefix(name) {
+    if (name.indexOf('queue://') === 0 || name.indexOf('topic://') === 0) {
+        var parts = name.substring(8).split('/');
+        var plan = parts.shift();
+        return parts.join('/');
+    } else {
+        return name;
+    }
+}
+
 function BrokerStats (env) {
     this.queues = {};
     this.brokers = create_podgroup();
@@ -73,9 +83,10 @@ BrokerStats.prototype._retrieve = function() {
     return Promise.all(brokers.map(list_addresses)).then(function (results) {
         var stats = {};
         for (var i = 0; i < results.length; i++) {
-            for (var name in results[i]) {
+            for (var n in results[i]) {
+                var name = strip_prefix(n);
                 var s = get_stats_for_address(stats, name);
-                var shard = merge(results[i][name], {name:brokers[i].connection.container_id});
+                var shard = merge(results[i][n], {name:brokers[i].connection.container_id});
                 s.depth += shard.messages;
                 s.shards.push(shard);
             }

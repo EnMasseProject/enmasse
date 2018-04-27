@@ -165,8 +165,11 @@ function MockBroker (name) {
         },
         removeAddressSettings : function (match) {
             if (myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.match === match; }) !== 1) {
-                throw new Error('error deleting address settings ' + match);
+                throw new Error('error deleting address settings %j', match);
             }
+        },
+        getAddressSettingsAsJSON : function (match) {
+            return JSON.stringify(self.objects.filter(function (o) { return o.type === 'address_settings' && o.match === match; })[0]);
         },
         listAddresses : function () {
             var items = self.get('address');
@@ -247,7 +250,7 @@ MockBroker.prototype.on_message = function (context) {
             throw new Error('no such resource: ' + resource);
         }
     } catch (e) {
-        console.log('invocation of ' + operation + ' on ' + resource + ' failed: ' + e);
+        console.log('invocation of %s on %s failed: %s', operation, resource, e);
         if (reply_link) {
             reply_link.send({application_properties:{_AMQ_OperationSucceeded:false}, body:util.format('%s', e)});
         }

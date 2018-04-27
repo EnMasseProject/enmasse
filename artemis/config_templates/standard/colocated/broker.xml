@@ -69,7 +69,7 @@ under the License.
 
       <acceptors>
          <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576</acceptor>
-         <acceptor name="amqp">tcp://0.0.0.0:5673?protocols=AMQP;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
+         <acceptor name="amqp">tcp://0.0.0.0:5673?protocols=AMQP;multicastPrefix=topic://;anycastPrefix=queue://;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
       </acceptors>
 
 

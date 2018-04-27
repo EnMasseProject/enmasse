@@ -25,14 +25,11 @@ function authenticate(credentials, options) {
         if( credentials && credentials.username ) {
             options.username = credentials.username;
             if (credentials.password) {
-                log.info('authenticating as %s using PLAIN', options.username);
                 options.password = credentials.password;
             } else if (credentials.token) {
-                log.info('authenticating as %s using XOAUTH2', options.username);
                 options.token = credentials.token;
             }
         } else {
-            log.info('authenticating as anonymous');
             options.username = "anonymous";
         }
 

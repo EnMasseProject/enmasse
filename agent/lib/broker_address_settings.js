@@ -15,12 +15,23 @@
  */
 'use strict';
 
-var log = require("./log.js").logger();
+var events = require('events');
+var util = require('util');
+var log = require('./log.js').logger();
 var kubernetes = require('./kubernetes.js');
 var myutils = require('./utils.js');
+var artemis = require('./artemis.js');
 
-function kubernetes_resource_compare(a, b) {
-    return myutils.string_compare(a.metadata.name, b.metadata.name);
+function match_compare(a, b) {
+    return myutils.string_compare(a.match, b.match);
+}
+
+function get_match(plan) {
+    return plan.addressType + '://' + plan.metadata.name + '/#';
+}
+
+function extract_match(o) {
+    return o.match;
 }
 
 function extract_address_plan(object) {
@@ -36,85 +47,118 @@ function required_broker_resource(plan) {
     return brokerRequired ? brokerRequired.credit : undefined;
 }
 
-function same_broker_resource(a, b) {
-    return required_broker_resource(a) === required_broker_resource(b);
+function equivalent_settings(a, b) {
+    return a.maxSizeBytes === b.maxSizeBytes && a.addressFullMessagePolicy === b.addressFullMessagePolicy;
+}
+
+function to_address_setting(global_max_size, plan) {
+    var r = required_broker_resource(plan);
+    if (r && r > 0 && r < 1) {
+        return {
+            match: get_match(plan),
+            maxSizeBytes: r * global_max_size,
+            addressFullMessagePolicy: 'FAIL'
+        }
+    } else {
+        log.info('not applying address settings for %s', plan.metadata.name);
+        return undefined;
+    }
+};
+
+function defined(o) {
+    return o !== undefined;
 }
 
 function BrokerAddressSettings(config) {
+    events.EventEmitter.call(this);
+    this.plans = [];
     this.watcher = kubernetes.watch('configmaps', myutils.merge({selector: 'type=address-plan'}, config));
     this.watcher.on('updated', this.updated.bind(this));
-    this.required_broker_resource = {};
-    this.last = undefined;
 }
 
-BrokerAddressSettings.prototype.wait_for_plans = function () {
-    var self = this;
-    return new Promise(function (resolve, reject) {
-        self.watcher.once('updated', function () {
-            log.info('plans have been retrieved');
-        });
-    });
-}
+util.inherits(BrokerAddressSettings, events.EventEmitter);
 
-BrokerAddressSettings.prototype.update_settings = function (plan) {
-    var r = required_broker_resource(plan);
-    if (r && r > 0 && r < 1) {
-        this.required_broker_resource[plan.metadata.name] = r;
-        log.info('updated required broker resource for %s: %d', plan.metadata.name, this.required_broker_resource[plan.metadata.name]);
-    }
-};
-
-BrokerAddressSettings.prototype.generate_address_settings = function (plan, global_max_size) {
-    if (global_max_size) {
-        var r = this.required_broker_resource[plan];
-        if (r) {
-            return {
-                maxSizeBytes: r * global_max_size,
-                addressFullMessagePolicy: 'FAIL'
-            };
-        } else {
-            log.info('no broker resource required for %s, therefore not applying address settings', plan);
-        }
-    } else {
-        log.info('no global max, therefore not applying address settings');
-    }
-};
-
-BrokerAddressSettings.prototype.delete_settings = function (plan) {
-    delete this.required_broker_resource[plan.metadata.name];
-    log.info('deleted required broker resource for %s', plan.metadata.name);
+BrokerAddressSettings.prototype.close = function () {
+    this.watcher.close();
 };
 
 BrokerAddressSettings.prototype.updated = function (objects) {
-    var plans = objects.map(extract_address_plan).filter(required_broker_resource);
-    plans.sort(kubernetes_resource_compare);
-    var changes = myutils.changes(this.last, plans, kubernetes_resource_compare, same_broker_resource);
-    this.last = plans;
-    if (changes) {
-        log.info('address plans: %s', changes.description);
-        changes.added.map(this.update_settings.bind(this));
-        changes.modified.map(this.update_settings.bind(this));
-        changes.removed.map(this.delete_settings.bind(this));
-    }
+    this.plans = objects.map(extract_address_plan);
+    this.emit('changed', this.plans);
 };
 
-BrokerAddressSettings.prototype.get_address_settings_async = function (address, global_max_size_promise) {
+BrokerAddressSettings.prototype.create_controller = function (connection) {
+    var controller = new AddressSettingsController(connection);
+    if (this.plans.length) {
+        controller.on_changed(this.plans);
+    }
+    this.on('changed', controller.on_changed.bind(controller));
+    return controller;
+};
+
+function AddressSettingsController(connection) {
+    this.broker = new artemis.Artemis(connection);
     var self = this;
-    if (this.last === undefined) {
-        return this.wait_for_plans().then(function () {
-            return global_max_size_promise.then(function (global_max_size) {
-                var settings = self.generate_address_settings(address.plan, global_max_size);
-                log.info('using settings %j for %s', settings, address.address);
-                return settings;
-            });
-        });
-    } else {
-        return global_max_size_promise.then(function (global_max_size) {
-            var settings = self.generate_address_settings(address.plan, global_max_size);
-            log.info('using settings %j for %s', settings, address.address);
-            return settings;
-        });
-    }
+    this.global_max_size = this.broker.getGlobalMaxSize();
+}
+
+AddressSettingsController.prototype.close = function () {
+    this.broker.close();
 };
 
-module.exports = BrokerAddressSettings;
+AddressSettingsController.prototype.on_changed = function (plans) {
+    var id = this.broker.connection.container_id;
+    var self = this;
+    this.global_max_size.then(function (global_max_size) {
+        if (global_max_size) {
+            log.info('global max size for broker %s is %d', id, global_max_size);
+            var desired_address_settings = plans.map(to_address_setting.bind(null, global_max_size)).filter(defined);
+            self.check_address_settings(desired_address_settings);
+        } else {
+            log.info('no global max size retrieved for %s, will not create address-settings', id);
+        }
+    }).catch(function (error) {
+        log.error('could not retrieve global max size for %s: %s', id, error);
+    });
+};
+
+AddressSettingsController.prototype.check_address_settings = function (desired_address_settings) {
+    var id = this.broker.connection.container_id;
+    var broker = this.broker;
+    function ensure_address_settings (match, settings) {
+        return broker.getAddressSettings(match).then(function (result) {
+            if (!result) {
+                return broker.addAddressSettings(match, settings).then(function () {
+                    log.info('address settings %s created on %s', match, id);
+                });
+            } else if (!equivalent_settings(settings, result)) {
+                log.info('recreating address settings %s on %s (%j != %j)', match, id, settings, result);
+                console.log('recreating address settings %s on %s', match, id);
+                return broker.removeAddressSettings(match).then(function() {
+                    log.info('address settings %s removed on %s', match, id);
+                    broker.addAddressSettings(match, settings);
+                }).then(function () {
+                    log.info('address settings %s created on %s', match, id);
+                });
+            } else {
+                log.info('address settings %s exist on %s', match, id);
+            }
+        });
+    };
+    var promise;
+    for (var i = 0; i < desired_address_settings.length; i++) {
+        var s = desired_address_settings[i];
+        if (promise) {
+            promise.then(ensure_address_settings.bind(null, s.match, s));
+        } else {
+            promise = ensure_address_settings(s.match, s);
+        }
+    }
+    promise.then(function () {
+        log.info('desired address settings created on %s', id);
+    });
+};
+
+module.exports.controller_factory = function (env) {
+    return new BrokerAddressSettings(env);
+}

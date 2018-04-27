@@ -473,6 +473,12 @@ Artemis.prototype.removeAddressSettings = function (match) {
     return this._request('broker', 'removeAddressSettings', [match]);
 };
 
+Artemis.prototype.getAddressSettings = function (match) {
+    return this._request('broker', 'getAddressSettingsAsJSON', [match]).then(function (result) {
+        return JSON.parse(result);
+    });
+}
+
 Artemis.prototype.deleteAddressAndBindings = function (address) {
     var self = this;
     return this.deleteBindingsFor(address).then(function () {

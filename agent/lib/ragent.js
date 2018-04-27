@@ -50,7 +50,7 @@ function get_product (connection) {
     }
 }
 
-function Ragent() {
+function Ragent(create_broker_controller) {
     this.known_routers = {};
     this.connected_routers = {};
     this.connected_brokers = {};
@@ -61,6 +61,7 @@ function Ragent() {
     this.container = amqp.create_container();
     this.container.sasl_server_mechanisms.enable_anonymous();
     this.configure_handlers();
+    this.create_broker_controller = create_broker_controller || broker_controller.create_controller;
 }
 
 Ragent.prototype.subscribe = function (context) {
@@ -147,7 +148,8 @@ function transform_address (addr) {
         address: addr.address,
         multicast: (addr.type === 'multicast' || addr.type === 'topic'),
         store_and_forward: (addr.type === 'queue' || addr.type === 'topic'),
-        allocated_to: addr.allocated_to
+        allocated_to: addr.allocated_to,
+        plan: addr.plan
     };
 }
 
@@ -201,9 +203,11 @@ Ragent.prototype.sync_brokers = function (addresses) {
 }
 
 Ragent.prototype.sync_broker = function (broker, addresses) {
-    var allocated = addresses.filter(if_allocated_to(broker.id));
-    log.debug('syncing broker %s with %j', broker.id, allocated.map(get_address));
-    broker.sync_addresses(allocated);
+    if (broker.sync_addresses) {
+        var allocated = addresses.filter(if_allocated_to(broker.id));
+        log.debug('syncing broker %s with %j', broker.id, allocated.map(get_address));
+        broker.sync_addresses(allocated);
+    }
 }
 
 var connection_properties = {product:'ragent', container_id:process.env.HOSTNAME};
@@ -275,7 +279,7 @@ Ragent.prototype.configure_handlers = function () {
                 router.on('provisioned', self.check_router_connectors.bind(self));
             });
         } else if (product === 'apache-activemq-artemis') {
-            var broker = broker_controller.create_controller(context.connection, self.broker_address_settings, self.event_sink);
+            var broker = self.create_broker_controller(context.connection, self.event_sink);
             self.connected_brokers[broker.id] = broker;
             self.sync_broker(broker, self.address_list);
             context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
@@ -329,7 +333,6 @@ Ragent.prototype.subscribe_to_addresses = function (env) {
 Ragent.prototype.listen_probe = function (env) {
     if (env.PROBE_PORT !== undefined) {
         var probe = http.createServer(function (req, res) {
-            log.info('probe request: %s', req.url);
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end('OK');
         });
