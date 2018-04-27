@@ -35,7 +35,19 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
+#start docker logging
+DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
+${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
+LOGS_PID=$!
+echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
+
+#execute test
 run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
+
+#stop docker logging
+echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
+kill ${LOGS_PID}
+categorize_dockerlogs "${DOCKER_LOG_DIR}"
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
