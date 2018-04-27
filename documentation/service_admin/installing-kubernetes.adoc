@@ -145,9 +145,9 @@ kubectl secret tls address-controller-cert --cert=address-controller-cert/tls.cr
 +
 [options="nowrap"]
 ----
+kubectl apply -f ./resources/address-controller/address-space-definitions.yaml
 kubectl apply -f ./resources/address-controller/deployment.yaml
 kubectl apply -f ./resources/address-controller/service.yaml
-kubectl apply -f ./resources/address-controller/address-space-definitions.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
