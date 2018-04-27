@@ -25,15 +25,18 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
+#start system resources logging
 ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
 STATS_PID=$!
+echo "process for checking system resources is running with PID: ${STATS_PID}"
 
+#start docker logging
 DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
 ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
 LOGS_PID=$!
+echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
-echo "process for checking system resources is running with PID: ${STATS_PID}"
-
+#run tests
 if [ "${TEST_PROFILE}" = "systemtests-marathon" ]; then
     run_test ${TESTCASE} ${TEST_PROFILE} || failure=$(($failure + 1))
 else
@@ -41,13 +44,13 @@ else
     run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
 fi
 
-
+#stop system resources logging
 echo "process for checking system resources with PID: ${STATS_PID} will be killed"
 kill ${STATS_PID}
 
+#stop docker logging
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill ${LOGS_PID}
-
 categorize_dockerlogs "${DOCKER_LOG_DIR}"
 
 if [ $failure -gt 0 ]
