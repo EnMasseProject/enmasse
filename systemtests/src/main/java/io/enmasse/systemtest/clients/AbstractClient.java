@@ -216,6 +216,17 @@ public abstract class AbstractClient {
     }
 
     /**
+     * Run client async
+     *
+     * @param logToOutput enable logging of stdOut and stdErr on output
+     * @param timeoutInMilliseconds timeout to kill process
+     * @return future of exit status of client
+     */
+    public boolean run(int timeoutInMilliseconds, boolean logToOutput) {
+        return runClient(timeoutInMilliseconds, logToOutput);
+    }
+
+    /**
      * Run client in sync mode
      *
      * @param logToOutput enable logging of stdOut and stdErr on output

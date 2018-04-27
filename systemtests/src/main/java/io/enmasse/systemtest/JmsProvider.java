@@ -9,16 +9,70 @@ import org.slf4j.Logger;
 
 import javax.jms.*;
 import javax.naming.Context;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class JmsProvider {
     private static Logger log = CustomLogger.getLogger();
+    private Context context;
+    private Connection connection;
+
+    public Context getContext() {
+        return context;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public javax.jms.Destination getDestination(String address) throws NamingException {
+        return (javax.jms.Destination) context.lookup(address);
+    }
+
+    private HashMap<String, String> createAddressMap(Destination destination) {
+        String identification;
+        if (destination.getType().equals(AddressType.QUEUE.toString())) {
+            identification = "queue.";
+        } else {
+            identification = "topic.";
+        }
+
+        return new HashMap<String, String>() {{
+            put(identification + destination.getAddress(), destination.getAddress());
+        }};
+    }
+
+    public Context createContext(String route, KeycloakCredentials credentials, String cliID, Destination address) throws Exception {
+        Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(), cliID,
+                createAddressMap(address));
+        context = new InitialContext(env);
+        return context;
+    }
+
+    public Context createContextForShared(String route, KeycloakCredentials credentials, Destination address) throws Exception {
+        Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(),
+                createAddressMap(address));
+        return new InitialContext(env);
+    }
+
+    public Connection createConnection(String route, KeycloakCredentials credentials, String cliID, Destination address) throws Exception {
+        context = createContext(route, credentials, cliID, address);
+        ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
+        connection = connectionFactory.createConnection();
+        return connection;
+    }
+
+    public Connection createConnection(Context context) throws Exception {
+        this.context = context;
+        ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
+        connection = connectionFactory.createConnection();
+        return connection;
+    }
+
 
     public Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
         return setUpEnv(url, username, password, "", prop);
@@ -47,7 +101,7 @@ public class JmsProvider {
     }
 
     public List<Message> generateMessages(Session session, String prefix, int count) {
-        List<Message> messages = new ArrayList<>();
+        List<Message> messages = new LinkedList<>();
         StringBuilder sb = new StringBuilder();
         IntStream.range(0, count).forEach(i -> {
             try {
@@ -60,11 +114,15 @@ public class JmsProvider {
         return messages;
     }
 
-
     public void sendMessages(MessageProducer producer, List<Message> messages) {
+        sendMessages(producer, messages, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+    }
+
+
+    public void sendMessages(MessageProducer producer, List<Message> messages, int mode, int priority, long ttl) {
         messages.forEach(m -> {
             try {
-                producer.send(m);
+                producer.send(m, mode, priority, ttl);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -74,7 +132,7 @@ public class JmsProvider {
     public List<CompletableFuture<List<Message>>> receiveMessagesAsync(int count, MessageConsumer... consumer) throws JMSException {
         AtomicInteger totalCount = new AtomicInteger(count);
         List<CompletableFuture<List<Message>>> resultsList = new ArrayList<>();
-        List<List<Message>> receivedResList = new ArrayList<>();
+        List<List<Message>> receivedResList = new LinkedList<>();
 
         for (int i = 0; i < consumer.length; i++) {
             final int index = i;
@@ -96,7 +154,7 @@ public class JmsProvider {
 
     public CompletableFuture<List<Message>> receiveMessagesAsync(MessageConsumer consumer, AtomicInteger totalCount) throws JMSException {
         CompletableFuture<List<Message>> received = new CompletableFuture<>();
-        List<Message> recvd = new ArrayList<>();
+        List<Message> recvd = new LinkedList<>();
         MessageListener myListener = message -> {
             log.info("Mesages received" + message + " count: " + totalCount.get());
             recvd.add(message);
@@ -113,7 +171,7 @@ public class JmsProvider {
     }
 
     public List<Message> receiveMessages(MessageConsumer consumer, int count, long timeout) {
-        List<Message> recvd = new ArrayList<>();
+        List<Message> recvd = new LinkedList<>();
         IntStream.range(0, count).forEach(i -> {
             try {
                 recvd.add(timeout > 0 ? consumer.receive(timeout) : consumer.receive());
