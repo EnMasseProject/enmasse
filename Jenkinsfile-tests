@@ -89,7 +89,7 @@ pipeline {
             //store test results from build and system tests
             junit '**/TEST-*.xml'
 
-            //archive test results and openshift lofs
+            //archive test results and openshift logs
             archive '**/TEST-*.xml'
             archive 'templates/install/**'
             sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${env.CORES_DIR} artifacts"
