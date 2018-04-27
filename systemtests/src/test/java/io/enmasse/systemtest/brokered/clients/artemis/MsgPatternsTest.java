@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@Disabled("core client has still issue with trustAll")
 @ExtendWith(ArtemisManagementParameterResolver.class)
 public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
