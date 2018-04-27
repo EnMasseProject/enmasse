@@ -234,7 +234,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         for (int i = 0; i < customersCount; i++) {
             //define users
-            List<KeycloakCredentials> users = new LinkedList<>();
+            ArrayList<KeycloakCredentials> users = new ArrayList<>(usersCount);
             for (int j = 0; j < usersCount; j++) {
                 users.add(new KeycloakCredentials(
                         String.format("uname.%s.%s", i, j),
@@ -247,7 +247,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
                 destinations[destI] = Destination.queue(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
             }
 
-            //run async: append addresse; create users; send/receive messages
+            //run async: append addresses; create users; send/receive messages
             final int customerIndex = i;
             company.put(CompletableFuture.runAsync(() ->
             {
@@ -262,7 +262,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             }), users);
         }
 
-        //once one of the doMessaging method then remove appropriate users
+        //once one of the doMessaging method is finished  then remove appropriate users
         for (Map.Entry<CompletableFuture<Void>, List<KeycloakCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
             removeUsers(sharedAddressSpace, customer.getValue().stream().map(KeycloakCredentials::getUsername).collect(Collectors.toList()));

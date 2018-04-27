@@ -231,7 +231,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * @throws Exception
      */
     protected void doMessaging(List<Destination> dest, List<KeycloakCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
-        List<AmqpClient> clients = new LinkedList<>();
+        ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
         String sufix = isBrokered(sharedAddressSpace) ? "#" : "*";
         users.forEach((user) -> {
             try {
@@ -241,8 +241,6 @@ public abstract class TestBaseWithShared extends TestBase {
                 AmqpClient queueClient = amqpClientFactory.createQueueClient();
                 queueClient.getConnectOptions().setCredentials(user);
                 clients.add(queueClient);
-
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
