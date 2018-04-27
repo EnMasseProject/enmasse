@@ -269,10 +269,10 @@ oc create configmap address-controller-config --from-literal=enableRbac=true
 +
 [options="nowrap"]
 ----
+oc create -f ./resources/address-controller/address-space-definitions.yaml
 oc create -f ./resources/address-controller/deployment.yaml
 oc create -f ./resources/address-controller/service.yaml
 oc create -f ./resources/address-controller/route.yaml
-oc create -f ./resources/address-controller/address-space-definitions.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
