@@ -24,7 +24,6 @@ public class HttpV1RootService {
         URI baseUri = uriInfo.getBaseUri();
         uriList.add(baseUri.resolve("/apis/enmasse.io/v1/addressspaces"));
         uriList.add(baseUri.resolve("/apis/enmasse.io/v1/addresses"));
-        uriList.add(baseUri.resolve("/apis/enmasse.io/v1/health"));
         uriList.add(baseUri.resolve("/apis/enmasse.io/v1/schema"));
         return Response.status(200).entity(uriList).build();
     }
