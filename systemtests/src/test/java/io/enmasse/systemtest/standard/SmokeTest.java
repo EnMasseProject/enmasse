@@ -6,8 +6,8 @@ package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a simple smoketest of EnMasse. If this passes, the chances of something being
@@ -108,7 +109,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private void testAnycast() throws Exception {
         AmqpClient client = amqpClientFactory.createQueueClient();
-        assertEquals(1, 2);
+
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
         Future<List<Message>> recvResult = client.recvMessages(anycast.getAddress(), msgs.size());
