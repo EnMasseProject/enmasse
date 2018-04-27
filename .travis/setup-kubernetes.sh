@@ -21,6 +21,9 @@ export CHANGE_MINIKUBE_NONE_USER=true
 mkdir $HOME/.kube || true
 touch $HOME/.kube/config
 
+sudo sh -c 'sed -e 's/journald/json-file/g' -i /etc/docker-latest/daemon.json'
+sudo systemctl restart docker && sleep 20
+
 docker run -d -p 5000:5000 registry
 
 export KUBECONFIG=$HOME/.kube/config
