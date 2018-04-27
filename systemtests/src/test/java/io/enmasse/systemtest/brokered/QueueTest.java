@@ -189,18 +189,18 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
         log.info("{} messages sent", count);
 
         recvd = jmsProvider.receiveMessages(receiver, batch, 1000);
-        assertThat("Wrong count fo received messages", recvd.size(), Matchers.is(batch));
+        assertThat("Wrong count of received messages", recvd.size(), Matchers.is(batch));
         log.info("{} messages received", batch);
 
         recvd2 = jmsProvider.receiveMessages(receiver, count - batch, 1000);
-        assertThat("Wrong count fo received messages", recvd2.size(), Matchers.is(count - batch));
+        assertThat("Wrong count of received messages", recvd2.size(), Matchers.is(count - batch));
         log.info("{} messages received", count - batch);
 
         jmsProvider.sendMessages(sender, listMsgs);
         log.info("{} messages sent", count);
 
         recvd = jmsProvider.receiveMessages(receiver, count, 1000);
-        assertThat("Wrong count fo received messages", recvd.size(), Matchers.is(count));
+        assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
         log.info("{} messages received", count);
 
         sender.close();
