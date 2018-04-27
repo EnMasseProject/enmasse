@@ -200,15 +200,28 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         appendAddresses(addressSpace, budget, destinations);
     }
 
+    protected void appendAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
+        appendAddresses(addressSpace, true, timeout, destinations);
+    }
+
+    protected void appendAddresses(AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        appendAddresses(addressSpace, wait, budget, destinations);
+    }
+
+    protected void appendAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Destination... destinations) throws Exception {
+        if (wait) {
+            TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.POST, destinations);
+        } else {
+            TestUtils.deploy(addressApiClient, addressSpace, HttpMethod.POST, destinations);
+        }
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
+    }
+
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         setAddresses(addressSpace, budget, destinations);
-    }
-
-    protected void appendAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.POST, destinations);
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
 
@@ -335,6 +348,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             throws Exception {
         for (int i = from; i < to; i++) {
             createUser(addressSpace, new KeycloakCredentials(prefixName + i, prefixPswd + i));
+        }
+    }
+
+    protected void removeUsers(AddressSpace addressSpace, List<String> users) throws Exception {
+        for (String user : users) {
+            removeUser(addressSpace, user);
         }
     }
 
@@ -581,6 +600,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         scaleWithoutWait(addressSpace, dest, setValue);
         scaleCheckerDown.get(3, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, dest, expectedValue, new TimeoutBudget(2, TimeUnit.MINUTES));
+    }
+
+    /**
+     * Wait for destinations are in isReady=true state within default timeout (5 MINUTE)
+     */
+    protected void waitForDestinationsReady(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, budget, destinations);
     }
 
     /**

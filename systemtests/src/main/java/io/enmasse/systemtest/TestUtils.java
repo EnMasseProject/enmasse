@@ -231,6 +231,10 @@ public class TestUtils {
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
+    public static void deploy(AddressApiClient apiClient, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
+        apiClient.deploy(addressSpace, httpMethod, destinations);
+    }
+
     /**
      * get path to all addresses for each address-spaces
      *
