@@ -9,12 +9,19 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.selenium.AddressWebItem;
+import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
-public class PlansTest extends TestBase {
+public class PlansTest extends TestBase implements ISeleniumProviderFirefox {
 
     private static Logger log = CustomLogger.getLogger();
     protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
@@ -517,6 +524,15 @@ public class PlansTest extends TestBase {
                 assertEquals("Pending", address.getPhase(), assertMessage);
                 assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
             }
+        }
+
+        SeleniumProvider seleniumProvider = getFirefoxSeleniumProvider();
+        ConsoleWebPage page = new ConsoleWebPage(seleniumProvider, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
+        page.openWebConsolePage();
+        page.openAddressesPageWebConsole();
+        for (Destination dest : notAllowedDest) {
+            AddressWebItem item = page.getAddressItem(dest);
+            assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
         }
 
         setAddresses(addressSpace);
