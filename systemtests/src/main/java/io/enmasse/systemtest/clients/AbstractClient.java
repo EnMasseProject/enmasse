@@ -356,7 +356,7 @@ public abstract class AbstractClient {
                     || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER)
                 args.put(Argument.BROKER, "ssl://" + args.getValues(Argument.BROKER).get(0));
             args.put(Argument.CONN_SSL_TRUST_ALL, "true");
-            args.put(Argument.CONN_SSL_VERIFY_HOST, "false");
+            args.put(Argument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
             args.put(Argument.CONN_AUTH_MECHANISM, "PLAIN");
         }
         args.remove(Argument.CONN_SSL);
