@@ -25,6 +25,7 @@ var util = require('util');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
 var AddressList = require('./address_list.js');
+var BufferedSender = require('./buffered_sender.js');
 var Registry = require('./registry.js');
 var tls_options = require('./tls_options.js');
 var myutils = require('./utils.js');
@@ -235,8 +236,23 @@ ConsoleServer.prototype.listen_probe = function (env) {
     }
 };
 
+function indexer(message) {
+    if (message.subject === 'address' && message.body) {
+        return message.body.address;
+    } else if (message.subject === 'address_deleted') {
+        return message.body;
+    } else if (message.subject === 'connection' && message.body) {
+        return message.body.id;
+    } else if (message.subject === 'connection_deleted') {
+        return message.body;
+    } else {
+        return undefined;
+    }
+}
+
 ConsoleServer.prototype.subscribe = function (name, sender) {
-    this.listeners[name] = sender;
+    var buffered_sender = new BufferedSender(sender, indexer);
+    this.listeners[name] = buffered_sender;
     this.addresses.for_each(function (address) {
         sender.send({subject:'address', body:address});
     }, this.authz.address_filter(sender.connection));
@@ -249,7 +265,7 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
         var props = {};
         props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
         props.disable_admin = !self.authz.is_admin(sender.connection);
-        sender.send({subject:'address_types', application_properties:props, body:address_types});
+        buffered_sender.send({subject:'address_types', application_properties:props, body:address_types});
     }).catch(function (error) {
         log.error('failed to get address types from address controller: %s', error);
     });
@@ -262,7 +278,7 @@ ConsoleServer.prototype.unsubscribe = function (name) {
 ConsoleServer.prototype.publish = function (message) {
     for (var name in this.listeners) {
         var sender = this.listeners[name];
-        if (this.authz.can_publish(sender, message)) {
+        if (this.authz.can_publish(sender.sender, message)) {
             sender.send(message);
         }
     }
