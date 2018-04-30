@@ -11,19 +11,18 @@ import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
 
 @Disabled("chrome driver has issue with headless mode")
-public class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard, ISeleniumProviderChrome {
+class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard, ISeleniumProviderChrome {
 
 
     @Test
-    public void testWebSocketSendReceiveQueue() throws Exception {
+    void testWebSocketSendReceiveQueue() throws Exception {
         doWebSocketSendReceive(Destination.queue("websocket-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
-    public void testWebSocketSendReceiveTopic() throws Exception {
+    void testWebSocketSendReceiveTopic() throws Exception {
         doWebSocketSendReceive(Destination.topic("websocket-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 }

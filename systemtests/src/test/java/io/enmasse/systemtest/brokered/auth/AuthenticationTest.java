@@ -10,14 +10,14 @@ import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-public class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrokered {
+class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
 
     /**
      * related github issue: #523
      */
     @Test
-    public void testStandardAuthenticationServiceRestartBrokered() throws Exception {
+    void testStandardAuthenticationServiceRestartBrokered() throws Exception {
         log.info("testStandardAuthenticationServiceRestartBrokered");
         AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(addressSpace);
@@ -35,12 +35,12 @@ public class AuthenticationTest extends AuthenticationTestBase implements ITestB
     }
 
     @Test
-    public void testStandardAuthenticationServiceBrokered() throws Exception {
+    void testStandardAuthenticationServiceBrokered() throws Exception {
         testStandardAuthenticationServiceGeneral(AddressSpaceType.BROKERED);
     }
 
     @Test
-    public void testNoneAuthenticationServiceBrokered() throws Exception {
+    void testNoneAuthenticationServiceBrokered() throws Exception {
         testNoneAuthenticationServiceGeneral(AddressSpaceType.BROKERED, anonymousUser, anonymousPswd);
     }
 }

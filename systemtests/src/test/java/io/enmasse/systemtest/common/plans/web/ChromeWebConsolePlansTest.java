@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
 @Disabled("Chrome driver does not work properly")
-public class ChromeWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderChrome {
+class ChromeWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderChrome {
 
     @Test
-    public void testCreateAddressPlan() throws Exception {
+    void testCreateAddressPlan() throws Exception {
         doTestCreateAddressPlan();
     }
 }

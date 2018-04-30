@@ -14,40 +14,40 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ArtemisManagementParameterResolver.class)
-public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
+class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
-    public void testBasicMessage() throws Exception {
+    void testBasicMessage() throws Exception {
         doBasicMessageTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testRoundRobinReceiver() throws Exception {
+    void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
+    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
 
     @Test
-    public void testMessageBrowse() throws Exception {
+    void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testDrainQueue() throws Exception {
+    void testDrainQueue() throws Exception {
         doDrainQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorQueue() throws Exception {
+    void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
+    void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath),
                 new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }

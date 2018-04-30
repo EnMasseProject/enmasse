@@ -23,13 +23,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
+class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     /**
      * related github issue: #335
      */
     @Test
-    public void testAddressTypes() throws Exception {
+    void testAddressTypes() throws Exception {
         Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(queueA);
 
@@ -65,7 +65,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
      * related github issue: #334
      */
     @Test
-    public void testCreateDeleteAddressSpace() throws Exception {
+    void testCreateDeleteAddressSpace() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace("brokered-create-delete-a", AddressSpaceType.BROKERED,
                 AuthService.STANDARD);
 
@@ -98,7 +98,7 @@ public class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test()
     @Disabled("disabled until #346 will be fixed")
-    public void testCreateAlreadyExistingAddress() throws Exception {
+    void testCreateAlreadyExistingAddress() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(addressSpaceA);
         Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));

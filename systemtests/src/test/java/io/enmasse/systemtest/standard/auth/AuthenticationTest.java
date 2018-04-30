@@ -9,15 +9,15 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
 import org.junit.jupiter.api.Test;
 
-public class AuthenticationTest extends AuthenticationTestBase implements ITestBaseStandard {
+class AuthenticationTest extends AuthenticationTestBase implements ITestBaseStandard {
 
     @Test
-    public void testStandardAuthenticationService() throws Exception {
+    void testStandardAuthenticationService() throws Exception {
         testStandardAuthenticationServiceGeneral(AddressSpaceType.STANDARD);
     }
 
     @Test
-    public void testNoneAuthenticationService() throws Exception {
+    void testNoneAuthenticationService() throws Exception {
         testNoneAuthenticationServiceGeneral(AddressSpaceType.STANDARD, null, null);
     }
 }

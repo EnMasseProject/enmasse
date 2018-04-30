@@ -9,8 +9,8 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -18,10 +18,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +63,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testColocatedQueues() throws Exception {
+    void testColocatedQueues() throws Exception {
         Destination q1 = Destination.queue("queue1", "pooled-queue");
         Destination q2 = Destination.queue("queue2", "pooled-queue");
         Destination q3 = Destination.queue("queue3", "pooled-queue");
@@ -79,7 +76,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testShardedQueues() throws Exception {
+    void testShardedQueues() throws Exception {
         Destination q1 = Destination.queue("persistedQueue1", "sharded-queue");
         Destination q2 = Destination.queue("persistedQueue2", "sharded-queue");
 
@@ -91,7 +88,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testRestApi() throws Exception {
+    void testRestApi() throws Exception {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
@@ -99,7 +96,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testCreateDeleteQueue() throws Exception {
+    void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
         Destination destExtra = Destination.queue("ext-queue", "pooled-queue");
 
@@ -116,7 +113,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             deleteAddresses(address);
             Future<List<String>> response = getAddresses(Optional.empty());
             assertThat("Extra destination was not created ",
-                    response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress())));
+                    response.get(20, TimeUnit.SECONDS), is(Collections.singletonList(destExtra.getAddress())));
             deleteAddresses(destExtra);
             response = getAddresses(Optional.empty());
             assertThat("No destinations are expected",
@@ -126,7 +123,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testMessagePriorities() throws Exception {
+    void testMessagePriorities() throws Exception {
         Destination dest = Destination.queue("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -162,7 +159,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     @Disabled("disabled due to issue #851")
-    public void testScaledown() throws Exception {
+    void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue", "sharded-queue");
         setAddresses(dest);
         scale(dest, 4);
@@ -202,7 +199,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     @Disabled("disabled due to issue #903")
-    public void testScalePooledQueueAutomatically() throws Exception {
+    void testScalePooledQueueAutomatically() throws Exception {
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 2000;
         for (int i = 0; i < destCount; i++) {

@@ -9,10 +9,10 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
-public class FirefoxWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderFirefox {
+class FirefoxWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderFirefox {
 
     @Test
-    public void testCreateAddressPlan() throws Exception {
+    void testCreateAddressPlan() throws Exception {
         doTestCreateAddressPlan();
     }
 }

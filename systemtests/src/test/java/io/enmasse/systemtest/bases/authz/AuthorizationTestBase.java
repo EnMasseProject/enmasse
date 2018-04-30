@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -255,7 +256,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 break;
         }
 
-        client.getConnectOptions().setCredentials(credentials);
+        Objects.requireNonNull(client).getConnectOptions().setCredentials(credentials);
         return client;
     }
 }

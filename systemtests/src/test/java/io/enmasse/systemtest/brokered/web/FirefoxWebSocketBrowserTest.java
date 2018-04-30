@@ -10,18 +10,17 @@ import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
 
-public class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseBrokered, ISeleniumProviderFirefox {
+class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseBrokered, ISeleniumProviderFirefox {
 
 
     @Test
-    public void testWebSocketSendReceiveQueue() throws Exception {
+    void testWebSocketSendReceiveQueue() throws Exception {
         doWebSocketSendReceive(Destination.queue("websocket-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
-    public void testWebSocketSendReceiveTopic() throws Exception {
+    void testWebSocketSendReceiveTopic() throws Exception {
         doWebSocketSendReceive(Destination.topic("websocket-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 }

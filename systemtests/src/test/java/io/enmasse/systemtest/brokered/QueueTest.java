@@ -31,12 +31,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(JmsProviderParameterResolver.class)
-public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
+class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
             connection = null;
@@ -44,7 +44,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void messageGroupTest() throws Exception {
+    void messageGroupTest() throws Exception {
         Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -68,7 +68,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
         Thread.sleep(2000);
 
         Future<Integer> sent = client.sendMessages(dest.getAddress(),
-                listOfMessages.toArray(new Message[listOfMessages.size()]));
+                listOfMessages.toArray(new Message[0]));
 
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
         assertAll(
@@ -88,7 +88,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testRestApi() throws Exception {
+    void testRestApi() throws Exception {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
 
@@ -96,7 +96,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void transactionCommitRejectTest(JmsProvider jmsProvider) throws Exception {
+    void transactionCommitRejectTest(JmsProvider jmsProvider) throws Exception {
         Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
@@ -165,7 +165,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testLoadMessages(JmsProvider jmsProvider) throws Exception {
+    void testLoadMessages(JmsProvider jmsProvider) throws Exception {
         Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 

@@ -4,6 +4,6 @@
  */
 package io.enmasse.systemtest.marathon;
 
-public interface ITestMethod {
+interface ITestMethod {
     void run() throws Exception;
 }

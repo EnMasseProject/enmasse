@@ -28,7 +28,7 @@ public abstract class TestBaseWithShared extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
 
-    protected static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
+    private static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         TestBase.deleteAddressSpace(addressSpace);
     }
 
@@ -69,7 +69,7 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     @AfterEach
-    public void tearDownShared(ExtensionContext context) throws Exception {
+    public void tearDownShared(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) { //test failed
             if (!environment.skipCleanup()) {
                 log.info(String.format("test failed: %s.%s",
@@ -95,7 +95,7 @@ public abstract class TestBaseWithShared extends TestBase {
         }
     }
 
-    protected void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
+    private void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         super.createAddressSpace(addressSpace);
     }
 
@@ -113,12 +113,12 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * check if address exists
      */
-    protected boolean addressExists(Destination destination) throws Exception {
+    private boolean addressExists(Destination destination) throws Exception {
         Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
                 new ArrayList<>());
         List<String> address = addresses.get(20, TimeUnit.SECONDS);
         log.info("found addresses");
-        address.stream().forEach(addr -> log.info("- address '{}'", addr));
+        address.forEach(addr -> log.info("- address '{}'", addr));
         log.info("looking for '{}' address", destination.getAddress());
         return address.contains(destination.getAddress());
     }
@@ -127,15 +127,15 @@ public abstract class TestBaseWithShared extends TestBase {
         return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
-    protected Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
+    private Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
         return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
     }
 
     /**
      * delete all addresses except 'dummy-address' and append new addresses
      *
-     * @param destinations
-     * @throws Exception
+     * @param destinations destinations to create
+     * @throws Exception address not ready
      */
     protected void setAddresses(Destination... destinations) throws Exception {
         if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
@@ -155,8 +155,8 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * append new addresses into address-space and sharedAddresses list
      *
-     * @param destinations
-     * @throws Exception
+     * @param destinations destinations to create
+     * @throws Exception address not ready
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
         appendAddresses(sharedAddressSpace, destinations);
@@ -165,8 +165,8 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * use DELETE html method for delete specific addresses
      *
-     * @param destinations
-     * @throws Exception
+     * @param destinations destinations to remove
+     * @throws Exception address not detleted
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
         deleteAddresses(sharedAddressSpace, destinations);
@@ -189,14 +189,14 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * attach senders to destinations
      */
-    protected List<AbstractClient> attachSenders(List<Destination> destinations) throws Exception {
+    protected List<AbstractClient> attachSenders(List<Destination> destinations) {
         return attachSenders(sharedAddressSpace, destinations);
     }
 
     /**
      * attach receivers to destinations
      */
-    protected List<AbstractClient> attachReceivers(List<Destination> destinations) throws Exception {
+    protected List<AbstractClient> attachReceivers(List<Destination> destinations) {
         return attachReceivers(sharedAddressSpace, destinations);
     }
 
@@ -204,11 +204,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
-                                             int senderCount, int receiverCount) throws Exception {
+                                             int senderCount, int receiverCount) {
         return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials);
-    }
-
-    public static String tagValue(String a) {
-        return a;
     }
 }

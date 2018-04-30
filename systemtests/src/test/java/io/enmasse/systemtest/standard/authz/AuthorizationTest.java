@@ -9,31 +9,31 @@ import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class AuthorizationTest extends AuthorizationTestBase implements ITestBaseStandard {
+class AuthorizationTest extends AuthorizationTestBase implements ITestBaseStandard {
 
     @Test
-    public void testSendAuthz() throws Exception {
+    void testSendAuthz() throws Exception {
         doTestSendAuthz();
     }
 
     @Test
-    public void testReceiveAuthz() throws Exception {
+    void testReceiveAuthz() throws Exception {
         doTestReceiveAuthz();
     }
 
     @Test
     @Disabled("related issue: #786")
-    public void testUserPermissionAfterRemoveAuthz() throws Exception {
+    void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }
 
     @Test
-    public void testSendAuthzWithWIldcards() throws Exception {
+    void testSendAuthzWithWIldcards() throws Exception {
         doTestSendAuthzWithWIldcards();
     }
 
     @Test
-    public void testReceiveAuthzWithWIldcards() throws Exception {
+    void testReceiveAuthzWithWIldcards() throws Exception {
         doTestReceiveAuthzWithWIldcards();
     }
 }

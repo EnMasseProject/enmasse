@@ -31,12 +31,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 @ExtendWith(JmsProviderParameterResolver.class)
-public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
+class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
             connection = null;
@@ -45,11 +45,11 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     @Disabled("disable due to authorization exception with create queue on topic address with wildcards")
-    public void testTopicPubSubWildcards() throws Exception {
+    void testTopicPubSubWildcards() throws Exception {
 
         int msgCount = 1000;
         int topicCount = 10;
-        int senderCount = topicCount;
+        int senderCount = 10;
         int recvCount = topicCount / 2;
 
         List<Destination> topicList = new ArrayList<>();
@@ -89,7 +89,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testRestApi() throws Exception {
+    void testRestApi() throws Exception {
         Destination t1 = Destination.topic("topic1", getDefaultPlan(AddressType.TOPIC));
         Destination t2 = Destination.topic("topic2", getDefaultPlan(AddressType.TOPIC));
 
@@ -97,7 +97,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
+    void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
         Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
@@ -136,7 +136,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
@@ -198,7 +198,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
+    void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
         Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
@@ -241,7 +241,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
@@ -290,7 +290,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    public void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 

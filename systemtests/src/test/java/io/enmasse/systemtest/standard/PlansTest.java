@@ -26,24 +26,24 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
+class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static Logger log = CustomLogger.getLogger();
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         plansProvider.setUp();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         plansProvider.tearDown();
     }
 
     @Test
     @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
-    public void testAppendAddressPlan() throws Exception {
+    void testAppendAddressPlan() throws Exception {
         List<AddressResource> addressResources = Collections.singletonList(new AddressResource("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
