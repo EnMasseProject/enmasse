@@ -16,18 +16,6 @@
 # for a login when appropriate.
 # for further parameters please see the help text.
 
-if which oc &> /dev/null
-then
-    :
-else
-    if which kubectl &> /dev/null
-    then :
-    else
-        echo "Cannot find oc or kubectl command, please check path to ensure it is installed"
-        exit 1
-    fi
-fi
-
 SCRIPTDIR=`dirname $0`
 RESOURCE_DIR=${SCRIPTDIR}/resources
 TEMPLATE_NAME=enmasse
@@ -108,6 +96,25 @@ done
 if [ "$CLUSTER_TYPE" == "openshift" ];
 then
     USE_OPENSHIFT=true
+    CMD=oc
+else
+    CMD=kubectl
+fi
+
+if [ -n "$USE_OPENSHIFT" ]; then
+    if which oc &> /dev/null
+    then
+        :
+    else
+        echo "Cannot find oc command, please check path to ensure it is installed"
+        exit 1
+    fi
+elif which kubectl &> /dev/null
+then
+    :
+else
+    echo "Cannot find oc or kubectl command, please check path to ensure it is installed"
+    exit 1
 fi
 
 source $SCRIPTDIR/common.sh
@@ -163,7 +170,7 @@ else
     fi
 fi
 
-runcmd "kubectl create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
+runcmd "$CMD create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
 
 if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
@@ -175,50 +182,50 @@ create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local"
 for auth_service in $AUTH_SERVICES
 do
     if [ "$auth_service" == "none" ]; then
-        create_self_signed_cert "kubectl" "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
-        runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/none-authservice/deployment.yaml" "Create none authservice deployment"
-        runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/none-authservice/service.yaml" "Create none authservice service"
+        create_self_signed_cert "$CMD" "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
+        runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/none-authservice/deployment.yaml" "Create none authservice deployment"
+        runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/none-authservice/service.yaml" "Create none authservice service"
     fi
     if [ "$auth_service" == "standard" ]; then
         KEYCLOAK_PASSWORD=`random_string`
-        create_self_signed_cert "kubectl" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
-        runcmd "kubectl create -n ${NAMESPACE} secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
-        runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/keycloak-deployment.yaml" "Create standard authservice deployment"
-        runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/service.yaml" "Create standard authservice service"
-        runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/controller-deployment.yaml" "Create standard authservice controller"
-        runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/pvc.yaml" "Create standard authservice persistent volume"
+        create_self_signed_cert "$CMD" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
+        runcmd "$CMD create -n ${NAMESPACE} secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
+        runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/keycloak-deployment.yaml" "Create standard authservice deployment"
+        runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/service.yaml" "Create standard authservice service"
+        runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/controller-deployment.yaml" "Create standard authservice controller"
+        runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/pvc.yaml" "Create standard authservice persistent volume"
         if [ -n "$USE_OPENSHIFT" ]; then
             runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/route.yaml" "Create standard authservice route"
         else
             runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/external-service.yaml" "Create standard authservice external service"
         fi
-        httpUrl="https://$(kubectl get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
-        runcmd "kubectl create -n ${NAMESPACE} configmap keycloak-config --from-literal=hostname=standard-authservice.${NAMESPACE}.svc --from-literal=httpUrl=$httpUrl --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
+        httpUrl="https://$($CMD get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
+        runcmd "$CMD create -n ${NAMESPACE} configmap keycloak-config --from-literal=hostname=standard-authservice.${NAMESPACE}.svc --from-literal=httpUrl=$httpUrl --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
     fi
 done
 
 if [ "$MODE" == "singletenant" ]; then
-    runcmd "kubectl create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
-    runcmd "kubectl create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
-    runcmd "kubectl create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
+    runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
+    runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
+    runcmd "$CMD create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
     if [ -n "$USE_OPENSHIFT" ]; then
         runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
     fi
 
-    create_address_space "kubectl" "default" $NAMESPACE
+    create_address_space "$CMD" "default" $NAMESPACE
 elif [ $MODE == "multitenant" ]; then
-    runcmd "kubectl create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
-    runcmd "kubectl create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
-    runcmd "kubectl create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/brokered-plans.yaml" "Create brokered address space plans"
+    runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
+    runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
+    runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/brokered-plans.yaml" "Create brokered address space plans"
 else
     echo "Unknown deployment mode $MODE"
     exit 1
 fi
 
-runcmd "kubectl create -n ${NAMESPACE} configmap address-controller-config -n ${NAMESPACE}" "Create address-controller configmap"
-runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/address-space-definitions.yaml" "Create address space definitions"
-runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/deployment.yaml" "Create address controller deployment"
-runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/service.yaml" "Create address controller service"
+runcmd "$CMD create -n ${NAMESPACE} configmap address-controller-config -n ${NAMESPACE}" "Create address-controller configmap"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/address-space-definitions.yaml" "Create address space definitions"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/deployment.yaml" "Create address controller deployment"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/service.yaml" "Create address controller service"
 
 if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/route.yaml" "Create address controller route"
