@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     private ConsoleWebPage consoleWebPage;
 
@@ -44,7 +45,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
     }
 
     @AfterEach
-    public void tearDownDrivers() throws Exception {
+    public void tearDownDrivers() {
         selenium.tearDownDrivers();
         plansProvider.tearDown();
     }
@@ -58,11 +59,11 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
      */
     protected void doTestCreateAddressPlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue1 = Arrays.asList(new AddressResource("broker", 0.15));
+        List<AddressResource> addressResourcesQueue1 = Collections.singletonList(new AddressResource("broker", 0.15));
         List<AddressResource> addressResourcesTopic2 = Arrays.asList(
                 new AddressResource("broker", 0.3),
                 new AddressResource("router", 0.2));
-        List<AddressResource> addressResourcesQueue3 = Arrays.asList(new AddressResource("broker", 0.25));
+        List<AddressResource> addressResourcesQueue3 = Collections.singletonList(new AddressResource("broker", 0.25));
         AddressPlan consoleQueuePlan1 = new AddressPlan("console-queue-1", AddressType.QUEUE, addressResourcesQueue1);
         AddressPlan consoleTopicPlan2 = new AddressPlan("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = new AddressPlan("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);

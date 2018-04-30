@@ -9,10 +9,10 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.junit.jupiter.api.Test;
 
-public class MulticastTest extends TestBaseWithShared implements ITestBaseStandard {
+class MulticastTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
-    public void testRestApi() throws Exception {
+    void testRestApi() throws Exception {
         Destination m1 = Destination.multicast("multicastRest1");
         Destination m2 = Destination.multicast("multicastRest2");
 

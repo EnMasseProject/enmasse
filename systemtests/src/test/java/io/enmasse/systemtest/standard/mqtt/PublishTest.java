@@ -54,7 +54,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     }
 
     @Test
-    public void testPublishQoS0() throws Exception {
+    void testPublishQoS0() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
         List<Integer> publisherQos = Arrays.asList(0, 0, 0);
@@ -63,7 +63,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     }
 
     @Test
-    public void testPublishQoS1() throws Exception {
+    void testPublishQoS1() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
         List<Integer> publisherQos = Arrays.asList(1, 1, 1);
@@ -71,7 +71,9 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
         this.publish(messages, publisherQos, 1);
     }
 
-    public void testPublishQoS2() throws Exception {
+    @Test
+    @Disabled
+    void testPublishQoS2() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
         List<Integer> publisherQos = Arrays.asList(2, 2, 2);
@@ -81,7 +83,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     @Disabled("related issue: #?")
-    public void testRetainedMessages() throws Exception {
+    void testRetainedMessages() throws Exception {
         Destination topic = Destination.topic("retained-message-topic", "sharded-topic");
         setAddresses(topic);
 

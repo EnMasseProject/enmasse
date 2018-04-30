@@ -34,22 +34,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
-public class AddressControllerApiTest extends TestBase {
+class AddressControllerApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         plansProvider.setUp();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         plansProvider.tearDown();
     }
 
     @Test
-    public void testRestApiGetSchema() throws Exception {
+    void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = new AddressPlan("test-schema-rest-api-addr-plan", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 0.6)));
         plansProvider.createAddressPlanConfig(queuePlan);
@@ -85,7 +85,7 @@ public class AddressControllerApiTest extends TestBase {
 
     @Test
     @Disabled("disabled due to issue: #947")
-    public void testVerifyRoutes() throws Exception {
+    void testVerifyRoutes() throws Exception {
         AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
         AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);
         createAddressSpaceList(addrSpaceAlfa, addrSpaceBeta);
@@ -105,7 +105,7 @@ public class AddressControllerApiTest extends TestBase {
     }
 
     @Test
-    public void testConsoleMessagingMqttRoutes() throws Exception {
+    void testConsoleMessagingMqttRoutes() throws Exception {
         AddressSpace addressSpace = new AddressSpace("routes-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
         String endpointPrefix = "test-endpoint-";
         addressSpace.setEndpoints(Arrays.asList(
@@ -139,8 +139,6 @@ public class AddressControllerApiTest extends TestBase {
         MqttClient mqttClient = mqttFactory.createClient();
         try {
             PublishTest.simpleMQTTSendReceive(topic, mqttClient, 3);
-        } catch (Exception ex) {
-            throw ex;
         } finally {
             mqttFactory.close();
         }
@@ -167,7 +165,7 @@ public class AddressControllerApiTest extends TestBase {
     }
 
     @Test
-    public void testRestApiAddressResourceParams() throws Exception {
+    void testRestApiAddressResourceParams() throws Exception {
         AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED);
         AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED);
         createAddressSpaceList(addressSpace, addressSpace2);

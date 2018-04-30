@@ -9,9 +9,9 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
-    public static void runTopicTest(AmqpClient client, Destination dest)
+    private static void runTopicTest(AmqpClient client, Destination dest)
             throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runTopicTest(client, dest, 1024);
     }
@@ -55,7 +55,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testColocatedTopics() throws Exception {
+    void testColocatedTopics() throws Exception {
         Destination t1 = Destination.topic("col-topic1", "pooled-topic");
         Destination t2 = Destination.topic("col-topic2", "pooled-topic");
         Destination t3 = Destination.topic("col-topic3", "pooled-topic");
@@ -68,7 +68,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testShardedTopic() throws Exception {
+    void testShardedTopic() throws Exception {
         Destination t1 = Destination.topic("shardedTopic", "sharded-topic");
         setAddresses(t1);
 
@@ -77,7 +77,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testRestApi() throws Exception {
+    void testRestApi() throws Exception {
         Destination t1 = Destination.topic("topicRest1", getDefaultPlan(AddressType.TOPIC));
         Destination t2 = Destination.topic("topicRest2", getDefaultPlan(AddressType.TOPIC));
 
@@ -85,7 +85,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testMessageSelectorsAppProperty() throws Exception {
+    void testMessageSelectorsAppProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicAppProp", "sharded-topic");
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
@@ -138,7 +138,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     }
 
-    public void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Destination dest) throws Exception {
+    private void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Destination dest) throws Exception {
         log.info("Application property selector: " + selector);
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();
@@ -166,7 +166,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         AmqpClient client2 = amqpClientFactory.createTopicClient();
         Future<List<Message>> receivedWithoutSel = client2.recvMessages(dest.getAddress(), msgsCount - 1);
 
-        Future<Integer> sent = client.sendMessages(dest.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
+        Future<Integer> sent = client.sendMessages(dest.getAddress(), listOfMessages.toArray(new Message[0]));
 
         assertThat("Wrong count of messages sent",
                 sent.get(1, TimeUnit.MINUTES), is(msgsCount));
@@ -188,7 +188,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void testMessageSelectorsProperty() throws Exception {
+    void testMessageSelectorsProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicProp", "sharded-topic");
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
@@ -229,7 +229,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     @Disabled("topic wildcards are not supported")
-    public void testTopicWildcards() throws Exception {
+    void testTopicWildcards() throws Exception {
         Destination t1 = Destination.topic("topic/No1", "sharded-topic");
         Destination t2 = Destination.topic("topic/No2", "sharded-topic");
 
@@ -255,7 +255,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     @Disabled("durable subscriptions are not supported")
-    public void testDurableLinkRoutedSubscription() throws Exception {
+    void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic", "sharded-topic");
         String linkName = "systest-durable";
         setAddresses(dest);
@@ -304,7 +304,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     @Disabled("durable subscriptions are not supported")
-    public void testDurableMessageRoutedSubscription() throws Exception {
+    void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mrtopic", "sharded-topic");
         String address = "myaddress";
         log.info("Deploying");
@@ -364,11 +364,11 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         subClient.sendMessages("$subctrl", unsub).get(1, TimeUnit.MINUTES);
     }
 
-    public class AmqpJmsSelectorFilter implements DescribedType {
+    class AmqpJmsSelectorFilter implements DescribedType {
 
         private final String selector;
 
-        public AmqpJmsSelectorFilter(String selector) {
+        AmqpJmsSelectorFilter(String selector) {
             this.selector = selector;
         }
 

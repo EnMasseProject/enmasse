@@ -7,8 +7,8 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Tests related to interoperability mqtt with amqp
  */
-public class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
+class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
 
     @Override
@@ -38,7 +38,7 @@ public class InteroperabilityTest extends TestBaseWithShared implements ITestBas
     }
 
     @Test
-    public void testSendMqttReceiveAmqp() throws Exception {
+    void testSendMqttReceiveAmqp() throws Exception {
         Destination mqttTopic = Destination.topic("mqtt-amqp-topic", "sharded-topic");
         setAddresses(mqttTopic);
 
@@ -62,7 +62,7 @@ public class InteroperabilityTest extends TestBaseWithShared implements ITestBas
 
     @Test
     @Disabled("disabled due to problems with mqtt in standard address space")
-    public void testSendAmqpReceiveMqtt() throws Exception {
+    void testSendAmqpReceiveMqtt() throws Exception {
         Destination mqttTopic = Destination.topic("amqp-mqtt-topic", "sharded-topic");
         setAddresses(mqttTopic);
 

@@ -51,7 +51,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     @AfterEach
-    public void tearDownWebConsoleTests() throws Exception {
+    public void tearDownWebConsoleTests() {
         if (clientsList != null) {
             stopClients(clientsList);
             clientsList.clear();
@@ -331,8 +331,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.clearAllFilters();
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1 + receiversBatch2),
                     consoleWebPage.getConnectionItems().size(), is(receiversBatch1 + receiversBatch2));
-        } catch (Exception ex) {
-            throw ex;
         } finally {
             removeUser(sharedAddressSpace, pavel.getUsername());
             stopClients(receiversTest);
@@ -485,7 +483,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotCreateAddresses() throws Exception {
-        Destination destination = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
         createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
@@ -623,7 +620,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     private void assertConnectionEncrypted(String message, List<ConnectionWebItem> allItems) {
-        assertThat(message, getConnectionProperty(allItems, (item -> item.isEncrypted())).size(), is(allItems.size()));
+        assertThat(message, getConnectionProperty(allItems, (ConnectionWebItem::isEncrypted)).size(), is(allItems.size()));
     }
 
     private void assertConnectionUnencrypted(String message, List<ConnectionWebItem> allItems) {
@@ -661,7 +658,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                         .replace("#", "");
                 assertTrue(rights.equals("") || item.getName().contains(rights), message);
             } else {
-                assertTrue(item.getName().equals(group.replace("view_", "")), message);
+                assertEquals(item.getName(), group.replace("view_", ""), message);
             }
         }
     }
@@ -671,7 +668,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         if (connections == null || connections.size() == 0)
             fail("No connection items in console under user " + username);
         for (ConnectionWebItem conn : connections) {
-            assertTrue(conn.getUser().equals(username), message);
+            assertEquals(conn.getUser(), username, message);
         }
     }
 

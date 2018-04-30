@@ -9,6 +9,10 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.selenium.AddressWebItem;
+import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
@@ -25,23 +29,23 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
-public class PlansTest extends TestBase {
+class PlansTest extends TestBase implements ISeleniumProviderFirefox {
 
     private static Logger log = CustomLogger.getLogger();
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         plansProvider.setUp();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         plansProvider.tearDown();
     }
 
     @Test
-    public void testCreateAddressSpacePlan() throws Exception {
+    void testCreateAddressSpacePlan() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 1.0));
         List<AddressResource> addressResourcesTopic = Arrays.asList(
@@ -98,7 +102,7 @@ public class PlansTest extends TestBase {
     }
 
     @Test
-    public void testQuotaLimitsPooled() throws Exception {
+    void testQuotaLimitsPooled() throws Exception {
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-pooled-test1", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 0.6)));
@@ -189,7 +193,7 @@ public class PlansTest extends TestBase {
     }
 
     @Test
-    public void testQuotaLimitsSharded() throws Exception {
+    void testQuotaLimitsSharded() throws Exception {
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-sharded-test1", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 1.0)));
@@ -241,7 +245,7 @@ public class PlansTest extends TestBase {
     }
 
     @Test
-    public void testGlobalSizeLimitations() throws Exception {
+    void testGlobalSizeLimitations() throws Exception {
         KeycloakCredentials user = new KeycloakCredentials("test", "test");
         String messageContent = String.join("", Collections.nCopies(1024, "F"));
 
@@ -299,9 +303,9 @@ public class PlansTest extends TestBase {
     }
 
     @Test
-    public void testAutoScaleAfterManualScale() throws Exception {
+    void testAutoScaleAfterManualScale() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.4));
+        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.4));
         AddressPlan queuePlan = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlanConfig(queuePlan);
 
@@ -310,7 +314,7 @@ public class PlansTest extends TestBase {
                 new AddressSpaceResource("broker", 0.0, 9.0),
                 new AddressSpaceResource("router", 1.0, 5.0),
                 new AddressSpaceResource("aggregate", 0.0, 10.0));
-        List<AddressPlan> addressPlans = Arrays.asList(queuePlan);
+        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
         AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
@@ -334,7 +338,7 @@ public class PlansTest extends TestBase {
 
     @Test
     @Disabled("test disabled due to issue: #1134")
-    public void testMessagePersistenceAfterAutoScale() throws Exception {
+    void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueueAlpha = Collections.singletonList(new AddressResource("broker", 0.3));
         List<AddressResource> addressResourcesQueueBeta = Collections.singletonList(new AddressResource("broker", 0.6));
@@ -407,7 +411,7 @@ public class PlansTest extends TestBase {
 
     @Test
     @Disabled("test disabled due to issue: #1136")
-    public void testMessagePersistenceAfterChangePlan() throws Exception {
+    void testMessagePersistenceAfterChangePlan() throws Exception {
         List<AddressResource> addressResourcesQueueDistributed = Collections.singletonList(new AddressResource("broker", 2.0));
         List<AddressResource> addressResourcesSharded = Collections.singletonList(new AddressResource("broker", 1.0));
 
@@ -517,6 +521,15 @@ public class PlansTest extends TestBase {
                 assertEquals("Pending", address.getPhase(), assertMessage);
                 assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
             }
+        }
+
+        SeleniumProvider seleniumProvider = getFirefoxSeleniumProvider();
+        ConsoleWebPage page = new ConsoleWebPage(seleniumProvider, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
+        page.openWebConsolePage();
+        page.openAddressesPageWebConsole();
+        for (Destination dest : notAllowedDest) {
+            AddressWebItem item = page.getAddressItem(dest);
+            assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
         }
 
         setAddresses(addressSpace);

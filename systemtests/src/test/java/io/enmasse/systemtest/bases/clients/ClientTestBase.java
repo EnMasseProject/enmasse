@@ -15,7 +15,6 @@ import io.enmasse.systemtest.clients.ClientType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,14 +26,14 @@ import java.util.concurrent.Future;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class ClientTestBase extends TestBaseWithShared {
-    private final String clientFolder = "clients_tests";
-    protected ArgumentMap arguments = new ArgumentMap();
-    protected List<AbstractClient> clients;
+    private ArgumentMap arguments = new ArgumentMap();
+    private List<AbstractClient> clients;
     protected Path logPath = null;
 
     @BeforeEach
     public void setUpClientBase(TestInfo info) {
         clients = new ArrayList<>();
+        String clientFolder = "clients_tests";
         logPath = Paths.get(
                 environment.testLogDir(),
                 clientFolder,
@@ -54,7 +53,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.clear();
     }
 
-    protected String getTopicPrefix(boolean topicSwitch) {
+    private String getTopicPrefix(boolean topicSwitch) {
         return topicSwitch ? "topic://" : "";
     }
 

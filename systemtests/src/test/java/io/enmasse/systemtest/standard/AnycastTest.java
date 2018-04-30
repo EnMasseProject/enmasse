@@ -6,8 +6,8 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
     }
 
     @Test
-    public void testMultipleReceivers() throws Exception {
+    void testMultipleReceivers() throws Exception {
         Destination dest = Destination.anycast("anycastMultipleReceivers");
         setAddresses(dest);
         AmqpClient client1 = amqpClientFactory.createQueueClient();
@@ -57,7 +57,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
     }
 
     @Test
-    public void testRestApi() throws Exception {
+    void testRestApi() throws Exception {
         Destination a1 = Destination.anycast("anycastRest1");
         Destination a2 = Destination.anycast("anycastRest2");
 
@@ -65,7 +65,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
     }
 
     @Test
-    public void testScaleRouterAutomatically() throws Exception {
+    void testScaleRouterAutomatically() throws Exception {
         //deploy addresses
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 210;

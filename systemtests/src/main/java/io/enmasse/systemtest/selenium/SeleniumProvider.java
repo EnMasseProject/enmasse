@@ -42,19 +42,23 @@ public class SeleniumProvider {
 
 
     public void onFailed(ExtensionContext extensionContext) {
+        String getTestClassName = extensionContext.getTestClass().get().getName();
+        String getTestMethodName = extensionContext.getTestMethod().get().getName();
+        saveScreenShots(getTestClassName, getTestMethodName);
+    }
+
+    public void saveScreenShots(String className, String methodName) {
         try {
-            String getTestClassName = extensionContext.getTestClass().get().getName();
-            String getTestMethodName = extensionContext.getTestMethod().get().getName();
             takeScreenShot();
             Path path = Paths.get(
                     environment.testLogDir(),
                     webconsoleFolder,
-                    getTestClassName,
-                    getTestMethodName);
+                    className,
+                    methodName);
             Files.createDirectories(path);
             for (Date key : browserScreenshots.keySet()) {
                 FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
-                        String.format("%s.%s_%s.png", getTestClassName, getTestMethodName, dateFormat.format(key))).toString()));
+                        String.format("%s.%s_%s.png", className, methodName, dateFormat.format(key))).toString()));
             }
             log.info("Screenshots stored");
         } catch (Exception ex) {

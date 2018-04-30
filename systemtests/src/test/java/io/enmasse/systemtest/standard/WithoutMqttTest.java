@@ -26,11 +26,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag(isolated)
-public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
+class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
     private AddressSpace addressSpace;
 
     @BeforeEach
-    public void setupSpace() throws Exception {
+    void setupSpace() throws Exception {
         addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
                 AuthService.STANDARD);
         createAddressSpace(addressSpace, false);
@@ -41,7 +41,7 @@ public class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
     }
 
     @Test
-    public void testNoMqttDeployed() throws Exception {
+    void testNoMqttDeployed() throws Exception {
         assertThat(kubernetes.listPods(addressSpace.getNamespace()).size(), is(2));
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);

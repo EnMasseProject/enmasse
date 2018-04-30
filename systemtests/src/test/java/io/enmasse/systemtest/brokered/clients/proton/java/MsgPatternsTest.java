@@ -14,40 +14,40 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ArtemisManagementParameterResolver.class)
-public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
+class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
-    public void testBasicMessage() throws Exception {
+    void testBasicMessage() throws Exception {
         doBasicMessageTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
-    public void testRoundRobinReceiver() throws Exception {
+    void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
-    public void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
+    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
     }
 
     @Test
-    public void testMessageBrowse() throws Exception {
+    void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
-    public void testDrainQueue() throws Exception {
+    void testDrainQueue() throws Exception {
         doDrainQueueTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorQueue() throws Exception {
+    void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
+    void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath),
                 new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
     }

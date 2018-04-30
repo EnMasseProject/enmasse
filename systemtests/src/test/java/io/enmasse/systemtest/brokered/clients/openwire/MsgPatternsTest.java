@@ -15,42 +15,42 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ArtemisManagementParameterResolver.class)
-public class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
+class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
-    public void testBasicMessage() throws Exception {
+    void testBasicMessage() throws Exception {
         doBasicMessageTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver());
     }
 
     @Test
-    public void testRoundRobinReceiver() throws Exception {
+    void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
     }
 
     @Test
     @Disabled("disabled due to issue #660")
-    public void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
+    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
 
     @Test
-    public void testMessageBrowse() throws Exception {
+    void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
     }
 
     @Test
-    public void testDrainQueue() throws Exception {
+    void testDrainQueue() throws Exception {
         doDrainQueueTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver());
     }
 
     @Test
-    public void testMessageSelectorQueue() throws Exception {
+    void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver());
     }
 
     @Test
     @Disabled("disabled due to issue #660")
-    public void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
+    void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }

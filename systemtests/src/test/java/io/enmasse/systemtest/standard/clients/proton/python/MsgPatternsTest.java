@@ -15,31 +15,31 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ArtemisManagementParameterResolver.class)
-public class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
+class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
 
     @Test
-    public void testBasicMessage() throws Exception {
+    void testBasicMessage() throws Exception {
         doBasicMessageTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testRoundRobinReceiver() throws Exception {
+    void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
+    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
 
     @Test
     @Disabled("selectors for queue does not work")
-    public void testMessageSelectorQueue() throws Exception {
+    void testMessageSelectorQueue() throws Exception {
         doMessageSelectorQueueTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
-    public void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
+    void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath),
                 new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
