@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.1.0-rc1-DISPATCH-983
+FROM enmasseproject/qdrouterd-base:1.1.0-rc1-patch295-DISPATCH-983
 ARG version=latest
 
 COPY ./run_qdr.sh ./qdrouterd.conf.template colocated-topic.snippet subscriptions.snippet amqp-kafka-bridge.snippet /etc/qpid-dispatch/
