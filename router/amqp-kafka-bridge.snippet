@@ -20,13 +20,13 @@
 linkRoute {
     name: override.kafka_out
     prefix: kafka
-    dir: out
+    direction: out
     containerId: amqp-kafka-bridge-service
 }
 
 linkRoute {
     name: override.kafka_in
     prefix: kafka
-    dir: in
+    direction: in
     containerId: amqp-kafka-bridge-service
 }

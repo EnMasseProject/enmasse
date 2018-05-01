@@ -104,14 +104,14 @@ connector {
 linkRoute {
     name: override.lwt_in
     prefix: ${DOLLAR}lwt
-    dir: in
+    direction: in
     containerId: lwt-service
 }
 
 linkRoute {
     name: override.lwt_out
     prefix: ${DOLLAR}lwt
-    dir: out
+    direction: out
     containerId: lwt-service
 }
 
