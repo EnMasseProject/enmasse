@@ -1,4 +1,4 @@
-FROM enmasseproject/nodejs-base:6
+FROM enmasseproject/nodejs-base:6-1
 
 RUN mkdir -p /opt/app-root/src/
 WORKDIR /opt/app-root/src/
