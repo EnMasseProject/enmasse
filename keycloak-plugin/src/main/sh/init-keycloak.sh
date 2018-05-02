@@ -1,12 +1,12 @@
 #!/bin/sh
 KEYCLOAK_CONFIG=${KEYCLOAK_DIR}/standalone/configuration/
+OPENSHIFT_CA=${OPENSHIFT_CA:-/var/run/secrets/kubernetes.io/serviceaccount/ca.crt}
 
 cp ${KEYCLOAK_PLUGIN_DIR}/configuration/* ${KEYCLOAK_CONFIG}/
 cp ${KEYCLOAK_PLUGIN_DIR}/providers/* ${KEYCLOAK_DIR}/providers/
 
 KEYSTORE_PATH=${KEYCLOAK_DIR}/standalone/configuration/certificates.keystore
 CERT_PATH=/opt/enmasse/cert
-OPENSHIFT_CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 TRUSTSTORE_PATH=${KEYCLOAK_DIR}/standalone/configuration/truststore.jks
 
 rm -f ${KEYSTORE_PATH}
