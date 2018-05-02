@@ -506,13 +506,11 @@ function connectors_of_interest(name) {
     return name !== 'amqp-connector' && name !== 'router-connector';
 }
 
-BrokerController.prototype._ensure_connectors = function () {
+BrokerController.prototype._ensure_connectors = function (desired) {
     var self = this;
     return this.broker.getConnectorServices().then(function (results) {
         var actual = results.filter(connectors_of_interest);
         actual.sort();
-        var desired = Object.keys(self.addresses);
-        desired.sort();
 
         var difference = myutils.changes(actual, desired, myutils.string_compare);
         if (difference) {
@@ -529,7 +527,9 @@ BrokerController.prototype._ensure_connectors = function () {
 };
 
 BrokerController.prototype._sync_addresses_and_connectors = function () {
-    return this._sync_broker_addresses().then(this._ensure_connectors.bind(this));
+    var desired = Object.keys(this.addresses);
+    desired.sort();
+    return this._sync_broker_addresses().then(this._ensure_connectors.bind(this, desired));
 }
 
 module.exports.create_controller = function (connection, get_address_settings, event_sink) {
