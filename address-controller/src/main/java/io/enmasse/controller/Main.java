@@ -86,7 +86,11 @@ public class Main extends AbstractVerticle {
 
             @Override
             public String getDefaultProviderName() {
-                return "selfsigned";
+                if (options.getWildcardCertSecret() != null) {
+                    return "wildcard";
+                } else {
+                    return "selfsigned";
+                }
             }
         };
     }
