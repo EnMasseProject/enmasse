@@ -250,6 +250,7 @@ public class KeycloakClient {
     }
 
     public void deleteUser(String realm, String userName) throws Exception {
+        log.info("User '{}' will be removed", userName);
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName));
         }

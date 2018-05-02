@@ -5,9 +5,11 @@
 package io.enmasse.systemtest.bases;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -19,6 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.shared;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(shared)
 public abstract class TestBaseWithShared extends TestBase {
@@ -158,8 +161,12 @@ public abstract class TestBaseWithShared extends TestBase {
      * @param destinations destinations to create
      * @throws Exception address not ready
      */
+    protected void appendAddresses(boolean wait, Destination... destinations) throws Exception {
+        appendAddresses(sharedAddressSpace, wait, destinations);
+    }
+
     protected void appendAddresses(Destination... destinations) throws Exception {
-        appendAddresses(sharedAddressSpace, destinations);
+        appendAddresses(true, destinations);
     }
 
     /**
@@ -170,6 +177,10 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
         deleteAddresses(sharedAddressSpace, destinations);
+    }
+
+    protected void waitForDestinationsReady(Destination... destinations) throws Exception {
+        waitForDestinationsReady(sharedAddressSpace, destinations);
     }
 
     /**
@@ -206,5 +217,60 @@ public abstract class TestBaseWithShared extends TestBase {
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) {
         return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials);
+    }
+
+    /**
+     * Create users within groups (according to destNamePrefix and customerIndex), wait until destinations are ready to use
+     * and start sending and receiving messages
+     *
+     * @param dest           list of all available destinations (destinations are not in ready state presumably)
+     * @param users          list of users dedicated for sending messages into destinations above
+     * @param destNamePrefix prefix of destinations name (due to authorization)
+     * @param customerIndex  also important due to authorization (only users under this customer can send messages into dest)
+     * @param messageCount   count of messages that will be send into destinations
+     * @throws Exception
+     */
+    protected void doMessaging(List<Destination> dest, List<KeycloakCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
+        ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
+        String sufix = isBrokered(sharedAddressSpace) ? "#" : "*";
+        users.forEach((user) -> {
+            try {
+                createUser(sharedAddressSpace, user,
+                        String.format("send_%s.%s.%s", destNamePrefix, customerIndex, sufix),
+                        String.format("recv_%s.%s.%s", destNamePrefix, customerIndex, sufix));
+                AmqpClient queueClient = amqpClientFactory.createQueueClient();
+                queueClient.getConnectOptions().setCredentials(user);
+                clients.add(queueClient);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        waitForDestinationsReady(dest.toArray(new Destination[0]));
+        //start sending messages
+        int everyN = 3;
+        for (AmqpClient client : clients) {
+            for (int i = 0; i < dest.size(); i++) {
+                if (i % everyN == 0) {
+                    Future<Integer> sent = client.sendMessages(dest.get(i).getAddress(), TestUtils.generateMessages(messageCount));
+                    //wait for messages sent
+                    assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(),
+                            String.format("Incorrect count of messages send"));
+                }
+            }
+        }
+
+        //receive messages
+        for (AmqpClient client : clients) {
+            for (int i = 0; i < dest.size(); i++) {
+                if (i % everyN == 0) {
+                    Future<List<Message>> received = client.recvMessages(dest.get(i).getAddress(), messageCount);
+                    //wait for messages received
+                    assertEquals(messageCount, received.get(1, TimeUnit.MINUTES).size(),
+                            String.format("Incorrect count of messages received"));
+                }
+            }
+            client.close();
+        }
     }
 }

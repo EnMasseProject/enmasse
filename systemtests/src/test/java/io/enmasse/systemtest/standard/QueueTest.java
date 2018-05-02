@@ -5,10 +5,7 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.Count;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -16,13 +13,11 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -31,6 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
+    private static Logger log = CustomLogger.getLogger();
 
     public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runQueueTest(client, dest, 1024);
@@ -226,6 +222,52 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         }
 
         queueClient.close();
+    }
+
+    @Test
+    @Disabled("Disabled due to issue with 'missing active autoLink'")
+    public void concurrentOperationsTest() throws Exception {
+        HashMap<CompletableFuture<Void>, List<KeycloakCredentials>> company = new HashMap<>();
+        int customersCount = 10;
+        int usersCount = 5;
+        int destinationCount = 10;
+        String destNamePrefix = "queue";
+
+        for (int i = 0; i < customersCount; i++) {
+            //define users
+            ArrayList<KeycloakCredentials> users = new ArrayList<>(usersCount);
+            for (int j = 0; j < usersCount; j++) {
+                users.add(new KeycloakCredentials(
+                        String.format("uname.%s.%s", i, j),
+                        String.format("p$$wd.%s.%s", i, j)));
+            }
+
+            //define destinations
+            Destination[] destinations = new Destination[destinationCount];
+            for (int destI = 0; destI < destinationCount; destI++) {
+                destinations[destI] = Destination.queue(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
+            }
+
+            //run async: append addresses; create users; send/receive messages
+            final int customerIndex = i;
+            company.put(CompletableFuture.runAsync(() ->
+            {
+                try {
+                    int messageCount = 43;
+                    appendAddresses(false, destinations); //without wait
+                    doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fail(e.getMessage());
+                }
+            }), users);
+        }
+
+        //once one of the doMessaging method is finished  then remove appropriate users
+        for (Map.Entry<CompletableFuture<Void>, List<KeycloakCredentials>> customer : company.entrySet()) {
+            customer.getKey().get();
+            removeUsers(sharedAddressSpace, customer.getValue().stream().map(KeycloakCredentials::getUsername).collect(Collectors.toList()));
+        }
     }
 }
 
