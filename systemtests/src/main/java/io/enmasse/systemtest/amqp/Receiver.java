@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
@@ -35,7 +36,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
 
     @Override
     protected void connectionOpened(ProtonConnection conn) {
-        connectionOpened(conn, linkOptions.getLinkName().orElse(linkOptions.getSource().getAddress()), linkOptions.getSource());
+        connectionOpened(conn, linkOptions.getLinkName().orElse(UUID.randomUUID().toString()), linkOptions.getSource());
     }
 
     private void connectionOpened(ProtonConnection conn, String linkName, Source source) {
@@ -64,7 +65,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
                 log.info("Receiver link redirected to '" + relocated + "'");
                 Source newSource = linkOptions.getSource();
                 newSource.setAddress(relocated);
-                String newLinkName = linkOptions.getLinkName().orElse(newSource.getAddress());
+                String newLinkName = linkOptions.getLinkName().orElse(UUID.randomUUID().toString());
 
                 vertx.runOnContext(id -> connectionOpened(conn, newLinkName, newSource));
             } else {
