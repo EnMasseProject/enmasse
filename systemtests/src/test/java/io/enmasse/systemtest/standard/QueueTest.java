@@ -225,6 +225,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
+    @Disabled("Disabled due to issue with 'missing active autoLink'")
     public void concurrentOperationsTest() throws Exception {
         HashMap<CompletableFuture<Void>, List<KeycloakCredentials>> company = new HashMap<>();
         int customersCount = 10;
