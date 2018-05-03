@@ -40,7 +40,7 @@ LOGS_PID=$!
 echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
 #execute test
-run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
+run_test ${TESTCASE} systemtests "kubernetes" || failure=$(($failure + 1))
 
 kubectl get events --all-namespaces
 

@@ -20,7 +20,7 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
-import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -477,6 +477,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         } else {
             return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps");
         }
+    }
+
+    protected String getOCConsoleRoute() {
+        return String.format("%s/console", environment.openShiftUrl());
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {

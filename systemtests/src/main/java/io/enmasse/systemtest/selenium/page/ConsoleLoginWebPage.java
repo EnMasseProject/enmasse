@@ -2,21 +2,22 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.selenium;
+package io.enmasse.systemtest.selenium.page;
 
 
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
-public class LoginWebPage {
+public class ConsoleLoginWebPage {
 
     private static Logger log = CustomLogger.getLogger();
 
     SeleniumProvider selenium;
 
-    public LoginWebPage(SeleniumProvider selenium) {
+    public ConsoleLoginWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
     }
 
