@@ -52,8 +52,8 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlanConfig("standard");
         plansProvider.appendAddressPlan(weakQueuePlan, standardPlan);
 
-        ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 20;
+        ArrayList<Destination> dest = new ArrayList<>(destCount);
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.queue("weak-queue-" + i, weakQueuePlan.getName()));
         }

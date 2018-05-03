@@ -244,7 +244,7 @@ public class TestUtils {
      */
     public static List<URL> getAddressesPaths(AddressApiClient apiClient) throws Exception {
         JsonArray addressPaths = apiClient.getAddressesPaths();
-        List<URL> paths = new ArrayList<>();
+        List<URL> paths = new ArrayList<>(addressPaths.size());
         for (int i = 0; i < addressPaths.size(); i++) {
             paths.add(new URL(addressPaths.getString(i)));
         }
@@ -524,8 +524,8 @@ public class TestUtils {
                         .getJsonObject("authenticationService")
                         .getString("type").toUpperCase());
 
-        List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
         JsonArray endpointsJson = addressSpaceJson.getJsonObject("spec").getJsonArray("endpoints");
+        List<AddressSpaceEndpoint> endpoints = new ArrayList<>(endpointsJson.size());
         if (endpointsJson != null) {
             for (int i = 0; i < endpointsJson.size(); i++) {
                 JsonObject endpointJson = endpointsJson.getJsonObject(i);
@@ -561,9 +561,10 @@ public class TestUtils {
         JsonObject status = addressJsonObject.getJsonObject("status");
         boolean isReady = status.getBoolean("isReady");
         String phase = status.getString("phase");
-        List<String> messages = new ArrayList<>();
+        List<String> messages = null;
         try {
             JsonArray jsonMessages = status.getJsonArray("messages");
+            messages = new ArrayList<>(jsonMessages.size());
             for (int i = 0; i < jsonMessages.size(); i++) {
                 messages.add(jsonMessages.getValue(i).toString());
             }
@@ -580,9 +581,9 @@ public class TestUtils {
      */
     private static SchemaData getSchemaObject(JsonObject addressJsonObject) {
         log.info("Got Schema object: {}", addressJsonObject.toString());
-        List<AddressSpaceTypeData> data = new ArrayList<>();
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         JsonArray addressSpaceTypes = spec.getJsonArray("addressSpaceTypes");
+        List<AddressSpaceTypeData> data = new ArrayList<>(addressSpaceTypes.size());
         for (int i = 0; i < addressSpaceTypes.size(); i++) {
             data.add(new AddressSpaceTypeData(addressSpaceTypes.getJsonObject(i)));
         }

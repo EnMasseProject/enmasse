@@ -98,7 +98,7 @@ class AddressControllerApiTest extends TestBase {
             assertThat("No addresses were created, so list should be empty!",
                     TestUtils.convertToListAddress(
                             sendRestApiRequest(HttpMethod.GET, url, Optional.empty()),
-                            new ArrayList<>(),
+                            Collections.emptyList(),
                             Address.class).size(),
                     is(0));
         }

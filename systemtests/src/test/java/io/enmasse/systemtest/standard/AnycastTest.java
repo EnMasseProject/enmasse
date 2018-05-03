@@ -29,11 +29,11 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         if (clients.length == 0) {
             throw new IllegalStateException("Clients are required for this test");
         }
-        List<String> msgs = new ArrayList<>();
+        List<String> msgs = new ArrayList<>(clients.length);
         for (int i = 0; i < clients.length; i++) {
             msgs.add("message-anycast-" + i);
         }
-        List<Future<List<Message>>> received = new ArrayList<>();
+        List<Future<List<Message>>> received = new ArrayList<>(clients.length);
         for (AmqpClient client : clients) {
             received.add(client.recvMessages(dest.getAddress(), 1));
         }
@@ -67,8 +67,8 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     void testScaleRouterAutomatically() throws Exception {
         //deploy addresses
-        ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 210;
+        ArrayList<Destination> dest = new ArrayList<>(destCount);
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
         }

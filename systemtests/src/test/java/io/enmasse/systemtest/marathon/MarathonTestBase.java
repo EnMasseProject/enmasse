@@ -133,7 +133,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         int senderCount = 10;
         int recvCount = 20;
 
-        List<Destination> queueList = new ArrayList<>();
+        List<Destination> queueList = new ArrayList<>(queueCount);
 
         //create queues
         for (int i = 0; i < queueCount; i++) {
@@ -151,7 +151,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             clients.add(client);
 
             //attach receivers
-            List<Future<List<Message>>> recvResults = new ArrayList<>();
+            List<Future<List<Message>>> recvResults = new ArrayList<>(recvCount);
             for (int i = 0; i < recvCount / 2; i++) {
                 recvResults.add(client.recvMessages(queueList.get(i).getAddress(), msgCount / 2));
                 recvResults.add(client.recvMessages(queueList.get(i).getAddress(), msgCount / 2));
@@ -260,7 +260,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         int msgCount = 1000;
         int topicCount = 10;
 
-        List<Destination> topicList = new ArrayList<>();
+        List<Destination> topicList = new ArrayList<>(topicCount);
 
         //create queues
         for (int i = 0; i < topicCount; i++) {
@@ -277,7 +277,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             clients.add(client);
 
             //attach subscibers
-            List<Future<List<Message>>> recvResults = new ArrayList<>();
+            List<Future<List<Message>>> recvResults = new ArrayList<>(topicCount);
             for (int i = 0; i < topicCount; i++) {
                 recvResults.add(client.recvMessages(String.format("test-topic-pubsub-%d", i), msgCount));
             }
@@ -326,10 +326,10 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
 
     private void doAddressTest(AddressSpace addressSpace, String topicPattern,
                                String queuePattern, KeycloakCredentials credentials) throws Exception {
-        List<Destination> queueList = new ArrayList<>();
-        List<Destination> topicList = new ArrayList<>();
 
         int destinationCount = 20;
+        List<Destination> queueList = new ArrayList<>(destinationCount);
+        List<Destination> topicList = new ArrayList<>(destinationCount);
 
         for (int i = 0; i < destinationCount; i++) {
             queueList.add(Destination.queue(String.format(queuePattern, i), getDefaultPlan(AddressType.QUEUE)));

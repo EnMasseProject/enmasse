@@ -118,7 +118,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     private boolean addressExists(Destination destination) throws Exception {
         Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
-                new ArrayList<>());
+                Collections.emptyList());
         List<String> address = addresses.get(20, TimeUnit.SECONDS);
         log.info("found addresses");
         address.forEach(addr -> log.info("- address '{}'", addr));
