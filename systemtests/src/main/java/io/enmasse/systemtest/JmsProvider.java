@@ -114,6 +114,18 @@ public class JmsProvider {
         return messages;
     }
 
+    public List<Message> generateMessages(Session session, int count, int sizeInBytes) throws Exception {
+        List<Message> messages = new LinkedList<>();
+        IntStream.range(0, count).forEach(i -> {
+            try {
+                messages.add(session.createTextMessage(String.join("", Collections.nCopies(sizeInBytes, "F"))));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        });
+        return messages;
+    }
+
     public void sendMessages(MessageProducer producer, List<Message> messages) {
         sendMessages(producer, messages, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
     }

@@ -206,4 +206,23 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
         sender.close();
         receiver.close();
     }
+
+    @Test
+    void testLargeMessages(JmsProvider jmsProvider) throws Exception {
+        Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        setAddresses(addressQueue);
+
+        connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
+                "jmsCliId", addressQueue);
+        connection.start();
+
+        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+    }
 }

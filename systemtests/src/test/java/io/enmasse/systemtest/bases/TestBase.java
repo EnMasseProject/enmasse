@@ -26,11 +26,16 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 
+import javax.jms.DeliveryMode;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -945,5 +950,28 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         response = getAddresses(addressSpace, Optional.empty());
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
         log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
+    }
+
+    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Destination dest, int count) throws Exception {
+        sendReceiveLargeMessage(jmsProvider, sizeInMB, dest, count, DeliveryMode.NON_PERSISTENT);
+    }
+
+    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Destination dest, int count, int mode) throws Exception {
+        int size = sizeInMB * 1024 * 1024;
+
+        Session session = jmsProvider.getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+        javax.jms.Queue testQueue = (javax.jms.Queue) jmsProvider.getDestination(dest.getAddress());
+        List<javax.jms.Message> messages = jmsProvider.generateMessages(session, count, size);
+
+        MessageProducer sender = session.createProducer(testQueue);
+        MessageConsumer receiver = session.createConsumer(testQueue);
+        List<javax.jms.Message> recvd;
+
+        jmsProvider.sendMessages(sender, messages, mode, javax.jms.Message.DEFAULT_PRIORITY, javax.jms.Message.DEFAULT_TIME_TO_LIVE);
+        log.info("{}MB {} message sent", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+
+        recvd = jmsProvider.receiveMessages(receiver, count, 2000);
+        assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
+        log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
     }
 }
