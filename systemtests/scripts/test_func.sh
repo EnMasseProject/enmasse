@@ -39,7 +39,13 @@ function wait_until_up(){
 function run_test() {
     TESTCASE=$1
     PROFILE=${2:-systemtests}
-    wait_until_up 5 ${OPENSHIFT_PROJECT}
+    CLUSTER_TYPE=${3:-openshift}
+
+    expected_pods=5
+    if [ "$CLUSTER_TYPE" == "kubernetes" ]; then
+        expected_pods=4
+    fi
+    wait_until_up ${expected_pods} ${OPENSHIFT_PROJECT}
     wait_code=$?
     if [ $wait_code -ne 0 ]; then
         echo "SYSTEM-TESTS WILL BE NOT EXECUTED (TESTCASE=${TESTCASE}; PROFILE=${PROFILE})"

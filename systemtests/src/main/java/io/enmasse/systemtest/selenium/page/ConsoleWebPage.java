@@ -2,11 +2,13 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.selenium;
+package io.enmasse.systemtest.selenium.page;
 
 
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.resources.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -27,7 +29,7 @@ public class ConsoleWebPage {
     private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
-    private LoginWebPage loginWebPage;
+    private ConsoleLoginWebPage consoleLoginWebPage;
     private KeycloakCredentials credentials;
 
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
@@ -35,24 +37,15 @@ public class ConsoleWebPage {
         this.consoleRoute = consoleRoute;
         this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
-        this.loginWebPage = new LoginWebPage(selenium);
+        this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
         this.credentials = credentials;
 
     }
 
-    public void openWebConsolePage() throws Exception {
-        openWebConsolePage(credentials);
-    }
 
-    public void openWebConsolePage(KeycloakCredentials credentials) throws Exception {
-        log.info("Opening console web page");
-        logout();
-        selenium.getDriver().get(consoleRoute);
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        selenium.takeScreenShot();
-        if (!loginWebPage.login(credentials.getUsername(), credentials.getPassword()))
-            throw new IllegalAccessException(loginWebPage.getAlertMessage());
-    }
+    //================================================================================================
+    // Getters and finders of elements and data
+    //================================================================================================
 
     private WebElement getNavigateMenu() throws Exception {
         return selenium.getDriver().findElement(By.className("nav-pf-vertical"));
@@ -73,23 +66,6 @@ public class ConsoleWebPage {
         return returnedItem;
     }
 
-    public void openAddressesPageWebConsole() throws Exception {
-        selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
-        toolbarType = ToolbarType.ADDRESSES;
-        log.info("Addresses page opened");
-    }
-
-    public void openDashboardPageWebConsole() throws Exception {
-        selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
-        log.info("Dashboard page opened");
-    }
-
-    public void openConnectionsPageWebConsole() throws Exception {
-        selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
-        toolbarType = ToolbarType.CONNECTIONS;
-        log.info("Connections page opened");
-    }
-
     public WebElement getCreateButton() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Create")));
     }
@@ -97,15 +73,6 @@ public class ConsoleWebPage {
     public WebElement getRemoveButton() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
     }
-
-    public void clickOnCreateButton() throws Exception {
-        selenium.clickOnItem(getCreateButton());
-    }
-
-    public void clickOnRemoveButton() throws Exception {
-        selenium.clickOnItem(getRemoveButton());
-    }
-
 
     /**
      * get toolbar element with all filters for addresses/connections
@@ -269,6 +236,106 @@ public class ConsoleWebPage {
         return getUserDropDown().findElement(By.id("logout"));
     }
 
+    public Integer getResultsCount() throws Exception {
+        String resultsString = getFilterResultsToolbar()
+                .findElement(By.className("col-sm-12"))
+                .findElement(By.className("ng-binding"))
+                .getText();
+        String[] split = resultsString.split(" ");
+        if (split.length == 2) {
+            return Integer.valueOf(split[0]);
+        }
+        throw new IllegalStateException("Incorrect format of results count, Expected: \"Integer 'Results''\"");
+    }
+
+    /**
+     * get all addresses
+     */
+    public List<AddressWebItem> getAddressItems() throws Exception {
+        WebElement content = getContentContainer();
+        List<WebElement> elements = content.findElements(By.className("list-group-item"));
+        List<AddressWebItem> addressItems = new ArrayList<>();
+        for (WebElement element : elements) {
+            AddressWebItem item = new AddressWebItem(element);
+            log.info(String.format("Got address: %s", item.toString()));
+            addressItems.add(item);
+        }
+        return addressItems;
+    }
+
+    /**
+     * get specific address
+     */
+    public AddressWebItem getAddressItem(Destination destination) throws Exception {
+        AddressWebItem returnedElement = null;
+        List<AddressWebItem> addressWebItems = getAddressItems();
+        for (AddressWebItem item : addressWebItems) {
+            if (item.getName().equals(destination.getAddress()))
+                returnedElement = item;
+        }
+        return returnedElement;
+    }
+
+    /**
+     * get all connections
+     */
+    public List<ConnectionWebItem> getConnectionItems() throws Exception {
+        WebElement content = getContentContainer();
+        List<WebElement> elements = content.findElements(By.className("list-group-item"));
+        List<ConnectionWebItem> connectionItems = new ArrayList<>();
+        for (WebElement element : elements) {
+            if (!element.getAttribute("class").contains("disabled")) {
+                ConnectionWebItem item = new ConnectionWebItem(element);
+                log.info(String.format("Got connection: %s", item.toString()));
+                connectionItems.add(item);
+            }
+        }
+        return connectionItems;
+    }
+
+    //================================================================================================
+    // Operations
+    //================================================================================================
+
+    public void openWebConsolePage() throws Exception {
+        openWebConsolePage(credentials);
+    }
+
+    public void openWebConsolePage(KeycloakCredentials credentials) throws Exception {
+        log.info("Opening console web page");
+        logout();
+        selenium.getDriver().get(consoleRoute);
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
+        selenium.takeScreenShot();
+        if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword()))
+            throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
+    }
+
+    public void openAddressesPageWebConsole() throws Exception {
+        selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
+        toolbarType = ToolbarType.ADDRESSES;
+        log.info("Addresses page opened");
+    }
+
+    public void openDashboardPageWebConsole() throws Exception {
+        selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
+        log.info("Dashboard page opened");
+    }
+
+    public void openConnectionsPageWebConsole() throws Exception {
+        selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
+        toolbarType = ToolbarType.CONNECTIONS;
+        log.info("Connections page opened");
+    }
+
+    public void clickOnCreateButton() throws Exception {
+        selenium.clickOnItem(getCreateButton());
+    }
+
+    public void clickOnRemoveButton() throws Exception {
+        selenium.clickOnItem(getRemoveButton());
+    }
+
     /**
      * common method for switching type of filtering/sorting
      */
@@ -414,18 +481,6 @@ public class ConsoleWebPage {
         }
     }
 
-    public Integer getResultsCount() throws Exception {
-        String resultsString = getFilterResultsToolbar()
-                .findElement(By.className("col-sm-12"))
-                .findElement(By.className("ng-binding"))
-                .getText();
-        String[] split = resultsString.split(" ");
-        if (split.length == 2) {
-            return Integer.valueOf(split[0]);
-        }
-        throw new IllegalStateException("Incorrect format of results count, Expected: \"Integer 'Results''\"");
-    }
-
     /**
      * remove 'type' filter element by (Name: Value)
      */
@@ -467,51 +522,6 @@ public class ConsoleWebPage {
         } else if (!asc && isSortAsc()) {
             selenium.clickOnItem(getAscDescButton(), "Desc");
         }
-    }
-
-    /**
-     * get all addresses
-     */
-    public List<AddressWebItem> getAddressItems() throws Exception {
-        WebElement content = getContentContainer();
-        List<WebElement> elements = content.findElements(By.className("list-group-item"));
-        List<AddressWebItem> addressItems = new ArrayList<>();
-        for (WebElement element : elements) {
-            AddressWebItem item = new AddressWebItem(element);
-            log.info(String.format("Got address: %s", item.toString()));
-            addressItems.add(item);
-        }
-        return addressItems;
-    }
-
-    /**
-     * get specific address
-     */
-    public AddressWebItem getAddressItem(Destination destination) throws Exception {
-        AddressWebItem returnedElement = null;
-        List<AddressWebItem> addressWebItems = getAddressItems();
-        for (AddressWebItem item : addressWebItems) {
-            if (item.getName().equals(destination.getAddress()))
-                returnedElement = item;
-        }
-        return returnedElement;
-    }
-
-    /**
-     * get all connections
-     */
-    public List<ConnectionWebItem> getConnectionItems() throws Exception {
-        WebElement content = getContentContainer();
-        List<WebElement> elements = content.findElements(By.className("list-group-item"));
-        List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        for (WebElement element : elements) {
-            if (!element.getAttribute("class").contains("disabled")) {
-                ConnectionWebItem item = new ConnectionWebItem(element);
-                log.info(String.format("Got connection: %s", item.toString()));
-                connectionItems.add(item);
-            }
-        }
-        return connectionItems;
     }
 
     /**

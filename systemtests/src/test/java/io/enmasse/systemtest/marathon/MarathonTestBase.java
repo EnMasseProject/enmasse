@@ -7,7 +7,7 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;

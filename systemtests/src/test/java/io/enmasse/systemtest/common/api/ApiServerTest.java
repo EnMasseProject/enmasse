@@ -10,7 +10,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.*;
-import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.standard.mqtt.PublishTest;
