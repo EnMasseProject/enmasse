@@ -5,8 +5,8 @@
 package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
@@ -31,14 +31,16 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     void testAddressTypes() throws Exception {
         Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
-        setAddresses(queueA);
+        Destination topicB = Destination.topic("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
 
+        setAddresses(false, queueA, topicB);
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(sharedAddressSpace);
+        waitForDestinationsReady(queueA);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
         amqpQueueCli.close();
 
-        Destination topicB = Destination.topic("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(topicB);
+
+        waitForDestinationsReady(topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(sharedAddressSpace);
         List<Future<List<Message>>> recvResults = Arrays.asList(
@@ -68,26 +70,28 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
     void testCreateDeleteAddressSpace() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace("brokered-create-delete-a", AddressSpaceType.BROKERED,
                 AuthService.STANDARD);
-
         AddressSpace addressSpaceC = new AddressSpace("brokered-create-delete-c", AddressSpaceType.BROKERED,
                 AuthService.STANDARD);
-        createAddressSpaceList(addressSpaceA, addressSpaceC);
-
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
-        setAddresses(addressSpaceA, queueB);
+
+        createAddressSpaceList(addressSpaceA, addressSpaceC);
+        setAddresses(addressSpaceA, false, queueB);
+        setAddresses(addressSpaceC, false, queueB);
+
+        //addr-space-A
         KeycloakCredentials user = new KeycloakCredentials("test", "test");
         createUser(addressSpaceA, user);
-
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setCredentials(user);
+        waitForDestinationsReady(addressSpaceC, queueB);
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
         amqpQueueCliA.close();
 
-        setAddresses(addressSpaceC, queueB);
+        //addr-space-C
         createUser(addressSpaceC, user);
-
         AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setCredentials(user);
+        waitForDestinationsReady(addressSpaceC, queueB);
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
         amqpQueueCliC.close();
 

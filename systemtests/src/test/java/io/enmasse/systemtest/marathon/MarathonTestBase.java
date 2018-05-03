@@ -211,12 +211,13 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
 
         Destination queue = Destination.queue("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
         Destination topic = Destination.topic("test-auth-send-receive-topic", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpace, queue, topic);
+        setAddresses(addressSpace, false, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
         KeycloakCredentials user = new KeycloakCredentials("test-user", "test-user");
         createUser(addressSpace, user);
 
+        waitForDestinationsReady(addressSpace, queue, topic);
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, user);
@@ -339,6 +340,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         AmqpClient topicClient;
 
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
+        setAddresses(addressSpace, false, topicList.toArray(new Destination[0]));
         for (Destination queue : queueList) {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
             queueClient.getConnectOptions().setCredentials(credentials);
@@ -347,7 +349,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             QueueTest.runQueueTest(queueClient, queue, 1024);
         }
 
-        setAddresses(addressSpace, topicList.toArray(new Destination[0]));
+        waitForDestinationsReady(addressSpace, topicList.toArray(new Destination[0]));
 
         for (Destination topic : topicList) {
             topicClient = amqpClientFactory.createTopicClient(addressSpace);
