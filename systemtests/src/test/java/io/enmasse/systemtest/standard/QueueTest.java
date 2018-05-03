@@ -9,12 +9,17 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,8 +30,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
+    private Connection connection;
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
+    }
 
     public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runQueueTest(client, dest, 1024);
@@ -268,6 +283,25 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             customer.getKey().get();
             removeUsers(sharedAddressSpace, customer.getValue().stream().map(KeycloakCredentials::getUsername).collect(Collectors.toList()));
         }
+    }
+
+    @Test
+    void testLargeMessages(JmsProvider jmsProvider) throws Exception {
+        Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        setAddresses(addressQueue);
+
+        connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
+                "jmsCliId", addressQueue);
+        connection.start();
+
+        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1);
+        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
     }
 }
 
