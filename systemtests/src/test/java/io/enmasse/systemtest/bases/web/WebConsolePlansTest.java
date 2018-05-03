@@ -13,7 +13,7 @@ import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
-import io.enmasse.systemtest.selenium.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;

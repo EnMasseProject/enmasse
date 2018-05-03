@@ -9,6 +9,7 @@ import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.*;
@@ -106,7 +107,7 @@ public class SeleniumProvider {
         return driverWait;
     }
 
-    protected void takeScreenShot() {
+    public void takeScreenShot() {
         try {
             log.info("Taking screenshot");
             browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
@@ -122,15 +123,15 @@ public class SeleniumProvider {
         }
     }
 
-    protected void clickOnItem(WebElement element) throws Exception {
+    public void clickOnItem(WebElement element) throws Exception {
         clickOnItem(element, null);
     }
 
-    protected void executeJavaScript(String script) throws Exception {
+    public void executeJavaScript(String script) throws Exception {
         executeJavaScript(script, null);
     }
 
-    protected void executeJavaScript(String script, String textToLog, String... arguments) throws Exception {
+    public void executeJavaScript(String script, String textToLog, Object... arguments) throws Exception {
         takeScreenShot();
         assertNotNull("Selenium provider failed, script to execute is null", script);
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
@@ -139,7 +140,7 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
-    protected void clickOnItem(WebElement element, String textToLog) throws Exception {
+    public void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
@@ -149,7 +150,7 @@ public class SeleniumProvider {
     }
 
 
-    protected void fillInputItem(WebElement element, String text) throws Exception {
+    public void fillInputItem(WebElement element, String text) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(text);
@@ -158,7 +159,7 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
-    protected void pressEnter(WebElement element) throws Exception {
+    public void pressEnter(WebElement element) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(Keys.RETURN);
@@ -215,7 +216,7 @@ public class SeleniumProvider {
         waitUntilItem(timeInSeconds, item, true);
     }
 
-    protected void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+    public void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, false);
     }
 
