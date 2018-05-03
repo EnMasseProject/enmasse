@@ -10,7 +10,7 @@ maven_path: "{{ maven_root_path }}/apache-maven-3.5.2/bin"
 
 # vars for webdriver tasks
 webdriver_folder: "{{ systemtests_dir }}/web_driver"
-geckodriver_version: '0.19.1'
+geckodriver_version: '0.20.1'
 chromedriver_version: '2.33'
 
 # vars for dependencies tasks
@@ -20,4 +20,4 @@ epel_repo_gpg_key_url: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{
 epel_repofile_path: "/etc/yum.repos.d/epel.repo"
 
 # vars for firefox
-firefox_version: '58.0.2'
+firefox_version: '59.0.3'
