@@ -677,9 +677,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addresses;
     }
 
-    protected ArrayList<Destination> generateQueueTopicList(String infix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>((int) range.count());
-        range.forEach(i -> {
+    protected ArrayList<Destination> generateQueueTopicList(String infix, int count) {
+        ArrayList<Destination> addresses = new ArrayList<>(count);
+        IntStream.range(0, count).forEach(i -> {
             if (i % 2 == 0) {
                 addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             } else {

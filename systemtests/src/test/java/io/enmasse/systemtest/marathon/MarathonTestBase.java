@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.marathon;
@@ -310,7 +311,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         consoleWebPage.openWebConsolePage(user);
 
         int addressCount = 5;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         runTestInLoop(30, () -> {
             consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));

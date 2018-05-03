@@ -89,7 +89,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestFilterAddressesByType() throws Exception {
         int addressCount = 4;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
@@ -123,7 +123,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestFilterAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
@@ -165,7 +165,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestSortAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
@@ -181,7 +181,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestSortAddressesByClients() throws Exception {
         int addressCount = 4;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
@@ -220,7 +220,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestSortConnectionsBySenders() throws Exception {
         int addressCount = 2;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
@@ -241,7 +241,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestSortConnectionsByReceivers() throws Exception {
         int addressCount = 2;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
@@ -341,7 +341,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestFilterConnectionsByHostname() throws Exception {
         int addressCount = 2;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
         consoleWebPage.openWebConsolePage();
@@ -363,7 +363,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
         consoleWebPage.openWebConsolePage();
