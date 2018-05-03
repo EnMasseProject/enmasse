@@ -52,7 +52,7 @@ spec:
         - name: WILDCARD_ENDPOINT_CERT_SECRET
           valueFrom:
             configMapKeyRef:
-              key: wildEndpointCertSecret
+              key: wildcardEndpointCertSecret
               name: address-controller-config
               optional: true
         - name: RESYNC_INTERVAL

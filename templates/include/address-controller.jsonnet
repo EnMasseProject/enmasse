@@ -165,7 +165,7 @@ local images = import "images.jsonnet";
                   "valueFrom": {
                     "configMapKeyRef": {
                       "name": "address-controller-config",
-                      "key": "wildEndpointCertSecret",
+                      "key": "wildcardEndpointCertSecret",
                       "optional": true
                     }
                   }
