@@ -113,6 +113,17 @@ function purge_stale_sessions(sessions, max_idle_time) {
     }
 }
 
+
+function clean_query_string(request, response, next) {
+    var u = url.parse(request.url, true);
+    if (u.query && u.query.session_state) {
+        response.redirect(u.pathname);
+        log.info('redirecting to %s (%s)', u.pathname, request.url);
+    } else {
+        next();
+    }
+}
+
 function patch(sessions) {
     return function (request, response, next) {
         let u = url.parse(request.url, true);
@@ -265,8 +276,8 @@ module.exports.auth_handler = function (authz, env, handler) {
         };
         let keycloak = new Keycloak({}, keycloak_config);
         keycloak.stores.push(SessionStore);
-        setTimeout(purge_stale_sessions.bind(null, sessions, 5*60*1000), 60*1000);
-        let interceptors = [patch(sessions)].concat(keycloak.middleware()).concat([keycloak.protect(record_token), authenticate(authz, env, get_oauth_credentials, auth_failed)]);
+        setInterval(purge_stale_sessions.bind(null, sessions, 15*60*1000), 60*1000);
+        let interceptors = [patch(sessions)].concat(keycloak.middleware()).concat([keycloak.protect(record_token), authenticate(authz, env, get_oauth_credentials, auth_failed), clean_query_string]);
         return function (request, response) {
             step(interceptors, request, response, 0, handler);
         };
