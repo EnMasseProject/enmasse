@@ -329,7 +329,6 @@ Ragent.prototype.subscribe_to_addresses = function (env) {
 Ragent.prototype.listen_probe = function (env) {
     if (env.PROBE_PORT !== undefined) {
         var probe = http.createServer(function (req, res) {
-            log.info('probe request: %s', req.url);
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end('OK');
         });
