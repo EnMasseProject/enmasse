@@ -133,25 +133,29 @@ module.exports.kubernetes_name = function (name) {
 
 module.exports.serialize = function (f) {
     var in_progress = false;
-    var pending = 0;
+    var pending = false;
     function execute() {
-        f().then(function () {
-            if (pending) {
-                next();
-            } else {
+        try {
+            f().then(function () {
+                if (pending) {
+                    next();
+                } else {
+                    in_progress = false;
+                }
+            }).catch(function(error) {
                 in_progress = false;
-            }
-        }).catch(function() {
+            });
+        } catch (error) {
             in_progress = false;
-        });
+        }
     }
     function next() {
-        pending--;
+        pending = false;
         setImmediate(execute);
     };
     return function () {
         if (in_progress) {
-            pending++;
+            pending = true;
         } else {
             in_progress = true;
             execute();

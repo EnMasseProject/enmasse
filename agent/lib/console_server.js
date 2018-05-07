@@ -254,10 +254,10 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     var buffered_sender = new BufferedSender(sender, indexer);
     this.listeners[name] = buffered_sender;
     this.addresses.for_each(function (address) {
-        sender.send({subject:'address', body:address});
+        buffered_sender.send({subject:'address', body:address});
     }, this.authz.address_filter(sender.connection));
     this.connections.for_each(function (conn) {
-        sender.send({subject:'connection', body:conn});
+        buffered_sender.send({subject:'connection', body:conn});
     }, this.authz.connection_filter(sender.connection));
     //TODO: poll for changes in address_types
     var self = this;
