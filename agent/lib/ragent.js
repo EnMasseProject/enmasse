@@ -54,8 +54,7 @@ function Ragent() {
     this.known_routers = {};
     this.connected_routers = {};
     this.connected_brokers = {};
-    this.addresses = {};//addresses indexed by address and transformed for router syncs
-    this.address_list = [];//original list as obtained from source
+    this.addresses = [];
     this.subscribers = {};
     this.clients = {};
     this.container = amqp.create_container();
@@ -108,11 +107,15 @@ Ragent.prototype.check_connectivity = function () {
 }
 
 Ragent.prototype.check_router_connectors = function (router, all_routers) {
-    if (router.is_ready_for_connectivity_check()) {
-        log.info('checking connectivity for ' + router.container_id);
-        router.check_connectors(all_routers || this.get_all_routers());
-    } else {
-        log.info(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
+    try {
+        if (router.is_ready_for_connectivity_check()) {
+            log.info('checking connectivity for ' + router.container_id);
+            router.check_connectors(all_routers || this.get_all_routers());
+        } else {
+            log.info(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
+        }
+    } catch (error) {
+        log.error('connectivity check failed for %s: %s', router.container_id, error);
     }
 }
 
@@ -133,35 +136,23 @@ Ragent.prototype.router_disconnected = function (context) {
 }
 
 Ragent.prototype.addresses_updated = function () {
+    this.sync_brokers();
     for (var r in this.connected_routers) {
         this.sync_router_addresses(this.connected_routers[r]);
     }
 }
 
-function transform_address (addr) {
-    if (addr.address === undefined || addr.type === undefined) {
-        console.error('BAD ADDRESS: %j', addr);
-    }
-    return {
-        name: 'ragent-' + addr.address,
-        address: addr.address,
-        multicast: (addr.type === 'multicast' || addr.type === 'topic'),
-        store_and_forward: (addr.type === 'queue' || addr.type === 'topic'),
-        allocated_to: addr.allocated_to
-    };
+function is_valid_address_definition(def) {
+    return def.address && def.type;
 }
 
 Ragent.prototype.sync_addresses = function (updated) {
-    log.info('triggering address configuration check');
-    this.sync_brokers(updated);
-    this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.address] = a; return map; }, {});
-    log.debug('updating addresses: %j', this.addresses);
+    this.addresses = updated.filter(is_valid_address_definition);
+    log.debug('addresses updated: %j', this.addresses);
     this.addresses_updated();
-    log.info('address configuration check triggered');
 }
 
 Ragent.prototype.sync_router_addresses = function (router) {
-    log.debug('updating addresses for %s', router.container_id);
     router.sync_addresses(this.addresses);
 }
 
@@ -193,15 +184,14 @@ function if_allocated_to (id) {
 
 function get_address (a) { return a.address; }
 
-Ragent.prototype.sync_brokers = function (addresses) {
-    this.address_list = addresses;
+Ragent.prototype.sync_brokers = function () {
     for (var id in this.connected_brokers) {
-        this.sync_broker(this.connected_brokers[id], addresses);
+        this.sync_broker(this.connected_brokers[id]);
     }
 }
 
-Ragent.prototype.sync_broker = function (broker, addresses) {
-    var allocated = addresses.filter(if_allocated_to(broker.id));
+Ragent.prototype.sync_broker = function (broker) {
+    var allocated = this.addresses.filter(if_allocated_to(broker.id));
     log.debug('syncing broker %s with %j', broker.id, allocated.map(get_address));
     broker.sync_addresses(allocated);
 }
@@ -267,17 +257,16 @@ Ragent.prototype.configure_handlers = function () {
             context.connection.on('connection_close', self.router_disconnected.bind(self));//todo: wait for a bit?
             r.on('ready', function (router) {
                 router.retrieve_listeners();
-                router.retrieve_addresses();
                 router.retrieve_connectors();
+                router.sync_addresses(self.addresses);
                 router.on('listeners_updated', self.connected_routers_updated.bind(self));//advertise only once have listeners
-                router.on('addresses_updated', self.sync_router_addresses.bind(self));
                 router.on('connectors_updated', self.check_router_connectors.bind(self));
                 router.on('provisioned', self.check_router_connectors.bind(self));
             });
         } else if (product === 'apache-activemq-artemis') {
             var broker = broker_controller.create_controller(context.connection, self.broker_address_settings, self.event_sink);
             self.connected_brokers[broker.id] = broker;
-            self.sync_broker(broker, self.address_list);
+            self.sync_broker(broker);
             context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
             context.connection.on('connection_close', self.on_broker_disconnect.bind(self));
         } else {

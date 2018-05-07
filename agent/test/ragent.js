@@ -289,7 +289,7 @@ function generate_address_list(count, allowed_types) {
 }
 
 describe('basic router configuration', function() {
-    this.timeout(5000);
+    this.timeout(10000);
     var ragent;
     var routers;
 
@@ -486,6 +486,10 @@ describe('basic router configuration', function() {
        function (router) {
            router.set_onetime_error_response('CREATE','org.apache.qpid.dispatch.router.config.address');
        }));
+    it('handles address create error 2', simple_address_test([{address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('CREATE','org.apache.qpid.dispatch.router.config.address');
+       }));
     it('handles address delete error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
@@ -552,7 +556,7 @@ describe('basic router configuration', function() {
     }));
     it('configures large number of anycast addresses', simple_address_test(generate_address_list(2000, ['anycast']), undefined, undefined, 2000));
     it('configures large number of multicast addresses', simple_address_test(generate_address_list(2000, ['multicast']), undefined, undefined, 2000));
-    it('configures large number of queues', simple_address_test(generate_address_list(2000, ['queue']), undefined, undefined, 4000));
+    it('configures large number of queues', simple_address_test(generate_address_list(2000, ['queue']), undefined, undefined, 6000));
     it('configures large number of topics', simple_address_test(generate_address_list(2000, ['topic']), undefined, undefined, 4000));
     it('configures large number of mixed addresses', simple_address_test(generate_address_list(2000), undefined, undefined, 4000));
 });
@@ -711,11 +715,13 @@ function fill(n, f) {
 
 describe('cooperating ragent group', function() {
     this.timeout(5000);
-    var counter = 0;
-    var groups = fill(4, function (i) { return new RouterGroup('ragent-' + (i+1)); });
+    var counter;
+    var groups;
     var podserver;
 
     beforeEach(function(done) {
+        counter = 0;
+        groups = fill(4, function (i) { return new RouterGroup('ragent-' + (i+1)); });
         podserver = new ResourceServer('Pod', true);
         Promise.all(groups.map(function (g) { return g.listen(); })).then(function (){
             podserver.listen(0).on('listening', function () {
