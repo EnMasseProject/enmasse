@@ -260,8 +260,8 @@ function extract_address_plan (object) {
 
 function display_order (plan_a, plan_b) {
     // explicitly ordered plans always come before those with undefined order
-    var a = plan_a.displayOrder || Number.MAX_VALUE;
-    var b = plan_b.displayOrder || Number.MAX_VALUE;
+    var a = plan_a.displayOrder === undefined ? Number.MAX_VALUE : plan_a.displayOrder;
+    var b = plan_b.displayOrder === undefined ? Number.MAX_VALUE : plan_b.displayOrder;
     return a - b;
 }
 

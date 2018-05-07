@@ -233,6 +233,32 @@ describe('configmap backed address source', function() {
             done(error);
         });
     });
+    it('treats 0 correctly as value for displayOrder', function(done) {
+        configmaps.add_address_plan({plan_name:'bar', address_type:'topic'});
+        configmaps.add_address_plan({plan_name:'medium', address_type:'queue', displayOrder:11});
+        configmaps.add_address_plan({plan_name:'foo', address_type:'topic', displayOrder:20});
+        configmaps.add_address_plan({plan_name:'standard', address_type:'anycast'});
+        configmaps.add_address_plan({plan_name:'non-standard', address_type:'anycast', displayOrder:30});
+        configmaps.add_address_plan({plan_name:'large', address_type:'queue', displayOrder:12});
+        configmaps.add_address_plan({plan_name:'small', address_type:'queue', displayOrder:0});
+        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        source.watcher.close();
+        source.get_address_types().then(function (types) {
+            assert.equal(types[0].name, 'queue');
+            assert.equal(types[0].plans[0].name, 'small');
+            assert.equal(types[0].plans[1].name, 'medium');
+            assert.equal(types[0].plans[2].name, 'large');
+            assert.equal(types[1].name, 'topic');
+            assert.equal(types[1].plans[0].name, 'foo');
+            assert.equal(types[1].plans[1].name, 'bar');
+            assert.equal(types[2].name, 'anycast');
+            assert.equal(types[2].plans[0].name, 'non-standard');
+            assert.equal(types[2].plans[1].name, 'standard');
+            done();
+        }).catch(function (error) {
+            done(error);
+        });
+    });
     it('creates an address', function(done) {
         var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.once('addresses_defined', function () {
