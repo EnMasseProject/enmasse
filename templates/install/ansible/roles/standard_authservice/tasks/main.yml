@@ -15,13 +15,13 @@
 - name: Give view permissions for the keycloak controller
   shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
 - name: Create the standard authentication service service
-  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/service.yaml
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/service.yaml
 - name: Create the standard authentication service deployment
-  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/keycloak-deployment.yaml
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/keycloak-deployment.yaml
 - name: Create the standard authentication service controller
-  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/controller-deployment.yaml
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/controller-deployment.yaml
 - name: Create the standard authentication service persistent volume claim
-  shell: kubectl apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/pvc.yaml
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/pvc.yaml
 - name: Create the standard authentication service route
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/route.yaml
 - name: Check if keycloak config exists
