@@ -20,8 +20,8 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
@@ -105,6 +105,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             log.error("Error tearing down test: {}", e.getMessage());
             throw e;
         }
+    }
+
+    protected void addToAddressSpaceList(AddressSpace... addressSpaces) {
+        addressSpaceList.addAll(Arrays.asList(addressSpaces));
+    }
+
+    protected List<AddressSpace> getAddressSpaceList() {
+        return addressSpaceList;
     }
 
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -977,5 +985,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         recvd = jmsProvider.receiveMessages(receiver, count, 2000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
         log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+    }
+
+    protected void deleteAddressSpaceCreatedBySC(String namespace, AddressSpace addressSpace) throws Exception {
+        TestUtils.deleteNamespace(kubernetes, addressSpace, namespace, logCollector);
     }
 }
