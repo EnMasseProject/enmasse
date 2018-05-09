@@ -5,9 +5,7 @@
 package io.enmasse.systemtest.selenium.page;
 
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -25,11 +23,13 @@ public class OpenshiftWebPage {
     String ocRoute;
     KeycloakCredentials credentials;
     OpenshiftLoginWebPage loginPage;
+    AddressApiClient addressApiClient;
 
-    public OpenshiftWebPage(SeleniumProvider selenium, String ocRoute, KeycloakCredentials credentials) {
+    public OpenshiftWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, String ocRoute, KeycloakCredentials credentials) {
         this.selenium = selenium;
         this.ocRoute = ocRoute;
         this.credentials = credentials;
+        this.addressApiClient = addressApiClient;
         this.loginPage = new OpenshiftLoginWebPage(selenium);
     }
 
@@ -143,15 +143,53 @@ public class OpenshiftWebPage {
         selenium.clickOnItem(getAddToProjectDropDown(), "Add to project dropdown");
     }
 
-    public void createAddressSpace(AddressSpaceType type, String name, String projectName) throws Exception {
-        if (type == AddressSpaceType.BROKERED) {
-            createAddressSpaceBrokered(name, projectName);
+    public void createAddressSpace(AddressSpace addressSpace, String projectName) throws Exception {
+        if (addressSpace.getType() == AddressSpaceType.BROKERED) {
+            createAddressSpaceBrokered(addressSpace.getNamespace(), projectName);
+        } else {
+            createAddressSpaceStandard(addressSpace.getNamespace(), projectName, "unlimited-standard");
+        }
+        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getNamespace());
+        if (addressSpace.getType() == AddressSpaceType.STANDARD) {
+            log.info("Waiting 2min before standard address space is created");
+            Thread.sleep(120_000);
         }
     }
 
     private void createAddressSpaceBrokered(String name, String projectName) throws Exception {
         clickOnCreateBrokered();
         next();
+        selectProjectInWizard(projectName);
+        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
+                name);
+        next();
+        next();
+        next();
+    }
+
+    private void createAddressSpaceStandard(String name, String projectName, String plan) throws Exception {
+        clickOnCreateStandard();
+        next();
+        selectPlanInStandard(plan);
+        next();
+        selectProjectInWizard(projectName);
+        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
+                name);
+        next();
+        next();
+        next();
+    }
+
+    private void selectPlanInStandard(String plan) throws Exception {
+        List<WebElement> plansItems = getOrderServiceModalWindow().findElements(By.className("plan-name"));
+        for (WebElement element : plansItems) {
+            if (element.getText().equals(plan.toLowerCase())) {
+                selenium.clickOnItem(element);
+            }
+        }
+    }
+
+    private void selectProjectInWizard(String projectName) throws Exception {
         clickOnAddToProjectDropdown();
         WebElement project = getItemFromAddToProjectDropDown(projectName);
         if (project != null) {
@@ -159,19 +197,11 @@ public class OpenshiftWebPage {
             selenium.clickOnItem(project);
         } else {
             log.info("Project is not present address space will be added into new");
-            createProjectInWizard(projectName);
+            selenium.clickOnItem(getItemFromAddToProjectDropDown("Create Project"));
+            selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("select-project")).findElement(By.id("name")),
+                    projectName);
+            selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("select-project")).findElement(By.id("displayName")),
+                    projectName);
         }
-        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
-                name);
-        next();
-        next();
-    }
-
-    private void createProjectInWizard(String projectName) throws Exception {
-        selenium.clickOnItem(getItemFromAddToProjectDropDown("Create Project"));
-        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("select-project")).findElement(By.id("name")),
-                projectName);
-        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("select-project")).findElement(By.id("displayName")),
-                projectName);
     }
 }

@@ -189,6 +189,10 @@ public abstract class Kubernetes {
         client.configMaps().inNamespace(namespace).createOrReplace(newConfigMap);
     }
 
+    public void deleteNamespace(String namespace) {
+        client.namespaces().withName(namespace).delete();
+    }
+
     //------------------------------------------------------------------------------------------------
     // Create config maps
     //------------------------------------------------------------------------------------------------

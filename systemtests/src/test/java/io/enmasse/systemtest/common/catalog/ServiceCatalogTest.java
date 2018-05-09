@@ -4,8 +4,7 @@
  */
 package io.enmasse.systemtest.common.catalog;
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
@@ -21,6 +20,7 @@ import static io.enmasse.systemtest.TestTag.isolated;
 class ServiceCatalogTest extends TestBase implements ISeleniumProviderFirefox {
 
     private static Logger log = CustomLogger.getLogger();
+    String projectName = "user";
 
     @BeforeEach
     void setUpDrivers() throws Exception {
@@ -28,18 +28,35 @@ class ServiceCatalogTest extends TestBase implements ISeleniumProviderFirefox {
     }
 
     @AfterEach
-    void tearDownWebConsoleTests() {
+    void tearDownWebConsoleTests() throws Exception {
         selenium.tearDownDrivers();
+        getAddressSpaceList().forEach(addressSpace -> {
+            try {
+                deleteAddressSpaceCreatedBySC(projectName, addressSpace);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Test
-    void testCreateBrokeredAddressSpace() throws Exception {
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, getOCConsoleRoute(),
+    void testCreateAddressSpaceBrokered() throws Exception {
+        AddressSpace brokered = new AddressSpace("brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        addToAddressSpaceList(brokered);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(),
                 new KeycloakCredentials("developer", "developer"));
         ocPage.openOpenshiftPage();
-        ocPage.getServicesFromCatalog();
-        //ocPage.createAddressSpace(AddressSpaceType.BROKERED, "brokered", "user");
-        //TestUtils.waitForAddressSpaceReady(addressApiClient, "brokered");
+        ocPage.createAddressSpace(brokered, projectName);
+    }
+
+    @Test
+    void testCreateAddressSpaceStandard() throws Exception {
+        AddressSpace standard = new AddressSpace("standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        addToAddressSpaceList(standard);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(),
+                new KeycloakCredentials("developer", "developer"));
+        ocPage.openOpenshiftPage();
+        ocPage.createAddressSpace(standard, projectName);
     }
 
 }

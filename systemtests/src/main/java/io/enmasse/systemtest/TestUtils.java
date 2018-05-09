@@ -727,12 +727,22 @@ public class TestUtils {
      * @param addressSpace AddressSpace that should be removed
      */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
+        waitForNamespaceDeleted(kubernetes, addressSpace.getNamespace());
+    }
+
+    /**
+     * Wait until AddressSpace will be removed
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @param namespace  project/namespace to remove
+     */
+    public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
+        while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(namespace)) {
             Thread.sleep(1000);
         }
-        if (kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
-            throw new TimeoutException("Timed out waiting for namespace " + addressSpace + " to disappear");
+        if (kubernetes.listNamespaces().contains(namespace)) {
+            throw new TimeoutException("Timed out waiting for namespace " + namespace + " to disappear");
         }
     }
 
@@ -924,6 +934,14 @@ public class TestUtils {
         logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         logCollector.collectConfigMaps(addressSpace.getNamespace());
         addressApiClient.deleteAddressSpace(addressSpace);
+    }
+
+    public static void deleteNamespace(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
+        logCollector.collectEvents(addressSpace.getNamespace());
+        logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        kubernetes.deleteNamespace(namespace);
+        waitForNamespaceDeleted(kubernetes, namespace);
     }
 
     public static FirefoxDriver getFirefoxDriver() {
