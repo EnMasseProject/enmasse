@@ -256,7 +256,7 @@ ConnectedRouter.prototype.create_connector = function (host_port, connector_name
     log.info('[%s] creating connector %s to %s', this.container_id, connector_name, host_port);
     var parts = host_port.split(':');
     return this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1],
-                                                            sslProfile:'ssl_internal_details', verifyHostName:'no'});
+                                                            sslProfile:'ssl_internal_details', verifyHostname:'no'});
 };
 
 ConnectedRouter.prototype.delete_connector = function (host_port, connector_name) {
