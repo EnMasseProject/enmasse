@@ -6,6 +6,8 @@
 package io.enmasse.systemtest;
 
 public class Environment {
+    public static final String useMinikubeEnv = "USE_MINIKUBE";
+
     private final String user = System.getenv("OPENSHIFT_USER");
     private final String token = System.getenv("OPENSHIFT_TOKEN");
     private final String url = System.getenv("OPENSHIFT_URL");
@@ -15,7 +17,7 @@ public class Environment {
     private final String testLogDir = System.getenv().getOrDefault("OPENSHIFT_TEST_LOGDIR", "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
     private final String keycloakAdminPassword = System.getenv("KEYCLOAK_ADMIN_PASSWORD");
-    private final boolean useMinikube = Boolean.parseBoolean(System.getenv("USE_MINIKUBE"));
+    private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
     private final boolean useDummyAddress = Boolean.parseBoolean(System.getenv("USE_DUMMY_ADDRESS"));
     private final boolean skipCleanup = Boolean.parseBoolean(System.getenv("SKIP_CLEANUP"));
 

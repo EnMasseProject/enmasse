@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
