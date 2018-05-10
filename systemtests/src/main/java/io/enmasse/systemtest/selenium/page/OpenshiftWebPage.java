@@ -6,6 +6,7 @@ package io.enmasse.systemtest.selenium.page;
 
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;

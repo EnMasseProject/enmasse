@@ -11,6 +11,8 @@ import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
@@ -79,7 +81,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return null;
     }
 
-
     @BeforeEach
     public void setup() {
         addressSpaceList = new ArrayList<>();
@@ -106,6 +107,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             throw e;
         }
     }
+
+
+
+
+    //================================================================================================
+    //==================================== AddressSpace methods ======================================
+    //================================================================================================
 
     protected void addToAddressSpaceList(AddressSpace... addressSpaces) {
         addressSpaceList.addAll(Arrays.asList(addressSpaces));

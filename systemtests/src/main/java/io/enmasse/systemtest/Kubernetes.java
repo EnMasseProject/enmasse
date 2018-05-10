@@ -64,6 +64,10 @@ public abstract class Kubernetes {
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
+    public Endpoint getOSBEndpoint() {
+        return getEndpoint(globalNamespace, "service-broker", "https");
+    }
+
     public abstract Endpoint getRestEndpoint();
 
     public abstract Endpoint getKeycloakEndpoint();

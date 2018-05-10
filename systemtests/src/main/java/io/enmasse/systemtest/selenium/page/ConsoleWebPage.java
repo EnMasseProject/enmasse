@@ -7,6 +7,7 @@ package io.enmasse.systemtest.selenium.page;
 
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import org.openqa.selenium.By;
