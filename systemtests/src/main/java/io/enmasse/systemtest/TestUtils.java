@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -306,6 +308,22 @@ public class TestUtils {
     }
 
     /**
+     * Check if state and description values equals required values
+     *
+     * @param status answer from service broker
+     * @return
+     */
+    public static boolean isServiceInstanceReady(JsonObject status) {
+        boolean isReady = false;
+        if (status != null) {
+            String state = status.getString("state");
+            String description = status.getString("description");
+            isReady = (state.equals("succeeded") && description.equals("All required pods are ready."));
+        }
+        return isReady;
+    }
+
+    /**
      * Get address space type from received AddressSpace(JsonObject) (usually received from AddressApiClient)
      *
      * @param addressSpace address space JsonObject
@@ -338,7 +356,7 @@ public class TestUtils {
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
+            log.info("Waiting until Address space: '{}' will be in ready state", addressSpace);
         }
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
@@ -346,6 +364,28 @@ public class TestUtils {
         waitUntilEndpointsPresent(apiClient, addressSpace);
         return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
                 addrSpaceI.getName().equals(addressSpace)).findFirst().get();
+    }
+
+    /**
+     * Waiting until service instance will be in ready state
+     *
+     * @param apiClient  open service broker api client for sending requests
+     * @param instanceId id of service instance
+     * @throws Exception
+     */
+    public static void waitForServiceInstanceReady(OSBApiClient apiClient, String instanceId) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+        boolean isReady = false;
+        while (budget.timeLeft() >= 0 && !isReady) {
+            isReady = isServiceInstanceReady(apiClient.getLastOperation(instanceId));
+            if (!isReady) {
+                Thread.sleep(10000);
+            }
+            log.info("Waiting until service instance '{}' will be in ready state", instanceId);
+        }
+        if (!isReady) {
+            throw new IllegalStateException(String.format("Service instance '%s' is not in Ready state within timeout.", instanceId));
+        }
     }
 
     private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {

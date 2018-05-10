@@ -2,36 +2,34 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.apiclients;
 
+import io.enmasse.systemtest.*;
 import com.google.common.collect.Sets;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class AddressApiClient {
-    private static Logger log = CustomLogger.getLogger();
-    private final WebClient client;
-    private final Kubernetes kubernetes;
-    private final Vertx vertx;
+public class AddressApiClient extends ApiClient {
+    protected static Logger log = CustomLogger.getLogger();
     private final int initRetry = 10;
     private final String schemaPath = "/apis/enmasse.io/v1alpha1/schema";
     private final String addressSpacesPath;
@@ -41,6 +39,7 @@ public class AddressApiClient {
     private Endpoint endpoint;
 
     public AddressApiClient(Kubernetes kubernetes) {
+        super(kubernetes, kubernetes.getRestEndpoint());
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)
@@ -60,6 +59,10 @@ public class AddressApiClient {
         vertx.close();
     }
 
+    @Override
+    protected String apiClientName() {
+        return "Address-controller";
+    }
 
     public void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         for (AddressSpace addressSpace : addressSpaces) {
@@ -114,15 +117,16 @@ public class AddressApiClient {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
         doRequestNTimes(initRetry, () -> {
-            client.post(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
-                    .timeout(20_000)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .sendJsonObject(config, ar -> responseHandler(ar,
-                            responsePromise,
-                            String.format("Error: create address space '%s'", addressSpace)));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    client.post(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(config, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    String.format("Error: create address space '%s'", addressSpace)));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -130,15 +134,16 @@ public class AddressApiClient {
         log.info("DELETE-address-space: path '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-            client.delete(endpoint.getPort(), endpoint.getHost(), path)
-                    .as(BodyCodec.jsonObject())
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .timeout(20_000)
-                    .send(ar -> responseHandler(ar,
-                            responsePromise,
-                            String.format("Error: delete address space '%s'", addressSpace)));
-            return responsePromise.get(2, TimeUnit.MINUTES);
-        });
+                    client.delete(endpoint.getPort(), endpoint.getHost(), path)
+                            .as(BodyCodec.jsonObject())
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar,
+                                    responsePromise,
+                                    String.format("Error: delete address space '%s'", addressSpace)));
+                    return responsePromise.get(2, TimeUnit.MINUTES);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     /**
@@ -153,14 +158,15 @@ public class AddressApiClient {
         log.info("GET-address-space: path '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         return doRequestNTimes(initRetry, () -> {
-            client.get(endpoint.getPort(), endpoint.getHost(), path)
-                    .as(BodyCodec.jsonObject())
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .send(ar -> responseHandler(ar,
-                            responsePromise,
-                            String.format("Error: get address space {}", name)));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    client.get(endpoint.getPort(), endpoint.getHost(), path)
+                            .as(BodyCodec.jsonObject())
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .send(ar -> responseHandler(ar,
+                                    responsePromise,
+                                    String.format("Error: get address space {}", name)));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public Set<String> listAddressSpaces() throws Exception {
@@ -179,13 +185,14 @@ public class AddressApiClient {
 
         CompletableFuture<JsonObject> response = new CompletableFuture<>();
         return doRequestNTimes(initRetry, () -> {
-            client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
-                    .as(BodyCodec.jsonObject())
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .timeout(20_000)
-                    .send(ar -> responseHandler(ar, response, "Error: get address spaces"));
-            return response.get(30, TimeUnit.SECONDS);
-        });
+                    client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
+                            .as(BodyCodec.jsonObject())
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar, response, "Error: get address spaces"));
+                    return response.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public JsonArray getAddressesPaths() throws Exception {
@@ -234,14 +241,15 @@ public class AddressApiClient {
         log.info("GET-schema: path {}; ", schemaPath);
 
         return doRequestNTimes(initRetry, () -> {
-            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-            client.get(endpoint.getPort(), endpoint.getHost(), schemaPath)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .timeout(20_000)
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+                    client.get(endpoint.getPort(), endpoint.getHost(), schemaPath)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     /**
@@ -275,13 +283,14 @@ public class AddressApiClient {
         log.info("DELETE-address: path {}", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-            client.delete(endpoint.getPort(), endpoint.getHost(), path)
-                    .timeout(20_000)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: delete address"));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    client.delete(endpoint.getPort(), endpoint.getHost(), path)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .send(ar -> responseHandler(ar, responsePromise, "Error: delete address"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -408,23 +417,24 @@ public class AddressApiClient {
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         return doRequestNTimes(initRetry, () -> {
-            client.get("as", "s");
-            HttpRequest<JsonObject> request = client.request(method, url.getPort(), url.getHost(), url.getPath())
-                    .timeout(20_000)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject());
-            Handler<AsyncResult<HttpResponse<JsonObject>>> handleResponse = (ar) -> responseHandler(ar, responsePromise,
-                    String.format("Error: send payload: '%s' with url: '%s'", payload.toString(), url));
+                    client.get("as", "s");
+                    HttpRequest<JsonObject> request = client.request(method, url.getPort(), url.getHost(), url.getPath())
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject());
+                    Handler<AsyncResult<HttpResponse<JsonObject>>> handleResponse = (ar) -> responseHandler(ar, responsePromise,
+                            String.format("Error: send payload: '%s' with url: '%s'", payload.toString(), url));
 
-            if (payload.isPresent()) {
-                log.info("use payload");
-                request.sendJsonObject(payload.get(), handleResponse);
-            } else {
-                log.info("don't use payload");
-                request.send(handleResponse);
-            }
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    if (payload.isPresent()) {
+                        log.info("use payload");
+                        request.sendJsonObject(payload.get(), handleResponse);
+                    } else {
+                        log.info("don't use payload");
+                        request.send(handleResponse);
+                    }
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public JsonObject responseAddressHandler(JsonObject responseData) throws AddressAlreadyExistsException {
@@ -438,36 +448,5 @@ public class AddressApiClient {
         return responseData;
     }
 
-    private <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise,
-                                     String warnMessage) {
-        try {
-            if (ar.succeeded()) {
-                HttpResponse<T> response = ar.result();
-                if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                    log.error("response status code: {}, body: {}", response.statusCode(), response.body());
-                    promise.completeExceptionally(new RuntimeException(response.body().toString()));
-                } else {
-                    promise.complete(ar.result().body());
-                }
-            } else {
-                log.warn(warnMessage);
-                promise.completeExceptionally(ar.cause());
-            }
-        } catch (io.vertx.core.json.DecodeException decEx) {
-            if (ar.result().bodyAsString().toLowerCase().contains("application is not available")) {
-                log.warn("Address-controller is not available.", ar.cause());
-                throw new IllegalStateException("Address-controller is not available.");
-            } else {
-                log.warn("Unexpected object received", ar.cause());
-                throw new IllegalStateException("JsonObject expected, but following object was received: " + ar.result().bodyAsString());
-            }
-        }
-    }
 
-    public <T> T doRequestNTimes(int retry, Callable<T> fn) throws Exception {
-        return TestUtils.doRequestNTimes(retry, () -> {
-            endpoint = kubernetes.getRestEndpoint();
-            return fn.call();
-        });
-    }
 }
