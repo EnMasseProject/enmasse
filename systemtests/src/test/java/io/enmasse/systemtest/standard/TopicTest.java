@@ -95,42 +95,52 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         Map<String, Object> appProperties = new HashMap<>();
         appProperties.put("appPar1", 1);
         assertAppProperty(topicClient, linkName, appProperties, "appPar1 = 1", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar2", 10);
         assertAppProperty(topicClient, linkName, appProperties, "appPar2 > 9", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar3", 10);
         assertAppProperty(topicClient, linkName, appProperties, "appPar3 < 11", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar4", 10);
         assertAppProperty(topicClient, linkName, appProperties, "appPar4 * 2 > 10", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("year", 2000);
         assertAppProperty(topicClient, linkName, appProperties, "(year > 1000) AND (year < 3000)", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("year2", 2000);
         assertAppProperty(topicClient, linkName, appProperties, "year2 BETWEEN 1999 AND 2018", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar5", "1");
         assertAppProperty(topicClient, linkName, appProperties, "appPar5 = '1'", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar6", true);
         assertAppProperty(topicClient, linkName, appProperties, "appPar6 = TRUE", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar7", "SOMETHING");
         assertAppProperty(topicClient, linkName, appProperties, "appPar7 IS NOT NULL", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar8", "SOMETHING");
         assertAppProperty(topicClient, linkName, appProperties, "appPar8 LIKE '%THING' ", selTopic);
+        linkName += "x";
 
         appProperties.clear();
         appProperties.put("appPar9", "bar");
