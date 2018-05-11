@@ -5,14 +5,20 @@
 package io.enmasse.systemtest.selenium.page;
 
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.KeycloakCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.resources.BindingSecretData;
+import io.enmasse.systemtest.selenium.resources.ProvisionedServiceItem;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,20 +63,20 @@ public class OpenshiftWebPage {
         return services;
     }
 
-    private WebElement getOrderServiceModalWindow() {
-        return selenium.getDriver().findElement(By.tagName("order-service"));
+    private WebElement getModalWindow() {
+        return selenium.getDriver().findElement(By.className("modal-content"));
     }
 
     private WebElement getNextButton() {
-        return getOrderServiceModalWindow().findElement(By.id("nextButton"));
+        return getModalWindow().findElement(By.id("nextButton"));
     }
 
     private WebElement getBackButton() {
-        return getOrderServiceModalWindow().findElement(By.id("backButton"));
+        return getModalWindow().findElement(By.id("backButton"));
     }
 
     private WebElement getAddToProjectDropDown() {
-        return getOrderServiceModalWindow().findElement(By.className("dropdown"));
+        return getModalWindow().findElement(By.className("dropdown"));
     }
 
     private WebElement getItemFromAddToProjectDropDown(String projectName) {
@@ -93,7 +99,62 @@ public class OpenshiftWebPage {
     }
 
     private List<WebElement> getBindingRadioItems() {
-        return getOrderServiceModalWindow().findElement(By.className("radio")).findElements(By.tagName("label"));
+        return getModalWindow().findElement(By.className("radio")).findElements(By.tagName("label"));
+    }
+
+    private WebElement getProjectListItem(String name) {
+        selenium.takeScreenShot();
+        List<WebElement> projects = selenium.getDriver().findElements(By.className("list-group-item"));
+        for (WebElement el : projects) {
+            if (el.findElement(By.tagName("span")).getText().equals(name)) {
+                return el;
+            }
+        }
+        return null;
+    }
+
+    private ProvisionedServiceItem getProvisionedServiceItem() {
+        return new ProvisionedServiceItem(selenium,
+                selenium.getDriver().findElement(By.tagName("service-instance-row")).findElement(By.className("provisioned-service")));
+    }
+
+    private WebElement getBindingCheckBoxes(String name) {
+        List<WebElement> checkBoxes = selenium.getDriver().findElements(By.className("checkbox"));
+        for (WebElement el : checkBoxes) {
+            if (name.equals(el.findElement(By.tagName("label")).findElement(By.tagName("span")).getText())) {
+                log.info(el.findElement(By.tagName("span")).getAttribute("innerHTML"));
+                return el.findElement(By.tagName("span"));
+            }
+        }
+        return null;
+    }
+
+    private void allowConsoleAccess() throws Exception {
+        selenium.clickOnItem(getBindingCheckBoxes("consoleAccess"), "consoleAccess");
+    }
+
+    private void allowConsoleAdmin() throws Exception {
+        selenium.clickOnItem(getBindingCheckBoxes("consoleAdmin"), "consoleAdmin");
+    }
+
+    private void allowExternalAccess() throws Exception {
+        selenium.clickOnItem(getBindingCheckBoxes("externalAccess"), "externalAccess");
+    }
+
+    private void fillReceiveAddresses(String text) throws Exception {
+        selenium.fillInputItem(selenium.getDriver().findElement(By.id("receiveAddresses")), text);
+    }
+
+    private void fillSendAddresses(String text) throws Exception {
+        selenium.fillInputItem(selenium.getDriver().findElement(By.id("sendAddresses")), text);
+    }
+
+    private WebElement getRevealSecretButton() {
+        return selenium.getDriver().findElement(By.cssSelector("a[ng-click='view.showSecret = !view.showSecret']"));
+    }
+
+    private BindingSecretData getBindingSecretData() {
+        return new BindingSecretData(selenium.getDriver().findElement(By.className("secret-data")));
     }
 
     //================================================================================================
@@ -103,25 +164,48 @@ public class OpenshiftWebPage {
     public void openOpenshiftPage() throws Exception {
         log.info("Opening openshift web page on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
-        waitUntilLoginPage();
+        if (waitUntilLoginPage()) {
+            selenium.getAngularDriver().waitForAngularRequestsToFinish();
+            selenium.takeScreenShot();
+            if (!login())
+                throw new IllegalAccessException(loginPage.getAlertMessage());
+        }
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        selenium.takeScreenShot();
-        if (!login())
-            throw new IllegalAccessException(loginPage.getAlertMessage());
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        waitUntilConsolePage();
+        if (!waitUntilConsolePage()) {
+            throw new IllegalStateException("Openshift console not loaded");
+        }
     }
 
     private boolean login() throws Exception {
         return loginPage.login(credentials.getUsername(), credentials.getPassword());
     }
 
-    private void waitUntilLoginPage() {
-        selenium.getDriverWait().until(ExpectedConditions.titleContains("Login"));
+    private boolean waitUntilLoginPage() {
+        try {
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.titleContains("Login"));
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
-    private void waitUntilConsolePage() {
-        selenium.getDriverWait().until(ExpectedConditions.visibilityOfElementLocated(By.className("services-no-sub-categories")));
+    private boolean waitUntilConsolePage() {
+        try {
+            selenium.getDriverWait().until(ExpectedConditions.visibilityOfElementLocated(By.className("services-no-sub-categories")));
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    private void waitForRedirectToService() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.presenceOfElementLocated(By.tagName("service-instance-row")));
+    }
+
+    private void waitUntilServiceIsReady() throws Exception {
+        getProvisionedServiceItem().expandServiceItem();
+        log.info("Waiting until provisioned service will be completed");
+        selenium.getDriverWait().withTimeout(Duration.ofMinutes(4)).until(ExpectedConditions.numberOfElementsToBe(By.className("alert-info"), 0));
     }
 
     private void clickOnCreateBrokered() throws Exception {
@@ -144,26 +228,37 @@ public class OpenshiftWebPage {
         selenium.clickOnItem(getAddToProjectDropDown(), "Add to project dropdown");
     }
 
-    public void createAddressSpace(AddressSpace addressSpace, String projectName) throws Exception {
+    public String provisionAddressSpaceViaSC(AddressSpace addressSpace, String projectName) throws Exception {
+        log.info("Service for addressSpace {} will be provisioned", addressSpace);
+        openOpenshiftPage();
         if (addressSpace.getType() == AddressSpaceType.BROKERED) {
             createAddressSpaceBrokered(addressSpace.getNamespace(), projectName);
         } else {
             createAddressSpaceStandard(addressSpace.getNamespace(), projectName, "unlimited-standard");
         }
-        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getNamespace());
-        if (addressSpace.getType() == AddressSpaceType.STANDARD) {
-            log.info("Waiting 2min before standard address space is created");
-            Thread.sleep(120_000);
-        }
+        selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");
+        waitForRedirectToService();
+        String serviceId = getProvisionedServiceItem().getId();
+        waitUntilServiceIsReady();
+        return serviceId;
+    }
+
+    public void deprovisionAddressSpace(String namespace) throws Exception {
+        log.info("Service in namespace {} wil be deprovisioned", namespace);
+        openOpenshiftPage();
+        clickOnShowAllProjects();
+        selenium.clickOnItem(getProjectListItem(namespace), namespace);
+        waitForRedirectToService();
+        selenium.clickOnItem(getProvisionedServiceItem().getServiceActionDelete(), "Delete");
+        selenium.clickOnItem(getModalWindow().findElement(By.className("btn-danger")));
     }
 
     private void createAddressSpaceBrokered(String name, String projectName) throws Exception {
         clickOnCreateBrokered();
         next();
         selectProjectInWizard(projectName);
-        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
+        selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
                 name);
-        next();
         next();
         next();
     }
@@ -174,15 +269,14 @@ public class OpenshiftWebPage {
         selectPlanInStandard(plan);
         next();
         selectProjectInWizard(projectName);
-        selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
+        selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
                 name);
-        next();
         next();
         next();
     }
 
     private void selectPlanInStandard(String plan) throws Exception {
-        List<WebElement> plansItems = getOrderServiceModalWindow().findElements(By.className("plan-name"));
+        List<WebElement> plansItems = getModalWindow().findElements(By.className("plan-name"));
         for (WebElement element : plansItems) {
             if (element.getText().equals(plan.toLowerCase())) {
                 selenium.clickOnItem(element);
@@ -199,10 +293,125 @@ public class OpenshiftWebPage {
         } else {
             log.info("Project is not present address space will be added into new");
             selenium.clickOnItem(getItemFromAddToProjectDropDown("Create Project"));
-            selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("select-project")).findElement(By.id("name")),
+            selenium.fillInputItem(getModalWindow().findElement(By.tagName("select-project")).findElement(By.id("name")),
                     projectName);
-            selenium.fillInputItem(getOrderServiceModalWindow().findElement(By.tagName("select-project")).findElement(By.id("displayName")),
+            selenium.fillInputItem(getModalWindow().findElement(By.tagName("select-project")).findElement(By.id("displayName")),
                     projectName);
+        }
+    }
+
+    public void clickOnShowAllProjects() throws Exception {
+        selenium.clickOnItem(selenium.getDriver().findElement(By.className("projects-view-all")), "Show all projects");
+    }
+
+    public String createBinding(String projectName, boolean consoleAccess, boolean adminConsole, boolean external,
+                                String receiveAddress, String sendAddresses) throws Exception {
+        log.info("Binding in namespace {} will be created", projectName);
+        openOpenshiftPage();
+        clickOnShowAllProjects();
+        selenium.clickOnItem(getProjectListItem(projectName), projectName);
+        waitForRedirectToService();
+        selenium.clickOnItem(getProvisionedServiceItem().getServiceActionCreateBinding(), "Create Binding");
+        next();
+        if (consoleAccess) {
+            allowConsoleAccess();
+        }
+        if (adminConsole) {
+            allowConsoleAdmin();
+        }
+        if (external) {
+            allowExternalAccess();
+        }
+        if (receiveAddress != null) {
+            fillReceiveAddresses(receiveAddress);
+        }
+        if (sendAddresses != null) {
+            fillSendAddresses(sendAddresses);
+        }
+        next();
+        Thread.sleep(2000);
+        String bindingId = getModalWindow().findElement(By.className("results-message")).findElement(By.tagName("strong")).getText();
+        next();
+        return bindingId;
+    }
+
+    public void removeBinding(String namespace, String bindingID) throws Exception {
+        log.info("Binding {} in namespace {} will be removed", bindingID, namespace);
+        openOpenshiftPage();
+        clickOnShowAllProjects();
+        selenium.clickOnItem(getProjectListItem(namespace), namespace);
+        waitForRedirectToService();
+        ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
+        serviceItem.expandServiceItem();
+        WebElement binding = serviceItem.getServiceBinding(bindingID);
+        selenium.clickOnItem(serviceItem.getDeleteBindingButton(binding), "Delete");
+        selenium.clickOnItem(getModalWindow().findElement(By.className("btn-danger")));
+    }
+
+    public BindingSecretData viewSecretOfBinding(String namespace, String bindingID) throws Exception {
+        openOpenshiftPage();
+        clickOnShowAllProjects();
+        selenium.clickOnItem(getProjectListItem(namespace), namespace);
+        waitForRedirectToService();
+        ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
+        serviceItem.expandServiceItem();
+        WebElement binding = serviceItem.getServiceBinding(bindingID);
+        selenium.clickOnItem(serviceItem.getViewSecretBindingButton(binding), "View Secret");
+        selenium.clickOnItem(getRevealSecretButton(), "Reveal Secret");
+        BindingSecretData secretData = getBindingSecretData();
+        log.info(secretData.toString());
+        return secretData;
+    }
+
+    //================================================================================================
+    // Login page class
+    //================================================================================================
+
+    private class OpenshiftLoginWebPage {
+
+        private Logger log = CustomLogger.getLogger();
+
+        SeleniumProvider selenium;
+
+        public OpenshiftLoginWebPage(SeleniumProvider selenium) {
+            this.selenium = selenium;
+        }
+
+        private WebElement getUsernameTextInput() {
+            return selenium.getDriver().findElement(By.id("inputUsername"));
+        }
+
+        private WebElement getPasswordTextInput() {
+            return selenium.getDriver().findElement(By.id("inputPassword"));
+        }
+
+        private WebElement getLoginButton() {
+            return selenium.getDriver().findElement(By.className("btn-lg"));
+        }
+
+        private WebElement getAlertContainer() {
+            return selenium.getDriver().findElement(By.className("alert"));
+        }
+
+        public String getAlertMessage() {
+            return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
+        }
+
+        private boolean checkAlert() {
+            try {
+                getAlertMessage();
+                return false;
+            } catch (Exception ignored) {
+                return true;
+            }
+        }
+
+        public boolean login(String username, String password) throws Exception {
+            log.info("Try to login with credentials {} : {}", username, password);
+            selenium.fillInputItem(getUsernameTextInput(), username);
+            selenium.fillInputItem(getPasswordTextInput(), password);
+            selenium.clickOnItem(getLoginButton(), "Log in");
+            return checkAlert();
         }
     }
 }

@@ -194,6 +194,7 @@ public abstract class Kubernetes {
     }
 
     public void deleteNamespace(String namespace) {
+        log.info("Following namespace will be removed - {}", namespace);
         client.namespaces().withName(namespace).delete();
     }
 

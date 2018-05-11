@@ -115,14 +115,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //==================================== AddressSpace methods ======================================
     //================================================================================================
 
-    protected void addToAddressSpaceList(AddressSpace... addressSpaces) {
-        addressSpaceList.addAll(Arrays.asList(addressSpaces));
-    }
-
-    protected List<AddressSpace> getAddressSpaceList() {
-        return addressSpaceList;
-    }
-
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
         createAddressSpace(addressSpace, !isBrokered(addressSpace));
     }
@@ -996,6 +988,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void deleteAddressSpaceCreatedBySC(String namespace, AddressSpace addressSpace) throws Exception {
-        TestUtils.deleteNamespace(kubernetes, addressSpace, namespace, logCollector);
+        TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, namespace, logCollector);
     }
 }

@@ -15,7 +15,7 @@ public interface ISeleniumProvider {
     WebDriver buildDriver() throws MalformedURLException;
 
     @AfterEach
-    default void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
+    default void tearDownWebConsoleTests(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) {
             selenium.onFailed(context);
         }
