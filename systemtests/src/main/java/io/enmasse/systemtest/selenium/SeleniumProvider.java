@@ -149,10 +149,18 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
+    public void clearInput(WebElement element) {
+        element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        element.sendKeys(Keys.BACK_SPACE);
+        angularDriver.waitForAngularRequestsToFinish();
+        log.info("Cleared input");
+    }
+
 
     public void fillInputItem(WebElement element, String text) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
+        clearInput(element);
         element.sendKeys(text);
         angularDriver.waitForAngularRequestsToFinish();
         log.info("Filled input with text: " + text);

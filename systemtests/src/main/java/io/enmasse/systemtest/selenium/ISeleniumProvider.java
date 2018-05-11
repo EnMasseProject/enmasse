@@ -10,10 +10,11 @@ import org.openqa.selenium.WebDriver;
 
 public interface ISeleniumProvider {
     SeleniumProvider selenium = new SeleniumProvider();
+
     WebDriver buildDriver();
 
     @AfterEach
-    default void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
+    default void tearDownWebConsoleTests(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) {
             selenium.onFailed(context);
         }

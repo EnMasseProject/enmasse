@@ -976,12 +976,13 @@ public class TestUtils {
         addressApiClient.deleteAddressSpace(addressSpace);
     }
 
-    public static void deleteNamespace(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
         logCollector.collectEvents(addressSpace.getNamespace());
         logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         logCollector.collectConfigMaps(addressSpace.getNamespace());
         kubernetes.deleteNamespace(namespace);
         waitForNamespaceDeleted(kubernetes, namespace);
+        waitForAddressSpaceDeleted(kubernetes, addressSpace);
     }
 
     public static FirefoxDriver getFirefoxDriver() {
