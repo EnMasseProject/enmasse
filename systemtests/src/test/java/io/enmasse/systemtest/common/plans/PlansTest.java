@@ -486,7 +486,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
                 Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)));
 
         setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Destination[0]));
-        List<Future<List<Address>>> getAddresses = new ArrayList<>();
+        List<Future<List<Address>>> getAddresses = new ArrayList<>(allowedDest.size());
         for (Destination dest : allowedDest) {
             getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getAddress())));
         }

@@ -141,7 +141,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     private void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Destination dest) throws Exception {
         log.info("Application property selector: " + selector);
         int msgsCount = 10;
-        List<Message> listOfMessages = new ArrayList<>();
+        List<Message> listOfMessages = new ArrayList<>(msgsCount);
         for (int i = 0; i < msgsCount; i++) {
             Message msg = Message.Factory.create();
             msg.setAddress(dest.getAddress());
@@ -194,7 +194,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         setAddresses(selTopic);
 
         int msgsCount = 10;
-        List<Message> listOfMessages = new ArrayList<>();
+        List<Message> listOfMessages = new ArrayList<>(msgsCount);
         for (int i = 0; i < msgsCount; i++) {
             Message msg = Message.Factory.create();
             msg.setAddress(selTopic.getAddress());

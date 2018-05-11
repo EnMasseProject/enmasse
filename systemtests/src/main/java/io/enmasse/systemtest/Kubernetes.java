@@ -294,7 +294,7 @@ public abstract class Kubernetes {
                 AddressSpaceType type = AddressSpaceType.valueOf(planDefinition.getString("addressSpaceType").toUpperCase());
 
                 JsonArray resourcesDef = planDefinition.getJsonArray("resources");
-                List<AddressSpaceResource> resources = new ArrayList<>();
+                List<AddressSpaceResource> resources = new ArrayList<>(resourcesDef.size());
 
                 for (int i = 0; i < resourcesDef.size(); i++) {
                     JsonObject resourceDef = resourcesDef.getJsonObject(i);
@@ -306,7 +306,7 @@ public abstract class Kubernetes {
                 }
 
                 JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
-                List<AddressPlan> addressPlans = new ArrayList<>();
+                List<AddressPlan> addressPlans = new ArrayList<>(addressPlansDef.size());
                 for (int i = 0; i < addressPlansDef.size(); i++) {
                     addressPlans.add(getAddressPlanConfig(addressPlansDef.getString(i)));
                 }
@@ -328,7 +328,7 @@ public abstract class Kubernetes {
                 JsonObject metadataDef = planDefinition.getJsonObject("metadata");
 
                 JsonArray requiredResourcesDef = planDefinition.getJsonArray("requiredResources");
-                List<AddressResource> requiredResources = new ArrayList<>();
+                List<AddressResource> requiredResources = new ArrayList<>(requiredResourcesDef.size());
 
                 for (int i = 0; i < requiredResourcesDef.size(); i++) {
                     JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);
@@ -361,7 +361,7 @@ public abstract class Kubernetes {
                 String template = configDefinition.getString("template");
 
                 JsonArray requiredResourcesDef = configDefinition.getJsonArray("parameters");
-                List<ResourceParameter> parameters = new ArrayList<>();
+                List<ResourceParameter> parameters = (requiredResourcesDef != null) ? new ArrayList<>(requiredResourcesDef.size()) : Collections.emptyList();
                 if (requiredResourcesDef != null) {
                     for (int i = 0; i < requiredResourcesDef.size(); i++) {
                         JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);

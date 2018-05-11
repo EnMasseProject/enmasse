@@ -229,9 +229,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         setAddresses(addressSpace, budget, destinations);
     }
 
-
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
+        setAddresses(addressSpace, true, timeout, destinations);
+    }
+
+    protected void setAddresses(AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        setAddresses(addressSpace, wait, budget, destinations);
+    }
+
+    protected void setAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Destination... destinations) throws Exception {
+        if (wait) {
+            TestUtils.deploy(addressApiClient, kubernetes, timeout, addressSpace, HttpMethod.PUT, destinations);
+        } else {
+            TestUtils.deploy(addressApiClient, addressSpace, HttpMethod.PUT, destinations);
+        }
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
@@ -251,7 +263,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName, new ArrayList<>());
+        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName, Collections.emptyList());
     }
 
     /**
@@ -262,7 +274,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception
      */
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
+        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, Collections.emptyList());
     }
 
     /**
@@ -283,7 +295,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception
      */
     protected Future<List<Destination>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
+        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, Collections.emptyList());
     }
 
     /**
@@ -654,20 +666,20 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected ArrayList<Destination> generateTopicsList(String prefix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>();
+        ArrayList<Destination> addresses = new ArrayList<>((int) range.count());
         range.forEach(i -> addresses.add(Destination.topic(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
     protected ArrayList<Destination> generateQueueList(String prefix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>();
+        ArrayList<Destination> addresses = new ArrayList<>((int) range.count());
         range.forEach(i -> addresses.add(Destination.queue(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
-    protected ArrayList<Destination> generateQueueTopicList(String infix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>();
-        range.forEach(i -> {
+    protected ArrayList<Destination> generateQueueTopicList(String infix, int count) {
+        ArrayList<Destination> addresses = new ArrayList<>(count);
+        IntStream.range(0, count).forEach(i -> {
             if (i % 2 == 0) {
                 addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             } else {
@@ -716,7 +728,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
         arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
 
-        List<AbstractClient> receivers = new ArrayList<>();
+        List<AbstractClient> receivers = new ArrayList<>(receiverCount);
         for (int i = 0; i < receiverCount; i++) {
             RheaClientReceiver rec = new RheaClientReceiver();
             rec.setArguments(arguments);
@@ -829,7 +841,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws
             Exception {
-        List<KeycloakCredentials> users = new ArrayList<>();
+        int usersCount = 7;
+        List<KeycloakCredentials> users = new ArrayList<>(usersCount);
         if (addressSpace.getType() == AddressSpaceType.BROKERED) {
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_#", "password"));
             users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.#", "password"));

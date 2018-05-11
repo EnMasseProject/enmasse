@@ -118,7 +118,7 @@ public abstract class TestBaseWithShared extends TestBase {
      */
     private boolean addressExists(Destination destination) throws Exception {
         Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
-                new ArrayList<>());
+                Collections.emptyList());
         List<String> address = addresses.get(20, TimeUnit.SECONDS);
         log.info("found addresses");
         address.forEach(addr -> log.info("- address '{}'", addr));
@@ -140,9 +140,9 @@ public abstract class TestBaseWithShared extends TestBase {
      * @param destinations destinations to create
      * @throws Exception address not ready
      */
-    protected void setAddresses(Destination... destinations) throws Exception {
+    protected void setAddresses(boolean wait, Destination... destinations) throws Exception {
         if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
-            setAddresses(sharedAddressSpace, destinations);
+            setAddresses(sharedAddressSpace, wait, destinations);
         } else {
             List<Destination> inShared = getDestinationsObjects(Optional.empty())
                     .get(10, TimeUnit.SECONDS);
@@ -150,9 +150,13 @@ public abstract class TestBaseWithShared extends TestBase {
                 deleteAddresses(inShared.toArray(new Destination[0]));
             }
             if (destinations.length > 0) {
-                appendAddresses(destinations);
+                appendAddresses(wait, destinations);
             }
         }
+    }
+
+    protected void setAddresses(Destination... destinations) throws Exception {
+        setAddresses(true, destinations);
     }
 
     /**

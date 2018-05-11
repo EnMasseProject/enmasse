@@ -111,7 +111,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
         Destination destExtra = Destination.queue("ext-queue", "pooled-queue");
 
-        List<Destination> addresses = new ArrayList<>();
+        List<Destination> addresses = new ArrayList<>(queues.size());
         queues.forEach(queue -> addresses.add(Destination.queue(queue, "pooled-queue")));
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -142,7 +142,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Thread.sleep(30_000);
 
         int msgsCount = 1024;
-        List<Message> listOfMessages = new ArrayList<>();
+        List<Message> listOfMessages = new ArrayList<>(msgsCount);
         for (int i = 0; i < msgsCount; i++) {
             Message msg = Message.Factory.create();
             msg.setAddress(dest.getAddress());
@@ -211,8 +211,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("disabled due to issue #903")
     void testScalePooledQueueAutomatically() throws Exception {
-        ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 2000;
+        ArrayList<Destination> dest = new ArrayList<>(destCount);
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.queue("weak-queue-" + i, "pooled-queue"));//broker credit = 0.01 => 20 pods
         }

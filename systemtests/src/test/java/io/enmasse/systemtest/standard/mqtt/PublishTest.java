@@ -35,7 +35,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     private static Logger log = CustomLogger.getLogger();
 
     public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
-        List<String> messages = new ArrayList<>();
+        List<String> messages = new ArrayList<>(msgCount);
         for (int i = 0; i < msgCount; i++) {
             messages.add(String.format("mqtt-simple-send-receive-%s", i));
         }

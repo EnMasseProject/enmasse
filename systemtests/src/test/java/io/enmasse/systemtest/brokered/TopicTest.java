@@ -52,7 +52,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         int senderCount = 10;
         int recvCount = topicCount / 2;
 
-        List<Destination> topicList = new ArrayList<>();
+        List<Destination> topicList = new ArrayList<>(topicCount);
 
         //create queues
         for (int i = 0; i < recvCount; i++) {
@@ -67,7 +67,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         client.getConnectOptions().setCredentials(defaultCredentials);
 
         //attach subscribers
-        List<Future<List<Message>>> recvResults = new ArrayList<>();
+        List<Future<List<Message>>> recvResults = new ArrayList<>(recvCount);
         for (int i = 0; i < recvCount; i++) {
             recvResults.add(client.recvMessages(String.format("test-topic-pubsub%d.*", i), msgCount * 2));
         }
@@ -115,7 +115,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
         CompletableFuture<List<javax.jms.Message>> received = new CompletableFuture<>();
 
-        List<javax.jms.Message> recvd = new ArrayList<>();
+        List<javax.jms.Message> recvd = new ArrayList<>(count);
         AtomicInteger i = new AtomicInteger(0);
         MessageListener myListener = message -> {
             recvd.add(message);

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.marathon;
@@ -133,7 +134,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         int senderCount = 10;
         int recvCount = 20;
 
-        List<Destination> queueList = new ArrayList<>();
+        List<Destination> queueList = new ArrayList<>(queueCount);
 
         //create queues
         for (int i = 0; i < queueCount; i++) {
@@ -151,7 +152,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             clients.add(client);
 
             //attach receivers
-            List<Future<List<Message>>> recvResults = new ArrayList<>();
+            List<Future<List<Message>>> recvResults = new ArrayList<>(recvCount);
             for (int i = 0; i < recvCount / 2; i++) {
                 recvResults.add(client.recvMessages(queueList.get(i).getAddress(), msgCount / 2));
                 recvResults.add(client.recvMessages(queueList.get(i).getAddress(), msgCount / 2));
@@ -211,12 +212,13 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
 
         Destination queue = Destination.queue("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
         Destination topic = Destination.topic("test-auth-send-receive-topic", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpace, queue, topic);
+        setAddresses(addressSpace, false, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
         KeycloakCredentials user = new KeycloakCredentials("test-user", "test-user");
         createUser(addressSpace, user);
 
+        waitForDestinationsReady(addressSpace, queue, topic);
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, user);
@@ -259,7 +261,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         int msgCount = 1000;
         int topicCount = 10;
 
-        List<Destination> topicList = new ArrayList<>();
+        List<Destination> topicList = new ArrayList<>(topicCount);
 
         //create queues
         for (int i = 0; i < topicCount; i++) {
@@ -276,7 +278,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             clients.add(client);
 
             //attach subscibers
-            List<Future<List<Message>>> recvResults = new ArrayList<>();
+            List<Future<List<Message>>> recvResults = new ArrayList<>(topicCount);
             for (int i = 0; i < topicCount; i++) {
                 recvResults.add(client.recvMessages(String.format("test-topic-pubsub-%d", i), msgCount));
             }
@@ -309,7 +311,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         consoleWebPage.openWebConsolePage(user);
 
         int addressCount = 5;
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", addressCount);
 
         runTestInLoop(30, () -> {
             consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
@@ -325,10 +327,10 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
 
     private void doAddressTest(AddressSpace addressSpace, String topicPattern,
                                String queuePattern, KeycloakCredentials credentials) throws Exception {
-        List<Destination> queueList = new ArrayList<>();
-        List<Destination> topicList = new ArrayList<>();
 
         int destinationCount = 20;
+        List<Destination> queueList = new ArrayList<>(destinationCount);
+        List<Destination> topicList = new ArrayList<>(destinationCount);
 
         for (int i = 0; i < destinationCount; i++) {
             queueList.add(Destination.queue(String.format(queuePattern, i), getDefaultPlan(AddressType.QUEUE)));
@@ -339,6 +341,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
         AmqpClient topicClient;
 
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
+        setAddresses(addressSpace, false, topicList.toArray(new Destination[0]));
         for (Destination queue : queueList) {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
             queueClient.getConnectOptions().setCredentials(credentials);
@@ -347,7 +350,7 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             QueueTest.runQueueTest(queueClient, queue, 1024);
         }
 
-        setAddresses(addressSpace, topicList.toArray(new Destination[0]));
+        waitForDestinationsReady(addressSpace, topicList.toArray(new Destination[0]));
 
         for (Destination topic : topicList) {
             topicClient = amqpClientFactory.createTopicClient(addressSpace);
