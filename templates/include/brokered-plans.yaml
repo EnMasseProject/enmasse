@@ -17,8 +17,8 @@ data:
       },
       "displayName": "Unlimited",
       "displayOrder": 0,
-      "shortDescription": "Unlimited plan without resource restrictions.",
-      "longDescription": "Unlimited plan where you can create an infinite number of queues until the system falls over.",
+      "shortDescription": "Unlimited brokered plan without resource restrictions.",
+      "longDescription": "Unlimited plan where you can create an infinite number of queues until the system falls over. Creates a single broker combined with a console for managing addresses.",
       "uuid": "5d5acf5c-0500-11e8-ab55-507b9def37d9",
       "addressSpaceType": "brokered",
       "resources": [

@@ -11,22 +11,26 @@ import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
 import io.enmasse.osb.api.catalog.*;
+import org.apache.commons.codec.Charsets;
 
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.*;
 
 public class ServiceMapping {
-    private final Map<AddressSpaceType, Service> services;
+    private final Service service;
+    private final UUID serviceUuid = UUID.nameUUIDFromBytes("service-enmasse".getBytes(StandardCharsets.US_ASCII));
+    private final Map<UUID, AddressSpaceType> planToAddressSpaceType = new HashMap<>();
     private final Schema schema;
 
-    private final String SERVICE_NAME_PATTERN = getStringFromEnv("SERVICE_BROKER_SERVICE_NAME_PATTERN", "enmasse-{0}");
+    private final String SERVICE_NAME = getStringFromEnv("SERVICE_BROKER_SERVICE_NAME", "enmasse");
+    private final String SERVICE_DESCRIPTION = getStringFromEnv("SERVICE_BROKER_SERVICE_DESCRIPTION", "EnMasse - Messaging-as-a-Service");
     private final String[] TAGS = getStringsFromEnv("SERVICE_BROKER_SERVICE_TAGS", new String[] {"middleware", "messaging", "amqp", "mqtt", "enmasse"});
-    private final String SERVICE_DISPLAY_NAME_PATTERN = getStringFromEnv("SERVICE_BROKER_SERVICE_DISPLAY_NAME_PATTERN", "EnMasse ({0})");
+    private final String SERVICE_DISPLAY_NAME = getStringFromEnv("SERVICE_BROKER_SERVICE_DISPLAY_NAME", "EnMasse");
 
     private final String SERVICE_PROVIDER_NAME = getStringFromEnv("SERVICE_BROKER_SERVICE_PROVIDER_NAME", "EnMasse");
     private final String IMAGE_URL = getStringFromEnv("SERVICE_BROKER_SERVICE_IMAGE_URL", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/images/logo/enmasse_icon.png");
-    private final String DOCUMENTATION_URL = getStringFromEnv("SERVICE_BROKER_DOCUMENTATION_URL", "https://github.com/EnMasseProject/enmasse");
+    private final String DOCUMENTATION_URL = getStringFromEnv("SERVICE_BROKER_DOCUMENTATION_URL", "http://enmasse.io/documentation");
     static final String addressRegexp = "^\\s*(([a-zA-Z0-9_-]+(([/.])[a-zA-Z0-9_-]+)*(([/.])?[#*])?)|[#*])(\\s*,\\s*(([a-zA-Z0-9_-]+([/.][a-zA-Z0-9_-]+)*([/.]?[#*])?)|[#*]))*\\s*$";
 
     private String getStringFromEnv(String varName, String defaultValue) {
@@ -47,37 +51,33 @@ public class ServiceMapping {
 
     public ServiceMapping(Schema schema) {
         this.schema = schema;
-        this.services = populateServices(schema);
+        this.service = populateService(schema);
     }
 
-    private Map<AddressSpaceType, Service> populateServices(Schema schema) {
-        Map<AddressSpaceType, Service> services = new LinkedHashMap<>();
-        MessageFormat messageFormat = new MessageFormat(SERVICE_NAME_PATTERN);
+    private Service populateService(Schema schema) {
+        Service service = new Service(serviceUuid,
+                SERVICE_NAME,
+                SERVICE_DESCRIPTION,
+                true);
+        service.getTags().addAll(Arrays.asList(TAGS));
+        service.getMetadata().put("displayName", SERVICE_DISPLAY_NAME);
+        service.getMetadata().put("providerDisplayName", SERVICE_PROVIDER_NAME);
+        //service.getMetadata().put("longDescription", addressSpaceType.getDescription());
+        service.getMetadata().put("imageUrl", IMAGE_URL);
+        service.getMetadata().put("documentationUrl", DOCUMENTATION_URL);
 
         for(AddressSpaceType addressSpaceType : schema.getAddressSpaceTypes()) {
-            Service service = new Service(getUuidForAddressSpaceType(addressSpaceType),
-                    MessageFormat.format(SERVICE_NAME_PATTERN,addressSpaceType.getName()),
-                    addressSpaceType.getDescription(),
-                    true);
-
-            service.getTags().addAll(Arrays.asList(TAGS));
-            service.getMetadata().put("displayName", MessageFormat.format(SERVICE_DISPLAY_NAME_PATTERN, addressSpaceType.getName()));
-            service.getMetadata().put("providerDisplayName", SERVICE_PROVIDER_NAME);
-            //service.getMetadata().put("longDescription", addressSpaceType.getDescription());
-            service.getMetadata().put("imageUrl", IMAGE_URL);
-            service.getMetadata().put("documentationUrl", DOCUMENTATION_URL);
 
             service.setPlans(populatePlans(addressSpaceType));
             // TODO - should come from config data
             service.setPlanUpdatable(false);
-
-            services.put(addressSpaceType, service);
         }
-        return Collections.unmodifiableMap(services);
+
+        return service;
     }
 
     private UUID getUuidForAddressSpaceType(AddressSpaceType addressSpaceType) {
-        return UUID.nameUUIDFromBytes(("service-enmasse-"+addressSpaceType.getName()).getBytes(StandardCharsets.US_ASCII));
+        return UUID.nameUUIDFromBytes(addressSpaceType.getName().getBytes(Charsets.US_ASCII));
     }
 
 
@@ -86,8 +86,11 @@ public class ServiceMapping {
         for(AddressSpacePlan addressSpacePlan : addressSpaceType.getPlans()) {
             // TODO
             boolean isFree = true;
-            Plan plan = new Plan(UUID.nameUUIDFromBytes(("plan-"+getUuidForAddressSpaceType(addressSpaceType)+"-"+addressSpacePlan.getName()).getBytes(StandardCharsets.US_ASCII)),
+            UUID planUuid = UUID.nameUUIDFromBytes(("plan-"+getUuidForAddressSpaceType(addressSpaceType)+"-"+addressSpacePlan.getName()).getBytes(StandardCharsets.US_ASCII));
+            Plan plan = new Plan(planUuid,
                     addressSpacePlan.getName(), addressSpacePlan.getShortDescription(), isFree, true);
+
+            planToAddressSpaceType.put(planUuid, addressSpaceType);
 
             ObjectSchema bindParameters = new ObjectSchema();
             StringSchema sendAddressProperty = new StringSchema();
@@ -141,32 +144,21 @@ public class ServiceMapping {
     }
 
     public List<Service> getServices() {
-        return new ArrayList<>(services.values());
+        return Collections.singletonList(service);
+    }
+
+    public Service getService() {
+        return service;
     }
 
     public Service getService(UUID serviceId) {
-        for(Service service : services.values()) {
-            if(service.getUuid().equals(serviceId)) {
-                return service;
-            }
+        if(service.getUuid().equals(serviceId)) {
+            return service;
         }
         return null;
     }
 
-    private Optional<Service> getServiceForAddressSpaceType(AddressSpaceType type) {
-        return Optional.ofNullable(services.get(type));
-    }
-
-    public Optional<Service> getServiceForAddressSpaceType(String type) {
-        return schema.findAddressSpaceType(type).flatMap(this::getServiceForAddressSpaceType);
-    }
-
-    public AddressSpaceType getAddressSpaceTypeForService(Service service) {
-        for(Map.Entry<AddressSpaceType, Service> entry : services.entrySet()) {
-            if(entry.getValue().equals(service)) {
-                return entry.getKey();
-            }
-        }
-        return null;
+    public AddressSpaceType getAddressSpaceTypeForPlan(UUID planId) {
+        return planToAddressSpaceType.get(planId);
     }
 }

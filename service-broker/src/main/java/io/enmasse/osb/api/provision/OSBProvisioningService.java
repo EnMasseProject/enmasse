@@ -77,8 +77,8 @@ public class OSBProvisioningService extends OSBServiceBase {
         Optional<AddressSpace> existingAddressSpace = findAddressSpaceByInstanceId(instanceId);
 
         if (existingAddressSpace.isPresent()) {
-            Optional<Service> desiredService = serviceMapping.getServiceForAddressSpaceType(existingAddressSpace.get().getType());
-            if (desiredService.isPresent() && desiredService.get().equals(service)) {
+            Service desiredService = serviceMapping.getService();
+            if (desiredService.equals(service)) {
                 Optional<Plan> plan = service.getPlan(request.getPlanId());
                 if (plan.isPresent() && plan.get().getName().equals(existingAddressSpace.get().getPlan())) {
                     String dashboardUrl = getConsoleURL(existingAddressSpace.get());
@@ -91,7 +91,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         if(findAddressSpaceByName(name).isPresent()) {
             throw Exceptions.conflictException("Service addressspace with name " + name + " already exists");
         }
-        AddressSpaceType addressSpaceType = serviceMapping.getAddressSpaceTypeForService(service);
+        AddressSpaceType addressSpaceType = serviceMapping.getAddressSpaceTypeForPlan(request.getPlanId());
         AddressSpace addressSpace = createAddressSpace(instanceId, name, addressSpaceType.getName(), service.getPlan(request.getPlanId()).get().getName(), userId, userName);
 
         String dashboardUrl = getConsoleURL(addressSpace);
