@@ -10,12 +10,10 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.KeycloakCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
@@ -24,12 +22,14 @@ import java.util.Map;
 
 import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
 class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
 
     private static Logger log = CustomLogger.getLogger();
     private Map<String, AddressSpace> provisionedServices = new HashMap<>();
+    private KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
 
     private String getUserProjectName(AddressSpace addressSpace) {
         return String.format("%s-%s", "service", addressSpace.getNamespace());
@@ -46,14 +46,18 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     @AfterEach
     void tearDownWebConsoleTests() {
-        provisionedServices.forEach((project, addressSpace) -> {
-            try {
-                deleteAddressSpaceCreatedBySC(project, addressSpace);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        provisionedServices.clear();
+        if (!environment.skipCleanup()) {
+            provisionedServices.forEach((project, addressSpace) -> {
+                try {
+                    deleteAddressSpaceCreatedBySC(project, addressSpace);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            provisionedServices.clear();
+        } else {
+            log.warn("Remove address spaces in tear down - SKIPPED!");
+        }
     }
 
     @Test
@@ -112,6 +116,27 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         String bindingID = ocPage.createBinding(getUserProjectName(brokered),
                 false, true, true, null, null);
         BindingSecretData credentials = ocPage.viewSecretOfBinding(getUserProjectName(brokered), bindingID);
+
+    }
+
+    @Test
+    @Disabled("IN PROGRESS")
+    void testLoginViaOpensShiftCredentials() throws Exception {
+        AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED);
+        provisionedServices.put(getUserProjectName(brokeredSpace), brokeredSpace);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        ocPage.openOpenshiftPage();
+        ocPage.provisionAddressSpaceViaSC(brokeredSpace, getUserProjectName(brokeredSpace));
+//        ConsoleWebPage consoleWebPage = ocPage.clickOnDashboard();
+//        consoleWebPage
+        waitForAddressSpaceReady(brokeredSpace);
+        reloadAddressSpaceEndpoints(brokeredSpace);
+        //this is important due to update of endpoint which are usually updated
+
+        ConsoleWebPage consolePage = new ConsoleWebPage(selenium, getConsoleRoute(brokeredSpace),
+                addressApiClient, brokeredSpace, developer);
+        consolePage.openWebConsolePage(true);
+        fail("korny za to nemuze");
 
     }
 
