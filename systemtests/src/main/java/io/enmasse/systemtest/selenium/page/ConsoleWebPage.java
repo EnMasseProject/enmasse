@@ -302,15 +302,24 @@ public class ConsoleWebPage {
         openWebConsolePage(credentials);
     }
 
+    public void openWebConsolePage(boolean viaOpenShift) throws Exception {
+        openWebConsolePage(credentials, viaOpenShift);
+    }
+
     public void openWebConsolePage(KeycloakCredentials credentials) throws Exception {
+        openWebConsolePage(credentials, false);
+    }
+
+    public void openWebConsolePage(KeycloakCredentials credentials, boolean viaOpenShift) throws Exception {
         log.info("Opening console web page");
         logout();
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword()))
+        if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift))
             throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
     }
+
 
     public void openAddressesPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
@@ -660,6 +669,10 @@ public class ConsoleWebPage {
             return selenium.getDriver().findElement(By.className("alert"));
         }
 
+        private WebElement getOpenshiftButton() {
+            return selenium.getDriver().findElement(By.id("zocial-openshift-v3"));
+        }
+
         public String getAlertMessage() throws Exception {
             return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
         }
@@ -673,12 +686,18 @@ public class ConsoleWebPage {
             }
         }
 
-        public boolean login(String username, String password) throws Exception {
-            log.info("Try to login with credentials {} : {}", username, password);
-            selenium.fillInputItem(getUsernameTextInput(), username);
-            selenium.fillInputItem(getPasswordTextInput(), password);
-            selenium.clickOnItem(getLoginButton(), "Log in");
-            return checkAlert();
+        public boolean login(String username, String password, boolean viaOpenShift) throws Exception {
+            if (viaOpenShift) {
+                selenium.clickOnItem(getOpenshiftButton());
+                OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
+                return ocLoginPage.login(username, password);
+            } else {
+                log.info("Try to login with credentials {} : {}", username, password);
+                selenium.fillInputItem(getUsernameTextInput(), username);
+                selenium.fillInputItem(getPasswordTextInput(), password);
+                selenium.clickOnItem(getLoginButton(), "Log in");
+                return checkAlert();
+            }
         }
     }
 }
