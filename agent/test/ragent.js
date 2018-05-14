@@ -111,9 +111,9 @@ function verify_addresses(inputs, router, verify_extra) {
         for (var i = 0; i < inputs.length; i++) {
             var a = inputs[i];
             if (a.type === 'queue') {
-                verify_queue(a.address, addresses, autolinks);
+                verify_queue(a.address, addresses, autolinks, a.allocated_to);
             } else if (a.type === 'topic') {
-                verify_topic(a.address, linkroutes);
+                verify_topic(a.address, linkroutes, a.allocated_to);
             } else if (a.type === 'anycast') {
                 verify_anycast(a.address, addresses);
             } else if (a.type === 'multicast') {
@@ -1017,9 +1017,6 @@ describe('broker configuration', function() {
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
-                //verify connectors exist:
-                broker_a.verify_connectors([{name:'a'}]);
-                broker_b.verify_connectors([{name:'b'}]);
                 done();
             }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         }).catch(done);
@@ -1038,46 +1035,16 @@ describe('broker configuration', function() {
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
-                //verify connectors:
-                broker_a.verify_connectors([{name:'a'}, {name:'c'}]);
-                broker_b.verify_connectors([{name:'b'}]);
                 //delete configmap
                 address_source.remove_resource_by_name('address-config-a');
                 setTimeout(function () {
                     verify_addresses([{address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
                     broker_a.verify_addresses([{address:'c', type:'queue'}]);
                     broker_b.verify_addresses([{address:'b', type:'queue'}]);
-                    //verify connector for a was deleted:
-                    broker_a.verify_connectors([{name:'c'}]);
-                    broker_b.verify_connectors([{name:'b'}]);
                     done();
                 }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
             }, 500);
         });
-    });
-
-    it('creates address-settings on broker', function (done) {
-        var settings = new BrokerAddressSettings({port:address_source.port, host:'localhost', token:'foo', namespace:'default'});
-        ragent.broker_address_settings = settings.get_address_settings_async.bind(settings);
-        var router = routers.new_router();
-        var broker_a = new MockBroker('broker_a');
-        broker_a.global_max_size = 100;
-        connect_broker(broker_a).then(function () {
-            address_source.add_address_plan({plan_name:'small', address_type:'queue', required_resources:[{name:'broker',credit:0.2}]});
-            address_source.add_address_plan({plan_name:'medium', address_type:'queue', required_resources:[{name:'broker',credit:0.5}]});
-            address_source.add_address_definition({address:'a', type:'queue', plan:'small'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'queue', plan:'medium'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            setTimeout(function () {
-                //verify router config:
-                verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_a'}], router);
-                //verify queues on broker:
-                broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'b', type:'queue'}]);
-                //verify address settings:
-                broker_a.verify_address_settings([{match:'a', maxSizeBytes:20, addressFullMessagePolicy:'FAIL'}, {match:'b', maxSizeBytes:50, addressFullMessagePolicy:'FAIL'}]);
-                settings.watcher.close();
-                done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        }).catch(done);
     });
 
     it('handles broker disconnection', function (done) {

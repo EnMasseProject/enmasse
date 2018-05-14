@@ -23,19 +23,11 @@ var artemis = require('./artemis.js');
 var myevents = require('./events.js');
 var myutils = require('./utils.js');
 
-function BrokerController(event_sink, get_address_settings) {
+function BrokerController(event_sink) {
     events.EventEmitter.call(this);
     this.check_in_progress = false;
-    this.post_event = event_sink || function (event) { log.info('event: %j', event); };
-    if (get_address_settings) {
-        var self = this;
-        this.get_address_settings = function (a) {
-            return get_address_settings(a, self.broker.getGlobalMaxSize());
-        }
-    } else {
-        this.get_address_settings = function () { return Promise.resolve(); };
-    }
-    this.serial_sync = require('./utils.js').serialize(this._sync_addresses_and_connectors.bind(this));
+    this.post_event = event_sink || function (event) { log.debug('event: %j', event); };
+    this.serial_sync = require('./utils.js').serialize(this._sync_broker_addresses.bind(this));
     this.addresses_synchronized = false;
     this.busy_count = 0;
     this.retrieve_count = 0;
@@ -289,7 +281,7 @@ function values(map) {
 }
 
 function excluded_addresses(address) {
-    return address === 'DLQ' || address === 'ExpiryQueue';
+    return address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications';
 }
 
 function is_temp_queue(a) {
@@ -327,7 +319,7 @@ BrokerController.prototype.delete_address = function (a) {
             self.post_event(myevents.address_delete(a));
         }).catch(function (error) {
             log.error('[%s] Failed to delete queue %s: %s', self.id, a.address, error);
-            self.broker.deleteAddress(a.address).then(function () {
+            return self.broker.deleteAddress(a.address).then(function () {
                 log.info('[%s] Deleted anycast address %s', self.id, a.address);
             }).catch(function (error) {
                 log.error('[%s] Failed to delete queue address %s: %s', self.id, a.address, error);
@@ -360,11 +352,7 @@ BrokerController.prototype.delete_address_and_settings = function (a) {
 
 BrokerController.prototype.delete_addresses = function (addresses) {
     var self = this;
-    return Promise.all(addresses.map(function (a) {
-        return self.get_address_settings(a).then(function (settings) {
-            return settings ? self.delete_address_and_settings(a) : self.delete_address(a);
-        });
-    }));
+    return Promise.all(addresses.map(function (a) { return self.delete_address(a); }));
 };
 
 BrokerController.prototype.create_address = function (a) {
@@ -404,13 +392,7 @@ BrokerController.prototype.create_address_and_settings = function (a, settings) 
 
 BrokerController.prototype.create_addresses = function (addresses) {
     var self = this;
-    return Promise.all(addresses.map(function (a) {
-        return self.get_address_settings(a).then(function (settings) {
-            return settings ? self.create_address_and_settings(a, settings) : self.create_address(a);
-        }).catch(function (error) {
-            log.error('[%s] Failed to create address for "%s": %s', self.id, a.address, error);
-        });
-    }));
+    return Promise.all(addresses.map(function (a) { return self.create_address(a); }));
 };
 
 BrokerController.prototype.check_broker_addresses = function () {
@@ -532,8 +514,8 @@ BrokerController.prototype._sync_addresses_and_connectors = function () {
     return this._sync_broker_addresses().then(this._ensure_connectors.bind(this, desired));
 }
 
-module.exports.create_controller = function (connection, get_address_settings, event_sink) {
-    var bc = new BrokerController(event_sink, get_address_settings);
+module.exports.create_controller = function (connection, event_sink) {
+    var bc = new BrokerController(event_sink);
     bc.set_connection(connection);
     return bc;
 };
