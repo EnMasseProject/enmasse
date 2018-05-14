@@ -12,7 +12,6 @@ import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
@@ -109,8 +108,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-
-
     //================================================================================================
     //==================================== AddressSpace methods ======================================
     //================================================================================================
@@ -191,6 +188,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected List<AddressSpace> getAddressSpaces() throws Exception {
         return TestUtils.getAddressSpacesObjects(addressApiClient);
     }
+
+    protected void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
+        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+    }
+
+    protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
+        AddressSpace addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
+        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+        return !addrSpaceResponse.getEndpoints().isEmpty();
+    }
+
 
     private KeycloakClient getKeycloakClient() throws Exception {
         if (keycloakApiClient == null) {

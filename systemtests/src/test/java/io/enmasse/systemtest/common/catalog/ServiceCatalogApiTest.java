@@ -42,7 +42,7 @@ class ServiceCatalogApiTest extends TestBase {
     private String createServiceInstance(AddressSpace addressSpace, boolean wait, Optional<String> instanceId) throws Exception {
         String processedInstanceId = osbApiClient.provisionInstance(addressSpace, instanceId);
         if (wait) {
-            TestUtils.waitForServiceInstanceReady(osbApiClient, processedInstanceId);
+            waitForServiceInstanceReady(processedInstanceId);
         }
         instances.put(addressSpace, processedInstanceId);
         return processedInstanceId;
@@ -80,14 +80,18 @@ class ServiceCatalogApiTest extends TestBase {
 
     @AfterAll
     void tearDown() {
-        instances.forEach((space, id) -> {
-            try {
-                osbApiClient.deprovisionInstance(space, id);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        instances.clear();
+        if (!environment.skipCleanup()) {
+            instances.forEach((space, id) -> {
+                try {
+                    osbApiClient.deprovisionInstance(space, id);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            instances.clear();
+        } else {
+            log.warn("Remove service instances in tear down - SKIPPED!");
+        }
     }
 
     @Test
