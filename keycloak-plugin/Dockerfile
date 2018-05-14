@@ -1,6 +1,6 @@
 FROM enmasseproject/java-base:8-6
 
-RUN yum -y install openssl && yum -y update && yum -y clean all
+RUN yum -y install openssl && yum -y clean all
 
 ARG version=latest
 ENV VERSION ${version}
