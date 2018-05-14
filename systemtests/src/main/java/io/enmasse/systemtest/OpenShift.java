@@ -30,7 +30,7 @@ public class OpenShift extends Kubernetes {
             return endpoint;
         } else {
             log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint(globalNamespace, "address-controller", "https");
+            return getEndpoint(globalNamespace, "address-space-controller", "https");
         }
     }
 

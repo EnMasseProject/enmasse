@@ -131,7 +131,7 @@ access, which will restrict it to a single address space.
 
 .Procedure
 
-. Create a service account for the {ProductName} address controller:
+. Create a service account for the {ProductName} address space controller:
 +
 [options="nowrap"]
 ----
@@ -144,7 +144,7 @@ oc create sa enmasse-admin
 ----
 oc login -u system:admin
 oc create -f ./resources/cluster-roles/api-server.yaml
-oc create -f ./resources/cluster-roles/address-controller.yaml
+oc create -f ./resources/cluster-roles/address-space-controller.yaml
 ----
 
 . Grant privileges to service account:
@@ -153,7 +153,7 @@ oc create -f ./resources/cluster-roles/address-controller.yaml
 ----
 oc login -u system:admin
 oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user enmasse.io:address-controller system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:enmasse:enmasse-admin
 oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
 ----
 +
@@ -205,11 +205,11 @@ oc create -f ./resources/api-server/service.yaml
 oc create route passthrough restapi --service=api-server -n enmasse
 ----
 
-. Deploy the address-controller:
+. Deploy the address-space-controller:
 +
 [options="nowrap"]
 ----
-oc create -f ./resources/address-controller/deployment.yaml
+oc create -f ./resources/address-space-controller/deployment.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
@@ -226,7 +226,7 @@ oc get pods -n enmasse
 
 .Procedure
 
-. Create service accounts for the {ProductName} address controller and address space:
+. Create service accounts for the {ProductName} address space controller and address space:
 +
 [options="nowrap"]
 ----
@@ -265,12 +265,12 @@ oc process -f ./resources/templates/address-space.yaml NAME=default NAMESPACE=en
 oc create -f ./resources/templates/address.yaml -n enmasse
 ----
 
-. Deploy address-controller:
+. Deploy address-space-controller:
 +
 [options="nowrap"]
 ----
-oc create -f ./resources/address-controller/address-space-definitions.yaml
-oc create -f ./resources/address-controller/deployment.yaml
+oc create -f ./resources/address-space-controller/address-space-definitions.yaml
+oc create -f ./resources/address-space-controller/deployment.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.

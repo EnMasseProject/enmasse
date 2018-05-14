@@ -168,7 +168,7 @@ public class Main extends AbstractVerticle {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
         } catch (Exception e) {
-            System.out.println("Error starting address controller: " + e.getMessage());
+            System.out.println("Error starting address space controller: " + e.getMessage());
             System.exit(1);
         }
     }

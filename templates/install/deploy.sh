@@ -169,7 +169,7 @@ else
     fi
 fi
 
-runcmd "$CMD create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
+runcmd "$CMD create sa enmasse-admin -n $NAMESPACE" "Create service account for address space controller"
 
 if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
@@ -222,9 +222,9 @@ else
     exit 1
 fi
 
-runcmd "$CMD create -n ${NAMESPACE} configmap address-controller-config -n ${NAMESPACE}" "Create address-controller configmap"
-runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/address-space-definitions.yaml" "Create address space definitions"
-runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-controller/deployment.yaml" "Create address controller deployment"
+runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config -n ${NAMESPACE}" "Create address-space-controller configmap"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/address-space-definitions.yaml" "Create address space definitions"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/deployment.yaml" "Create address space controller deployment"
 
 create_self_signed_cert "$CMD" "api-server.${NAMESPACE}.svc.cluster.local" "api-server-cert"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/deployment.yaml" "Create api server deployment"
@@ -240,15 +240,15 @@ if [ $MODE == "multitenant" ]; then
     if [ -n "$OS_ALLINONE" ] && [ -n "$USE_OPENSHIFT" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
-        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/address-controller.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant address controller"
+        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/address-space-controller.yaml -n $NAMESPACE" "Create cluster roles needed for address-space-controller"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/api-server.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant api server"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-controller rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting api-server rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting auth-delegator rights to enmasse-admin"
         runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
     elif [ -n "$USE_OPENSHIFT" ]; then
         echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/*.yaml'"
-        echo "Please add enmasse.io:address-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+        echo "Please add enmasse.io:address-space-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add enmasse.io:api-server to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add system:auth-delegator to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin'"
     fi

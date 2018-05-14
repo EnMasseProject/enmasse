@@ -3,8 +3,8 @@ kind: Deployment
 metadata:
   labels:
     app: enmasse
-    name: address-controller
-  name: address-controller
+    name: address-space-controller
+  name: address-space-controller
 spec:
   replicas: 1
   strategy:
@@ -13,7 +13,7 @@ spec:
     metadata:
       labels:
         app: enmasse
-        name: address-controller
+        name: address-space-controller
     spec:
       containers:
       - env:
@@ -21,25 +21,25 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: enableRbac
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
         - name: ENABLE_EVENT_LOGGER
           valueFrom:
             configMapKeyRef:
               key: enableEventLogger
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
         - name: ENVIRONMENT
           valueFrom:
             configMapKeyRef:
               key: environment
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
         - name: IMPERSONATE_USER
           valueFrom:
             configMapKeyRef:
               key: impersonateUser
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
         - name: ADDRESS_CONTROLLER_SA
           value: enmasse-admin
@@ -53,27 +53,27 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: wildcardEndpointCertSecret
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
         - name: RESYNC_INTERVAL
           valueFrom:
             configMapKeyRef:
               key: resyncInterval
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
         - name: RECHECK_INTERVAL
           valueFrom:
             configMapKeyRef:
               key: recheckInterval
-              name: address-controller-config
+              name: address-space-controller-config
               optional: true
-        image: docker.io/enmasseproject/address-controller:latest
+        image: docker.io/enmasseproject/address-space-controller:latest
         livenessProbe:
           httpGet:
             path: /healthz
             port: http
             scheme: HTTP
-        name: address-controller
+        name: address-space-controller
         ports:
         - containerPort: 8080
           name: http

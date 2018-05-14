@@ -110,7 +110,7 @@ kubectl create configmap keycloak-config --from-literal=hostname=standard-authse
 
 ==== Deploying {ProductName}
 
-. Create service account for the {ProductName} address controller:
+. Create service account for the {ProductName} address space controller:
 +
 [options="nowrap"]
 ----
@@ -124,7 +124,7 @@ kubectl create sa enmasse-admin
 kubectl apply -f ./resources/resource-definitions/resource-definitions.yaml
 kubectl apply -f ./resources/plans/standard-plans.yaml
 kubectl apply -f ./resources/plans/brokered-plans.yaml
-kubectl apply -f ./resources/address-controller/address-space-definitions.yaml
+kubectl apply -f ./resources/address-space-controller/address-space-definitions.yaml
 ----
 
 . Create a certificate to use for the api server. For testing purposes, you can create a self-signed certificate:
@@ -150,11 +150,11 @@ kubectl create -f ./resources/api-server/deployment.yaml
 kubectl create -f ./resources/api-server/service.yaml
 ----
 
-. Deploy the address-controller:
+. Deploy the address-space-controller:
 +
 [options="nowrap"]
 ----
-kubectl create -f ./resources/address-controller/deployment.yaml
+kubectl create -f ./resources/address-space-controller/deployment.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.

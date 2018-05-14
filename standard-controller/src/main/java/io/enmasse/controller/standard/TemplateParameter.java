@@ -6,7 +6,7 @@
 package io.enmasse.controller.standard;
 
 /**
- * Template parameters that are dynamically set by the address controller.
+ * Template parameters that are dynamically set by the standard controller.
  */
 public interface TemplateParameter {
     String NAME = "NAME";

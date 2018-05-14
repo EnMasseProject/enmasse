@@ -120,7 +120,7 @@ public class ServiceBroker extends AbstractVerticle {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
         } catch (Exception e) {
-            System.out.println("Error starting address controller: " + e.getMessage());
+            System.out.println("Error starting service broker: " + e.getMessage());
             System.exit(1);
         }
     }

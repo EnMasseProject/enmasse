@@ -6,7 +6,7 @@
 package io.enmasse.controller.common;
 
 /**
- * Template parameters that are dynamically set by the address controller.
+ * Template parameters that are dynamically set by the address space controller.
  */
 public interface TemplateParameter {
     String ADDRESS_SPACE = "ADDRESS_SPACE";

@@ -74,9 +74,9 @@ public class Main {
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(addressController, result -> {
             if (result.succeeded()) {
-                log.info("Address space controller for {} deployed", addressSpace);
+                log.info("Standard controller for {} deployed", addressSpace);
             } else {
-                log.warn("Unable to deploy address controller for {}", addressSpace);
+                log.warn("Unable to deploy standard controller for {}", addressSpace);
             }
         });
         vertx.createHttpServer()

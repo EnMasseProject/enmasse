@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ClusterRole
 metadata:
-  name: enmasse.io:address-controller
+  name: enmasse.io:address-space-controller
 rules:
   - apiGroups: [ "", "project.openshift.io" ]
     resources: [ "projectrequests" ]
