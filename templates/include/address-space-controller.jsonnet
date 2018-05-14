@@ -6,10 +6,10 @@ local images = import "images.jsonnet";
     "kind": "Deployment",
     "metadata": {
       "labels": {
-        "name": "address-controller",
+        "name": "address-space-controller",
         "app": "enmasse"
       },
-      "name": "address-controller"
+      "name": "address-space-controller"
     },
     "spec": {
       "replicas": 1,
@@ -19,7 +19,7 @@ local images = import "images.jsonnet";
       "template": {
         "metadata": {
           "labels": {
-            "name": "address-controller",
+            "name": "address-space-controller",
             "app": "enmasse"
           }
         },
@@ -28,14 +28,14 @@ local images = import "images.jsonnet";
           "serviceAccount": "enmasse-admin",
           "containers": [
             {
-              "image": images.address_controller,
-              "name": "address-controller",
+              "image": images.address_space_controller,
+              "name": "address-space-controller",
               "env": [
                 {
                   "name": "ENABLE_RBAC",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "enableRbac",
                       "optional": true
                     }
@@ -45,7 +45,7 @@ local images = import "images.jsonnet";
                   "name": "ENABLE_EVENT_LOGGER",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "enableEventLogger",
                       "optional": true
                     }
@@ -55,7 +55,7 @@ local images = import "images.jsonnet";
                   "name": "ENVIRONMENT",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "environment",
                       "optional": true
                     }
@@ -65,7 +65,7 @@ local images = import "images.jsonnet";
                   "name": "IMPERSONATE_USER",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "impersonateUser",
                       "optional": true
                     }
@@ -91,7 +91,7 @@ local images = import "images.jsonnet";
                   "name": "WILDCARD_ENDPOINT_CERT_SECRET",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "wildcardEndpointCertSecret",
                       "optional": true
                     }
@@ -101,7 +101,7 @@ local images = import "images.jsonnet";
                   "name": "RESYNC_INTERVAL",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "resyncInterval",
                       "optional": true
                     }
@@ -111,7 +111,7 @@ local images = import "images.jsonnet";
                   "name": "RECHECK_INTERVAL",
                   "valueFrom": {
                     "configMapKeyRef": {
-                      "name": "address-controller-config",
+                      "name": "address-space-controller-config",
                       "key": "recheckInterval",
                       "optional": true
                     }

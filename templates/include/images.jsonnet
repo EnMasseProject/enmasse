@@ -5,8 +5,8 @@ local registry = std.extVar("REGISTRY");
   image(name)::
     registry + "/" + project + "/" + name + ":" + version,
     
-  address_controller::
-    self.image(std.extVar("ADDRESS_CONTROLLER_IMAGE")),
+  address_space_controller::
+    self.image(std.extVar("ADDRESS_SPACE_CONTROLLER_IMAGE")),
 
   api_server::
     self.image(std.extVar("API_SERVER_IMAGE")),

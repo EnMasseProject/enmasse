@@ -80,7 +80,7 @@ function sign_csr() {
   local CSRFILE=$3
   local CERTFILE=$4
 
-  runcmd "openssl x509 -req -days 11000 -in ${CSRFILE} -CA ${CA_CERT} -CAkey ${CA_KEY} -CAcreateserial -out ${CERTFILE}" "Sign address-controller certificate with CA key"
+  runcmd "openssl x509 -req -days 11000 -in ${CSRFILE} -CA ${CA_CERT} -CAkey ${CA_KEY} -CAcreateserial -out ${CERTFILE}" "Sign certificate with CA key"
 }
 
 function create_tls_secret() {

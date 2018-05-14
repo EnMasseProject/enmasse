@@ -1,14 +1,14 @@
 local roles = import "include/roles.jsonnet";
 local authService = import "include/auth-service.jsonnet";
 local prometheus = import "include/prometheus.jsonnet";
-local addressController = import "include/address-controller.jsonnet";
+local addressSpaceController = import "include/address-space-controller.jsonnet";
 local apiServer = import "include/api-server.jsonnet";
 local serviceBroker = import "include/service-broker.jsonnet";
 local grafana = import "include/grafana.jsonnet";
 {
     "resources/grafana/grafana.json": grafana.grafana,
     "resources/prometheus/prometheus.json": prometheus.prometheus,
-    "resources/address-controller/deployment.json": addressController.deployment,
+    "resources/address-space-controller/deployment.json": addressSpaceController.deployment,
     "resources/api-server/service.json": apiServer.service,
     "resources/api-server/deployment.json": apiServer.deployment,
     "resources/templates/api-service.json": apiServer.api_service,

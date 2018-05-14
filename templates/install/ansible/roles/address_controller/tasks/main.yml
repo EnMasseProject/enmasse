@@ -1,12 +1,12 @@
 ---
-- name: Check if address-controller-config exists
-  shell: oc get configmap -n {{ namespace }} address-controller-config
+- name: Check if address-space-controller-config exists
+  shell: oc get configmap -n {{ namespace }} address-space-controller-config
   register: config_exists
   ignore_errors: True
-- name: Create the address controller config map
+- name: Create the address space controller config map
   when: config_exists.failed
-  shell: oc create configmap address-controller-config --from-literal=enableRbac={{ enable_rbac }} --from-literal=environment={{ enmasse_environment }}
+  shell: oc create configmap address-space-controller-config --from-literal=enableRbac={{ enable_rbac }} --from-literal=environment={{ enmasse_environment }}
 - name: Create the address space definitions
-  shell: oc apply -f {{ playbook_dir }}/resources/address-controller/address-space-definitions.yaml
-- name: Create the address controller deployment
-  shell: oc apply -f {{ playbook_dir }}/resources/address-controller/deployment.yaml
+  shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/address-space-definitions.yaml
+- name: Create the address space controller deployment
+  shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/deployment.yaml

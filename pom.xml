@@ -53,7 +53,7 @@
         <module>mqtt-gateway</module>
         <module>mqtt-lwt</module>
         <module>standard-controller</module>
-        <module>address-controller</module>
+        <module>address-space-controller</module>
         <module>api-server</module>
         <module>keycloak-plugin</module>
         <module>keycloak-controller</module>

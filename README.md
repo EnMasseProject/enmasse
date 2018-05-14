@@ -13,16 +13,15 @@ EnMasse is an open source messaging platform, with focus on scalability and perf
 
 EnMasse is made of different components needed for the deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s). Other broker implementations such as Apache Kafka may also be used.
 
-* [address-controller](https://github.com/EnMasseProject/enmasse/tree/master/address-controller): Controls multiple instances (tenants) and per-instance address space
-* [ragent](https://github.com/EnMasseProject/enmasse/tree/master/ragent): Controls the router network configuration
-* [configserv](https://github.com/EnMasseProject/enmasse/tree/master/configserv): A bridge for subscribing to Kubernetes resource updates through AMQP
-* [queue-scheduler](https://github.com/EnMasseProject/enmasse/tree/master/queue-scheduler): Controls the mapping of queues to brokers
+* [address-space-controller](https://github.com/EnMasseProject/enmasse/tree/master/address-space-controller): Controls address spaces
+* [standard-controller](https://github.com/EnMasseProject/enmasse/tree/master/standard-controller): Controls resources within the standard address space
+* [api-server](https://github.com/EnMasseProject/enmasse/tree/master/api-server): REST API for creating address spaces and addresses
+* [service-broker](https://github.com/EnMasseProject/enmasse/tree/master/service-broker): Open Service Broker API implementation for EnMasse
 * [subserv](https://github.com/EnMasseProject/enmasse/tree/master/subserv): Subscription service for durable subscriptions
-* [agent](https://github.com/EnMasseProject/enmasse/tree/master/agent): Messaging-centric console, address space controller for managing and monitoring addresses
+* [agent](https://github.com/EnMasseProject/enmasse/tree/master/agent): Messaging-centric console, managing and monitoring addresses on routers and brokers
 * [mqtt-gateway](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
 * [mqtt-lwt](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
 * [amqp-kafa-bridge](https://github.com/EnMasseProject/amqp-kafka-bridge): A bridge between AMQP and Apache Kafka
-* [barnabas](https://github.com/EnMasseProject/barnabas): Kafka on OpenShift
 
 # Documentation
 

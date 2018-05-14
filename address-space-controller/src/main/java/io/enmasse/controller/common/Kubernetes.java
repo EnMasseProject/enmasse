@@ -15,7 +15,7 @@ import io.fabric8.openshift.client.ParameterValue;
 import java.util.*;
 
 /**
- * Interface for Kubernetes operations done by the address controller
+ * Interface for Kubernetes operations done by the address space controller
  */
 public interface Kubernetes {
 

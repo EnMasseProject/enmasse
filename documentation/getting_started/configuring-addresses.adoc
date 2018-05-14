@@ -17,7 +17,7 @@ addresses. You can get the console URL by running the following command:
 echo "https://$({OcGetRoute} console)"
 ....
 
-You can also deploy the addressing config using the address controller
+You can also deploy the addressing config using the REST API
 API. See the <<configuring-using-restapi>> for details on the
 resources consumed by the API. Here is an example config with all 4 variants that you can save to `addresses.json`:
 
@@ -63,7 +63,7 @@ To deploy this configuration, you must currently use a http client like curl:
 
 [subs=attributes+,options="nowrap"]
 ....
-curl -X POST -H "content-type: application/json" --data-binary @addresses.json -k https://$({OcGetRoute} restapi)/apis/enmasse.io/v1/addresses/default
+curl -X POST -H "content-type: application/json" --data-binary @addresses.json -k https://$({OcGetRoute} restapi)/apis/enmasse.io/v1/namespaces/myproject/addressspaces/default/addresses
 ....
 
 This will connect to the address controller REST API and deploy the address config.

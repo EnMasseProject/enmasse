@@ -202,7 +202,7 @@ public class TestUtils {
     /**
      * Delete requested destinations(Addresses) from AddressSpace
      *
-     * @param apiClient    client for http requests on address controller
+     * @param apiClient    client for http requests on api server
      * @param addressSpace from this AddressSpace will be removed required destinations
      * @param destinations destinations requested to be removed
      * @throws Exception
@@ -214,7 +214,7 @@ public class TestUtils {
     /**
      * Deploy one or more destinations into requested AddressSpace
      *
-     * @param apiClient    client for http requests on address controller
+     * @param apiClient    client for http requests on api server
      * @param kubernetes   client for manipulation with kubernetes cluster
      * @param budget       timeout for deploy
      * @param addressSpace AddressSpace for deploy destinations
@@ -250,7 +250,7 @@ public class TestUtils {
     /**
      * get path to all addresses for each address-spaces
      *
-     * @param apiClient client for sending http requests to address controller
+     * @param apiClient client for sending http requests to api server
      * @return list of rest-api paths
      * @throws Exception
      */
@@ -266,7 +266,7 @@ public class TestUtils {
     /**
      * send whatever request to restapi route
      *
-     * @param apiClient client for sending http requests to address controller
+     * @param apiClient client for sending http requests to api server 
      * @param method    http method PUT, POST, DELETE, GET
      * @param url       api route
      * @param payload   JsonObject as a payload
@@ -282,7 +282,7 @@ public class TestUtils {
     /**
      * Check if AddressSpace exists
      *
-     * @param apiClient        client for http requests on address controller
+     * @param apiClient        client for http requests on api server
      * @param addressSpaceName name of AddressSpace
      * @return true if AddressSpace exists, false otherwise
      * @throws Exception
@@ -487,7 +487,7 @@ public class TestUtils {
 
 
     /**
-     * Convert restapi json response(kind: AddressSpace or AddressSpaceList) from address controller to AddressSpace object
+     * Convert restapi json response(kind: AddressSpace or AddressSpaceList) from api server to AddressSpace object
      *
      * @param addressSpaceJson
      * @return
