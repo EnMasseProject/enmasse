@@ -245,6 +245,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
     }
 
     @Test
+    @Disabled("test disabled as per-address limit enforcement has been removed")
     void testGlobalSizeLimitations() throws Exception {
         KeycloakCredentials user = new KeycloakCredentials("test", "test");
         String messageContent = String.join("", Collections.nCopies(1024, "F"));
