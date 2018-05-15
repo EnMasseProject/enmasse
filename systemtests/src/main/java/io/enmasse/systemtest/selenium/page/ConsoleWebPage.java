@@ -704,7 +704,17 @@ public class ConsoleWebPage {
             if (viaOpenShift) {
                 selenium.clickOnItem(getOpenshiftButton());
                 OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
-                return ocLoginPage.login(username, password);
+                boolean login = ocLoginPage.login(username, password);
+                if (login) {
+                    AuthorizeAccessWebPage authzWebPage = new AuthorizeAccessWebPage(selenium);
+                    if (authzWebPage.isOpenedInBrowser()) {
+                        authzWebPage.clickOnCheckboxRequestedPermissions();
+                        authzWebPage.clickOnBtnAllowSelectedPermissions();
+                    } else {
+                        log.info("Authorize Access web page was skipped!");
+                    }
+                }
+                return login;
             } else {
                 log.info("Try to login with credentials {} : {}", username, password);
                 selenium.fillInputItem(getUsernameTextInput(), username);

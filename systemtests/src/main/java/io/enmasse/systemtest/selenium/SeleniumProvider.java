@@ -112,7 +112,7 @@ public class SeleniumProvider {
             log.info("Taking screenshot");
             browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
         } catch (Exception ex) {
-            log.warn("Cannot take screenshot: " + ex.getMessage());
+            log.warn("Cannot take screenshot: {}", ex.getMessage());
         }
     }
 
@@ -210,6 +210,10 @@ public class SeleniumProvider {
             Thread.sleep(1000);
         }
         return result;
+    }
+
+    public WebElement getInputByName(String inputName) {
+        return this.getDriver().findElement(By.cssSelector("input[name='{}']".format(inputName)));
     }
 
     public WebElement getWebElement(Supplier<WebElement> webElement) throws Exception {

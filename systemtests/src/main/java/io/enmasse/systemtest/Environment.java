@@ -18,8 +18,21 @@ public class Environment {
     private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
     private final String keycloakAdminPassword = System.getenv("KEYCLOAK_ADMIN_PASSWORD");
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
+
+    /**
+     * Create dummy address in shared address-spaces due to faster deploy of next addresses
+     */
     private final boolean useDummyAddress = Boolean.parseBoolean(System.getenv("USE_DUMMY_ADDRESS"));
+
+    /**
+     * Skip removing address-spaces
+     */
     private final boolean skipCleanup = Boolean.parseBoolean(System.getenv("SKIP_CLEANUP"));
+
+    /**
+     * Store screenshots every time
+     */
+    private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv("STORE_SCREENSHOTS"));
 
     public String openShiftUrl() {
         return url;
@@ -67,5 +80,9 @@ public class Environment {
 
     public boolean skipCleanup() {
         return skipCleanup;
+    }
+
+    public boolean storeScreenshots() {
+        return storeScreenshots;
     }
 }
