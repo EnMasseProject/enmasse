@@ -23,7 +23,7 @@ class AddressV1Serializer extends JsonSerializer<Address> {
     @Override
     public void serialize(Address address, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
-        root.put(Fields.API_VERSION, "enmasse.io/v1");
+        root.put(Fields.API_VERSION, "enmasse.io/v1alpha1");
         root.put(Fields.KIND, "Address");
         serialize(address, root);
         root.serialize(jsonGenerator, serializerProvider);

@@ -22,7 +22,7 @@ class SchemaV1Serializer extends JsonSerializer<Schema> {
     @Override
     public void serialize(Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
-        root.put(Fields.API_VERSION, "enmasse.io/v1");
+        root.put(Fields.API_VERSION, "enmasse.io/v1alpha1");
         root.put(Fields.KIND, "Schema");
         ObjectNode spec = root.putObject(Fields.SPEC);
 

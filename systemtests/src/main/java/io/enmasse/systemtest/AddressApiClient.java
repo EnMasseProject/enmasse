@@ -33,9 +33,10 @@ public class AddressApiClient {
     private final Kubernetes kubernetes;
     private final Vertx vertx;
     private final int initRetry = 10;
-    private final String schemaPath = "/apis/enmasse.io/v1/schema";
+    private final String schemaPath = "/apis/enmasse.io/v1alpha1/schema";
     private final String addressSpacesPath;
     private final String addressPathPattern;
+    private final String addressResourcePath;
     private final String authzString;
     private Endpoint endpoint;
 
@@ -47,8 +48,9 @@ public class AddressApiClient {
                 .setTrustAll(true)
                 .setVerifyHost(false));
         this.kubernetes = kubernetes;
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace());
-        this.addressPathPattern = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
+        this.addressPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
         this.endpoint = kubernetes.getRestEndpoint();
         this.authzString = "Bearer " + kubernetes.getApiToken();
     }
@@ -103,7 +105,7 @@ public class AddressApiClient {
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         JsonObject config = new JsonObject();
-        config.put("apiVersion", "v1");
+        config.put("apiVersion", "enmasse.io/v1alpha1");
         config.put("kind", "AddressSpace");
         config.put("metadata", createAddressSpaceMetadata(addressSpace));
         config.put("spec", createAddressSpaceSpec(addressSpace));
@@ -316,9 +318,49 @@ public class AddressApiClient {
         }
     }
 
+    public void createAddress(Destination destination) throws Exception {
+        JsonObject entry = new JsonObject();
+        entry.put("apiVersion", "enmasse.io/v1alpha1");
+        entry.put("kind", "Address");
+        JsonObject metadata = new JsonObject();
+        if (destination.getName() != null) {
+            metadata.put("name", destination.getAddressSpace() + "." + destination.getName());
+        }
+        if (destination.getUuid() != null) {
+            metadata.put("uid", destination.getUuid());
+        }
+        entry.put("metadata", metadata);
+
+        JsonObject spec = new JsonObject();
+        if (destination.getAddress() != null) {
+            spec.put("address", destination.getAddress());
+        }
+        if (destination.getType() != null) {
+            spec.put("type", destination.getType());
+        }
+        if (destination.getPlan() != null) {
+            spec.put("plan", destination.getPlan());
+        }
+        entry.put("spec", spec);
+
+        log.info("post-address: path {}; body: {}", addressResourcePath, entry.toString());
+
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        doRequestNTimes(initRetry, () -> {
+            client.post(endpoint.getPort(), endpoint.getHost(), addressResourcePath)
+                    .timeout(20_000)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .sendJsonObject(entry, ar -> responseHandler(ar,
+                            responsePromise,
+                            "Error: create address"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        });
+    }
+
     public void createAddress(AddressSpace addressSpace, Destination destination) throws Exception {
         JsonObject entry = new JsonObject();
-        entry.put("apiVersion", "enmasse.io/v1");
+        entry.put("apiVersion", "enmasse.io/v1alpha1");
         entry.put("kind", "Address");
         JsonObject metadata = new JsonObject();
         if (destination.getName() != null) {

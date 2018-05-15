@@ -14,6 +14,7 @@ import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ import java.util.concurrent.Callable;
 @Path(HttpAddressSpaceService.BASE_URI)
 public class HttpAddressSpaceService {
 
-    static final String BASE_URI = "/apis/enmasse.io/v1/namespaces/{namespace}/addressspaces";
+    static final String BASE_URI = "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
     private final SchemaProvider schemaProvider;
@@ -85,21 +86,7 @@ public class HttpAddressSpaceService {
     public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull  AddressSpace input) throws Exception {
         return doRequest("Error creating address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
-            AddressSpace addressSpace = input;
-
-            if (addressSpace.getNamespace() == null) {
-                addressSpace = new AddressSpace.Builder(addressSpace)
-                        .setNamespace(namespace)
-                        .build();
-            }
-
-            if (addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) == null) {
-                addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName("enmasse-" + addressSpace.getNamespace() + "-" + addressSpace.getName()));
-            }
-
-            if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
-                addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
-            }
+            AddressSpace addressSpace = setAddressSpaceDefaults(input, namespace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
@@ -111,27 +98,39 @@ public class HttpAddressSpaceService {
         });
     }
 
+    private AddressSpace setAddressSpaceDefaults(AddressSpace addressSpace, String namespace) {
+        if (addressSpace.getNamespace() == null) {
+            addressSpace = new AddressSpace.Builder(addressSpace)
+                    .setNamespace(namespace)
+                    .build();
+        }
+
+        if (addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) == null) {
+            addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName("enmasse-" + addressSpace.getNamespace() + "-" + addressSpace.getName()));
+        }
+
+        if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
+            addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
+        }
+
+        if (addressSpace.getLabel(LabelKeys.ADDRESS_SPACE_TYPE) == null) {
+            addressSpace.putLabel(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getType());
+        }
+
+        if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
+            addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
+        }
+
+        return addressSpace;
+    }
+
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     public Response replaceAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @NotNull  AddressSpace input) throws Exception {
         return doRequest("Error replacing address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
-            AddressSpace addressSpace = input;
-
-            if (addressSpace.getNamespace() == null) {
-                addressSpace = new AddressSpace.Builder(addressSpace)
-                        .setNamespace(namespace)
-                        .build();
-            }
-
-            if (addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) == null) {
-                addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName("enmasse-" + addressSpace.getNamespace() + "-" + addressSpace.getName()));
-            }
-
-            if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
-                addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
-            }
+            AddressSpace addressSpace = setAddressSpaceDefaults(input, namespace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);

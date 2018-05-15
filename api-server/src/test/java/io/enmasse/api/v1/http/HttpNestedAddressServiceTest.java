@@ -27,8 +27,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class HttpAddressServiceTest {
-    private HttpAddressService addressService;
+public class HttpNestedAddressServiceTest {
+    private HttpNestedAddressService addressService;
     private TestAddressSpaceApi addressSpaceApi;
     private TestAddressApi addressApi;
     private Address q1;
@@ -39,7 +39,7 @@ public class HttpAddressServiceTest {
     @Before
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        this.addressService = new HttpAddressService(addressSpaceApi, new TestSchemaProvider());
+        this.addressService = new HttpNestedAddressService(addressSpaceApi, new TestSchemaProvider());
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 

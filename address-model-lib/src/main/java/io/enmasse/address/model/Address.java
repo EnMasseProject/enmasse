@@ -136,6 +136,14 @@ public class Address {
         return Objects.hash(address, addressSpace, namespace);
     }
 
+    public String getLabel(String labelKey) {
+        return labels.get(labelKey);
+    }
+
+    public void putLabel(String labelKey, String labelValue) {
+        labels.put(labelKey, labelValue);
+    }
+
     public static class Builder {
         private String name;
         private String namespace;

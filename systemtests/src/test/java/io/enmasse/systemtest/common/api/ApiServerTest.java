@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
-class AddressControllerApiTest extends TestBase {
+class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
@@ -231,5 +232,17 @@ class AddressControllerApiTest extends TestBase {
             assertEquals(serverResponse.getString("description"), "Missing 'plan' string field in 'spec'",
                     "Incorrect response from server on missing plan!");
         }
+    }
+
+    @Test
+    void testCreateAddressResource() throws Exception {
+        AddressSpace addrSpace = new AddressSpace("create-address-resource", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
+        createAddressSpace(addrSpace, false);
+        Destination destination = new Destination("addr1", null, "create-address-resource", "addr_1", "anycast", "standard-anycast");
+        addressApiClient.createAddress(destination);
+
+        List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        assertThat(addresses.size(), is(1));
+        assertThat(addresses.get(0).getName(), is("create-address-resource.addr1"));
     }
 }

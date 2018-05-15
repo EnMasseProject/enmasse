@@ -86,7 +86,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         Async async = context.async(4);
         try {
-            HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+            HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                 context.assertEquals(200, response.statusCode());
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
@@ -98,7 +98,7 @@ public class HTTPServerTest {
             putAuthzToken(r1);
             r1.end();
 
-            HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1/namespaces/ns/addresses/addr1", response -> {
+            HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addresses/addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     System.out.println(data);
@@ -110,7 +110,7 @@ public class HTTPServerTest {
             putAuthzToken(r2);
             r2.end();
 
-            HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance", response -> {
+            HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1alpha1/addresses/myinstance", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("items"));
@@ -120,9 +120,9 @@ public class HTTPServerTest {
                 });
             });
             putAuthzToken(r3);
-            r3.end("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
+            r3.end("{\"apiVersion\":\"enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
 
-            HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance?address=addr1", response -> {
+            HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/addresses/myinstance?address=addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("metadata"));
@@ -149,13 +149,13 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         context.assertTrue(data.containsKey("resources"));
                         JsonArray resources = data.getJsonArray("resources");
-                        context.assertEquals(1, resources.size());
+                        context.assertEquals(2, resources.size());
                         async.complete();
                     });
                 });
@@ -174,7 +174,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1/schema", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/schema", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();

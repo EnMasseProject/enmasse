@@ -71,7 +71,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
             }
 
             if (address.getSelfLink() == null) {
-                builder.setSelfLink("/apis/enmasse.io/v1/namespaces/" + address.getNamespace() + "/addressspaces/" + address.getAddressSpace());
+                builder.setSelfLink("/apis/enmasse.io/v1alpha1/namespaces/" + address.getNamespace() + "/addressspaces/" + address.getAddressSpace());
             }
             return builder.build();
         } catch (Exception e) {

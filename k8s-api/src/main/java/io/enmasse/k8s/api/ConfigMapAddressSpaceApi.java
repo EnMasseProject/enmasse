@@ -79,7 +79,6 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         Map<String, String> labels = new HashMap<>(addressSpace.getLabels());
         String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
         labels.put(LabelKeys.TYPE, "address-space");
-        labels.put(LabelKeys.NAMESPACE, addressSpace.getNamespace());
         config.withNewMetadata()
                 .withName(name)
                 .addToLabels(labels)
@@ -136,7 +135,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
             }
 
             if (addressSpace.getSelfLink() == null) {
-                builder.setSelfLink("/apis/enmasse.io/v1/namespaces/" + addressSpace.getNamespace() + "/addressspaces/" + addressSpace.getName());
+                builder.setSelfLink("/apis/enmasse.io/v1alpha1/namespaces/" + addressSpace.getNamespace() + "/addressspaces/" + addressSpace.getName());
             }
 
             return builder.build();

@@ -120,7 +120,7 @@ module.exports.hash = hash;
 
 const MAX_KUBE_NAME = 63/*max allowed*/ - 3/*needed for kube to add stateful set qualifier*/;
 module.exports.kubernetes_name = function (name) {
-    var clean = name.toLowerCase().replace(/[^a-z0-9\-]/g, '');
+    var clean = name.toLowerCase().replace(/[^a-z0-9\-\.]/g, '');
     if (clean.charAt(0) === '-') clean = clean.substring(1);
     if (clean.charAt(clean.length-1) === '-') clean = clean.substring(0,clean.length-1);
     var qualifier = rhea.generate_uuid();

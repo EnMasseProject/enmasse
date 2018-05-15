@@ -16,6 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 import io.enmasse.address.model.Address;
@@ -69,6 +70,19 @@ public class AddressApiHelperTest {
         } catch (BadRequestException e) {
             assertThat(e.getMessage(), is("Address 'q1' already exists with resource name 'q1'"));
         }
+    }
+
+    @Test
+    public void testParseLabelSelector() throws Exception {
+        Map<String, String> labels = AddressApiHelper.parseLabelSelector("key=value");
+        assertThat(labels.size(), is(1));
+        assertThat(labels.get("key"), is("value"));
+
+        labels = AddressApiHelper.parseLabelSelector("key1=value1,key2=value2,key3=value3");
+        assertThat(labels.size(), is(3));
+        assertThat(labels.get("key1"), is("value1"));
+        assertThat(labels.get("key2"), is("value2"));
+        assertThat(labels.get("key3"), is("value3"));
     }
 
     private Address createAddress(String name, String address)

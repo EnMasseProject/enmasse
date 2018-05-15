@@ -22,7 +22,7 @@ class AddressSpaceListV1Serializer extends JsonSerializer<AddressSpaceList> {
     @Override
     public void serialize(AddressSpaceList addressSpaceList, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
-        root.put(Fields.API_VERSION, "enmasse.io/v1");
+        root.put(Fields.API_VERSION, "enmasse.io/v1alpha1");
         root.put(Fields.KIND, "AddressSpaceList");
         ArrayNode items = root.putArray(Fields.ITEMS);
         for (AddressSpace addressSpace : addressSpaceList) {

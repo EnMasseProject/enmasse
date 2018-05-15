@@ -16,6 +16,7 @@ import io.enmasse.config.AnnotationKeys;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Deserializer for AddressSpace V1 format
@@ -24,6 +25,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private final DecodeContext decodeContext;
+    private static final Pattern nameRegex = Pattern.compile("[a-z]*[a-z0-9\\-]*[a-z0-9]*");
 
     AddressSpaceV1Deserializer(DecodeContext decodeContext) {
         this.decodeContext = decodeContext;
@@ -42,6 +44,11 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
 
         String typeName = spec.get(Fields.TYPE).asText();
+
+        String addressSpaceName = metadata.get(Fields.NAME).asText();
+        if (!nameRegex.matcher(addressSpaceName).matches()) {
+            throw new DeserializeException("Bad address space name '" + addressSpaceName + "'");
+        }
 
         AddressSpace.Builder builder = new AddressSpace.Builder()
                 .setName(metadata.get(Fields.NAME).asText())

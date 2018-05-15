@@ -33,9 +33,7 @@ public class APIResourceList {
     @Valid
     private List<APIResource> resources;
 
-    public APIResourceList(String apiVersion, String kind, String groupVersion, List<APIResource> resources) {
-        this.apiVersion = apiVersion;
-        this.kind = kind;
+    public APIResourceList(String groupVersion, List<APIResource> resources) {
         this.groupVersion = groupVersion;
         this.resources = resources;
     }

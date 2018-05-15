@@ -43,9 +43,7 @@ public class APIGroup
     @Valid
     private String serverAddressByClientCIDRs;
 
-    public APIGroup(String apiVersion, String kind, String name, List<APIGroupVersion> versions, APIGroupVersion preferredVersion, String serverAddressByClientCIDRs) {
-        this.apiVersion = apiVersion;
-        this.kind = kind;
+    public APIGroup(String name, List<APIGroupVersion> versions, APIGroupVersion preferredVersion, String serverAddressByClientCIDRs) {
         this.name = name;
         this.versions = versions;
         this.preferredVersion = preferredVersion;

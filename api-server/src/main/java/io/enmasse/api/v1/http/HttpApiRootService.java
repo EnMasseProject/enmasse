@@ -15,12 +15,12 @@ import java.util.Arrays;
 @Path("/apis")
 public class HttpApiRootService {
     private static final APIGroup apiGroup =
-            new APIGroup("v1", "APIGroup", "enmasse.io", Arrays.asList(
-                    new APIGroupVersion("enmasse.io/v1", "v1")),
-                    new APIGroupVersion("enmasse.io/v1", "v1"),
+            new APIGroup("enmasse.io", Arrays.asList(
+                    new APIGroupVersion("enmasse.io/v1alpha1", "v1alpha1")),
+                    new APIGroupVersion("enmasse.io/v1alpha1", "v1alpha1"),
                     null);
 
-    private static final APIGroupList apiGroupList = new APIGroupList("v1", "APIGroupList", Arrays.asList(apiGroup));
+    private static final APIGroupList apiGroupList = new APIGroupList(Arrays.asList(apiGroup));
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -36,13 +36,15 @@ public class HttpApiRootService {
     }
 
 
-    private static final APIResourceList apiResourceList = new APIResourceList("v1", "APIResourceList", "enmasse.io/v1",
+    private static final APIResourceList apiResourceList = new APIResourceList("enmasse.io/v1alpha1",
         Arrays.asList(
                 new APIResource("addressspaces", "", true, "AddressSpace",
-                    Arrays.asList("create", "delete", "get", "list"))));
+                    Arrays.asList("create", "delete", "get", "list")),
+                new APIResource("addresses", "", true, "Address",
+                                Arrays.asList("create", "delete", "get", "list"))));
 
     @GET
-    @Path("enmasse.io/v1")
+    @Path("enmasse.io/v1alpha1")
     @Produces({MediaType.APPLICATION_JSON})
     public APIResourceList getApiGroupV1() {
         return apiResourceList;

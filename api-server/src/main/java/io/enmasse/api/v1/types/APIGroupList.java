@@ -30,9 +30,7 @@ public class APIGroupList {
     @Valid
     private List<APIGroup> groups;
 
-    public APIGroupList(String apiVersion, String kind, List<APIGroup> groups) {
-        this.apiVersion = apiVersion;
-        this.kind = kind;
+    public APIGroupList(List<APIGroup> groups) {
         this.groups = groups;
     }
 
