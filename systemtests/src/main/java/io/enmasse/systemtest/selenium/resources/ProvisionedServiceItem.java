@@ -18,9 +18,9 @@ public class ProvisionedServiceItem {
     private WebElement serviceItem;
     private String id;
 
-    public ProvisionedServiceItem(SeleniumProvider selenium, WebElement serviceItem) {
+    public ProvisionedServiceItem(SeleniumProvider selenium) {
         this.selenium = selenium;
-        this.serviceItem = serviceItem;
+        this.serviceItem = selenium.getDriver().findElement(By.tagName("service-instance-row")).findElement(By.className("provisioned-service"));
         this.id = serviceItem.findElement(By.className("list-row-longname")).getText();
     }
 
@@ -95,7 +95,13 @@ public class ProvisionedServiceItem {
         }
     }
 
+    public void collapseServiceItem() throws Exception {
+        if (serviceItem.getAttribute("class").contains("active")) {
+            selenium.clickOnItem(serviceItem.findElement(By.className("list-pf-chevron")), "Provisioned service");
+        }
+    }
+
     public WebElement getRedirectConsoleButton() {
-        return serviceItem.findElement(By.className("list-pf-details")).findElement(By.tagName("div"));
+        return serviceItem.findElement(By.className("list-pf-details")).findElement(By.tagName("a"));
     }
 }

@@ -40,7 +40,13 @@ public class ConsoleWebPage {
         this.defaultAddressSpace = defaultAddressSpace;
         this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
         this.credentials = credentials;
+    }
 
+    public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
+        this.selenium = selenium;
+        this.addressApiClient = addressApiClient;
+        this.defaultAddressSpace = defaultAddressSpace;
+        this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
     }
 
 
@@ -628,6 +634,14 @@ public class ConsoleWebPage {
 
         //check if address deleted
         assertNull(getAddressItem(destination), "Console failed, still contains deleted address item ");
+    }
+
+    public boolean login() throws Exception {
+        return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), false);
+    }
+
+    public boolean login(KeycloakCredentials credentials) throws Exception {
+        return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), false);
     }
 
     public void logout() throws Exception {

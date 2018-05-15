@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
+import io.enmasse.systemtest.KeycloakCredentials;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -49,6 +50,10 @@ public class BindingSecretData {
 
     public String getPassword() {
         return password;
+    }
+
+    public KeycloakCredentials getCredentials() {
+        return new KeycloakCredentials(username, password);
     }
 
     private Object parseDataFromSecret(List<WebElement> data, String dataName) {
