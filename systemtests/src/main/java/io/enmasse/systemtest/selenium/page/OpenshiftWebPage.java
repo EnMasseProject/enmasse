@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class OpenshiftWebPage {
@@ -114,8 +115,7 @@ public class OpenshiftWebPage {
     }
 
     private ProvisionedServiceItem getProvisionedServiceItem() {
-        return new ProvisionedServiceItem(selenium,
-                selenium.getDriver().findElement(By.tagName("service-instance-row")).findElement(By.className("provisioned-service")));
+        return new ProvisionedServiceItem(selenium);
     }
 
     private WebElement getBindingCheckBoxes(String name) {
@@ -361,5 +361,18 @@ public class OpenshiftWebPage {
         BindingSecretData secretData = getBindingSecretData();
         log.info(secretData.toString());
         return secretData;
+    }
+
+    public ConsoleWebPage clickOnDashboard(String namespace, AddressSpace addressSpace) throws Exception {
+        openOpenshiftPage();
+        clickOnShowAllProjects();
+        selenium.clickOnItem(getProjectListItem(namespace), namespace);
+        waitForRedirectToService();
+        ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
+        serviceItem.collapseServiceItem();
+        selenium.clickOnItem(serviceItem.getRedirectConsoleButton());
+        Set<String> tabHandles = selenium.getDriver().getWindowHandles();
+        selenium.getDriver().switchTo().window(tabHandles.toArray()[tabHandles.size() - 1].toString());
+        return new ConsoleWebPage(selenium, addressApiClient, addressSpace);
     }
 }

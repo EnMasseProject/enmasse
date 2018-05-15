@@ -4,10 +4,7 @@
  */
 package io.enmasse.systemtest.common.catalog;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -17,6 +14,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,8 +63,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     void testProvisionAddressSpaceBrokered() throws Exception {
         AddressSpace brokered = new AddressSpace("addr-space-brokered", AddressSpaceType.BROKERED);
         provisionedServices.put(getUserProjectName(brokered), brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(),
-                new KeycloakCredentials("developer", "developer"));
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, getUserProjectName(brokered));
         ocPage.deprovisionAddressSpace(getUserProjectName(brokered));
@@ -77,8 +74,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     void testProvisionAddressSpaceStandard() throws Exception {
         AddressSpace standard = new AddressSpace("addr-space-standard", AddressSpaceType.STANDARD);
         provisionedServices.put(getUserProjectName(standard), standard);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(),
-                new KeycloakCredentials("developer", "developer"));
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(standard, getUserProjectName(standard));
         ocPage.deprovisionAddressSpace(getUserProjectName(standard));
@@ -89,8 +85,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     void testCreateDeleteBindings() throws Exception {
         AddressSpace brokered = new AddressSpace("test-binding-space", AddressSpaceType.BROKERED);
         provisionedServices.put(getUserProjectName(brokered), brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(),
-                new KeycloakCredentials("developer", "developer"));
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, getUserProjectName(brokered));
         String external = ocPage.createBinding(getUserProjectName(brokered),
@@ -107,16 +102,26 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
+        Destination queue = Destination.queue("test-queue", "brokered-queue");
+        Destination topic = Destination.topic("test-topic", "brokered-topic");
         AddressSpace brokered = new AddressSpace("test-external-messaging-space", AddressSpaceType.BROKERED);
         provisionedServices.put(getUserProjectName(brokered), brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(),
-                new KeycloakCredentials("developer", "developer"));
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, getUserProjectName(brokered));
+        reloadAddressSpaceEndpoints(brokered);
+
         String bindingID = ocPage.createBinding(getUserProjectName(brokered),
                 false, true, true, null, null);
         BindingSecretData credentials = ocPage.viewSecretOfBinding(getUserProjectName(brokered), bindingID);
 
+        ConsoleWebPage consolePage = ocPage.clickOnDashboard(getUserProjectName(brokered), brokered);
+        consolePage.login(credentials.getCredentials());
+        consolePage.createAddressWebConsole(queue, false, false);
+        consolePage.createAddressWebConsole(topic, false, true);
+
+        assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));
     }
 
     @Test
