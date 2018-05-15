@@ -49,6 +49,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
             parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+            parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getNamespace());
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
 

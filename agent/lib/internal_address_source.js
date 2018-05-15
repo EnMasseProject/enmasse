@@ -217,7 +217,8 @@ AddressSource.prototype.create_address = function (definition) {
         kind: 'Address',
         metadata: {
             name: configmap_name,
-            addressSpace: this.address_space
+            namespace: this.address_space.namespace,
+            addressSpace: this.address_space.name
         },
         spec: {
             address: definition.address,
@@ -234,7 +235,7 @@ AddressSource.prototype.create_address = function (definition) {
                 type: 'address-config'
             },
             annotations: {
-                addressSpace: this.address_space,
+                addressSpace: this.address_space.name,
             },
         },
         data: {

@@ -94,7 +94,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         ConfigMapList list = client.configMaps().inNamespace(this.namespace).withLabels(labels).list();
         for (ConfigMap config : list.getItems()) {
             Address address = getAddressFromConfig(config);
-            if (address.getNamespace().equals(namespace)) {
+            if (namespace.equals(address.getNamespace())) {
                 addresses.add(address);
             }
         }
