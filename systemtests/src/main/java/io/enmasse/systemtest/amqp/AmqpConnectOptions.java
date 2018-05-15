@@ -6,6 +6,8 @@ package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.KeycloakCredentials;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
@@ -86,6 +88,15 @@ public class AmqpConnectOptions {
 
     public AmqpConnectOptions setPassword(String password) {
         this.password = password;
+        return this;
+    }
+
+    public AmqpConnectOptions setCert(String pemCert) {
+        this.protonClientOptions
+                .setSsl(true)
+                .setHostnameVerificationAlgorithm("")
+                .setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(pemCert)))
+                .setTrustAll(false);
         return this;
     }
 
