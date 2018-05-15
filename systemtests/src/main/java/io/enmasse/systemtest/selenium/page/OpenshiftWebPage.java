@@ -182,7 +182,7 @@ public class OpenshiftWebPage {
 
     private boolean waitUntilLoginPage() {
         try {
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.titleContains("Login"));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Login"));
             return true;
         } catch (Exception ex) {
             return false;
