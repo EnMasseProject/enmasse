@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response;
 /**
  * API for serving address model schema.
  */
-@Path("/apis/enmasse.io/v1/schema")
+@Path("/apis/enmasse.io/v1alpha1/schema")
 public class HttpSchemaService {
     private static final Logger log = LoggerFactory.getLogger(HttpSchemaService.class.getName());
 

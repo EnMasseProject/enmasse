@@ -86,6 +86,14 @@ public class AddressSpace {
         this.annotations.put(key, value);
     }
 
+    public void putLabel(String key, String value) {
+        this.labels.put(key, value);
+    }
+
+    public String getLabel(String key) {
+        return labels.get(key);
+    }
+
     public Map<String, String> getLabels() {
         return labels;
     }

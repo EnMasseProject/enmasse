@@ -213,7 +213,7 @@ function get_configmap_name_for_address(address) {
 AddressSource.prototype.create_address = function (definition) {
     var configmap_name = get_configmap_name_for_address(definition.address);
     var address = {
-        apiVersion: 'enmasse.io/v1',
+        apiVersion: 'enmasse.io/v1alpha1',
         kind: 'Address',
         metadata: {
             name: configmap_name,

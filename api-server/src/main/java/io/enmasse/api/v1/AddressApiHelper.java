@@ -31,9 +31,28 @@ public class AddressApiHelper {
     }
 
     public AddressList getAddresses(String namespace, String addressSpaceId) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
         AddressList list = new AddressList();
-        list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddresses(namespace));
+        if (addressSpaceId == null) {
+            for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {
+                list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddresses(namespace));
+            }
+        } else {
+            AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
+            list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddresses(namespace));
+        }
+        return list;
+    }
+
+    public AddressList getAddressesWithLabels(String namespace, String addressSpaceId, Map<String, String> labels) throws Exception {
+        AddressList list = new AddressList();
+        if (addressSpaceId == null) {
+            for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {
+                list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddressesWithLabels(namespace, labels));
+            }
+        } else {
+            AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
+            list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddressesWithLabels(namespace, labels));
+        }
         return list;
     }
 
@@ -93,15 +112,10 @@ public class AddressApiHelper {
         String [] pairs = labelSelector.split(",");
         for (String pair : pairs) {
             String elements[] = pair.split("=");
-            if (elements.length > 2) {
+            if (elements.length > 1) {
                 labels.put(elements[0], elements[1]);
             }
         }
         return labels;
-    }
-
-    public AddressList getAddressesWithLabels(String namespace, String addressSpaceId, Map<String, String> labels) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
-        return new AddressList(addressSpaceApi.withAddressSpace(addressSpace).listAddressesWithLabels(namespace, labels));
     }
 }

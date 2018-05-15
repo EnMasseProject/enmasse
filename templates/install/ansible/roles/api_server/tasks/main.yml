@@ -65,12 +65,12 @@
       apiVersion: apiregistration.k8s.io/v1beta1
       kind: APIService
       metadata:
-        name: v1.enmasse.io
+        name: v1alpha1.enmasse.io
       spec:
         group: enmasse.io
         groupPriorityMinimum: 1000
         caBundle: "{{ ca_bundle | b64encode }}"
-        version: v1
+        version: v1alpha1
         versionPriority: 10
         service:
           name: api-server

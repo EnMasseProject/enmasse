@@ -10,7 +10,7 @@ package io.enmasse.address.model;
 public class KubeUtil {
     private static int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
     public static String sanitizeName(String name) {
-        String clean = name.toLowerCase().replaceAll("[^a-z0-9\\-]", "");
+        String clean = name.toLowerCase().replaceAll("[^a-z0-9\\-.]", "");
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }

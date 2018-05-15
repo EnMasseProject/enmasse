@@ -21,7 +21,7 @@ Likewise, an address space in namespace A can have the same name as an address s
 [source,json,options="nowrap"]
 ----
 {
-    "apiVersion": "enmasse.io/v1",
+    "apiVersion": "enmasse.io/v1alpha1",
     "kind": "AddressSpace",
     "metadata": {
         "name": "myspace"
@@ -38,7 +38,7 @@ Likewise, an address space in namespace A can have the same name as an address s
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces
+curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces
 ----
 +
 This will create the infrastructure required for that address space. Replace the namespace with the
@@ -55,7 +55,7 @@ various components.
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces/myspace
+curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace
 ----
 +
 You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON
@@ -70,7 +70,7 @@ object.
 [source,json,options="nowrap"]
 ----
 {
-  "apiVersion": "enmasse.io/v1",
+  "apiVersion": "enmasse.io/v1alpha1",
   "kind": "Address",
   "metadata": {
       "addressSpace": "myspace"
@@ -88,7 +88,7 @@ object.
 [source,bash,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X PUT -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspaces/myspace/addresses
+curl -X PUT -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
 ----
 
 === Viewing Configured Addresses
@@ -99,7 +99,7 @@ curl -X PUT -T address.json -H "content-type: application/json" -H "Authorizatio
 +
 [source,bash,options="nowrap"]
 ----
-curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/namespaces/[:namespace]/addressspace/myspace/addresses
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspace/myspace/addresses
 ----
 +
 The addresses are ready to be used by messaging clients once the `status.isReady` field of each

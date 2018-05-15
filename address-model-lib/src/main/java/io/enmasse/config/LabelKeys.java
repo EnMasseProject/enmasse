@@ -18,4 +18,7 @@ public interface LabelKeys {
     String CAPABILITY = "capability";
     String ENVIRONMENT = "environment";
     String NAMESPACE = "namespace";
+    String ADDRESS_TYPE = "addressType";
+    String ADDRESS_SPACE_TYPE = "addressSpaceType";
+    String ADDRESS_SPACE = "addressSpace";
 }
