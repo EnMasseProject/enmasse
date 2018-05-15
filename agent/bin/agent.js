@@ -30,7 +30,8 @@ function bind_event(source, event, target, method) {
 function start(env) {
     kubernetes.get_messaging_route_hostname(env).then(function (result) {
         if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
-        var address_source = new AddressSource(env.ADDRESS_SPACE);
+        var address_space = { name: env.ADDRESS_SPACE, namespace: env.ADDRESS_SPACE_NAMESPACE };
+        var address_source = new AddressSource(address_space);
         var console_server = new ConsoleServer(address_source);
         bind_event(address_source, 'addresses_defined', console_server.addresses);
 

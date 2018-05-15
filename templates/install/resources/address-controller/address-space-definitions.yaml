@@ -273,6 +273,8 @@ data:
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
+              - name: ADDRESS_SPACE_NAMESPACE
+                value: ${ADDRESS_SPACE_NAMESPACE}
               - name: MESSAGING_CERT
                 value: /opt/agent/messaging-cert/tls.crt
               image: docker.io/enmasseproject/agent:latest
@@ -865,8 +867,11 @@ data:
     - description: The secret to mount for MQTT private key and certificate
       name: MQTT_SECRET
       required: true
-    - description: The address space this infrastructure is deployed for
+    - description: The name of our address space
       name: ADDRESS_SPACE
+      required: true
+    - description: The namespace of our address space
+      name: ADDRESS_SPACE_NAMESPACE
       required: true
     - description: The hostname of the authentication service used by this address space
       name: AUTHENTICATION_SERVICE_HOST
@@ -1182,6 +1187,8 @@ data:
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
+              - name: ADDRESS_SPACE_NAMESPACE
+                value: ${ADDRESS_SPACE_NAMESPACE}
               - name: MESSAGING_CERT
                 value: /opt/agent/messaging-cert/tls.crt
               image: docker.io/enmasseproject/agent:latest
@@ -1940,8 +1947,11 @@ data:
     - description: The secret to mount for MQTT private key and certificate
       name: MQTT_SECRET
       required: true
-    - description: The address space this infrastructure is deployed for
+    - description: The name of our address space
       name: ADDRESS_SPACE
+      required: true
+    - description: The namespace of our address space
+      name: ADDRESS_SPACE_NAMESPACE
       required: true
     - description: The hostname of the authentication service used by this address space
       name: AUTHENTICATION_SERVICE_HOST
@@ -2172,6 +2182,8 @@ data:
             - env:
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
+              - name: ADDRESS_SPACE_NAMESPACE
+                value: ${ADDRESS_SPACE_NAMESPACE}
               - name: ENABLE_EVENT_LOGGER
                 value: ${ENABLE_EVENT_LOGGER}
               - name: ADDRESS_SPACE_TYPE
@@ -2258,8 +2270,11 @@ data:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
       value: 2Gi
-    - description: The address space this infrastructure is deployed for
+    - description: The name of our address space
       name: ADDRESS_SPACE
+      required: true
+    - description: The namespace of our address space
+      name: ADDRESS_SPACE_NAMESPACE
       required: true
     - description: Certificate to be used for public messaging service
       name: MESSAGING_SECRET

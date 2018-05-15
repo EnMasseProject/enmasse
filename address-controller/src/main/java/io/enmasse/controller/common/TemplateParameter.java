@@ -10,6 +10,7 @@ package io.enmasse.controller.common;
  */
 public interface TemplateParameter {
     String ADDRESS_SPACE = "ADDRESS_SPACE";
+    String ADDRESS_SPACE_NAMESPACE = "ADDRESS_SPACE_NAMESPACE";
 
     String CONSOLE_SECRET = "CONSOLE_SECRET";
     String MESSAGING_SECRET = "MESSAGING_SECRET";
