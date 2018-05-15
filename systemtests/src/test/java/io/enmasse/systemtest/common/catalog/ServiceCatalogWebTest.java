@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.common.catalog;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -17,9 +18,15 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
@@ -62,41 +69,41 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvisionAddressSpaceBrokered() throws Exception {
         AddressSpace brokered = new AddressSpace("addr-space-brokered", AddressSpaceType.BROKERED);
-        provisionedServices.put(getUserProjectName(brokered), brokered);
+        String namespace = getUserProjectName(brokered);
+        provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
-        ocPage.provisionAddressSpaceViaSC(brokered, getUserProjectName(brokered));
-        ocPage.deprovisionAddressSpace(getUserProjectName(brokered));
+        ocPage.provisionAddressSpaceViaSC(brokered, namespace);
+        ocPage.deprovisionAddressSpace(namespace);
     }
 
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvisionAddressSpaceStandard() throws Exception {
         AddressSpace standard = new AddressSpace("addr-space-standard", AddressSpaceType.STANDARD);
-        provisionedServices.put(getUserProjectName(standard), standard);
+        String namespace = getUserProjectName(standard);
+        provisionedServices.put(namespace, standard);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
-        ocPage.provisionAddressSpaceViaSC(standard, getUserProjectName(standard));
-        ocPage.deprovisionAddressSpace(getUserProjectName(standard));
+        ocPage.provisionAddressSpaceViaSC(standard, namespace);
+        ocPage.deprovisionAddressSpace(namespace);
     }
 
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateDeleteBindings() throws Exception {
         AddressSpace brokered = new AddressSpace("test-binding-space", AddressSpaceType.BROKERED);
-        provisionedServices.put(getUserProjectName(brokered), brokered);
+        String namespace = getUserProjectName(brokered);
+        provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
-        ocPage.provisionAddressSpaceViaSC(brokered, getUserProjectName(brokered));
-        String external = ocPage.createBinding(getUserProjectName(brokered),
-                false, false, true, null, null);
-        String consoleAdmin = ocPage.createBinding(getUserProjectName(brokered),
-                false, true, false, null, null);
-        String consoleAccess = ocPage.createBinding(getUserProjectName(brokered),
-                true, false, false, null, null);
-        ocPage.removeBinding(getUserProjectName(brokered), external);
-        ocPage.removeBinding(getUserProjectName(brokered), consoleAccess);
-        ocPage.removeBinding(getUserProjectName(brokered), consoleAdmin);
+        ocPage.provisionAddressSpaceViaSC(brokered, namespace);
+        String external = ocPage.createBinding(namespace, false, false, true, null, null);
+        String consoleAdmin = ocPage.createBinding(namespace, false, true, false, null, null);
+        String consoleAccess = ocPage.createBinding(namespace, true, false, false, null, null);
+        ocPage.removeBinding(namespace, external);
+        ocPage.removeBinding(namespace, consoleAccess);
+        ocPage.removeBinding(namespace, consoleAdmin);
     }
 
     @Test
@@ -105,23 +112,56 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         Destination queue = Destination.queue("test-queue", "brokered-queue");
         Destination topic = Destination.topic("test-topic", "brokered-topic");
         AddressSpace brokered = new AddressSpace("test-external-messaging-space", AddressSpaceType.BROKERED);
-        provisionedServices.put(getUserProjectName(brokered), brokered);
+        String namespace = getUserProjectName(brokered);
+        provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
 
         ocPage.openOpenshiftPage();
-        ocPage.provisionAddressSpaceViaSC(brokered, getUserProjectName(brokered));
+        ocPage.provisionAddressSpaceViaSC(brokered, namespace);
         reloadAddressSpaceEndpoints(brokered);
 
-        String bindingID = ocPage.createBinding(getUserProjectName(brokered),
-                false, true, true, null, null);
-        BindingSecretData credentials = ocPage.viewSecretOfBinding(getUserProjectName(brokered), bindingID);
+        String bindingID = ocPage.createBinding(namespace, false, true, true, null, null);
+        String restrictedAccesId = ocPage.createBinding(namespace, false, false, true, "noexists", "noexists");
+        BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
+        BindingSecretData restricted = ocPage.viewSecretOfBinding(namespace, restrictedAccesId);
 
-        ConsoleWebPage consolePage = ocPage.clickOnDashboard(getUserProjectName(brokered), brokered);
+        ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokered);
         consolePage.login(credentials.getCredentials());
         consolePage.createAddressWebConsole(queue, false, false);
         consolePage.createAddressWebConsole(topic, false, true);
 
         assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));
+        assertThrows(ExecutionException.class,
+                () -> assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic)));
+    }
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    void testSendMessageUsingBindingCert() throws Exception {
+        Destination queue = Destination.queue("test-queue", "sharded-queue");
+        AddressSpace addressSpace = new AddressSpace("test-cert-messaging-space", AddressSpaceType.STANDARD);
+        String namespace = getUserProjectName(addressSpace);
+        provisionedServices.put(namespace, addressSpace);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+
+        ocPage.openOpenshiftPage();
+        ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);
+        reloadAddressSpaceEndpoints(addressSpace);
+
+        String bindingID = ocPage.createBinding(namespace, false, true, true, null, null);
+        BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
+
+        ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
+        consolePage.login(credentials.getCredentials());
+        consolePage.createAddressWebConsole(queue, false, true);
+
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions()
+                .setCredentials(credentials.getCredentials())
+                .setCert(credentials.getMessagingCert());
+
+        Future<Integer> results = client.sendMessages(queue.getAddress(), Arrays.asList("pepa", "jouda"));
+        assertThat(results.get(30, TimeUnit.SECONDS), is(2));
     }
 
     @Test

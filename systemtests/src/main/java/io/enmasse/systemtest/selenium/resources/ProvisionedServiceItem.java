@@ -102,6 +102,6 @@ public class ProvisionedServiceItem {
     }
 
     public WebElement getRedirectConsoleButton() {
-        return serviceItem.findElement(By.className("list-pf-details")).findElement(By.tagName("a"));
+        return serviceItem.findElement(By.className("list-pf-details")).findElement(By.cssSelector("a[target='_blank']"));
     }
 }
