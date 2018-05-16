@@ -158,7 +158,7 @@ If everything is setup correctly, you can then deploy
 https://grafana.com/[Grafana]:
 
 ....
-oc process -f https://raw.githubusercontent.com/hawkular/hawkular-grafana-datasource/master/docker/openshift/openshift-template-ephemeral.yaml -n openshift-infra | oc create -n openshift-infra -f -
+oc process -f https://raw.githubusercontent.com/hawkular/hawkular-grafana-datasource/master/openshift/openshift-template-ephemeral.yaml -n openshift-infra | oc create -n openshift-infra -f -
 ....
 
 After some time, Grafana should become available at
