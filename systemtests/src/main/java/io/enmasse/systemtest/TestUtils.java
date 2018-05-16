@@ -15,12 +15,11 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Predicate;
@@ -926,16 +925,11 @@ public class TestUtils {
         addressApiClient.deleteAddressSpace(addressSpace);
     }
 
-    public static FirefoxDriver getFirefoxDriver() {
-        FirefoxOptions opts = new FirefoxOptions();
-        opts.setHeadless(true);
-        return new FirefoxDriver(opts);
+    public static RemoteWebDriver getFirefoxDriver() throws MalformedURLException {
+        return new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), DesiredCapabilities.firefox());
     }
 
-    public static ChromeDriver getChromeDriver() {
-        ChromeOptions opts = new ChromeOptions();
-        opts.setHeadless(true);
-        opts.addArguments("--no-sandbox");
-        return new ChromeDriver(opts);
+    public static RemoteWebDriver getChromeDriver() throws MalformedURLException {
+        return new RemoteWebDriver(new URL("http://localhost:6666/wd/hub"), DesiredCapabilities.chrome());
     }
 }

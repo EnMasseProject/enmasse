@@ -1,0 +1,31 @@
+---
+# tasks file for install selenium docker containers
+- name: SELENIUM-CONTAINER | Install docker_container dependency
+  pip:
+    name: docker-py
+
+- name: SELENIUM-CONTAINER | clean older containers with drivers
+  docker_container:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+       - "selenium-firefox"
+       - "selenium-chrome"
+
+- name: SELENIUM-CONTAINER | get and start firefox container
+  docker_container:
+    name: selenium-firefox
+    image: selenium/standalone-firefox-debug
+    state: started
+    restart: yes
+    ports:
+      - "4444:4444"
+
+- name: SELENIUM-CONTAINER | get and start chrome container
+  docker_container:
+    name: selenium-chrome
+    image: selenium/standalone-chrome-debug
+    state: started
+    restart: yes
+    ports:
+      - "6666:4444"

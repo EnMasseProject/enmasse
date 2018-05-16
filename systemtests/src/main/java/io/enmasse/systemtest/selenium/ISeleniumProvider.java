@@ -8,9 +8,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.WebDriver;
 
+import java.net.MalformedURLException;
+
 public interface ISeleniumProvider {
     SeleniumProvider selenium = new SeleniumProvider();
-    WebDriver buildDriver();
+    WebDriver buildDriver() throws MalformedURLException;
 
     @AfterEach
     default void tearDownWebConsoleTests(ExtensionContext context) throws Exception {

@@ -2,9 +2,7 @@
 # tasks file with dependencies
 - import_tasks: dependencies.yml
   tags: [dependencies, always]
-- import_tasks: firefox.yml
-  tags: firefox
 - import_tasks: clients.yml
   tags: clients
-- import_tasks: webdrivers.yml
-  tags: webdrivers
+- import_tasks: selenium_container.yml
+  tags: selenium
