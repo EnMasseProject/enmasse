@@ -13,13 +13,15 @@ import org.slf4j.Logger;
 
 import java.io.File;
 
-public class RheaWebPage {
+public class RheaWebPage implements IWebPage {
 
+    private static final String webPageTitle = "cli-rhea client";
     private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium;
 
     public RheaWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
+        checkReachableWebPage();
     }
 
     public void openRheaWebPage() throws Exception {
@@ -40,5 +42,10 @@ public class RheaWebPage {
 
     public boolean checkCountMessage(int count) throws Exception {
         return selenium.getWebElements(() -> selenium.getDriver().findElements(By.tagName("div")), count).size() == count;
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        checkTitle(selenium, webPageTitle);
     }
 }

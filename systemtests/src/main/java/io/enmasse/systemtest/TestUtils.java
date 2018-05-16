@@ -373,11 +373,11 @@ public class TestUtils {
      * @param instanceId id of service instance
      * @throws Exception
      */
-    public static void waitForServiceInstanceReady(OSBApiClient apiClient, String instanceId) throws Exception {
+    public static void waitForServiceInstanceReady(OSBApiClient apiClient,String username, String instanceId) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
         boolean isReady = false;
         while (budget.timeLeft() >= 0 && !isReady) {
-            isReady = isServiceInstanceReady(apiClient.getLastOperation(instanceId));
+            isReady = isServiceInstanceReady(apiClient.getLastOperation(username, instanceId));
             if (!isReady) {
                 Thread.sleep(10000);
             }

@@ -4,12 +4,14 @@
  */
 package io.enmasse.systemtest.common.catalog;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.resources.ServiceInstance;
+import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
+import io.enmasse.systemtest.standard.QueueTest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
@@ -21,11 +23,13 @@ import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
-class ServiceCatalogApiTest extends TestBase {
+@Disabled("disabled due to issues with namespace of address space which is 'null'")
+class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox {
 
     private OSBApiClient osbApiClient;
     private static Logger log = CustomLogger.getLogger();
     private HashMap<AddressSpace, String> instances = new HashMap<>();
+    private static KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
 
     //================================================================================================
     //==================================== OpenServiceBroker methods =================================
@@ -39,34 +43,34 @@ class ServiceCatalogApiTest extends TestBase {
      * @return id of instance
      * @throws Exception
      */
-    private String createServiceInstance(AddressSpace addressSpace, boolean wait, Optional<String> instanceId) throws Exception {
-        String processedInstanceId = osbApiClient.provisionInstance(addressSpace, instanceId);
+    private ServiceInstance createServiceInstance(AddressSpace addressSpace, String username, boolean wait, Optional<String> instanceId) throws Exception {
+        ServiceInstance provInstance = osbApiClient.provisionInstance(addressSpace, username, instanceId);
         if (wait) {
-            waitForServiceInstanceReady(processedInstanceId);
+            waitForServiceInstanceReady(username, provInstance.getInstanceId());
         }
-        instances.put(addressSpace, processedInstanceId);
-        return processedInstanceId;
+        instances.put(addressSpace, provInstance.getInstanceId());
+        return provInstance;
     }
 
-    private String createServiceInstance(AddressSpace addressSpace) throws Exception {
-        return createServiceInstance(addressSpace, true, Optional.empty());
+    private ServiceInstance createServiceInstance(AddressSpace addressSpace, String username) throws Exception {
+        return createServiceInstance(addressSpace, username, true, Optional.empty());
     }
 
-    private void deleteServiceInstance(AddressSpace addressSpace, String instanceId) throws Exception {
-        osbApiClient.deprovisionInstance(addressSpace, instanceId);
+    private void deleteServiceInstance(AddressSpace addressSpace, String username, String instanceId) throws Exception {
+        osbApiClient.deprovisionInstance(addressSpace, username, instanceId);
         instances.remove(addressSpace, instanceId);
     }
 
-    private String generateBinding(AddressSpace addressSpace, String instanceId, HashMap<String, String> binding) throws Exception {
-        return osbApiClient.generateBinding(addressSpace, instanceId, binding);
+    private String generateBinding(AddressSpace addressSpace, String username, String instanceId, HashMap<String, String> binding) throws Exception {
+        return osbApiClient.generateBinding(addressSpace, username, instanceId, binding);
     }
 
-    private void deprovisionBinding(AddressSpace addressSpace, String instanceId, String bindingId) throws Exception {
-        osbApiClient.deprovisionBinding(addressSpace, instanceId, bindingId);
+    private void deprovisionBinding(AddressSpace addressSpace, String username, String instanceId, String bindingId) throws Exception {
+        osbApiClient.deprovisionBinding(addressSpace, username, instanceId, bindingId);
     }
 
-    private void waitForServiceInstanceReady(String instanceId) throws Exception {
-        TestUtils.waitForServiceInstanceReady(osbApiClient, instanceId);
+    private void waitForServiceInstanceReady(String username, String instanceId) throws Exception {
+        TestUtils.waitForServiceInstanceReady(osbApiClient, username, instanceId);
     }
 
     @BeforeAll
@@ -83,7 +87,7 @@ class ServiceCatalogApiTest extends TestBase {
         if (!environment.skipCleanup()) {
             instances.forEach((space, id) -> {
                 try {
-                    osbApiClient.deprovisionInstance(space, id);
+                    osbApiClient.deprovisionInstance(space, developer.getUsername(), id);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -109,17 +113,17 @@ class ServiceCatalogApiTest extends TestBase {
     }
 
     private void provideAndCreateBinding(AddressSpace addressSpace, String wildcardMark) throws Exception {
-        String instanceId = createServiceInstance(addressSpace);
+        ServiceInstance provInstance = createServiceInstance(addressSpace, developer.getUsername());
         HashMap<String, String> bindResources = new HashMap<>();
         bindResources.put("sendAddresses", String.format("queue.%s", wildcardMark));
         bindResources.put("receiveAddresses", String.format("queue.%s", wildcardMark));
         bindResources.put("consoleAccess", "true");
         bindResources.put("consoleAdmin", "false");
         bindResources.put("externalAccess", "false");
-        String bindingId = generateBinding(addressSpace, instanceId, bindResources);
+        String bindingId = generateBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), bindResources);
 
         //deprovisionBinding(addressSpace, instanceId, bindingId); //!TODO disabled due to deleteBinding is not implemented
-        deleteServiceInstance(addressSpace, instanceId);
+        deleteServiceInstance(addressSpace, developer.getUsername(), provInstance.getInstanceId());
     }
 
     @Test
@@ -128,8 +132,8 @@ class ServiceCatalogApiTest extends TestBase {
     void testProvideServicesWithIdenticalId() throws Exception {
         AddressSpace addressSpaceViaOSBAPI = new AddressSpace("my-space-via-osbapi-brokered", AddressSpaceType.BROKERED);
         AddressSpace addressSpaceViaOSBAPI2 = new AddressSpace("another-space-via-osbapi-brokered", AddressSpaceType.BROKERED);
-        String instanceId = createServiceInstance(addressSpaceViaOSBAPI);
-        createServiceInstance(addressSpaceViaOSBAPI2, true, Optional.of(instanceId));
+        ServiceInstance provInstance = createServiceInstance(addressSpaceViaOSBAPI, developer.getUsername());
+        createServiceInstance(addressSpaceViaOSBAPI2, developer.getUsername(), true, Optional.of(provInstance.getInstanceId()));
 
         //!TODO there are missing steps what should happen when instanceId already exists
     }
@@ -139,9 +143,31 @@ class ServiceCatalogApiTest extends TestBase {
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testMissingRequiredParameter() throws Exception {
         AddressSpace addressSpaceViaOSBAPI = new AddressSpace(null, AddressSpaceType.BROKERED);
-        createServiceInstance(addressSpaceViaOSBAPI);
+        createServiceInstance(addressSpaceViaOSBAPI, developer.getUsername());
 
         //!TODO there are missing steps what should happen when required parameter is missing
+    }
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    void testLoginWithOpensShiftCredentials() throws Exception {
+        //setup selenium only for this test
+        if (selenium.getDriver() == null) {
+            selenium.setupDriver(environment, kubernetes, buildDriver());
+        } else {
+            selenium.clearScreenShots();
+        }
+
+        // setup new service instance
+        AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED);
+        ServiceInstance serviceInstance = createServiceInstance(brokeredSpace, developer.getUsername());
+        waitForAddressSpaceReady(brokeredSpace);
+        reloadAddressSpaceEndpoints(brokeredSpace);
+
+        //connect to provided dashboard_url
+        ConsoleWebPage consolePage = new ConsoleWebPage(selenium, serviceInstance.getDashboardUrl(),
+                addressApiClient, brokeredSpace, developer);
+        consolePage.openWebConsolePage(true);
     }
 
 }
