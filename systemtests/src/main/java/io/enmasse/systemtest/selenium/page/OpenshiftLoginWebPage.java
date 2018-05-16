@@ -10,7 +10,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
-public class OpenshiftLoginWebPage {
+public class OpenshiftLoginWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -18,6 +18,7 @@ public class OpenshiftLoginWebPage {
 
     public OpenshiftLoginWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
+        checkReachableWebPage();
     }
 
     private WebElement getUsernameTextInput() {
@@ -55,5 +56,10 @@ public class OpenshiftLoginWebPage {
         selenium.fillInputItem(getPasswordTextInput(), password);
         selenium.clickOnItem(getLoginButton(), "Log in");
         return checkAlert();
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        //TODO
     }
 }

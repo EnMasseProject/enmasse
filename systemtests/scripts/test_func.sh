@@ -41,9 +41,9 @@ function run_test() {
     PROFILE=${2:-systemtests}
     CLUSTER_TYPE=${3:-openshift}
 
-    expected_pods=5
+    expected_pods=6
     if [ "$CLUSTER_TYPE" == "kubernetes" ]; then
-        expected_pods=4
+        expected_pods=5
     fi
     wait_until_up ${expected_pods} ${OPENSHIFT_PROJECT}
     wait_code=$?

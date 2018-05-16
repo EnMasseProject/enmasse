@@ -13,11 +13,13 @@ import org.slf4j.Logger;
 
 public class RheaWebPage {
 
+    private static final String webPageTitle = "cli-rhea client";
     private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium;
 
     public RheaWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
+        checkReachableWebPage();
     }
 
     public void openRheaWebPage() {
@@ -36,5 +38,10 @@ public class RheaWebPage {
 
     public boolean checkCountMessage(int count) throws Exception {
         return selenium.getWebElements(() -> selenium.getDriver().findElements(By.tagName("div")), count).size() == count;
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        checkTitle(selenium, webPageTitle);
     }
 }

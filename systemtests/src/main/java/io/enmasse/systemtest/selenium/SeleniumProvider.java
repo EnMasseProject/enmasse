@@ -143,7 +143,8 @@ public class SeleniumProvider {
     public void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
-        log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
+        logCheckboxValue(element);
+        log.info("Click on element: {}", (textToLog == null ? element.getText() : textToLog));
         element.click();
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
@@ -213,7 +214,7 @@ public class SeleniumProvider {
     }
 
     public WebElement getInputByName(String inputName) {
-        return this.getDriver().findElement(By.cssSelector("input[name='{}']".format(inputName)));
+        return this.getDriver().findElement(By.cssSelector(String.format("input[name='%s']", inputName)));
     }
 
     public WebElement getWebElement(Supplier<WebElement> webElement) throws Exception {
@@ -272,4 +273,35 @@ public class SeleniumProvider {
         }
         log.info("End of waiting");
     }
+
+    //================================================================================================
+    //==================================== Checkbox methods ==========================================
+    //================================================================================================
+
+    public void setValueOnCheckboxRequestedPermissions(WebElement element, boolean check) throws Exception {
+        if (getCheckboxValue(element) != check) {
+            clickOnItem(element);
+        } else {
+            log.info("Checkbox already {}", check ? "checked" : "unchecked");
+        }
+    }
+
+    public boolean getCheckboxValue(WebElement element) {
+        if (isCheckbox(element)) {
+            return new Boolean(element.getAttribute("checked"));
+        }
+        throw new IllegalStateException("Requested element is not of type 'checkbox'");
+    }
+
+    private boolean isCheckbox(WebElement element) {
+        String type = element.getAttribute("type");
+        return type != null && type.equals("checkbox");
+    }
+
+    private void logCheckboxValue(WebElement element) {
+        if (isCheckbox(element)) {
+            log.info("Checkbox value before click is checked='{}'", element.getAttribute("checked"));
+        }
+    }
+
 }

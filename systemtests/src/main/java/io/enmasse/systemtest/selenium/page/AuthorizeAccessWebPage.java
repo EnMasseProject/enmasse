@@ -10,17 +10,22 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
-public class AuthorizeAccessWebPage {
+public class AuthorizeAccessWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private SeleniumProvider selenium;
     private static final String webPageTitle = "Authorize service account kc-oauth";
 
-    SeleniumProvider selenium;
+    private static Logger log = CustomLogger.getLogger();
 
     public AuthorizeAccessWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
+        checkReachableWebPage();
     }
 
+
+    //===========================
+    //======= Get element methods
+    //===========================
 
     private WebElement getCheckBoxRequestedPermission() {
         return selenium.getDriver().findElement(By.id("scope-0"));
@@ -34,29 +39,30 @@ public class AuthorizeAccessWebPage {
         return selenium.getInputByName("deny");
     }
 
-    public void clickOnCheckboxRequestedPermissions() throws Exception {
-        selenium.clickOnItem(getCheckBoxRequestedPermission());
+    //===========================
+    //= Click on elements methods
+    //===========================
+
+
+    private void clickOnCheckboxRequestedPermissions() throws Exception {
+        selenium.clickOnItem(getCheckBoxRequestedPermission(), "checkbox user:info");
     }
 
     public void clickOnBtnAllowSelectedPermissions() throws Exception {
-        selenium.clickOnItem(getBtnAllowRequestedPermissions());
+        selenium.clickOnItem(getBtnAllowRequestedPermissions(), "Allow selected permissions");
     }
 
     public void clickOnBtnDeny() throws Exception {
-        selenium.clickOnItem(getBtnDeny());
+        selenium.clickOnItem(getBtnDeny(), "Deny");
     }
 
-    public boolean isOpenedInBrowser() {
-        try {
-            WebElement title = selenium.getDriver().findElement(By.tagName("title"));
-            if (title != null && title.getText() != null) {
-                String titleContent = title.getText();
-                return titleContent.contains(webPageTitle);
-            }
-            return false;
-        } catch (Exception ex) {
-            return false;
-        }
+    public void setValueOnCheckboxRequestedPermissions(boolean check) throws Exception {
+        selenium.setValueOnCheckboxRequestedPermissions(getCheckBoxRequestedPermission(), check);
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        checkTitle(selenium, webPageTitle);
     }
 
 }

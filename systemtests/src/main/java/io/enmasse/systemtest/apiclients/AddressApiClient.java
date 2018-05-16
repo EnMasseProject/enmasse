@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import io.enmasse.systemtest.*;
 import com.google.common.collect.Sets;
+import io.enmasse.systemtest.*;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
@@ -18,15 +18,11 @@ import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class AddressApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
@@ -35,23 +31,12 @@ public class AddressApiClient extends ApiClient {
     private final String addressSpacesPath;
     private final String addressPathPattern;
     private final String addressResourcePath;
-    private final String authzString;
-    private Endpoint endpoint;
 
     public AddressApiClient(Kubernetes kubernetes) {
         super(kubernetes, kubernetes.getRestEndpoint());
-        this.vertx = VertxFactory.create();
-        this.client = WebClient.create(vertx, new WebClientOptions()
-                .setSsl(true)
-                // TODO: Fetch CA and use
-                .setTrustAll(true)
-                .setVerifyHost(false));
-        this.kubernetes = kubernetes;
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
-        this.addressPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace());
+        this.addressPathPattern = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
         this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
-        this.endpoint = kubernetes.getRestEndpoint();
-        this.authzString = "Bearer " + kubernetes.getApiToken();
     }
 
     public void close() {
@@ -108,7 +93,7 @@ public class AddressApiClient extends ApiClient {
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         JsonObject config = new JsonObject();
-        config.put("apiVersion", "enmasse.io/v1alpha1");
+        config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
         config.put("metadata", createAddressSpaceMetadata(addressSpace));
         config.put("spec", createAddressSpaceSpec(addressSpace));
@@ -198,21 +183,21 @@ public class AddressApiClient extends ApiClient {
     public JsonArray getAddressesPaths() throws Exception {
         log.info("GET-addresses-paths: path {}; ", addressPathPattern);
         return doRequestNTimes(initRetry, () -> {
-            CompletableFuture<JsonArray> responsePromise = new CompletableFuture<>();
-            client.get(endpoint.getPort(), endpoint.getHost(), addressPathPattern)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonArray())
-                    .timeout(20_000)
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses path"));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    CompletableFuture<JsonArray> responsePromise = new CompletableFuture<>();
+                    client.get(endpoint.getPort(), endpoint.getHost(), addressPathPattern)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonArray())
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses path"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     /**
      * give you JsonObject with AddressesList or Address kind
      *
-     *
-     * @param addressName  name of address
+     * @param addressName name of address
      * @return
      * @throws Exception
      */
@@ -221,14 +206,15 @@ public class AddressApiClient extends ApiClient {
         log.info("GET-addresses: path {}; ", path);
 
         return doRequestNTimes(initRetry, () -> {
-            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-            client.get(endpoint.getPort(), endpoint.getHost(), path)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .timeout(20_000)
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+                    client.get(endpoint.getPort(), endpoint.getHost(), path)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     /**
@@ -356,15 +342,16 @@ public class AddressApiClient extends ApiClient {
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-            client.post(endpoint.getPort(), endpoint.getHost(), addressResourcePath)
-                    .timeout(20_000)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .sendJsonObject(entry, ar -> responseHandler(ar,
-                            responsePromise,
-                            "Error: create address"));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    client.post(endpoint.getPort(), endpoint.getHost(), addressResourcePath)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(entry, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    "Error: create address"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public void createAddress(AddressSpace addressSpace, Destination destination) throws Exception {
@@ -401,15 +388,16 @@ public class AddressApiClient extends ApiClient {
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-            client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getName()))
-                    .timeout(20_000)
-                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                    .as(BodyCodec.jsonObject())
-                    .sendJsonObject(entry, ar -> responseHandler(ar,
-                            responsePromise,
-                            "Error: deploy addresses"));
-            return responsePromise.get(30, TimeUnit.SECONDS);
-        });
+                    client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getName()))
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(entry, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    "Error: deploy addresses"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()));
     }
 
     public JsonObject sendRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {

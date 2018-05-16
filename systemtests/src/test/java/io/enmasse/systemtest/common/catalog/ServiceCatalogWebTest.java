@@ -11,7 +11,11 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
-import org.junit.jupiter.api.*;
+import io.enmasse.systemtest.standard.QueueTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
@@ -27,7 +31,6 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
 class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
@@ -165,23 +168,29 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @Disabled("IN PROGRESS")
-    void testLoginViaOpensShiftCredentials() throws Exception {
+    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    void testLoginWithOpensShiftCredentials() throws Exception {
         AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED);
-        provisionedServices.put(getUserProjectName(brokeredSpace), brokeredSpace);
+        String namespace = getUserProjectName(brokeredSpace);
+
+        //provision via oc web ui and wait until ready
+        provisionedServices.put(namespace, brokeredSpace);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
         ocPage.openOpenshiftPage();
-        ocPage.provisionAddressSpaceViaSC(brokeredSpace, getUserProjectName(brokeredSpace));
-//        ConsoleWebPage consoleWebPage = ocPage.clickOnDashboard();
-//        consoleWebPage
-        waitForAddressSpaceReady(brokeredSpace);
+        ocPage.provisionAddressSpaceViaSC(brokeredSpace, namespace);
         reloadAddressSpaceEndpoints(brokeredSpace);
-        //this is important due to update of endpoint which are usually updated
 
-        ConsoleWebPage consolePage = new ConsoleWebPage(selenium, getConsoleRoute(brokeredSpace),
-                addressApiClient, brokeredSpace, developer);
+        //open console login web page and use OpenShift credentials for login
+        ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
         consolePage.openWebConsolePage(true);
-        fail("korny za to nemuze");
+
+        //do simple send/receive
+        Destination queue = Destination.queue("test-queue", "brokered-queue");
+        consolePage.createAddressWebConsole(queue, false, true);
+
+        AmqpClient client = amqpClientFactory.createQueueClient(brokeredSpace);
+        client.getConnectOptions().setCredentials(developer);
+        QueueTest.runQueueTest(client, queue);
 
     }
 
