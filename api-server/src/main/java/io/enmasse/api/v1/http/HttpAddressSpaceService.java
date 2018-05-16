@@ -86,7 +86,7 @@ public class HttpAddressSpaceService {
     public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull  AddressSpace input) throws Exception {
         return doRequest("Error creating address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
-            AddressSpace addressSpace = setAddressSpaceDefaults(input, namespace);
+            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, input, namespace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
@@ -98,7 +98,7 @@ public class HttpAddressSpaceService {
         });
     }
 
-    private AddressSpace setAddressSpaceDefaults(AddressSpace addressSpace, String namespace) {
+    private AddressSpace setAddressSpaceDefaults(SecurityContext securityContext, AddressSpace addressSpace, String namespace) {
         if (addressSpace.getNamespace() == null) {
             addressSpace = new AddressSpace.Builder(addressSpace)
                     .setNamespace(namespace)
@@ -121,6 +121,14 @@ public class HttpAddressSpaceService {
             addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
         }
 
+        if (securityContext.isSecure() && securityContext.getUserPrincipal() != null) {
+            String createdBy = RbacSecurityContext.getUserName(securityContext.getUserPrincipal());
+            String createdByUid = RbacSecurityContext.getUserId(securityContext.getUserPrincipal());
+
+            addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
+            addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
+        }
+
         return addressSpace;
     }
 
@@ -130,7 +138,7 @@ public class HttpAddressSpaceService {
     public Response replaceAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @NotNull  AddressSpace input) throws Exception {
         return doRequest("Error replacing address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
-            AddressSpace addressSpace = setAddressSpaceDefaults(input, namespace);
+            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, input, namespace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
