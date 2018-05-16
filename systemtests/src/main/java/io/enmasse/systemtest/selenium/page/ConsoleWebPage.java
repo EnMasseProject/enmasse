@@ -19,10 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ConsoleWebPage {
+public class ConsoleWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium;
@@ -33,14 +32,6 @@ public class ConsoleWebPage {
     private ConsoleLoginWebPage consoleLoginWebPage;
     private KeycloakCredentials credentials;
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
-        this.selenium = selenium;
-        this.consoleRoute = consoleRoute;
-        this.addressApiClient = addressApiClient;
-        this.defaultAddressSpace = defaultAddressSpace;
-        this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
-        this.credentials = credentials;
-    }
 
     public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
         this.selenium = selenium;
@@ -49,6 +40,13 @@ public class ConsoleWebPage {
         this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
     }
 
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
+        this(selenium, addressApiClient, defaultAddressSpace);
+        this.consoleRoute = consoleRoute;
+        this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
+        this.credentials = credentials;
+        checkReachableWebPage();
+    }
 
     //================================================================================================
     // Getters and finders of elements and data
@@ -653,7 +651,7 @@ public class ConsoleWebPage {
         }
     }
 
-    private class ConsoleLoginWebPage {
+    private class ConsoleLoginWebPage implements IWebPage {
 
         private Logger log = CustomLogger.getLogger();
 
@@ -661,6 +659,7 @@ public class ConsoleWebPage {
 
         public ConsoleLoginWebPage(SeleniumProvider selenium) {
             this.selenium = selenium;
+            checkReachableWebPage();
         }
 
         private WebElement getContentElement() throws Exception {
@@ -706,12 +705,14 @@ public class ConsoleWebPage {
                 OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
                 boolean login = ocLoginPage.login(username, password);
                 if (login) {
-                    AuthorizeAccessWebPage authzWebPage = new AuthorizeAccessWebPage(selenium);
-                    if (authzWebPage.isOpenedInBrowser()) {
-                        authzWebPage.clickOnCheckboxRequestedPermissions();
+                    try {
+                        //may raise IllegalStateException with expected message vvv
+                        AuthorizeAccessWebPage authzWebPage = new AuthorizeAccessWebPage(selenium);
+                        authzWebPage.setValueOnCheckboxRequestedPermissions(true);
                         authzWebPage.clickOnBtnAllowSelectedPermissions();
-                    } else {
-                        log.info("Authorize Access web page was skipped!");
+                    } catch (IllegalStateException ex) {
+                        assertEquals("Unexpected web page in browser!", ex.getMessage());
+                        log.info("'Authorize Access' web page was skipped!");
                     }
                 }
                 return login;
@@ -723,5 +724,15 @@ public class ConsoleWebPage {
                 return checkAlert();
             }
         }
+
+        @Override
+        public void checkReachableWebPage() {
+            //TODO
+        }
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        //TODO
     }
 }

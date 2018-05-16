@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class OpenshiftWebPage {
+public class OpenshiftWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -374,5 +374,10 @@ public class OpenshiftWebPage {
         Set<String> tabHandles = selenium.getDriver().getWindowHandles();
         selenium.getDriver().switchTo().window(tabHandles.toArray()[tabHandles.size() - 1].toString());
         return new ConsoleWebPage(selenium, addressApiClient, addressSpace);
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        //TODO
     }
 }
