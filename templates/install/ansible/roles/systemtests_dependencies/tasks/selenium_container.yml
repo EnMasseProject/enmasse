@@ -20,6 +20,8 @@
     restart: yes
     ports:
       - "4444:4444"
+    network_mode: host
+
 
 - name: SELENIUM-CONTAINER | get and start chrome container
   docker_container:
@@ -29,3 +31,4 @@
     restart: yes
     ports:
       - "6666:4444"
+    network_mode: host

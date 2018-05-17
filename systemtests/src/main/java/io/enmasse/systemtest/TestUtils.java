@@ -926,10 +926,10 @@ public class TestUtils {
     }
 
     public static RemoteWebDriver getFirefoxDriver() throws MalformedURLException {
-        return new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), DesiredCapabilities.firefox());
+        return new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
     }
 
     public static RemoteWebDriver getChromeDriver() throws MalformedURLException {
-        return new RemoteWebDriver(new URL("http://localhost:6666/wd/hub"), DesiredCapabilities.chrome());
+        return new RemoteWebDriver(new URL("http://localhost:6666/wd/hub"), new ChromeOptions());
     }
 }
