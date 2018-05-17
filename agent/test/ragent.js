@@ -557,8 +557,8 @@ describe('basic router configuration', function() {
     it('configures large number of anycast addresses', simple_address_test(generate_address_list(2000, ['anycast']), undefined, undefined, 2000));
     it('configures large number of multicast addresses', simple_address_test(generate_address_list(2000, ['multicast']), undefined, undefined, 2000));
     it('configures large number of queues', simple_address_test(generate_address_list(2000, ['queue']), undefined, undefined, 6000));
-    it('configures large number of topics', simple_address_test(generate_address_list(2000, ['topic']), undefined, undefined, 4000));
-    it('configures large number of mixed addresses', simple_address_test(generate_address_list(2000), undefined, undefined, 4000));
+    it('configures large number of topics', simple_address_test(generate_address_list(2000, ['topic']), undefined, undefined, 6000));
+    it('configures large number of mixed addresses', simple_address_test(generate_address_list(2000), undefined, undefined, 6000));
 });
 
 function localpath(name) {
@@ -1066,7 +1066,7 @@ describe('broker configuration', function() {
     });
 
     it('creates lots of queues on associated brokers', function (done) {
-        this.timeout(20000);
+        this.timeout(30000);
         var router = routers.new_router();
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
@@ -1082,7 +1082,7 @@ describe('broker configuration', function() {
                 broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_a'; }));
                 broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_b'; }));
                 done();
-            }, 15000/*15 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }, 25000/*25 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         }).catch(done);
     });
 });
