@@ -185,7 +185,7 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                 createAddressType(
                         "queue",
                         "A store-and-forward queue. A queue may be sharded across multiple storage units, " +
-                                "in which case message ordering is no longer guaraneteed.",
+                                "in which case message ordering is no longer guaranteed.",
                         filteredAddressPlans),
                 createAddressType(
                         "topic",

@@ -350,14 +350,14 @@ describe('basic router configuration', function() {
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', direction:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', direction:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out'});
        }));
     it('removes or updates address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-a', {prefix:'a', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', direction:'in'});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', direction:'out'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autolink', 'ragent-baz', {addr:'baz', direction:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out'});
        }));
     it('configures addresses on multiple routers', multi_router_address_test(3, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
