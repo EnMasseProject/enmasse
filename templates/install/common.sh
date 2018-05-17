@@ -45,7 +45,7 @@ function create_address_space() {
         \"name\": \"${name}\",
         \"labels\": {
             \"type\": \"address-space\",
-            \"namespace\": "${NAMESPACE}"
+            \"namespace\": \"${NAMESPACE}\"
         }
     },
     \"data\": {
