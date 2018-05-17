@@ -101,6 +101,7 @@ kubectl get service standard-authservice -o jsonpath={.spec.clusterIP}
 ----
 
 . Create keycloak configuration:
++
 [options="nowrap"]
 ----
 AUTH_HOST=<value from one of the previous commands>

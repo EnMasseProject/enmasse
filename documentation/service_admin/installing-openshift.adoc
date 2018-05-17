@@ -109,12 +109,14 @@ oc get service standard-authservice -o jsonpath={.spec.clusterIP}
 ----
 +
 . Or, if you have a public hostname:
++
 [options="nowrap"]
 ----
 oc get route keycloak -o jsonpath={.spec.host}
 ----
 
 . Create keycloak configuration:
++
 [options="nowrap"]
 ----
 AUTH_HOST=<value from one of the previous commands>

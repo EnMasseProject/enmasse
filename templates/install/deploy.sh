@@ -74,7 +74,7 @@ while getopts a:de:gm:n:o:u:t:yvh opt; do
             echo
             echo "optional arguments:"
             echo "  -h                   show this help message"
-            echo "  -a \"none standard\" Deploy given authentication services (default: \"none\")"
+            echo "  -a \"none standard\"   Deploy given authentication services (default: \"none\")"
             echo "  -d                   create an all-in-one cluster on localhost"
             echo "  -e                   Environment label for this EnMasse deployment"
             echo "  -n NAMESPACE         Project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"

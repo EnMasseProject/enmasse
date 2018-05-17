@@ -305,7 +305,7 @@
                 }
             }
         },
-        "/addressses/{addressSpace}/{address}": {
+        "/addresses/{addressSpace}/{address}": {
             "get": {
                 "tags": [
                     "addresses"

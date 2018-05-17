@@ -57,7 +57,7 @@ public class Endpoint {
                 .append("host=").append(host).append(",")
                 .append("service=").append(service).append(",")
                 .append("port=").append(port).append(",")
-                .append("certProviderSpec").append(certSpec).append("}")
+                .append("certProviderSpec=").append(certSpec).append("}")
                 .toString();
     }
 
