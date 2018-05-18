@@ -16,7 +16,7 @@ https://github.com/openshift/origin/releases/tag/v3.6.0
 * Download EnMasse release from
 https://github.com/EnMasseProject/enmasse/releases
 * Untar and run:
-** `./deploy-openshift.sh -d -s -n enmasse -o multitenant`
+** `./deploy.sh -d -s -n enmasse -o multitenant`
 
 [[verifying-if-the-enmasse-service-broker-is-registered]]
 == Verifying if the EnMasse Service Broker is registered
