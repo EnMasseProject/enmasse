@@ -6,7 +6,7 @@ objects:
   - apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: ${NAME}
+      name: ${NAMESPACE}.${NAME}
       labels:
         type: address-space
     data:
