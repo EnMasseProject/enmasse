@@ -310,8 +310,9 @@ public class TestUtils {
     /**
      * Check if state and description values equals required values
      *
-     * @param status answer from service broker
-     * @return
+     *
+     * @param status answer from service broker on 'last_operation'
+     * @return true->state=succeeded / otherwise else
      */
     public static boolean isServiceInstanceReady(JsonObject status) {
         boolean isReady = false;

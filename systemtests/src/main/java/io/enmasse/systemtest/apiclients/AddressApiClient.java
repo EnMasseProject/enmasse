@@ -34,8 +34,8 @@ public class AddressApiClient extends ApiClient {
 
     public AddressApiClient(Kubernetes kubernetes) {
         super(kubernetes, kubernetes.getRestEndpoint());
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace());
-        this.addressPathPattern = String.format("/apis/enmasse.io/v1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
+        this.addressPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
         this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
     }
 

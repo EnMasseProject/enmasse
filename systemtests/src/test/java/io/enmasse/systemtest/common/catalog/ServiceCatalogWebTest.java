@@ -11,11 +11,7 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
-import io.enmasse.systemtest.standard.QueueTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
@@ -93,6 +89,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
+    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateDeleteBindings() throws Exception {
         AddressSpace brokered = new AddressSpace("test-binding-space", AddressSpaceType.BROKERED);
@@ -110,6 +107,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
+    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
         Destination queue = Destination.queue("test-queue", "brokered-queue");
@@ -139,6 +137,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
+    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
         Destination queue = Destination.queue("test-queue", "sharded-queue");
@@ -182,16 +181,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
-        consolePage.openWebConsolePage(true);
-
-        //do simple send/receive
-        Destination queue = Destination.queue("test-queue", "brokered-queue");
-        consolePage.createAddressWebConsole(queue, false, true);
-
-        AmqpClient client = amqpClientFactory.createQueueClient(brokeredSpace);
-        client.getConnectOptions().setCredentials(developer);
-        QueueTest.runQueueTest(client, queue);
-
+        consolePage.login(developer, true);
     }
 
 }
