@@ -11,7 +11,7 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.slf4j.Logger;
 
-public class RheaWebPage {
+public class RheaWebPage implements IWebPage {
 
     private static final String webPageTitle = "cli-rhea client";
     private static Logger log = CustomLogger.getLogger();

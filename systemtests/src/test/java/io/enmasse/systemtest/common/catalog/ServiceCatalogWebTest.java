@@ -11,7 +11,6 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
-import io.enmasse.systemtest.standard.QueueTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -182,16 +181,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
-        consolePage.openWebConsolePage(true);
-
-        //do simple send/receive
-        Destination queue = Destination.queue("test-queue", "brokered-queue");
-        consolePage.createAddressWebConsole(queue, false, true);
-
-        AmqpClient client = amqpClientFactory.createQueueClient(brokeredSpace);
-        client.getConnectOptions().setCredentials(developer);
-        QueueTest.runQueueTest(client, queue);
-
+        consolePage.login(developer, true);
     }
 
 }
