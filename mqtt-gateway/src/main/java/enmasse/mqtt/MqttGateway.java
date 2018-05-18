@@ -31,6 +31,8 @@ public class MqttGateway extends AbstractVerticle {
     // binding info for listening
     private String bindAddress;
     private int listenPort;
+    // mqtt server options
+    private int maxMessageSize;
     // connection info to the messaging service
     private String messagingServiceHost;
     private int messagingServicePort;
@@ -65,6 +67,18 @@ public class MqttGateway extends AbstractVerticle {
     @Value(value = "${enmasse.mqtt.listenport:1883}")
     public MqttGateway setListenPort(int listePort) {
         this.listenPort = listePort;
+        return this;
+    }
+
+    /**
+     * Set max message size for MQTT Gateway
+     *
+     * @param maxMessageSize   max message size for MQTT messages
+     * @return  current MQTT gateway instance
+     */
+    @Value(value = "${enmasse.mqtt.maxmessagesize:131072}")
+    public MqttGateway setMaxMessageSize(int maxMessageSize) {
+        this.maxMessageSize = maxMessageSize;
         return this;
     }
 
@@ -136,6 +150,7 @@ public class MqttGateway extends AbstractVerticle {
     private void bindMqttServer(Future<Void> startFuture) {
 
         MqttServerOptions options = new MqttServerOptions();
+        options.setMaxMessageSize(this.maxMessageSize);
         options.setHost(this.bindAddress).setPort(this.listenPort);
 
         if (this.ssl) {

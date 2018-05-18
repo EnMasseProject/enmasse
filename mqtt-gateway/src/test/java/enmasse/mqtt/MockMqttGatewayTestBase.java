@@ -29,6 +29,7 @@ public abstract class MockMqttGatewayTestBase {
     public static final String MQTT_BIND_ADDRESS = "localhost";
     public static final int MQTT_LISTEN_PORT = 1883;
     public static final int MQTT_TLS_LISTEN_PORT = 8883;
+    public static final int MQTT_MAX_MESSAGE_SIZE = 131072;
 
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
@@ -68,6 +69,7 @@ public abstract class MockMqttGatewayTestBase {
         this.mqttGateway
                 .setBindAddress(MQTT_BIND_ADDRESS)
                 .setListenPort(port)
+                .setMaxMessageSize(MQTT_MAX_MESSAGE_SIZE)
                 .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
                 .setMessagingServicePort(router.getNormalPort());
 
