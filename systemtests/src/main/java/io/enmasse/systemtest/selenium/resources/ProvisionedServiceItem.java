@@ -67,8 +67,7 @@ public class ProvisionedServiceItem {
                 return el;
             }
         }
-        log.info("Binding {} not found", bindingID);
-        return null;
+        throw new IllegalStateException(String.format("Binding %s not found", bindingID));
     }
 
     public WebElement getDeleteBindingButton(WebElement binding) {
