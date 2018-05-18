@@ -209,9 +209,9 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     private void waitUntilBindingIsReady() throws Exception {
-        selenium.getDriverWait()
-                .withTimeout(Duration.ofMinutes(1))
-                .until(ExpectedConditions.presenceOfNestedElementLocatedBy(getModalWindow().findElement(By.className("results-message")), By.tagName("strong")));
+        Thread.sleep(5000);
+        selenium.takeScreenShot();
+        selenium.getWebElement(() -> getModalWindow().findElement(By.className("results-message")).findElement(By.tagName("strong")), 360);
     }
 
     private void clickOnCreateBrokered() throws Exception {

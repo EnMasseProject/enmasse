@@ -12,8 +12,10 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +47,6 @@ public class ConsoleWebPage implements IWebPage {
         this.consoleRoute = consoleRoute;
         this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
         this.credentials = credentials;
-        checkReachableWebPage();
     }
 
     //================================================================================================
@@ -53,6 +54,7 @@ public class ConsoleWebPage implements IWebPage {
     //================================================================================================
 
     private WebElement getNavigateMenu() throws Exception {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
         return selenium.getDriver().findElement(By.className("nav-pf-vertical"));
     }
 
@@ -635,11 +637,15 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public boolean login() throws Exception {
-        return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), false);
+        return login(credentials, false);
     }
 
     public boolean login(KeycloakCredentials credentials) throws Exception {
-        return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), false);
+        return login(credentials, false);
+    }
+
+    public boolean login(KeycloakCredentials credentials, boolean viaOpenShift) throws Exception {
+        return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift);
     }
 
     public void logout() throws Exception {
@@ -659,7 +665,6 @@ public class ConsoleWebPage implements IWebPage {
 
         public ConsoleLoginWebPage(SeleniumProvider selenium) {
             this.selenium = selenium;
-            checkReachableWebPage();
         }
 
         private WebElement getContentElement() throws Exception {
@@ -701,6 +706,7 @@ public class ConsoleWebPage implements IWebPage {
 
         public boolean login(String username, String password, boolean viaOpenShift) throws Exception {
             if (viaOpenShift) {
+                checkReachableWebPage();
                 selenium.clickOnItem(getOpenshiftButton());
                 OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
                 boolean login = ocLoginPage.login(username, password);
@@ -727,7 +733,8 @@ public class ConsoleWebPage implements IWebPage {
 
         @Override
         public void checkReachableWebPage() {
-            //TODO
+            String pageTitle = "Log in to";  //full title is "Log in to 'project-name'"
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains(pageTitle));
         }
     }
 

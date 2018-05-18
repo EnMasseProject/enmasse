@@ -11,7 +11,7 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.slf4j.Logger;
 
-public class RheaWebPage {
+public class RheaWebPage implements IWebPage {
 
     private static final String webPageTitle = "cli-rhea client";
     private static Logger log = CustomLogger.getLogger();
@@ -19,7 +19,6 @@ public class RheaWebPage {
 
     public RheaWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
-        checkReachableWebPage();
     }
 
     public void openRheaWebPage() {
@@ -27,6 +26,7 @@ public class RheaWebPage {
         selenium.getDriver().get("file:///opt/rhea.html");
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
+        checkReachableWebPage();
     }
 
     public void sendReceiveMessages(String server, String address, int count, KeycloakCredentials credentials) throws Exception {

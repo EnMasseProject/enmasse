@@ -221,6 +221,10 @@ public class SeleniumProvider {
         return getElement(webElement, 30, 0);
     }
 
+    public WebElement getWebElement(Supplier<WebElement> webElement, int attempts) throws Exception {
+        return getElement(webElement, attempts, 0);
+    }
+
     public List<WebElement> getWebElements(Supplier<List<WebElement>> webElements, int count) throws Exception {
         return getElement(webElements, 30, count);
     }

@@ -648,7 +648,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     private void assertElementDisabled(String message, WebElement element) {
         try {
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(element)));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(element)));
             assertFalse(element.isEnabled(), message);
         } catch (Exception ex) {
             throw new IllegalStateException("Element is enabled");

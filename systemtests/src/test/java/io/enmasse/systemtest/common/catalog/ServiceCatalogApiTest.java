@@ -5,13 +5,11 @@
 package io.enmasse.systemtest.common.catalog;
 
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.resources.ServiceInstance;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
-import io.enmasse.systemtest.standard.QueueTest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
@@ -23,13 +21,41 @@ import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
-@Disabled("disabled due to issues with namespace of address space which is 'null'")
+//@Disabled("disabled due to issues with namespace of address space which is 'null'")
 class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox {
 
     private OSBApiClient osbApiClient;
     private static Logger log = CustomLogger.getLogger();
     private HashMap<AddressSpace, String> instances = new HashMap<>();
     private static KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
+
+    @BeforeAll
+    void initializeTestBase() {
+        if (!environment.useMinikube()) {
+            osbApiClient = new OSBApiClient(kubernetes);
+        } else {
+            log.info("Open Service Broker API client cannot be initialized, tests running on minikube");
+        }
+    }
+
+    @AfterAll
+    void tearDown() {
+        if (!environment.skipCleanup()) {
+            instances.forEach((space, id) -> {
+                try {
+                    osbApiClient.deprovisionInstance(space, developer.getUsername(), id);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            instances.clear();
+        } else {
+            log.warn("Remove service instances in tear down - SKIPPED!");
+        }
+        if (environment.useMinikube() && osbApiClient != null) {
+            osbApiClient.close();
+        }
+    }
 
     //================================================================================================
     //==================================== OpenServiceBroker methods =================================
@@ -73,31 +99,6 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
         TestUtils.waitForServiceInstanceReady(osbApiClient, username, instanceId);
     }
 
-    @BeforeAll
-    void initializeTestBase() {
-        if (!environment.useMinikube()) {
-            osbApiClient = new OSBApiClient(kubernetes);
-        } else {
-            log.info("Open Service Broker API client cannot be initialized, tests running on minikube");
-        }
-    }
-
-    @AfterAll
-    void tearDown() {
-        if (!environment.skipCleanup()) {
-            instances.forEach((space, id) -> {
-                try {
-                    osbApiClient.deprovisionInstance(space, developer.getUsername(), id);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            instances.clear();
-        } else {
-            log.warn("Remove service instances in tear down - SKIPPED!");
-        }
-    }
-
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingStandard() throws Exception {
@@ -122,6 +123,7 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
         bindResources.put("externalAccess", "false");
         String bindingId = generateBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), bindResources);
 
+        //TODO verify that bindings for send/recieve/view console/etc... works fine
         //deprovisionBinding(addressSpace, instanceId, bindingId); //!TODO disabled due to deleteBinding is not implemented
         deleteServiceInstance(addressSpace, developer.getUsername(), provInstance.getInstanceId());
     }
@@ -158,13 +160,11 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
             selenium.clearScreenShots();
         }
 
-        // setup new service instance
         AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED);
         ServiceInstance serviceInstance = createServiceInstance(brokeredSpace, developer.getUsername());
         waitForAddressSpaceReady(brokeredSpace);
         reloadAddressSpaceEndpoints(brokeredSpace);
 
-        //connect to provided dashboard_url
         ConsoleWebPage consolePage = new ConsoleWebPage(selenium, serviceInstance.getDashboardUrl(),
                 addressApiClient, brokeredSpace, developer);
         consolePage.openWebConsolePage(true);
