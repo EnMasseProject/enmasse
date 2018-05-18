@@ -208,6 +208,12 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.getDriverWait().withTimeout(Duration.ofMinutes(4)).until(ExpectedConditions.numberOfElementsToBe(By.className("alert-info"), 0));
     }
 
+    private void waitUntilBindingIsReady() throws Exception {
+        selenium.getDriverWait()
+                .withTimeout(Duration.ofMinutes(1))
+                .until(ExpectedConditions.presenceOfNestedElementLocatedBy(getModalWindow().findElement(By.className("results-message")), By.tagName("strong")));
+    }
+
     private void clickOnCreateBrokered() throws Exception {
         selenium.clickOnItem(getServiceFromCatalog("EnMasse (brokered)"));
     }
@@ -288,7 +294,7 @@ public class OpenshiftWebPage implements IWebPage {
         clickOnAddToProjectDropdown();
         WebElement project = getItemFromAddToProjectDropDown(projectName);
         if (project != null) {
-            log.info("Project is present address space will be added into them: {}", projectName);
+            log.info("Project is present address space will be added into it: {}", projectName);
             selenium.clickOnItem(project);
         } else {
             log.info("Project is not present address space will be added into new");
@@ -329,7 +335,7 @@ public class OpenshiftWebPage implements IWebPage {
             fillSendAddresses(sendAddresses);
         }
         next();
-        Thread.sleep(2000);
+        waitUntilBindingIsReady();
         String bindingId = getModalWindow().findElement(By.className("results-message")).findElement(By.tagName("strong")).getText();
         next();
         return bindingId;
