@@ -1,18 +1,17 @@
 #!/bin/bash
 
-# This script is for deploying EnMasse into OpenShift. The target of
-# installation can be an existing OpenShift deployment or an all-in-one
-# container can be started.
+# This script is for deploying EnMasse into OpenShift or Kubernetes. 
+# The target of installation can be an existing OpenShift deployment 
+# or an all-in-one container can be started.
 #
-# In either case, access to the `oc` command is required.
+# In either case, access to the `oc` or `kubectl` command is required.
 #
 # example usage:
 #
-#    $ enmasse-deploy.sh -c 10.0.1.100 -o enmasse.10.0.1.100.xip.io
+#    $ deploy.sh -n enmasse -a standard
 #
-# this will deploy EnMasse into the OpenShift cluster running at 10.0.1.100
-# and set the EnMasse webui route url to enmasse.10.0.1.100.xip.io.
-# further it will use the user `developer` and project `myproject`, asking
+# this will deploy EnMasse into the OpenShift cluster with authentication services.
+# Further it will use the user `developer` and project `enmasse`, asking
 # for a login when appropriate.
 # for further parameters please see the help text.
 
@@ -150,6 +149,10 @@ fi
 
 if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
+    rc=$?;
+    if [[ $rc != 0 ]]; then
+        exit $rc;
+    fi
     AVAILABLE_PROJECTS=`docmd "oc projects -q"`
     for proj in $AVAILABLE_PROJECTS
     do
