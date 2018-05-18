@@ -104,10 +104,6 @@ public class KubeAuthApi implements AuthApi {
             body.put("kind", "SubjectAccessReview");
             body.put("apiVersion", "authorization.k8s.io/v1beta1");
 
-            JsonObject metadata = new JsonObject();
-            metadata.put("namespace", namespace);
-            body.put("metadata", metadata);
-
             JsonObject spec = new JsonObject();
 
             JsonObject resourceAttributes = new JsonObject();
@@ -119,7 +115,7 @@ public class KubeAuthApi implements AuthApi {
             spec.put("user", user);
 
             body.put("spec", spec);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/namespaces/" + namespace + "/localsubjectaccessreviews", "POST", body, false, impersonateUser);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false, impersonateUser);
 
             JsonObject status = responseBody.getJsonObject("status");
             boolean allowed = false;

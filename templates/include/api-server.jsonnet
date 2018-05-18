@@ -105,11 +105,9 @@ local images = import "images.jsonnet";
               },
               "resources": {
                 "requests": {
-                  "cpu": "500m",
                   "memory": "128Mi"
                 },
                 "limits": {
-                  "cpu": "500m",
                   "memory": "256Mi"
                 }
               }

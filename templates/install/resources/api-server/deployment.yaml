@@ -43,10 +43,8 @@ spec:
           name: https
         resources:
           limits:
-            cpu: 500m
             memory: 256Mi
           requests:
-            cpu: 500m
             memory: 128Mi
         volumeMounts:
         - mountPath: /api-server-cert

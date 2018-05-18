@@ -91,7 +91,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -119,7 +119,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 

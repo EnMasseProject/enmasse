@@ -19,8 +19,10 @@ import java.util.Optional;
 public class HttpConsoleService {
     public static final String BASE_URI = "/console";
     private final AddressSpaceApi addressSpaceApi;
+    private final String namespace;
 
-    public HttpConsoleService(AddressSpaceApi addressSpaceApi) {
+    public HttpConsoleService(String namespace, AddressSpaceApi addressSpaceApi) {
+        this.namespace = namespace;
         this.addressSpaceApi = addressSpaceApi;
     }
 
@@ -29,7 +31,7 @@ public class HttpConsoleService {
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{addressSpace}")
     public Response getConsole(@PathParam("addressSpace") String addressSpaceName) {
-        return addressSpaceApi.getAddressSpaceWithName("enmasse", addressSpaceName)
+        return addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
                 .map(addressSpace -> getConsoleURL(addressSpace)
                         .map(uri -> Response.temporaryRedirect(uri).build())
                         .orElse(Response.status(404).build()))

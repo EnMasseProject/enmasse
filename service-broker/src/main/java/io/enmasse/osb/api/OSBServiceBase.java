@@ -8,6 +8,7 @@ import java.util.*;
 
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.KubeUtil;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
@@ -31,11 +32,11 @@ public abstract class OSBServiceBase {
     private final AddressSpaceApi addressSpaceApi;
     private final AuthApi authApi;
     private final SchemaProvider schemaProvider;
-    // TODO: Make configurable
-    private final String namespace = "enmasse";
+    private final String namespace;
 
     public OSBServiceBase(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider) {
         this.addressSpaceApi = addressSpaceApi;
+        this.namespace = authApi.getNamespace();
         this.authApi = authApi;
         this.schemaProvider = schemaProvider;
 
@@ -50,7 +51,7 @@ public abstract class OSBServiceBase {
     }
 
     protected void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(authApi.getNamespace(), verb, "configmaps"))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "configmaps"))) {
             throw Exceptions.notAuthorizedException();
         }
     }
@@ -79,8 +80,34 @@ public abstract class OSBServiceBase {
                 .putLabel(LabelKeys.SERVICE_INSTANCE_ID, instanceId)
                 .setEndpointList(null)
                 .build();
+        addressSpace = setDefaults(addressSpace, namespace);
         addressSpaceApi.createAddressSpace(addressSpace);
         log.info("Created MaaS addressspace {}", addressSpace.getName());
+        return addressSpace;
+    }
+
+    private static AddressSpace setDefaults(AddressSpace addressSpace, String namespace) {
+        if (addressSpace.getNamespace() == null) {
+            addressSpace = new AddressSpace.Builder(addressSpace)
+                    .setNamespace(namespace)
+                    .build();
+        }
+
+        if (addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) == null) {
+            addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName("enmasse-" + addressSpace.getNamespace() + "-" + addressSpace.getName()));
+        }
+
+        if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
+            addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
+        }
+
+        if (addressSpace.getLabel(LabelKeys.ADDRESS_SPACE_TYPE) == null) {
+            addressSpace.putLabel(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getType());
+        }
+
+        if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
+            addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
+        }
         return addressSpace;
     }
 

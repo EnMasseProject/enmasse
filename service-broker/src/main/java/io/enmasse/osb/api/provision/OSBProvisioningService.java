@@ -44,6 +44,7 @@ public class OSBProvisioningService extends OSBServiceBase {
                                      @PathParam("instanceId") String instanceId,
                                      @QueryParam("accepts_incomplete") @DefaultValue("false") boolean acceptsIncomplete,
                                      ProvisionRequest request) throws Exception {
+        log.info("Parameters: {}", request.getParameters());
 
         verifyAuthorized(securityContext, ResourceVerb.create);
 
