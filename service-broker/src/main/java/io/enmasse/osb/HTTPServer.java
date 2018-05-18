@@ -11,12 +11,12 @@ import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.catalog.OSBCatalogService;
 import io.enmasse.osb.api.console.HttpConsoleService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
-import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.osb.keycloak.KeycloakApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.function.Predicate;
 
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
@@ -76,7 +75,7 @@ public class HTTPServer extends AbstractVerticle {
         }
 
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
-        deployment.getRegistry().addSingletonResource(new HttpConsoleService(addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new HttpConsoleService(authApi.getNamespace(), addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consolePrefix));
         deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, keycloakApi));

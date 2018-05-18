@@ -3,6 +3,9 @@ kind: ClusterRole
 metadata:
   name: enmasse.io:service-broker
 rules:
-  - apiGroups: [ "", "users.openshift.io" ]
+  - apiGroups: [ "", "user.openshift.io" ]
     resources: [ "users" ]
     verbs: [ "get" ]
+  - apiGroups: [ "v1.enmasse.io" ]
+    resources: [ "addressspaces" ]
+    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
