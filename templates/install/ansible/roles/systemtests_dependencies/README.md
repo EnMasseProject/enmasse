@@ -12,7 +12,6 @@ Tags
 - dependencies
 - clients
 - selenium
-- firefox
 
 Example Playbook
 ----------------

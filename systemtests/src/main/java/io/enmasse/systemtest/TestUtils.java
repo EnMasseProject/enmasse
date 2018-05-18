@@ -11,11 +11,8 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
@@ -265,7 +262,7 @@ public class TestUtils {
     /**
      * send whatever request to restapi route
      *
-     * @param apiClient client for sending http requests to api server 
+     * @param apiClient client for sending http requests to api server
      * @param method    http method PUT, POST, DELETE, GET
      * @param url       api route
      * @param payload   JsonObject as a payload
@@ -930,6 +927,6 @@ public class TestUtils {
     }
 
     public static RemoteWebDriver getChromeDriver() throws MalformedURLException {
-        return new RemoteWebDriver(new URL("http://localhost:6666/wd/hub"), new ChromeOptions());
+        return new RemoteWebDriver(new URL("http://localhost:4443/wd/hub"), new ChromeOptions());
     }
 }
