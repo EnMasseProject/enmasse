@@ -1,6 +1,6 @@
 #!/bin/sh
 BASE_VERSION=$1
-VERSION=$1
+VERSION=$2
 git checkout -b release-${BASE_VERSION}
 mvn versions:set -DnewVersion=${VERSION}
 echo $VERSION > release.version
