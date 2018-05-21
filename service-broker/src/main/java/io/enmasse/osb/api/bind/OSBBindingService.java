@@ -77,7 +77,7 @@ public class OSBBindingService extends OSBServiceBase {
             this.random.nextBytes(passwordBytes);
             String password = Base64.getEncoder().encodeToString(passwordBytes);
 
-            UserRepresentation userRep = keycloakClient.createUser(addressSpace.getName(), username, password);
+            UserRepresentation userRep = keycloakClient.createUser(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME), username, password);
 
             createGroupMapping(keycloakClient, addressSpace, userRep.getId(), groupIds);
 
@@ -128,7 +128,7 @@ public class OSBBindingService extends OSBServiceBase {
     private void createGroupMapping(KeycloakClient keycloakClient, AddressSpace addressSpace, String userId, List<String> groupIds) throws IOException, GeneralSecurityException  {
         for(String groupId : groupIds) {
 
-            keycloakClient.joinGroup(addressSpace.getName(), userId, groupId);
+            keycloakClient.joinGroup(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME), userId, groupId);
         }
 
     }
@@ -140,14 +140,14 @@ public class OSBBindingService extends OSBServiceBase {
             if(existingGroups.containsKey(group)) {
                 groupIds.add(existingGroups.get(group).get(0).getId());
             } else {
-                groupIds.add(keycloakClient.createGroup(addressSpace.getName(), group).getId());
+                groupIds.add(keycloakClient.createGroup(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME), group).getId());
             }
         }
         return groupIds;
     }
 
     private Map<String, List<GroupRepresentation>> getAllExistingGroups(KeycloakClient keycloakClient, AddressSpace addressSpace) {
-        return keycloakClient.getGroups(addressSpace.getName()).stream()
+        return keycloakClient.getGroups(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).stream()
                 .collect(Collectors.groupingBy(GroupRepresentation::getName));
     }
 
