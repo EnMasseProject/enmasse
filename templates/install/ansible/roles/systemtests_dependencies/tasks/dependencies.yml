@@ -47,7 +47,7 @@
 
 ######################################################
 # Install dependencies by yum
-- name: YUM | Install gcc, redhat-rpm-config, bzip2, unzip, python-devel, openssl, Xvfb, gtk3
+- name: YUM | Install gcc, redhat-rpm-config, bzip2, unzip, python-devel, openssl
   yum:
     name:
       - gcc
@@ -57,8 +57,6 @@
       - python-devel
       - openssl
       - openssl-devel
-      - xorg-x11-server-Xvfb
-      - gtk3
     state: installed
 
 - name: YUM | Install nodejs

@@ -10,8 +10,6 @@ import io.enmasse.systemtest.KeycloakCredentials;
 import org.openqa.selenium.By;
 import org.slf4j.Logger;
 
-import java.io.File;
-
 public class RheaWebPage {
 
     private static Logger log = CustomLogger.getLogger();
@@ -21,11 +19,9 @@ public class RheaWebPage {
         this.selenium = selenium;
     }
 
-    public void openRheaWebPage() throws Exception {
-        File file = new File("src/main/resources/rhea.html");
-        String absolutePath = file.getAbsolutePath();
+    public void openRheaWebPage() {
         log.info("Opening rhea web page");
-        selenium.getDriver().get("file://" + absolutePath);
+        selenium.getDriver().get("file:///opt/rhea.html");
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
     }

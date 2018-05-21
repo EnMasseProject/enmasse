@@ -1,0 +1,67 @@
+---
+# tasks file for install selenium docker containers
+- name: SELENIUM-CONTAINER | Install docker_container dependency
+  pip:
+    name: docker-py
+
+- name: SELENIUM-CONTAINER | clean older containers with drivers
+  docker_container:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ chrome_container }}"
+    - "{{ firefox_container }}"
+
+- name: SELENIUM-CONTAINER | get and start firefox container
+  docker_container:
+    name: "{{ firefox_container }}"
+    image: selenium/standalone-firefox-debug
+    state: started
+    restart: yes
+    ports:
+      - 4444:4444
+    network_mode: host
+    env:
+      DISPLAY: :99
+      SE_OPTS: "-port 4444"
+    exposed_ports:
+      - 4444
+    published_ports:
+      - 4444
+
+
+- name: SELENIUM-CONTAINER | get and start chrome container
+  docker_container:
+    name: "{{ chrome_container }}"
+    image: selenium/standalone-chrome-debug
+    state: started
+    restart: yes
+    ports:
+      - 4443:4443
+    network_mode: host
+    env:
+      DISPLAY: :98
+      SE_OPTS: "-port 4443"
+    exposed_ports:
+      - 4443:
+    published_ports:
+      - 4443
+
+- name: SELENIUM-CONTAINER | include rhea.html and rhea.js into containers (docker)
+  shell: |
+    docker cp "{{ systemtests_dir }}"/src/main/resources/rhea.html "{{ item }}":/opt/rhea.html
+    docker cp "{{ rhea_path}}"/dist/rhea.js "{{ item }}":/opt/rhea.js
+  ignore_errors: true
+  register: docker_latests_not_present
+  with_items:
+    - "{{ chrome_container }}"
+    - "{{ firefox_container }}"
+
+- name: SELENIUM-CONTAINER | include rhea.html and rhea.js into containers (docker-latest)
+  shell: |
+      docker-latest cp "{{ systemtests_dir }}"/src/main/resources/rhea.html "{{ item }}":/opt/rhea.html
+      docker-latest cp "{{ rhea_path}}"/dist/rhea.js "{{ item }}":/opt/rhea.js
+  with_items:
+    - "{{ chrome_container }}"
+    - "{{ firefox_container }}"
+  when: docker_latests_not_present.results[0].failed == true
