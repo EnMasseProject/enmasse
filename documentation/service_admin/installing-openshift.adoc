@@ -157,6 +157,7 @@ oc login -u system:admin
 oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
 oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:enmasse:enmasse-admin
 oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
 ----
 +
 *Note*: You can log back in as the regular user after this step.
