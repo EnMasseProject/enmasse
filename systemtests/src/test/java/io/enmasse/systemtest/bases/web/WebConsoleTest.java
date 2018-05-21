@@ -15,8 +15,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -640,7 +642,12 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     private void assertElementDisabled(String message, WebElement element) {
-        assertFalse(element.isEnabled(), message);
+        try {
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(element)));
+            assertFalse(element.isEnabled(), message);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Element is enabled");
+        }
     }
 
     private void assertElementEnabled(String message, WebElement element) {
