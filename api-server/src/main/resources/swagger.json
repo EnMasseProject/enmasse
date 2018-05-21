@@ -5,7 +5,7 @@
         "version": "1.0.0",
         "title": "EnMasse API"
     },
-    "basePath": "/apis/enmasse.io/v1",
+    "basePath": "/apis/enmasse.io/v1alpha1",
     "tags": [
         {
             "name": "addressspaces",
@@ -397,7 +397,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "enmasse.io/v1"
+                        "enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
@@ -495,9 +495,9 @@
             "properties": {
                 "apiVersion": {
                     "type": "string",
-                    "default": "enmasse.io/v1",
+                    "default": "enmasse.io/v1alpha1",
                     "enum": [
-                        "enmasse.io/v1"
+                        "enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
@@ -526,7 +526,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "enmasse.io/v1"
+                        "enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
@@ -612,9 +612,9 @@
             "properties": {
                 "apiVersion": {
                     "type": "string",
-                    "default": "enmasse.io/v1",
+                    "default": "enmasse.io/v1alpha1",
                     "enum": [
-                        "enmasse.io/v1"
+                        "enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {

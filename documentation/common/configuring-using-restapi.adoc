@@ -88,7 +88,7 @@ object.
 [source,bash,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X PUT -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
+curl -X POST -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
 ----
 
 === Viewing Configured Addresses
@@ -99,7 +99,7 @@ curl -X PUT -T address.json -H "content-type: application/json" -H "Authorizatio
 +
 [source,bash,options="nowrap"]
 ----
-curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspace/myspace/addresses
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
 ----
 +
 The addresses are ready to be used by messaging clients once the `status.isReady` field of each
