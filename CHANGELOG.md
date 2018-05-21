@@ -1,3 +1,30 @@
+## 0.20.0 (May 23, 2018)
+* Kubernetes and OpenShift resources are no longer separate. This means that the different
+  components like authentication service, address space controller, rest api etc. can be managed and
+  upgraded individually which makes operations a lot easier.
+* REST API now served by a new component, api-server, code moved from the old address-controller.
+  The intention is to have this act as a kubernetes API server, allowing custom resource support for
+  address spaces and addresses.
+* REST API paths have changed in preparation for custom resources support. A more detailed document
+  describing these changes will be made available at release. A short summary:
+  
+      * The `/apis/enmasse.io/v1` prefix has changed to `/apis/enmasse.io/v1alpha1` which better
+        reflects the state of our APIs in terms of breaking changes.
+
+      * Address spaces are now namespaced, which means that you can create address spaces with the
+        same name in different namespaces. This means the path to address space resources are now
+        `/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces`
+
+      * The path `/apis/enmasse.io/v1/addresses` API has 'moved' to /apis/enmasse.io/v1alpha/addressspaces/[:addressspace]/addresses`.
+      
+      * A new API under `/apis/enmasse/v1alpha1/namespaces/[:namespace]/addresses` have been
+        introduced to support custom resources for addresses.
+* address-controller renamed to address-space-controller
+* Performance improvements to handling large number of addresses in agent
+* Removal of per-address resource limits in broker as there was a lower limit than expected on how
+  many addresses and limit settings a broker could handle
+* Bug fixes to console, address space controller, agent and more
+
 ## 0.19.0 (April 23, 2018)
 * Support OpenShift identity brokering in Keycloak. This allows you to authenticate an address space
   admin user using OpenShift credentials.
