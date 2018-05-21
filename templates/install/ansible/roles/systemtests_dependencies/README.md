@@ -4,19 +4,14 @@ role contains tasks for dependencies, browsers and clients for frunning full sys
 
 Role Variables
 --------------
-
-- geckodriver_version
-- chromedriver_version
 - nodejs_version
-- firefox_version
 
 Tags
 --------------
 
 - dependencies
 - clients
-- webdrivers
-- firefox
+- selenium
 
 Example Playbook
 ----------------
@@ -30,5 +25,5 @@ Example Playbook
 
 #### Call specific from command line
 ```sh
-$ ansible-playbook playbook-name.yml --tags clients --skip-tags dependencies
+$ ansible-playbook systemtests-dependencies.yml --tags clients --skip-tags dependencies
 ```

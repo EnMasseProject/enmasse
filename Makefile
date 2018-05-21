@@ -53,7 +53,4 @@ systemtests:
 client_install:
 	./systemtests/scripts/client_install.sh
 
-webdriver_install:
-	./systemtests/scripts/install_web_drivers.sh
-
 .PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java

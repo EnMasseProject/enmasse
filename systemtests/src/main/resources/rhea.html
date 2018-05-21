@@ -1,14 +1,15 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>cli-rhea client</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-    <script type="text/javascript" src="../../../client_executable/rhea/dist/rhea.js"></script>
+    <script type="text/javascript" src="./rhea.js"></script>
 </head>
 
 <body>
-<h1>Browser based testing</h1>
+    <h1>Browser based testing</h1>
 
-<script type="text/javascript">
+    <script type="text/javascript">
         var connect_to_enmasse = function(server, address, count, username, password){
             var requests = parseInt(count);
             var current = 1;
@@ -16,7 +17,7 @@
             var client = require('rhea');
             function next_request() {
                 var msg = 'request-' + current;
-                sender.send({body:msg})
+                sender.send({body:msg});
                 append('sent: ' + msg);
             }
             client.on('connection_open', function (context) {
@@ -43,5 +44,6 @@
             sender = connection.open_sender(address);
         }
     </script>
+
 </body>
 </html>
