@@ -89,7 +89,6 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateDeleteBindings() throws Exception {
         AddressSpace brokered = new AddressSpace("test-binding-space", AddressSpaceType.BROKERED);
@@ -107,7 +106,6 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
         Destination queue = Destination.queue("test-queue", "brokered-queue");
@@ -137,7 +135,6 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
         Destination queue = Destination.queue("test-queue", "sharded-queue");

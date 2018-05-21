@@ -100,7 +100,6 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingStandard() throws Exception {
         AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-standard", AddressSpaceType.STANDARD);
@@ -108,7 +107,6 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @Disabled("Disabled due to #1237")
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingBrokered() throws Exception {
         AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-brokered", AddressSpaceType.BROKERED);
