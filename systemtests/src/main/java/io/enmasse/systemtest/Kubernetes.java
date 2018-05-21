@@ -64,6 +64,10 @@ public abstract class Kubernetes {
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
+    public Endpoint getOSBEndpoint() {
+        return getEndpoint(globalNamespace, "service-broker", "https");
+    }
+
     public abstract Endpoint getRestEndpoint();
 
     public abstract Endpoint getKeycloakEndpoint();
@@ -187,6 +191,11 @@ public abstract class Kubernetes {
 
     public void replaceConfigMap(String namespace, ConfigMap newConfigMap) {
         client.configMaps().inNamespace(namespace).createOrReplace(newConfigMap);
+    }
+
+    public void deleteNamespace(String namespace) {
+        log.info("Following namespace will be removed - {}", namespace);
+        client.namespaces().withName(namespace).delete();
     }
 
     //------------------------------------------------------------------------------------------------

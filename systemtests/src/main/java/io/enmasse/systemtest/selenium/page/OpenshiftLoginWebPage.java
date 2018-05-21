@@ -2,49 +2,46 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.selenium;
-
+package io.enmasse.systemtest.selenium.page;
 
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
-public class LoginWebPage {
+public class OpenshiftLoginWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
 
     SeleniumProvider selenium;
 
-    public LoginWebPage(SeleniumProvider selenium) {
+    public OpenshiftLoginWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
+        checkReachableWebPage();
     }
 
-    private WebElement getContentElement() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("kc-content")));
+    private WebElement getUsernameTextInput() {
+        return selenium.getDriver().findElement(By.id("inputUsername"));
     }
 
-    private WebElement getUsernameTextInput() throws Exception {
-        return getContentElement().findElement(By.id("username"));
+    private WebElement getPasswordTextInput() {
+        return selenium.getDriver().findElement(By.id("inputPassword"));
     }
 
-    private WebElement getPasswordTextInput() throws Exception {
-        return getContentElement().findElement(By.id("password"));
+    private WebElement getLoginButton() {
+        return selenium.getDriver().findElement(By.className("btn-lg"));
     }
 
-    private WebElement getLoginButton() throws Exception {
-        return getContentElement().findElement(By.className("btn-lg"));
-    }
-
-    private WebElement getAlertContainer() throws Exception {
+    private WebElement getAlertContainer() {
         return selenium.getDriver().findElement(By.className("alert"));
     }
 
-    public String getAlertMessage() throws Exception {
+    public String getAlertMessage() {
         return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
     }
 
-    private boolean checkAlert() throws Exception {
+    private boolean checkAlert() {
         try {
             getAlertMessage();
             return false;
@@ -59,5 +56,10 @@ public class LoginWebPage {
         selenium.fillInputItem(getPasswordTextInput(), password);
         selenium.clickOnItem(getLoginButton(), "Log in");
         return checkAlert();
+    }
+
+    @Override
+    public void checkReachableWebPage() {
+        //TODO
     }
 }
