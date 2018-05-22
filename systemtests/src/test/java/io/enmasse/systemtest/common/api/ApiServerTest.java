@@ -87,7 +87,6 @@ class ApiServerTest extends TestBase {
     }
 
     @Test
-    @Disabled("disabled due to issue: #947")
     void testVerifyRoutes() throws Exception {
         AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
         AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);
