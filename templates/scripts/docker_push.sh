@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
+
+curdir="$(dirname $(readlink -f ${0}))"
+source "${curdir}/logger.sh"
+
 if [[ -f Dockerfile ]]; then
 
     EVAL="${1}"
     RETRY=${2:-10} #repeat RETRY-times
     WAIT=${3:-10} #with WAIT seconds of sleep
 
-    echo "INFO: push docker images with retry mechanism"
-    while [[ ${RETRY} > 0 ]]; do
+    info "push docker images with retry mechanism"
+    while (( RETRY > 0 )); do
         (( RETRY-- ))
-        ${EVAL}
-        if [[ $? = 0 ]]; then
+        if ${EVAL}; then
+            info "docker images successfully pushed"
             exit 0
         fi
-        echo "INFO: remaining retry operations: ${RETRY}"
+        info "remaining retry operations: ${RETRY}"
         sleep ${WAIT}
     done
-    echo "ERROR: push dockerfile failed"
-    exit 1
+    err_and_exit "push dockerfile failed"
 else
-    echo "WARN: missing dockerfile!"
+    warn "missing dockerfile!"
 fi
