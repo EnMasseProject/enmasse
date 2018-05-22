@@ -1,18 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 EXPECTED_FILE="${1}"
 TIMEOUT="${2:-600}"
 
-function err() {
-    echo "ERROR: ${1}" >&2
-    exit ${2:-1}
-}
+curdir="$(dirname $(readlink -f ${0}))"
 
-function info() {
-    echo "INFO: ${1}"
-}
+source "${curdir}/../../scripts/logger.sh"
 
 if [[ -z "${EXPECTED_FILE}" ]]; then
-    err "Argument missing, file name required!" 2
+    err_and_exit "Argument missing, file name required!" 2
 fi
 
 END=$(( SECONDS + TIMEOUT ))
@@ -20,7 +15,7 @@ info "Waiting until ${EXPECTED_FILE} will be presented within ${TIMEOUT} seconds
 while [[ ! -f "${EXPECTED_FILE}" ]]
 do
     if (( SECONDS >= END )); then
-        err "Timeout reached!"
+        err_and_exit "Timeout reached!"
     fi
     info "${EXPECTED_FILE} doesn't exist yet!"
     sleep 5

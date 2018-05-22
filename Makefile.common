@@ -48,6 +48,10 @@ docker_tag:
 	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
 
 docker_push:
-	if [ -f Dockerfile ]; then $(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
+	if [ -f Dockerfile ] ; \
+	then \
+		bash ../scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
+	fi
+	
 
 .PHONY: all init build test package clean docker_build docker_tag docker_push
