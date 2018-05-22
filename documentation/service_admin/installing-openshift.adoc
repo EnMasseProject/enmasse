@@ -92,36 +92,51 @@ oc adm policy add-role-to-user view system:serviceaccount:enmasse:default
 [options="nowrap"]
 ----
 oc create -f ./resources/standard-authservice/service.yaml
-oc create -f ./resources/standard-authservice/keycloak-deployment.yaml
-oc create -f ./resources/standard-authservice/controller-deployment.yaml
-oc create -f ./resources/standard-authservice/pvc.yaml
 oc create -f ./resources/standard-authservice/route.yaml
+oc create -f ./resources/standard-authservice/pvc.yaml
 ----
 
 . Create keycloak configuration used by controller and service. To make the standard authservice
-accessible for the messaging console and keycloak operator, you need to specify the `httpUrl`
-setting. If you are running a local OpenShift cluster without a public DNS, use the internal service
-IP for the hostname, otherwise use the hostname of the external route. To get the service ip:
+accessible for the messaging console and keycloak operator, you need to specify the `httpUrl` and the `oauthUrl`
+settings in the keycloak configuration. For the `httpUrl`, use the internal service IP:
 +
 [options="nowrap"]
 ----
 oc get service standard-authservice -o jsonpath={.spec.clusterIP}
 ----
 +
-. Or, if you have a public hostname:
+Set the HTTP_URL environment variable:
++
+----
+HTTP_URL=https://<clusterIP from above>:8443/auth
+----
+
+. For the `oauthUrl`, use the hostname from the route
 +
 [options="nowrap"]
 ----
 oc get route keycloak -o jsonpath={.spec.host}
+----
++
+Set the OAUTH_URL environment variable:
++
+----
+OAUTH_URL=https://<route host from above>/auth
 ----
 
 . Create keycloak configuration:
 +
 [options="nowrap"]
 ----
-AUTH_HOST=<value from one of the previous commands>
-AUTH_PORT=8443 if using the service ip, 443 if using the route host
-oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
+oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=$HTTP_URL --from-literal=oauthUrl=$OAUTH_URL --from-literal=caSecretName=standard-authservice-cert
+----
+
+. Deploy keycloak and controller:
++
+[options="nowrap"]
+----
+oc create -f ./resources/standard-authservice/keycloak-deployment.yaml
+oc create -f ./resources/standard-authservice/controller-deployment.yaml
 ----
 
 ==== Deploying {ProductName}

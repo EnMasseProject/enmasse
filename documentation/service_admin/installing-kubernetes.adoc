@@ -87,26 +87,56 @@ kubectl create secret generic keycloak-credentials --from-literal=admin.username
 [options="nowrap"]
 ----
 kubectl apply -f ./resources/standard-authservice/service.yaml
-kubectl apply -f ./resources/standard-authservice/keycloak-deployment.yaml
-kubectl apply -f ./resources/standard-authservice/controller-deployment.yaml
+kubectl apply -f ./resources/standard-authservice/external-service.yaml
 kubectl apply -f ./resources/standard-authservice/pvc.yaml
 ----
 
-. Create keycloak configuration used by controller and service. For the messaging console and
-keycloak controller to work, you need to specify the `httpUrl` setting. To get the service ip:
+. Create keycloak configuration used by controller and service. To make the standard authservice
+accessible for the messaging console and keycloak controller, you need to specify the `httpUrl` and the `oauthUrl`
+settings in the keycloak configuration. For the `httpUrl`, use the internal service IP:
 +
 [options="nowrap"]
 ----
 kubectl get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
++
+Set the HTTP_URL environment variable:
++
+----
+HTTP_URL=https://<clusterIP from above>:8443/auth
+----
+
+. For the `oauthUrl`, use the load balancer host name if it is set:
++
+[options="nowrap"]
+----
+kubectl get service standard-authservice-external -o 'jsonpath={.status.loadBalancer.ingress.hostname}'
+----
++
+Otherwise use the node/VM IP and the service NodePort:
++
+----
+kubectl get service standard-authservice-external -o 'jsonpath={.spec.ports[?(@.name=="https")].nodePort}'
+----
+Set the OAUTH_URL environment variable:
++
+----
+OAUTH_URL=https://<service host from above or node/VM IP together with NodePort from above>/auth
 ----
 
 . Create keycloak configuration:
 +
 [options="nowrap"]
 ----
-AUTH_HOST=<value from one of the previous commands>
-AUTH_PORT=8443 if using the service ip, 443 if using the route host
-kubectl create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
+kubectl create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=$HTTP_URL --from-literal=oauthUrl=$OAUTH_URL --from-literal=caSecretName=standard-authservice-cert
+----
+
+. Deploy keycloak and controller:
++
+[options="nowrap"]
+----
+kubectl create -f ./resources/standard-authservice/keycloak-deployment.yaml
+kubectl create -f ./resources/standard-authservice/controller-deployment.yaml
 ----
 
 ==== Deploying {ProductName}

@@ -264,8 +264,9 @@ local images = import "images.jsonnet";
                     "name": "KEYCLOAK_SASL_XOAUTH_BASE_URI", 
                     "valueFrom": {
                       "configMapKeyRef": {
+                        "optional": true,
                         "name": "keycloak-config",
-                        "key": "httpUrl"
+                        "key": "oauthUrl"
                       }
                     }
                   },
