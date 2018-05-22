@@ -50,7 +50,7 @@ docker_tag:
 docker_push:
 	if [ -f Dockerfile ] ; \
 	then \
-		bash ../docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
+		bash ../templates/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
 	fi
 	
 
