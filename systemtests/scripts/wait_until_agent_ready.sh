@@ -4,7 +4,7 @@ TIMEOUT="${2:-600}"
 
 curdir="$(dirname $(readlink -f ${0}))"
 
-source "${curdir}/../../templates/scripts/logger.sh"
+source "${curdir}/../../scripts/logger.sh"
 
 if [[ -z "${EXPECTED_FILE}" ]]; then
     err_and_exit "Argument missing, file name required!" 2
