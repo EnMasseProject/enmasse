@@ -116,11 +116,11 @@ endif::[]
 
 . Create keycloak configuration:
 +
-[options="nowrap"]
+[options="nowrap",subs="attributes"]
 ----
-AUTH_HOST=<value from one of the previous commands>
+AUTH_HOST=value from one of the previous commands
 AUTH_PORT=8443 if using the service ip, 443 if using the route host
-oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
+{cmdcli} create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
 ----
 
 ==== Deploying Address Space Controller
@@ -351,7 +351,7 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-AUTH_HOST=<value from one of the previous commands>
+AUTH_HOST=value from one of the previous commands
 AUTH_PORT=8443 if using the service ip, 443 if using the route host
 {cmdcli} create configmap service-broker-config --from-literal=enableRbac=false --from-literal=keycloakUrl=https://$AUTH_HOST:$AUTH_PORT/auth
 ----
