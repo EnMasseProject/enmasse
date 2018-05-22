@@ -1,7 +1,5 @@
 [[plans]]
 
-== Configuring plans and resource definitions
-
 Plans are used to configure quotas and control the resources consumed by a particular deployment.  Plans are configured by the {ProductName} service operator, and selected when creating an address space and address.
 
 Resource definitions are a description of some resource referenced by the plans, which may be configured with a template and parameters to be used when instantiating the template.

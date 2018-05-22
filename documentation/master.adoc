@@ -24,18 +24,23 @@
 
 = Documentation for {ProductName}
 
-== Installation and configuration
+== Installation
 
 include::service_admin/installing-openshift.adoc[leveloffset=+1]
-include::service_admin/monitoring-openshift.adoc[leveloffset=+1]
 include::service_admin/installing-kubernetes.adoc[leveloffset=+1]
-include::service_admin/monitoring-kubernetes.adoc[leveloffset=+1]
+
+== Configuring address space and address plans 
+
 include::service_admin/plans.adoc[leveloffset=+1]
+
+== Monitoring
+include::service_admin/monitoring.adoc[leveloffset=+1]
 
 == Managing address spaces and addresses
 
 include::common/address-model.adoc[leveloffset=+1]
 include::common/address-space.adoc[leveloffset=+1]
+include::common/configuring-using-cli.adoc[leveloffset=+1]
 include::common/configuring-using-restapi.adoc[leveloffset=+1]
 
 == Connecting applications to {ProductName}
@@ -49,6 +54,8 @@ include::messaging_app_developer/connecting.adoc[leveloffset=+1]
 include::getting_started/openshift.adoc[leveloffset=+2]
 include::getting_started/kubernetes.adoc[leveloffset=+2]
 include::getting_started/aws.adoc[leveloffset=+2]
+
+[appendix]
 
 == REST API Reference
 

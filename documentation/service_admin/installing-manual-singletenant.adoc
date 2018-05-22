@@ -1,0 +1,63 @@
+[[openshift-install-single-address-space]]
+==== Deploying {ProductName} limited to a single address space
+
+.Procedure
+
+. Create service accounts for the {ProductName} address space controller and address space:
++
+[options="nowrap"]
+----
+oc create sa enmasse-admin
+oc create sa address-space-admin
+----
+
+. Grant privileges required for viewing and managing resources:
++
+[options="nowrap"]
+----
+oc policy add-role-to-user view system:serviceaccount:enmasse:default
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:address-space-admin
+----
+
+. Install default plan and resource configuration
++
+[options="nowrap"]
+----
+oc create -f ./resources/resource-definitions/resource-definitions.yaml
+oc create -f ./resources/plans/standard-plans.yaml
+----
+
+. Deploy default address space
++
+[options="nowrap"]
+----
+oc process -f ./resources/templates/address-space.yaml NAME=default NAMESPACE=enmasse TYPE=standard PLAN=unlimited-standard | oc create -f -
+----
+
+. Deploy template for creating addresses. You can use this later for creating addresses from the command line
++
+[options="nowrap"]
+----
+oc create -f ./resources/templates/address.yaml -n enmasse
+----
+
+. Deploy address-space-controller:
++
+[options="nowrap"]
+----
+oc create -f ./resources/address-space-controller/address-space-definitions.yaml
+oc create -f ./resources/address-space-controller/deployment.yaml
+----
++
+The deployments required for running {ProductName} are now created.
+This guide will walk through the manual deployment procedure and should work on any platform
+supporting the OpenShift client.
+
+. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
++
+[options="nowrap"]
+----
+oc get pods -n enmasse
+----
+

@@ -88,7 +88,7 @@ prepare:
 	cp -f include/resource-definitions.yaml install/resources/resource-definitions
 	cp -f include/cluster-roles/*.yaml install/resources/cluster-roles
 	cp -f include/*-plans.yaml install/resources/plans/
-	cp -f include/address.yaml include/address-space.yaml install/resources/templates
+	cp -f include/address.yaml include/address-space.yaml include/service-broker.yaml install/resources/templates
 
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
