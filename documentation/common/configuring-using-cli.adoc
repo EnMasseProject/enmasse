@@ -1,0 +1,71 @@
+[[configuring-using-cli]]
+
+== Configuring {ProductName} using the command line
+
+{ProductName} can be configured to support manipulating address spaces and addresses using the
+Kubernetes and OpenShift command line tools. See <<oc-register-apiservice>> for how to setup the API
+server to support this if you have not already configured your installation with it.
+
+=== Creating an Address Space
+
+.Procedure
+
+. Save the following YAML data to a file 'space.yaml':
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpace
+metadata:
+    name: myspace
+spec:
+    type: standard
+    plan: unlimited-standard
+----
+
+. Create the address space using the command line (replace `oc` with `kubectl` if using Kubernetes):
++
+[source,yaml,options="nowrap"]
+----
+oc create -f space.yaml
+----
+
+. You should now be able too list address spaces:
++
+[source,yaml,options="nowrap"]
+----
+oc get addressspaces
+----
+
+=== Creating an Address
+
+.Procedure
+
+. Save the following YAML data to a file 'address.yaml' (*NOTE*: Prefixing the name with the address space name is required to ensure addresses from different address spaces do not collide):
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1alpha1
+kind: Address
+metadata:
+    name: myspace.myqueue
+spec:
+    address: myqueue
+    type: queue
+    plan: pooled-queue
+----
+
+. Create the address using the command line (replace `oc` with `kubectl` if using Kubernetes):
++
+[source,yaml,options="nowrap"]
+----
+oc create -f address.yaml
+----
+
+. You should now be able too list addresses:
++
+[source,yaml,options="nowrap"]
+----
+oc get addresses
+----
+

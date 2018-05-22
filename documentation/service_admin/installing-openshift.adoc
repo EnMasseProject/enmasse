@@ -8,279 +8,45 @@ include::common/prerequisites-openshift.adoc[leveloffset=+1]
 
 include::common/install-procedure.adoc[leveloffset+=1]
 
-To simplify deployment, have a look at the ansible playbooks in the `ansible/playbooks/openshift` folder.
+{ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the
+`deploy.sh` script, or following the manual steps.
+
+*NOTE*: You can invoke the deployment script with `-h` to view a list of options.
+
+=== Installing {ProductName} using Ansible
+
+Installing with Ansible requires creating an inventory file with the variables for configuring the
+system. Example inventory files can be found in the `ansible/inventory` folder. The following
+options are supported:
+
+.Table Ansible Configuration Settings
+|===
+|Name |Description |Default| Required
+|namespace|Namespace where {ProductName} should be installed.|- |yes
+|multitenant|Whether {ProductName} should be installed in the multitenant mode or not. Singletenant mode is recommended for evaluation purposes only. | true| no
+|enable_rbac|Enable RBAC authentication of REST APIs.|true |no
+|service_catalog|Enable integration with the Service Catalog.|false |no
+|osb_console_prefix|The HTTP URL of the console prefix for the Service Catalog Dashboard.| service broker service ip| no
+|authentication_services|List of authentication services to deploy. 'none' and 'standard' are supported. |["none"] |no
+|keycloak_admin_password|The admin password to use for the standard authentication service keycloak instance. |- |yes (if standard is enabled)
+|keycloak_http_url|The OAUTH URL to use for keycloak.| standard authentication service ip |no
+|api_server|Enable REST API server.|true |no
+|register_api_server|Register API server with Kubernetes master.|false |no
+|secure_api_server|Enable mutual TLS for API server.|false |no
+|===
+
+. Run the ansible playbook.
++
+[options="nowrap"]
+----
+ansible-playbook -i <inventory file> ansble/playbooks/openshift/install.yml
+----
+
+=== Installing {ProductName} manually
 
 This guide will walk through the manual deployment procedure and should work on any platform
 supporting the OpenShift client.
 
-==== Creating project for {ProductName}
+include::installing-manual.adoc[leveloffset+=1]
 
-. Create enmasse project:
-+
-[options="nowrap"]
-----
-oc new-project enmasse
-----
-
-==== Deploying authentication services
-
-{ProductName} require at least 1 authentication service to be deployed. The authentication service
-can either be none (allow all), standard (keycloak) or external (not managed by enmasse).
-
-===== Deploying the none authentication service
-
-.Procedure
-
-. Create a certificate to use for the none authentication service. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap"]
-----
-mkdir -p none-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
-----
-
-. Create secret with the none authentication service certificate:
-+
-[options="nowrap"]
-----
-oc create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
-----
-
-. Create the none authentication service:
-+
-[options="nowrap"]
-----
-oc create -f ./resources/none-authservice/service.yaml
-oc create -f ./resources/none-authservice/deployment.yaml
-----
-
-===== Deploying the standard authentication service
-
-.Procedure
-
-. Create a certificate to use for the standard authentication service. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap"]
-----
-mkdir -p standard-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
-----
-
-. Create secret with the standard authentication service certificate:
-+
-[options="nowrap"]
-----
-oc create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
-----
-
-. Create secret with keycloak admin credentials. Choose password wisely as this user will have complete access over authentication and authorization policies:
-+
-[options="nowrap"]
-----
-oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
-----
-
-. Give view permissions for the keycloak controller:
-+
-[options="nowrap"]
-----
-oc adm policy add-role-to-user view system:serviceaccount:enmasse:default
-----
-
-. Create the standard authentication service:
-+
-[options="nowrap"]
-----
-oc create -f ./resources/standard-authservice/service.yaml
-oc create -f ./resources/standard-authservice/keycloak-deployment.yaml
-oc create -f ./resources/standard-authservice/controller-deployment.yaml
-oc create -f ./resources/standard-authservice/pvc.yaml
-oc create -f ./resources/standard-authservice/route.yaml
-----
-
-. Create keycloak configuration used by controller and service. To make the standard authservice
-accessible for the messaging console and keycloak operator, you need to specify the `httpUrl`
-setting. If you are running a local OpenShift cluster without a public DNS, use the internal service
-IP for the hostname, otherwise use the hostname of the external route. To get the service ip:
-+
-[options="nowrap"]
-----
-oc get service standard-authservice -o jsonpath={.spec.clusterIP}
-----
-+
-. Or, if you have a public hostname:
-+
-[options="nowrap"]
-----
-oc get route keycloak -o jsonpath={.spec.host}
-----
-
-. Create keycloak configuration:
-+
-[options="nowrap"]
-----
-AUTH_HOST=<value from one of the previous commands>
-AUTH_PORT=8443 if using the service ip, 443 if using the route host
-oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
-----
-
-==== Deploying {ProductName}
-
-To deploy {ProductName}, it is recommended that you have cluster-admin access in order to set up the
-required roles for creating namespaces and managing resources in those namespaces. See
-<<openshift-install-single-address-space>> for how to deploy {ProductName} without cluster-admin
-access, which will restrict it to a single address space.
-
-.Procedure
-
-. Create a service account for the {ProductName} address space controller:
-+
-[options="nowrap"]
-----
-oc create sa enmasse-admin
-----
-
-. Create cluster-wide roles used by the `enmasse-admin` service account:
-+
-[options="nowrap"]
-----
-oc login -u system:admin
-oc create -f ./resources/cluster-roles/api-server.yaml
-oc create -f ./resources/cluster-roles/address-space-controller.yaml
-----
-
-. Grant privileges to service account:
-+
-[options="nowrap"]
-----
-oc login -u system:admin
-oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
-----
-+
-*Note*: You can log back in as the regular user after this step.
-
-. Install default plan and resource configuration
-+
-[options="nowrap"]
-----
-oc create -f ./resources/resource-definitions/resource-definitions.yaml
-oc create -f ./resources/plans/standard-plans.yaml
-oc create -f ./resources/plans/brokered-plans.yaml
-----
-
-. Create a certificate to use for the api server. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap"]
-----
-mkdir -p api-server-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
-----
-
-. Create a secret containing the api-server certificate:
-+
-[options="nowrap"]
-----
-oc create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
-----
-
-. Create API server config:
-+
-[options="nowrap"]
-----
-oc create configmap api-server-config --from-literal=enableRbac=true
-----
-
-. Deploy the api-server:
-+
-[options="nowrap"]
-----
-oc create -f ./resources/api-server/deployment.yaml
-oc create -f ./resources/api-server/service.yaml
-----
-
-. Create routes exposing the API server:
-+
-[options="nowrap"]
-----
-oc create route passthrough restapi --service=api-server -n enmasse
-----
-
-. Deploy the address-space-controller:
-+
-[options="nowrap"]
-----
-oc create -f ./resources/address-space-controller/deployment.yaml
-----
-+
-The deployments required for running {ProductName} are now created.
-
-. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
-+
-[options="nowrap"]
-----
-oc get pods -n enmasse
-----
-
-[[openshift-install-single-address-space]]
-==== Deploying {ProductName} limited to a single address space
-
-.Procedure
-
-. Create service accounts for the {ProductName} address space controller and address space:
-+
-[options="nowrap"]
-----
-oc create sa enmasse-admin
-oc create sa address-space-admin
-----
-
-. Grant privileges required for viewing and managing resources:
-+
-[options="nowrap"]
-----
-oc policy add-role-to-user view system:serviceaccount:enmasse:default
-oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
-oc policy add-role-to-user admin system:serviceaccount:enmasse:address-space-admin
-----
-
-. Install default plan and resource configuration
-+
-[options="nowrap"]
-----
-oc create -f ./resources/resource-definitions/resource-definitions.yaml
-oc create -f ./resources/plans/standard-plans.yaml
-----
-
-. Deploy default address space
-+
-[options="nowrap"]
-----
-oc process -f ./resources/templates/address-space.yaml NAME=default NAMESPACE=enmasse TYPE=standard PLAN=unlimited-standard | oc create -f -
-----
-
-. Deploy template for creating addresses. You can use this later for creating addresses from the command line
-+
-[options="nowrap"]
-----
-oc create -f ./resources/templates/address.yaml -n enmasse
-----
-
-. Deploy address-space-controller:
-+
-[options="nowrap"]
-----
-oc create -f ./resources/address-space-controller/address-space-definitions.yaml
-oc create -f ./resources/address-space-controller/deployment.yaml
-----
-+
-The deployments required for running {ProductName} are now created.
-
-. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
-+
-[options="nowrap"]
-----
-oc get pods -n enmasse
-----
+include::installing-manual-singletenant.adoc[leveloffset+=1]

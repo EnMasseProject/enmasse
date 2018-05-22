@@ -1,0 +1,371 @@
+==== Creating project for {ProductName}
+
+ifeval::["{cmdcli}" == "oc"]
+. Create enmasse project:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} new-project enmasse
+----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Create enmasse namespace:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create namespace enmasse
+----
+endif::[]
+
+==== Deploying authentication services
+
+{ProductName} require at least 1 authentication service to be deployed. The authentication service
+can either be none (allow all), standard (keycloak) or external (not managed by enmasse).
+
+===== Deploying the none authentication service
+
+.Procedure
+
+. Create a certificate to use for the none authentication service. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p none-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+----
+
+. Create secret with the none authentication service certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
+----
+
+. Create the none authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/none-authservice/service.yaml
+{cmdcli} create -f ./resources/none-authservice/deployment.yaml
+----
+
+===== Deploying the standard authentication service
+
+.Procedure
+
+. Create a certificate to use for the standard authentication service. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p standard-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+----
+
+. Create secret with the standard authentication service certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
+----
+
+. Create secret with keycloak admin credentials. Choose password wisely as this user will have complete access over authentication and authorization policies:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Give view permissions for the keycloak controller:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} adm policy add-role-to-user view system:serviceaccount:enmasse:default
+----
+endif::[]
+
+. Create the standard authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/standard-authservice/service.yaml
+{cmdcli} create -f ./resources/standard-authservice/keycloak-deployment.yaml
+{cmdcli} create -f ./resources/standard-authservice/controller-deployment.yaml
+{cmdcli} create -f ./resources/standard-authservice/pvc.yaml
+{cmdcli} create -f ./resources/standard-authservice/route.yaml
+----
+
+. Create keycloak configuration used by controller and service. To make the standard authservice
+accessible for the messaging console and keycloak operator, you need to specify the `httpUrl`
+setting. If you are running a local cluster without a public DNS, use the internal service
+IP for the hostname, otherwise use the hostname of the external route. To get the service ip:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
+ifeval::["{cmdcli}" == "oc"]
++
+. Or, if you have a public hostname:
++
+[options="nowrap"]
+----
+oc get route keycloak -o jsonpath={.spec.host}
+----
+endif::[]
+
+. Create keycloak configuration:
++
+[options="nowrap"]
+----
+AUTH_HOST=<value from one of the previous commands>
+AUTH_PORT=8443 if using the service ip, 443 if using the route host
+oc create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
+----
+
+==== Deploying Address Space Controller
+
+The Address Space Controller is responsible for creating the infrastructure used by address spaces.
+
+*NOTE*: If you install on OpenShift, it is recommended that you have cluster-admin access in order to
+set up the required roles for creating namespaces and managing resources in those namespaces. See
+<<openshift-install-single-address-space>> for how to deploy without cluster-admin access, which will
+restrict it to a single address space.
+
+.Procedure
+
+. Create a service account for the {ProductName} address space controller:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create sa enmasse-admin
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create cluster-wide roles used by the `enmasse-admin` service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc create -f ./resources/cluster-roles/address-space-controller.yaml
+----
+
+. Grant privileges to service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:enmasse:enmasse-admin
+----
++
+*Note*: You can log back in as the regular user after this step.
+endif::[]
+
+. Install default plan and resource configuration
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/resource-definitions/resource-definitions.yaml
+{cmdcli} create -f ./resources/plans/standard-plans.yaml
+{cmdcli} create -f ./resources/plans/brokered-plans.yaml
+----
+
+. Deploy the address-space-controller:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/address-space-controller/address-space-definitions.yaml
+{cmdcli} create -f ./resources/address-space-controller/deployment.yaml
+----
+
+==== (Optional) Deploying API Server
+
+The API Server provides a REST API for creating address spaces and addresses. It can also serve as
+a Kubernetes API server if registered as an APIService.
+
+*NOTE*: If you install on OpenShift, it is recommended that you have cluster-admin access in order to set up the required roles for delegating authentication to the Kubernetes master. See <<openshift-install-single-address-space>> for how to deploy without cluster-admin access, which will restrict it to a single address space.
+
+.Procedure
+
+. Create a service account for the {ProductName} api server:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create sa enmasse-admin
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create cluster-wide roles used by the `enmasse-admin` service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc create -f ./resources/cluster-roles/api-server.yaml
+----
+
+. Grant privileges to service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
+----
++
+*Note*: You can log back in as the regular user after this step.
+endif::[]
+
+. Create a certificate to use for the api server. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p api-server-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+----
+
+. Create a secret containing the api-server certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
+----
+
+. Create API server config:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create configmap api-server-config --from-literal=enableRbac=false
+----
+
+. Deploy the api-server:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/api-server/deployment.yaml
+{cmdcli} create -f ./resources/api-server/service.yaml
+----
+
+ifeval::["{cmdcli}" == "oc"]
+[[{cmdcli}-register-apiserver]]
+. (Optional) Register API server to support custom resources
++
+[options="nowrap"]
+----
+oc process -f ./resources/templates/api-service.yaml ENMASSE_NAMESPACE=enmasse | oc create -f -
+----
+
+. (Optional) Create routes exposing the API server:
++
+[options="nowrap"]
+----
+oc create route passthrough restapi --service=api-server -n enmasse
+----
+endif::[]
+
+==== (Optional) Deploying Service Broker
+
+The Service Broker provides an implementation of the Open Service Broker API that integerates with the Kubernetes Service Catalog. The Service Broker requires the Standard Authentication Service to be deployed.
+
+*NOTE*: If you install on OpenShift, it is recommended that you have cluster-admin access in order to set up the required roles for delegating authentication to the Kubernetes master. See <<openshift-install-single-address-space>> for how to deploy without cluster-admin access, which will restrict it to a single address space.
+
+.Procedure
+
+. Create a service account for the {ProductName} service broker:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create sa enmasse-admin
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create cluster-wide roles used by the `enmasse-admin` service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc create -f ./resources/cluster-roles/service-broker.yaml
+----
+
+. Grant privileges to service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:service-broker system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
+----
++
+*Note*: You can log back in as the regular user after this step.
+endif::[]
+
+. Create a certificate to use for the service broker. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p service-broker-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=service-broker.enmasse.svc.cluster.local" -out service-broker-cert/tls.crt -keyout service-broker-cert/tls.key
+----
+
+. Create a secret containing the service-broker certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls service-broker-cert --cert=service-broker-cert/tls.crt --key=service-broker-cert/tls.key
+----
+
+. Create a secret containing the service-broker secret configuration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls service-broker-secret --from-literal=keycloak.username=admin --from-literal=keycloak.password=admin --from-literal=keycloakCa.crt=`{cmdcli} extract secret/standard-authservice-cert --keys=tls.crt --to=-`
+----
+
+. Deploy the service-broker:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/service-broker/deployment.yaml
+{cmdcli} create -f ./resources/service-broker/service.yaml
+----
+
+. Create service broker configuration. To make the service broker behave correctly in redirects, you need to specify the `keycloakUrl` setting. If you are running a local cluster without a public DNS, use the internal service IP for the hostname, otherwise use the hostname of the external route. To get the service ip:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
+ifeval::["{cmdcli}" == "oc"]
++
+. Or, if you have a public hostname:
++
+[options="nowrap"]
+----
+oc get route keycloak -o jsonpath={.spec.host}
+----
+endif::[]
+
+. Create service broker config:
++
+[options="nowrap",subs="attributes"]
+----
+AUTH_HOST=<value from one of the previous commands>
+AUTH_PORT=8443 if using the service ip, 443 if using the route host
+{cmdcli} create configmap service-broker-config --from-literal=enableRbac=false --from-literal=keycloakUrl=https://$AUTH_HOST:$AUTH_PORT/auth
+----
+
+. Create secret with token for Service Catalog
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret generic service-catalog-credentials --from-literal=token=`{cmdcli} whoami -t`
+----
+
+. Register Service Broker with Service Catalog
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} process -f ./resources/templates/service-broker.yaml BROKER_NAMESPACE=enmasse | oc create -f -
+----
