@@ -35,8 +35,10 @@ public class KeycloakManager implements Watcher<AddressSpace>
     private String getConsoleRedirectURI(AddressSpace addressSpace) {
         if (addressSpace.getEndpoints() != null) {
             for (Endpoint endpoint : addressSpace.getEndpoints()) {
-                if (endpoint.getName().equals("console") && endpoint.getHost().isPresent()) {
-                    String uri = "https://" + endpoint.getHost().get() + "/*";
+                if ((endpoint.getName().equals("console") || endpoint.getName().equals("console-external")) 
+                        && endpoint.getHost().isPresent()) {
+                    String portSuffix = (endpoint.getPort() != 443 ? ":" + endpoint.getPort() : "");
+                    String uri = "https://" + endpoint.getHost().get() + portSuffix + "/*";
                     log.info("Using {} as redirect URI for enmasse-console", uri);
                     return uri;
                 }
