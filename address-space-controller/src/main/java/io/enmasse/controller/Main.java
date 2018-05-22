@@ -104,7 +104,7 @@ public class Main extends AbstractVerticle {
                 resolverMap.put(AuthenticationServiceType.STANDARD, new StandardAuthenticationServiceResolver(
                         config.getData().get("hostname"),
                         Integer.parseInt(config.getData().get("port")),
-                        config.getData().get("httpUrl"),
+                        Boolean.valueOf(config.getData().get("oauthDisabled")) ? null: config.getData().get("httpUrl"),
                         config.getData().get("caSecretName")));
             } else {
                 log.warn("Skipping standard authentication service: configmap {} not found", authService.getConfigMap());
