@@ -45,20 +45,20 @@ public class OpenshiftWebPage implements IWebPage {
     // Getters and finders of elements and data
     //================================================================================================
 
-    private WebElement getCatalog() {
-        return selenium.getDriver().findElement(By.className("services-no-sub-categories"));
+    private WebElement getCatalog() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("services-no-sub-categories")));
     }
 
     private String getTitleFromService(WebElement element) {
         return element.findElement(By.className("services-item-name")).getAttribute("title");
     }
 
-    public WebElement getServiceFromCatalog(String name) {
+    public WebElement getServiceFromCatalog(String name) throws Exception {
         List<WebElement> services = getServicesFromCatalog();
         return services.stream().filter(item -> name.equals(getTitleFromService(item))).collect(Collectors.toList()).get(0);
     }
 
-    public List<WebElement> getServicesFromCatalog() {
+    public List<WebElement> getServicesFromCatalog() throws Exception {
         List<WebElement> services = getCatalog().findElements(By.className("services-item"));
         services.forEach(item -> log.info("Got service item from catalog: {}", getTitleFromService(item)));
         return services;
@@ -212,6 +212,7 @@ public class OpenshiftWebPage implements IWebPage {
         Thread.sleep(5000);
         selenium.takeScreenShot();
         selenium.getWebElement(() -> getModalWindow().findElement(By.className("results-message")).findElement(By.tagName("strong")), 360);
+        selenium.takeScreenShot();
     }
 
     private void clickOnCreateBrokered() throws Exception {
