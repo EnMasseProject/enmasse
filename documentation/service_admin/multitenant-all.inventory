@@ -1,0 +1,12 @@
+[enmasse]
+localhost ansible_connection=local
+
+[enmasse:vars]
+namespace=enmasse
+multitenant=true
+enable_rbac=false
+api_server=true
+service_catalog=true
+register_api_server=true
+keycloak_admin_password=admin
+authentication_services=["standard"]

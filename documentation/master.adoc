@@ -7,9 +7,9 @@
 :sectanchors!:
 :sectnums:
 :source-highlighter: highlightjs
-:toc:
+:toc: left
 :linkattrs:
-:toclevels: 2
+:toclevels: 3
 
 :ProductName: EnMasse
 :QpidJmsVersion: 0.20.0

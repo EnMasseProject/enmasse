@@ -35,11 +35,19 @@ options are supported:
 |secure_api_server|Enable mutual TLS for API server.|false |no
 |===
 
+An example inventory that enables both the API server and Service Broker integration:
+
+[source,options="nowrap"]
+.link:service_admin/multitenant-all.inventory[multitenant-all.inventory]
+----
+include::multitenant-all.inventory[]
+----
+
 . Run the ansible playbook.
 +
 [options="nowrap"]
 ----
-ansible-playbook -i <inventory file> ansble/playbooks/openshift/install.yml
+ansible-playbook -i <inventory file> ansible/playbooks/openshift/install.yml
 ----
 
 === Installing {ProductName} manually
