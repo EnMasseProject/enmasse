@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Template
+objects:
+  - apiVersion: servicecatalog.k8s.io/v1beta1
+    kind: ClusterServiceBroker
+    metadata:
+      name: enmasse
+      uid: 53bd3760-1576-11e8-8bc3-0242ac110007
+    spec:
+      url: "https://service-broker.${BROKER_NAMESPACE}.svc:8443/osbapi/"
+      insecureSkipTLSVerify: true
+      authInfo:
+        bearer:
+          secretRef:
+            name: service-catalog-credentials
+            namespace: "${BROKER_NAMESPACE}"
+parameters:
+- description: Namespace where EnMasse Service Broker is running
+  name: BROKER_NAMESPACE
+  value: enmasse

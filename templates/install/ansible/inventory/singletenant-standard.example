@@ -1,0 +1,7 @@
+[enmasse]
+localhost ansible_connection=local
+
+[enmasse:vars]
+multitenant=false
+address_space_type=standard
+address_space_plan=unlimited-standard
