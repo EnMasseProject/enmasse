@@ -296,7 +296,7 @@ public class OSBApiClient extends ApiClient {
      * @return
      */
     private String serviceName(AddressSpace addressSpace) {
-        return String.format("enmasse-%s", addressSpace.getType());
+        return addressSpace.getType().toString();
     }
 
     /**
