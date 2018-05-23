@@ -66,26 +66,25 @@ while getopts a:de:gm:n:o:u:t:yvh opt; do
         v)
             set -x
             ;;
-        h)
+        *)
             echo "usage: deploy.sh [options]"
             echo
             echo "deploy the EnMasse suite into a running Kubernetes cluster"
             echo
             echo "optional arguments:"
             echo "  -h                   show this help message"
-            echo "  -a \"none standard\"   Deploy given authentication services (default: \"none\")"
+            echo "  -a TYPE              Deploy one or more given authentication services (default: \"none\")"
+            echo "                         TYPE := { none | standard }[,TYPE]"
             echo "  -d                   create an all-in-one cluster on localhost"
             echo "  -e                   Environment label for this EnMasse deployment"
             echo "  -n NAMESPACE         Project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER            Master URI to login against (default: https://localhost:8443)"
-            echo "  -o mode              Deploy in given mode, 'singletenant' or 'multitenant'.  (default: \"singletenant\")"
+            echo "  -o MODE              Deploy in given tenant mode.  (default: \"singletenant\")"
+            echo "                         MODE := { singletenant | multitenant }"
             echo "  -u USER              User to run commands as (default: $DEFAULT_USER)"
-            echo "  -t CLUSTER_TYPE      Type of cluster, 'openshift' or 'kubernetes' (default: openshift)"
+            echo "  -t CLUSTER_TYPE      Type of cluster. (default: openshift)"
+            echo "                         CLUSTER_TYPE := { openshift | kubernetes }"
             echo
-            exit
-            ;;
-        \?)
-            echo "Invalid option: -$OPTARG" >&2
             exit
             ;;
     esac
@@ -179,7 +178,7 @@ if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 fi
 
-for auth_service in $AUTH_SERVICES
+for auth_service in ${AUTH_SERVICES//,/ }
 do
     if [ "$auth_service" == "none" ]; then
         create_self_signed_cert "$CMD" "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
