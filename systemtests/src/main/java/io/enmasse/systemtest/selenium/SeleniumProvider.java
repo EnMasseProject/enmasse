@@ -9,6 +9,7 @@ import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.*;
@@ -106,12 +107,12 @@ public class SeleniumProvider {
         return driverWait;
     }
 
-    protected void takeScreenShot() {
+    public void takeScreenShot() {
         try {
             log.info("Taking screenshot");
             browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
         } catch (Exception ex) {
-            log.warn("Cannot take screenshot: " + ex.getMessage());
+            log.warn("Cannot take screenshot: {}", ex.getMessage());
         }
     }
 
@@ -122,15 +123,15 @@ public class SeleniumProvider {
         }
     }
 
-    protected void clickOnItem(WebElement element) throws Exception {
+    public void clickOnItem(WebElement element) throws Exception {
         clickOnItem(element, null);
     }
 
-    protected void executeJavaScript(String script) throws Exception {
+    public void executeJavaScript(String script) throws Exception {
         executeJavaScript(script, null);
     }
 
-    protected void executeJavaScript(String script, String textToLog, String... arguments) throws Exception {
+    public void executeJavaScript(String script, String textToLog, Object... arguments) throws Exception {
         takeScreenShot();
         assertNotNull(script, "Selenium provider failed, script to execute is null");
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
@@ -139,26 +140,35 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
-    protected void clickOnItem(WebElement element, String textToLog) throws Exception {
+    public void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
-        log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
+        logCheckboxValue(element);
+        log.info("Click on element: {}", (textToLog == null ? element.getText() : textToLog));
         element.click();
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }
 
+    public void clearInput(WebElement element) {
+        element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        element.sendKeys(Keys.BACK_SPACE);
+        angularDriver.waitForAngularRequestsToFinish();
+        log.info("Cleared input");
+    }
 
-    protected void fillInputItem(WebElement element, String text) throws Exception {
+
+    public void fillInputItem(WebElement element, String text) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
+        clearInput(element);
         element.sendKeys(text);
         angularDriver.waitForAngularRequestsToFinish();
         log.info("Filled input with text: " + text);
         takeScreenShot();
     }
 
-    protected void pressEnter(WebElement element) throws Exception {
+    public void pressEnter(WebElement element) throws Exception {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(Keys.RETURN);
@@ -203,8 +213,16 @@ public class SeleniumProvider {
         return result;
     }
 
+    public WebElement getInputByName(String inputName) {
+        return this.getDriver().findElement(By.cssSelector(String.format("input[name='%s']", inputName)));
+    }
+
     public WebElement getWebElement(Supplier<WebElement> webElement) throws Exception {
         return getElement(webElement, 30, 0);
+    }
+
+    public WebElement getWebElement(Supplier<WebElement> webElement, int attempts) throws Exception {
+        return getElement(webElement, attempts, 0);
     }
 
     public List<WebElement> getWebElements(Supplier<List<WebElement>> webElements, int count) throws Exception {
@@ -215,7 +233,7 @@ public class SeleniumProvider {
         waitUntilItem(timeInSeconds, item, true);
     }
 
-    protected void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+    public void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, false);
     }
 
@@ -259,4 +277,35 @@ public class SeleniumProvider {
         }
         log.info("End of waiting");
     }
+
+    //================================================================================================
+    //==================================== Checkbox methods ==========================================
+    //================================================================================================
+
+    public void setValueOnCheckboxRequestedPermissions(WebElement element, boolean check) throws Exception {
+        if (getCheckboxValue(element) != check) {
+            clickOnItem(element);
+        } else {
+            log.info("Checkbox already {}", check ? "checked" : "unchecked");
+        }
+    }
+
+    public boolean getCheckboxValue(WebElement element) {
+        if (isCheckbox(element)) {
+            return new Boolean(element.getAttribute("checked"));
+        }
+        throw new IllegalStateException("Requested element is not of type 'checkbox'");
+    }
+
+    private boolean isCheckbox(WebElement element) {
+        String type = element.getAttribute("type");
+        return type != null && type.equals("checkbox");
+    }
+
+    private void logCheckboxValue(WebElement element) {
+        if (isCheckbox(element)) {
+            log.info("Checkbox value before click is checked='{}'", element.getAttribute("checked"));
+        }
+    }
+
 }

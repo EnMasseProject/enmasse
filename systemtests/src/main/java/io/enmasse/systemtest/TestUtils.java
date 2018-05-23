@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -302,6 +304,23 @@ public class TestUtils {
     }
 
     /**
+     * Check if state and description values equals required values
+     *
+     *
+     * @param status answer from service broker on 'last_operation'
+     * @return true->state=succeeded / otherwise else
+     */
+    public static boolean isServiceInstanceReady(JsonObject status) {
+        boolean isReady = false;
+        if (status != null) {
+            String state = status.getString("state");
+            String description = status.getString("description");
+            isReady = (state.equals("succeeded") && description.equals("All required pods are ready."));
+        }
+        return isReady;
+    }
+
+    /**
      * Get address space type from received AddressSpace(JsonObject) (usually received from AddressApiClient)
      *
      * @param addressSpace address space JsonObject
@@ -334,7 +353,7 @@ public class TestUtils {
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
+            log.info("Waiting until Address space: '{}' will be in ready state", addressSpace);
         }
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
@@ -342,6 +361,28 @@ public class TestUtils {
         waitUntilEndpointsPresent(apiClient, addressSpace);
         return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
                 addrSpaceI.getName().equals(addressSpace)).findFirst().get();
+    }
+
+    /**
+     * Waiting until service instance will be in ready state
+     *
+     * @param apiClient  open service broker api client for sending requests
+     * @param instanceId id of service instance
+     * @throws Exception
+     */
+    public static void waitForServiceInstanceReady(OSBApiClient apiClient,String username, String instanceId) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+        boolean isReady = false;
+        while (budget.timeLeft() >= 0 && !isReady) {
+            isReady = isServiceInstanceReady(apiClient.getLastOperation(username, instanceId));
+            if (!isReady) {
+                Thread.sleep(10000);
+            }
+            log.info("Waiting until service instance '{}' will be in ready state", instanceId);
+        }
+        if (!isReady) {
+            throw new IllegalStateException(String.format("Service instance '%s' is not in Ready state within timeout.", instanceId));
+        }
     }
 
     private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
@@ -723,12 +764,22 @@ public class TestUtils {
      * @param addressSpace AddressSpace that should be removed
      */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
+        waitForNamespaceDeleted(kubernetes, addressSpace.getNamespace());
+    }
+
+    /**
+     * Wait until AddressSpace will be removed
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @param namespace  project/namespace to remove
+     */
+    public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
+        while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(namespace)) {
             Thread.sleep(1000);
         }
-        if (kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
-            throw new TimeoutException("Timed out waiting for namespace " + addressSpace + " to disappear");
+        if (kubernetes.listNamespaces().contains(namespace)) {
+            throw new TimeoutException("Timed out waiting for namespace " + namespace + " to disappear");
         }
     }
 
@@ -922,6 +973,14 @@ public class TestUtils {
         addressApiClient.deleteAddressSpace(addressSpace);
     }
 
+    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
+        logCollector.collectEvents(addressSpace.getNamespace());
+        logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        kubernetes.deleteNamespace(namespace);
+        waitForNamespaceDeleted(kubernetes, namespace);
+        waitForAddressSpaceDeleted(kubernetes, addressSpace);
+    }
     public static RemoteWebDriver getFirefoxDriver() throws MalformedURLException {
         return new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
     }

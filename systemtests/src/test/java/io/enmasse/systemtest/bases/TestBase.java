@@ -11,6 +11,7 @@ import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
@@ -20,8 +21,8 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
-import io.enmasse.systemtest.selenium.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
@@ -79,7 +80,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return null;
     }
 
-
     @BeforeEach
     public void setup() {
         addressSpaceList = new ArrayList<>();
@@ -106,6 +106,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             throw e;
         }
     }
+
+
+    //================================================================================================
+    //==================================== AddressSpace methods ======================================
+    //================================================================================================
 
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
         createAddressSpace(addressSpace, !isBrokered(addressSpace));
@@ -183,6 +188,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected List<AddressSpace> getAddressSpaces() throws Exception {
         return TestUtils.getAddressSpacesObjects(addressApiClient);
     }
+
+    protected void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
+        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+    }
+
+    protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
+        AddressSpace addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
+        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+        return !addrSpaceResponse.getEndpoints().isEmpty();
+    }
+
 
     private KeycloakClient getKeycloakClient() throws Exception {
         if (keycloakApiClient == null) {
@@ -477,6 +493,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         } else {
             return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps");
         }
+    }
+
+    protected String getOCConsoleRoute() {
+        return String.format("%s/console", environment.openShiftUrl());
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {
@@ -973,5 +993,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         recvd = jmsProvider.receiveMessages(receiver, count, 2000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
         log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+    }
+
+    protected void deleteAddressSpaceCreatedBySC(String namespace, AddressSpace addressSpace) throws Exception {
+        TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, namespace, logCollector);
     }
 }

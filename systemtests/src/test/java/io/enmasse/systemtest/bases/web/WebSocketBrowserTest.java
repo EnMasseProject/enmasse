@@ -9,7 +9,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
-import io.enmasse.systemtest.selenium.RheaWebPage;
+import io.enmasse.systemtest.selenium.page.RheaWebPage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;

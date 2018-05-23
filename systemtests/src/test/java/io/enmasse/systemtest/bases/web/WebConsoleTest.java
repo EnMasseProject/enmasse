@@ -11,6 +11,11 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.selenium.*;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.resources.AddressWebItem;
+import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
+import io.enmasse.systemtest.selenium.resources.FilterType;
+import io.enmasse.systemtest.selenium.resources.SortType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -643,7 +648,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     private void assertElementDisabled(String message, WebElement element) {
         try {
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(element)));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(element)));
             assertFalse(element.isEnabled(), message);
         } catch (Exception ex) {
             throw new IllegalStateException("Element is enabled");
