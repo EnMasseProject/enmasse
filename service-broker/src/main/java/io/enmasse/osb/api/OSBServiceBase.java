@@ -94,7 +94,7 @@ public abstract class OSBServiceBase {
         }
 
         if (addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) == null) {
-            addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName("enmasse-" + addressSpace.getNamespace() + "-" + addressSpace.getName()));
+            addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
         }
 
         if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
