@@ -35,6 +35,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
             return;
         }
         boolean isAuthenticated = false;
+
         String auth = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (auth != null && auth.startsWith(BEARER_PREFIX)) {
             String token = auth.substring(BEARER_PREFIX.length());

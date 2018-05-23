@@ -12,28 +12,64 @@ import java.security.Principal;
 
 public class AllowAllAuthInterceptor implements ContainerRequestFilter {
 
+    private static final String X_REMOTE_USER = "X-Remote-User";
+    private final AuthApi authApi;
+    private final boolean doUserLookup;
+
+    public AllowAllAuthInterceptor(AuthApi authApi, boolean doUserLookup) {
+        this.authApi = authApi;
+        this.doUserLookup = doUserLookup;
+    }
+
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        requestContext.setSecurityContext(new SecurityContext() {
-            @Override
-            public Principal getUserPrincipal() {
-                return RbacSecurityContext.getUserPrincipal("anonymous", "");
-            }
+        if (doUserLookup && requestContext.getHeaderString(X_REMOTE_USER) != null) {
+            String userName = requestContext.getHeaderString(X_REMOTE_USER);
+            String userId = authApi.getUserId(userName);
 
-            @Override
-            public boolean isUserInRole(String role) {
-                return true;
-            }
+            requestContext.setSecurityContext(new SecurityContext() {
+                @Override
+                public Principal getUserPrincipal() {
+                    return RbacSecurityContext.getUserPrincipal(userName, userId);
+                }
 
-            @Override
-            public boolean isSecure() {
-                return true;
-            }
+                @Override
+                public boolean isUserInRole(String role) {
+                    return true;
+                }
 
-            @Override
-            public String getAuthenticationScheme() {
-                return "dummy";
-            }
-        });
+                @Override
+                public boolean isSecure() {
+                    return true;
+                }
+
+                @Override
+                public String getAuthenticationScheme() {
+                    return "dummy";
+                }
+            });
+        } else {
+            requestContext.setSecurityContext(new SecurityContext() {
+                @Override
+                public Principal getUserPrincipal() {
+                    return RbacSecurityContext.getUserPrincipal("anonymous", "");
+                }
+
+                @Override
+                public boolean isUserInRole(String role) {
+                    return true;
+                }
+
+                @Override
+                public boolean isSecure() {
+                    return true;
+                }
+
+                @Override
+                public String getAuthenticationScheme() {
+                    return "dummy";
+                }
+            });
+        }
     }
 }

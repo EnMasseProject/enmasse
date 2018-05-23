@@ -84,6 +84,16 @@ local images = import "images.jsonnet";
                       "optional": true
                     }
                   }
+                },
+                {
+                  "name": "ENABLE_USER_LOOKUP",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "api-server-config",
+                      "key": "enableUserLookup",
+                      "optional": true
+                    }
+                  }
                 }
               ],
               "ports": [

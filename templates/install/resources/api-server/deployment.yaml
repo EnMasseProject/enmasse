@@ -29,6 +29,12 @@ spec:
               key: enableRbac
               name: api-server-config
               optional: true
+        - name: ENABLE_USER_LOOKUP
+          valueFrom:
+            configMapKeyRef:
+              key: enableUserLookup
+              name: api-server-config
+              optional: true
         image: docker.io/enmasseproject/api-server:latest
         livenessProbe:
           httpGet:
