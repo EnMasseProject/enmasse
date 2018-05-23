@@ -31,34 +31,16 @@ include::deploy-procedure.adoc[leveloffset+=1]
 The Kubernetes deployment script and YAML files currently do not support Role
 Based Access Control (RBAC). In Kubernetes clusters which have RBAC enabled, it is
 required to additionally create a role binding for the `default` service account
-to the `view` role and for the `enmasse-service-account` to the `cluster-admin` role:
+to the `edit` role and for the `enmasse-admin` to the `cluster-admin` and `admin` roles:
 
 [options="nowrap"]
 ....
-kubectl create clusterrolebinding enmasse-service-account-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-service-account
-kubectl create rolebinding default-view-binding --clusterrole=view --serviceaccount=enmasse:default -n enmasse
+kubectl create clusterrolebinding enmasse-admin-cluster-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-admin
+kubectl create rolebinding default-edit-binding --clusterrole=edit --serviceaccount=enmasse:default -n enmasse
+kubectl create rolebinding enmasse-admin-admin-binding --clusterrole=admin --serviceaccount=enmasse:enmasse-admin -n enmasse
 ....
 
-_Note: The `cluster-admin` role gives the `enmasse-service-account` service account unlimited access to the Kubernetes cluster._
-
-[[deploying-external-load-balancers]]
-=== Deploying external load balancers
-
-If you're running {ProductName} in your own Kubernetes instance on any of the
-cloud providers, you can deploy the external load balancer services
-to expose {ProductName} ports:
-
-[options="nowrap"]
-....
-kubectl apply -f kubernetes/addons/external-lb.yaml -n enmasse
-....
-
-If you are running in multitenant mode, exposing the restapi is sufficient:
-
-[options="nowrap"]
-....
-kubectl apply -f kubernetes/addons/external-lb-restapi.yaml -n enmasse
-....
+_Note: The `cluster-admin` role gives the `enmasse-admin` service account unlimited access to the Kubernetes cluster._
 
 [[configuring-addresses-kubernetes]]
 === Configuring addresses
