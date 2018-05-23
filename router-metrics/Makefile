@@ -4,6 +4,6 @@ build:
 	@echo "Nothing to build"
 
 package:
-	tar -czf router-metrics-$(VERSION).tgz *.py
+	tar -czf build/router-metrics-$(VERSION).tgz *.py
 
 test:
