@@ -227,7 +227,7 @@ else
     exit 1
 fi
 
-runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config -n ${NAMESPACE}" "Create address-space-controller configmap"
+runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config" "Create address-space-controller configmap"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/address-space-definitions.yaml" "Create address space definitions"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/deployment.yaml" "Create address space controller deployment"
 
