@@ -221,7 +221,7 @@ elif [ $MODE == "multitenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/brokered-plans.yaml" "Create brokered address space plans"
     if [ "$USE_OPENSHIFT" == "true" ]; then
-        runcmd "$CMD create -n ${NAMESPACE} configmap api-server-config --from-literal=enableRbac=true" "Create api-server configmap"
+        runcmd "$CMD create -n ${NAMESPACE} configmap api-server-config --from-literal=enableRbac=false" "Create api-server configmap"
     fi
 else
     echo "Unknown deployment mode $MODE"
@@ -237,7 +237,7 @@ runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/deployment.yam
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/service.yaml" "Create api server service"
 
 if [ "$USE_OPENSHIFT" == "true" ]; then
-    runcmd "oc create route passthrough restapi -n ${NAMESPACE} --service=api-server" "Create restapi route"
+    runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/route.yaml" "Create restapi route"
 else
     runcmd "kubectl expose service api-server -n ${NAMESPACE} --port=443 --target-port=8443 --name=restapi --type=LoadBalancer" "Create external restapi service"
 fi

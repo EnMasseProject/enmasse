@@ -43,8 +43,8 @@ public class Main {
         NamespacedOpenShiftClient client = new DefaultOpenShiftClient(config);
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
         KeycloakParams params = KeycloakParams.fromEnv(System.getenv());
-        if (params.getIdentityProviderUrl() == null) {
-            params.setIdentityProviderUrl(getPublicOpenShiftUrl(client));
+        if (params.getIdentityProviderUrl() == null || params.getIdentityProviderUrl().isEmpty()) {
+            params.setIdentityProviderUrl(openshiftUri);
         }
 
         log.info("Started with params: {}", params);
@@ -98,31 +98,5 @@ public class Main {
 
     private static String readFile(File file) throws IOException {
         return new String(Files.readAllBytes(file.toPath()));
-    }
-
-    public static String getPublicOpenShiftUrl(OpenShiftClient client) {
-        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
-
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/.well-known/oauth-authorization-server");
-        Request request = new Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer " + client.getConfiguration().getOauthToken())
-            .get()
-            .build();
-
-        try (Response response = httpClient.newCall(request).execute()) {
-            try (ResponseBody responseBody = response.body()) {
-                String responseString = responseBody != null ? responseBody.string() : "{}";
-                if (response.isSuccessful()) {
-                    ObjectNode node = mapper.readValue(responseString, ObjectNode.class);
-                    if (node.hasNonNull("issuer")) {
-                        return node.get("issuer").asText();
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return null;
     }
 }
