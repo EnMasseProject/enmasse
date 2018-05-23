@@ -10,10 +10,12 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.resources.ServiceInstance;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -87,7 +89,7 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
         instances.remove(addressSpace, instanceId);
     }
 
-    private String generateBinding(AddressSpace addressSpace, String username, String instanceId, HashMap<String, String> binding) throws Exception {
+    private BindingSecretData generateBinding(AddressSpace addressSpace, String username, String instanceId, HashMap<String, String> binding) throws Exception {
         return osbApiClient.generateBinding(addressSpace, username, instanceId, binding);
     }
 
@@ -102,29 +104,33 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingStandard() throws Exception {
-        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-standard", AddressSpaceType.STANDARD);
-        provideAndCreateBinding(addressSpaceViaOSBAPI, "*");
+        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-standard22", AddressSpaceType.STANDARD);
+        provideAndCreateBinding(addressSpaceViaOSBAPI, Destination.queue("queue.standard.osbapi", "pooled-queue"), "*");
     }
 
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingBrokered() throws Exception {
-        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-brokered", AddressSpaceType.BROKERED);
-        provideAndCreateBinding(addressSpaceViaOSBAPI, "#");
+        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-brokered2", AddressSpaceType.BROKERED);
+        provideAndCreateBinding(addressSpaceViaOSBAPI, Destination.queue("queue.brokered.osbapi", "brokered-queue"), "#");
     }
 
-    private void provideAndCreateBinding(AddressSpace addressSpace, String wildcardMark) throws Exception {
+    private void provideAndCreateBinding(AddressSpace addressSpace, Destination queue, String wildcardMark) throws Exception {
         ServiceInstance provInstance = createServiceInstance(addressSpace, developer.getUsername());
         HashMap<String, String> bindResources = new HashMap<>();
         bindResources.put("sendAddresses", String.format("queue.%s", wildcardMark));
         bindResources.put("receiveAddresses", String.format("queue.%s", wildcardMark));
         bindResources.put("consoleAccess", "true");
-        bindResources.put("consoleAdmin", "false");
-        bindResources.put("externalAccess", "false");
-        String bindingId = generateBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), bindResources);
+        bindResources.put("consoleAdmin", "true");
+        bindResources.put("externalAccess", "true");
+        BindingSecretData binding = generateBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), bindResources);
 
-        //TODO verify that bindings for send/recieve/view console/etc... works fine
-        //deprovisionBinding(addressSpace, instanceId, bindingId); //!TODO disabled due to deleteBinding is not implemented
+        reloadAddressSpaceEndpoints(addressSpace);
+        setAddresses(addressSpace, queue);
+        assertCanConnect(addressSpace, binding.getCredentials(), Arrays.asList(queue));
+
+        //!TODO to deleteBinding is not implemented, returns 200 every time
+        deprovisionBinding(addressSpace,developer.getUsername(), provInstance.getInstanceId(), binding.getId());
         deleteServiceInstance(addressSpace, developer.getUsername(), provInstance.getInstanceId());
     }
 

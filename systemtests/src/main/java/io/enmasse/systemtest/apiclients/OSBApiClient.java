@@ -9,6 +9,7 @@ import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.resources.ServiceInstance;
+import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.codec.BodyCodec;
@@ -134,7 +135,7 @@ public class OSBApiClient extends ApiClient {
      * @param instanceId
      * @throws Exception
      */
-    public String generateBinding(AddressSpace addressSpace, String username, String instanceId, HashMap<String, String> bindings) throws Exception {
+    public BindingSecretData generateBinding(AddressSpace addressSpace, String username, String instanceId, HashMap<String, String> bindings) throws Exception {
         JsonObject serviceCatalog = getCatalog(username);
         String serviceId = getAddressSpaceID(serviceCatalog.getJsonArray("services"), serviceName(addressSpace));
         String planId = getAddressSpacePlanID(serviceCatalog.getJsonArray("services"), addressSpace);
@@ -149,7 +150,7 @@ public class OSBApiClient extends ApiClient {
             for (Map.Entry<String, String> entry : bindings.entrySet()) {
                 bindResource.put(entry.getKey(), entry.getValue());
             }
-            payload.put("bind_resource", bindResource);
+            payload.put("parameters", bindResource);
         }
 
         //prepare and send request
@@ -169,7 +170,7 @@ public class OSBApiClient extends ApiClient {
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty());
         log.info("PUT-ServiceBindings: finished successfully with response {}; ", response.toString());
-        return bindingId;
+        return new BindingSecretData(response, bindingId);
     }
 
     //!TODO this functionality is not verified yet

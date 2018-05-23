@@ -5,12 +5,14 @@
 package io.enmasse.systemtest.selenium.resources;
 
 import io.enmasse.systemtest.KeycloakCredentials;
+import io.vertx.core.json.JsonObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
 
 public class BindingSecretData {
+    private String id;
     private String externalMessagingHost;
     private String externalMessagingPort;
     private String messagingCert;
@@ -44,6 +46,15 @@ public class BindingSecretData {
         this.mqttHost = (String) parseDataFromSecret(data, "mqttHost");
         this.mqqtPort = (String) parseDataFromSecret(data, "mqttMqttPort");
         this.mqttsPort = (String) parseDataFromSecret(data, "mqttMqttsPort");
+    }
+
+    public BindingSecretData(JsonObject binding, String id) {
+        JsonObject credentials = binding.getJsonObject("credentials");
+        this.id = id;
+        this.username = credentials.getString("username");
+        this.password = credentials.getString("password");
+        this.messagingHost = credentials.getString("messagingHost");
+        this.messagingCert = credentials.getString("messagingCert.pem");
     }
 
     public String getExternalMessagingHost() {
@@ -108,6 +119,10 @@ public class BindingSecretData {
 
     public String getMqttsPort() {
         return mqttsPort;
+    }
+
+    public String getId() {
+        return id;
     }
 
     private Object parseDataFromSecret(List<WebElement> data, String dataName) {
