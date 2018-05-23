@@ -71,7 +71,7 @@ There are three options for configuration:
          the subscription address, as well as through the topic.
 
 Durable subscriptions overlap a little with mqtt style subscriptions.
-At present mqtt subscriptions use option 3. However mqtt subscriptions
+At present mqtt subscriptions use option 2b. However mqtt subscriptions
 need to be associated with multiple topics and generally are expected
 to need to scale further than the number of statically defined durable
 subscriptions. Any unification with mqtt is currently considered out
@@ -86,11 +86,11 @@ task breakdown that follows assumes that the first option is used.
 How should deletion of topics with existing subscriptions be handled?
 
 One option would be to refuse to delete the topic. This would need to
-be enforced in the rest-api, in the console and in the service broker.
+be enforced in the rest-api and in the console.
 
 Another option would be to automatically delete subscriptions when the
-topic is deleted. This could be done by the agent on detecting the
-deletion of the topic.
+topic is deleted. This could be done by the standard-controller on
+detecting the deletion of the topic.
 
 == tasks ==
 
@@ -169,20 +169,19 @@ the shard count.
 The stats for topics will be unaffected. A durable subscription will
 continue to be reflected in the stats for the topic it belongs to.
 
-=== service broker ===
-
-There needs to be some way to associate the topic (and possibly
-specify other optional properties) with a subscription when created
-through the service broker.
-
 === subserv ==
 
 The subscription location logic should be removed entirely.
 
+=== api-server ==
+
+This should not require any changes other than those to the common lib
+necessitated by the update to the standard-controller which uses that
+same common lib.
+
 === tests ===
 
-* create and delete subscriptions through console, rest api and
-  service broker
+* create and delete subscriptions through console and rest api
 
 * verify that messages published to the associated topic are received
 
