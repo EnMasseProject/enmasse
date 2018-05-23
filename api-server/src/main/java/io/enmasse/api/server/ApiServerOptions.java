@@ -19,6 +19,7 @@ public class ApiServerOptions {
     private Duration resyncInterval;
     private String clientCa;
     private boolean enableRbac;
+    private boolean enableUserLookup;
 
     public String getNamespace() {
         return namespace;
@@ -60,6 +61,7 @@ public class ApiServerOptions {
                 .orElse(Duration.ofMinutes(5)));
 
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
+        options.setEnableUserLookup(Boolean.parseBoolean(getEnv(env, "ENABLE_USER_LOOKUP").orElse(getEnv(env,"ENABLE_RBAC").orElse("false"))));
 
         return options;
     }
@@ -90,5 +92,13 @@ public class ApiServerOptions {
 
     public void setEnableRbac(boolean enableRbac) {
         this.enableRbac = enableRbac;
+    }
+
+    public boolean isEnableUserLookup() {
+        return enableUserLookup;
+    }
+
+    public void setEnableUserLookup(boolean enableUserLookup) {
+        this.enableUserLookup = enableUserLookup;
     }
 }

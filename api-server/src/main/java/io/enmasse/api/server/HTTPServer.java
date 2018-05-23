@@ -6,7 +6,6 @@
 package io.enmasse.api.server;
 
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
-import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
@@ -40,17 +39,17 @@ public class HTTPServer extends AbstractVerticle {
     private final SchemaProvider schemaProvider;
     private final String certDir;
     private final String clientCa;
-    private final AuthApi authApi;
+    private final AuthWrapper authWrapper;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, AuthApi authApi) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, AuthWrapper authWrapper) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
         this.clientCa = clientCa;
-        this.authApi = authApi;
+        this.authWrapper = authWrapper;
     }
 
     @Override
@@ -61,9 +60,9 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
-        if (authApi != null) {
+        if (authWrapper.isRbacEnabled()) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authWrapper.getAuthApi(), path ->
                     path.equals(HttpHealthService.BASE_URI) ||
                     path.equals("/swagger.json") ||
                     path.equals("/apis") ||
@@ -71,7 +70,7 @@ public class HTTPServer extends AbstractVerticle {
                     path.equals("/apis/enmasse.io/v1alpha1")));
         } else {
             log.info("Disabling authentication and authorization for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
+            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor(authWrapper.getAuthApi(), authWrapper.isEnableUserLookup()));
         }
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());

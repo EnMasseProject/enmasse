@@ -71,7 +71,7 @@ public class HTTPServer extends AbstractVerticle {
                     path.startsWith(HttpConsoleService.BASE_URI)));
         } else {
             log.info("Disabling authentication and authorization for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
+            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor(null, false));
         }
 
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
