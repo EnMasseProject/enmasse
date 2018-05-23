@@ -136,6 +136,16 @@ local images = import "images.jsonnet";
                     }
                   },
                   {
+                    "name": "OAUTH_IDENTITY_PROVIDER_URL",
+                    "valueFrom": {
+                      "configMapKeyRef": {
+                        "optional": true,
+                        "name": "keycloak-config",
+                        "key": "identityProviderUrl"
+                      }
+                    }
+                  },
+                  {
                     "name": "OAUTH_IDENTITY_PROVIDER_CLIENT_ID",
                     "valueFrom": {
                       "configMapKeyRef": {

@@ -19,6 +19,12 @@ spec:
             configMapKeyRef:
               key: httpUrl
               name: keycloak-config
+        - name: OAUTH_IDENTITY_PROVIDER_URL
+          valueFrom:
+            configMapKeyRef:
+              key: identityProviderUrl
+              name: keycloak-config
+              optional: true
         - name: OAUTH_IDENTITY_PROVIDER_CLIENT_ID
           valueFrom:
             configMapKeyRef:
