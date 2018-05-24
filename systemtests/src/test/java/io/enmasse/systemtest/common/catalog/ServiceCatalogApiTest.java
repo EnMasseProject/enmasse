@@ -104,14 +104,14 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingStandard() throws Exception {
-        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-standard22", AddressSpaceType.STANDARD);
+        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("osbapi-standard", AddressSpaceType.STANDARD);
         provideAndCreateBinding(addressSpaceViaOSBAPI, Destination.queue("queue.standard.osbapi", "pooled-queue"), "*");
     }
 
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvideServiceInstanceWithBindingBrokered() throws Exception {
-        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("myspace-via-osbapi-brokered2", AddressSpaceType.BROKERED);
+        AddressSpace addressSpaceViaOSBAPI = new AddressSpace("osbapi-brokered", AddressSpaceType.BROKERED);
         provideAndCreateBinding(addressSpaceViaOSBAPI, Destination.queue("queue.brokered.osbapi", "brokered-queue"), "#");
     }
 
