@@ -4,7 +4,7 @@ objects:
 - apiVersion: apiregistration.k8s.io/v1beta1
   kind: APIService
   metadata:
-    name: v1.enmasse.io
+    name: v1alpha1.enmasse.io
   spec:
     group: enmasse.io
     groupPriorityMinimum: 1000
@@ -12,7 +12,7 @@ objects:
     service:
       name: api-server
       namespace: ${ENMASSE_NAMESPACE}
-    version: v1
+    version: v1alpha1
     versionPriority: 15
 parameters:
 - description: Namespace where EnMasse is running
