@@ -15,11 +15,18 @@ ifeval::["{cmdcli}" == "kubectl"]
 ----
 {cmdcli} create namespace enmasse
 ----
+
+. Set enmasse namespace as default namespace:
++
+[options="nowrap",subs="attributes"]
+----
+kubectl config set-context $(kubectl config current-context) --namespace=enmasse
+----
 endif::[]
 
 ==== Deploying authentication services
 
-{ProductName} require at least 1 authentication service to be deployed. The authentication service
+{ProductName} requires at least 1 authentication service to be deployed. The authentication service
 can either be none (allow all), standard (keycloak) or external (not managed by enmasse).
 
 ===== Deploying the none authentication service
@@ -246,9 +253,9 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 {cmdcli} create -f ./resources/api-server/deployment.yaml
 {cmdcli} create -f ./resources/api-server/service.yaml
 ----
-
 ifeval::["{cmdcli}" == "oc"]
 [[{cmdcli}-register-apiservice]]
+
 . (Optional) Register API server to support custom resources
 +
 [options="nowrap"]
@@ -266,7 +273,7 @@ endif::[]
 
 ==== (Optional) Deploying Service Broker
 
-The Service Broker provides an implementation of the Open Service Broker API that integerates with the Kubernetes Service Catalog. The Service Broker requires the Standard Authentication Service to be deployed.
+The Service Broker provides an implementation of the Open Service Broker API that integrates with the Kubernetes Service Catalog. The Service Broker requires the Standard Authentication Service to be deployed.
 
 *NOTE*: If you install on OpenShift, it is recommended that you have cluster-admin access in order to set up the required roles for delegating authentication to the Kubernetes master. See <<openshift-install-single-address-space>> for how to deploy without cluster-admin access, which will restrict it to a single address space.
 
