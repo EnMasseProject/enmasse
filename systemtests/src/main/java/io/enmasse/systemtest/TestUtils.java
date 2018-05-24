@@ -249,22 +249,6 @@ public class TestUtils {
     }
 
     /**
-     * get path to all addresses for each address-spaces
-     *
-     * @param apiClient client for sending http requests to api server
-     * @return list of rest-api paths
-     * @throws Exception
-     */
-    public static List<URL> getAddressesPaths(AddressApiClient apiClient) throws Exception {
-        JsonArray addressPaths = apiClient.getAddressesPaths();
-        List<URL> paths = new ArrayList<>();
-        for (int i = 0; i < addressPaths.size(); i++) {
-            paths.add(new URL(addressPaths.getString(i)));
-        }
-        return paths;
-    }
-
-    /**
      * send whatever request to restapi route
      *
      * @param apiClient client for sending http requests to api server

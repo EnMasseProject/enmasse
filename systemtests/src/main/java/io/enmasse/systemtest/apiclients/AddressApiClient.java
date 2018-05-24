@@ -184,21 +184,6 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
-    public JsonArray getAddressesPaths() throws Exception {
-        log.info("GET-addresses-paths: path {}; ", addressPathPattern);
-        return doRequestNTimes(initRetry, () -> {
-                    CompletableFuture<JsonArray> responsePromise = new CompletableFuture<>();
-                    client.get(endpoint.getPort(), endpoint.getHost(), addressPathPattern)
-                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                            .as(BodyCodec.jsonArray())
-                            .timeout(20_000)
-                            .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses path"));
-                    return responsePromise.get(30, TimeUnit.SECONDS);
-                },
-                Optional.of(() -> kubernetes.getRestEndpoint()),
-                Optional.empty());
-    }
-
     /**
      * give you JsonObject with AddressesList or Address kind
      *
