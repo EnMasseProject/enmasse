@@ -35,7 +35,7 @@ function create_address_space() {
   local name=$2
   local namespace=$3
 
-  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1alpha1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"${namespace}\\\", \\\"annotations\\\": {\\\"enmasse.io/namespace\\\": \\\"$namespace\\\"} }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\", \\\"plan\\\": \\\"unlimited-standard\\\" } }"
+  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1alpha1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"${namespace}\\\", \\\"labels\\\": {\\\"namespace\\\": \\\"$namespace\\\" }, \\\"annotations\\\": {\\\"enmasse.io/namespace\\\": \\\"$namespace\\\", \\\"enmasse.io/realm-name\\\": \\\"$namespace\\\"} }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\", \\\"plan\\\": \\\"unlimited-standard\\\" } }"
 
   runcmd "cat <<EOF | $CMD create -n ${namespace} -f -
 {
