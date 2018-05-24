@@ -15,6 +15,8 @@
 # for a login when appropriate.
 # for further parameters please see the help text.
 SCRIPTDIR=`dirname $0`
+source $SCRIPTDIR/common.sh
+TEMPDIR=`tempdir`
 RESOURCE_DIR=${SCRIPTDIR}/resources
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
@@ -27,13 +29,13 @@ OC_ARGS=""
 GUIDE=false
 MODE="singletenant"
 
-while getopts a:de:gm:n:o:u:t:yvh opt; do
+while getopts a:c:de:gk:m:n:o:u:t:yvh opt; do
     case $opt in
         a)
             AUTH_SERVICES=$OPTARG
             ;;
         c)
-            CA_SECRET=$OPTARG
+            CERT_FILE=$OPTARG
             ;;
         d)
             OS_ALLINONE=true
@@ -43,6 +45,9 @@ while getopts a:de:gm:n:o:u:t:yvh opt; do
             ;;
         g)
             GUIDE=true
+            ;;
+        k)
+            KEY_FILE=$OPTARG
             ;;
         m)
             MASTER_URI=$OPTARG
@@ -75,10 +80,14 @@ while getopts a:de:gm:n:o:u:t:yvh opt; do
             echo "  -h                   show this help message"
             echo "  -a TYPE              Deploy one or more given authentication services (default: \"none\")"
             echo "                         TYPE := { none | standard }[,TYPE]"
+            echo "  -c FILE              Provide a PEM encoded certificate file of the full certificate chain"
+            echo "                         Must be used in combination with -k"
             echo "  -d                   create an all-in-one cluster on localhost"
             echo "  -e                   Environment label for this EnMasse deployment"
-            echo "  -n NAMESPACE         Project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
+            echo "  -k FILE              Provide a PEM encoded key file used for external connections"
+            echo "                         Must be used in combination with -c"
             echo "  -m MASTER            Master URI to login against (default: https://localhost:8443)"
+            echo "  -n NAMESPACE         Project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -o MODE              Deploy in given tenant mode.  (default: \"singletenant\")"
             echo "                         MODE := { singletenant | multitenant }"
             echo "  -u USER              User to run commands as (default: $DEFAULT_USER)"
@@ -89,6 +98,14 @@ while getopts a:de:gm:n:o:u:t:yvh opt; do
             ;;
     esac
 done
+
+if [ -n "$KEY_FILE" -a -n "$CERT_FILE" ]; then
+    test -r "$CERT_FILE" || die "Certificate file '$CERT_FILE' cannot be found or read"
+    test -r "$KEY_FILE" || die "Key file '$KEY_FILE' cannot be found or read"
+    CERT_PROVIDED=true
+elif [ -n "$KEY_FILE" -o -n "$CERT_FILE" ]; then
+    die "The arguments -c and -k must both be used in combination"
+fi
 
 if [ "$CLUSTER_TYPE" == "openshift" ];
 then
@@ -113,9 +130,6 @@ else
     echo "Cannot find oc or kubectl command, please check path to ensure it is installed"
     exit 1
 fi
-
-source $SCRIPTDIR/common.sh
-TEMPDIR=`tempdir`
 
 if [ -z "$KUBE_USER" ]
 then
@@ -227,11 +241,20 @@ else
     exit 1
 fi
 
-runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config" "Create address-space-controller configmap"
+if [ "$CERT_PROVIDED" == "true" ]; then
+    runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config --from-literal=wildcardEndpointCertSecret=api-server-cert" "Create address-space-controller configmap"
+else
+    runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config" "Create address-space-controller configmap"
+fi
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/address-space-definitions.yaml" "Create address space definitions"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/deployment.yaml" "Create address space controller deployment"
 
-create_self_signed_cert "$CMD" "api-server.${NAMESPACE}.svc.cluster.local" "api-server-cert"
+if [ "$CERT_PROVIDED" == "true" ]; then
+    create_tls_secret $CMD api-server-cert "$KEY_FILE" "$CERT_FILE"
+else
+    create_self_signed_cert "$CMD" "api-server.${NAMESPACE}.svc.cluster.local" "api-server-cert"
+fi
+
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/deployment.yaml" "Create api server deployment"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/api-server/service.yaml" "Create api server service"
 

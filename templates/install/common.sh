@@ -15,6 +15,11 @@ function runcmd() {
     fi
 }
 
+function die() {
+    echo "$*" 1>&2
+    exit 1
+}
+
 function docmd() {
     local cmd=$1
     if [ -z $GUIDE ] || [ "$GUIDE" == "false" ]; then
