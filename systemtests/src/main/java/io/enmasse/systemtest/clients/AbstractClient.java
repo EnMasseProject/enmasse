@@ -29,7 +29,7 @@ public abstract class AbstractClient {
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
-    protected ArrayList<Argument> allowedArgs = new ArrayList<>();
+    protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Executor executor;
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
@@ -96,10 +96,10 @@ public abstract class AbstractClient {
      *
      * @param args string array of arguments
      */
-    public void setArguments(ArgumentMap args) {
+    public void setArguments(ClientArgumentMap args) {
         arguments.clear();
         args = transformArguments(args);
-        for (Argument arg : args.getArguments()) {
+        for (ClientArgument arg : args.getArguments()) {
             if (validateArgument(arg)) {
                 for (String value : args.getValues(arg)) {
                     arguments.add(arg.command());
@@ -119,7 +119,7 @@ public abstract class AbstractClient {
      * @param arg argument to validate
      * @return true if argument is supported
      */
-    private boolean validateArgument(Argument arg) {
+    private boolean validateArgument(ClientArgument arg) {
         return this.allowedArgs.contains(arg);
     }
 
@@ -135,7 +135,7 @@ public abstract class AbstractClient {
      * @param args argument map of arguments
      * @return modified map of arguments
      */
-    protected abstract ArgumentMap transformArguments(ArgumentMap args);
+    protected abstract ClientArgumentMap transformArguments(ClientArgumentMap args);
 
     /**
      * Method modify executable command of client
@@ -285,35 +285,35 @@ public abstract class AbstractClient {
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap basicBrokerTransformation(ArgumentMap args) {
+    protected ClientArgumentMap basicBrokerTransformation(ClientArgumentMap args) {
         String username;
         String password;
         String broker;
-        if (args.getValues(Argument.BROKER) != null) {
-            broker = args.getValues(Argument.BROKER).get(0);
-            args.remove(Argument.BROKER);
+        if (args.getValues(ClientArgument.BROKER) != null) {
+            broker = args.getValues(ClientArgument.BROKER).get(0);
+            args.remove(ClientArgument.BROKER);
 
-            if (args.getValues(Argument.USERNAME) != null) {
-                username = args.getValues(Argument.USERNAME).get(0);
-                args.remove(Argument.USERNAME);
+            if (args.getValues(ClientArgument.USERNAME) != null) {
+                username = args.getValues(ClientArgument.USERNAME).get(0);
+                args.remove(ClientArgument.USERNAME);
 
-                if (args.getValues(Argument.PASSWORD) != null) {
-                    password = args.getValues(Argument.PASSWORD).get(0);
-                    args.remove(Argument.PASSWORD);
+                if (args.getValues(ClientArgument.PASSWORD) != null) {
+                    password = args.getValues(ClientArgument.PASSWORD).get(0);
+                    args.remove(ClientArgument.PASSWORD);
 
-                    args.put(Argument.BROKER, String.format("%s:%s@%s", username, password, broker));
+                    args.put(ClientArgument.BROKER, String.format("%s:%s@%s", username, password, broker));
                     return args;
                 }
 
-                args.put(Argument.BROKER, String.format("%s:@%s", username, broker));
+                args.put(ClientArgument.BROKER, String.format("%s:@%s", username, broker));
                 return args;
             }
 
-            args.put(Argument.BROKER, broker);
+            args.put(ClientArgument.BROKER, broker);
             return args;
         }
-        args.remove(Argument.USERNAME);
-        args.remove(Argument.PASSWORD);
+        args.remove(ClientArgument.USERNAME);
+        args.remove(ClientArgument.PASSWORD);
         return args;
     }
 
@@ -323,19 +323,19 @@ public abstract class AbstractClient {
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap brokerUrlTranformation(ArgumentMap args) {
+    protected ClientArgumentMap brokerUrlTranformation(ClientArgumentMap args) {
         args = basicBrokerTransformation(args);
-        if (args.getValues(Argument.BROKER) != null) {
-            String protocol = args.getValues(Argument.CONN_SSL) != null ? "amqps://" : "amqp://";
-            args.put(Argument.BROKER_URL,
-                    String.format("%s%s/%s", protocol, args.getValues(Argument.BROKER).get(0),
-                            args.getValues(Argument.ADDRESS).get(0)));
+        if (args.getValues(ClientArgument.BROKER) != null) {
+            String protocol = args.getValues(ClientArgument.CONN_SSL) != null ? "amqps://" : "amqp://";
+            args.put(ClientArgument.BROKER_URL,
+                    String.format("%s%s/%s", protocol, args.getValues(ClientArgument.BROKER).get(0),
+                            args.getValues(ClientArgument.ADDRESS).get(0)));
         }
-        args.remove(Argument.CONN_SSL);
-        args.remove(Argument.USERNAME);
-        args.remove(Argument.PASSWORD);
-        args.remove(Argument.BROKER);
-        args.remove(Argument.ADDRESS);
+        args.remove(ClientArgument.CONN_SSL);
+        args.remove(ClientArgument.USERNAME);
+        args.remove(ClientArgument.PASSWORD);
+        args.remove(ClientArgument.BROKER);
+        args.remove(ClientArgument.ADDRESS);
 
         return args;
     }
@@ -347,19 +347,19 @@ public abstract class AbstractClient {
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap javaBrokerTransformation(ArgumentMap args) {
-        if (args.getValues(Argument.CONN_SSL) != null) {
+    protected ClientArgumentMap javaBrokerTransformation(ClientArgumentMap args) {
+        if (args.getValues(ClientArgument.CONN_SSL) != null) {
             if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
                     || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)
-                args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
+                args.put(ClientArgument.BROKER, "amqps://" + args.getValues(ClientArgument.BROKER).get(0));
             if (clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER
                     || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER)
-                args.put(Argument.BROKER, "ssl://" + args.getValues(Argument.BROKER).get(0));
-            args.put(Argument.CONN_SSL_TRUST_ALL, "true");
-            args.put(Argument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
-            args.put(Argument.CONN_AUTH_MECHANISM, "PLAIN");
+                args.put(ClientArgument.BROKER, "ssl://" + args.getValues(ClientArgument.BROKER).get(0));
+            args.put(ClientArgument.CONN_SSL_TRUST_ALL, "true");
+            args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
+            args.put(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN");
         }
-        args.remove(Argument.CONN_SSL);
+        args.remove(ClientArgument.CONN_SSL);
 
         return args;
     }

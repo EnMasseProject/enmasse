@@ -10,7 +10,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
-import io.enmasse.systemtest.selenium.*;
+import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
@@ -490,6 +490,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotCreateAddresses() throws Exception {
+        selenium.tearDownDrivers();
+        selenium.setupDriver(environment, kubernetes, buildDriver());
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
 
         createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
@@ -505,6 +507,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotDeleteAddresses() throws Exception {
+        selenium.tearDownDrivers();
+        selenium.setupDriver(environment, kubernetes, buildDriver());
         Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 

@@ -9,8 +9,8 @@ import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.Argument;
-import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientArgument;
+import io.enmasse.systemtest.clients.ClientArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import java.util.concurrent.Future;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class ClientTestBase extends TestBaseWithShared {
-    private ArgumentMap arguments = new ArgumentMap();
+    private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
     protected Path logPath = null;
 
@@ -40,10 +40,10 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 info.getTestClass().get().getName(),
                 info.getTestMethod().get().getName());
 
-        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
-        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        arguments.put(ClientArgument.CONN_SSL, "true");
     }
 
     @AfterEach
@@ -69,15 +69,15 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
         if (websocket)
-            arguments.put(Argument.CONN_WEB_SOCKET, "true");
+            arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
 
         sender.setArguments(arguments);
-        arguments.remove(Argument.MSG_CONTENT);
+        arguments.remove(ClientArgument.MSG_CONTENT);
         receiver.setArguments(arguments);
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");
@@ -98,10 +98,10 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount / 2));
-        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
+        arguments.put(ClientArgument.TIMEOUT, "60");
 
 
         receiver.setArguments(arguments);
@@ -110,8 +110,8 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         Future<Boolean> recResult = receiver.runAsync();
         Future<Boolean> rec2Result = receiver2.runAsync();
 
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
 
@@ -138,14 +138,14 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
-        arguments.put(Argument.TIMEOUT, "100");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.TIMEOUT, "100");
 
         sender.setArguments(arguments);
-        arguments.remove(Argument.MSG_CONTENT);
+        arguments.remove(ClientArgument.MSG_CONTENT);
         subscriber.setArguments(arguments);
         subscriber2.setArguments(arguments);
 
@@ -180,18 +180,18 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
-        arguments.remove(Argument.MSG_CONTENT);
+        arguments.remove(ClientArgument.MSG_CONTENT);
 
-        arguments.put(Argument.RECV_BROWSE, "true");
+        arguments.put(ClientArgument.RECV_BROWSE, "true");
         receiver_browse.setArguments(arguments);
 
-        arguments.put(Argument.RECV_BROWSE, "false");
+        arguments.put(ClientArgument.RECV_BROWSE, "false");
         receiver_receive.setArguments(arguments);
 
         assertAll(
@@ -215,15 +215,15 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, dest.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
         sender.setArguments(arguments);
-        arguments.remove(Argument.MSG_CONTENT);
+        arguments.remove(ClientArgument.MSG_CONTENT);
 
-        arguments.put(Argument.COUNT, "0");
+        arguments.put(ClientArgument.COUNT, "0");
         receiver.setArguments(arguments);
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");
@@ -243,14 +243,14 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(queue);
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.ADDRESS, queue.getAddress());
-        arguments.put(Argument.MSG_PROPERTY, "colour~red");
-        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
-        arguments.put(Argument.MSG_PROPERTY, "a~true");
-        arguments.put(Argument.MSG_PROPERTY, "b~false");
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.ADDRESS, queue.getAddress());
+        arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
+        arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
+        arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
+        arguments.put(ClientArgument.MSG_PROPERTY, "b~false");
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
         //send messages
         sender.setArguments(arguments);
@@ -258,13 +258,13 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         assertEquals(expectedMsgCount, sender.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
 
-        arguments.remove(Argument.MSG_PROPERTY);
-        arguments.remove(Argument.MSG_CONTENT);
-        arguments.put(Argument.RECV_BROWSE, "true");
-        arguments.put(Argument.COUNT, "0");
+        arguments.remove(ClientArgument.MSG_PROPERTY);
+        arguments.remove(ClientArgument.MSG_CONTENT);
+        arguments.put(ClientArgument.RECV_BROWSE, "true");
+        arguments.put(ClientArgument.COUNT, "0");
 
         //receiver with selector colour = red
-        arguments.put(Argument.SELECTOR, "colour = 'red'");
+        arguments.put(ClientArgument.SELECTOR, "colour = 'red'");
         receiver.setArguments(arguments);
         assertAll(
                 () -> assertTrue(receiver.run(), "Receiver 'colour = red' failed, expected return code 0"),
@@ -272,7 +272,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                         String.format("Expected %d received messages 'colour = red'", expectedMsgCount)));
 
         //receiver with selector number > 12.5
-        arguments.put(Argument.SELECTOR, "number > 12.5");
+        arguments.put(ClientArgument.SELECTOR, "number > 12.5");
         receiver.setArguments(arguments);
         assertAll(
                 () -> assertTrue(receiver.run(), "Receiver 'number > 12.5' failed, expected return code 0"),
@@ -281,7 +281,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
 
 
         //receiver with selector a AND b
-        arguments.put(Argument.SELECTOR, "a AND b");
+        arguments.put(ClientArgument.SELECTOR, "a AND b");
         receiver.setArguments(arguments);
         assertAll(
                 () -> assertTrue(receiver.run(), "Receiver 'a AND b' failed, expected return code 0"),
@@ -289,8 +289,8 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                         String.format("Expected %d received messages 'a AND b'", 0)));
 
         //receiver with selector a OR b
-        arguments.put(Argument.RECV_BROWSE, "false");
-        arguments.put(Argument.SELECTOR, "a OR b");
+        arguments.put(ClientArgument.RECV_BROWSE, "false");
+        arguments.put(ClientArgument.SELECTOR, "a OR b");
         receiver.setArguments(arguments);
         assertAll(
                 () -> assertTrue(receiver.run(), "Receiver 'a OR b' failed, expected return code 0"),
@@ -307,32 +307,32 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(topic);
 
-        arguments.put(Argument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(Argument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
-        arguments.put(Argument.MSG_PROPERTY, "colour~red");
-        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
-        arguments.put(Argument.MSG_PROPERTY, "a~true");
-        arguments.put(Argument.MSG_PROPERTY, "b~false");
-        arguments.put(Argument.TIMEOUT, "100");
-        arguments.put(Argument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
+        arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
+        arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
+        arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
+        arguments.put(ClientArgument.MSG_PROPERTY, "b~false");
+        arguments.put(ClientArgument.TIMEOUT, "100");
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
         //set up sender
         sender.setArguments(arguments);
 
-        arguments.remove(Argument.MSG_PROPERTY);
-        arguments.remove(Argument.MSG_CONTENT);
+        arguments.remove(ClientArgument.MSG_PROPERTY);
+        arguments.remove(ClientArgument.MSG_CONTENT);
 
         //set up subscriber1
-        arguments.put(Argument.SELECTOR, "colour = 'red'");
+        arguments.put(ClientArgument.SELECTOR, "colour = 'red'");
         subscriber.setArguments(arguments);
 
         //set up subscriber2
-        arguments.put(Argument.SELECTOR, "number > 12.5");
+        arguments.put(ClientArgument.SELECTOR, "number > 12.5");
         subscriber2.setArguments(arguments);
 
         //set up subscriber3
-        arguments.put(Argument.SELECTOR, "a AND b");
+        arguments.put(ClientArgument.SELECTOR, "a AND b");
         subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();

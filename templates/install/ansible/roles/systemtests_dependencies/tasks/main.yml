@@ -5,4 +5,4 @@
 - import_tasks: clients.yml
   tags: clients
 - import_tasks: selenium_container.yml
-  tags: selenium
+  tags: [never, selenium]
