@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 CURDIR="$(readlink -f $(dirname $0))"
 
+source "${CURDIR}/../../scripts/logger.sh"
+
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/enmasse-latest.tgz | tar -zx
     D=`readlink -f enmasse-latest`
@@ -63,20 +65,26 @@ function teardown_test() {
     kubectl delete namespace $PROJECT_NAME
 }
 
-function create_addres_space() {
-    ADDRESS_SPACE_NAME=$1
-    ADDRESS_SPACE_DEF=$2
+function create_address_space() {
+    NAMESPACE=$1
+    ADDRESS_SPACE_NAME=$2
+    ADDRESS_SPACE_DEF=$3
     TOKEN=$(oc whoami -t)
-    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1/addressspaces
-    wait_until_up 2 ${ADDRESS_SPACE_NAME} || return 1
+    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addressspaces
+    wait_until_up 2 ${NAMESPACE}-${ADDRESS_SPACE_NAME} || return 1
 }
 
-function create_addresses() {
-    ADDRESS_SPACE_NAME=$1
-    ADDRESSES_DEF=$2
+function create_address() {
+    NAMESPACE=$1
+    ADDRESS_SPACE=$2
+    NAME=$3
+    ADDRESS=$4
+    TYPE=$5
+    PLAN=$6
+
+    PAYLOAD="{\"apiVersion\": \"enmasse.io/v1alpha1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
     TOKEN=$(oc whoami -t)
-    curl -k -X PUT -H "content-type: application/json" --data-binary @${ADDRESSES_DEF} -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1/addresses/${ADDRESS_SPACE_NAME}
-    sleep 40 #waiting for addresses are ready
+    curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addresses
 }
 
 function create_user() {
@@ -86,6 +94,7 @@ function create_user() {
     ADDRESS_SPACE_NAME=$4
     NEW_USER_DEF=$5
 
+    info "create new user via user:password ${USER}:${PASSWORD}; ADDRESS_SPACE: '${ADDRESS_SPACE_NAME}'"
     # get token
     RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
     TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
@@ -102,22 +111,22 @@ function join_group() {
     USER_NAME=$5
     GROUP_NAME=$6
 
-
+    info "user: '${USER_NAME}' join group '${GROUP_NAME}'"
     # get token
     RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
     TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
 
     #GET USER ID
-    echo "get user id: ${USER_NAME}"
+    info "get user id: ${USER_NAME}"
     TCKUSERJSON=$(curl -k -X GET -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users?search=${USER_NAME})
     TCK_USER_ID=$(echo ${TCKUSERJSON} | jq -r '.[].id')
-    echo "user id: ${TCK_USER_ID}"
+    info "user id: ${TCK_USER_ID}"
 
     #GET GROUP ID
-    echo "get group id: ${GROUP_NAME}"
+    info "get group id: ${GROUP_NAME}"
     KEYCLOAK_GROUPS=$(curl -k -X GET -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/groups?search=${GROUP_NAME})
-    GROUP_ID=$(echo ${KEYCLOAK_GROUPS} | jq -r '.[].id')
-    echo "group id: ${GROUP_ID}"
+    GROUP_ID=$(echo ${KEYCLOAK_GROUPS} | jq '.[]' | jq -r "select(.name == \"${GROUP_NAME}\") | .id")
+    info "group id: ${GROUP_ID}"
 
     #JOIN GROUP
     $(curl -k -X PUT -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users/${TCK_USER_ID}/groups/${GROUP_ID})
@@ -129,6 +138,8 @@ function create_group() {
     PASSWORD=$3
     ADDRESS_SPACE_NAME=$4
     GROUP_NAME=$5
+
+    info "create new group: '${GROUP_NAME}'"
 
     GROUP_DEF="{\"name\":\"${GROUP_NAME}\"}"
     echo ${GROUP_DEF}
