@@ -13,8 +13,8 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.Argument;
-import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientArgument;
+import io.enmasse.systemtest.clients.ClientArgumentMap;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
@@ -699,14 +699,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, KeycloakCredentials
             credentials, String address, String content, int count, boolean logToOutput) {
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.USERNAME, credentials.getUsername());
-        arguments.put(Argument.PASSWORD, credentials.getPassword());
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.MSG_CONTENT, content);
-        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(Argument.ADDRESS, address);
-        arguments.put(Argument.COUNT, Integer.toString(count));
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.MSG_CONTENT, content);
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, address);
+        arguments.put(ClientArgument.COUNT, Integer.toString(count));
         client.setArguments(arguments);
 
         return client.run(logToOutput);
@@ -725,16 +725,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination,
                                          int receiverCount, KeycloakCredentials credentials) throws Exception {
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "120");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, credentials.getUsername());
-        arguments.put(Argument.PASSWORD, credentials.getPassword());
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.ADDRESS, destination.getAddress());
-        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
-        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
+        arguments.put(ClientArgument.TIMEOUT, "120");
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        arguments.put(ClientArgument.ADDRESS, destination.getAddress());
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
         List<AbstractClient> receivers = new ArrayList<>();
         for (int i = 0; i < receiverCount; i++) {
@@ -754,21 +754,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Destination> destinations) {
         List<AbstractClient> senders = new ArrayList<>();
 
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
-        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.MSG_CONTENT, "msg no.%d");
-        arguments.put(Argument.COUNT, "30");
-        arguments.put(Argument.DURATION, "30");
-        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
-        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
+        arguments.put(ClientArgument.TIMEOUT, "60");
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no.%d");
+        arguments.put(ClientArgument.COUNT, "30");
+        arguments.put(ClientArgument.DURATION, "30");
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
         for (int i = 0; i < destinations.size(); i++) {
-            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
+            arguments.put(ClientArgument.ADDRESS, destinations.get(i).getAddress());
             for (int j = 0; j < i + 1; j++) {
                 AbstractClient send = new RheaClientSender();
                 send.setArguments(arguments);
@@ -786,18 +786,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Destination> destinations) {
         List<AbstractClient> receivers = new ArrayList<>();
 
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, defaultCredentials.getUsername());
-        arguments.put(Argument.PASSWORD, defaultCredentials.getPassword());
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
-        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
+        arguments.put(ClientArgument.TIMEOUT, "60");
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
         for (int i = 0; i < destinations.size(); i++) {
-            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
+            arguments.put(ClientArgument.ADDRESS, destinations.get(i).getAddress());
             for (int j = 0; j < i + 1; j++) {
                 AbstractClient rec = new RheaClientReceiver();
                 rec.setArguments(arguments);
@@ -815,19 +815,19 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination,
                                              int connectionCount,
                                              int senderCount, int receiverCount, KeycloakCredentials credentials) {
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "120");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, credentials.getUsername());
-        arguments.put(Argument.PASSWORD, credentials.getPassword());
-        arguments.put(Argument.OBJECT_CONTROL, "CESR");
-        arguments.put(Argument.ADDRESS, destination.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(connectionCount));
-        arguments.put(Argument.SENDER_COUNT, Integer.toString(senderCount));
-        arguments.put(Argument.RECEIVER_COUNT, Integer.toString(receiverCount));
-        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
-        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
+        arguments.put(ClientArgument.TIMEOUT, "120");
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.OBJECT_CONTROL, "CESR");
+        arguments.put(ClientArgument.ADDRESS, destination.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(connectionCount));
+        arguments.put(ClientArgument.SENDER_COUNT, Integer.toString(senderCount));
+        arguments.put(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount));
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
         AbstractClient cli = new RheaClientConnector();
         cli.setArguments(arguments);

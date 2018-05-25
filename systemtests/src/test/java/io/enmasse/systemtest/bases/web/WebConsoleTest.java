@@ -10,7 +10,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
-import io.enmasse.systemtest.selenium.*;
+import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
@@ -42,11 +42,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
 
     private ConsoleWebPage consoleWebPage;
-
-    @AfterAll
-    public static void TearDownDrivers() {
-        selenium.tearDownDrivers();
-    }
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
@@ -490,7 +485,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotCreateAddresses() throws Exception {
-        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
+        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user" + UUID.randomUUID(), "monitorPa55");
 
         createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
 

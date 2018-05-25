@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.clients.artemis;
 
-import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientReceiver;
 
@@ -14,7 +14,7 @@ public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
     }
 
     @Override
-    protected ArgumentMap transformArguments(ArgumentMap args) {
+    protected ClientArgumentMap transformArguments(ClientArgumentMap args) {
         args = javaBrokerTransformation(args);
         args = modifySelectorArg(args);
         return args;

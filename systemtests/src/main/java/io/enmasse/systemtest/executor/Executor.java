@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -74,7 +75,7 @@ public class Executor {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public int execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+    public int execute(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
         log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);

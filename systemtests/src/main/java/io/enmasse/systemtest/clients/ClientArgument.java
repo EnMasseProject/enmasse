@@ -7,7 +7,7 @@ package io.enmasse.systemtest.clients;
 /**
  * Enum with argument for external clients
  */
-public enum Argument {
+public enum ClientArgument {
     //connection opts
     CONN_URLS("--conn-urls"),
     CONN_RECONNECT("--conn-reconnect"),
@@ -104,7 +104,7 @@ public enum Argument {
 
     private String command;
 
-    Argument(String command) {
+    ClientArgument(String command) {
         this.command = command;
     }
 

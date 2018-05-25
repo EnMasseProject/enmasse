@@ -330,17 +330,20 @@ public class ConsoleWebPage implements IWebPage {
     public void openAddressesPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
         toolbarType = ToolbarType.ADDRESSES;
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         log.info("Addresses page opened");
     }
 
     public void openDashboardPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         log.info("Dashboard page opened");
     }
 
     public void openConnectionsPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
         toolbarType = ToolbarType.CONNECTIONS;
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         log.info("Connections page opened");
     }
 

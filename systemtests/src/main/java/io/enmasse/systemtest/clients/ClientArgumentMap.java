@@ -12,8 +12,8 @@ import java.util.Set;
 /**
  * Class represents Map of arguments (allow duplicate argument)
  */
-public class ArgumentMap {
-    private final Map<Argument, ArrayList<String>> mappings = new HashMap<>();
+public class ClientArgumentMap {
+    private final Map<ClientArgument, ArrayList<String>> mappings = new HashMap<>();
 
     /**
      * Returns set of values for argument
@@ -21,7 +21,7 @@ public class ArgumentMap {
      * @param arg argument
      * @return Set of values
      */
-    public ArrayList<String> getValues(Argument arg) {
+    public ArrayList<String> getValues(ClientArgument arg) {
         return mappings.get(arg);
     }
 
@@ -30,7 +30,7 @@ public class ArgumentMap {
      *
      * @return set of arguments
      */
-    public Set<Argument> getArguments() {
+    public Set<ClientArgument> getArguments() {
         return mappings.keySet();
     }
 
@@ -39,7 +39,7 @@ public class ArgumentMap {
      *
      * @param key name of argument
      */
-    public void remove(Argument key) {
+    public void remove(ClientArgument key) {
         mappings.remove(key);
     }
 
@@ -57,15 +57,15 @@ public class ArgumentMap {
      * @param value value
      * @return true if operation is completed
      */
-    public Boolean put(Argument key, String value) {
+    public Boolean put(ClientArgument key, String value) {
         ArrayList<String> target = mappings.get(key);
 
         if (target == null ||
-                (key != Argument.MSG_PROPERTY &&
-                        key != Argument.MSG_CONTENT_LIST_ITEM &&
-                        key != Argument.MSG_CONTENT_MAP_ITEM &&
-                        key != Argument.MSG_ANNOTATION) &&
-                        key != Argument.CONN_PROPERTY) {
+                (key != ClientArgument.MSG_PROPERTY &&
+                        key != ClientArgument.MSG_CONTENT_LIST_ITEM &&
+                        key != ClientArgument.MSG_CONTENT_MAP_ITEM &&
+                        key != ClientArgument.MSG_ANNOTATION) &&
+                        key != ClientArgument.CONN_PROPERTY) {
 
             target = new ArrayList<>();
             mappings.put(key, target);

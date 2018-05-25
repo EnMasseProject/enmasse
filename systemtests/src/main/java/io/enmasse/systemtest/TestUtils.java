@@ -306,7 +306,6 @@ public class TestUtils {
     /**
      * Check if state and description values equals required values
      *
-     *
      * @param status answer from service broker on 'last_operation'
      * @return true->state=succeeded / otherwise else
      */
@@ -370,7 +369,7 @@ public class TestUtils {
      * @param instanceId id of service instance
      * @throws Exception
      */
-    public static void waitForServiceInstanceReady(OSBApiClient apiClient,String username, String instanceId) throws Exception {
+    public static void waitForServiceInstanceReady(OSBApiClient apiClient, String username, String instanceId) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
         boolean isReady = false;
         while (budget.timeLeft() >= 0 && !isReady) {
@@ -981,6 +980,7 @@ public class TestUtils {
         waitForNamespaceDeleted(kubernetes, namespace);
         waitForAddressSpaceDeleted(kubernetes, addressSpace);
     }
+
     public static RemoteWebDriver getFirefoxDriver() throws MalformedURLException {
         return new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
     }

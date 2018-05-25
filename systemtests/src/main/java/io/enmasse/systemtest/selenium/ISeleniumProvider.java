@@ -16,6 +16,7 @@ import java.net.MalformedURLException;
 @ExtendWith(EnvironmentParameterResolver.class)
 public interface ISeleniumProvider {
     SeleniumProvider selenium = new SeleniumProvider();
+
     WebDriver buildDriver() throws MalformedURLException;
 
     @AfterEach

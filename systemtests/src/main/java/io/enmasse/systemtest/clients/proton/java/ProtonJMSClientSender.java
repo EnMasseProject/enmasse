@@ -5,8 +5,8 @@
 package io.enmasse.systemtest.clients.proton.java;
 
 import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.Argument;
-import io.enmasse.systemtest.clients.ArgumentMap;
+import io.enmasse.systemtest.clients.ClientArgument;
+import io.enmasse.systemtest.clients.ClientArgumentMap;
 import io.enmasse.systemtest.clients.ClientType;
 
 import java.nio.file.Path;
@@ -25,75 +25,75 @@ public class ProtonJMSClientSender extends AbstractClient {
 
     @Override
     protected void fillAllowedArgs() {
-        allowedArgs.add(Argument.CONN_RECONNECT);
-        allowedArgs.add(Argument.CONN_RECONNECT_INTERVAL);
-        allowedArgs.add(Argument.CONN_RECONNECT_LIMIT);
-        allowedArgs.add(Argument.CONN_RECONNECT_TIMEOUT);
-        allowedArgs.add(Argument.CONN_HEARTBEAT);
-        allowedArgs.add(Argument.CONN_SSL_CERTIFICATE);
-        allowedArgs.add(Argument.CONN_SSL_PRIVATE_KEY);
-        allowedArgs.add(Argument.CONN_SSL_PASSWORD);
-        allowedArgs.add(Argument.CONN_SSL_TRUST_STORE);
-        allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER);
-        allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER_NAME);
-        allowedArgs.add(Argument.CONN_MAX_FRAME_SIZE);
-        allowedArgs.add(Argument.CONN_ASYNC_ACKS);
-        allowedArgs.add(Argument.CONN_ASYNC_SEND);
-        allowedArgs.add(Argument.CONN_AUTH_MECHANISM);
-        allowedArgs.add(Argument.CONN_AUTH_SASL);
-        allowedArgs.add(Argument.CONN_CLIENT_ID);
-        allowedArgs.add(Argument.CONN_CLOSE_TIMEOUT);
-        allowedArgs.add(Argument.CONN_CONN_TIMEOUT);
-        allowedArgs.add(Argument.CONN_DRAIN_TIMEOUT);
-        allowedArgs.add(Argument.CONN_SSL_TRUST_ALL);
-        allowedArgs.add(Argument.CONN_SSL_VERIFY_HOST);
+        allowedArgs.add(ClientArgument.CONN_RECONNECT);
+        allowedArgs.add(ClientArgument.CONN_RECONNECT_INTERVAL);
+        allowedArgs.add(ClientArgument.CONN_RECONNECT_LIMIT);
+        allowedArgs.add(ClientArgument.CONN_RECONNECT_TIMEOUT);
+        allowedArgs.add(ClientArgument.CONN_HEARTBEAT);
+        allowedArgs.add(ClientArgument.CONN_SSL_CERTIFICATE);
+        allowedArgs.add(ClientArgument.CONN_SSL_PRIVATE_KEY);
+        allowedArgs.add(ClientArgument.CONN_SSL_PASSWORD);
+        allowedArgs.add(ClientArgument.CONN_SSL_TRUST_STORE);
+        allowedArgs.add(ClientArgument.CONN_SSL_VERIFY_PEER);
+        allowedArgs.add(ClientArgument.CONN_SSL_VERIFY_PEER_NAME);
+        allowedArgs.add(ClientArgument.CONN_MAX_FRAME_SIZE);
+        allowedArgs.add(ClientArgument.CONN_ASYNC_ACKS);
+        allowedArgs.add(ClientArgument.CONN_ASYNC_SEND);
+        allowedArgs.add(ClientArgument.CONN_AUTH_MECHANISM);
+        allowedArgs.add(ClientArgument.CONN_AUTH_SASL);
+        allowedArgs.add(ClientArgument.CONN_CLIENT_ID);
+        allowedArgs.add(ClientArgument.CONN_CLOSE_TIMEOUT);
+        allowedArgs.add(ClientArgument.CONN_CONN_TIMEOUT);
+        allowedArgs.add(ClientArgument.CONN_DRAIN_TIMEOUT);
+        allowedArgs.add(ClientArgument.CONN_SSL_TRUST_ALL);
+        allowedArgs.add(ClientArgument.CONN_SSL_VERIFY_HOST);
 
-        allowedArgs.add(Argument.TX_SIZE);
-        allowedArgs.add(Argument.TX_ACTION);
-        allowedArgs.add(Argument.TX_ENDLOOP_ACTION);
+        allowedArgs.add(ClientArgument.TX_SIZE);
+        allowedArgs.add(ClientArgument.TX_ACTION);
+        allowedArgs.add(ClientArgument.TX_ENDLOOP_ACTION);
 
-        allowedArgs.add(Argument.LINK_DURABLE);
-        allowedArgs.add(Argument.LINK_AT_MOST_ONCE);
-        allowedArgs.add(Argument.LINK_AT_LEAST_ONCE);
-        allowedArgs.add(Argument.CAPACITY);
+        allowedArgs.add(ClientArgument.LINK_DURABLE);
+        allowedArgs.add(ClientArgument.LINK_AT_MOST_ONCE);
+        allowedArgs.add(ClientArgument.LINK_AT_LEAST_ONCE);
+        allowedArgs.add(ClientArgument.CAPACITY);
 
-        allowedArgs.add(Argument.LOG_LIB);
-        allowedArgs.add(Argument.LOG_STATS);
-        allowedArgs.add(Argument.LOG_MESSAGES);
+        allowedArgs.add(ClientArgument.LOG_LIB);
+        allowedArgs.add(ClientArgument.LOG_STATS);
+        allowedArgs.add(ClientArgument.LOG_MESSAGES);
 
-        allowedArgs.add(Argument.BROKER);
-        allowedArgs.add(Argument.ADDRESS);
-        allowedArgs.add(Argument.USERNAME);
-        allowedArgs.add(Argument.PASSWORD);
-        allowedArgs.add(Argument.COUNT);
-        allowedArgs.add(Argument.CLOSE_SLEEP);
-        allowedArgs.add(Argument.TIMEOUT);
-        allowedArgs.add(Argument.DURATION);
+        allowedArgs.add(ClientArgument.BROKER);
+        allowedArgs.add(ClientArgument.ADDRESS);
+        allowedArgs.add(ClientArgument.USERNAME);
+        allowedArgs.add(ClientArgument.PASSWORD);
+        allowedArgs.add(ClientArgument.COUNT);
+        allowedArgs.add(ClientArgument.CLOSE_SLEEP);
+        allowedArgs.add(ClientArgument.TIMEOUT);
+        allowedArgs.add(ClientArgument.DURATION);
 
-        allowedArgs.add(Argument.MSG_ID);
-        allowedArgs.add(Argument.MSG_GROUP_ID);
-        allowedArgs.add(Argument.MSG_GROUP_SEQ);
-        allowedArgs.add(Argument.MSG_REPLY_TO_GROUP_ID);
-        allowedArgs.add(Argument.MSG_SUBJECT);
-        allowedArgs.add(Argument.MSG_REPLY_TO);
-        allowedArgs.add(Argument.MSG_PROPERTY);
-        allowedArgs.add(Argument.MSG_DURABLE);
-        allowedArgs.add(Argument.MSG_TTL);
-        allowedArgs.add(Argument.MSG_PRIORITY);
-        allowedArgs.add(Argument.MSG_CORRELATION_ID);
-        allowedArgs.add(Argument.MSG_USER_ID);
-        allowedArgs.add(Argument.MSG_CONTENT_TYPE);
-        allowedArgs.add(Argument.MSG_CONTENT);
-        allowedArgs.add(Argument.MSG_CONTENT_LIST_ITEM);
-        allowedArgs.add(Argument.MSG_CONTENT_MAP_ITEM);
-        allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
-        allowedArgs.add(Argument.MSG_ANNOTATION);
+        allowedArgs.add(ClientArgument.MSG_ID);
+        allowedArgs.add(ClientArgument.MSG_GROUP_ID);
+        allowedArgs.add(ClientArgument.MSG_GROUP_SEQ);
+        allowedArgs.add(ClientArgument.MSG_REPLY_TO_GROUP_ID);
+        allowedArgs.add(ClientArgument.MSG_SUBJECT);
+        allowedArgs.add(ClientArgument.MSG_REPLY_TO);
+        allowedArgs.add(ClientArgument.MSG_PROPERTY);
+        allowedArgs.add(ClientArgument.MSG_DURABLE);
+        allowedArgs.add(ClientArgument.MSG_TTL);
+        allowedArgs.add(ClientArgument.MSG_PRIORITY);
+        allowedArgs.add(ClientArgument.MSG_CORRELATION_ID);
+        allowedArgs.add(ClientArgument.MSG_USER_ID);
+        allowedArgs.add(ClientArgument.MSG_CONTENT_TYPE);
+        allowedArgs.add(ClientArgument.MSG_CONTENT);
+        allowedArgs.add(ClientArgument.MSG_CONTENT_LIST_ITEM);
+        allowedArgs.add(ClientArgument.MSG_CONTENT_MAP_ITEM);
+        allowedArgs.add(ClientArgument.MSG_CONTENT_FROM_FILE);
+        allowedArgs.add(ClientArgument.MSG_ANNOTATION);
     }
 
     @Override
-    protected ArgumentMap transformArguments(ArgumentMap args) {
+    protected ClientArgumentMap transformArguments(ClientArgumentMap args) {
         args = javaBrokerTransformation(args);
-        args.put(Argument.LOG_LIB, "trace");
+        args.put(ClientArgument.LOG_LIB, "trace");
         return args;
     }
 
