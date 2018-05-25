@@ -6,7 +6,6 @@ package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
@@ -38,8 +37,6 @@ public class ExecutionListener implements TestExecutionListener {
                 e.printStackTrace();
             }
             apiClient.close();
-            SeleniumContainers.stopAndRemoveChromeContainer();
-            SeleniumContainers.stopAndRemoveFirefoxContainer();
         } else {
             log.warn("Remove address spaces when test run finished - SKIPPED!");
         }
