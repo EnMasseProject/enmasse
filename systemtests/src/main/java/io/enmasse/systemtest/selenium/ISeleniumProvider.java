@@ -7,7 +7,6 @@ package io.enmasse.systemtest.selenium;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.resolvers.EnvironmentParameterResolver;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.WebDriver;
@@ -25,11 +24,5 @@ public interface ISeleniumProvider {
         if (context.getExecutionException().isPresent() || env.storeScreenshots()) {
             selenium.onFailed(context);
         }
-    }
-
-    @BeforeAll
-    default void deployContainers() {
-        SeleniumContainers.deployFirefoxContainer();
-        SeleniumContainers.deployChromeContainer();
     }
 }

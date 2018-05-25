@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.selenium;
 
 import io.enmasse.systemtest.TestUtils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.WebDriver;
 
 import java.net.MalformedURLException;
@@ -13,5 +15,15 @@ public interface ISeleniumProviderFirefox extends ISeleniumProvider {
     @Override
     default WebDriver buildDriver() throws MalformedURLException {
         return TestUtils.getFirefoxDriver();
+    }
+
+    @BeforeAll
+    default void deployContainers() {
+        SeleniumContainers.deployFirefoxContainer();
+    }
+
+    @AfterAll
+    default  void removeContainer() {
+        SeleniumContainers.stopAndRemoveFirefoxContainer();
     }
 }
