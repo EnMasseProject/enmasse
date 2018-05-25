@@ -44,7 +44,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     private ConsoleWebPage consoleWebPage;
 
     @AfterAll
-    public static void TearDownDrivers() {
+    public static void tearDownDrivers() {
         selenium.tearDownDrivers();
     }
 
@@ -490,9 +490,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotCreateAddresses() throws Exception {
-        selenium.tearDownDrivers();
-        selenium.setupDriver(environment, kubernetes, buildDriver());
-        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_1", "monitorPa55");
+        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user" + UUID.randomUUID(), "monitorPa55");
 
         createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
 

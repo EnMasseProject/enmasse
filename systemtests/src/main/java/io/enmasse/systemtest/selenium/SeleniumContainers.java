@@ -24,7 +24,7 @@ public class SeleniumContainers {
 
     public static void deployFirefoxContainer() {
         log.info("Deploy firefox container");
-        DockerCmdClient.pull(FIREFOX_IMAGE, "docker.io");
+        DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
         stopAndRemoveFirefoxContainer();
         DockerCmdClient.runContainer(FIREFOX_IMAGE, FIREFOX_CONTAINER_NAME,
                 generateSeleniumOpts("4444", ":99"));
@@ -34,7 +34,7 @@ public class SeleniumContainers {
 
     public static void deployChromeContainer() {
         log.info("Deploy chrome container");
-        DockerCmdClient.pull(CHROME_IMAGE, "docker.io");
+        DockerCmdClient.pull("docker.io", CHROME_IMAGE, "latest");
         stopAndRemoveChromeContainer();
         DockerCmdClient.runContainer(CHROME_IMAGE, CHROME_CONTAINER_NAME,
                 generateSeleniumOpts("4443", ":98"));
@@ -81,7 +81,7 @@ public class SeleniumContainers {
                 "-d",
                 "-p", String.format("%s:%s", port, port),
                 "--network", "host",
-                "-e", "DISPLAY=" + display,
+                "-e", String.format("DISPLAY=%s", display),
                 "-e", String.format("SE_OPTS=-port %s", port)).toArray(new String[0]);
     }
 }

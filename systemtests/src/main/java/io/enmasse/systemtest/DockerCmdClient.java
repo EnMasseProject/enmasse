@@ -8,7 +8,6 @@ import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.executor.Executor;
 import org.slf4j.Logger;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,9 +22,11 @@ public class DockerCmdClient {
     private static int DEFAULT_SYNC_TIMEOUT = 120000;
     private static String DOCKER_COMMAND;
 
-    public static ExecutionResultData pull(String name, String repository) {
+    public static ExecutionResultData pull(String repository, String name, String tag) {
         setUpDockerCommand();
-        String image = String.format("%s/%s", repository, name);
+        if (tag == null)
+            tag = "latest";
+        String image = String.format("%s/%s:%s", repository, name, tag);
         return execute(Arrays.asList(DOCKER_COMMAND, "pull", image), DEFAULT_SYNC_TIMEOUT, false);
     }
 
@@ -84,8 +85,8 @@ public class DockerCmdClient {
             Executor executor = new Executor();
             int ret = executor.execute(command, timeout);
             synchronized (lock) {
-                log.info("Return code - " + ret);
                 if (logToOutput) {
+                    log.info("Return code - {}", ret);
                     if (ret == 0) {
                         log.info(executor.getStdOut());
                     } else {
