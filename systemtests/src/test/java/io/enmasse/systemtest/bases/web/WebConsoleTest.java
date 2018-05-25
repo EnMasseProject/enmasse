@@ -500,8 +500,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotDeleteAddresses() throws Exception {
-        selenium.tearDownDrivers();
-        selenium.setupDriver(environment, kubernetes, buildDriver());
         Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
         KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
 
