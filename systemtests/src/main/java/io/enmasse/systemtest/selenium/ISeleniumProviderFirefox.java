@@ -23,7 +23,8 @@ public interface ISeleniumProviderFirefox extends ISeleniumProvider {
     }
 
     @AfterAll
-    default  void removeContainer() {
+    default void removeContainers() {
+        selenium.tearDownDrivers();
         SeleniumContainers.stopAndRemoveFirefoxContainer();
     }
 }

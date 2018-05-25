@@ -43,11 +43,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     private ConsoleWebPage consoleWebPage;
 
-    @AfterAll
-    public static void tearDownDrivers() {
-        selenium.tearDownDrivers();
-    }
-
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         if (selenium.getDriver() == null)

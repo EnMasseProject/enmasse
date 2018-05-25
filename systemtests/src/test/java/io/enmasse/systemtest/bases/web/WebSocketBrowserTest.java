@@ -31,11 +31,6 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         super.setAddresses(sharedAddressSpace);
     }
 
-    @AfterAll
-    public static void TearDownDrivers() {
-        selenium.tearDownDrivers();
-    }
-
     @Override
     public boolean skipDummyAddress() {
         return true;
