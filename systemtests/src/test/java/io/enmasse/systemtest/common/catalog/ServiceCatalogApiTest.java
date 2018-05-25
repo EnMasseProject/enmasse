@@ -21,7 +21,7 @@ import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
-//@Disabled("disabled due to issues with namespace of address space which is 'null'")
+@Disabled("disabled due to instability")
 class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox {
 
     private OSBApiClient osbApiClient;
