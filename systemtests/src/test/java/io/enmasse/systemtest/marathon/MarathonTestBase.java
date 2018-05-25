@@ -5,18 +5,17 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.SysytemTestsErrorCollector;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.rules.ErrorCollector;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -32,19 +31,16 @@ import static io.enmasse.systemtest.TestTag.marathon;
 import static org.hamcrest.CoreMatchers.is;
 
 @Tag(marathon)
-public abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFirefox {
+abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFirefox {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
     private SeleniumProvider selenium = new SeleniumProvider();
     private ConsoleWebPage consoleWebPage;
-    private ErrorCollector collector = new ErrorCollector();
+    private SysytemTestsErrorCollector collector = new SysytemTestsErrorCollector();
 
-    @AfterEach
-    public void after(ExtensionContext context) {
-        if (context.getExecutionException().isPresent()) { //test failed
-            selenium.onFailed(context);
-            selenium.tearDownDrivers();
-        }
+    @BeforeEach
+    void setupMarathonTests() {
+        collector.clear();
     }
 
     //========================================================================================================
@@ -63,11 +59,14 @@ public abstract class MarathonTestBase extends TestBase implements ISeleniumProv
             } catch (Exception ex) {
                 collector.addError(ex);
                 if (++fails >= limit) {
-                    throw new IllegalStateException(String.format("Test failed: %d times in a row", fails));
+                    throw new IllegalStateException(String.format("Test failed: %d times in a row: %s", fails, collector.toString()));
                 }
             } finally {
                 closeClients();
             }
+        }
+        if (fails < limit && !collector.verify()) {
+            throw new IllegalStateException(String.format("Test failed with these exceptions: %s", collector.toString()));
         }
     }
 

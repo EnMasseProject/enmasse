@@ -16,7 +16,6 @@ import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.WebElement;
