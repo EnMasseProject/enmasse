@@ -28,7 +28,7 @@
     force: yes
 
 - name: CLIENTS | Compile cli-java clients
-  shell: 'mvn package -B -DskipTests=true'
+  shell: 'mvn clean package -B -DskipTests=true'
   args:
     chdir: "{{ cli_java_git_path }}"
   environment:

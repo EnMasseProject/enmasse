@@ -2,8 +2,7 @@
   "apiVersion": "enmasse.io/v1",
   "kind": "AddressSpace",
   "metadata": {
-    "name": "tck-brokered",
-    "namespace": "tck-brokered"
+    "name": "tck-brokered"
   },
   "spec": {
     "type": "brokered",
