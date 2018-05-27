@@ -21,6 +21,7 @@ import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
+import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.http.HttpMethod;
@@ -532,6 +533,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) {
         SeleniumProvider selenium = null;
         try {
+            SeleniumContainers.deployFirefoxContainer();
             selenium = getFirefoxSeleniumProvider();
             ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
             console.openWebConsolePage();
@@ -543,6 +545,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             if (selenium != null) {
                 selenium.tearDownDrivers();
             }
+            SeleniumContainers.stopAndRemoveFirefoxContainer();
         }
     }
 
