@@ -1,5 +1,9 @@
 #!/bin/bash
 SCRIPTDIR=$(dirname $0)
+
+curdir="$(dirname $(readlink -f ${0}))"
+source "${curdir}/../../scripts/logger.sh"
+
 #parameters:
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
 # {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
@@ -10,10 +14,9 @@ ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
 
 oc cluster down #for the case that cluster is already running
 
-oc get status
-if [ ! $? -ne 0 ]; then
-    echo "ERROR: shutting down of openshift cluster failed, tests won't be executed"
-    exit 1
+oc status
+if [[ $? != 0 ]]; then
+    err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
 fi
 
 sudo rm -rf /var/lib/origin/openshift.local.pv
@@ -22,14 +25,14 @@ sudo rm -rf /var/log/pods/*
 
 DOCKER_STATUS=$(sudo systemctl show --property ActiveState ${DOCKER} | sed -n -e 's/^ActiveState=//p')
 if [[ "${DOCKER_STATUS}" != "active" ]]; then
-    echo "Docker service is not running"
-    echo "Starting docker service"
+    info "Docker service is not running"
+    info "Starting docker service"
     sudo systemctl restart ${DOCKER}
 fi
 
 oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
 if [ ! $? -ne 0 ]; then
-    echo "WARN: openshift cluster didn't start properly, wait for 30s and try to restart..."
+    warn "OpenShift cluster didn't start properly, wait for 30s and try to restart..."
     sleep 30
     oc cluster down
     oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
@@ -39,22 +42,18 @@ oc login -u system:admin
 TIMEOUT=300
 NOW=$(date +%s)
 END=$(($NOW + $TIMEOUT))
-echo "Now: $(date -d@${NOW} -u +%F:%H:%M:%S)"
-echo "Waiting ${TIMEOUT} seconds until: $(date -d@${END} -u +%F:%H:%M:%S)"
+info "Now: $(date -d@${NOW} -u +%F:%H:%M:%S)"
+info "Waiting ${TIMEOUT} seconds until: $(date -d@${END} -u +%F:%H:%M:%S)"
 
 oc cluster status
 while [ $? -gt 0 ]
 do
     NOW=$(date +%s)
     if [ ${NOW} -gt ${END} ]; then
-        echo "ERROR: Timed out waiting for openshift cluster to come up!"
-        exit 1
+        err_and_exit "ERROR: Timed out waiting for openshift cluster to come up!"
     fi
     sleep 5
     oc cluster status
 done
-
-
 sleep 30
-
 oc get pv
