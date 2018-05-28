@@ -203,3 +203,23 @@ function categorize_dockerlogs {
         mv "${x}" "${LOG_DIR}/${ADDR_SPACE}"
     done
 }
+
+function stop_and_check_openshift() {
+    oc cluster down #for the case that cluster is already running
+    if oc status; then
+        err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
+    fi
+    info "cluster turned off successfully"
+}
+
+function clean_docker_images() {
+    docker stop $(docker ps -q) || true
+    docker rm $(docker ps -a -q) -f || true
+    docker rmi $(docker images -q) -f || true
+}
+
+function clean_oc_location() {
+    sudo rm -rf /var/lib/origin/openshift.local.pv
+    sudo rm -rf /var/log/containers/*
+    sudo rm -rf /var/log/pods/*
+}
