@@ -38,6 +38,15 @@ public abstract class ApiClient {
 
     protected abstract String apiClientName();
 
+    protected void reconnect() {
+        this.client.close();
+        this.client = WebClient.create(vertx, new WebClientOptions()
+                .setSsl(true)
+                // TODO: Fetch CA and use
+                .setTrustAll(true)
+                .setVerifyHost(false));
+    }
+
     protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise,
                                        String warnMessage) {
         try {
@@ -64,12 +73,12 @@ public abstract class ApiClient {
         }
     }
 
-    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Callable<Endpoint>> endpointFn) throws Exception {
+    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Callable<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
             if (endpointFn.isPresent()) {
                 endpoint = endpointFn.get().call();
             }
             return fn.call();
-        });
+        }, reconnect);
     }
 }

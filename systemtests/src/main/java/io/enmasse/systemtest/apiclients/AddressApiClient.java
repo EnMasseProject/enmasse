@@ -111,7 +111,8 @@ public class AddressApiClient extends ApiClient {
                                     String.format("Error: create address space '%s'", addressSpace)));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -128,7 +129,8 @@ public class AddressApiClient extends ApiClient {
                                     String.format("Error: delete address space '%s'", addressSpace)));
                     return responsePromise.get(2, TimeUnit.MINUTES);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     /**
@@ -151,7 +153,8 @@ public class AddressApiClient extends ApiClient {
                                     String.format("Error: get address space {}", name)));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public Set<String> listAddressSpaces() throws Exception {
@@ -177,7 +180,8 @@ public class AddressApiClient extends ApiClient {
                             .send(ar -> responseHandler(ar, response, "Error: get address spaces"));
                     return response.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public JsonArray getAddressesPaths() throws Exception {
@@ -191,7 +195,8 @@ public class AddressApiClient extends ApiClient {
                             .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses path"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     /**
@@ -214,7 +219,8 @@ public class AddressApiClient extends ApiClient {
                             .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     /**
@@ -235,7 +241,8 @@ public class AddressApiClient extends ApiClient {
                             .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     /**
@@ -276,7 +283,8 @@ public class AddressApiClient extends ApiClient {
                             .send(ar -> responseHandler(ar, responsePromise, "Error: delete address"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -351,7 +359,8 @@ public class AddressApiClient extends ApiClient {
                                     "Error: create address"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public void createAddress(AddressSpace addressSpace, Destination destination) throws Exception {
@@ -397,7 +406,8 @@ public class AddressApiClient extends ApiClient {
                                     "Error: deploy addresses"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public JsonObject sendRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {
@@ -422,7 +432,8 @@ public class AddressApiClient extends ApiClient {
                     }
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()));
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public JsonObject responseAddressHandler(JsonObject responseData) throws AddressAlreadyExistsException {

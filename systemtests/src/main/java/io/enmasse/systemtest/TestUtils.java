@@ -10,6 +10,7 @@ import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -384,6 +385,7 @@ public class TestUtils {
         if (!isReady) {
             throw new IllegalStateException(String.format("Service instance '%s' is not in Ready state within timeout.", instanceId));
         }
+        log.info("Service instance '{}' is in ready state", instanceId);
     }
 
     private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
@@ -791,14 +793,20 @@ public class TestUtils {
      * @param fn    request function
      * @return
      */
-    public static <T> T doRequestNTimes(int retry, Callable<T> fn) throws Exception {
+    public static <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Runnable> reconnect) throws Exception {
         try {
             return fn.call();
         } catch (Exception ex) {
+            if (ex.getCause() instanceof VertxException && ex.getCause().getMessage().contains("Connection was closed")) {
+                if (reconnect.isPresent()) {
+                    log.warn("connection was closed, trying to reconnect...");
+                    reconnect.get().run();
+                }
+            }
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     log.info("{} remaining iterations", retry);
-                    return doRequestNTimes(retry - 1, fn);
+                    return doRequestNTimes(retry - 1, fn, reconnect);
                 } catch (Exception ex2) {
                     throw ex2;
                 }

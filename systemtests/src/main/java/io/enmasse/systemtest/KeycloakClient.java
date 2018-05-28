@@ -20,6 +20,7 @@ import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -246,13 +247,13 @@ public class KeycloakClient {
                 }
             }
             return null;
-        });
+        }, Optional.empty());
     }
 
     public void deleteUser(String realm, String userName) throws Exception {
         log.info("User '{}' will be removed", userName);
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
-            TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName));
+            TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName), Optional.empty());
         }
     }
 

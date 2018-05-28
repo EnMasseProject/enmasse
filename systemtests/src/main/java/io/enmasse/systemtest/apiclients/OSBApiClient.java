@@ -72,6 +72,7 @@ public class OSBApiClient extends ApiClient {
         String putPath = String.format(serviceInstancesPath, instanceId);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         log.info("PUT-ServiceInstance: path {}; ", putPath);
+
         JsonObject response = doRequestNTimes(retry, () -> {
             client.put(endpoint.getPort(), endpoint.getHost(), putPath)
                     .putHeader("X-Broker-API-Version", apiVersion)
@@ -83,7 +84,7 @@ public class OSBApiClient extends ApiClient {
                     .sendJsonObject(payload,
                             ar -> responseHandler(ar, responsePromise, "Error: put service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
-        }, Optional.empty());
+        }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("PUT-ServiceInstance: Async operation done with result: {}", response.toString());
         String dashboardUrl = response.getString("dashboard_url");
         ServiceInstance provInstance = new ServiceInstance(instanceId, dashboardUrl);
@@ -123,7 +124,7 @@ public class OSBApiClient extends ApiClient {
                     .timeout(10_000)
                     .send(ar -> responseHandler(ar, responsePromise, "Error: delete service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
-        }, Optional.empty());
+        }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("DELETE-ServiceInstance: Async operation done with result: {}", response.toString());
     }
 
@@ -168,7 +169,7 @@ public class OSBApiClient extends ApiClient {
                     .sendJsonObject(payload,
                             ar -> responseHandler(ar, responsePromise, "Error: put service bindings"));
             return responsePromise.get(20, TimeUnit.SECONDS);
-        }, Optional.empty());
+        }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("PUT-ServiceBindings: finished successfully with response {}; ", response.toString());
         return new BindingSecretData(response, bindingId);
     }
@@ -194,7 +195,7 @@ public class OSBApiClient extends ApiClient {
                     .timeout(10_000)
                     .send(ar -> responseHandler(ar, responsePromise, "Error: delete binding instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
-        }, Optional.empty());
+        }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("DELETE-Binding: operation done with result: {}", response.toString());
     }
 
@@ -219,7 +220,7 @@ public class OSBApiClient extends ApiClient {
                     .timeout(10_000)
                     .send(ar -> responseHandler(ar, responsePromise, "Error: get last operation on service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
-        }, Optional.empty());
+        }, Optional.empty(), Optional.of(() -> reconnect()));
     }
 
 
@@ -241,7 +242,7 @@ public class OSBApiClient extends ApiClient {
                     .timeout(10_000)
                     .send((ar) -> responseHandler(ar, responsePromise, "Error: get service catalog"));
             return responsePromise.get(20, TimeUnit.SECONDS);
-        }, Optional.empty());
+        }, Optional.empty(), Optional.of(() -> reconnect()));
     }
 
     /**
