@@ -1,8 +1,9 @@
 #!/bin/sh
 TESTCASE=$1
+PROFILE=${2:-"systemtests"}
 
 if [ -n "$TESTCASE" ]; then
     EXTRA_ARGS="-Dtest=$TESTCASE"
 fi
 
-mvn test -pl systemtests -Psystemtests -Djava.net.preferIPv4Stack=true $EXTRA_ARGS
+mvn test -pl systemtests -P${PROFILE} -Djava.net.preferIPv4Stack=true ${EXTRA_ARGS}
