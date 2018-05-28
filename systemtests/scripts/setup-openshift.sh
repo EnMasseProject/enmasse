@@ -14,8 +14,8 @@ ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
 
 oc cluster down #for the case that cluster is already running
 
-oc status
-if [[ $? != 0 ]]; then
+
+if oc status; then
     err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
 fi
 
