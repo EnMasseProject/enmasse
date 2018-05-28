@@ -22,7 +22,7 @@ public class SeleniumContainers {
     private static final String FIREFOX_CONTAINER_NAME = "selenium-firefox";
     private static final String CHROME_CONTAINER_NAME = "selenium-chrome";
 
-    public static void deployFirefoxContainer() {
+    public static void deployFirefoxContainer() throws InterruptedException {
         log.info("Deploy firefox container");
         DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
         stopAndRemoveFirefoxContainer();
@@ -30,6 +30,7 @@ public class SeleniumContainers {
                 generateSeleniumOpts("4444", ":99"));
         copyRheaWebPageFirefox();
         assertTrue(DockerCmdClient.isContainerRunning(FIREFOX_CONTAINER_NAME));
+        Thread.sleep(1000);
     }
 
     public static void deployChromeContainer() {

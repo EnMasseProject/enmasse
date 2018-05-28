@@ -13,11 +13,13 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -981,11 +983,31 @@ public class TestUtils {
         waitForAddressSpaceDeleted(kubernetes, addressSpace);
     }
 
-    public static RemoteWebDriver getFirefoxDriver() throws MalformedURLException {
-        return new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
+    public static RemoteWebDriver getFirefoxDriver() throws Exception {
+        return getRemoteDriver("localhost", 4444, new FirefoxOptions());
     }
 
-    public static RemoteWebDriver getChromeDriver() throws MalformedURLException {
-        return new RemoteWebDriver(new URL("http://localhost:4443/wd/hub"), new ChromeOptions());
+    public static RemoteWebDriver getChromeDriver() throws Exception {
+        return getRemoteDriver("localhost", 4443, new ChromeOptions());
+    }
+
+    private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
+        int attempts = 30;
+        for (int i = 0; i < attempts; i++) {
+            if (pingHost(host, port, 500)) {
+                return new RemoteWebDriver(new URL(String.format("http://%s:%s/wd/hub", host, port)), options);
+            }
+            Thread.sleep(1000);
+        }
+        throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
+    }
+
+    private static boolean pingHost(String host, int port, int timeout) {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(host, port), timeout);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

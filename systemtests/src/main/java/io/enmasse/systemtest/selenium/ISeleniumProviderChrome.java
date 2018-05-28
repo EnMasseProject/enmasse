@@ -9,11 +9,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.WebDriver;
 
-import java.net.MalformedURLException;
-
 public interface ISeleniumProviderChrome extends ISeleniumProvider {
     @Override
-    default WebDriver buildDriver() throws MalformedURLException {
+    default WebDriver buildDriver() throws Exception {
         return TestUtils.getChromeDriver();
     }
 

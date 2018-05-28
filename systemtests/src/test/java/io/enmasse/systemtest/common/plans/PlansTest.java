@@ -9,10 +9,9 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
-import io.enmasse.systemtest.selenium.resources.AddressWebItem;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
+import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.apache.qpid.proton.message.Message;
@@ -35,8 +34,12 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
     private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         plansProvider.setUp();
+        if (selenium.getDriver() == null)
+            selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
+        else
+            selenium.clearScreenShots();
     }
 
     @AfterEach
@@ -524,8 +527,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
             }
         }
 
-        SeleniumProvider seleniumProvider = getFirefoxSeleniumProvider();
-        ConsoleWebPage page = new ConsoleWebPage(seleniumProvider, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
         for (Destination dest : notAllowedDest) {
