@@ -16,7 +16,7 @@ public interface ISeleniumProviderFirefox extends ISeleniumProvider {
     }
 
     @BeforeAll
-    default void deployContainers() throws InterruptedException {
+    default void deployContainer() {
         SeleniumContainers.deployFirefoxContainer();
     }
 
