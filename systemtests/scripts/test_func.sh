@@ -206,6 +206,12 @@ function categorize_dockerlogs {
 
 function stop_and_check_openshift() {
     oc cluster down #for the case that cluster is already running
+    openshift_pids=$(ps aux | grep 'openshift' | grep -v 'grep\|setup-openshift' | awk '{print $2}')
+    if [[ -n ${openshift_pids} ]]; then
+        warn "OpenShift cluster didn't stop properly, trying to kill OpenShift processes..."
+        kill -9 "${openshift_pids}"
+    fi
+
     if oc status; then
         err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
     fi
@@ -213,9 +219,26 @@ function stop_and_check_openshift() {
 }
 
 function clean_docker_images() {
-    docker stop $(docker ps -q) || true
-    docker rm $(docker ps -a -q) -f || true
-    docker rmi $(docker images -q) -f || true
+    containers_run=$(docker ps -q)
+    if [[ -n ${containers_run} ]];then
+        ${DOCKER} stop "${containers_run}"
+    else
+        info "No running containers"
+    fi
+
+    containers_all=$(docker ps -a -q)
+    if [[ -n ${containers_all} ]];then
+        ${DOCKER} rm "${containers_all}" -f
+    else
+        info "No containers to remove"
+    fi
+
+    images=$(docker images -q)
+    if [[ -n ${images} ]];then
+        ${DOCKER} rmi "${images}" -f
+    else
+        info "No images to remove"
+    fi
 }
 
 function clean_oc_location() {
