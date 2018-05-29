@@ -44,18 +44,18 @@ pipeline {
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
-        stage('build') {
-            steps {
-                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
-                sh 'make docker_tag'
-            }
-        }
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     sh './systemtests/scripts/setup-openshift.sh "templates/install"'
                     sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
                 }
+            }
+        }
+        stage('build') {
+            steps {
+                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
+                sh 'make docker_tag'
             }
         }
         stage('push docker images') {

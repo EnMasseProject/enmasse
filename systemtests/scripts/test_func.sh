@@ -213,9 +213,26 @@ function stop_and_check_openshift() {
 }
 
 function clean_docker_images() {
-    docker stop $(docker ps -q) || true
-    docker rm $(docker ps -a -q) -f || true
-    docker rmi $(docker images -q) -f || true
+    containers_run=$(docker ps -q)
+    if [[ -n ${containers_run} ]];then
+        docker stop "${containers_run}"
+    else
+        info "No running containers"
+    fi
+
+    containers_all=$(docker ps -a -q)
+    if [[ -n ${containers_all} ]];then
+        docker rm "${containers_all}" -f
+    else
+        info "No containers to remove"
+    fi
+
+    images=$(docker images -q)
+    if [[ -n ${images} ]];then
+        docker rmi "${images}" -f
+    else
+        info "No images to remove"
+    fi
 }
 
 function clean_oc_location() {
