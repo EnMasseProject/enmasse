@@ -106,7 +106,10 @@
     "apiVersion": "v1",
     "kind": "Secret",
     "metadata": {
-      "name": name
+      "name": name,
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "data": {}
   },
@@ -146,7 +149,10 @@
     "apiVersion": "v1",
     "kind": "Secret",
     "metadata": {
-      "name": name
+      "name": name,
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "data": {
       "tls.crt": cert_value
