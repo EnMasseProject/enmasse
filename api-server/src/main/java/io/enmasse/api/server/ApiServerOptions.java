@@ -18,8 +18,8 @@ public class ApiServerOptions {
     private String certDir;
     private Duration resyncInterval;
     private String clientCa;
+    private String requestHeaderClientCa;
     private boolean enableRbac;
-    private boolean enableUserLookup;
 
     public String getNamespace() {
         return namespace;
@@ -55,13 +55,13 @@ public class ApiServerOptions {
         options.setCertDir(getEnv(env, "CERT_DIR").orElse("/api-server-cert"));
 
         options.setClientCa(getEnv(env, "CLIENT_CA").orElse(null));
+        options.setRequestHeaderClientCa(getEnv(env, "REQUEST_HEADER_CLIENT_CA").orElse(null));
 
         options.setResyncInterval(getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofMinutes(5)));
 
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
-        options.setEnableUserLookup(Boolean.parseBoolean(getEnv(env, "ENABLE_USER_LOOKUP").orElse(getEnv(env,"ENABLE_RBAC").orElse("false"))));
 
         return options;
     }
@@ -94,11 +94,11 @@ public class ApiServerOptions {
         this.enableRbac = enableRbac;
     }
 
-    public boolean isEnableUserLookup() {
-        return enableUserLookup;
+    public void setRequestHeaderClientCa(String clientCa) {
+        this.requestHeaderClientCa = clientCa;
     }
 
-    public void setEnableUserLookup(boolean enableUserLookup) {
-        this.enableUserLookup = enableUserLookup;
+    public String getRequestHeaderClientCa() {
+        return requestHeaderClientCa;
     }
 }

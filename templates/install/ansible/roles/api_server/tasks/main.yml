@@ -16,7 +16,7 @@
   ignore_errors: True
 - name: Create API Server Config
   when: config_exists.failed
-  shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }} --from-literal=enableUserLookup={{ enable_user_lookup | default(enable_rbac) }}
+  shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }}
 - name: Create EnMasse API Server Deployment
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/api-server/deployment.yaml"
 - name: Create EnMasse API Server Service
@@ -33,6 +33,13 @@
 - set_fact:
     client_ca: "{{ clientca_result.stdout }}"
   when: secure_api_server and secret_exists.failed
+- name: Extract API Request Header Client CA
+  when: secure_api_server and secret_exists.failed
+  shell: oc get configmap extension-apiserver-authentication -n kube-system -o jsonpath={.data.requestheader-client-ca-file}
+  register: requestheaderclientca_result
+- set_fact:
+    request_header_client_ca: "{{ requestheaderclientca_result.stdout }}"
+  when: secure_api_server and secret_exists.failed
 - name: Store API Client CA in secret
   when: secure_api_server and secret_exists.failed
   shell:
@@ -46,6 +53,7 @@
       type: tls
       data:
         ca.crt: "{{ client_ca | b64encode }}"
+        request-header-ca.crt: "{{ request_header_client_ca | b64encode }}"
       EOF
 - name: Create route for API server
   shell: oc create route passthrough restapi -n {{ namespace }} --service=api-server

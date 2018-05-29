@@ -15,15 +15,15 @@ public class TokenReview {
         this.isAuthenticated = isAuthenticated;
     }
 
-    public boolean isAuthenticated() {
-        return isAuthenticated;
-    }
-
     public String getUserName() {
         return userName;
     }
 
     public String getUserId() {
         return userId;
+    }
+
+    public boolean isAuthenticated() {
+        return isAuthenticated;
     }
 }
