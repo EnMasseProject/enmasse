@@ -95,6 +95,14 @@ public class Address {
         return resourceVersion;
     }
 
+    public String getNameWithoutAddressspace() {
+        if(name.startsWith(addressSpace+".")) {
+            return name.substring(addressSpace.length()+1);
+        } else {
+            return name;
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

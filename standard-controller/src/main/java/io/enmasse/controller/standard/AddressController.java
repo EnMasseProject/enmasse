@@ -160,7 +160,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             for (Address address : addressSet) {
                 String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
                 String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
-                String name = address.getName();
+                String name = address.getNameWithoutAddressspace();
                 if (brokerId == null && name.equals(cluster.getClusterId())) {
                     numFound++;
                 } else if (cluster.getClusterId().equals(clusterId)) {
@@ -279,7 +279,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk, AddressPlan addressPlan) {
-        String clusterId = isPooled(addressPlan) ? "broker" : address.getName();
+        String clusterId = isPooled(addressPlan) ? "broker" : address.getNameWithoutAddressspace();
         if (!clusterOk.containsKey(clusterId)) {
             if (!kubernetes.isDestinationClusterReady(clusterId)) {
                 address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");

@@ -58,7 +58,7 @@ public class AddressProvisioner {
             } else if (resourceRequest.getResourceName().equals("broker") && resourceRequest.getAmount() < 1) {
                 instanceId = getBrokerId(address).orElseThrow(() -> new IllegalArgumentException("Unexpected pooled address without broker id: " + address.getAddress()));
             } else if (resourceRequest.getResourceName().equals("broker")) {
-                instanceId = address.getName();
+                instanceId = address.getNameWithoutAddressspace();
             }
             Map<String, UsageInfo> resourceUsage = usageMap.computeIfAbsent(resourceRequest.getResourceName(), k -> new HashMap<>());
             UsageInfo info = resourceUsage.computeIfAbsent(instanceId, i -> new UsageInfo());
@@ -112,13 +112,13 @@ public class AddressProvisioner {
                     }
                 }
             } else if ("broker".equals(resourceName)) {
-                UsageInfo info = resourceUsage.get(address.getName());
+                UsageInfo info = resourceUsage.get(address.getNameWithoutAddressspace());
                 if (info != null) {
-                    throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
+                    throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getNameWithoutAddressspace());
                 }
                 info = new UsageInfo();
                 info.addUsed(resourceRequest.getAmount());
-                resourceUsage.put(address.getName(), info);
+                resourceUsage.put(address.getNameWithoutAddressspace(), info);
             }
 
             double resourceNeeded = sumNeeded(resourceUsage);
@@ -189,7 +189,7 @@ public class AddressProvisioner {
 
         Map<String, Address> addressByClusterId = new HashMap<>();
         for (Address address : addressSet) {
-            addressByClusterId.put(address.getName(), address);
+            addressByClusterId.put(address.getNameWithoutAddressspace(), address);
         }
 
         for (Map.Entry<String, Map<String, UsageInfo>> entry : neededMap.entrySet()) {
