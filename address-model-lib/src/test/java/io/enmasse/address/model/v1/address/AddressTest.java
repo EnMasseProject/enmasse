@@ -87,4 +87,42 @@ public class AddressTest {
         assertThat(b.getStatus().getPhase(), is(Status.Phase.Active));
         assertThat(b.getStatus().getMessages(), hasItem("foo"));
     }
+
+    @Test public void testGetNameWithoutAddressSpace() {
+        Address a = new Address.Builder()
+                .setAddress("a1")
+                .setName("myspace.foo")
+                .setPlan("p1")
+                .setType("t1")
+                .setNamespace("ns")
+                .setAddressSpace("myspace")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
+                .build();
+        assertThat(a.getNameWithoutAddressspace(), is("foo"));
+
+        a = new Address.Builder()
+                .setAddress("a1")
+                .setName("myspace.foo")
+                .setPlan("p1")
+                .setType("t1")
+                .setNamespace("ns")
+                .setAddressSpace("foo")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
+                .build();
+
+        assertThat(a.getNameWithoutAddressspace(), is("myspace.foo"));
+
+        a = new Address.Builder()
+                .setAddress("a1")
+                .setName("foo")
+                .setPlan("p1")
+                .setType("t1")
+                .setNamespace("ns")
+                .setAddressSpace("foo")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
+                .build();
+
+        assertThat(a.getNameWithoutAddressspace(), is("foo"));
+        
+    }
 }
