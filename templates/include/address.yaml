@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Template
 metadata:
   name: address
+  app: enmasse
 objects:
   - apiVersion: v1
     kind: ConfigMap
@@ -9,6 +10,7 @@ objects:
       name: ${NAME}
       labels:
         type: address-config
+        app: enmasse
     data:
       config.json: |-
         {

@@ -4,6 +4,7 @@ metadata:
   name: address-space-plan-brokered
   labels:
     type: address-space-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -40,6 +41,7 @@ metadata:
   name: resource-definition-brokered
   labels:
     type: resource-definition
+    app: enmasse
 data:
   definition: |-
     {
@@ -57,6 +59,7 @@ metadata:
   name: address-plan-brokered-queue
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -85,6 +88,7 @@ metadata:
   name: address-plan-brokered-topic
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {

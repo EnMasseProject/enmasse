@@ -95,6 +95,7 @@ function create_tls_secret() {
   local CERTFILE=$4
 
   runcmd "$CMD create secret tls ${SECRET_NAME} -n ${NAMESPACE} --cert=${CERTFILE} --key=${KEYFILE}" "Create $SECRET_NAME TLS secret"
+  runcmd "$CMD label -n ${NAMESPACE} secret ${SECRET_NAME} app=enmasse"
 }
 
 function create_and_sign_cert() {

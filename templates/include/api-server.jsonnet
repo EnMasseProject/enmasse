@@ -145,7 +145,10 @@ local images = import "images.jsonnet";
         "apiVersion": "apiregistration.k8s.io/v1beta1",
         "kind": "APIService",
         "metadata": {
-          "name": "v1alpha1.enmasse.io"
+          "name": "v1alpha1.enmasse.io",
+          "labels": {
+            "app": "enmasse"
+          }
         },
         "spec": {
           "group": "enmasse.io",

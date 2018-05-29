@@ -6,7 +6,10 @@ local images = import "images.jsonnet";
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
     "metadata": {
-      "name": "grafana"
+      "name": "grafana",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "spec": {
       "replicas": 1,
@@ -42,7 +45,10 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "Service",
     "metadata": {
-      "name": "grafana"
+      "name": "grafana",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "spec": {
       "ports": [
@@ -63,7 +69,10 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "PersistentVolumeClaim",
     "metadata": {
-      "name": "grafana-data"
+      "name": "grafana-data",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "spec": {
       "accessModes": [

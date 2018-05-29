@@ -4,6 +4,7 @@ metadata:
   name: address-space-plan-standard
   labels:
     type: address-space-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -54,6 +55,7 @@ metadata:
   name: address-space-plan-standard-mqtt
   labels:
     type: address-space-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -104,6 +106,7 @@ metadata:
   name: resource-definition-standard
   labels:
     type: resource-definition
+    app: enmasse
 data:
   definition: |-
     {
@@ -121,6 +124,7 @@ metadata:
   name: resource-definition-standard-mqtt
   labels:
     type: resource-definition
+    app: enmasse
 data:
   definition: |-
     {
@@ -138,6 +142,7 @@ metadata:
   name: address-plan-sharded-queue
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -170,6 +175,7 @@ metadata:
   name: address-plan-pooled-queue
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -202,6 +208,7 @@ metadata:
   name: address-plan-standard-anycast
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -230,6 +237,7 @@ metadata:
   name: address-plan-standard-multicast
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -258,6 +266,7 @@ metadata:
   name: address-plan-sharded-topic
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {
@@ -290,6 +299,7 @@ metadata:
   name: address-plan-pooled-topic
   labels:
     type: address-plan
+    app: enmasse
 data:
   definition: |-
     {

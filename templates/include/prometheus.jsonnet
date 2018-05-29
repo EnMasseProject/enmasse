@@ -8,6 +8,9 @@ local images = import "images.jsonnet";
     "kind": "ConfigMap",
     "metadata": {
       "name": name,
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "data": {
       "config.yaml": std.toString({
@@ -34,6 +37,9 @@ local images = import "images.jsonnet";
     "kind": "ConfigMap",
     "metadata": {
       "name": name,
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "data": {
       "config.yaml": std.toString({
@@ -76,7 +82,10 @@ local images = import "images.jsonnet";
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
     "metadata": {
-      "name": "prometheus"
+      "name": "prometheus",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "spec": {
       "replicas": 1,
@@ -115,7 +124,10 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "ServiceAccount",
     "metadata": {
-      "name": "prometheus-server"
+      "name": "prometheus-server",
+      "labels": {
+        "app": "enmasse"
+      }
     }
   },
 
@@ -124,7 +136,10 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "ConfigMap",
     "metadata": {
-      "name": "prometheus-config"
+      "name": "prometheus-config",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "data": {
       "prometheus.yml": std.toString(
@@ -192,7 +207,10 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "Service",
     "metadata": {
-      "name": "prometheus"
+      "name": "prometheus",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "spec": {
       "ports": [
@@ -211,9 +229,12 @@ local images = import "images.jsonnet";
   prometheus_pvc::
   {
     "apiVersion": "v1",
-    "kind": "PersistentVolumeClaim",
+    "k:wqind": "PersistentVolumeClaim",
     "metadata": {
-      "name": "prometheus-data"
+      "name": "prometheus-data",
+      "labels": {
+        "app": "enmasse"
+      }
     },
     "spec": {
       "accessModes": [
