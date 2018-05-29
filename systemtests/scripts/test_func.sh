@@ -205,10 +205,12 @@ function categorize_dockerlogs {
 }
 
 function stop_and_check_openshift() {
+    ps aux | grep 'openshift'
     oc cluster down #for the case that cluster is already running
     openshift_pids=$(ps aux | grep 'openshift' | grep -v 'grep' | awk '{print $2}')
     if [[ -n ${openshift_pids} ]]; then
         warn "OpenShift cluster didn't stop properly, trying to kill OpenShift processes..."
+        ps aux | grep 'openshift'
         kill -9 "${openshift_pids}"
     fi
 
