@@ -106,7 +106,7 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
 
     @Override
     public void onUpdate(Set<AddressSpace> resources) throws Exception {
-        log.info("Check standard address spaces: {}", resources.stream().map(AddressSpace::getName).collect(Collectors.toSet()));
+        log.info("Check address spaces: {}", resources.stream().map(a -> a.getNamespace()+":"+a.getName()).collect(Collectors.toSet()));
 
         if (schemaProvider.getSchema() == null) {
             log.info("No schema available");

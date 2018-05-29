@@ -105,12 +105,12 @@ public class AddressSpace {
 
         AddressSpace that = (AddressSpace) o;
 
-        return name.equals(that.name);
+        return Objects.equals(name, that.name) && Objects.equals(namespace, that.namespace);
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return Objects.hash(name, namespace);
     }
 
     @Override
