@@ -13,6 +13,7 @@ OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download
 ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
     --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
 
+sleep 10
 stop_and_check_openshift
 clean_docker_images
 clean_oc_location
