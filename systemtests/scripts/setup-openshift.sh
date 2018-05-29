@@ -3,6 +3,7 @@ SCRIPTDIR=$(dirname $0)
 
 curdir="$(dirname $(readlink -f ${0}))"
 source "${curdir}/../../scripts/logger.sh"
+source "${curdir}/test_func.sh"
 
 #parameters:
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
@@ -12,16 +13,9 @@ OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download
 ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
     --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
 
-oc cluster down #for the case that cluster is already running
-
-
-if oc status; then
-    err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
-fi
-
-sudo rm -rf /var/lib/origin/openshift.local.pv
-sudo rm -rf /var/log/containers/*
-sudo rm -rf /var/log/pods/*
+stop_and_check_openshift
+clean_docker_images
+clean_oc_location
 
 DOCKER_STATUS=$(sudo systemctl show --property ActiveState ${DOCKER} | sed -n -e 's/^ActiveState=//p')
 if [[ "${DOCKER_STATUS}" != "active" ]]; then
