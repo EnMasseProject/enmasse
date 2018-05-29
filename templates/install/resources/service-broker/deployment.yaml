@@ -63,9 +63,9 @@ spec:
           name: https
         resources:
           limits:
-            memory: 128Mi
+            memory: 256Mi
           requests:
-            memory: 64Mi
+            memory: 128Mi
         volumeMounts:
         - mountPath: /service-broker-cert
           name: service-broker-cert
