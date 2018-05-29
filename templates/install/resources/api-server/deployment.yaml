@@ -21,18 +21,18 @@ spec:
               key: ca.crt
               name: api-server-client-ca
               optional: true
+        - name: REQUEST_HEADER_CLIENT_CA
+          valueFrom:
+            secretKeyRef:
+              key: request-header-ca.crt
+              name: api-server-client-ca
+              optional: true
         - name: CERT_DIR
           value: /api-server-cert
         - name: ENABLE_RBAC
           valueFrom:
             configMapKeyRef:
               key: enableRbac
-              name: api-server-config
-              optional: true
-        - name: ENABLE_USER_LOOKUP
-          valueFrom:
-            configMapKeyRef:
-              key: enableUserLookup
               name: api-server-config
               optional: true
         image: docker.io/enmasseproject/api-server:latest

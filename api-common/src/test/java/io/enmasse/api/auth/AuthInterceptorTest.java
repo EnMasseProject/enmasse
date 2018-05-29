@@ -12,6 +12,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.http.HttpConnection;
+import io.vertx.core.http.HttpServerRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,12 +24,13 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.function.Predicate;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-
 
 public class AuthInterceptorTest {
 
@@ -57,41 +60,42 @@ public class AuthInterceptorTest {
     }
 
 
-    private void assertExceptionThrown(ContainerRequestContext requestContext) {
-        try {
-            handler.filter(requestContext);
-            fail("Expected exception to be thrown");
-        } catch (Exception e) {
-        }
+    private void assertAuthenticatedAs(ContainerRequestContext requestContext, String userName) {
+        ArgumentCaptor<SecurityContext> contextCaptor = ArgumentCaptor.forClass(SecurityContext.class);
+        handler.filter(requestContext);
+        verify(requestContext).setSecurityContext(contextCaptor.capture());
+        SecurityContext context = contextCaptor.getValue();
+        assertThat(RbacSecurityContext.getUserName(context.getUserPrincipal()), is(userName));
     }
 
     @Test
     public void testNoAuthorizationHeader() {
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn(null);
-        assertExceptionThrown(mockRequestContext);
+        assertAuthenticatedAs(mockRequestContext, "system:anonymous");
     }
 
     @Test
     public void testBasicAuth() throws IOException {
         Files.write(Paths.get(tokenFile.getAbsolutePath()), "valid_token".getBytes());
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Basic dXNlcjpwYXNzCg==");
-        assertExceptionThrown(mockRequestContext);
+
+        assertAuthenticatedAs(mockRequestContext, "system:anonymous");
     }
 
-    @Test
-    public void testInvalidToken() throws IOException {
-        TokenReview returnedTokenReview = new TokenReview(null, null,false);
+    @Test(expected = NotAuthorizedException.class)
+    public void testInvalidToken() {
+        TokenReview returnedTokenReview = new TokenReview(null, null, false);
         when(mockAuthApi.performTokenReview("invalid_token")).thenReturn(returnedTokenReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer invalid_token");
-        assertExceptionThrown(mockRequestContext);
+        handler.filter(mockRequestContext);
     }
 
     @Test
-    public void testValidTokenButNotAuthorized() throws IOException {
+    public void testValidTokenButNotAuthorized() {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -109,9 +113,60 @@ public class AuthInterceptorTest {
     }
 
     @Test
-    public void testHealthAuthz() throws IOException {
+    public void testHealthAuthz() {
         when(mockUriInfo.getPath()).thenReturn("/healthz");
         handler.filter(mockRequestContext);
+    }
+
+    @Test
+    public void testCertAuthorization() {
+        SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("me", true);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("me"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
+
+        HttpServerRequest request = mock(HttpServerRequest.class);
+        HttpConnection connection = mock(HttpConnection.class);
+        when(request.isSSL()).thenReturn(true);
+        when(request.connection()).thenReturn(connection);
+
+        handler.setRequest(request);
+
+        handler.filter(mockRequestContext);
+
+        ArgumentCaptor<SecurityContext> contextCaptor = ArgumentCaptor.forClass(SecurityContext.class);
+        verify(mockRequestContext).setSecurityContext(contextCaptor.capture());
+        SecurityContext context = contextCaptor.getValue();
+
+        assertThat(context.getAuthenticationScheme(), is("RBAC"));
+        RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
+        assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("me"));
+        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces")));
+    }
+
+    @Test
+    public void testCertAuthorizationFailed() throws SSLPeerUnverifiedException {
+        SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("system:anonymous", false);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("system:anonymous"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
+
+        HttpServerRequest request = mock(HttpServerRequest.class);
+        HttpConnection connection = mock(HttpConnection.class);
+        when(request.isSSL()).thenReturn(true);
+        when(request.connection()).thenReturn(connection);
+        when(connection.peerCertificateChain()).thenThrow(new SSLPeerUnverifiedException(""));
+
+        handler.setRequest(request);
+
+        handler.filter(mockRequestContext);
+
+        ArgumentCaptor<SecurityContext> contextCaptor = ArgumentCaptor.forClass(SecurityContext.class);
+        verify(mockRequestContext).setSecurityContext(contextCaptor.capture());
+        SecurityContext context = contextCaptor.getValue();
+
+        assertThat(context.getAuthenticationScheme(), is("RBAC"));
+        RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
+        assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("system:anonymous"));
+        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces")));
     }
 
     @Test
@@ -119,7 +174,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockAuthApi.performSubjectAccessReview(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 

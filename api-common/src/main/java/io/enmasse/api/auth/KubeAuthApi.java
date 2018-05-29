@@ -64,6 +64,7 @@ public class KubeAuthApi implements AuthApi {
             throw new UncheckedIOException(e);
         }
     }
+
     @Override
     public TokenReview performTokenReview(String token) {
         if (client.isAdaptable(OkHttpClient.class)) {
@@ -76,7 +77,9 @@ public class KubeAuthApi implements AuthApi {
             spec.put("token", token);
             body.put("spec", spec);
 
+            log.debug("Token review request: {}", body);
             JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false, null);
+            log.debug("Token review response: {}", responseBody);
             JsonObject status = responseBody.getJsonObject("status");
             boolean authenticated = false;
             String userName = null;
@@ -97,7 +100,41 @@ public class KubeAuthApi implements AuthApi {
     }
 
     @Override
-    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReview(String user, String namespace, String resource, String verb) {
+    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewPath(String user, String path, String verb) {
+        if (client.isAdaptable(OkHttpClient.class)) {
+            JsonObject body = new JsonObject();
+
+            body.put("kind", "SubjectAccessReview");
+            body.put("apiVersion", "authorization.k8s.io/v1beta1");
+
+            JsonObject spec = new JsonObject();
+
+            JsonObject nonResourceAttributes = new JsonObject();
+            nonResourceAttributes.put("path", path);
+            nonResourceAttributes.put("verb", verb);
+
+            spec.put("nonResourceAttributes", nonResourceAttributes);
+            spec.put("user", user);
+
+            body.put("spec", spec);
+            log.debug("Subject access review request: {}", body);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false, impersonateUser);
+
+            log.debug("Subject access review response: {}", responseBody);
+            JsonObject status = responseBody.getJsonObject("status");
+            boolean allowed = false;
+            if (status != null) {
+                Boolean allowedMaybe = status.getBoolean("allowed");
+                allowed = allowedMaybe == null ? false : allowedMaybe;
+            }
+            return new io.enmasse.api.auth.SubjectAccessReview(user, allowed);
+        } else {
+            return new SubjectAccessReview(user, false);
+        }
+    }
+
+    @Override
+    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewResource(String user, String namespace, String resource, String verb) {
         if (client.isAdaptable(OkHttpClient.class)) {
             JsonObject body = new JsonObject();
 
@@ -115,7 +152,9 @@ public class KubeAuthApi implements AuthApi {
             spec.put("user", user);
 
             body.put("spec", spec);
+            log.debug("Subject access review request: {}", body);
             JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false, impersonateUser);
+            log.debug("Subject access review response: {}", responseBody);
 
             JsonObject status = responseBody.getJsonObject("status");
             boolean allowed = false;

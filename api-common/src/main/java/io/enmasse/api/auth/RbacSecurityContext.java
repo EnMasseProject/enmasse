@@ -48,19 +48,38 @@ public class RbacSecurityContext implements SecurityContext {
     @Override
     public boolean isUserInRole(String json) {
         JsonObject data = new JsonObject(json);
+        SubjectAccessReview accessReview;
+        String type = data.getString("type");
 
-        String namespace = data.getString("namespace");
-        String verb = data.getString("verb");
-        String resource = data.getString("resource");
-        SubjectAccessReview accessReview = authApi.performSubjectAccessReview(tokenReview.getUserName(), namespace, resource, verb);
+        if ("path".equals(type)) {
+            String path = data.getString("path");
+            String verb = data.getString("verb");
+            accessReview = authApi.performSubjectAccessReviewPath(tokenReview.getUserName(), path, verb);
+        } else if ("resource".equals(type)) {
+            String namespace = data.getString("namespace");
+            String verb = data.getString("verb");
+            String resource = data.getString("resource");
+            accessReview = authApi.performSubjectAccessReviewResource(tokenReview.getUserName(), namespace, resource, verb);
+        } else {
+            throw new IllegalArgumentException("Unknown role type " + type);
+        }
         return accessReview.isAllowed();
     }
 
     public static String rbacToRole(String namespace, ResourceVerb verb, String resource) {
         JsonObject object = new JsonObject();
+        object.put("type",  "resource");
         object.put("namespace", namespace);
         object.put("verb", verb);
         object.put("resource", resource);
+        return object.toString();
+    }
+
+    public static String rbacToRole(String path, String verb) {
+        JsonObject object = new JsonObject();
+        object.put("type",  "path");
+        object.put("path", path);
+        object.put("verb", verb);
         return object.toString();
     }
 

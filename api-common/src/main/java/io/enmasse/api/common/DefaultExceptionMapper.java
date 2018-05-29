@@ -28,22 +28,24 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         if (exception instanceof WebApplicationException) {
             WebApplicationException webApplicationException = (WebApplicationException) exception;
             status = Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
-            response = webApplicationException.getResponse();
+            response = Response.status(status)
+                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
+                    .build();
         } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException) {
             status = Response.Status.BAD_REQUEST;
             response = Response.status(status)
-                    .entity(new ErrorResponse(null, exception.getMessage()))
+                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
                     .build();
         } else if (exception instanceof KubernetesClientException) {
             Status kubeStatus = ((KubernetesClientException) exception).getStatus();
             status = Response.Status.fromStatusCode(kubeStatus.getCode());
             response = Response.status(kubeStatus.getCode())
-                    .entity(new ErrorResponse(null, kubeStatus.getMessage()))
+                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
                     .build();
         } else {
             status = Response.Status.INTERNAL_SERVER_ERROR;
             response = Response.status(status)
-                    .entity(new ErrorResponse(null, exception.getMessage()))
+                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
                     .build();
         }
 

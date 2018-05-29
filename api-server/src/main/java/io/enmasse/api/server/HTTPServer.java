@@ -6,6 +6,7 @@
 package io.enmasse.api.server;
 
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
+import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
@@ -39,17 +40,21 @@ public class HTTPServer extends AbstractVerticle {
     private final SchemaProvider schemaProvider;
     private final String certDir;
     private final String clientCa;
-    private final AuthWrapper authWrapper;
+    private final String requestHeaderClientCa;
+    private final AuthApi authApi;
+    private final boolean isRbacEnabled;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, AuthWrapper authWrapper) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, String requestHeaderClientCa, AuthApi authApi, boolean isRbacEnabled) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
         this.clientCa = clientCa;
-        this.authWrapper = authWrapper;
+        this.requestHeaderClientCa = requestHeaderClientCa;
+        this.authApi = authApi;
+        this.isRbacEnabled = isRbacEnabled;
     }
 
     @Override
@@ -60,17 +65,14 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
-        if (authWrapper.isRbacEnabled()) {
+        if (isRbacEnabled) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authWrapper.getAuthApi(), path ->
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
                     path.equals(HttpHealthService.BASE_URI) ||
-                    path.equals("/swagger.json") ||
-                    path.equals("/apis") ||
-                    path.equals("/apis/enmasse.io") ||
-                    path.equals("/apis/enmasse.io/v1alpha1")));
+                    path.equals("/swagger.json")));
         } else {
             log.info("Disabling authentication and authorization for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor(authWrapper.getAuthApi(), authWrapper.isEnableUserLookup()));
+            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
         }
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
@@ -120,10 +122,20 @@ public class HTTPServer extends AbstractVerticle {
                     .setCertPath(certFile.getAbsolutePath()));
             options.setSsl(true);
 
-            if (clientCa != null) {
+            if (clientCa != null || requestHeaderClientCa != null) {
                 log.info("Enabling client authentication");
-                options.setTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(clientCa)));
+                PemTrustOptions trustOptions = new PemTrustOptions();
+                if (clientCa != null) {
+                    log.info("Adding client CA");
+                    trustOptions.addCertValue(Buffer.buffer(clientCa));
+                }
+
+                if (requestHeaderClientCa != null) {
+                    log.info("Adding request header client CA");
+                    trustOptions.addCertValue(Buffer.buffer(requestHeaderClientCa));
+                }
+
+                options.setTrustOptions(trustOptions);
                 options.setClientAuth(ClientAuth.REQUEST);
             }
 

@@ -72,6 +72,16 @@ local images = import "images.jsonnet";
                   }
                 },
                 {
+                  "name": "REQUEST_HEADER_CLIENT_CA",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "name": "api-server-client-ca",
+                      "key": "request-header-ca.crt",
+                      "optional": true
+                    }
+                  }
+                },
+                {
                   "name": "CERT_DIR",
                   "value": "/api-server-cert"
                 },
@@ -81,16 +91,6 @@ local images = import "images.jsonnet";
                     "configMapKeyRef": {
                       "name": "api-server-config",
                       "key": "enableRbac",
-                      "optional": true
-                    }
-                  }
-                },
-                {
-                  "name": "ENABLE_USER_LOOKUP",
-                  "valueFrom": {
-                    "configMapKeyRef": {
-                      "name": "api-server-config",
-                      "key": "enableUserLookup",
                       "optional": true
                     }
                   }

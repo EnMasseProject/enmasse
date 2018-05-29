@@ -41,10 +41,8 @@ public class ApiServer extends AbstractVerticle {
 
         AuthApi authApi = new KubeAuthApi(controllerClient, null, controllerClient.getConfiguration().getOauthToken());
 
-        AuthWrapper wrapper = new AuthWrapper(authApi, options.isEnableRbac(), options.isEnableUserLookup());
-
         deployVerticles(startPromise,
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), wrapper), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), options.getRequestHeaderClientCa(), authApi, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {

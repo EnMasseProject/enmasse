@@ -47,9 +47,9 @@ public class HTTPServerTest {
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
-        when(authApi.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        when(authApi.performSubjectAccessReview(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, new AuthWrapper(null, false, false)), context.asyncAssertSuccess());
+        when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, null, authApi, false), context.asyncAssertSuccess());
     }
 
     @After
@@ -76,7 +76,7 @@ public class HTTPServerTest {
         instanceApi.withAddressSpace(addressSpace).createAddress(
             new Address.Builder()
                     .setAddressSpace("myinstance")
-                .setName("addr1")
+                .setName("myinstance.addr1")
                 .setAddress("addR1")
                 .setNamespace("ns")
                 .setType("queue")
@@ -91,7 +91,7 @@ public class HTTPServerTest {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("items"));
-                    context.assertEquals("addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                    context.assertEquals("myinstance.addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
                     async.complete();
                 });
             });
@@ -103,7 +103,7 @@ public class HTTPServerTest {
                     JsonObject data = buffer.toJsonObject();
                     System.out.println(data);
                     context.assertTrue(data.containsKey("metadata"));
-                    context.assertEquals("addr1", data.getJsonObject("metadata").getString("name"));
+                    context.assertEquals("myinstance.addr1", data.getJsonObject("metadata").getString("name"));
                     async.complete();
                 });
             });

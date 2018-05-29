@@ -4,9 +4,9 @@ localhost ansible_connection=local
 [enmasse:vars]
 namespace=enmasse
 multitenant=true
-enable_rbac=false
-enable_user_lookup=true
+enable_rbac=true
 api_server=true
 register_api_server=true
+secure_api_server=true
 keycloak_admin_password=admin
 authentication_services=["standard"]
