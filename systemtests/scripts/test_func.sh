@@ -205,6 +205,13 @@ function categorize_dockerlogs {
 }
 
 function stop_and_check_openshift() {
+    if ! oc; then
+        info "oc command not found, nothing to stop"
+        exit 0
+    fi
+    if oc whoami; then
+        oc logout
+    fi
     oc cluster down #for the case that cluster is already running
     openshift_pids=$(ps aux | grep 'openshift' | grep -v 'grep\|setup-openshift' | awk '{print $2}')
     if [[ -n ${openshift_pids} ]]; then
@@ -212,14 +219,15 @@ function stop_and_check_openshift() {
         kill -9 "${openshift_pids}"
     fi
 
-    if oc status; then
-        oc status -v
+    if oc cluster status; then
         err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
     fi
     info "cluster turned off successfully"
 }
 
 function clean_docker_images() {
+    DOCKER=${DOCKER:-docker}
+
     containers_run=$(docker ps -q)
     if [[ -n ${containers_run} ]];then
         ${DOCKER} stop "${containers_run}"
