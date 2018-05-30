@@ -23,8 +23,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
     }
 
     @Test
-    void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
+    void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
+        doRoundRobinReceiverTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test

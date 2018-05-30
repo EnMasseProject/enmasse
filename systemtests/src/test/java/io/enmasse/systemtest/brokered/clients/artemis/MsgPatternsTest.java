@@ -22,8 +22,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
     }
 
     @Test
-    void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+    void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
+        doRoundRobinReceiverTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
     }
 
     @Test

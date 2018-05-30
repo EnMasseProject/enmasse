@@ -89,7 +89,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
+    protected void doRoundRobinReceiverTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
             throws Exception {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
@@ -109,6 +109,12 @@ public abstract class ClientTestBase extends TestBaseWithShared {
 
         Future<Boolean> recResult = receiver.runAsync();
         Future<Boolean> rec2Result = receiver2.runAsync();
+
+        if (isBrokered(sharedAddressSpace)) {
+            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getAddress(), 2);
+        } else {
+            waitForSubscribersConsole(sharedAddressSpace, dest, 2);
+        }
 
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
