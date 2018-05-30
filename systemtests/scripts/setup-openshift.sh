@@ -13,14 +13,12 @@ OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download
 OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 DOCKER=${DOCKER:-docker}
 
-if ! oc; then
-    ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
-    --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
-else
-    info "OpenShift client already installed"
-fi
 
 stop_and_check_openshift
+
+ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
+    --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
+
 clean_docker_images
 clean_oc_location
 
