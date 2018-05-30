@@ -212,8 +212,7 @@ function stop_and_check_openshift() {
         kill -9 "${openshift_pids}"
     fi
 
-    if oc status; then
-        oc status -v
+    if oc cluster status; then
         err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
     fi
     info "cluster turned off successfully"

@@ -10,6 +10,7 @@ source "${curdir}/test_func.sh"
 # {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
 ENMASSE_DIR=${1}
 OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
+OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 
 if ! oc; then
     ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
@@ -35,7 +36,7 @@ if ! oc cluster up --service-catalog "${OC_CLUSTER_ARGS}" ; then
     oc cluster down
     oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
 fi
-oc login -u system:admin
+oc login -u system:admin "${OPENSHIFT_URL}"
 
 TIMEOUT=300
 NOW=$(date +%s)
