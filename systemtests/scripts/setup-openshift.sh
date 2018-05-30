@@ -10,8 +10,13 @@ source "${curdir}/test_func.sh"
 # {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
 ENMASSE_DIR=${1}
 OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
-ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
+
+if ! oc; then
+    ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
     --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
+else
+    info "OpenShift client already installed"
+fi
 
 stop_and_check_openshift
 clean_docker_images
