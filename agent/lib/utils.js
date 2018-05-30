@@ -119,13 +119,13 @@ function hash(s) {
 module.exports.hash = hash;
 
 const MAX_KUBE_NAME = 63/*max allowed*/ - 3/*needed for kube to add stateful set qualifier*/;
-module.exports.kubernetes_name = function (name) {
+module.exports.kubernetes_name = function (name, prefix_length = 0) {
     var clean = name.toLowerCase().replace(/[^a-z0-9\-\.]/g, '');
     if (clean.charAt(0) === '-') clean = clean.substring(1);
     if (clean.charAt(clean.length-1) === '-') clean = clean.substring(0,clean.length-1);
     var qualifier = rhea.generate_uuid();
-    if (clean.length + 1/*separator*/ + qualifier.length > MAX_KUBE_NAME) {
-        clean = clean.substring(0, MAX_KUBE_NAME - (qualifier.length+1));
+    if (clean.length + 1/*separator*/ + qualifier.length > (MAX_KUBE_NAME - prefix_length)) {
+        clean = clean.substring(0, (MAX_KUBE_NAME - prefix_length) - (qualifier.length+1));
     }
     clean += '-' + qualifier;
     return clean;

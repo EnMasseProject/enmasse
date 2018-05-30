@@ -260,7 +260,7 @@ describe('configmap backed address source', function() {
         });
     });
     it('creates an address', function(done) {
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({name: 'foo'}, {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.once('addresses_defined', function () {
             source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
                 function () {
