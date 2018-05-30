@@ -11,6 +11,7 @@ source "${curdir}/test_func.sh"
 ENMASSE_DIR=${1}
 OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
 OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
+DOCKER=${DOCKER:-docker}
 
 if ! oc; then
     ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
@@ -36,7 +37,7 @@ if ! oc cluster up --service-catalog "${OC_CLUSTER_ARGS}" ; then
     oc cluster down
     oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
 fi
-oc login -u system:admin "${OPENSHIFT_URL}"
+oc login -u system:admin --insecure-skip-tls-verify "${OPENSHIFT_URL}"
 
 TIMEOUT=300
 NOW=$(date +%s)

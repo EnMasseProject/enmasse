@@ -222,6 +222,8 @@ function stop_and_check_openshift() {
 }
 
 function clean_docker_images() {
+    DOCKER=${DOCKER:-docker}
+
     containers_run=$(docker ps -q)
     if [[ -n ${containers_run} ]];then
         ${DOCKER} stop "${containers_run}"
