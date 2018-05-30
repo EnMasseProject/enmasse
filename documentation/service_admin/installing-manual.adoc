@@ -83,11 +83,12 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standar
 ----
 
 ifeval::["{cmdcli}" == "oc"]
-. Give view permissions for the keycloak controller:
+. Grant privileges to service account:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap"]
 ----
-{cmdcli} adm policy add-role-to-user view system:serviceaccount:enmasse:default
+oc login -u system:admin
+oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:enmasse:enmasse-admin
 ----
 endif::[]
 

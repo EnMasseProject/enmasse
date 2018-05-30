@@ -12,8 +12,8 @@
 - name: Create secret with the keycloak credentials
   when: secret_exists.failed
   shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
-- name: Give view permissions for the keycloak controller
-  shell: oc adm policy add-role-to-user view system:serviceaccount:{{ namespace }}:default
+- name: Give user lookup permissions for the keycloak controller
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:{{ namespace }}:enmasse-admin
 - name: Create the standard authentication service service
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/service.yaml
 - name: Create the standard authentication service deployment

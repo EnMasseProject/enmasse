@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:keycloak-controller
+rules:
+  - apiGroups: [ "", "user.openshift.io" ]
+    resources: [ "users" ]
+    verbs: [ "get" ]

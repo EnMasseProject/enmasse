@@ -10,5 +10,4 @@ public interface AuthApi {
     SubjectAccessReview performSubjectAccessReviewPath(String user, String path, String verb);
     String getCert(String secretName, String namespace);
     String getNamespace();
-    String getUserId(String userName);
 }

@@ -8,15 +8,19 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.SecurityContext;
 import java.security.Principal;
+import java.util.Optional;
+
+import static io.enmasse.api.auth.AuthInterceptor.X_REMOTE_USER;
 
 public class AllowAllAuthInterceptor implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
+        String username = Optional.ofNullable(requestContext.getHeaderString(X_REMOTE_USER)).orElse("system:anonymous");
         requestContext.setSecurityContext(new SecurityContext() {
             @Override
             public Principal getUserPrincipal() {
-                return RbacSecurityContext.getUserPrincipal("anonymous", "");
+                return RbacSecurityContext.getUserPrincipal(username, "");
             }
 
             @Override

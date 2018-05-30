@@ -113,6 +113,7 @@ local images = import "images.jsonnet";
             }
           },
           "spec": {
+            "serviceAccount": "enmasse-admin",
             "containers": [
               {
                 "image": images.keycloak_controller,

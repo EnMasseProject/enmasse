@@ -9,16 +9,13 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.k8s.api.cache.Store;
 import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -27,9 +24,11 @@ public class KeycloakManager implements Watcher<AddressSpace>
 {
     private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
     private final KeycloakApi keycloak;
+    private final KubeApi kube;
 
-    public KeycloakManager(KeycloakApi keycloak) {
+    public KeycloakManager(KeycloakApi keycloak, KubeApi kube) {
         this.keycloak = keycloak;
+        this.kube = kube;
     }
 
     private String getConsoleRedirectURI(AddressSpace addressSpace) {
@@ -66,7 +65,12 @@ public class KeycloakManager implements Watcher<AddressSpace>
             AddressSpace addressSpace = entry.getValue();
             String realmName = entry.getKey();
             log.info("Creating realm {}", realmName);
-            keycloak.createRealm(realmName, addressSpace.getAnnotation(AnnotationKeys.CREATED_BY), addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID), getConsoleRedirectURI(addressSpace));
+            String userName = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY);
+            String userId = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID);
+            if (userId == null || userId.isEmpty()) {
+                userId = kube.findUserId(userName);
+            }
+            keycloak.createRealm(realmName, userName, userId, getConsoleRedirectURI(addressSpace));
         }
     }
 }
