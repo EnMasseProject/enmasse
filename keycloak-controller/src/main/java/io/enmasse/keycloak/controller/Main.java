@@ -5,24 +5,22 @@
 package io.enmasse.keycloak.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.ResourceChecker;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
-import okhttp3.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.security.Security;
 import java.time.Duration;
@@ -49,7 +47,26 @@ public class Main {
 
         log.info("Started with params: {}", params);
 
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(params));
+        KubeApi kubeApi = userName -> {
+            if (client.supportsOpenShiftAPIGroup("user.openshift.io")) {
+                if (userName.isEmpty() || userName.contains(":")) {
+                    return "";
+                }
+                try {
+                    User user = client.users().withName(userName).get();
+                    if (user == null) {
+                        return "";
+                    }
+                    return user.getMetadata().getUid();
+                } catch (KubernetesClientException e) {
+                    return "";
+                }
+            } else {
+                return "";
+            }
+        };
+
+        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(params), kubeApi);
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))

@@ -55,9 +55,6 @@ public class OSBProvisioningService extends OSBServiceBase {
             JsonObject object = new JsonObject(Buffer.buffer(Base64.getDecoder().decode(originatingIdentity.split(" +")[1])));
             userName = object.getString("username");
             userId = object.getString("uid");
-            if (userId == null || userId.isEmpty()) {
-                userId = getAuthApi().getUserId(userName);
-            }
         }
 
         if (!acceptsIncomplete) {

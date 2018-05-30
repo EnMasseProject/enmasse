@@ -59,3 +59,4 @@ spec:
             memory: 256Mi
           requests:
             memory: 256Mi
+      serviceAccount: enmasse-admin

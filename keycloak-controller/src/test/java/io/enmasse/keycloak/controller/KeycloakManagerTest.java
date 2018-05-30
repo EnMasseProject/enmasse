@@ -15,16 +15,22 @@ import org.mockito.internal.util.collections.Sets;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class KeycloakManagerTest {
     private KeycloakManager manager;
     private Set<String> realms;
     private Map<String, String> realmAdminUsers;
+    private KubeApi mockKubeApi;
 
     @Before
     public void setup() {
         realms = new HashSet<>();
         realmAdminUsers = new HashMap<>();
+        mockKubeApi = mock(KubeApi.class);
+        when(mockKubeApi.findUserId(any())).thenReturn("");
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
             public Set<String> getRealmNames() {
@@ -41,7 +47,7 @@ public class KeycloakManagerTest {
             public void deleteRealm(String realmName) {
                 realms.remove(realmName);
             }
-        });
+        }, mockKubeApi);
     }
 
     @Test

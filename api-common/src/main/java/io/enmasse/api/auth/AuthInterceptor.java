@@ -24,7 +24,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
     public static final String BEARER_PREFIX = "Bearer ";
     private final AuthApi authApi;
     private final Predicate<String> pathFilter;
-    private static final String X_REMOTE_USER = "X-Remote-User";
+    public static final String X_REMOTE_USER = "X-Remote-User";
 
     @Context
     private HttpServerRequest request;
@@ -61,8 +61,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
             try {
                 connection.peerCertificateChain();
                 log.debug("Client certificates trusted... impersonating {}", userName);
-                String userId = authApi.getUserId(userName);
-                requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview(userName, userId, true), authApi, requestContext.getUriInfo()));
+                requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview(userName, "", true), authApi, requestContext.getUriInfo()));
             } catch (SSLPeerUnverifiedException e) {
                 log.debug("Peer certificate not valid, proceeding as anonymous");
                 requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview("system:anonymous", "", false), authApi, requestContext.getUriInfo()));

@@ -5,9 +5,6 @@ metadata:
     app: enmasse
   name: enmasse.io:api-server
 rules:
-  - apiGroups: [ "", "user.openshift.io" ]
-    resources: [ "users" ]
-    verbs: [ "get" ]
   - apiGroups: [ "enmasse.io" ]
     resources: [ "addresses", "addressspaces" ]
     verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]

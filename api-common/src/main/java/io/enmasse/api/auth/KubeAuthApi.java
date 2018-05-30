@@ -5,7 +5,6 @@
 package io.enmasse.api.auth;
 
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.json.JsonObject;
 import okhttp3.*;
@@ -182,14 +181,4 @@ public class KubeAuthApi implements AuthApi {
     public String getNamespace() {
         return client.getNamespace();
     }
-
-    @Override
-    public String getUserId(String userName) {
-        User user = client.users().withName(userName).get();
-        if (user != null) {
-            return user.getMetadata().getUid();
-        }
-        return null;
-    }
-
 }
