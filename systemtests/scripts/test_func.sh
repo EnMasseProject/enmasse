@@ -205,6 +205,9 @@ function categorize_dockerlogs {
 }
 
 function stop_and_check_openshift() {
+    if oc whoami; then
+        oc logout
+    fi
     oc cluster down #for the case that cluster is already running
     openshift_pids=$(ps aux | grep 'openshift' | grep -v 'grep\|setup-openshift' | awk '{print $2}')
     if [[ -n ${openshift_pids} ]]; then
