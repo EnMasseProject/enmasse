@@ -266,6 +266,7 @@ describe('configmap backed address source', function() {
                 function () {
                     source.once('addresses_defined', function (addresses) {
                         assert.equal(addresses.length, 1);
+                        assert.equal(addresses[0].name.substring(0,4), 'foo.');
                         assert.equal(addresses[0].address, 'myqueue');
                         assert.equal(addresses[0].type, 'queue');
                         assert.equal(addresses[0].plan, 'clever');
