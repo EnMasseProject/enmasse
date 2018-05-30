@@ -37,7 +37,7 @@ if ! oc cluster up --service-catalog "${OC_CLUSTER_ARGS}" ; then
     oc cluster down
     oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
 fi
-oc login -u system:admin --insecure-skip-tls-verify "${OPENSHIFT_URL}"
+oc login -u system:admin
 
 TIMEOUT=300
 NOW=$(date +%s)
