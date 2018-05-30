@@ -206,14 +206,12 @@ function categorize_dockerlogs {
 
 function stop_and_check_openshift() {
     oc cluster down #for the case that cluster is already running
-    sleep 10
     openshift_pids=$(ps aux | grep 'openshift' | grep -v 'grep\|setup-openshift' | awk '{print $2}')
     if [[ -n ${openshift_pids} ]]; then
         warn "OpenShift cluster didn't stop properly, trying to kill OpenShift processes..."
         kill -9 "${openshift_pids}"
     fi
 
-    sleep 10
     if oc status; then
         oc status -v
         err_and_exit "shutting down of openshift cluster failed, tests won't be executed"
