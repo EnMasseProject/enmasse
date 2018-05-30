@@ -5,4 +5,4 @@ build:
 
 package:
 	mkdir -p build
-	tar -czf build/router-$(VERSION).tgz run_qdr.sh qdrouterd.conf.template colocated-topic.snippet subscriptions.snippet amqp-kafka-bridge.snippet
+	tar -czf build/router-$(VERSION).tgz run_qdr.sh configure.sh

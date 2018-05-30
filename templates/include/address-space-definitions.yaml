@@ -63,8 +63,134 @@ data:
         labels:
           app: enmasse
         name: broker-prometheus-config
-    - apiVersion: extensions/v1beta1
-      kind: Deployment
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: qdrouterd-config
+      data:
+        qdrouterd.conf: |-
+          router {
+            mode: interior
+            id: ${HOSTNAME}
+            defaultDistribution: unavailable
+            allowResumableLinkRoute: ${ALLOW_DURABLE_SUBSCRIPTIONS}
+          }
+
+          sslProfile {
+            name: auth_service_ssl
+            certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+          }
+
+          authServicePlugin {
+            name: auth_service
+            authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
+            #saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            authSslProfile: auth_service_ssl
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 5672
+            saslPlugin: auth_service
+            linkCapacity: ${ROUTER_LINK_CAPACITY}
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 55672
+            role: inter-router
+            authenticatePeer: yes
+            sslProfile: inter_router_tls
+            saslMechanisms: EXTERNAL
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 8443
+            saslPlugin: auth_service
+            sslProfile: ssl_details
+            http: true
+            authenticatePeer: yes
+          }
+
+          sslProfile {
+            name: ssl_details
+            certFile: /etc/qpid-dispatch/ssl/tls.crt
+            keyFile: /etc/qpid-dispatch/ssl/tls.key
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 5671
+            saslPlugin: auth_service
+            sslProfile: ssl_details
+            requireSsl: true
+          }
+
+          sslProfile {
+            name: inter_router_tls
+            certFile: /etc/enmasse-certs/tls.crt
+            keyFile: /etc/enmasse-certs/tls.key
+            certDb: /etc/enmasse-certs/ca.crt
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 55671
+            sslProfile: inter_router_tls
+            saslMechanisms: EXTERNAL
+            authenticatePeer: yes
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 56671
+            sslProfile: inter_router_tls
+            saslMechanisms: EXTERNAL
+            role: route-container
+            authenticatePeer: yes
+          }
+
+          connector {
+            host: ragent
+            port: 5671
+            sslProfile: inter_router_tls
+            verifyHostName: no
+          }
+
+          linkRoute {
+            name: override.lwt_in
+            prefix: $lwt
+            direction: in
+            containerId: lwt-service
+          }
+
+          linkRoute {
+            name: override.lwt_out
+            prefix: $lwt
+            direction: out
+            containerId: lwt-service
+          }
+
+          address {
+            name: override.mqtt
+            prefix: $mqtt
+            distribution: balanced
+          }
+
+          address {
+            name: override.subctrl
+            prefix: $subctrl
+            distribution: balanced
+          }
+
+          address {
+            name: override.temp
+            prefix: $temp
+            distribution: balanced
+          }
+    - apiVersion: apps/v1beta1
+      kind: StatefulSet
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
@@ -78,6 +204,7 @@ data:
           name: qdrouterd
         name: qdrouterd
       spec:
+        serviceName: qdrouterd-headless
         replicas: 1
         template:
           metadata:
@@ -90,20 +217,12 @@ data:
           spec:
             containers:
             - env:
-              - name: LINK_CAPACITY
-                value: ${ROUTER_LINK_CAPACITY}
-              - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
-              - name: AUTHENTICATION_SERVICE_HOST
-                value: ${AUTHENTICATION_SERVICE_HOST}
-              - name: AUTHENTICATION_SERVICE_PORT
-                value: ${AUTHENTICATION_SERVICE_PORT}
-              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-              - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+              - name: QDROUTERD_CONF
+                value: "/etc/qpid-dispatch/config/qdrouterd.conf"
+              - name: QDROUTERD_AUTO_MESH_DISCOVERY
+                value: "INFER"
+              - name: APPLICATION_NAME
+                value: "qdrouterd"
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -136,6 +255,8 @@ data:
               - mountPath: /etc/enmasse-certs
                 name: router-internal-cert
                 readOnly: true
+              - mountPath: /etc/qpid-dispatch/config
+                name: qdrouterd-config
             - env:
               - name: ROUTER_HOST
                 value: 127.0.0.1
@@ -172,6 +293,9 @@ data:
             - name: router-internal-cert
               secret:
                 secretName: router-internal-cert
+            - name: qdrouterd-config
+              configMap:
+                name: qdrouterd-config
     - apiVersion: v1
       data:
         tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
@@ -338,6 +462,22 @@ data:
             - name: broker-templates
               configMap:
                 name: broker-templates
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
+        name: qdrouterd-headless
+      spec:
+        clusterIP: None
+        ports:
+        - name: inter-router
+          port: 55672
+          targetPort: 55672
+        selector:
+          capability: router
     - apiVersion: v1
       kind: Service
       metadata:
@@ -602,6 +742,55 @@ data:
               selector:
                 name: ${NAME}
                 role: broker
+          - apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              annotations:
+                addressSpace: ${ADDRESS_SPACE}
+                cluster_id: ${CLUSTER_ID}
+              labels:
+                app: enmasse
+              name: ${NAME}-config
+            data:
+              colocated-topic.conf: |-
+                connector {
+                  host: 127.0.0.1
+                  port: 5673
+                  name: localbroker
+                  role: route-container
+                  sslProfile: inter_router_tls
+                  verifyHostName: no
+                }
+
+                linkRoute {
+                  name: override.main_in
+                  prefix: ${ADDRESS}
+                  direction: in
+                  connection: localbroker
+                }
+
+                linkRoute {
+                  name: override.main_out
+                  prefix: ${ADDRESS}
+                  direction: out
+                  connection: localbroker
+                }
+
+                linkRoute {
+                  name: override.qualified_out
+                  prefix: ${ADDRESS}/${HOSTNAME}
+                  direction: out
+                  connection: localbroker
+                }
+                # yuck, yuck, but colocated router hopefully soon to disappear
+                connector {
+                  name: qdrouterd-0
+                  host: qdrouterd-0.qdrouterd-headless.${NAMESPACE}.svc.cluster.local
+                  port: 55672
+                  role: inter-router
+                  sslProfile: inter_router_tls
+                  verifyHostName: false
+                }
           - apiVersion: apps/v1beta1
             kind: StatefulSet
             metadata:
@@ -701,20 +890,12 @@ data:
                   - env:
                     - name: TOPIC_NAME
                       value: ${ADDRESS}
-                    - name: LINK_CAPACITY
-                      value: ${ROUTER_LINK_CAPACITY}
-                    - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                      value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+                    - name: QDROUTERD_CONF
+                      value: "/etc/qpid-dispatch/config/qdrouterd.conf:/etc/qpid-dispatch/additional-config/colocated-topic.conf"
+                    - name: QDROUTERD_AUTO_MESH_DISCOVERY
+                      value: "INFER"
+                    - name: APPLICATION_NAME
+                      value: "qdrouterd"
                     image: ${ROUTER_IMAGE}
                     livenessProbe:
                       initialDelaySeconds: 60
@@ -752,6 +933,10 @@ data:
                     - mountPath: /etc/enmasse-certs
                       name: broker-internal-cert
                       readOnly: true
+                    - mountPath: /etc/qpid-dispatch/config
+                      name: qdrouterd-config
+                    - mountPath: /etc/qpid-dispatch/additional-config
+                      name: colocated-config
                   - env:
                     - name: TOPIC_NAME
                       value: ${ADDRESS}
@@ -791,6 +976,12 @@ data:
                   - configMap:
                       name: broker-prometheus-config
                     name: broker-prometheus-config
+                  - name: qdrouterd-config
+                    configMap:
+                      name: qdrouterd-config
+                  - name: colocated-config
+                    configMap:
+                      name: ${NAME}-config
               volumeClaimTemplates:
               - apiVersion: v1
                 kind: PersistentVolumeClaim
@@ -982,8 +1173,125 @@ data:
         labels:
           app: enmasse
         name: broker-prometheus-config
-    - apiVersion: extensions/v1beta1
-      kind: Deployment
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: qdrouterd-config
+      data:
+        qdrouterd.conf: |-
+          router {
+            mode: interior
+            id: ${HOSTNAME}
+            defaultDistribution: unavailable
+            allowResumableLinkRoute: ${ALLOW_DURABLE_SUBSCRIPTIONS}
+          }
+
+          sslProfile {
+            name: auth_service_ssl
+            certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+          }
+
+          authServicePlugin {
+            name: auth_service
+            authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
+            #saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            authSslProfile: auth_service_ssl
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 5672
+            saslPlugin: auth_service
+            linkCapacity: ${ROUTER_LINK_CAPACITY}
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 55672
+            role: inter-router
+            authenticatePeer: yes
+            sslProfile: inter_router_tls
+            saslMechanisms: EXTERNAL
+          }
+
+          sslProfile {
+            name: ssl_details
+            certFile: /etc/qpid-dispatch/ssl/tls.crt
+            keyFile: /etc/qpid-dispatch/ssl/tls.key
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 5671
+            saslPlugin: auth_service
+            sslProfile: ssl_details
+            requireSsl: true
+          }
+
+          sslProfile {
+            name: inter_router_tls
+            certFile: /etc/enmasse-certs/tls.crt
+            keyFile: /etc/enmasse-certs/tls.key
+            certDb: /etc/enmasse-certs/ca.crt
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 55671
+            sslProfile: inter_router_tls
+            saslMechanisms: EXTERNAL
+            authenticatePeer: yes
+          }
+
+          listener {
+            host: 0.0.0.0
+            port: 56671
+            sslProfile: inter_router_tls
+            saslMechanisms: EXTERNAL
+            role: route-container
+            authenticatePeer: yes
+          }
+
+          connector {
+            host: ragent
+            port: 5671
+            sslProfile: inter_router_tls
+            verifyHostName: no
+          }
+
+          linkRoute {
+            name: override.lwt_in
+            prefix: $lwt
+            direction: in
+            containerId: lwt-service
+          }
+
+          linkRoute {
+            name: override.lwt_out
+            prefix: $lwt
+            direction: out
+            containerId: lwt-service
+          }
+
+          address {
+            name: override.mqtt
+            prefix: $mqtt
+            distribution: balanced
+          }
+
+          address {
+            name: override.subctrl
+            prefix: $subctrl
+            distribution: balanced
+          }
+
+          address {
+            name: override.temp
+            prefix: $temp
+            distribution: balanced
+          }
+    - apiVersion: apps/v1beta1
+      kind: StatefulSet
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
@@ -997,6 +1305,7 @@ data:
           name: qdrouterd
         name: qdrouterd
       spec:
+        serviceName: qdrouterd-headless
         replicas: 1
         template:
           metadata:
@@ -1009,20 +1318,12 @@ data:
           spec:
             containers:
             - env:
-              - name: LINK_CAPACITY
-                value: ${ROUTER_LINK_CAPACITY}
-              - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
-              - name: AUTHENTICATION_SERVICE_HOST
-                value: ${AUTHENTICATION_SERVICE_HOST}
-              - name: AUTHENTICATION_SERVICE_PORT
-                value: ${AUTHENTICATION_SERVICE_PORT}
-              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-              - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+              - name: QDROUTERD_CONF
+                value: "/etc/qpid-dispatch/config/qdrouterd.conf"
+              - name: QDROUTERD_AUTO_MESH_DISCOVERY
+                value: "INFER"
+              - name: APPLICATION_NAME
+                value: "qdrouterd"
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -1055,6 +1356,8 @@ data:
               - mountPath: /etc/enmasse-certs
                 name: router-internal-cert
                 readOnly: true
+              - mountPath: /etc/qpid-dispatch/config
+                name: qdrouterd-config
             - env:
               - name: ROUTER_HOST
                 value: 127.0.0.1
@@ -1091,6 +1394,9 @@ data:
             - name: router-internal-cert
               secret:
                 secretName: router-internal-cert
+            - name: qdrouterd-config
+              configMap:
+                name: qdrouterd-config
     - apiVersion: v1
       data:
         tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
@@ -1264,6 +1570,22 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
+        name: qdrouterd-headless
+      spec:
+        clusterIP: None
+        ports:
+        - name: inter-router
+          port: 55672
+          targetPort: 55672
+        selector:
+          capability: router
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
         name: ragent
       spec:
         ports:
@@ -1427,6 +1749,10 @@ data:
                     - mountPath: /etc/prometheus-config
                       name: broker-prometheus-config
                       readOnly: true
+                    - mountPath: /etc/qpid-dispatch/config
+                      name: qdrouterd-config
+                    - mountPath: /etc/qpid-dispatch/additional-config
+                      name: colocated-config
                   volumes:
                   - name: ssl-certs
                     secret:
@@ -1440,6 +1766,12 @@ data:
                   - configMap:
                       name: broker-prometheus-config
                     name: broker-prometheus-config
+                  - name: qdrouterd-config
+                    configMap:
+                      name: qdrouterd-config
+                  - name: colocated-config
+                    configMap:
+                      name: ${NAME}-config
               volumeClaimTemplates:
               - apiVersion: v1
                 kind: PersistentVolumeClaim
@@ -1521,6 +1853,55 @@ data:
               selector:
                 name: ${NAME}
                 role: broker
+          - apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              annotations:
+                addressSpace: ${ADDRESS_SPACE}
+                cluster_id: ${CLUSTER_ID}
+              labels:
+                app: enmasse
+              name: ${NAME}-config
+            data:
+              colocated-topic.conf: |-
+                connector {
+                  host: 127.0.0.1
+                  port: 5673
+                  name: localbroker
+                  role: route-container
+                  sslProfile: inter_router_tls
+                  verifyHostName: no
+                }
+
+                linkRoute {
+                  name: override.main_in
+                  prefix: ${ADDRESS}
+                  direction: in
+                  connection: localbroker
+                }
+
+                linkRoute {
+                  name: override.main_out
+                  prefix: ${ADDRESS}
+                  direction: out
+                  connection: localbroker
+                }
+
+                linkRoute {
+                  name: override.qualified_out
+                  prefix: ${ADDRESS}/${HOSTNAME}
+                  direction: out
+                  connection: localbroker
+                }
+                # yuck, yuck, but colocated router hopefully soon to disappear
+                connector {
+                  name: qdrouterd-0
+                  host: qdrouterd-0.qdrouterd-headless.${NAMESPACE}.svc.cluster.local
+                  port: 55672
+                  role: inter-router
+                  sslProfile: inter_router_tls
+                  verifyHostName: false
+                }
           - apiVersion: apps/v1beta1
             kind: StatefulSet
             metadata:
@@ -1620,20 +2001,12 @@ data:
                   - env:
                     - name: TOPIC_NAME
                       value: ${ADDRESS}
-                    - name: LINK_CAPACITY
-                      value: ${ROUTER_LINK_CAPACITY}
-                    - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                      value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+                    - name: QDROUTERD_CONF
+                      value: "/etc/qpid-dispatch/config/qdrouterd.conf:/etc/qpid-dispatch/additional-config/colocated-topic.conf"
+                    - name: QDROUTERD_AUTO_MESH_DISCOVERY
+                      value: "INFER"
+                    - name: APPLICATION_NAME
+                      value: "qdrouterd"
                     image: ${ROUTER_IMAGE}
                     livenessProbe:
                       initialDelaySeconds: 60
@@ -1671,6 +2044,10 @@ data:
                     - mountPath: /etc/enmasse-certs
                       name: broker-internal-cert
                       readOnly: true
+                    - mountPath: /etc/qpid-dispatch/config
+                      name: qdrouterd-config
+                    - mountPath: /etc/qpid-dispatch/additional-config
+                      name: colocated-config
                   - env:
                     - name: TOPIC_NAME
                       value: ${ADDRESS}
@@ -1710,6 +2087,12 @@ data:
                   - configMap:
                       name: broker-prometheus-config
                     name: broker-prometheus-config
+                  - name: qdrouterd-config
+                    configMap:
+                      name: qdrouterd-config
+                  - name: colocated-config
+                    configMap:
+                      name: ${NAME}-config
               volumeClaimTemplates:
               - apiVersion: v1
                 kind: PersistentVolumeClaim
