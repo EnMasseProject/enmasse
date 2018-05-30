@@ -7,6 +7,7 @@ package io.enmasse.controller.common;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceResolver;
+import io.enmasse.config.AnnotationKeys;
 
 import java.util.Optional;
 
@@ -43,8 +44,8 @@ public class NoneAuthenticationServiceResolver implements AuthenticationServiceR
     }
 
     @Override
-    public Optional<String> getSaslInitHost(AddressSpace addressSpace, AuthenticationService authService) {
-        return Optional.empty();
+    public String getSaslInitHost(AddressSpace addressSpace, AuthenticationService authService) {
+        return Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getName());
     }
 
     @Override

@@ -370,8 +370,8 @@ public class AddressProvisionerTest {
 
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, addresses);
 
-        verify(kubernetes, atLeast(1)).scaleDeployment(eq("router"), eq(40));
-        verify(kubernetes, never()).scaleDeployment(eq("router"), eq(41));
+        verify(kubernetes, atLeast(1)).scaleStatefulSet(eq("router"), eq(40));
+        verify(kubernetes, never()).scaleStatefulSet(eq("router"), eq(41));
     }
 
     @Test
