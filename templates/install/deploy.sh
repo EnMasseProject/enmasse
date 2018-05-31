@@ -212,7 +212,7 @@ do
         if [ -n "$USE_OPENSHIFT" ]; then
             runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/route.yaml" "Create standard authservice route"
             OAUTH_DISABLED="false"
-            HTTP_URL="https://$(oc get route keycloak -o yaml -o jsonpath={.spec.host})/auth"
+            HTTP_URL="https://$($CMD get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
         else
             runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/external-service.yaml" "Create standard authservice external service"
             OAUTH_DISABLED="true"
@@ -289,8 +289,7 @@ if [ $MODE == "multitenant" ]; then
         echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/'"
         echo "Please add enmasse.io:address-space-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add enmasse.io:api-server to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin'"
-        echo "Please add enmasse.io:keycloak-controller to
-        system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+        echo "Please add enmasse.io:keycloak-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add system:auth-delegator to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin'"
     fi
 fi
