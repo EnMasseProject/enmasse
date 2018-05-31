@@ -6,6 +6,6 @@ rules:
   - apiGroups: [ "", "user.openshift.io" ]
     resources: [ "users" ]
     verbs: [ "get" ]
-  - apiGroups: [ "v1.enmasse.io" ]
+  - apiGroups: [ "enmasse.io" ]
     resources: [ "addresses", "addressspaces" ]
     verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
