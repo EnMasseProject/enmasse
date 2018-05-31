@@ -44,9 +44,8 @@ public class NoneAuthenticationServiceResolver implements AuthenticationServiceR
     }
 
     @Override
-    public Optional<String> getSaslInitHost(AddressSpace addressSpace, AuthenticationService authService) {
-        String realmName = Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getName());
-        return Optional.of(realmName);
+    public String getSaslInitHost(AddressSpace addressSpace, AuthenticationService authService) {
+        return Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getName());
     }
 
     @Override
