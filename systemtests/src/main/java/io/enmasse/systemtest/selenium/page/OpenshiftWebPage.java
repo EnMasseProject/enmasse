@@ -205,7 +205,9 @@ public class OpenshiftWebPage implements IWebPage {
     private void waitUntilServiceIsReady() throws Exception {
         getProvisionedServiceItem().expandServiceItem();
         log.info("Waiting until provisioned service will be completed");
+        selenium.takeScreenShot();
         selenium.getDriverWait().withTimeout(Duration.ofMinutes(4)).until(ExpectedConditions.numberOfElementsToBe(By.className("alert-info"), 0));
+        selenium.takeScreenShot();
     }
 
     private void waitUntilBindingIsReady() throws Exception {
