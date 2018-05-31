@@ -14,7 +14,6 @@ import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
@@ -32,20 +31,16 @@ public class Main extends AbstractVerticle {
     private final ControllerOptions options;
 
     private Main(ControllerOptions options) {
-        this.controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
-                .withMasterUrl(options.getMasterUrl())
-                .withOauthToken(options.getToken())
-                .withNamespace(options.getNamespace())
-                .build());
+        this.controllerClient = new DefaultOpenShiftClient();
         this.options = options;
     }
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
+        SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, controllerClient.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
-        Kubernetes kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac(), options.getImpersonateUser());
+        Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac(), options.getImpersonateUser());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
