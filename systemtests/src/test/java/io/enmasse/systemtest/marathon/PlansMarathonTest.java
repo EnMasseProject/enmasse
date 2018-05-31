@@ -41,7 +41,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
     void testHighLoadAddresses() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
-        AddressPlan xxsQueuePlan = new AddressPlan("xxs-queue", AddressType.QUEUE, addressResourcesQueue);
+        AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlanConfig(xxsQueuePlan);
 
         //define and create address space plan
