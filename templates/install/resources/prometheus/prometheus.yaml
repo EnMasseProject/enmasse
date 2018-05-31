@@ -3,6 +3,8 @@ items:
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
+    labels:
+      app: enmasse
     name: prometheus
   spec:
     replicas: 1
@@ -46,10 +48,14 @@ items:
       "kubernetes_pod_name"}]}]}'
   kind: ConfigMap
   metadata:
+    labels:
+      app: enmasse
     name: prometheus-config
 - apiVersion: v1
   kind: Service
   metadata:
+    labels:
+      app: enmasse
     name: prometheus
   spec:
     ports:
@@ -59,8 +65,10 @@ items:
     selector:
       name: prometheus
 - apiVersion: v1
-  kind: PersistentVolumeClaim
+  k:wqind: PersistentVolumeClaim
   metadata:
+    labels:
+      app: enmasse
     name: prometheus-data
   spec:
     accessModes:
@@ -71,5 +79,7 @@ items:
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
+    labels:
+      app: enmasse
     name: prometheus-server
 kind: List

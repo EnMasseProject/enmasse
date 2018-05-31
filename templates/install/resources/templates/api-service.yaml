@@ -4,6 +4,8 @@ objects:
 - apiVersion: apiregistration.k8s.io/v1beta1
   kind: APIService
   metadata:
+    labels:
+      app: enmasse
     name: v1alpha1.enmasse.io
   spec:
     group: enmasse.io

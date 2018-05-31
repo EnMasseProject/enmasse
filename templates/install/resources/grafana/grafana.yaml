@@ -3,6 +3,8 @@ items:
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
+    labels:
+      app: enmasse
     name: grafana
   spec:
     replicas: 1
@@ -28,6 +30,8 @@ items:
 - apiVersion: v1
   kind: Service
   metadata:
+    labels:
+      app: enmasse
     name: grafana
   spec:
     ports:
@@ -39,6 +43,8 @@ items:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
+    labels:
+      app: enmasse
     name: grafana-data
   spec:
     accessModes:
