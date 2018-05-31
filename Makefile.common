@@ -4,6 +4,7 @@ DOCKER_ORG      ?= enmasseproject
 DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
+NAMESPACE       ?= $(shell oc project -q)
 COMMIT          ?= latest
 TAG             ?= latest
 VERSION         ?= $(shell cat $(TOPDIR)/release.version)

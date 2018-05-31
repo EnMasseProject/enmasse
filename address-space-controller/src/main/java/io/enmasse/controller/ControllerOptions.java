@@ -17,10 +17,6 @@ public final class ControllerOptions {
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
 
-    private final String masterUrl;
-    private final String namespace;
-    private final String token;
-
     private final File templateDir;
     private final NoneAuthServiceInfo noneAuthService;
     private final StandardAuthServiceInfo standardAuthService;
@@ -38,11 +34,7 @@ public final class ControllerOptions {
 
     private final String impersonateUser;
 
-    private ControllerOptions(String masterUrl, String namespace, String token,
-                              File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
-        this.masterUrl = masterUrl;
-        this.namespace = namespace;
-        this.token = token;
+    private ControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
         this.templateDir = templateDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
@@ -55,18 +47,6 @@ public final class ControllerOptions {
         this.resyncInterval = resyncInterval;
         this.recheckInterval = recheckInterval;
         this.impersonateUser = impersonateUser;
-    }
-
-    public String getMasterUrl() {
-        return masterUrl;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getToken() {
-        return token;
     }
 
     public File getTemplateDir() {
@@ -120,15 +100,6 @@ public final class ControllerOptions {
 
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
-        String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
-        String masterPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
-
-        String namespace = getEnv(env, "NAMESPACE")
-                .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "namespace")));
-
-        String token = getEnv(env, "TOKEN")
-                .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "token")));
-
         File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
 
         if (!templateDir.exists()) {
@@ -163,9 +134,7 @@ public final class ControllerOptions {
             impersonateUser = null;
         }
 
-        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
-                namespace,
-                token,
+        return new ControllerOptions(
                 templateDir,
                 noneAuthService,
                 standardAuthService,
@@ -206,13 +175,5 @@ public final class ControllerOptions {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
         }
         return var;
-    }
-
-    private static String readFile(File file) {
-        try {
-            return new String(Files.readAllBytes(file.toPath()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }
