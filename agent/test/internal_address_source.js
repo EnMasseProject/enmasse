@@ -260,12 +260,13 @@ describe('configmap backed address source', function() {
         });
     });
     it('creates an address', function(done) {
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({name: 'foo'}, {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.once('addresses_defined', function () {
             source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
                 function () {
                     source.once('addresses_defined', function (addresses) {
                         assert.equal(addresses.length, 1);
+                        assert.equal(addresses[0].name.substring(0,4), 'foo.');
                         assert.equal(addresses[0].address, 'myqueue');
                         assert.equal(addresses[0].type, 'queue');
                         assert.equal(addresses[0].plan, 'clever');

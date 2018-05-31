@@ -206,12 +206,12 @@ AddressSource.prototype.check_status = function (address_stats) {
     return Promise.all(results);
 };
 
-function get_configmap_name_for_address(address) {
-    return myutils.kubernetes_name(address);
+function get_configmap_name_for_address(address, addressspace) {
+    return addressspace + "." + myutils.kubernetes_name(address, addressspace.length + 1);
 }
 
 AddressSource.prototype.create_address = function (definition) {
-    var configmap_name = get_configmap_name_for_address(definition.address);
+    var configmap_name = get_configmap_name_for_address(definition.address, this.address_space.name);
     var address = {
         apiVersion: 'enmasse.io/v1alpha1',
         kind: 'Address',
