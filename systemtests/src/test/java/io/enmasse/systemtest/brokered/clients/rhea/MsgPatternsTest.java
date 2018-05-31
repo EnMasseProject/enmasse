@@ -27,8 +27,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
     }
 
     @Test
-    void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
+    void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
+        doRoundRobinReceiverTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
