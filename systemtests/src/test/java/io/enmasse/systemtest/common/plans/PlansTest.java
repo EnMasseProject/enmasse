@@ -532,6 +532,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
         page.openAddressesPageWebConsole();
         for (Destination dest : notAllowedDest) {
             AddressWebItem item = page.getAddressItem(dest);
+            assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
         }
 
