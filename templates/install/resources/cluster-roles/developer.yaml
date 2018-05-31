@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:developer
+rules:
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addresses" ]
+    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
