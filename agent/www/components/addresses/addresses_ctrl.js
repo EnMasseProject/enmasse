@@ -54,8 +54,8 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         var saveLastLinkInfo = function (item) {
           lastLinkInfo[item.address] =
             {
-              ingress: angular.copy(item.outcomes.ingress.links),
-              egress: angular.copy(item.outcomes.egress.links)
+                ingress: item.outcomes ? angular.copy(item.outcomes.ingress.links) : [],
+                egress: item.outcomes ? angular.copy(item.outcomes.egress.links) : []
             }
         }
         var calcRates = function (item) {
@@ -87,8 +87,8 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
                 }
               })
             }
-            calc(lastInfo.ingress, item.outcomes.ingress.links)
-            calc(lastInfo.egress, item.outcomes.egress.links)
+              calc(lastInfo.ingress, item.outcomes ? item.outcomes.ingress.links : [])
+              calc(lastInfo.egress, item.outcomes ? item.outcomes.egress.links : [])
           }
         }
         // construct the html tooltop for a link details row
@@ -127,34 +127,92 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             })
         }
 
-        var on_update = function (reason) {
-          if ($scope.filterConfig) {
-            $scope.filterConfig.resultsCount = $scope.items.length;
-          }
-          if (reason.split('_')[0] !== 'address') {
-            return
-          }
-            $scope.admin_disabled = address_service.admin_disabled;
-          $scope.items.forEach( function (item) {
-            if (item.senders + item.receivers > 0) {
-              if (!item.ingress_outcomes_link_table) {
-                item.ingress_outcomes_link_table = new linkTableConfig()
-                item.egress_outcomes_link_table = new linkTableConfig()
-              }
-              calcRates(item)
-              saveLastLinkInfo(item)
-
-              // needed to force the grid to update the data
-              item.ingress_outcomes_link_table.data = item.outcomes.ingress.links
-              item.egress_outcomes_link_table.data = item.outcomes.egress.links
-            }
-          })
-          $timeout(() => {}) // safely apply any changes to scope variables
-          // force a rate updated even if there was no change in the address
-          if (rateTimer)
-            clearTimeout(rateTimer)
-          rateTimer = setTimeout(forceDeliveryRateUpdate, 7500)
+        $scope.filterConfig = {
+            fields: [
+                {
+                    id: 'address',
+                    title:  'Name',
+                    placeholder: 'Filter by Name...',
+                    filterType: 'text'
+                },
+                {
+                    id: 'type',
+                    title:  'Type',
+                    placeholder: 'Filter by Type...',
+                    filterType: 'select',
+                    filterValues: ['queue', 'topic', 'multicast', 'anycast']
+                }
+            ],
+            resultsCount: 0,
+            appliedFilters: [],
+            onFilterChange: filterChange
         };
+
+        var matchesFilter = function (item, filter) {
+            if (filter.id === 'address') {
+                return item.address.match(filter.value) !== null;
+            } else if (filter.id === 'type') {
+                return item.type.match(filter.value) !== null;
+            } else {
+                return true;
+            }
+        };
+
+        var compareFn = function(item1, item2) {
+            var compValue = 0;
+            if ($scope.sortConfig.currentField.id === 'address') {
+                compValue = item1.address.localeCompare(item2.address);
+            } else if ($scope.sortConfig.currentField.id === 'senders') {
+                compValue = item1.senders - item2.senders;
+            } else if ($scope.sortConfig.currentField.id === 'receivers') {
+                compValue = item1.receivers - item2.receivers;
+            }
+
+            if (!$scope.sortConfig.isAscending) {
+                compValue = compValue * -1;
+            }
+
+            return compValue;
+        };
+
+        var matchesFilters = function (item, filters) {
+            return !filters || filters.every(matchesFilter.bind(null, item));
+        };
+
+        var applyFilters = function (filters) {
+            $scope.items = address_service.get_addresses(function (item) {
+                return matchesFilters(item, filters);
+            });
+            $scope.filterConfig.resultsCount = $scope.items.length;
+            $scope.items.sort(compareFn);
+        };
+
+        var on_update = function (reason) {
+            applyFilters($scope.filterConfig.appliedFilters);
+            if (reason.split('_')[0] !== 'address') {
+                return;
+            }
+            $scope.admin_disabled = address_service.admin_disabled;
+            $scope.items.forEach( function (item) {
+                if (item.senders + item.receivers > 0) {
+                    if (!item.ingress_outcomes_link_table) {
+                        item.ingress_outcomes_link_table = new linkTableConfig()
+                        item.egress_outcomes_link_table = new linkTableConfig()
+                    }
+                    calcRates(item)
+                    saveLastLinkInfo(item)
+                    // needed to force the grid to update the data
+                    item.ingress_outcomes_link_table.data = item.outcomes.ingress.links
+                    item.egress_outcomes_link_table.data = item.outcomes.egress.links
+                }
+            })
+            $timeout(() => {}) // safely apply any changes to scope variables
+            // force a rate updated even if there was no change in the address
+            if (rateTimer)
+                clearTimeout(rateTimer)
+            rateTimer = setTimeout(forceDeliveryRateUpdate, 7500)
+        };
+
         address_service.on_update(on_update);
 
         $scope.getTableHeight = function(item, xgress) {
@@ -166,44 +224,8 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         };
 
         $scope.filtersText = '';
-        $scope.items = address_service.addresses;
+        $scope.items = address_service.get_addresses();
         on_update("address")
-
-        var matchesFilter = function (item, filter) {
-          var match = true;
-
-          if (filter.id === 'address') {
-              match = item.address.match(filter.value) !== null;
-          } else if (filter.id === 'type') {
-              match = item.type.match(filter.value) !== null;
-          }
-          return match;
-        };
-
-        var matchesFilters = function (item, filters) {
-          var matches = true;
-
-          filters.forEach(function(filter) {
-            if (!matchesFilter(item, filter)) {
-              matches = false;
-              return false;
-            }
-          });
-          return matches;
-        };
-
-        var applyFilters = function (filters) {
-          $scope.items = [];
-          if (filters && filters.length > 0) {
-            address_service.addresses.forEach(function (item) {
-              if (matchesFilters(item, filters)) {
-                $scope.items.push(item);
-              }
-            });
-          } else {
-            $scope.items = address_service.addresses;
-          }
-        };
 
         var filterChange = function (filters) {
             $scope.filtersText = "";
@@ -211,48 +233,11 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
                 $scope.filtersText += filter.title + " : " + filter.value + "\n";
             });
             applyFilters(filters);
-            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
         };
-
-        $scope.filterConfig = {
-          fields: [
-            {
-              id: 'address',
-              title:  'Name',
-              placeholder: 'Filter by Name...',
-              filterType: 'text'
-            },
-            {
-              id: 'type',
-              title:  'Type',
-              placeholder: 'Filter by Type...',
-                filterType: 'select',
-                filterValues: ['queue', 'topic', 'multicast', 'anycast', 'subscription']
-            }
-          ],
-          resultsCount: $scope.items.length,
-          appliedFilters: [],
-          onFilterChange: filterChange
-        };
-        var compareFn = function(item1, item2) {
-          var compValue = 0;
-          if ($scope.sortConfig.currentField.id === 'address') {
-            compValue = item1.address.localeCompare(item2.address);
-          } else if ($scope.sortConfig.currentField.id === 'senders') {
-              compValue = item1.senders - item2.senders;
-          } else if ($scope.sortConfig.currentField.id === 'receivers') {
-              compValue = item1.receivers - item2.receivers;
-          }
-
-          if (!$scope.sortConfig.isAscending) {
-            compValue = compValue * -1;
-          }
-
-          return compValue;
-        };
+        $scope.filterConfig.onFilterChange = filterChange;
 
         var sortChange = function (sortId, isAscending) {
-          $scope.items.sort(compareFn);
+            $scope.items.sort(compareFn);
         };
 
         $scope.sortConfig = {

@@ -1,5 +1,110 @@
 var rhea = require('rhea');
 
+function coalesce (f, delay, max_delay) {
+    var start, scheduled, timeout = undefined;
+    var timeout = undefined;
+
+    function fire() {
+        start = undefined;
+        timeout = undefined;
+        f();
+    }
+
+    function can_delay() {
+        return start && scheduled < (start + max_delay);
+    }
+
+    function schedule() {
+        timeout = setTimeout(fire, delay);
+        scheduled = Date.now() + delay;
+    }
+
+    return function () {
+        if (timeout) {
+            if (can_delay()) {
+                clearTimeout(timeout);
+                schedule();
+            } // else just wait for previously scheduled call
+        } else {
+            start = Date.now();
+            schedule();
+        }
+    }
+};
+
+function string_compare (a, b) {
+    if (a === b) return 0;
+    else if (a < b) return -1;
+    else return 1;
+};
+
+function get_address (a) {
+    return a.address;
+};
+
+function SortedObjectSet(key_function, wrapper) {
+    this.key_function = key_function;
+    this.wrapper = wrapper;
+    this.objects = [];
+}
+
+SortedObjectSet.prototype.find_by_key = function(key) {
+    var m = 0;
+    var n = this.objects.length - 1;
+    while (m <= n) {
+        var k = (n + m) >> 1;
+        var cmp = string_compare(key, this.key_function(this.objects[k]));
+        if (cmp > 0) {
+            m = k + 1;
+        } else if(cmp < 0) {
+            n = k - 1;
+        } else {
+            return k;
+        }
+    }
+    return -m - 1;
+}
+
+SortedObjectSet.prototype.update = function (object) {
+    var i = this.find_by_key(this.key_function(object));
+    if (i < 0) {
+        this.objects.splice(~i, 0, this.wrapper(object));
+    } else {
+        this.objects[i].update(object);
+    }
+};
+
+SortedObjectSet.prototype.remove = function (filter) {
+    var removed = [];
+    for (var i = 0; i < this.objects.length;) {
+        if (filter(this.objects[i])) {
+            removed.push(this.objects[i]);
+            this.objects.splice(i, 1);
+        } else {
+            i++;
+        }
+    }
+    return removed.length ? removed : undefined;
+};
+
+SortedObjectSet.prototype.remove_by_key = function (key) {
+    var i = this.find_by_key(key);
+    if (i < 0) {
+        return false;
+    } else {
+        this.objects.splice(i, 1);
+        return true;
+    }
+};
+
+SortedObjectSet.prototype.filter = function (filter) {
+    return this.objects.filter(filter);
+};
+
+SortedObjectSet.prototype.some = function (filter) {
+    return this.objects.some(filter);
+};
+
 function TimeSeries(label, max_size) {
     this.yData = [label];
     this.xData = ['time'];
@@ -57,6 +162,10 @@ WindowedDelta.prototype.total = function (current) {
     return t;
 };
 
+function address_definition(a) {
+    return new AddressDefinition(a);
+}
+
 function AddressDefinition(a) {
     this.update(a);
     this.depth_series = new TimeSeries('messages-stored');
@@ -109,7 +218,7 @@ AddressDefinition.prototype.update_periodic_deltas = function () {
 function AddressService($http) {
     var self = this;  // 'this' is not available in the success funtion of $http.get
     this.admin_disabled = true;
-    this.addresses = [];
+    this._addresses = new SortedObjectSet(get_address, address_definition);
     this.address_types = [];
     this.address_space_type = '';
     this.connections = [];
@@ -144,9 +253,9 @@ AddressService.prototype.get_plan_display_name = function (type, plan) {
         } else {
             console.log('found no plan called %s address of type %s', plan, type);
         }
-    } else {
+    } else if (this.address_types.length) {
         console.log('found no address for type %s in %j', type, this.address_types);
-    }
+    } //else haven't loaded plans yet
     return plan;
 };
 
@@ -163,55 +272,50 @@ AddressService.prototype.list_topic_names = function () {
     return this.addresses.filter(function (a) { return a.type === 'topic'; }).map(function (a) { return a.address; });
 };
 
+AddressService.prototype.get_addresses = function (filter) {
+    return this._addresses.filter(filter || function () { return true});
+};
+
+function update_depth_series(o) {
+    return o.update_depth_series();
+}
+
+function update_periodic_deltas(o) {
+    return o.update_periodic_deltas();
+}
+
 AddressService.prototype.update_depth_series = function () {
-    var changed = false;
-    for (var i = 0; i < this.addresses.length; i++) {
-        if (this.addresses[i].update_depth_series()) {
-            changed = true;
-        }
+    if (this._addresses.some(update_depth_series) && this.callback) {
+        this.callback('update_depth_series');
     }
-    if (changed && this.callback) this.callback('update_depth_series');
 };
 
 AddressService.prototype.update_periodic_deltas = function () {
-    for (var i = 0; i < this.addresses.length; i++) {
-        this.addresses[i].update_periodic_deltas();
-    }
+    this._addresses.some(update_periodic_deltas);
     if (this.callback) this.callback('reset_periodic_deltas');
 };
 
 AddressService.prototype.update = function (a) {
-    var i = 0;
-    while (i < this.addresses.length && a.address !== this.addresses[i].address) {
-        i++;
-    }
-    if (this.addresses[i] === undefined) {
-        this.addresses[i] = new AddressDefinition(a);
-    } else {
-        this.addresses[i].update(a);
-    }
+    this._addresses.update(a);
 }
 
 AddressService.prototype.create_address = function (obj) {
     this.sender.send({subject: 'create_address', body: obj});
 }
 
+function is_selected(o) { return o.selected; }
+function to_delete_address_message(o) { return {subject: 'delete_address', body: o} };
+
 AddressService.prototype.delete_selected = function () {
-    var changed = false;
-    for (var i = 0; i < this.addresses.length;) {
-        if (this.addresses[i].selected) {
-            this.sender.send({subject: 'delete_address', body: this.addresses[i]});
-            this.addresses.splice(i, 1);
-            changed = true;
-        } else {
-            i++;
-        }
+    var removed = this._addresses.remove(is_selected);
+    if (removed) {
+        removed.map(to_delete_address_message).forEach(this.sender.send.bind(this.sender));
     }
     if (changed && this.callback) this.callback('address_deleted');
 }
 
 AddressService.prototype.is_unique_name = function (name) {
-    return !this.addresses.some(function (a) { return a.address === name; });
+    return !this._addresses.some(function (a) { return a.address === name; });
 }
 
 AddressService.prototype.create_user = function (obj) {
@@ -255,16 +359,8 @@ AddressService.prototype.on_message = function (context) {
         this.update(context.message.body);
         if (this.callback) this.callback('address');
     } else if (context.message.subject === 'address_deleted') {
-        var changed = false;
-        for (var i = 0; i < this.addresses.length;) {
-            if (this.addresses[i].address === context.message.body) {
-                this.addresses.splice(i, 1);
-                changed = true;
-            } else {
-                i++;
-            }
-        }
-        if (changed && this.callback) this.callback('address_deleted');
+        this._addresses.remove_by_key(context.message.body);
+        if (this.callback) this.callback('address_deleted');
     } else if (context.message.subject === 'address_types') {
         this.address_types = context.message.body;
         this.address_space_type = context.message.application_properties.address_space_type;
@@ -302,8 +398,23 @@ AddressService.prototype.on_message = function (context) {
     }
 }
 
+AddressService.prototype._notify = function () {
+    for (var reason in this._reasons) {
+        console.log('udpate: %s', reason);
+        this._callback(reason);
+    }
+    this._reasons = {};
+}
+
 AddressService.prototype.on_update = function (callback) {
-    this.callback = callback;
+    this._reasons = {};
+    this._callback = callback;
+    this.notify = coalesce(this._notify.bind(this), 10, 500);
+    var self = this;
+    this.callback = function (reason) {
+        self._reasons[reason] = true;
+        this.notify();
+    }
 }
 
 angular.module('address_service', []).factory('address_service', function($http) {

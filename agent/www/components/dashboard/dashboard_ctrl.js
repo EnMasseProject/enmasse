@@ -164,6 +164,7 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
 
     // called by address_service each time an address' data changes
     var on_update = function (reason) {
+        items = address_service.get_addresses();
         $timeout(function () {
           if (!reason) reason = '';
           if (reason.split(':')[0] !== 'address') {
@@ -175,7 +176,7 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
         })
     };
 
-    var items = address_service.addresses;
+    var items = address_service.get_addresses();
     address_service.on_update(on_update)
 
     // draw charts without waiting for on_update event from address_service
