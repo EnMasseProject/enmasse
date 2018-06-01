@@ -27,11 +27,7 @@ public abstract class ApiClient {
     protected ApiClient(Kubernetes kubernetes, Endpoint endpoint) {
         this.vertx = VertxFactory.create();
         this.kubernetes = kubernetes;
-        this.client = WebClient.create(vertx, new WebClientOptions()
-                .setSsl(true)
-                // TODO: Fetch CA and use
-                .setTrustAll(true)
-                .setVerifyHost(false));
+        this.connect();
         this.authzString = String.format("Bearer %s", kubernetes.getApiToken());
         this.endpoint = endpoint;
     }
@@ -40,6 +36,10 @@ public abstract class ApiClient {
 
     protected void reconnect() {
         this.client.close();
+        connect();
+    }
+
+    protected void connect() {
         this.client = WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)
                 // TODO: Fetch CA and use
