@@ -40,6 +40,7 @@ public class RheaClientConnector extends AbstractClient {
         allowedArgs.add(ClientArgument.CONN_SSL_VERIFY_PEER_NAME);
         allowedArgs.add(ClientArgument.CONN_MAX_FRAME_SIZE);
         allowedArgs.add(ClientArgument.CONN_WEB_SOCKET);
+        allowedArgs.add(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS);
         allowedArgs.add(ClientArgument.CONN_PROPERTY);
 
         allowedArgs.add(ClientArgument.LINK_DURABLE);

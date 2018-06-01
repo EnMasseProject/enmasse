@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.selenium.page;
 
 
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.KeycloakCredentials;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -29,10 +30,11 @@ public class RheaWebPage implements IWebPage {
         checkReachableWebPage();
     }
 
-    public void sendReceiveMessages(String server, String address, int count, KeycloakCredentials credentials) throws Exception {
+    public void sendReceiveMessages(String server, String address, int count, KeycloakCredentials credentials, AddressSpaceType addressSpaceType) throws Exception {
         openRheaWebPage();
-        String command = String.format("connect_to_enmasse(\"wss://%s\", \"%s\", \"%s\", \"%s\", \"%s\")",
-                server, address, count, credentials.getUsername(), credentials.getPassword());
+        String wsProtocol = (addressSpaceType == AddressSpaceType.STANDARD) ? "binary" : "amqp";
+        String command = String.format("connect_to_enmasse(\"wss://%s\", \"%s\", \"%s\", \"%s\", \"%s\", ['%s'])",
+                server, address, count, credentials.getUsername(), credentials.getPassword(), wsProtocol);
         selenium.executeJavaScript(command);
     }
 

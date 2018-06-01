@@ -23,8 +23,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("tests is disabled until websocket will be enabled in standard addr space")
-    void testBasicMessageWebScoket() throws Exception {
+    void testBasicMessageWebSocket() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }
 

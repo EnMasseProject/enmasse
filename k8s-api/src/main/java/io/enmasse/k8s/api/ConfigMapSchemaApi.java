@@ -16,7 +16,6 @@ import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
-import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,6 +169,12 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
 
         builder.setAvailableEndpoints(Arrays.asList(
                 createEndpointSpec("messaging", "amqps"),
+                new EndpointSpec.Builder()
+                        .setName("amqp-wss")
+                        .setService("messaging")
+                        .setServicePort("https")
+                        .setCertSpec(new CertSpec(null, "external-certs-messaging"))
+                        .build(),
                 createEndpointSpec("mqtt", "secure-mqtt"),
                 createEndpointSpec("console", "https")));
 

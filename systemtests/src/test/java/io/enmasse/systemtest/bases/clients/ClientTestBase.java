@@ -4,9 +4,7 @@
  */
 package io.enmasse.systemtest.bases.clients;
 
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.ArtemisManagement;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.ClientArgument;
@@ -57,6 +55,19 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         return topicSwitch ? "topic://" : "";
     }
 
+    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) {
+        if (addressSpace.getType().equals(AddressSpaceType.STANDARD) && websocket) {
+            Endpoint messagingEndpoint = addressSpace.getEndpoint("amqp-wss");
+            if (TestUtils.resolvable(messagingEndpoint)) {
+                return messagingEndpoint;
+            } else {
+                return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "https");
+            }
+        } else {
+            return getMessagingRoute(addressSpace);
+        }
+    }
+
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         doBasicMessageTest(sender, receiver, false);
     }
@@ -69,12 +80,16 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        if (websocket)
+        if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
+            if (sharedAddressSpace.getType() == AddressSpaceType.STANDARD) {
+                arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+            }
+        }
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);

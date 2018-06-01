@@ -24,6 +24,7 @@ public enum ClientArgument {
     CONN_SSL_VERIFY_PEER_NAME("--conn-ssl-verify-peer-name"),
     CONN_MAX_FRAME_SIZE("--conn-max-frame-size"),
     CONN_WEB_SOCKET("--conn-web-socket"),
+    CONN_WEB_SOCKET_PROTOCOLS("--conn-ws-protocols"),
     CONN_OPTIONS("--connection-options"),
     CONN_PROPERTY("--conn-property"),
 
