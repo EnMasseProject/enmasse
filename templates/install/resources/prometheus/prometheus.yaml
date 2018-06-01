@@ -65,7 +65,7 @@ items:
     selector:
       name: prometheus
 - apiVersion: v1
-  k:wqind: PersistentVolumeClaim
+  kind: PersistentVolumeClaim
   metadata:
     labels:
       app: enmasse
