@@ -5,8 +5,7 @@
 package io.enmasse.systemtest.bases.web;
 
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.RheaWebPage;
@@ -32,6 +31,20 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
     }
 
     @Override
+    protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
+        if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
+            Endpoint messagingEndpoint = addressSpace.getEndpoint("amqp-wss");
+            if (TestUtils.resolvable(messagingEndpoint)) {
+                return messagingEndpoint;
+            } else {
+                return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "https");
+            }
+        } else {
+            return super.getMessagingRoute(addressSpace);
+        }
+    }
+
+    @Override
     public boolean skipDummyAddress() {
         return true;
     }
@@ -45,7 +58,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         int count = 10;
 
         rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(),
-                count, defaultCredentials);
+                count, defaultCredentials, sharedAddressSpace.getType());
         assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }
 }

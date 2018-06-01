@@ -20,12 +20,7 @@ data:
           addressSpace: ${ADDRESS_SPACE}
           enmasse.io/service-port.amqp: 5672
           enmasse.io/service-port.amqps: 5671
-          service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
-            "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
-            ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
-            "name": "console", "namespace": ""}, {"kind": "Service", "name": "subscription",
-            "namespace": ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}]'
-          service.alpha.openshift.io/infrastructure: 'true'
+          enmasse.io/service-port.amqp-wss: 443
         labels:
           app: enmasse
         name: messaging
@@ -51,6 +46,10 @@ data:
           port: 55672
           protocol: TCP
           targetPort: 55672
+        - name: https
+          port: 443
+          protocol: TCP
+          targetPort: 8443
         selector:
           capability: router
     - apiVersion: v1
@@ -115,6 +114,9 @@ data:
                 protocol: TCP
               - containerPort: 5671
                 name: amqps
+                protocol: TCP
+              - containerPort: 8443
+                name: https
                 protocol: TCP
               - containerPort: 55671
                 name: amqps-normal
@@ -723,6 +725,9 @@ data:
                       protocol: TCP
                     - containerPort: 5671
                       name: amqps
+                      protocol: TCP
+                    - containerPort: 8443
+                      name: https
                       protocol: TCP
                     - containerPort: 55671
                       name: amqps-normal
@@ -916,12 +921,7 @@ data:
           addressSpace: ${ADDRESS_SPACE}
           enmasse.io/service-port.amqp: 5672
           enmasse.io/service-port.amqps: 5671
-          service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
-            "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
-            ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
-            "name": "console", "namespace": ""}, {"kind": "Service", "name": "subscription",
-            "namespace": ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}]'
-          service.alpha.openshift.io/infrastructure: 'true'
+          enmasse.io/service-port.amqp-wss: 443
         labels:
           app: enmasse
         name: messaging
@@ -931,6 +931,10 @@ data:
           port: 5672
           protocol: TCP
           targetPort: 5672
+        - name: https
+          port: 443
+          protocol: TCP
+          targetPort: 8443
         - name: amqps
           port: 5671
           protocol: TCP
@@ -1027,6 +1031,9 @@ data:
                 protocol: TCP
               - containerPort: 5671
                 name: amqps
+                protocol: TCP
+              - containerPort: 8443
+                name: https
                 protocol: TCP
               - containerPort: 55671
                 name: amqps-normal
@@ -1635,6 +1642,9 @@ data:
                       protocol: TCP
                     - containerPort: 5671
                       name: amqps
+                      protocol: TCP
+                    - containerPort: 8443
+                      name: https
                       protocol: TCP
                     - containerPort: 55671
                       name: amqps-normal
