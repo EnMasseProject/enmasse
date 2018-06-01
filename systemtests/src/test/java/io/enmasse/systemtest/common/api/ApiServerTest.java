@@ -11,8 +11,8 @@ import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.selenium.SeleniumContainers;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.standard.mqtt.PublishTest;
 import io.vertx.core.http.HttpMethod;
@@ -21,15 +21,16 @@ import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -214,7 +215,7 @@ class ApiServerTest extends TestBase {
             setAddresses(addressSpace, destWithouAddress);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals(serverResponse.getString("description"), "Missing 'address' string field in 'spec'",
+            assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("description"),
                     "Incorrect response from server on missing address!");
         }
 
@@ -223,7 +224,7 @@ class ApiServerTest extends TestBase {
             setAddresses(addressSpace, destWithoutType);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals(serverResponse.getString("description"), "Missing 'type' string field in 'spec'",
+            assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("description"),
                     "Incorrect response from serveron missing type!");
         }
 
@@ -232,7 +233,7 @@ class ApiServerTest extends TestBase {
             setAddresses(addressSpace, destWithouPlan);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals(serverResponse.getString("description"), "Missing 'plan' string field in 'spec'",
+            assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("description"),
                     "Incorrect response from server on missing plan!");
         }
     }
