@@ -60,7 +60,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
         createAddressSpace(manyAddressesSpace);
 
         ArrayList<Destination> dest = new ArrayList<>();
-        int destCount = 4000;
+        int destCount = 3900;
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));//broker credit = 0.001 => 4 pods
         }
