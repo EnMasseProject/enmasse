@@ -18,25 +18,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderFirefox {
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteAnycast() throws Exception {
         doTestCreateDeleteAddress(Destination.anycast("test-anycast-firefox"));
     }
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteMulticast() throws Exception {
         doTestCreateDeleteAddress(Destination.multicast("test-multicast-firefox"));
     }

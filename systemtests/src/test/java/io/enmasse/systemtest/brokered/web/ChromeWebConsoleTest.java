@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, ISeleniumProviderChrome {
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
