@@ -229,7 +229,7 @@ local images = import "images.jsonnet";
   prometheus_pvc::
   {
     "apiVersion": "v1",
-    "k:wqind": "PersistentVolumeClaim",
+    "kind": "PersistentVolumeClaim",
     "metadata": {
       "name": "prometheus-data",
       "labels": {
