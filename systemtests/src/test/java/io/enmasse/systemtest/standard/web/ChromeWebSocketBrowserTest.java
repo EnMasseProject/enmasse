@@ -12,7 +12,6 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("disabled until ws in standard address space will be implemented")
 class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard, ISeleniumProviderChrome {
 
 
