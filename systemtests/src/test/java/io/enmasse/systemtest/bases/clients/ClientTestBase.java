@@ -131,7 +131,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         assertAll(
                 () -> assertEquals(expectedMsgCount / 2, receiver.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount / 2)),
-                () -> assertEquals(expectedMsgCount / 2, receiver.getMessages().size(),
+                () -> assertEquals(expectedMsgCount / 2, receiver2.getMessages().size(),
                         String.format("Expected %d sent messages", expectedMsgCount / 2)));
     }
 
