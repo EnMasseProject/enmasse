@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderChrome {
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue1", "pooled-queue"),
                 Destination.queue("test-queue2", "sharded-queue"));
@@ -32,7 +31,6 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     }
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteAnycast() throws Exception {
         doTestCreateDeleteAddress(Destination.anycast("test-anycast-chrome"));
     }

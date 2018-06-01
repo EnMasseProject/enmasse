@@ -18,13 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, ISeleniumProviderFirefox {
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
-    @Disabled("related issue: #1074")
     void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }

@@ -193,14 +193,17 @@ AddressService.prototype.create_address = function (obj) {
 }
 
 AddressService.prototype.delete_selected = function () {
+    var changed = false;
     for (var i = 0; i < this.addresses.length;) {
         if (this.addresses[i].selected) {
             this.sender.send({subject: 'delete_address', body: this.addresses[i]});
             this.addresses.splice(i, 1);
+            changed = true;
         } else {
             i++;
         }
     }
+    if (changed && this.callback) this.callback('address_deleted');
 }
 
 AddressService.prototype.is_unique_name = function (name) {
@@ -257,7 +260,7 @@ AddressService.prototype.on_message = function (context) {
                 i++;
             }
         }
-        if (changed && this.callback) this.callback('address:deleted');
+        if (changed && this.callback) this.callback('address_deleted');
     } else if (context.message.subject === 'address_types') {
         this.address_types = context.message.body;
         this.address_space_type = context.message.application_properties.address_space_type;
