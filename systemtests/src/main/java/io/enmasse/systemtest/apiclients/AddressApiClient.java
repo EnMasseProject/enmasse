@@ -87,6 +87,7 @@ public class AddressApiClient extends ApiClient {
             JsonObject endpointJson = new JsonObject();
             endpointJson.put("name", endpoint.getName());
             endpointJson.put("service", endpoint.getService());
+            endpointJson.put("servicePort", endpoint.getServicePort());
             endpointsJson.add(endpointJson);
         }
         return endpointsJson;

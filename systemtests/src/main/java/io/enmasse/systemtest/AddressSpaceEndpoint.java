@@ -7,22 +7,14 @@ package io.enmasse.systemtest;
 public class AddressSpaceEndpoint {
     private String name;
     private String service;
+    private String servicePort;
     private String host;
     private int port;
 
-    public AddressSpaceEndpoint(String name, String service) {
+    public AddressSpaceEndpoint(String name, String service, String servicePort) {
         this.name = name;
         this.service = service;
-    }
-
-    public AddressSpaceEndpoint(String name, String service, String host) {
-        this(name, service);
-        this.host = host;
-    }
-
-    public AddressSpaceEndpoint(String name, String service, String host, int port) {
-        this(name, service, host);
-        this.port = port;
+        this.servicePort = servicePort;
     }
 
     public String getName() {
@@ -48,6 +40,15 @@ public class AddressSpaceEndpoint {
     public void setService(String service) {
         this.service = service;
     }
+
+    public String getServicePort() {
+        return servicePort;
+    }
+
+    public void setServicePort(String servicePort) {
+        this.servicePort = servicePort;
+    }
+
 
     public int getPort() {
         return port;

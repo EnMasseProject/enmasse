@@ -77,9 +77,10 @@ public class TemplateBrokerSetGeneratorTest {
                 .setName(name)
                 .setNamespace(name)
                 .setType("standard")
-                .appendEndpoint(new Endpoint.Builder()
+                .appendEndpoint(new EndpointSpec.Builder()
                         .setName("foo")
                         .setService("messaging")
+                        .setServicePort("amqps")
                         .setCertSpec(new CertSpec("mysecret", "mysecret"))
                         .build())
                 .build();

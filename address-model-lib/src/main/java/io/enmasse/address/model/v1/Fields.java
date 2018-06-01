@@ -14,8 +14,11 @@ interface Fields {
     String NAME = "name";
     String NAMESPACE = "namespace";
     String ENDPOINTS = "endpoints";
+    String ENDPOINT_STATUSES = "endpointStatuses";
     String HOST = "host";
     String SERVICE = "service";
+    String SERVICE_HOST = "serviceHost";
+    String SERVICE_PORT = "servicePort";
     String CERT = "cert";
     String SECRET_NAME = "secretName";
     String PROVIDER = "provider";

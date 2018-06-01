@@ -14,14 +14,14 @@ public class AddressSpaceType {
     private final String description;
     private final List<AddressSpacePlan> plans;
     private final List<AddressType> addressTypes;
-    private final List<String> serviceNames;
+    private final List<EndpointSpec> availableEndpoints;
 
-    public AddressSpaceType(String name, String description, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<String> serviceNames) {
+    public AddressSpaceType(String name, String description, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints) {
         this.name = name;
         this.description = description;
         this.plans = plans;
         this.addressTypes = addressTypes;
-        this.serviceNames = serviceNames;
+        this.availableEndpoints = availableEndpoints;
     }
 
     public String getName() {
@@ -49,8 +49,8 @@ public class AddressSpaceType {
         return Optional.empty();
     }
 
-    public List<String> getServiceNames() {
-        return Collections.unmodifiableList(serviceNames);
+    public List<EndpointSpec> getAvailableEndpoints() {
+        return Collections.unmodifiableList(availableEndpoints);
     }
 
     public Optional<AddressType> findAddressType(String type) {
@@ -67,7 +67,7 @@ public class AddressSpaceType {
         private String description;
         private List<AddressType> addressTypes;
         private List<AddressSpacePlan> addressSpacePlans;
-        private List<String> serviceNames;
+        private List<EndpointSpec> availableEndpoints;
 
         public Builder setName(String name) {
             this.name = name;
@@ -89,8 +89,8 @@ public class AddressSpaceType {
             return this;
         }
 
-        public Builder setServiceNames(List<String> serviceNames) {
-            this.serviceNames = new ArrayList<>(serviceNames);
+        public Builder setAvailableEndpoints(List<EndpointSpec> availableEndpoints) {
+            this.availableEndpoints = new ArrayList<>(availableEndpoints);
             return this;
         }
 
@@ -99,9 +99,9 @@ public class AddressSpaceType {
             Objects.requireNonNull(description);
             Objects.requireNonNull(addressSpacePlans);
             Objects.requireNonNull(addressTypes);
-            Objects.requireNonNull(serviceNames);
+            Objects.requireNonNull(availableEndpoints);
 
-            return new AddressSpaceType(name, description, addressSpacePlans, addressTypes, serviceNames);
+            return new AddressSpaceType(name, description, addressSpacePlans, addressTypes, availableEndpoints);
         }
     }
 }

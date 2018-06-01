@@ -28,6 +28,7 @@ public class EndpointControllerTest {
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
                 .setNamespace("mynamespace")
+                .putAnnotation(AnnotationKeys.NAMESPACE, "myns")
                 .setType("type1")
                 .setPlan("myplan")
                 .build();
@@ -46,8 +47,6 @@ public class EndpointControllerTest {
                 .addToLabels(LabelKeys.TYPE, "loadbalancer")
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, "messaging")
-                .addToAnnotations(AnnotationKeys.CERT_PROVIDER, "selfsigned")
-                .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, "mysecret")
                 .endMetadata()
                 .editOrNewSpec()
                 .withHost("messaging.example.com")
@@ -65,10 +64,9 @@ public class EndpointControllerTest {
 
         AddressSpace newspace = controller.handle(addressSpace);
 
-        assertThat(newspace.getEndpoints().size(), is(1));
-        assertThat(newspace.getEndpoints().get(0).getName(), is("myservice-external"));
-        assertTrue(newspace.getEndpoints().get(0).getHost().isPresent());
-        assertThat(newspace.getEndpoints().get(0).getHost().get(), is("messaging.example.com"));
-        assertTrue(newspace.getEndpoints().get(0).getCertSpec().isPresent());
+        assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myservice-external"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getHost(), is("messaging.example.com"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging.myns.svc"));
     }
 }

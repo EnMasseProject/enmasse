@@ -92,9 +92,9 @@ class ApiServerTest extends TestBase {
         AddressSpace addressSpace = new AddressSpace("routes-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
         String endpointPrefix = "test-endpoint-";
         addressSpace.setEndpoints(Arrays.asList(
-                new AddressSpaceEndpoint(endpointPrefix + "messaging", "messaging"),
-                new AddressSpaceEndpoint(endpointPrefix + "console", "console"),
-                new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt")));
+                new AddressSpaceEndpoint(endpointPrefix + "messaging", "messaging", "amqps"),
+                new AddressSpaceEndpoint(endpointPrefix + "console", "console", "https"),
+                new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")));
         createAddressSpace(addressSpace);
 
         KeycloakCredentials luckyUser = new KeycloakCredentials("Lucky", "luckyPswd");

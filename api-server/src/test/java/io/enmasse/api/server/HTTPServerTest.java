@@ -63,10 +63,11 @@ public class HTTPServerTest {
                 .setNamespace(name)
                 .setType("mytype")
                 .setPlan("myplan")
-                .setStatus(new io.enmasse.address.model.Status(false))
-                .appendEndpoint(new Endpoint.Builder()
+                .setStatus(new io.enmasse.address.model.AddressSpaceStatus(false))
+                .appendEndpoint(new EndpointSpec.Builder()
                         .setName("foo")
                         .setService("messaging")
+                        .setServicePort("amqps")
                         .build())
                 .build();
     }

@@ -405,7 +405,7 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         if (!endpointsReady) {
-            throw new IllegalStateException(String.format("Address-space '%s' have no ready endpoints!"));
+            throw new IllegalStateException(String.format("Address-space '%s' have no ready endpoints!", name));
         }
     }
 
@@ -576,9 +576,34 @@ public class TestUtils {
             for (int i = 0; i < endpointsJson.size(); i++) {
                 JsonObject endpointJson = endpointsJson.getJsonObject(i);
                 endpoints.add(new AddressSpaceEndpoint(endpointJson.getString("name"),
-                        endpointJson.getString("service"),
-                        endpointJson.getString("host"),
-                        endpointJson.getInteger("port")));
+                        endpointJson.getString("service"), endpointJson.getString("servicePort")));
+            }
+        }
+
+        JsonArray endpointsStatusJson = addressSpaceJson.getJsonObject("status").getJsonArray("endpointStatuses");
+        if (endpointsStatusJson != null) {
+            for (int i = 0; i < endpointsStatusJson.size(); i++) {
+                JsonObject endpointJson = endpointsJson.getJsonObject(i);
+                String ename = endpointJson.getString("name");
+
+                String host = null;
+                int port = 0;
+
+                if (endpointJson.containsKey("host")) {
+                    host = endpointJson.getString("host");
+                }
+
+                if (endpointJson.containsKey("port")) {
+                    port = endpointJson.getInteger("port");
+                }
+
+
+                for (AddressSpaceEndpoint endpoint : endpoints) {
+                    if (endpoint.getName().equals(ename)) {
+                        endpoint.setHost(host);
+                        endpoint.setPort(port);
+                    }
+                }
             }
         }
         AddressSpace addrSpace = new AddressSpace(name, namespace, type, plan, authService);

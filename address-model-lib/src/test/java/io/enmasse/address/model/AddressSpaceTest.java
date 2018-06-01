@@ -27,7 +27,7 @@ public class AddressSpaceTest {
         assertThat(space.getName(), is("name"));
         assertThat(space.getType(), is("type"));
         assertThat(space.getPlan(), is("plan"));
-        assertThat(space.getStatus(), is(new Status(false)));
+        assertThat(space.getStatus(), is(new AddressSpaceStatus(false)));
         assertNotNull(space.getEndpoints());
         assertThat(space.getEndpoints().size(), is(0));
         assertNotNull(space.getAuthenticationService());
