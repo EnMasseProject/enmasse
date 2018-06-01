@@ -6,6 +6,8 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.Schema;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
@@ -17,6 +19,8 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
@@ -62,6 +66,15 @@ public class CreateController implements Controller {
             schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
         }
         log.info("Creating address space {}", addressSpace);
+
+        // Set default endpoints from type
+        if (addressSpace.getEndpoints() == null) {
+            AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace);
+
+            addressSpace = new AddressSpace.Builder(addressSpace)
+                    .setEndpointList(addressSpaceType.getAvailableEndpoints())
+                    .build();
+        }
 
         KubernetesList resourceList = new KubernetesListBuilder()
                 .addAllToItems(infraResourceFactory.createResourceList(addressSpace))

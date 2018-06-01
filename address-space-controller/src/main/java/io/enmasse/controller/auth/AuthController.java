@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.CertProviderFactory;
@@ -43,9 +43,9 @@ public class AuthController implements Controller {
     }
 
     public void issueExternalCertificates(AddressSpace addressSpace) throws Exception {
-        List<Endpoint> endpoints = addressSpace.getEndpoints();
+        List<EndpointSpec> endpoints = addressSpace.getEndpoints();
         if (endpoints != null) {
-            for (Endpoint endpoint : endpoints) {
+            for (EndpointSpec endpoint : endpoints) {
                 if (endpoint.getCertSpec().isPresent()) {
                     try {
                         CertProvider certProvider = certProviderFactory.createProvider(endpoint.getCertSpec().get());

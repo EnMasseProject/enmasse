@@ -6,10 +6,9 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
@@ -183,13 +182,11 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public HasMetadata createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace) {
+    public HasMetadata createEndpoint(EndpointSpec endpoint, Service service, String addressSpaceName, String namespace) {
         if (service == null || service.getMetadata().getAnnotations() == null) {
             log.info("Skipping creating endpoint for unknown service {}", endpoint.getService());
             return null;
         }
-
-        String defaultPort = service.getMetadata().getAnnotations().get(AnnotationKeys.ENDPOINT_PORT);
 
         if (client.isAdaptable(OpenShiftClient.class)) {
             RouteBuilder route = new RouteBuilder()
@@ -207,7 +204,7 @@ public class KubernetesHelper implements Kubernetes {
                     .endTo()
                     .withNewPort()
                     .editOrNewTargetPort()
-                    .withStrVal(defaultPort)
+                    .withStrVal(endpoint.getServicePort())
                     .endTargetPort()
                     .endPort()
                     .endSpec();
@@ -239,7 +236,7 @@ public class KubernetesHelper implements Kubernetes {
             }
             ServicePort servicePort = null;
             for (ServicePort port : service.getSpec().getPorts()) {
-                if (port.getName().equals(defaultPort)) {
+                if (port.getName().equals(endpoint.getServicePort())) {
                     servicePort = port;
                     break;
                 }

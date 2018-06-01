@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class.getName());
@@ -58,63 +57,24 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             authResolver.getSaslInitHost(addressSpace, authService).ifPresent(saslInitHost -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));
             authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
 
-            // Step 1: Validate endpoints and remove unknown
-            List<String> availableServices = addressSpaceType.getServiceNames();
-            Map<String, CertSpec> serviceCertProviders = new HashMap<>();
-
-            List<Endpoint> endpoints = null;
-            if (addressSpace.getEndpoints() != null) {
-                endpoints = new ArrayList<>(addressSpace.getEndpoints());
-                Iterator<Endpoint> it = endpoints.iterator();
-                while (it.hasNext()) {
-                    Endpoint endpoint = it.next();
-                    if (!availableServices.contains(endpoint.getService())) {
-                        log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
-                        it.remove();
-                    } else {
-                        endpoint.getCertSpec().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
+            Map<String, String> serviceCertMapping = new HashMap<>();
+            for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
+                endpoint.getCertSpec().ifPresent(cert -> {
+                    if (cert.getProvider() == null) {
+                        cert.setProvider(defaultCertProvider);
                     }
-                }
-            } else {
-            // Step 2: Create endpoints if the user didnt supply any
-                endpoints = availableServices.stream()
-                        .map(service -> new Endpoint.Builder().setName(service).setService(service).build())
-                        .collect(Collectors.toList());
+                    serviceCertMapping.put(endpoint.getService(), cert.getSecretName());
+                });
             }
 
-            // Step 3: Create missing secrets if not specified
-            for (String service : availableServices) {
-                if (!serviceCertProviders.containsKey(service)) {
-                    serviceCertProviders.put(service, new CertSpec(defaultCertProvider));
-                }
+            if (serviceCertMapping.containsKey("messaging")) {
+                parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging"));
             }
-
-            // Step 3: Ensure all endpoints have their certProviders set
-            endpoints = endpoints.stream()
-                    .map(endpoint -> {
-                        if (!endpoint.getCertSpec().isPresent()) {
-                            return new Endpoint.Builder(endpoint)
-                                    .setCertSpec(serviceCertProviders.get(endpoint.getService()))
-                                    .build();
-                        } else {
-                            return endpoint;
-                        }
-                    }).collect(Collectors.toList());
-
-            for (Map.Entry<String, CertSpec> entry : serviceCertProviders.entrySet()) {
-                if (entry.getValue().getSecretName() == null) {
-                    entry.getValue().setSecretName("external-certs-" + entry.getKey());
-                }
+            if (serviceCertMapping.containsKey("console")) {
+                parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console"));
             }
-
-            if (availableServices.contains("messaging")) {
-                parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName());
-            }
-            if (availableServices.contains("console")) {
-                parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertProviders.get("console").getSecretName());
-            }
-            if (availableServices.contains("mqtt")) {
-                parameters.put(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName());
+            if (serviceCertMapping.containsKey("mqtt")) {
+                parameters.put(TemplateParameter.MQTT_SECRET, serviceCertMapping.get("mqtt"));
             }
 
             parameters.putAll(resourceDefinition.getTemplateParameters());
@@ -127,7 +87,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             // Step 5: Create infrastructure
             resourceList.addAll(kubernetes.processTemplate(resourceDefinition.getTemplateName().get(), parameterValues.toArray(new ParameterValue[0])).getItems());
 
-            for (Endpoint endpoint : endpoints) {
+            for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
                 Service service = null;
                 for (HasMetadata resource : resourceList) {
                     if (resource.getKind().equals("Service") && resource.getMetadata().getName().equals(endpoint.getService())) {

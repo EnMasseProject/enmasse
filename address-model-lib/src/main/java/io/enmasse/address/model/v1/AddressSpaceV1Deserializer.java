@@ -114,40 +114,27 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             ArrayNode endpoints = (ArrayNode) spec.get(Fields.ENDPOINTS);
             for (int i = 0; i < endpoints.size(); i++) {
                 ObjectNode endpoint = (ObjectNode) endpoints.get(i);
-                io.enmasse.address.model.Endpoint.Builder b = new io.enmasse.address.model.Endpoint.Builder()
+                EndpointSpec.Builder b = new EndpointSpec.Builder()
                         .setName(endpoint.get(Fields.NAME).asText())
-                        .setService(endpoint.get(Fields.SERVICE).asText());
+                        .setService(endpoint.get(Fields.SERVICE).asText())
+                        .setServicePort(endpoint.get(Fields.SERVICE_PORT).asText());
 
                 if (endpoint.hasNonNull(Fields.HOST)) {
                     b.setHost(endpoint.get(Fields.HOST).asText());
                 }
 
-                if (endpoint.hasNonNull(Fields.PORT)) {
-                    b.setPort(endpoint.get(Fields.PORT).asInt());
-                }
-
-                if (endpoint.hasNonNull(Fields.SERVICE_PORTS)) {
-                    Map<String, Integer> servicePorts = new HashMap<>();
-                    ArrayNode ports = (ArrayNode) endpoint.get(Fields.SERVICE_PORTS);
-                    for (int p = 0; p < ports.size(); p++) {
-                        ObjectNode portEntry = (ObjectNode) ports.get(p);
-                        servicePorts.put(portEntry.get(Fields.NAME).asText(), portEntry.get(Fields.PORT).asInt());
-                    }
-                    b.setServicePorts(servicePorts);
-                }
-
                 if (endpoint.hasNonNull(Fields.CERT)) {
                     ObjectNode cert = (ObjectNode) endpoint.get(Fields.CERT);
-                    CertSpec certSpec = new CertSpec(cert.get(Fields.PROVIDER).asText());
+                    CertSpec certSpec = new CertSpec();
+                    if (cert.hasNonNull(Fields.PROVIDER)) {
+                        certSpec.setProvider(cert.get(Fields.PROVIDER).asText());
+                    }
+
                     if (cert.hasNonNull(Fields.SECRET_NAME)) {
                         certSpec.setSecretName(cert.get(Fields.SECRET_NAME).asText());
                     }
+
                     b.setCertSpec(certSpec);
-                } else if (endpoint.hasNonNull(Fields.CERT_PROVIDER)) {
-                    ObjectNode certProvider = (ObjectNode) endpoint.get(Fields.CERT_PROVIDER);
-                    String name = certProvider.get(Fields.NAME).asText();
-                    String secretName = certProvider.get(Fields.SECRET_NAME).asText();
-                    b.setCertSpec(new CertSpec(name).setSecretName(secretName));
                 }
                 builder.appendEndpoint(b.build());
             }
@@ -196,7 +183,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
         if (status != null) {
             boolean isReady = status.get(Fields.IS_READY).asBoolean();
-            Status s = new Status(isReady);
+            AddressSpaceStatus s = new AddressSpaceStatus(isReady);
             if (status.hasNonNull(Fields.MESSAGES)) {
                 ArrayNode messages = (ArrayNode) status.get(Fields.MESSAGES);
                 for (int i = 0; i < messages.size(); i++) {
@@ -204,6 +191,35 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 }
             }
             builder.setStatus(s);
+
+            if (status.hasNonNull(Fields.ENDPOINT_STATUSES)) {
+                ArrayNode endpoints = (ArrayNode) status.get(Fields.ENDPOINT_STATUSES);
+                for (int i = 0; i < endpoints.size(); i++) {
+                    ObjectNode endpoint = (ObjectNode) endpoints.get(i);
+                    EndpointStatus.Builder b = new EndpointStatus.Builder()
+                            .setName(endpoint.get(Fields.NAME).asText())
+                            .setServiceHost(endpoint.get(Fields.SERVICE_HOST).asText());
+
+                    if (endpoint.hasNonNull(Fields.HOST)) {
+                        b.setHost(endpoint.get(Fields.HOST).asText());
+                    }
+
+                    if (endpoint.hasNonNull(Fields.PORT)) {
+                        b.setPort(endpoint.get(Fields.PORT).asInt());
+                    }
+
+                    if (endpoint.hasNonNull(Fields.SERVICE_PORTS)) {
+                        Map<String, Integer> servicePorts = new HashMap<>();
+                        ArrayNode ports = (ArrayNode) endpoint.get(Fields.SERVICE_PORTS);
+                        for (int p = 0; p < ports.size(); p++) {
+                            ObjectNode portEntry = (ObjectNode) ports.get(p);
+                            servicePorts.put(portEntry.get(Fields.NAME).asText(), portEntry.get(Fields.PORT).asInt());
+                        }
+                        b.setServicePorts(servicePorts);
+                    }
+                    s.appendEndpointStatus(b.build());
+                }
+            }
         }
         return builder.build();
     }

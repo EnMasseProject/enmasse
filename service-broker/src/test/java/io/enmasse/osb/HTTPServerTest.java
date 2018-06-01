@@ -6,8 +6,8 @@
 package io.enmasse.osb;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.AddressSpaceStatus;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
@@ -66,10 +66,11 @@ public class HTTPServerTest {
                 .setNamespace(name)
                 .setType("mytype")
                 .setPlan("myplan")
-                .setStatus(new Status(false))
-                .appendEndpoint(new Endpoint.Builder()
+                .setStatus(new AddressSpaceStatus(false))
+                .appendEndpoint(new EndpointSpec.Builder()
                         .setName("foo")
                         .setService("messaging")
+                        .setServicePort("amqps")
                         .build())
                 .build();
     }

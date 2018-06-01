@@ -6,7 +6,7 @@ package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -46,10 +46,11 @@ public class WildcardCertProviderTest {
                 .setPlan("myplan")
                 .build();
 
-        Endpoint endpoint = new Endpoint.Builder()
+        EndpointSpec endpoint = new EndpointSpec.Builder()
                 .setCertSpec(new CertSpec("wildcard", "mycerts"))
                 .setName("messaging")
                 .setService("svc")
+                .setServicePort("amqps")
                 .build();
 
         certProvider.provideCert(space, endpoint);
@@ -65,10 +66,11 @@ public class WildcardCertProviderTest {
                 .setType("standard")
                 .build();
 
-        Endpoint endpoint = new Endpoint.Builder()
+        EndpointSpec endpoint = new EndpointSpec.Builder()
                 .setCertSpec(new CertSpec("wildcard", "mycerts"))
                 .setName("messaging")
                 .setService("svc")
+                .setServicePort("amqps")
                 .build();
 
         client.secrets().create(new SecretBuilder()

@@ -5,7 +5,6 @@
 package io.enmasse.address.model.v1.address;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.address.model.v1.DeserializeException;
 import org.junit.Test;
@@ -118,11 +117,18 @@ public class SerializationTest {
                 .setCreationTimestamp("some date")
                 .setResourceVersion("1234")
                 .setSelfLink("/my/resource")
-                .setStatus(new Status(true).appendMessage("hello"))
-                .setEndpointList(Arrays.asList(new Endpoint.Builder()
+                .setStatus(new AddressSpaceStatus(true).appendMessage("hello").appendEndpointStatus(
+                        new EndpointStatus.Builder()
+                        .setName("myendpoint")
+                        .setHost("example.com")
+                        .setPort(443)
+                        .setServiceHost("messaging.svc")
+                        .setServicePorts(Collections.singletonMap("amqp", 5672))
+                        .build()))
+                .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
-                        .setServicePorts(Collections.singletonMap("amqp", 5672))
+                        .setServicePort("amqp")
                         .setCertSpec(new CertSpec("provider").setSecretName("secret"))
                         .build()))
                 .setAuthenticationService(new AuthenticationService.Builder()
@@ -149,10 +155,15 @@ public class SerializationTest {
         assertThat(deserialized.getResourceVersion(), is(addressSpace.getResourceVersion()));
         assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
         assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().size(), is(addressSpace.getEndpoints().size()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getName(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getName()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getHost()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getPort(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getPort()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServiceHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServiceHost()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServicePorts(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServicePorts()));
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
         assertThat(deserialized.getEndpoints().get(0).getName(), is(addressSpace.getEndpoints().get(0).getName()));
         assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
-        assertThat(deserialized.getEndpoints().get(0).getServicePorts().get("amqp"), is(5672));
         assertThat(deserialized.getEndpoints().get(0).getCertSpec().get().getProvider(), is(addressSpace.getEndpoints().get(0).getCertSpec().get().getProvider()));
         assertThat(deserialized.getEndpoints().get(0).getCertSpec().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertSpec().get().getSecretName()));
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
@@ -179,7 +190,7 @@ public class SerializationTest {
                 .setNamespace("mynamespace")
                 .setPlan("default")
                 .setType("standard")
-                .setStatus(new Status(true).appendMessage("hello"))
+                .setStatus(new AddressSpaceStatus(true).appendMessage("hello"))
                 .setEndpointList(null)
                 .build();
 
@@ -409,10 +420,11 @@ public class SerializationTest {
                 .setNamespace("mynamespace")
                 .setPlan("myplan")
                 .setType("standard")
-                .setStatus(new Status(true).appendMessage("hello"))
-                .setEndpointList(Arrays.asList(new Endpoint.Builder()
+                .setStatus(new AddressSpaceStatus(true).appendMessage("hello"))
+                .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
+                        .setServicePort("amqp")
                         .build()))
                 .build();
 
@@ -421,10 +433,11 @@ public class SerializationTest {
                 .setNamespace("myothernamespace")
                 .setPlan("myotherplan")
                 .setType("brokered")
-                .setStatus(new Status(false))
-                .setEndpointList(Arrays.asList(new Endpoint.Builder()
+                .setStatus(new AddressSpaceStatus(false))
+                .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
                         .setName("bestendpoint")
                         .setService("mqtt")
+                        .setServicePort("mqtts")
                         .setCertSpec(new CertSpec("mysecret"))
                         .build()))
                 .build();

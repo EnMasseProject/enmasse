@@ -5,6 +5,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.address.model.Status;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
@@ -58,14 +59,14 @@ public class ControllerChainTest {
                 .setName("myspace")
                 .setType("type1")
                 .setPlan("myplan")
-                .setStatus(new Status(false))
+                .setStatus(new AddressSpaceStatus(false))
                 .build();
 
         AddressSpace a2 = new AddressSpace.Builder()
                 .setName("myspace2")
                 .setType("type1")
                 .setPlan("myplan")
-                .setStatus(new Status(false))
+                .setStatus(new AddressSpaceStatus(false))
                 .build();
 
         when(mockController.handle(eq(a1))).thenReturn(a1);

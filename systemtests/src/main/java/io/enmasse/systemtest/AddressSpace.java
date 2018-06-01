@@ -87,7 +87,7 @@ public class AddressSpace {
 
     public Endpoint getEndpoint(String endpointService) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
-            if (addrSpaceEndpoint.getService().equals(endpointService)) {
+            if (addrSpaceEndpoint.getName().equals(endpointService)) {
                 if (addrSpaceEndpoint.getHost() == null) {
                     return null;
                 } else {

@@ -4,8 +4,6 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.config.AnnotationKeys;
-
 import java.util.*;
 
 /**
@@ -22,12 +20,12 @@ public class AddressSpace {
     private final Map<String, String> labels;
     private final Map<String, String> annotations;
 
-    private final List<Endpoint> endpointList;
+    private final List<EndpointSpec> endpointList;
     private final String planName;
     private final AuthenticationService authenticationService;
-    private final Status status;
+    private final AddressSpaceStatus status;
 
-    private AddressSpace(String name, String namespace, String typeName, String selfLink, String creationTimestamp, String resourceVersion, List<Endpoint> endpointList, String planName, AuthenticationService authenticationService, Status status, String uid, Map<String, String> labels, Map<String, String> annotations) {
+    private AddressSpace(String name, String namespace, String typeName, String selfLink, String creationTimestamp, String resourceVersion, List<EndpointSpec> endpointList, String planName, AuthenticationService authenticationService, AddressSpaceStatus status, String uid, Map<String, String> labels, Map<String, String> annotations) {
         this.name = name;
         this.namespace = namespace;
         this.typeName = typeName;
@@ -55,7 +53,7 @@ public class AddressSpace {
         return typeName;
     }
 
-    public List<io.enmasse.address.model.Endpoint> getEndpoints() {
+    public List<EndpointSpec> getEndpoints() {
         if (endpointList != null) {
             return Collections.unmodifiableList(endpointList);
         }
@@ -70,7 +68,7 @@ public class AddressSpace {
         return uid;
     }
 
-    public Status getStatus() {
+    public AddressSpaceStatus getStatus() {
         return status;
     }
 
@@ -148,10 +146,10 @@ public class AddressSpace {
         private String resourceVersion;
 
         private String type;
-        private List<io.enmasse.address.model.Endpoint> endpointList = new ArrayList<>();
+        private List<EndpointSpec> endpointList = new ArrayList<>();
         private String plan;
         private AuthenticationService authenticationService = new AuthenticationService.Builder().build();
-        private Status status = new Status(false);
+        private AddressSpaceStatus status = new AddressSpaceStatus(false);
         private String uid;
         private Map<String, String> labels = new HashMap<>();
         private Map<String, String> annotations = new HashMap<>();
@@ -169,7 +167,7 @@ public class AddressSpace {
                 this.endpointList = null;
             }
             this.plan = addressSpace.getPlan();
-            this.status = new Status(addressSpace.getStatus());
+            this.status = new AddressSpaceStatus(addressSpace.getStatus());
             this.authenticationService = addressSpace.getAuthenticationService();
             this.uid = addressSpace.getUid();
             this.labels = new HashMap<>(addressSpace.getLabels());
@@ -218,7 +216,7 @@ public class AddressSpace {
             return this;
         }
 
-        public Builder setEndpointList(List<Endpoint> endpointList) {
+        public Builder setEndpointList(List<EndpointSpec> endpointList) {
             if (endpointList != null) {
                 this.endpointList = new ArrayList<>(endpointList);
             } else {
@@ -227,7 +225,7 @@ public class AddressSpace {
             return this;
         }
 
-        public Builder appendEndpoint(Endpoint endpoint) {
+        public Builder appendEndpoint(EndpointSpec endpoint) {
             this.endpointList.add(endpoint);
             return this;
         }
@@ -242,7 +240,7 @@ public class AddressSpace {
             return this;
         }
 
-        public Builder setStatus(Status status) {
+        public Builder setStatus(AddressSpaceStatus status) {
             this.status = status;
             return this;
         }
@@ -285,11 +283,11 @@ public class AddressSpace {
             return name;
         }
 
-        public List<Endpoint> getEndpoints() {
+        public List<EndpointSpec> getEndpoints() {
             return endpointList;
         }
 
-        public Status getStatus() {
+        public AddressSpaceStatus getStatus() {
             return status;
         }
     }

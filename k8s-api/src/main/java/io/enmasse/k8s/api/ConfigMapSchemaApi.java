@@ -152,13 +152,26 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
         return assembleSchema(maps);
     }
 
+    private EndpointSpec createEndpointSpec(String name, String port) {
+        return new EndpointSpec.Builder()
+                .setName(name)
+                .setService(name)
+                .setServicePort(port)
+                .setCertSpec(new CertSpec(null, "external-certs-" + name))
+                .build();
+    }
+
     private AddressSpaceType createStandardType(List<AddressSpacePlan> addressSpacePlans, List<AddressPlan> addressPlans) {
         AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
         builder.setName("standard");
         builder.setDescription("A standard address space consists of an AMQP router network in combination with " +
                 "attachable 'storage units'. The implementation of a storage unit is hidden from the client " +
                         "and the routers with a well defined API.");
-        builder.setServiceNames(Arrays.asList("messaging", "mqtt", "console"));
+
+        builder.setAvailableEndpoints(Arrays.asList(
+                createEndpointSpec("messaging", "amqps"),
+                createEndpointSpec("mqtt", "secure-mqtt"),
+                createEndpointSpec("console", "https")));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "standard".equals(plan.getAddressSpaceType()))
@@ -200,7 +213,10 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
         AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
         builder.setName("brokered");
         builder.setDescription("A brokered address space consists of a broker combined with a console for managing addresses.");
-        builder.setServiceNames(Arrays.asList("messaging", "console", "brokerconsole"));
+
+        builder.setAvailableEndpoints(Arrays.asList(
+                createEndpointSpec("messaging", "amqps"),
+                createEndpointSpec("console", "https")));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "brokered".equals(plan.getAddressSpaceType()))

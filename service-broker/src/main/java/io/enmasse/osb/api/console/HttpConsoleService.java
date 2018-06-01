@@ -5,7 +5,7 @@
 package io.enmasse.osb.api.console;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
 import javax.ws.rs.*;
@@ -39,9 +39,9 @@ public class HttpConsoleService {
     }
 
     private Optional<URI> getConsoleURL(AddressSpace addressSpace) {
-        List<Endpoint> endpoints = addressSpace.getEndpoints();
+        List<EndpointStatus> endpoints = addressSpace.getStatus().getEndpointStatuses();
         return endpoints == null ? Optional.empty() : endpoints.stream()
                 .filter(endpoint -> endpoint.getName().equals("console"))
-                .findAny().flatMap(e -> e.getHost()).map(s -> URI.create("https://" + s));
+                .findAny().map(e -> URI.create("https://" + e.getHost()));
     }
 }
