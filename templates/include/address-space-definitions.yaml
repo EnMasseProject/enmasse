@@ -20,7 +20,6 @@ data:
           addressSpace: ${ADDRESS_SPACE}
           enmasse.io/service-port.amqp: 5672
           enmasse.io/service-port.amqps: 5671
-          io.enmasse.endpointPort: amqps
           service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
             "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
             ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
@@ -370,7 +369,6 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          io.enmasse.endpointPort: https
         labels:
           app: enmasse
         name: console
@@ -918,7 +916,6 @@ data:
           addressSpace: ${ADDRESS_SPACE}
           enmasse.io/service-port.amqp: 5672
           enmasse.io/service-port.amqps: 5671
-          io.enmasse.endpointPort: amqps
           service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
             "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
             ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
@@ -1284,7 +1281,6 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          io.enmasse.endpointPort: https
         labels:
           app: enmasse
         name: console
@@ -1813,7 +1809,6 @@ data:
           addressSpace: ${ADDRESS_SPACE}
           enmasse.io/service-port.mqtt: 1883
           enmasse.io/service-port.mqtts: 8883
-          io.enmasse.endpointPort: secure-mqtt
         labels:
           app: enmasse
         name: mqtt
@@ -2141,7 +2136,6 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          io.enmasse.endpointPort: amqps
         labels:
           app: enmasse
         name: messaging
@@ -2255,7 +2249,6 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          io.enmasse.endpointPort: https
         labels:
           app: enmasse
         name: console

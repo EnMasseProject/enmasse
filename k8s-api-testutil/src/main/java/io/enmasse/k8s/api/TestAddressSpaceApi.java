@@ -6,6 +6,7 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.address.model.Status;
 
 import java.time.Duration;
@@ -84,6 +85,6 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     public void setAllInstancesReady(boolean ready) {
         addressSpaces.entrySet().stream().forEach(entry -> addressSpaces.put(
                 entry.getKey(),
-                new AddressSpace.Builder(entry.getValue()).setStatus(new Status(ready)).build()));
+                new AddressSpace.Builder(entry.getValue()).setStatus(new AddressSpaceStatus(ready)).build()));
     }
 }

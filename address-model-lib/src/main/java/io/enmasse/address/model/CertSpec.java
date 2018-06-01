@@ -4,11 +4,11 @@
  */
 package io.enmasse.address.model;
 
-import java.util.Objects;
-
 public class CertSpec {
-    private final String provider;
+    private String provider;
     private String secretName;
+
+    public CertSpec() { }
 
     public CertSpec(String provider) {
         this.provider = provider;
@@ -21,6 +21,11 @@ public class CertSpec {
 
     public String getProvider() {
         return provider;
+    }
+
+    public CertSpec setProvider(String provider) {
+        this.provider = provider;
+        return this;
     }
 
     public String getSecretName() {

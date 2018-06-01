@@ -32,7 +32,11 @@ public class TestSchemaApi implements SchemaApi {
                         new AddressSpaceType.Builder()
                                 .setName("type1")
                                 .setDescription("Test Type")
-                                .setServiceNames(Collections.singletonList("messaging"))
+                                .setAvailableEndpoints(Collections.singletonList(new EndpointSpec.Builder()
+                                        .setName("messaging")
+                                        .setService("messaging")
+                                        .setServicePort("amqps")
+                                        .build()))
                                 .setAddressTypes(Arrays.asList(
                                         new AddressType.Builder()
                                                 .setName("anycast")

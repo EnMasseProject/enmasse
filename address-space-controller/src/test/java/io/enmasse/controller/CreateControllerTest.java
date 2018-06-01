@@ -40,7 +40,7 @@ public class CreateControllerTest {
         when(mockResourceFactory.createResourceList(eq(addressSpace))).thenReturn(Collections.emptyList());
 
         SchemaProvider testSchema = new TestSchemaProvider();
-        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, "test", eventLogger);
+        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, "test", eventLogger, null);
 
         createController.handle(addressSpace);
 

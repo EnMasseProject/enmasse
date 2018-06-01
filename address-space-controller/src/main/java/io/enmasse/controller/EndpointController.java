@@ -5,8 +5,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -32,44 +31,41 @@ public class EndpointController implements Controller {
 
     @Override
     public AddressSpace handle(AddressSpace addressSpace) {
-        AddressSpace.Builder builder = new AddressSpace.Builder(addressSpace);
-        updateEndpoints(builder);
-        return builder.build();
+        updateEndpoints(addressSpace);
+        return addressSpace;
     }
 
-    private void updateEndpoints(AddressSpace.Builder builder) {
+    private void updateEndpoints(AddressSpace addressSpace) {
 
         Map<String, String> annotations = new HashMap<>();
-        annotations.put(AnnotationKeys.ADDRESS_SPACE, builder.getName());
+        annotations.put(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName());
 
-        List<Endpoint> endpoints;
+        List<EndpointStatus> endpoints;
         /* Watch for routes and lb services */
         if (client.isAdaptable(OpenShiftClient.class)) {
             OpenShiftClient openShiftClient = client.adapt(OpenShiftClient.class);
-            endpoints = openShiftClient.routes().inNamespace(builder.getAnnotations().get(AnnotationKeys.NAMESPACE)).list().getItems().stream()
-                    .filter(route -> isPartOfAddressSpace(builder.getName(), route))
-                    .map(this::routeToEndpoint)
+            endpoints = openShiftClient.routes().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).list().getItems().stream()
+                    .filter(route -> isPartOfAddressSpace(addressSpace.getName(), route))
+                    .map(route -> routeToEndpoint(addressSpace, route))
                     .collect(Collectors.toList());
         } else {
-            endpoints = client.services().inNamespace(builder.getAnnotations().get(AnnotationKeys.NAMESPACE)).withLabel(LabelKeys.TYPE, "loadbalancer").list().getItems().stream()
-                    .filter(service -> isPartOfAddressSpace(builder.getName(), service))
-                    .map(this::serviceToEndpoint)
+            endpoints = client.services().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withLabel(LabelKeys.TYPE, "loadbalancer").list().getItems().stream()
+                    .filter(service -> isPartOfAddressSpace(addressSpace.getName(), service))
+                    .map(service -> serviceToEndpoint(addressSpace, service))
                     .collect(Collectors.toList());
         }
 
-        log.debug("Updating endpoints for " + builder.getName() + " to " + endpoints);
-        builder.setEndpointList(endpoints);
+        log.debug("Updating endpoints for " + addressSpace.getName() + " to " + endpoints);
+        addressSpace.getStatus().setEndpointStatuses(endpoints);
     }
 
     private static boolean isPartOfAddressSpace(String id, HasMetadata resource) {
         return resource.getMetadata().getAnnotations() != null && id.equals(resource.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE));
     }
 
-    private Endpoint routeToEndpoint(Route route) {
+    private EndpointStatus routeToEndpoint(AddressSpace addressSpace, Route route) {
         Map<String, String> annotations = route.getMetadata().getAnnotations();
 
-        String providerName = annotations.get(AnnotationKeys.CERT_PROVIDER);
-        // TODO: After 0.19.0: Switch to use this instead of route.to
         String serviceName = annotations.get(AnnotationKeys.SERVICE_NAME);
 
         Map<String, Integer> servicePorts = new HashMap<>();
@@ -81,32 +77,21 @@ public class EndpointController implements Controller {
             }
         }
 
-        String secretName = route.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
-        Endpoint.Builder builder = new Endpoint.Builder()
+        EndpointStatus.Builder builder = new EndpointStatus.Builder()
                 .setName(route.getMetadata().getName())
                 .setHost(route.getSpec().getHost())
                 .setPort(443)
-                .setService(route.getSpec().getTo().getName())
+                .setServiceHost(serviceName + "." + addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) + ".svc")
                 .setServicePorts(servicePorts);
-
-        if (secretName != null) {
-            builder.setCertSpec(new CertSpec(providerName, secretName));
-        }
 
         return builder.build();
     }
 
-    private Endpoint serviceToEndpoint(Service service) {
-        String providerName = service.getMetadata().getAnnotations().get(AnnotationKeys.CERT_PROVIDER);
-        String secretName = service.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
+    private EndpointStatus serviceToEndpoint(AddressSpace addressSpace, Service service) {
         String serviceName = service.getMetadata().getAnnotations().get(AnnotationKeys.SERVICE_NAME);
-        Endpoint.Builder builder = new Endpoint.Builder()
+        EndpointStatus.Builder builder = new EndpointStatus.Builder()
                 .setName(service.getMetadata().getName())
-                .setService(serviceName);
-
-        if (secretName != null) {
-            builder.setCertSpec(new CertSpec(providerName, secretName));
-        }
+                .setServiceHost(serviceName + "." + addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) + ".svc");
 
         if (service.getSpec().getPorts().size() > 0) {
             Integer nodePort = service.getSpec().getPorts().get(0).getNodePort();

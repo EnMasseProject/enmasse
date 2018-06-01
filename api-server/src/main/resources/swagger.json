@@ -754,25 +754,11 @@
                             "service": {
                                 "type": "string"
                             },
-                            "host": {
+                            "servicePort": {
                                 "type": "string"
                             },
-                            "port": {
-                                "type": "integer"
-                            },
-                            "servicePorts": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "name": {
-                                            "type": "string"
-                                        },
-                                        "port": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                }
+                            "host": {
+                                "type": "string"
                             },
                             "cert": {
                                 "type": "object",
@@ -811,6 +797,40 @@
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "endpointStatuses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "serviceHost": {
+                                "type": "string"
+                            },
+                            "host": {
+                                "type": "string"
+                            },
+                            "port": {
+                                "type": "integer"
+                            },
+                            "servicePorts": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "port": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

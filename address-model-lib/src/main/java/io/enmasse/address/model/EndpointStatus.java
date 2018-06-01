@@ -4,34 +4,35 @@
  */
 package io.enmasse.address.model;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * An endpoint
  */
-public class Endpoint {
+public class EndpointStatus {
     private final String name;
-    private final String service;
     private final String host;
     private final int port;
+    private final String serviceHost;
     private final Map<String, Integer> servicePorts;
-    private final CertSpec certSpec;
 
-    public Endpoint(String name, String service, String host, int port, Map<String, Integer> servicePorts, CertSpec certSpec) {
+    public EndpointStatus(String name, String serviceHost, String host, int port, Map<String, Integer> servicePorts) {
         this.name = name;
-        this.service = service;
+        this.serviceHost = serviceHost;
         this.host = host;
         this.port = port;
         this.servicePorts = servicePorts;
-        this.certSpec = certSpec;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getService() {
-        return service;
+    public String getServiceHost() {
+        return serviceHost;
     }
 
     public int getPort() {
@@ -42,12 +43,8 @@ public class Endpoint {
         return Collections.unmodifiableMap(servicePorts);
     }
 
-    public Optional<String> getHost() {
-        return Optional.ofNullable(host);
-    }
-
-    public Optional<CertSpec> getCertSpec() {
-        return Optional.ofNullable(certSpec);
+    public String getHost() {
+        return host;
     }
 
     @Override
@@ -55,28 +52,25 @@ public class Endpoint {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
                 .append("host=").append(host).append(",")
-                .append("service=").append(service).append(",")
-                .append("port=").append(port).append(",")
-                .append("certProviderSpec=").append(certSpec).append("}")
+                .append("serviceHost=").append(serviceHost).append(",")
+                .append("port=").append(port).append("}")
                 .toString();
     }
 
     public static class Builder {
         private String name;
-        private String service;
+        private String serviceHost;
         private String host;
         private int port = 0;
-        private CertSpec certSpec;
         private Map<String, Integer> servicePorts = new HashMap<>();
 
         public Builder() {}
 
-        public Builder(io.enmasse.address.model.Endpoint endpoint) {
+        public Builder(EndpointStatus endpoint) {
             this.name = endpoint.getName();
             this.port = endpoint.getPort();
-            this.service = endpoint.getService();
-            this.host = endpoint.getHost().orElse(null);
-            this.certSpec = endpoint.getCertSpec().orElse(null);
+            this.serviceHost = endpoint.getServiceHost();
+            this.host = endpoint.getHost();
             this.servicePorts = new HashMap<>(endpoint.getServicePorts());
         }
 
@@ -85,8 +79,8 @@ public class Endpoint {
             return this;
         }
 
-        public Builder setService(String service) {
-            this.service = service;
+        public Builder setServiceHost(String serviceHost) {
+            this.serviceHost = serviceHost;
             return this;
         }
 
@@ -106,15 +100,10 @@ public class Endpoint {
             return this;
         }
 
-        public Builder setCertSpec(CertSpec certSpec) {
-            this.certSpec = certSpec;
-            return this;
-        }
-
-        public Endpoint build() {
+        public EndpointStatus build() {
             Objects.requireNonNull(name, "name not set");
-            Objects.requireNonNull(service, "service not set");
-            return new Endpoint(name, service, host, port, servicePorts, certSpec);
+            Objects.requireNonNull(serviceHost, "service host not set");
+            return new EndpointStatus(name, serviceHost, host, port, servicePorts);
         }
     }
 }

@@ -7,6 +7,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class StandardControllerSchema {
@@ -40,7 +41,11 @@ public class StandardControllerSchema {
                 .setName("standard")
                 .setDescription("standard")
                 .setAddressSpacePlans(Arrays.asList(plan))
-                .setServiceNames(Arrays.asList("messaging"))
+                .setAvailableEndpoints(Collections.singletonList(new EndpointSpec.Builder()
+                        .setName("messaging")
+                        .setService("messaging")
+                        .setServicePort("amqps")
+                        .build()))
                 .setAddressTypes(Arrays.asList(
                         new AddressType.Builder()
                                 .setName("anycast")

@@ -6,7 +6,7 @@ package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -46,15 +46,15 @@ public class HttpAddressSpaceServiceTest {
                 .setType("type1")
                 .setPlan("myplan")
                 .setEndpointList(Arrays.asList(
-                        new Endpoint.Builder()
+                        new EndpointSpec.Builder()
                             .setName("messaging")
                             .setService("messaging")
-                            .setHost("messaging.example.com")
+                            .setServicePort("amqps")
                         .build(),
-                        new Endpoint.Builder()
+                        new EndpointSpec.Builder()
                             .setName("mqtt")
                             .setService("mqtt")
-                            .setHost("mqtt.example.com")
+                            .setServicePort("mqtts")
                         .build()))
                 .build();
 

@@ -4,7 +4,8 @@
  */
 package io.enmasse.osb.api.bind;
 
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.SchemaProvider;
@@ -91,24 +92,34 @@ public class OSBBindingService extends OSBServiceBase {
                 });
             }
 
-            for (Endpoint endpoint : addressSpace.getEndpoints()) {
-                if ("console".equals(endpoint.getService())) {
+            for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
+                if ("console".equals(endpointSpec.getService())) {
                     continue;
                 }
-                String prefix = endpoint.getName();
-                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpoint.getHost().isPresent()) {
-                    endpoint.getHost().ifPresent(host -> {
-                        String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
-                        credentials.put(externalPrefix + "Host", host);
-                        credentials.put(externalPrefix + "Port", String.format("%d", endpoint.getPort()));
-                    });
+                String prefix = endpointSpec.getName();
+
+                EndpointStatus endpointStatus = null;
+                for (EndpointStatus status : addressSpace.getStatus().getEndpointStatuses()) {
+                    if (status.getName().equals(endpointSpec.getName())) {
+                        endpointStatus = status;
+                        break;
+                    }
                 }
-                credentials.put(prefix + "Host", String.format("%s.%s.svc", endpoint.getService(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)));
-                for (Map.Entry<String, Integer> servicePort : endpoint.getServicePorts().entrySet()) {
+                if (endpointStatus == null) {
+                    continue;
+                }
+
+                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpointStatus.getHost() != null) {
+                    String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
+                    credentials.put(externalPrefix + "Host", endpointStatus.getHost());
+                    credentials.put(externalPrefix + "Port", String.format("%d", endpointStatus.getPort()));
+                }
+                credentials.put(prefix + "Host", endpointStatus.getServiceHost());
+                for (Map.Entry<String, Integer> servicePort : endpointStatus.getServicePorts().entrySet()) {
                     String portName = servicePort.getKey().substring(0, 1).toUpperCase() + servicePort.getKey().substring(1);
                     credentials.put(prefix + portName + "Port", String.format("%d", servicePort.getValue()));
                 }
-                endpoint.getCertSpec().ifPresent(certSpec -> {
+                endpointSpec.getCertSpec().ifPresent(certSpec -> {
                     String cert = getAuthApi().getCert(certSpec.getSecretName(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
                     credentials.put(prefix + "Cert.pem", cert);
                 });

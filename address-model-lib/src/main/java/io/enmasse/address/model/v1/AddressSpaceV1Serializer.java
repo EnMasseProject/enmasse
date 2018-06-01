@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.*;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointStatus;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -74,24 +76,13 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
 
         if (addressSpace.getEndpoints() != null) {
             ArrayNode endpoints = spec.putArray(Fields.ENDPOINTS);
-            for (io.enmasse.address.model.Endpoint endpoint : addressSpace.getEndpoints()) {
+            for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
                 ObjectNode e = endpoints.addObject();
                 e.put(Fields.NAME, endpoint.getName());
                 e.put(Fields.SERVICE, endpoint.getService());
-
-                if (!endpoint.getServicePorts().isEmpty()) {
-                    ArrayNode ports = e.putArray(Fields.SERVICE_PORTS);
-                    for (Map.Entry<String, Integer> portEntry : endpoint.getServicePorts().entrySet()) {
-                        ObjectNode entry = ports.addObject();
-                        entry.put(Fields.NAME, portEntry.getKey());
-                        entry.put(Fields.PORT, portEntry.getValue());
-                    }
-                }
+                e.put(Fields.SERVICE_PORT, endpoint.getServicePort());
 
                 endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
-                if (endpoint.getPort() != 0) {
-                    e.put(Fields.PORT, endpoint.getPort());
-                }
                 endpoint.getCertSpec().ifPresent(cert -> {
                     ObjectNode p = e.putObject(Fields.CERT);
                     p.put(Fields.PROVIDER, cert.getProvider());
@@ -118,6 +109,31 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
             ArrayNode messages = status.putArray(Fields.MESSAGES);
             for (String message : addressSpace.getStatus().getMessages()) {
                 messages.add(message);
+            }
+        }
+
+        if (!addressSpace.getStatus().getEndpointStatuses().isEmpty()) {
+            ArrayNode endpointStatuses = status.putArray(Fields.ENDPOINT_STATUSES);
+            for (EndpointStatus endpointStatus : addressSpace.getStatus().getEndpointStatuses()) {
+                ObjectNode e = endpointStatuses.addObject();
+                e.put(Fields.NAME, endpointStatus.getName());
+                e.put(Fields.SERVICE_HOST, endpointStatus.getServiceHost());
+                if (!endpointStatus.getServicePorts().isEmpty()) {
+                    ArrayNode ports = e.putArray(Fields.SERVICE_PORTS);
+                    for (Map.Entry<String, Integer> portEntry : endpointStatus.getServicePorts().entrySet()) {
+                        ObjectNode entry = ports.addObject();
+                        entry.put(Fields.NAME, portEntry.getKey());
+                        entry.put(Fields.PORT, portEntry.getValue());
+                    }
+                }
+
+                if (endpointStatus.getHost() != null) {
+                    e.put(Fields.HOST, endpointStatus.getHost());
+                }
+
+                if (endpointStatus.getPort() != 0) {
+                    e.put(Fields.PORT, endpointStatus.getPort());
+                }
             }
         }
     }

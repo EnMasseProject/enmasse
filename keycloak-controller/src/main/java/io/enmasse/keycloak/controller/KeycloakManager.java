@@ -7,7 +7,7 @@ package io.enmasse.keycloak.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
@@ -32,17 +32,14 @@ public class KeycloakManager implements Watcher<AddressSpace>
     }
 
     private String getConsoleRedirectURI(AddressSpace addressSpace) {
-        if (addressSpace.getEndpoints() != null) {
-            for (Endpoint endpoint : addressSpace.getEndpoints()) {
-                if (endpoint.getName().equals("console") && endpoint.getHost().isPresent()) {
-                    String uri = "https://" + endpoint.getHost().get() + "/*";
-                    log.info("Using {} as redirect URI for enmasse-console", uri);
-                    return uri;
-                }
+        for (EndpointStatus endpoint : addressSpace.getStatus().getEndpointStatuses()) {
+            if (endpoint.getName().equals("console") && endpoint.getHost() != null) {
+                String uri = "https://" + endpoint.getHost() + "/*";
+                log.info("Using {} as redirect URI for enmasse-console", uri);
+                return uri;
             }
-        } else {
-            log.info("Address space {} has no endpoints defined", addressSpace.getName());
         }
+        log.info("Address space {} has no endpoints defined", addressSpace.getName());
         return null;
     }
 
