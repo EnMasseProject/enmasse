@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:master-2018-03-14
+FROM enmasseproject/qdrouterd-base:1.1.0-rc3_proton-0.23.0-rc1
 ARG version=latest
 ENV VERSION=${version}
 
