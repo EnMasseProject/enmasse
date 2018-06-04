@@ -242,9 +242,10 @@ AddressSource.prototype.create_address = function (definition) {
             'config.json': JSON.stringify(address)
         }
     };
-    return kubernetes.post('configmaps', configmap, this.config).then(function (result) {
+    return kubernetes.post('configmaps', configmap, this.config).then(function (result, error) {
         if (result >= 300) {
-            return Promise.reject(new Error(util.format('Failed to created address %j: %d %s', definition, result, http.STATUS_CODES[result])));
+            log.error('failed to create config map for %j [%d %s]: %s', configmap, result, http.STATUS_CODES[result], error);
+            return Promise.reject(new Error(util.format('Failed to created address %j: %d %s %s', definition, result, http.STATUS_CODES[result], error)));
         } else {
             return Promise.resolve();
         }
