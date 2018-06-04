@@ -403,6 +403,7 @@ public class TestUtils {
                 break;
             }
             addressSpaceJson = apiClient.getAddressSpace(name);
+            log.info("Address space JSON: {} ", addressSpaceJson);
             Thread.sleep(1000);
         }
         if (!endpointsReady) {
@@ -585,6 +586,7 @@ public class TestUtils {
         if (endpointsStatusJson != null) {
             for (int i = 0; i < endpointsStatusJson.size(); i++) {
                 JsonObject endpointJson = endpointsJson.getJsonObject(i);
+                log.info("Endpoint json: {}", endpointJson);
                 String ename = endpointJson.getString("name");
                 if (!endpointJson.containsKey("host") || !endpointJson.containsKey("port")) {
                     endpoints = null;
