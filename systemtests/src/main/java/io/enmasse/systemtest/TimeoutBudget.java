@@ -30,4 +30,8 @@ public class TimeoutBudget {
             return -1;
         }
     }
+
+    public boolean timeoutExpired() {
+        return timeLeft() < 0;
+    }
 }
