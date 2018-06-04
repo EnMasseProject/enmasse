@@ -14,6 +14,7 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -38,6 +39,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
     }
 
     @Test
+    @Disabled("disabled due to: #1306")
     void testHighLoadAddresses() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
