@@ -338,7 +338,7 @@ public class AddressApiClient extends ApiClient {
         }
         entry.put("spec", spec);
 
-        log.info("post-address: path {}; body: {}", addressResourcePath, entry.toString());
+        log.info("POST-address: path {}; body: {}", addressResourcePath, entry.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
@@ -384,7 +384,7 @@ public class AddressApiClient extends ApiClient {
         }
         entry.put("spec", spec);
 
-        log.info("post-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
+        log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
