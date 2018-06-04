@@ -118,7 +118,8 @@ public class AddressSpace {
                 .append("namespace=").append(namespace).append(",")
                 .append("type=").append(typeName).append(",")
                 .append("plan=").append(planName).append(",")
-                .append("endpoints=").append(endpointList).append("}");
+                .append("endpoints=").append(endpointList).append(",")
+                .append("status=").append(status).append("}");
         return sb.toString();
     }
 

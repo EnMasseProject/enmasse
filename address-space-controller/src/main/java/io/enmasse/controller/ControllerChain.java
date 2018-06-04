@@ -118,6 +118,7 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
                 for (Controller controller : chain) {
                     addressSpace = controller.handle(addressSpace);
                 }
+                log.info("Replacing adddress space: {}", addressSpace);
 
                 addressSpaceApi.replaceAddressSpace(addressSpace);
             } catch (KubernetesClientException e) {
