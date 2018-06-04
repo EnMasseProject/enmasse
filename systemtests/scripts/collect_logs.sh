@@ -24,4 +24,6 @@ do
     done
 done
 
-cp -r ${LOGDIR}/* ${ARTIFACTS_DIR}/logs/
+if [[ ! -z "$(ls ${LOGDIR})" ]]; then
+    cp -r ${LOGDIR}/* ${ARTIFACTS_DIR}/logs/
+fi

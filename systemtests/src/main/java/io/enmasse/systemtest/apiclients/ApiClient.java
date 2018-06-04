@@ -27,16 +27,25 @@ public abstract class ApiClient {
     protected ApiClient(Kubernetes kubernetes, Endpoint endpoint) {
         this.vertx = VertxFactory.create();
         this.kubernetes = kubernetes;
-        this.client = WebClient.create(vertx, new WebClientOptions()
-                .setSsl(true)
-                // TODO: Fetch CA and use
-                .setTrustAll(true)
-                .setVerifyHost(false));
+        this.connect();
         this.authzString = String.format("Bearer %s", kubernetes.getApiToken());
         this.endpoint = endpoint;
     }
 
     protected abstract String apiClientName();
+
+    protected void reconnect() {
+        this.client.close();
+        connect();
+    }
+
+    protected void connect() {
+        this.client = WebClient.create(vertx, new WebClientOptions()
+                .setSsl(true)
+                // TODO: Fetch CA and use
+                .setTrustAll(true)
+                .setVerifyHost(false));
+    }
 
     protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise,
                                        String warnMessage) {
@@ -64,12 +73,12 @@ public abstract class ApiClient {
         }
     }
 
-    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Callable<Endpoint>> endpointFn) throws Exception {
+    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Callable<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
             if (endpointFn.isPresent()) {
                 endpoint = endpointFn.get().call();
             }
             return fn.call();
-        });
+        }, reconnect);
     }
 }
