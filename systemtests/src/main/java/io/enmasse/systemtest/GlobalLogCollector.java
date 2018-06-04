@@ -41,6 +41,7 @@ public class GlobalLogCollector {
     }
 
     public void collectConfigMaps(String namespace) {
+        log.info("Collecting configmaps for namespace {}", namespace);
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
                 Path path = Paths.get(logDir.getPath(), namespace);
