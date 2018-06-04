@@ -55,7 +55,7 @@ public class EndpointController implements Controller {
                     .collect(Collectors.toList());
         }
 
-        log.debug("Updating endpoints for " + addressSpace.getName() + " to " + endpoints);
+        log.info("Updating endpoints for " + addressSpace.getName() + " to " + endpoints);
         addressSpace.getStatus().setEndpointStatuses(endpoints);
     }
 
