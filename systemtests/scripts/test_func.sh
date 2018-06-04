@@ -255,3 +255,7 @@ function clean_oc_location() {
     sudo rm -rf /var/log/containers/*
     sudo rm -rf /var/log/pods/*
 }
+
+function check_if_ansible_ready() {
+    sudo rpm -qa | grep -qw ansible || sudo yum -y install --enablerepo=epel ansible
+}
