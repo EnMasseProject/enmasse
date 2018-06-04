@@ -257,5 +257,9 @@ function clean_oc_location() {
 }
 
 function check_if_ansible_ready() {
-    sudo rpm -qa | grep -qw ansible || sudo yum -y install --enablerepo=epel ansible
+    info "Running: check if ansible is already installed"
+    if ! sudo rpm -qa | grep -qw ansible; then
+        info "Ansible is not installed, running install command"
+        sudo yum -y install --enablerepo=epel ansible
+    fi
 }
