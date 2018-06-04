@@ -87,27 +87,6 @@ class ApiServerTest extends TestBase {
     }
 
     @Test
-    @Disabled("disabled due to issue: #947")
-    void testVerifyRoutes() throws Exception {
-        AddressSpace addrSpaceAlfa = new AddressSpace("addr-space-alfa", AddressSpaceType.BROKERED);
-        AddressSpace addrSpaceBeta = new AddressSpace("addr-space-beta", AddressSpaceType.BROKERED);
-        createAddressSpaceList(addrSpaceAlfa, addrSpaceBeta);
-        List<URL> paths = getAddressesPaths();
-        for (URL url : paths) {
-            log.info("url: {}", url);
-        }
-        assertThat(String.format("Unexpected count of paths: '%s'", paths), paths.size(), is(2));
-        for (URL url : paths) {
-            assertThat("No addresses were created, so list should be empty!",
-                    TestUtils.convertToListAddress(
-                            sendRestApiRequest(HttpMethod.GET, url, Optional.empty()),
-                            Address.class,
-                            object -> true).size(),
-                    is(0));
-        }
-    }
-
-    @Test
     void testConsoleMessagingMqttRoutes() throws Exception {
         AddressSpace addressSpace = new AddressSpace("routes-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
         String endpointPrefix = "test-endpoint-";

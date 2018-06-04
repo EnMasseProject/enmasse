@@ -248,10 +248,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
-    protected List<URL> getAddressesPaths() throws Exception {
-        return TestUtils.getAddressesPaths(addressApiClient);
-    }
-
     protected JsonObject sendRestApiRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {
         return TestUtils.sendRestApiRequest(addressApiClient, method, url, payload);
     }

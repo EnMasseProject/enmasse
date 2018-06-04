@@ -209,38 +209,6 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("disabled due to issue #903")
-    void testScalePooledQueueAutomatically() throws Exception {
-        ArrayList<Destination> dest = new ArrayList<>();
-        int destCount = 2000;
-        for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("weak-queue-" + i, "pooled-queue"));//broker credit = 0.01 => 20 pods
-        }
-        setAddresses(dest.toArray(new Destination[0]));
-
-//        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getAddressPlanConfig("pooled-queue").getRequiredCreditFromResource("broker");
-//        int replicasCount = (int) (destCount * requiredCredit);
-//        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
-        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 20);
-
-        AmqpClient queueClient = amqpClientFactory.createQueueClient();
-        for (int i = 0; i < destCount; i += 100) {
-            QueueTest.runQueueTest(queueClient, dest.get(i), 10);
-        }
-
-        deleteAddresses(dest.subList(0, destCount / 2).toArray(new Destination[0])); //broker credit = 0.01 => 10 pods
-        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), 10);
-
-        for (int i = destCount / 2; i < destCount; i += 50) {
-            QueueTest.runQueueTest(queueClient, dest.get(i), 10);
-        }
-
-        queueClient.close();
-    }
-
-    @Test
-    @Disabled("Disabled due to issue with 'missing active autoLink'")
     public void concurrentOperationsTest() throws Exception {
         HashMap<CompletableFuture<Void>, List<KeycloakCredentials>> company = new HashMap<>();
         int customersCount = 10;
