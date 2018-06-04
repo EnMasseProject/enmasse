@@ -141,7 +141,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
         Destination queue = Destination.queue("test-queue", "sharded-queue");
-        AddressSpace addressSpace = new AddressSpace("test-cert-messaging-space", AddressSpaceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpace("test-cert-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
