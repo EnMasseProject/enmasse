@@ -32,6 +32,14 @@ pipeline {
         CORES_DIR = "/tmp/cores"
     }
     stages {
+        stage('wait for agent ready') {
+            environment {
+                EXPECTED_DIR = '/tmp/agent_ready'
+            }
+            steps {
+                sh "./systemtests/scripts/wait_until_agent_ready.sh ${env.EXPECTED_DIR}"
+            }
+        }
         stage('clean') {
             steps {
                 cleanWs()
