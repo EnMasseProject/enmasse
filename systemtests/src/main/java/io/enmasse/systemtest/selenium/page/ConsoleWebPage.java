@@ -275,14 +275,10 @@ public class ConsoleWebPage implements IWebPage {
      */
     public AddressWebItem getAddressItem(Destination destination) throws Exception {
         AddressWebItem returnedElement = null;
-        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.SECONDS);
-
-        while(!budget.timeoutExpired() && returnedElement == null) {
-            List<AddressWebItem> addressWebItems = getAddressItems();
-            for (AddressWebItem item : addressWebItems) {
-                if (item.getName().equals(destination.getAddress()))
-                    returnedElement = item;
-            }
+        List<AddressWebItem> addressWebItems = getAddressItems();
+        for (AddressWebItem item : addressWebItems) {
+            if (item.getName().equals(destination.getAddress()))
+                returnedElement = item;
         }
         return returnedElement;
     }
