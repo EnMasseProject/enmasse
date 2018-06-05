@@ -141,7 +141,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
         plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-quota-limits-pooled", AddressSpaceType.STANDARD,
+        AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
         KeycloakCredentials user = new KeycloakCredentials("quota_user", "quotaPa55");
@@ -220,7 +220,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
         plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-quota-limits-sharded", AddressSpaceType.STANDARD,
+        AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
         KeycloakCredentials user = new KeycloakCredentials("quota_user", "quotaPa55");
