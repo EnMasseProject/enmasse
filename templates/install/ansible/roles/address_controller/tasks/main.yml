@@ -6,6 +6,8 @@
 - name: Create the address space controller config map
   when: config_exists.failed
   shell: oc create configmap address-space-controller-config --from-literal=enableRbac={{ enable_rbac }} --from-literal=environment={{ enmasse_environment }}
+- name: Label the address space controller config map
+  shell: oc label --overwrite -n {{ namespace }} configmap address-space-controller-config app=enmasse
 - name: Create the address space definitions
   shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/address-space-definitions.yaml
 - name: Create the address space controller deployment

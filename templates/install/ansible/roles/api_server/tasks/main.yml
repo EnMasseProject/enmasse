@@ -6,10 +6,14 @@
 - name: Create cluster wide roles used by api server
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/api-server.yaml
 - name: Grant api-server cluster role privileges to service account
-  shell: oc adm policy add-cluster-role-to-user enmasse.io:api-server -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:api-server -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin --rolebinding-name={{ namespace }}-api-server-enmasse-admin
+- name: Label clusterrolebindings {{ namespace }}-api-server-enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} clusterrolebindings {{ namespace }}-api-server-enmasse-admin app=enmasse 
 - name: Grant auth delegation privileges to service account
-  shell: oc adm policy add-cluster-role-to-user system:auth-delegator -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user system:auth-delegator -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin --rolebinding-name={{ namespace }}-auth-delegator-enmasse-admin
   when: enable_rbac
+- name: Label clusterrolebindings {{ namespace }}-auth-delegator-enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} clusterrolebindings {{ namespace }}-auth-delegator-enmasse-admin app=enmasse
 - name: Check if api-server-config exists
   shell: oc get configmap -n {{ namespace }} api-server-config
   register: config_exists
@@ -17,6 +21,8 @@
 - name: Create API Server Config
   when: config_exists.failed
   shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }}
+- name: Label configmap api-server-config
+  shell: oc label --overwrite -n {{ namespace }} configmap api-server-config app=enmasse
 - name: Create EnMasse API Server Deployment
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/api-server/deployment.yaml"
 - name: Create EnMasse API Server Service
@@ -48,6 +54,8 @@
       apiVersion: v1
       kind: Secret
       metadata:
+        labels:
+          app: enmasse
         name: api-server-client-ca
         namespace: "{{ namespace }}"
       type: tls
@@ -57,6 +65,9 @@
       EOF
 - name: Create route for API server
   shell: oc create route passthrough restapi -n {{ namespace }} --service=api-server
+  when: not register_api_server
+- name: Label route restapi
+  shell: oc label --overwrite -n {{ namespace }} route restapi app=enmasse
   when: not register_api_server
 - name: Extract API Server CA
   when: register_api_server
@@ -73,6 +84,8 @@
       apiVersion: apiregistration.k8s.io/v1beta1
       kind: APIService
       metadata:
+        labels:
+          app: enmasse        
         name: v1alpha1.enmasse.io
       spec:
         group: enmasse.io

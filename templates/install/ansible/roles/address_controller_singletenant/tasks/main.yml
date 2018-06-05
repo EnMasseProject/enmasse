@@ -6,11 +6,19 @@
 - name: Create address space admin SA
   shell: oc create sa address-space-admin -n {{ namespace }}
   when: sa_exists.failed
+- name: Label address space admin SA
+  shell: oc label --overwrite -n {{ namespace }} sa address-space-admin app=enmasse 
 - name: Grant view policy to default SA
-  shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace }}:default -n {{ namespace }}
+  shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace }}:default -n {{ namespace }} --rolebinding-name=enmasse-view
+- name: Label rolebinding enmasse-view
+  shell: oc label --overwrite -n {{ namespace }} rolebinding enmasse-view app=enmasse 
 - name: Grant admin policy to enmasse-admin
-  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:enmasse-admin -n {{ namespace }}
-- name: Grant admin policy to address-space-admin
-  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:address-space-admin -n {{ namespace }}
+  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:enmasse-admin -n {{ namespace }} --rolebinding-name=enmasse-admin
+- name: Label rolebinding enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} rolebinding enmasse-admin app=enmasse
+- name: Grant admin policy to enmasse-address-space-admin
+  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:address-space-admin -n {{ namespace }} --rolebinding-name=enmasse-address-space-admin
+- name: Label rolebinding enmasse-address-space-admin
+  shell: oc label --overwrite -n {{ namespace }} rolebinding enmasse-address-space-admin app=enmasse
 - name: Deploy default address space
   shell: oc process -f {{ playbook_dir }}/resources/templates/address-space.yaml NAME=default NAMESPACE={{ namespace }} TYPE={{ address_space_type }} PLAN={{ address_space_plan }} | oc apply -n {{ namespace }} -f -

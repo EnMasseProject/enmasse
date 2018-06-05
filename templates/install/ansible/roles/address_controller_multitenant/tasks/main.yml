@@ -6,8 +6,14 @@
 - name: Create cluster wide roles used by enmasse-admin service account
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/address-space-controller.yaml
 - name: Grant address space controller cluster role privileges to service account
-  shell: oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin --rolebinding-name={{ namespace }}-address-space-controller-enmasse-admin
+- name: Label clusterrolebindings {{ namespace }}-address-space-controller-enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} clusterrolebindings {{ namespace }}-address-space-controller-enmasse-admin app=enmasse
 - name: Grant view policy to default SA
-  shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace }}:default -n {{ namespace }}
+  shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace }}:default -n {{ namespace }} --rolebinding-name=enmasse-view
+- name: Label rolebinding enmasse-view
+  shell: oc label --overwrite -n {{ namespace }} rolebinding enmasse-view app=enmasse
 - name: Grant admin policy to enmasse-admin
-  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:enmasse-admin -n {{ namespace }}
+  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:enmasse-admin -n {{ namespace }} --rolebinding-name=enmasse-admin
+- name: Label rolebinding enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} rolebinding enmasse-admin app=enmasse

@@ -74,7 +74,7 @@ while getopts a:c:de:gk:m:n:o:u:t:yvh opt; do
         *)
             echo "usage: deploy.sh [options]"
             echo
-            echo "deploy the EnMasse suite into a running Kubernetes cluster"
+            echo "deploy the EnMasse suite into a running OpenShift or Kubernetes cluster"
             echo
             echo "optional arguments:"
             echo "  -h                   show this help message"
@@ -186,14 +186,14 @@ else
 fi
 
 runcmd "$CMD create sa enmasse-admin -n $NAMESPACE" "Create service account for address space controller"
-runcmd "$CMD label -n ${NAMESPACE} sa enmasse-admin app=enmasse"
+runcmd "$CMD label -n ${NAMESPACE} sa enmasse-admin app=enmasse" "Label SA enmasse-admin"
 
 if [ -n "$USE_OPENSHIFT" ]; then
     runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default --rolebinding-name=enmasse-view" "Add permissions for viewing OpenShift resources to default user"
     runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin --rolebinding-name=enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 
-    runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-view app=enmasse"
-    runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-admin app=enmasse"
+    runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-view app=enmasse" "Label rolebinding enmasse-view"
+    runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-admin app=enmasse" "Label rolebinding enmasse-admin"
 fi
 
 for auth_service in ${AUTH_SERVICES//,/ }
@@ -207,7 +207,7 @@ do
         KEYCLOAK_PASSWORD=`random_string`
         create_self_signed_cert "$CMD" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
         runcmd "$CMD create -n ${NAMESPACE} secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
-        runcmd "$CMD label -n ${NAMESPACE} secret keycloak-credentials app=enmasse"
+        runcmd "$CMD label -n ${NAMESPACE} secret keycloak-credentials app=enmasse" "Label secret keycloak-credentials"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/service.yaml" "Create standard authservice service"
         if [ -n "$USE_OPENSHIFT" ]; then
             runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/route.yaml" "Create standard authservice route"
@@ -219,7 +219,7 @@ do
             HTTP_URL="https://$($CMD get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
         fi
         runcmd "$CMD create -n ${NAMESPACE} configmap keycloak-config --from-literal=hostname=standard-authservice.${NAMESPACE}.svc --from-literal=oauthDisabled=${OAUTH_DISABLED} --from-literal=httpUrl=${HTTP_URL} --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
-	runcmd "$CMD label -n ${NAMESPACE} configmap keycloak-config app=enmasse"
+	runcmd "$CMD label -n ${NAMESPACE} configmap keycloak-config app=enmasse" "Label configmap keycloak-config"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/pvc.yaml" "Create standard authservice persistent volume"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/keycloak-deployment.yaml" "Create standard authservice deployment"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/controller-deployment.yaml" "Create standard authservice controller"
@@ -230,10 +230,10 @@ if [ "$MODE" == "singletenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
     runcmd "$CMD create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
-    runcmd "$CMD label -n ${NAMESPACE} sa address-space-admin app=enmasse"
+    runcmd "$CMD label -n ${NAMESPACE} sa address-space-admin app=enmasse" "Label SA address-space-admin"
     if [ -n "$USE_OPENSHIFT" ]; then
-        runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin --rolebinding-name=enmasse-addressspace-admin" "Add permissions for editing OpenShift resources to address space admin SA"
-        runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-addressspace-admin app=enmasse"
+        runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin --rolebinding-name=enmasse-address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
+        runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-address-space-admin app=enmasse" "Label rolebinding enmasse-address-space-admin"
     fi
 
     create_address_space "$CMD" "default" $NAMESPACE
@@ -243,7 +243,7 @@ elif [ $MODE == "multitenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/brokered-plans.yaml" "Create brokered address space plans"
     if [ "$USE_OPENSHIFT" == "true" ]; then
         runcmd "$CMD create -n ${NAMESPACE} configmap api-server-config --from-literal=enableRbac=false" "Create api-server configmap"
-	runcmd "$CMD label -n ${NAMESPACE} configmap api-server-config app=enmasse"
+	runcmd "$CMD label -n ${NAMESPACE} configmap api-server-config app=enmasse" "Label configmap api-server-config"
     fi
 else
     echo "Unknown deployment mode $MODE"
@@ -255,7 +255,7 @@ if [ "$CERT_PROVIDED" == "true" ]; then
 else
     runcmd "$CMD create -n ${NAMESPACE} configmap address-space-controller-config" "Create address-space-controller configmap"
 fi
-runcmd "$CMD label -n ${NAMESPACE} configmap address-space-controller-config app=enmasse"
+runcmd "$CMD label -n ${NAMESPACE} configmap address-space-controller-config app=enmasse" "Label configmap address-space-controller-config"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/address-space-definitions.yaml" "Create address space definitions"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/deployment.yaml" "Create address space controller deployment"
 
@@ -275,16 +275,29 @@ else
 fi
 
 if [ $MODE == "multitenant" ]; then
-    if [ -n "$OS_ALLINONE" ] && [ -n "$USE_OPENSHIFT" ]
+    if [ -n "$USE_OPENSHIFT" ]; then
+        OS_CAN_USER_CREATE_CLUSTERROLES=$(oc policy can-i create clusterroles)
+    fi
+    if [ -n "$OS_ALLINONE" ] && [ -n "$USE_OPENSHIFT" ] || [ $OS_CAN_USER_CREATE_CLUSTERROLES == "yes" ]
     then
-        runcmd "oc login -u system:admin" "Logging in as system:admin"
+        if [ -n "$OS_ALLINONE" ]; then
+            runcmd "oc login -u system:admin" "Logging in as system:admin"
+        fi
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/address-space-controller.yaml -n $NAMESPACE" "Create cluster roles needed for address-space-controller"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/api-server.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant api server"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting api-server rights to enmasse-admin"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting keycloak-controller rights to enmasse-admin"
-        runcmd "oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting auth-delegator rights to enmasse-admin"
-        runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin --rolebinding-name=${NAMESPACE}-address-space-controller-enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin --rolebinding-name=${NAMESPACE}-api-server-enmasse-admin" "Granting api-server rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin --rolebinding-name=${NAMESPACE}-keycloak-controller-enmasse-admin" "Granting keycloak-controller rights to enmasse-admin"
+        runcmd "oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin --rolebinding-name=${NAMESPACE}-auth-delegator-enmasse-admin" "Granting auth-delegator rights to enmasse-admin"
+
+        runcmd "oc label -n ${NAMESPACE} clusterrolebindings ${NAMESPACE}-address-space-controller-enmasse-admin app=enmasse" "Label clusterrolebindings ${NAMESPACE}-address-space-controller-enmasse-admin"
+        runcmd "oc label -n ${NAMESPACE} clusterrolebindings ${NAMESPACE}-api-server-enmasse-admin app=enmasse" "Label clusterrolebindings ${NAMESPACE}-api-server-enmasse-admin"
+        runcmd "oc label -n ${NAMESPACE} clusterrolebindings ${NAMESPACE}-keycloak-controller-enmasse-admin app=enmasse" "Label clusterrolebindings ${NAMESPACE}-keycloak-controller-enmasse-admin"
+        runcmd "oc label -n ${NAMESPACE} clusterrolebindings ${NAMESPACE}-auth-delegator-enmasse-admin app=enmasse" "Label clusterrolebindings ${NAMESPACE}-auth-delegator-enmasse-admin"
+        
+        if [ -n "$OS_ALLINONE" ]; then
+            runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
+        fi
     elif [ -n "$USE_OPENSHIFT" ]; then
         echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/'"
         echo "Please add enmasse.io:address-space-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"

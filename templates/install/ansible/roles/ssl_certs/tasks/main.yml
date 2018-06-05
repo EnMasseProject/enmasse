@@ -23,3 +23,5 @@
 - name: Create a secret containing the certificate
   shell: oc create secret tls {{ cert_secret }} -n {{ namespace }} --cert="{{ cert_temp.path }}/tls.crt" --key="{{ cert_temp.path }}/tls.key"
   when: secret_exists.failed
+- name: Label secret {{ cert_secret }}
+  shell: oc label --overwrite -n {{ namespace }} secret {{ cert_secret }} app=enmasse
