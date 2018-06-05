@@ -237,7 +237,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             {
                 try {
                     int messageCount = 43;
-                    appendAddresses(false, destinations); //without wait
+                    appendAddresses(false, -1, destinations); //without wait
                     doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();

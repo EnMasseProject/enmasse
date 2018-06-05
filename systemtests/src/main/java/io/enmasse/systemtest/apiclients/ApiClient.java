@@ -23,13 +23,15 @@ public abstract class ApiClient {
     protected Vertx vertx;
     protected Endpoint endpoint;
     protected String authzString;
+    protected String apiVersion;
 
-    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint) {
+    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion) {
         this.vertx = VertxFactory.create();
         this.kubernetes = kubernetes;
         this.connect();
         this.authzString = String.format("Bearer %s", kubernetes.getApiToken());
         this.endpoint = endpoint;
+        this.apiVersion = apiVersion;
     }
 
     protected abstract String apiClientName();

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 public class OSBApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
-    private final String apiVersion = "2.13";
     private final String catalogPath = "/osbapi/v2/catalog";                                         //GET
     private final String serviceInstancesPath = "/osbapi/v2/service_instances/%s";                   //PUT, PATCH, DELETE
     private final String lastOperation = "/osbapi/v2/service_instances/%s/last_operation";           //GET
@@ -29,7 +28,7 @@ public class OSBApiClient extends ApiClient {
     private final int retry = 10;
 
     public OSBApiClient(Kubernetes kubernetes) {
-        super(kubernetes, kubernetes.getOSBEndpoint());
+        super(kubernetes, kubernetes.getOSBEndpoint(), "2.13");
     }
 
     public void close() {

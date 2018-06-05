@@ -169,6 +169,16 @@ public abstract class TestBaseWithShared extends TestBase {
         appendAddresses(true, destinations);
     }
 
+    protected void appendAddresses(boolean wait, int batchSize, Destination... destinations) throws Exception {
+        TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, sharedAddressSpace, wait, batchSize, destinations);
+        logCollector.collectConfigMaps(sharedAddressSpace.getNamespace());
+    }
+
+    protected void appendAddresses(int batchSize, Destination... destinations) throws Exception {
+        appendAddresses(true, batchSize, destinations);
+    }
+
     /**
      * use DELETE html method for delete specific addresses
      *

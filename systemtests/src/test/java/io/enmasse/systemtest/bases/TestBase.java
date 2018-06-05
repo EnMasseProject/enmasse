@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = new Environment();
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
-    private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
+    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
     private static Logger log = CustomLogger.getLogger();
@@ -236,6 +236,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
+    protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
+        TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
+        logCollector.collectConfigMaps(addressSpace.getNamespace());
+    }
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
