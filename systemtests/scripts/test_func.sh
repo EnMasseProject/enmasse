@@ -255,3 +255,11 @@ function clean_oc_location() {
     sudo rm -rf /var/log/containers/*
     sudo rm -rf /var/log/pods/*
 }
+
+function check_if_ansible_ready() {
+    info "Running: check if ansible is already installed"
+    if ! sudo rpm -qa | grep -qw ansible; then
+        info "Ansible is not installed, running install command"
+        sudo yum -y install --enablerepo=epel ansible
+    fi
+}
