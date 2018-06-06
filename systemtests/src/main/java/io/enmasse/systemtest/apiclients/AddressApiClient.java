@@ -291,7 +291,7 @@ public class AddressApiClient extends ApiClient {
         int start = 0;
         int end = batchSize - 1;
         if (batchSize == -1) {
-            JsonObject payload = prepareAddressesPayload(addressSpace, Arrays.copyOfRange(destinations, start, destinations.length - 1));
+            JsonObject payload = prepareAddressesPayload(addressSpace, destinations);
             createAddresses(addressSpace, payload);
         } else {
             while (end < destinations.length) {
