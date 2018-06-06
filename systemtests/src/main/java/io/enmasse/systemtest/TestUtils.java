@@ -407,7 +407,7 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         if (!endpointsReady) {
-            throw new IllegalStateException(String.format("Address-space '%s' have no ready endpoints!"));
+            throw new IllegalStateException(String.format("Address-space '%s' have no ready endpoints!", name));
         }
     }
 
@@ -588,13 +588,18 @@ public class TestUtils {
                 JsonObject endpointJson = endpointsJson.getJsonObject(i);
                 log.info("Endpoint json: {}", endpointJson);
                 String ename = endpointJson.getString("name");
-                if (!endpointJson.containsKey("host") || !endpointJson.containsKey("port")) {
-                    endpoints = null;
-                    break;
+
+                String host = null;
+                int port = 0;
+
+                if (endpointJson.containsKey("host")) {
+                    host = endpointJson.getString("host");
                 }
 
-                String host = endpointJson.getString("host");
-                int port = endpointJson.getInteger("port");
+                if (endpointJson.containsKey("port")) {
+                    port = endpointJson.getInteger("port");
+                }
+
 
                 for (AddressSpaceEndpoint endpoint : endpoints) {
                     if (endpoint.getName().equals(ename)) {
