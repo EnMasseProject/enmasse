@@ -20,13 +20,15 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     @Test
     @Disabled("related issue: #1074")
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestCreateDeleteAddress(Destination.queue("test-queue1", "pooled-queue"),
+                Destination.queue("test-queue2", "sharded-queue"));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestCreateDeleteAddress(Destination.topic("test-topic1", "pooled-topic"),
+                Destination.topic("test-topic2", "sharded-topic"));
     }
 
     @Test
