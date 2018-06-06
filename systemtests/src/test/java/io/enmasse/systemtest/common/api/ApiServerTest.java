@@ -15,12 +15,13 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.standard.mqtt.PublishTest;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -221,11 +222,16 @@ class ApiServerTest extends TestBase {
     void testCreateAddressResource() throws Exception {
         AddressSpace addrSpace = new AddressSpace("create-address-resource", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
         createAddressSpace(addrSpace, false);
-        Destination destination = new Destination("addr1", null, "create-address-resource", "addr_1", "anycast", "standard-anycast");
-        addressApiClient.createAddress(destination);
 
+        Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), "standard-anycast");
+        addressApiClient.createAddress(anycast);
         List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(1));
-        assertThat(addresses.get(0).getName(), is("create-address-resource.addr1"));
+        assertThat(addresses.get(0).getName(), is(String.format("%s.%s", addrSpace.getName(), anycast.getName())));
+
+        Destination multicast = new Destination("addr2", null, addrSpace.getName(), "addr_2", AddressType.MULTICAST.toString(), "standard-multicast");
+        addressApiClient.createAddress(multicast);
+        addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        assertThat(addresses.size(), is(2));
     }
 }

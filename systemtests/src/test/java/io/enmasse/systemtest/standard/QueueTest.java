@@ -88,10 +88,12 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedQueues() throws Exception {
-        Destination q1 = Destination.queue("persistedQueue1", "sharded-queue");
-        Destination q2 = Destination.queue("persistedQueue2", "sharded-queue");
+        Destination q1 = Destination.queue("shardedQueue1", "sharded-queue");
+        Destination q2 = new Destination("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), "sharded-queue");
+        addressApiClient.createAddress(q2);
 
-        setAddresses(q1, q2);
+        setAddresses(q1);
+        waitForDestinationsReady(q2);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         runQueueTest(client, q1);

@@ -69,8 +69,12 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedTopic() throws Exception {
-        Destination t1 = Destination.topic("shardedTopic", "sharded-topic");
+        Destination t1 = Destination.topic("shardedTopic1", "sharded-topic");
+        Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), "sharded-topic");
+        addressApiClient.createAddress(t2);
+
         setAddresses(t1);
+        waitForDestinationsReady(t2);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
         runTopicTest(topicClient, t1, 2048);
