@@ -255,7 +255,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
     void doTestTopicPubSubLong(AddressSpace addressSpace) throws Exception {
         createAddressSpace(addressSpace);
 
-        int msgCount = 1000;
+        int msgCount = 100;
         int topicCount = 10;
 
         List<Destination> topicList = new ArrayList<>();
@@ -290,7 +290,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
             for (int i = 0; i < topicCount; i++) {
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount));
             }
-            Thread.sleep(5000);
+            Thread.sleep(10000);
         });
     }
 
@@ -313,7 +313,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         runTestInLoop(30, () -> {
             consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
             consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
-            Thread.sleep(5000);
+            Thread.sleep(10000);
         });
         log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
