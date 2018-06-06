@@ -63,12 +63,14 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     //============================ do test methods ===============================================
     //============================================================================================
 
-    protected void doTestCreateDeleteAddress(Destination destination) throws Exception {
+    protected void doTestCreateDeleteAddress(Destination... destinations) throws Exception {
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
         consoleWebPage.openWebConsolePage();
-        consoleWebPage.createAddressWebConsole(destination);
-        consoleWebPage.deleteAddressWebConsole(destination);
+        for (Destination dest : destinations) {
+            consoleWebPage.createAddressWebConsole(dest);
+            consoleWebPage.deleteAddressesWebConsole(dest);
+        }
         assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
     }
 

@@ -194,7 +194,7 @@ class ApiServerTest extends TestBase {
             setAddresses(addressSpace, destWithouAddress);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("description"),
+            assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("message"),
                     "Incorrect response from server on missing address!");
         }
 
@@ -203,7 +203,7 @@ class ApiServerTest extends TestBase {
             setAddresses(addressSpace, destWithoutType);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("description"),
+            assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("message"),
                     "Incorrect response from serveron missing type!");
         }
 
@@ -212,7 +212,7 @@ class ApiServerTest extends TestBase {
             setAddresses(addressSpace, destWithouPlan);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("description"),
+            assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("message"),
                     "Incorrect response from server on missing plan!");
         }
     }

@@ -530,8 +530,16 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
         ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
+
+        for (Destination dest : allowedDest) {
+            selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
+            AddressWebItem item = page.getAddressItem(dest);
+            assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
+            assertThat("Item is not in state Ready", item.getStatus(), is(AddressStatus.READY));
+        }
+
         for (Destination dest : notAllowedDest) {
-            selenium.waitUntilItemPresent(7, () -> page.getAddressItem(dest));
+            selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             AddressWebItem item = page.getAddressItem(dest);
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
