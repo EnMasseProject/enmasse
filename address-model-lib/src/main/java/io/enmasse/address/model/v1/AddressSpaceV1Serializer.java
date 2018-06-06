@@ -127,8 +127,13 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                     }
                 }
 
-                e.put(Fields.HOST, endpointStatus.getHost());
-                e.put(Fields.PORT, endpointStatus.getPort());
+                if (endpointStatus.getHost() != null) {
+                    e.put(Fields.HOST, endpointStatus.getHost());
+                }
+
+                if (endpointStatus.getPort() != 0) {
+                    e.put(Fields.PORT, endpointStatus.getPort());
+                }
             }
         }
     }
