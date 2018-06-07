@@ -23,11 +23,12 @@ public class Address {
     private final String addressSpace;
     private final String type;
     private final String plan;
+    private final Optional<String> topic;
     private final Status status;
     private final Map<String, String> labels;
     private final Map<String, String> annotations;
 
-    private Address(String name, String namespace, String selfLink, String uid, String creationTimestamp, String resourceVersion, String address, String addressSpace, String type, String plan, Status status, Map<String, String> labels, Map<String, String> annotations) {
+    private Address(String name, String namespace, String selfLink, String uid, String creationTimestamp, String resourceVersion, String address, String addressSpace, String type, String plan, Optional<String> topic, Status status, Map<String, String> labels, Map<String, String> annotations) {
         this.name = name;
         this.namespace = namespace;
         this.selfLink = selfLink;
@@ -38,6 +39,7 @@ public class Address {
         this.addressSpace = addressSpace;
         this.type = type;
         this.plan = plan;
+        this.topic = topic;
         this.status = status;
         this.labels = labels;
         this.annotations = annotations;
@@ -69,6 +71,10 @@ public class Address {
 
     public String getPlan() {
         return plan;
+    }
+
+    public Optional<String> getTopic() {
+        return topic;
     }
 
     public Status getStatus() {
@@ -112,6 +118,9 @@ public class Address {
         sb.append("annotations=").append(annotations).append(",");
         sb.append("type=").append(type).append(",");
         sb.append("plan=").append(plan).append(",");
+        if (topic.isPresent()) {
+            sb.append("topic=").append(topic.get()).append(",");
+        }
         sb.append("status=").append(status).append(",");
         sb.append("resourceVersion=").append(resourceVersion).append("}");
         return sb.toString();
@@ -163,6 +172,7 @@ public class Address {
         private String addressSpace;
         private String type;
         private String plan;
+        private Optional<String> topic = Optional.empty();
         private Status status = new Status(false);
         private Map<String, String> labels = new HashMap<>();
         private Map<String, String> annotations = new HashMap<>();
@@ -178,6 +188,7 @@ public class Address {
             this.addressSpace = address.getAddressSpace();
             this.type = address.getType();
             this.plan = address.getPlan();
+            this.topic = address.getTopic();
             this.status = new Status(address.getStatus());
             this.selfLink = address.getSelfLink();
             this.creationTimestamp = address.getCreationTimestamp();
@@ -241,6 +252,11 @@ public class Address {
             return this;
         }
 
+        public Builder setTopic(String topic) {
+            this.topic = Optional.ofNullable(topic);
+            return this;
+        }
+
         public Builder setStatus(Status status) {
             this.status = status;
             return this;
@@ -272,7 +288,7 @@ public class Address {
                 putAnnotation(AnnotationKeys.UUID, uuid);
                 name = KubeUtil.sanitizeWithUuid(address, uuid);
             }
-            return new Address(name, namespace, selfLink, uid, creationTimestamp, resourceVersion, address, addressSpace, type, plan, status, labels, annotations);
+            return new Address(name, namespace, selfLink, uid, creationTimestamp, resourceVersion, address, addressSpace, type, plan, topic, status, labels, annotations);
         }
     }
 }
