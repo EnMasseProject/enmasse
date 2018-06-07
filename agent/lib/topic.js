@@ -16,14 +16,12 @@
 'use strict';
 
 var create_podgroup = require('./podgroup.js');
-var create_locator = require('./subloc.js');
 var create_controller = require('./subctrl.js');
 var log = require('./log.js').logger();
 
 function Topic (name) {
     this.name = name;
     this.pods = create_podgroup();
-    this.locator = create_locator(this.pods);
     this.controller = create_controller(this.pods);
 };
 

@@ -145,7 +145,7 @@ AddressService.prototype.get_plan_display_name = function (type, plan) {
             console.log('found no plan called %s address of type %s', plan, type);
         }
     } else {
-        console.log('found no address for type %s', type);
+        console.log('found no address for type %s in %j', type, this.address_types);
     }
     return plan;
 };
@@ -157,6 +157,10 @@ AddressService.prototype.get_valid_plans = function (type) {
 
 AddressService.prototype.get_valid_address_types = function () {
     return this.address_types;
+};
+
+AddressService.prototype.list_topic_names = function () {
+    return this.addresses.filter(function (a) { return a.type === 'topic'; }).map(function (a) { return a.address; });
 };
 
 AddressService.prototype.update_depth_series = function () {

@@ -7,12 +7,13 @@ Clients connect and send and receive messages in this address space using the AM
 // TODO This reflects the status quo, but how should multiple protocols actually be surfaced?
 
 ==== Address Types
-The standard address space supports four address types:
+The standard address space supports five address types:
 
 * queue
 * topic
 * anycast
 * multicast
+* subscription
 
 // TODO Document plan restrictions and document properties for all 4 types
 
@@ -43,6 +44,13 @@ The anycast address type is a scalable direct address for sending messages to on
 // standard.address.multicast.longDescription:start
 The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. It is important to note that only pre-settled messages can be sent to multicast addresses, as message acknowledgements from consumers are not propagated to producers.
 // standard.address.multicast.longDescription:stop
+
+[[subscription]]
+==== Subscription
+// standard.address.subscription.shortDescription:A subscription on a specified topic
+// standard.address.subscription.longDescription:start
+The subscription address type allows a subscription to be created for a topic which will hold messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer using <topic-address>::<subscription-address>. For example for a subscription 'mysub' on a topic 'mytopic', the consumer should consume from address 'mytopic::mysub'.
+// standard.address.subscription.longDescription:stop
 
 [[brokered_address_space]]
 === Brokered Address Space

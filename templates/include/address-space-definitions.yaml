@@ -92,8 +92,6 @@ data:
             - env:
               - name: LINK_CAPACITY
                 value: ${ROUTER_LINK_CAPACITY}
-              - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -701,60 +699,6 @@ data:
                   - env:
                     - name: TOPIC_NAME
                       value: ${ADDRESS}
-                    - name: LINK_CAPACITY
-                      value: ${ROUTER_LINK_CAPACITY}
-                    - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                      value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-                    image: ${ROUTER_IMAGE}
-                    livenessProbe:
-                      initialDelaySeconds: 60
-                      tcpSocket:
-                        port: amqp
-                    name: router
-                    ports:
-                    - containerPort: 5672
-                      name: amqp
-                      protocol: TCP
-                    - containerPort: 5671
-                      name: amqps
-                      protocol: TCP
-                    - containerPort: 8443
-                      name: https
-                      protocol: TCP
-                    - containerPort: 55671
-                      name: amqps-normal
-                      protocol: TCP
-                    - containerPort: 56671
-                      name: amqps-broker
-                      protocol: TCP
-                    resources:
-                      limits:
-                        memory: 256Mi
-                      requests:
-                        memory: 256Mi
-                    volumeMounts:
-                    - mountPath: /etc/qpid-dispatch/ssl
-                      name: ssl-certs
-                      readOnly: true
-                    - mountPath: /etc/qpid-dispatch/authservice-ca
-                      name: authservice-ca
-                      readOnly: true
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                  - env:
-                    - name: TOPIC_NAME
-                      value: ${ADDRESS}
                     - name: CLUSTER_ID
                       value: ${NAME}
                     - name: CERT_DIR
@@ -854,9 +798,6 @@ data:
     - description: The link capacity setting for router
       name: ROUTER_LINK_CAPACITY
       value: '50'
-    - description: Whether AMQP based durable subscriptions to topics are allowed
-      name: ALLOW_DURABLE_SUBSCRIPTIONS
-      value: 'true'
     - description: The hostname to use for the exposed route for messaging
       name: MESSAGING_HOSTNAME
     - description: The hostname to use for the exposed route for MQTT
@@ -1011,8 +952,6 @@ data:
             - env:
               - name: LINK_CAPACITY
                 value: ${ROUTER_LINK_CAPACITY}
-              - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -1616,60 +1555,6 @@ data:
                       readOnly: true
                     - mountPath: /etc/prometheus-config
                       name: broker-prometheus-config
-                      readOnly: true
-                  - env:
-                    - name: TOPIC_NAME
-                      value: ${ADDRESS}
-                    - name: LINK_CAPACITY
-                      value: ${ROUTER_LINK_CAPACITY}
-                    - name: ALLOW_DURABLE_SUBSCRIPTIONS
-                      value: ${ALLOW_DURABLE_SUBSCRIPTIONS}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-                    image: ${ROUTER_IMAGE}
-                    livenessProbe:
-                      initialDelaySeconds: 60
-                      tcpSocket:
-                        port: amqp
-                    name: router
-                    ports:
-                    - containerPort: 5672
-                      name: amqp
-                      protocol: TCP
-                    - containerPort: 5671
-                      name: amqps
-                      protocol: TCP
-                    - containerPort: 8443
-                      name: https
-                      protocol: TCP
-                    - containerPort: 55671
-                      name: amqps-normal
-                      protocol: TCP
-                    - containerPort: 56671
-                      name: amqps-broker
-                      protocol: TCP
-                    resources:
-                      limits:
-                        memory: 256Mi
-                      requests:
-                        memory: 256Mi
-                    volumeMounts:
-                    - mountPath: /etc/qpid-dispatch/ssl
-                      name: ssl-certs
-                      readOnly: true
-                    - mountPath: /etc/qpid-dispatch/authservice-ca
-                      name: authservice-ca
-                      readOnly: true
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
                       readOnly: true
                   - env:
                     - name: TOPIC_NAME
@@ -1938,9 +1823,6 @@ data:
     - description: The link capacity setting for router
       name: ROUTER_LINK_CAPACITY
       value: '50'
-    - description: Whether AMQP based durable subscriptions to topics are allowed
-      name: ALLOW_DURABLE_SUBSCRIPTIONS
-      value: 'true'
     - description: The hostname to use for the exposed route for messaging
       name: MESSAGING_HOSTNAME
     - description: The hostname to use for the exposed route for MQTT

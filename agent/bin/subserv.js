@@ -166,32 +166,6 @@ function handle_control_message(context) {
 
 amqp.on('message', handle_control_message);
 
-amqp.on('sender_open', function (context) {
-    //treat as link to be redirected
-    var source = context.sender.source.address;
-    if (source.indexOf('locate/') === 0 || source.indexOf('locate.') === 0) {
-        source = source.substring(7);
-    }
-    var topic = topics[source];
-    if (topic === undefined) {
-        context.sender.close({condition:'amqp:not-found', description:'unknown topic ' + source});
-    } else {
-        var subscription_id = context.sender.name;
-        log.debug('got attach request from subscribing client: ' + topic.name + ' ' + subscription_id);
-        var link = context.sender;
-        topic.locator.locate(subscription_id, topic.name).then(
-            function (address) {
-                link.close({condition:'amqp:link:redirect', description:address, info:{'address':address}});
-            }
-        ).catch (
-            function (e) {
-                var desc = 'Could not locate subscription: ' + e;
-                link.close({condition:'amqp:internal-error', description:desc});
-            }
-        );
-    }
-});
-
 amqp.on('connection_open', function (context) {
     log.debug('connected ' + context.connection.container_id + ' [' + context.connection.options.id + ']');
 });

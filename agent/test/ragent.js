@@ -47,6 +47,17 @@ function remove(list, predicate) {
     return removed;
 }
 
+function verify_subscription(name, topic, all_linkroutes, containerId) {
+    var prefix = topic + '::' + name;
+    var linkroutes = remove(all_linkroutes, function (o) { return o.prefix === prefix; });
+    assert.equal(linkroutes.length, 1, 'no link route found for subscription ' + name + ' on ' + topic);
+    assert.equal(linkroutes[0].prefix, prefix);
+    assert.equal(linkroutes[0].direction, 'out');
+    if (containerId) {
+        assert.equal(linkroutes[0].containerId, containerId);
+    }
+}
+
 function verify_topic(name, all_linkroutes, containerId) {
     var linkroutes = remove(all_linkroutes, function (o) { return o.prefix === name; });
     assert.equal(linkroutes.length, 2, 'no link routes found for topic ' + name);
@@ -114,6 +125,8 @@ function verify_addresses(inputs, router, verify_extra) {
                 verify_queue(a.address, addresses, autolinks, a.allocated_to);
             } else if (a.type === 'topic') {
                 verify_topic(a.address, linkroutes, a.allocated_to);
+            } else if (a.type === 'subscription') {
+                verify_subscription(a.address, a.topic, linkroutes, a.allocated_to);
             } else if (a.type === 'anycast') {
                 verify_anycast(a.address, addresses);
             } else if (a.type === 'multicast') {
@@ -339,9 +352,15 @@ describe('basic router configuration', function() {
     it('configures a single multicast address', simple_address_test([{address:'foo',type:'multicast'}]));
     it('configures a single queue address', simple_address_test([{address:'foo',type:'queue'}]));
     it('configures a single topic address', simple_address_test([{address:'foo',type:'topic'}]));
+    it('configures a topic and subscription', simple_address_test([{address:'foo',type:'topic'}, {address:'sub',type:'subscription',topic:'foo','allocated_to':'broker-0'}]));
     it('configures multiple anycast addresses', simple_address_test([{address:'a',type:'anycast'}, {address:'b',type:'anycast'}, {address:'c',type:'anycast'}]));
     it('configures multiple multicast addresses', simple_address_test([{address:'a',type:'multicast'}, {address:'b',type:'multicast'}, {address:'c',type:'multicast'}]));
     it('configures multiple topics', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic'}, {address:'c',type:'topic'}]));
+    it('configures multiple topics and subscriptions', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic'}, {address:'c',type:'topic'},
+                                                                            {address:'sub-a',type:'subscription',topic:'a','allocated_to':'broker-0'},
+                                                                            {address:'sub-b',type:'subscription',topic:'b','allocated_to':'broker-1'},
+                                                                            {address:'sub-b2',type:'subscription',topic:'b','allocated_to':'broker-2'},
+                                                                            {address:'sub-c',type:'subscription',topic:'c','allocated_to':'broker-3'}]));
     it('configures multiple queues', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'queue'}]));
     it('configures queues based on allocation', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue', allocated_to:'broker-1'}, {address:'c',type:'queue', allocated_to:'broker-1'}]));
     it('configures topic based on allocation', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic', allocated_to:'broker-1'}, {address:'c',type:'topic', allocated_to:'broker-1'}]));
@@ -1045,6 +1064,48 @@ describe('broker configuration', function() {
                 }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
             }, 500);
         });
+    });
+
+    it('creates subscriptions on associated brokers', function (done) {
+        var router = routers.new_router();
+        var broker_a = new MockBroker('broker_a');
+        var broker_b = new MockBroker('broker_b');
+        Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
+            address_source.add_address_definition({address:'a', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'b', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'a'}, undefined, {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'b'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            setTimeout(function () {
+                verify_addresses([{address:'a', type:'topic', allocated_to:'broker_a'}, {address:'b', type:'topic', allocated_to:'broker_b'},
+                                  {address:'sub-a', type:'subscription', topic:'a', allocated_to:'broker_a'},
+                                  {address:'sub-b', type:'subscription', topic:'b', allocated_to:'broker_b'}], router);
+                //verify queues on respective brokers:
+                broker_a.verify_addresses([{address:'a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'a'}]);
+                broker_b.verify_addresses([{address:'b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'b'}]);
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
+    });
+
+    it('handles subscriptions and topics in correct order', function (done) {
+        var router = routers.new_router();
+        var broker_a = new MockBroker('broker_a');
+        var broker_b = new MockBroker('broker_b');
+        Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
+            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'topic-a'}, undefined, {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'topic-b'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'topic-a', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'topic-b', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            setTimeout(function () {
+                verify_addresses([{address:'topic-a', type:'topic', allocated_to:'broker_a'}, {address:'topic-b', type:'topic', allocated_to:'broker_b'},
+                                  {address:'sub-a', type:'subscription', topic:'topic-a', allocated_to:'broker_a'},
+                                  {address:'sub-b', type:'subscription', topic:'topic-b', allocated_to:'broker_b'}], router);
+                //verify queues on respective brokers:
+                broker_a.verify_addresses([{address:'topic-a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'topic-a'}]);
+                broker_b.verify_addresses([{address:'topic-b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'topic-b'}]);
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
 
     it('handles broker disconnection', function (done) {
