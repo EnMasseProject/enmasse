@@ -393,10 +393,13 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             $scope.valid_address_types = function () {
                 return address_service.get_valid_address_types();
             };
+            $scope.list_topic_names = function () {
+                return address_service.list_topic_names();
+            };
 
             $scope.updateName = function() {
                 $scope.semantics_complete = angular.isDefined($scope.data.address) && $scope.data.address.length > 0 && address_service.is_unique_name($scope.data.address)
-                    && $scope.data.type.length > 0;
+                    && $scope.data.type.length > 0 && ($scope.data.type !== 'subscription' || ($scope.data.topic && $scope.data.topic.length));
             };
             $scope.nextButtonTitle = "Next >";
 
@@ -411,13 +414,13 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
               return $scope.tooltip.address[addr].longDescription
             }
             $scope.getLabel = function (addr) {
-              return $scope.tooltip.address[addr].shortDescription
+              return $scope.tooltip.address[addr] ? $scope.tooltip.address[addr].shortDescription : addr;
             }
             $scope.hasExternal = function (addr) {
-              return angular.isDefined($scope.tooltip.address[addr].external)
+              return $scope.tooltip.address[addr] && angular.isDefined($scope.tooltip.address[addr].external)
             }
             $scope.hasTooltip = function (addr) {
-              return angular.isDefined($scope.tooltip.address[addr].longDescription)
+              return $scope.tooltip.address[addr] && angular.isDefined($scope.tooltip.address[addr].longDescription)
             }
             $scope.getExternal = function (addr) {
               return $scope.tooltip.address[addr].external
@@ -437,6 +440,9 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
                 var f = $scope.valid_plans();
                 if (f && f.length) {
                     $scope.data.plan = $scope.valid_plans()[0].name;
+                }
+                if ($scope.data.type !== 'subscription') {
+                    $scope.data.topic = undefined;
                 }
             }
             return true;

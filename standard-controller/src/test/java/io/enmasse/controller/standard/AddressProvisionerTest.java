@@ -117,13 +117,13 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address largeQueue = createQueue("q4", "xlarge-queue");
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(largeQueue));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(largeQueue), Sets.newSet(largeQueue));
 
         assertThat(neededMap, is(usageMap));
         assertThat(largeQueue.getStatus().getPhase(), is(Pending));
 
         Address smallQueue = createQueue("q4", "small-queue");
-        neededMap = provisioner.checkQuota(usageMap, Sets.newSet(smallQueue));
+        neededMap = provisioner.checkQuota(usageMap, Sets.newSet(smallQueue), Sets.newSet(smallQueue));
 
         assertThat(neededMap, is(not(usageMap)));
     }
@@ -139,7 +139,7 @@ public class AddressProvisionerTest {
         AddressProvisioner provisioner = createProvisioner();
 
         Map<String, Map<String, UsageInfo>> usageMap = new HashMap<>();
-        Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, new LinkedHashSet<>(addresses.values()));
+        Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, new LinkedHashSet<>(addresses.values()), new LinkedHashSet<>(addresses.values()));
 
         assertThat(provisionMap.get("router").get("all").getNeeded(), is(1));
         int numConfiguring = 0;
@@ -162,7 +162,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = createAddress("q2", "queue", "small-queue");
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(queue), Sets.newSet(queue));
 
         List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker", new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), clusterList, neededMap, Sets.newSet(queue));
@@ -187,7 +187,7 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = createAddress("q3", "queue", "small-queue");
-        Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
+        Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue), Sets.newSet(queue));
 
         List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker", new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), clusterList, provisionMap, Sets.newSet(queue));
@@ -220,7 +220,7 @@ public class AddressProvisionerTest {
                 createQueue("q2", "pooled-queue-large"));
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet);
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
 
         assertThat(neededMap.keySet().size(), is(1));
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
@@ -292,7 +292,7 @@ public class AddressProvisionerTest {
 
         Address q1 = createQueue("q1", "xlarge-queue");
         Address q2 = createQueue("q2", "large-queue");
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1, q2));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1, q2), Sets.newSet(q1, q2));
 
         when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(q1)), any(), anyInt(), eq(q1))).thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(q1), new KubernetesList()));
         when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(q2)), any(), anyInt(), eq(q2))).thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(q2), new KubernetesList()));
@@ -355,7 +355,7 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("aggregate", 0, 100000)));
 
         Map<String, Map<String, UsageInfo>> usageMap = new HashMap<>();
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addresses);
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addresses, addresses);
 
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, addresses);
 

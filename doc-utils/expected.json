@@ -10,6 +10,8 @@
     "standard.address.queue.longDescription",
     "standard.address.topic.shortDescription",
     "standard.address.topic.longDescription",
+    "standard.address.subscription.longDescription",
+    "standard.address.subscription.shortDescription",
 
     "brokered.address.queue.shortDescription",
     "brokered.address.queue.longDescription",

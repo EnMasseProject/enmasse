@@ -76,7 +76,7 @@ BrokerStats.prototype._retrieve = function() {
             for (var name in results[i]) {
                 var s = get_stats_for_address(stats, name);
                 var shard = merge(results[i][name], {name:brokers[i].connection.container_id});
-                s.depth += shard.messages;
+                if (shard.messages) s.depth += shard.messages;
                 s.shards.push(shard);
             }
         }

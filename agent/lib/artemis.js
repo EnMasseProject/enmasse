@@ -160,6 +160,11 @@ Artemis.prototype._request = function (resource, operation, parameters) {
     });
 }
 
+Artemis.prototype.createSubscription = function (name, address, shared) {
+    return this._request('broker', 'createQueue', [address, 'MULTICAST', name/*queue name*/, null/*filter*/, true/*durable*/,
+                                                   shared ? -1 : 1/*max consumers*/, false/*purgeOnNoConsumers*/, false/*autoCreateAddress*/]);
+}
+
 Artemis.prototype.createQueue = function (name) {
     return this._request('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, true/*durable*/,
                                                    -1/*max consumers*/, false/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
@@ -358,6 +363,14 @@ function queues_to_addresses(addresses, queues, include_topic_stats, include_rev
                 }
             } else if (a.type !== 'topic') {
                 log.warn('Unexpected address type: queue %s has type %s, address %s has type %s', q.name, q.routingType, q.address, a.type);
+            }
+            if (q.durable && !q.purgeOnNoConsumers) {
+                //treat as subscription
+                index[q.name] = {
+                    name: q.name,
+                    type: 'subscription'
+                };
+                myutils.merge(index[q.name], q);
             }
             if (include_topic_stats) {
                 update_topic_stats(a, q);

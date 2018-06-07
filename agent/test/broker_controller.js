@@ -72,11 +72,11 @@ describe('broker controller', function() {
                 var addresses = broker.list_addresses();
                 var queues = broker.list_queues();
                 broker.verify_topic(addresses, 'bar');
-                assert.equal(addresses.length, 0);
-                assert.equal(queues.length, 0);
+                assert.equal(addresses.length, 0, util.format('extra addresses: %j', addresses));
+                assert.equal(queues.length, 0, util.format('extra queues: %j', queues));
                 done();
-            });
-        });
+            }).catch(console.error);
+        }).catch(console.error);
     });
     it('deletes a topic', function(done) {
         controller.addresses_defined([{address:'foo',type:'queue'}, {address:'bar',type:'topic'}]).then(function () {
