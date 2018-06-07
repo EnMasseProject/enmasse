@@ -67,11 +67,11 @@ public class AddressProvisioner {
         }
     }
 
-    public Map<String, Map<String, UsageInfo>> checkQuota(Map<String, Map<String, UsageInfo>> usageMap, Set<Address> addressSet) {
+    public Map<String, Map<String, UsageInfo>> checkQuota(Map<String, Map<String, UsageInfo>> usageMap, Set<Address> pending, Set<Address> all) {
         Map<String, Map<String, UsageInfo>> newUsageMap = usageMap;
         Map<String, Double> limits = computeLimits();
-        for (Address address : addressSet) {
-            Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address);
+        for (Address address : pending) {
+            Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
             if (neededMap != null) {
                 newUsageMap = neededMap;
                 address.getStatus().setPhase(Status.Phase.Configuring);
@@ -91,7 +91,30 @@ public class AddressProvisioner {
         return newUsageMap;
     }
 
-    private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address) {
+    private Address findAddress(String name, Set<Address> addressSet) {
+        for (Address address : addressSet) {
+            if (name.equals(address.getAddress())) {
+                return address;
+            }
+        }
+        return null;
+    }
+
+    private void checkBrokerQuotaForSubscription(Address subscription, Address topic, Map<String, UsageInfo> brokerUsage, ResourceRequest requested) {
+        String cluster = topic.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
+        String broker = topic.getAnnotations().get(AnnotationKeys.BROKER_ID);
+        subscription.getAnnotations().put(AnnotationKeys.CLUSTER_ID, cluster);
+        if (broker != null) {
+            brokerUsage.get(broker).addUsed(requested.getAmount());
+            subscription.getAnnotations().put(AnnotationKeys.BROKER_ID, broker);
+        } else {
+            brokerUsage.get(cluster).addUsed(requested.getAmount());
+            log.info("need to allocate subscription {} on {} to broker from {}", subscription.getAddress(), topic.getAddress(), cluster);
+            //TODO: find least used broker on topic cluster
+        }
+    }
+
+    private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
         AddressType addressType = addressResolver.getType(address);
         AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
 
@@ -103,24 +126,37 @@ public class AddressProvisioner {
             if ("router".equals(resourceName)) {
                 UsageInfo info = resourceUsage.computeIfAbsent("all", k -> new UsageInfo());
                 info.addUsed(resourceRequest.getAmount());
-            } else if ("broker".equals(resourceName) && resourceRequest.getAmount() < 1) {
-                boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getAmount());
-                if (!scheduled) {
-                    allocateBroker(resourceUsage);
-                    if (!scheduleAddress(resourceUsage, address, resourceRequest.getAmount())) {
-                        log.warn("Unable to find broker for scheduling {}", address);
-                        return null;
-                    }
-                }
             } else if ("broker".equals(resourceName)) {
-                UsageInfo info = resourceUsage.get(getShardedClusterId(address));
-                if (info != null) {
-                    throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
+                if ("subscription".equals(address.getType())) {
+                    if (address.getTopic().isPresent()) {
+                        Address topic = findAddress(address.getTopic().get(), addressSet);
+                        if (topic != null) {
+                            checkBrokerQuotaForSubscription(address, topic, resourceUsage, resourceRequest);
+                        } else {
+                            log.warn("Unable to find topic {} for subscription {}", address.getTopic().get(), address.getAddress());
+                        }
+                    } else {
+                        log.warn("No topic specified for subscription {}", address.getAddress());
+                    }
+                } else if (resourceRequest.getAmount() < 1) {
+                    boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getAmount());
+                    if (!scheduled) {
+                        allocateBroker(resourceUsage);
+                        if (!scheduleAddress(resourceUsage, address, resourceRequest.getAmount())) {
+                            log.warn("Unable to find broker for scheduling {}", address);
+                            return null;
+                        }
+                    }
+                } else {
+                    UsageInfo info = resourceUsage.get(getShardedClusterId(address));
+                    if (info != null) {
+                        throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
+                    }
+                    info = new UsageInfo();
+                    info.addUsed(resourceRequest.getAmount());
+                    resourceUsage.put(getShardedClusterId(address), info);
+                    address.putAnnotation(AnnotationKeys.CLUSTER_ID, getShardedClusterId(address));
                 }
-                info = new UsageInfo();
-                info.addUsed(resourceRequest.getAmount());
-                resourceUsage.put(getShardedClusterId(address), info);
-                address.putAnnotation(AnnotationKeys.CLUSTER_ID, getShardedClusterId(address));
             }
 
             double resourceNeeded = sumNeeded(resourceUsage);
