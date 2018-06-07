@@ -72,6 +72,7 @@ class AddressV1Serializer extends JsonSerializer<Address> {
         spec.put(Fields.TYPE, address.getType());
         spec.put(Fields.PLAN, address.getPlan());
         spec.put(Fields.ADDRESS, address.getAddress());
+        address.getTopic().ifPresent(topic -> spec.put(Fields.TOPIC, topic));
 
         status.put(Fields.IS_READY, address.getStatus().isReady());
         status.put(Fields.PHASE, address.getStatus().getPhase().name());

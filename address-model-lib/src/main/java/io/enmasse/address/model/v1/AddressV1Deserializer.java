@@ -41,6 +41,9 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
                 .setAddress(spec.get(Fields.ADDRESS).asText())
                 .setType(type)
                 .setPlan(spec.get(Fields.PLAN).asText());
+        if (spec.hasNonNull(Fields.TOPIC)) {
+            builder.setTopic(spec.get(Fields.TOPIC).asText());
+        }
 
         if (metadata != null) {
             if (metadata.hasNonNull(Fields.NAME)) {

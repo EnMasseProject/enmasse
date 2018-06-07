@@ -7,6 +7,7 @@
      next-title="nextButtonTitle"
      next-callback="nextCallback"
      back-callback="backCallback"
+     content-height="400"
      wizard-done="deployComplete || deployInProgress">
   <div pf-wizard-step step-title="Definition" substeps="false" step-id="semantics" step-priority="0" show-review="true" show-review-details="true"
        review-template="components/addresses/pattern-review.html" next-enabled="semantics_complete" on-show="onShow">
@@ -30,6 +31,13 @@
             </div>
           </div>
         </div>
+
+        <div pf-form-group pf-label="Topic" pf-label-class="col-sm-2" pf-input-class="col-sm-10" ng-if="data.type === 'subscription'">
+          <select class="combobox form-control" name="topic" ng-model="data.topic" ng-change="updateName()">
+            <option ng-repeat="topic_name in list_topic_names()" value="{{topic_name}}">{{topic_name}}</option>
+          </select>
+        </div>
+
       </form>
     </div>
   </div>
