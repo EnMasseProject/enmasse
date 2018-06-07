@@ -226,6 +226,9 @@ AddressSource.prototype.create_address = function (definition) {
             plan: definition.plan
         }
     };
+    if (definition.type === 'subscription') {
+        address.spec.topic = definition.topic;
+    }
     var configmap = {
         apiVersion: 'v1',
         kind: 'ConfigMap',

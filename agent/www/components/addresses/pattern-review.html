@@ -8,5 +8,9 @@
       <span class="wizard-pf-review-item-label">Type:</span>
       <span class="wizard-pf-review-item-value">{{data.type}}</span>
     </div>
+    <div class="wizard-pf-review-item" ng-if="data.type === 'subscription'">
+      <span class="wizard-pf-review-item-label">Topic:</span>
+      <span class="wizard-pf-review-item-value">{{data.topic}}</span>
+    </div>
   </form>
 </div>

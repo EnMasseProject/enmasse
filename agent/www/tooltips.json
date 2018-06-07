@@ -32,6 +32,10 @@
                 "longDescription": "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units; however, message order is no longer guaranteed.",
                 "shortDescription": "A store-and-forward queue"
             },
+            "subscription": {
+                "longDescription": "The subscription address type allows a subscription to be created for a topic which will hold messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer via <topic-address>::<subscription-address>. E,g, for a subscription 'mysub' on a topic 'mytopic', the consumer should consume from address 'mytopic::mysub'.",
+                "shortDescription": "A subscription on a chosen topic"
+            },
             "topic": {
                 "longDescription": "The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
                 "shortDescription": "A publish-subscribe topic"
