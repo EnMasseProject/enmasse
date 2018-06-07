@@ -34,7 +34,6 @@ import static org.hamcrest.CoreMatchers.is;
 abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFirefox {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
-    private SeleniumProvider selenium = new SeleniumProvider();
     private ConsoleWebPage consoleWebPage;
     private SysytemTestsErrorCollector collector = new SysytemTestsErrorCollector();
 
