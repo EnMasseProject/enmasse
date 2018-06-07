@@ -13,9 +13,6 @@ To build EnMasse, you need
    * [Npm >= 3](https://www.npmjs.com/)
    * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
    * [Asciidoctor](http://asciidoc.org/) (optional, only required for docs)
-   * [Python Pip](https://pypi.python.org/pypi/pip) (optional, only required for systemtests)
-   * [Xvfb](https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml) (optional, only required for systemtests)
-   * [Firefox](https://www.mozilla.org) (optional, only required for systemtests)
 
 The EnMasse java modules are built using maven. Node.js modules are built using make. All docker images
 are built using make.
@@ -72,18 +69,13 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 ### Running full systemtest suite
 
-#### Install client dependencies
+#### Install systemtests dependencies
 
-    make client_install
-
-#### Install web drivers
-
-    make webdriver_install
+    ansible-playbook templates/install/ansible/playbooks/openshift/systemtests-dependencies.yml
 
 #### Running the systemtests
 
-    Xvfb :10 -ac &
-    DISPLAY=:10 PATH=$PATH:(pwd)/systemtests/web_driver make systemtests
+    make systemtests
     
 #### Run single system test
 
