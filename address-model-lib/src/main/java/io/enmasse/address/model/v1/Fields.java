@@ -31,6 +31,7 @@ interface Fields {
     String ITEMS = "items";
     String TYPE = "type";
     String PLAN = "plan";
+    String TOPIC = "topic";
     String ADDRESS = "address";
     String ADDRESS_SPACE = "addressSpace";
     String UUID = "uuid";

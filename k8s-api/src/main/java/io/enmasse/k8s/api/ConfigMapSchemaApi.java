@@ -209,6 +209,10 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                         "topic",
                         "A topic address for store-and-forward publish-subscribe messaging. Each message published " +
                                 "to a topic address is forwarded to all subscribes on that address.",
+                        filteredAddressPlans),
+                createAddressType(
+                        "subscription",
+                        "A subscription on a topic",
                         filteredAddressPlans)));
 
         return builder.build();
