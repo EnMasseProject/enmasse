@@ -283,6 +283,7 @@ if [ $MODE == "multitenant" ]; then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/address-space-controller.yaml -n $NAMESPACE" "Create cluster roles needed for address-space-controller"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/api-server.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant api server"
+        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/keycloak-controller.yaml -n $NAMESPACE" "Create cluster roles needed for keycloak controller"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting api-server rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting keycloak-controller rights to enmasse-admin"
