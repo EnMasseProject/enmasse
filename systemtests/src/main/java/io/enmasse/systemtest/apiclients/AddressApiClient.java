@@ -18,6 +18,7 @@ import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -29,13 +30,13 @@ public class AddressApiClient extends ApiClient {
     private final int initRetry = 10;
     private final String schemaPath = "/apis/enmasse.io/v1alpha1/schema";
     private final String addressSpacesPath;
-    private final String addressPathPattern;
+    private final String addressNestedPathPattern;
     private final String addressResourcePath;
 
     public AddressApiClient(Kubernetes kubernetes) {
-        super(kubernetes, kubernetes.getRestEndpoint());
+        super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1");
         this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
-        this.addressPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
         this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
     }
 
@@ -250,7 +251,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     private String getAddressPath(String addressSpace) {
-        return String.format(addressPathPattern, addressSpace);
+        return String.format(addressNestedPathPattern, addressSpace);
     }
 
     public void deleteAddress(String addressSpace, Destination destination) throws Exception {
@@ -272,6 +273,41 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
+
+    public void appendAddresses(AddressSpace addressSpace, int batchSize, Destination... destinations) throws Exception {
+        JsonObject response = getAddresses(addressSpace, Optional.empty());
+        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
+
+        Set<Destination> desired = Sets.newHashSet(destinations);
+
+        Set<Destination> toCreate = Sets.difference(desired, current);
+
+        destinations = toCreate.toArray(new Destination[0]);
+        if (batchSize > destinations.length) {
+            throw new IllegalArgumentException(String.format(
+                    "Size of batches cannot be greater then count of addresses! got %s; expected <= %s",
+                    batchSize, destinations.length));
+        }
+        int start = 0;
+        int end = batchSize - 1;
+        if (batchSize == -1) {
+            JsonObject payload = prepareAddressesPayload(addressSpace, destinations);
+            createAddresses(addressSpace, payload);
+        } else {
+            while (end < destinations.length) {
+                JsonObject payload = prepareAddressesPayload(addressSpace, Arrays.copyOfRange(destinations, start, end));
+                createAddresses(addressSpace, payload);
+                start += batchSize;
+                end += batchSize;
+            }
+            start -= batchSize;
+            if (start < destinations.length) {
+                JsonObject payload = prepareAddressesPayload(addressSpace, Arrays.copyOfRange(destinations, start, destinations.length - 1));
+                createAddresses(addressSpace, payload);
+            }
+        }
+    }
+
     public void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, Optional.empty());
         Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
@@ -283,6 +319,44 @@ public class AddressApiClient extends ApiClient {
         for (Destination destination : toCreate) {
             createAddress(addressSpace, destination);
         }
+    }
+
+    private JsonObject prepareAddressesPayload(AddressSpace addressSpace, Destination... destinations) {
+        JsonObject addressList = new JsonObject();
+        addressList.put("apiVersion", this.apiVersion);
+        addressList.put("kind", "AddressList");
+        JsonArray items = new JsonArray();
+        for (Destination destination : destinations) {
+            JsonObject item = new JsonObject();
+            JsonObject metadata = new JsonObject();
+            if (destination.getName() != null) {
+                metadata.put("name", destination.getName());
+            }
+            if (destination.getUuid() != null) {
+                metadata.put("uid", destination.getUuid());
+            }
+            if (destination.getAddressSpace() != null) {
+                metadata.put("addressSpace", destination.getAddressSpace());
+            } else {
+                metadata.put("addressSpace", addressSpace.getName());
+            }
+            item.put("metadata", metadata);
+
+            JsonObject spec = new JsonObject();
+            if (destination.getAddress() != null) {
+                spec.put("address", destination.getAddress());
+            }
+            if (destination.getType() != null) {
+                spec.put("type", destination.getType());
+            }
+            if (destination.getPlan() != null) {
+                spec.put("plan", destination.getPlan());
+            }
+            item.put("spec", spec);
+            items.add(item);
+        }
+        addressList.put("items", items);
+        return addressList;
     }
 
     public void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -387,6 +461,24 @@ public class AddressApiClient extends ApiClient {
                             .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                             .as(BodyCodec.jsonObject())
                             .sendJsonObject(entry, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    "Error: deploy addresses"));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
+    }
+
+    public void createAddresses(AddressSpace addressSpace, JsonObject payload) throws Exception {
+        log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), payload.toString());
+
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        doRequestNTimes(initRetry, () -> {
+                    client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getName()))
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(payload, ar -> responseHandler(ar,
                                     responsePromise,
                                     "Error: deploy addresses"));
                     return responsePromise.get(30, TimeUnit.SECONDS);

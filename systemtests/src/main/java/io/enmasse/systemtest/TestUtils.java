@@ -248,6 +248,19 @@ public class TestUtils {
         }
     }
 
+    public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
+        apiClient.appendAddresses(addressSpace, batchSize, destinations);
+        if (wait) {
+            JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
+            if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
+                if (destinations.length == 0) {
+                    waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+                }
+            }
+            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+        }
+    }
+
     /**
      * send whatever request to restapi route
      *

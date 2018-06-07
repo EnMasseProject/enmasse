@@ -35,11 +35,14 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
 
     @AfterEach
     void tearDown() {
-        plansProvider.tearDown();
+        if (!environment.skipCleanup()) {
+            plansProvider.tearDown();
+        }
+
     }
 
     @Test
-    @Disabled("disabled due to: #1306")
+    @Disabled("disabled due to: #1319")
     void testHighLoadAddresses() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
@@ -67,6 +70,57 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
             dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));//broker credit = 0.001 => 4 pods
         }
         setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
+
+//        TODO once getAddressPlanConfig() method will be implemented
+//        double requiredCredit = getAddressPlanConfig("pooled-queue").getRequiredCreditFromResource("broker");
+//        int replicasCount = (int) (destCount * requiredCredit);
+//        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
+        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
+
+        AmqpClient queueClient = amqpClientFactory.createQueueClient();
+        for (int i = 0; i < destCount; i += 100) {
+            QueueTest.runQueueTest(queueClient, dest.get(i), 42);
+        }
+
+        deleteAddresses(manyAddressesSpace, dest.subList(0, destCount / 2).toArray(new Destination[0])); //broker credit = 0.001 => 2 pods
+        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 2);
+
+        for (int i = destCount / 2; i < destCount; i += 50) {
+            QueueTest.runQueueTest(queueClient, dest.get(i), 42);
+        }
+        queueClient.close();
+    }
+
+    @Test
+    @Disabled("disabled due to: #1306")
+    void testHighLoadAddressesInBatches() throws Exception {
+        //define and create address plans
+        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
+        AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
+        plansProvider.createAddressPlanConfig(xxsQueuePlan);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 0.0, 5.0),
+                new AddressSpaceResource("router", 1.0, 1.0),
+                new AddressSpaceResource("aggregate", 0.0, 5.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
+        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan", "manybrokeresplan",
+                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlanConfig(manyAddressesPlan);
+
+        //create address space plan with new plan
+        AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
+                manyAddressesPlan.getName(), AuthService.STANDARD);
+        createAddressSpace(manyAddressesSpace);
+
+        ArrayList<Destination> dest = new ArrayList<>();
+        int destCount = 3900;
+        for (int i = 0; i < destCount; i++) {
+            dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));//broker credit = 0.001 => 4 pods
+        }
+        setAddresses(manyAddressesSpace);
+        appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Destination[0]));
 
 //        TODO once getAddressPlanConfig() method will be implemented
 //        double requiredCredit = getAddressPlanConfig("pooled-queue").getRequiredCreditFromResource("broker");
