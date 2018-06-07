@@ -116,7 +116,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         long calculatedUsage = System.nanoTime();
         Set<Address> pendingAddresses = filterByPhases(addressSet, Arrays.asList(Pending));
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses);
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
         log.info("Usage: {}, Needed: {}", usageMap, neededMap);
 
