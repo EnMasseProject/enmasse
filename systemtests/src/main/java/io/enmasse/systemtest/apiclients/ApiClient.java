@@ -84,4 +84,8 @@ public abstract class ApiClient {
             return fn.call();
         }, reconnect);
     }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
 }

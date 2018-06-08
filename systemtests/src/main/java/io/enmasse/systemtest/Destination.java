@@ -5,13 +5,19 @@
 
 package io.enmasse.systemtest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import io.vertx.core.json.JsonObject;
+
+import java.io.IOException;
 import java.util.Objects;
 
 public class Destination {
-    private static final String QUEUE = "queue";
-    private static final String TOPIC = "topic";
-    private static final String ANYCAST = "anycast";
-    private static final String MULTICAST = "multicast";
+    public static final String QUEUE = "queue";
+    public static final String TOPIC = "topic";
+    public static final String ANYCAST = "anycast";
+    public static final String MULTICAST = "multicast";
     private final String name;
 
     @Override
@@ -131,4 +137,45 @@ public class Destination {
     public String toString() {
         return "{name=" + name + ", address=" + address + "}";
     }
+
+    public JsonObject toJson(String version) {
+        JsonObject entry = new JsonObject();
+        entry.put("apiVersion", version);
+        entry.put("kind", "Address");
+        entry.put("metadata", this.jsonMetadata());
+        entry.put("spec", this.jsonSpec());
+        return entry;
+    }
+
+
+    public JsonObject jsonMetadata() {
+        JsonObject metadata = new JsonObject();
+        if (this.getName() != null) {
+            metadata.put("name", this.getAddressSpace() + "." + this.getName());
+        }
+        if (this.getUuid() != null) {
+            metadata.put("uid", this.getUuid());
+        }
+        return metadata;
+    }
+
+    public JsonObject jsonSpec() {
+        JsonObject spec = new JsonObject();
+        if (this.getAddress() != null) {
+            spec.put("address", this.getAddress());
+        }
+        if (this.getType() != null) {
+            spec.put("type", this.getType());
+        }
+        if (this.getPlan() != null) {
+            spec.put("plan", this.getPlan());
+        }
+        return spec;
+    }
+
+    public String toYaml(String version) throws IOException {
+        JsonNode jsonNodeTree = new ObjectMapper().readTree(this.toJson(version).toString());
+        return new YAMLMapper().writeValueAsString(jsonNodeTree);
+    }
+
 }

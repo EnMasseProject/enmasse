@@ -2,25 +2,24 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.clients.rhea;
+package io.enmasse.systemtest.messagingclients.rhea;
 
-import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.ClientArgument;
-import io.enmasse.systemtest.clients.ClientArgumentMap;
-import io.enmasse.systemtest.clients.ClientType;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-
-public class RheaClientSender extends AbstractClient {
-    public RheaClientSender() {
-        super(ClientType.CLI_RHEA_SENDER);
+public class RheaClientReceiver extends AbstractClient {
+    public RheaClientReceiver() {
+        super(ClientType.CLI_RHEA_RECEIVER);
     }
 
-    public RheaClientSender(Path logPath) {
-        super(ClientType.CLI_RHEA_SENDER, logPath);
+    public RheaClientReceiver(Path logPath) {
+        super(ClientType.CLI_RHEA_RECEIVER, logPath);
     }
 
     @Override
@@ -59,25 +58,12 @@ public class RheaClientSender extends AbstractClient {
         allowedArgs.add(ClientArgument.TIMEOUT);
         allowedArgs.add(ClientArgument.DURATION);
 
-        allowedArgs.add(ClientArgument.MSG_ID);
-        allowedArgs.add(ClientArgument.MSG_GROUP_ID);
-        allowedArgs.add(ClientArgument.MSG_GROUP_SEQ);
-        allowedArgs.add(ClientArgument.MSG_REPLY_TO_GROUP_ID);
-        allowedArgs.add(ClientArgument.MSG_SUBJECT);
-        allowedArgs.add(ClientArgument.MSG_REPLY_TO);
-        allowedArgs.add(ClientArgument.MSG_PROPERTY);
-        allowedArgs.add(ClientArgument.MSG_DURABLE);
-        allowedArgs.add(ClientArgument.MSG_TTL);
-        allowedArgs.add(ClientArgument.MSG_PRIORITY);
-        allowedArgs.add(ClientArgument.MSG_CORRELATION_ID);
-        allowedArgs.add(ClientArgument.MSG_USER_ID);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_TYPE);
-        allowedArgs.add(ClientArgument.MSG_CONTENT);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_LIST_ITEM);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_MAP_ITEM);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_FROM_FILE);
-        allowedArgs.add(ClientArgument.MSG_ANNOTATION);
-        allowedArgs.add(ClientArgument.ANONYMOUS);
+        allowedArgs.add(ClientArgument.SELECTOR);
+        allowedArgs.add(ClientArgument.RECV_BROWSE);
+        allowedArgs.add(ClientArgument.ACTION);
+        allowedArgs.add(ClientArgument.PROCESS_REPLY_TO);
+        allowedArgs.add(ClientArgument.RECV_LISTEN);
+        allowedArgs.add(ClientArgument.RECV_LISTEN_PORT);
     }
 
     @Override

@@ -7,7 +7,7 @@ package io.enmasse.systemtest.bases;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.clients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;

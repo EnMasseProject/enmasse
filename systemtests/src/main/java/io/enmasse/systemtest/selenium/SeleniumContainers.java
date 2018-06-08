@@ -6,7 +6,7 @@ package io.enmasse.systemtest.selenium;
 
 
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.DockerCmdClient;
+import io.enmasse.systemtest.cmdclients.DockerCmdClient;
 import org.slf4j.Logger;
 
 import java.io.File;

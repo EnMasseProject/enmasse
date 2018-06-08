@@ -57,49 +57,8 @@ public class AddressApiClient extends ApiClient {
         }
     }
 
-    private JsonObject createAddressSpaceMetadata(AddressSpace addressSpace) {
-        JsonObject metadata = new JsonObject();
-        metadata.put("name", addressSpace.getName());
-        if (addressSpace.getNamespace() != null) {
-            JsonObject annotations = new JsonObject();
-            annotations.put("enmasse.io/namespace", addressSpace.getNamespace());
-            annotations.put("enmasse.io/realm-name", addressSpace.getNamespace());
-            metadata.put("annotations", annotations);
-        }
-        return metadata;
-    }
-
-    private JsonObject createAddressSpaceSpec(AddressSpace addressSpace) {
-        JsonObject spec = new JsonObject();
-        spec.put("type", addressSpace.getType().toString().toLowerCase());
-        spec.put("plan", addressSpace.getPlan());
-        JsonObject authService = new JsonObject();
-        authService.put("type", addressSpace.getAuthService().toString());
-        spec.put("authenticationService", authService);
-        if (!addressSpace.getEndpoints().isEmpty()) {
-            spec.put("endpoints", createAddressSpaceEndpoints(addressSpace));
-        }
-        return spec;
-    }
-
-    private JsonArray createAddressSpaceEndpoints(AddressSpace addressSpace) {
-        JsonArray endpointsJson = new JsonArray();
-        for (AddressSpaceEndpoint endpoint : addressSpace.getEndpoints()) {
-            JsonObject endpointJson = new JsonObject();
-            endpointJson.put("name", endpoint.getName());
-            endpointJson.put("service", endpoint.getService());
-            endpointJson.put("servicePort", endpoint.getServicePort());
-            endpointsJson.add(endpointJson);
-        }
-        return endpointsJson;
-    }
-
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        JsonObject config = new JsonObject();
-        config.put("apiVersion", "v1");
-        config.put("kind", "AddressSpace");
-        config.put("metadata", createAddressSpaceMetadata(addressSpace));
-        config.put("spec", createAddressSpaceSpec(addressSpace));
+        JsonObject config = addressSpace.toJson(getApiVersion());
 
         log.info("POST-address-space: path {}; body {}", addressSpacesPath, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -301,18 +260,18 @@ public class AddressApiClient extends ApiClient {
         int start = 0;
         int end = batchSize - 1;
         if (batchSize == -1) {
-            JsonObject payload = prepareAddressesPayload(addressSpace, destinations);
+            JsonObject payload = createAddressListPayloadJson(addressSpace, destinations);
             createAddresses(addressSpace, payload);
         } else {
             while (end < destinations.length) {
-                JsonObject payload = prepareAddressesPayload(addressSpace, Arrays.copyOfRange(destinations, start, end));
+                JsonObject payload = createAddressListPayloadJson(addressSpace, Arrays.copyOfRange(destinations, start, end));
                 createAddresses(addressSpace, payload);
                 start += batchSize;
                 end += batchSize;
             }
             start -= batchSize;
             if (start < destinations.length) {
-                JsonObject payload = prepareAddressesPayload(addressSpace, Arrays.copyOfRange(destinations, start, destinations.length - 1));
+                JsonObject payload = createAddressListPayloadJson(addressSpace, Arrays.copyOfRange(destinations, start, destinations.length - 1));
                 createAddresses(addressSpace, payload);
             }
         }
@@ -331,9 +290,9 @@ public class AddressApiClient extends ApiClient {
         }
     }
 
-    private JsonObject prepareAddressesPayload(AddressSpace addressSpace, Destination... destinations) {
+    private JsonObject createAddressListPayloadJson(AddressSpace addressSpace, Destination... destinations) {
         JsonObject addressList = new JsonObject();
-        addressList.put("apiVersion", this.apiVersion);
+        addressList.put("apiVersion", getApiVersion());
         addressList.put("kind", "AddressList");
         JsonArray items = new JsonArray();
         for (Destination destination : destinations) {
@@ -351,18 +310,7 @@ public class AddressApiClient extends ApiClient {
                 metadata.put("addressSpace", addressSpace.getName());
             }
             item.put("metadata", metadata);
-
-            JsonObject spec = new JsonObject();
-            if (destination.getAddress() != null) {
-                spec.put("address", destination.getAddress());
-            }
-            if (destination.getType() != null) {
-                spec.put("type", destination.getType());
-            }
-            if (destination.getPlan() != null) {
-                spec.put("plan", destination.getPlan());
-            }
-            item.put("spec", spec);
+            item.put("spec", destination.jsonSpec());
             items.add(item);
         }
         addressList.put("items", items);
@@ -395,31 +343,8 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void createAddress(Destination destination) throws Exception {
-        JsonObject entry = new JsonObject();
-        entry.put("apiVersion", "enmasse.io/v1alpha1");
-        entry.put("kind", "Address");
-        JsonObject metadata = new JsonObject();
-        if (destination.getName() != null) {
-            metadata.put("name", getAddressName(destination.getAddressSpace(), destination));
-        }
-        if (destination.getUuid() != null) {
-            metadata.put("uid", destination.getUuid());
-        }
-        entry.put("metadata", metadata);
-
-        JsonObject spec = new JsonObject();
-        if (destination.getAddress() != null) {
-            spec.put("address", destination.getAddress());
-        }
-        if (destination.getType() != null) {
-            spec.put("type", destination.getType());
-        }
-        if (destination.getPlan() != null) {
-            spec.put("plan", destination.getPlan());
-        }
-        entry.put("spec", spec);
-
-        log.info("POST-address: path {}; body: {}", addressResourcePath, entry.toString());
+        JsonObject addressJson = destination.toJson(apiVersion);
+        log.info("POST-address: path {}; body: {}", addressResourcePath, addressJson.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
@@ -427,7 +352,7 @@ public class AddressApiClient extends ApiClient {
                             .timeout(20_000)
                             .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                             .as(BodyCodec.jsonObject())
-                            .sendJsonObject(entry, ar -> responseHandler(ar,
+                            .sendJsonObject(addressJson, ar -> responseHandler(ar,
                                     responsePromise,
                                     "Error: create address"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
@@ -453,18 +378,7 @@ public class AddressApiClient extends ApiClient {
             metadata.put("addressSpace", addressSpace.getName());
         }
         entry.put("metadata", metadata);
-
-        JsonObject spec = new JsonObject();
-        if (destination.getAddress() != null) {
-            spec.put("address", destination.getAddress());
-        }
-        if (destination.getType() != null) {
-            spec.put("type", destination.getType());
-        }
-        if (destination.getPlan() != null) {
-            spec.put("plan", destination.getPlan());
-        }
-        entry.put("spec", spec);
+        entry.put("spec", destination.jsonSpec());
 
         log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
 
@@ -537,6 +451,4 @@ public class AddressApiClient extends ApiClient {
         }
         return responseData;
     }
-
-
 }

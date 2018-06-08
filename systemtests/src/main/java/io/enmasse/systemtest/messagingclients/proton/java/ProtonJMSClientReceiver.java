@@ -2,25 +2,24 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.clients.proton.java;
+package io.enmasse.systemtest.messagingclients.proton.java;
 
-import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.ClientArgument;
-import io.enmasse.systemtest.clients.ClientArgumentMap;
-import io.enmasse.systemtest.clients.ClientType;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-
-public class ProtonJMSClientSender extends AbstractClient {
-    public ProtonJMSClientSender() {
-        super(ClientType.CLI_JAVA_PROTON_JMS_SENDER);
+public class ProtonJMSClientReceiver extends AbstractClient {
+    public ProtonJMSClientReceiver() {
+        super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
     }
 
-    public ProtonJMSClientSender(Path logPath) {
-        super(ClientType.CLI_JAVA_PROTON_JMS_SENDER, logPath);
+    public ProtonJMSClientReceiver(Path logPath) {
+        super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER, logPath);
     }
 
     @Override
@@ -70,35 +69,30 @@ public class ProtonJMSClientSender extends AbstractClient {
         allowedArgs.add(ClientArgument.TIMEOUT);
         allowedArgs.add(ClientArgument.DURATION);
 
-        allowedArgs.add(ClientArgument.MSG_ID);
-        allowedArgs.add(ClientArgument.MSG_GROUP_ID);
-        allowedArgs.add(ClientArgument.MSG_GROUP_SEQ);
-        allowedArgs.add(ClientArgument.MSG_REPLY_TO_GROUP_ID);
-        allowedArgs.add(ClientArgument.MSG_SUBJECT);
-        allowedArgs.add(ClientArgument.MSG_REPLY_TO);
-        allowedArgs.add(ClientArgument.MSG_PROPERTY);
-        allowedArgs.add(ClientArgument.MSG_DURABLE);
-        allowedArgs.add(ClientArgument.MSG_TTL);
-        allowedArgs.add(ClientArgument.MSG_PRIORITY);
-        allowedArgs.add(ClientArgument.MSG_CORRELATION_ID);
-        allowedArgs.add(ClientArgument.MSG_USER_ID);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_TYPE);
-        allowedArgs.add(ClientArgument.MSG_CONTENT);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_LIST_ITEM);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_MAP_ITEM);
-        allowedArgs.add(ClientArgument.MSG_CONTENT_FROM_FILE);
-        allowedArgs.add(ClientArgument.MSG_ANNOTATION);
+        allowedArgs.add(ClientArgument.MSG_SELECTOR);
+        allowedArgs.add(ClientArgument.RECV_BROWSE);
+        allowedArgs.add(ClientArgument.ACTION);
+        allowedArgs.add(ClientArgument.PROCESS_REPLY_TO);
     }
 
     @Override
     protected ClientArgumentMap transformArguments(ClientArgumentMap args) {
         args = javaBrokerTransformation(args);
+        args = modifySelectorArg(args);
         args.put(ClientArgument.LOG_LIB, "trace");
+        return args;
+    }
+
+    protected ClientArgumentMap modifySelectorArg(ClientArgumentMap args) {
+        if (args.getValues(ClientArgument.SELECTOR) != null) {
+            args.put(ClientArgument.MSG_SELECTOR, args.getValues(ClientArgument.SELECTOR).get(0));
+            args.remove(ClientArgument.SELECTOR);
+        }
         return args;
     }
 
     @Override
     protected List<String> transformExecutableCommand(String executableCommand) {
-        return Arrays.asList("java", "-jar", executableCommand, "sender");
+        return Arrays.asList("java", "-jar", executableCommand, "receiver");
     }
 }

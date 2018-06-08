@@ -4,6 +4,9 @@
  */
 package io.enmasse.systemtest;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,5 +187,52 @@ public class AddressSpace {
         }
         addressSpaceString.append("}");
         return addressSpaceString.toString();
+    }
+
+
+    public JsonObject toJson(String version) {
+        JsonObject entry = new JsonObject();
+        entry.put("apiVersion", version);
+        entry.put("kind", "AddressSpace");
+        entry.put("metadata", this.jsonMetadata());
+        entry.put("spec", this.jsonSpec());
+        return entry;
+    }
+
+    public JsonObject jsonMetadata() {
+        JsonObject metadata = new JsonObject();
+        metadata.put("name", this.getName());
+        if (this.getNamespace() != null) {
+            JsonObject annotations = new JsonObject();
+            annotations.put("enmasse.io/namespace", this.getNamespace());
+            annotations.put("enmasse.io/realm-name", this.getNamespace());
+            metadata.put("annotations", annotations);
+        }
+        return metadata;
+    }
+
+    public JsonObject jsonSpec() {
+        JsonObject spec = new JsonObject();
+        spec.put("type", this.getType().toString().toLowerCase());
+        spec.put("plan", this.getPlan());
+        JsonObject authService = new JsonObject();
+        authService.put("type", this.getAuthService().toString());
+        spec.put("authenticationService", authService);
+        if (!this.getEndpoints().isEmpty()) {
+            spec.put("endpoints", this.jsonEndpoints());
+        }
+        return spec;
+    }
+
+    public JsonArray jsonEndpoints() {
+        JsonArray endpointsJson = new JsonArray();
+        for (AddressSpaceEndpoint endpoint : this.getEndpoints()) {
+            JsonObject endpointJson = new JsonObject();
+            endpointJson.put("name", endpoint.getName());
+            endpointJson.put("service", endpoint.getService());
+            endpointJson.put("servicePort", endpoint.getServicePort());
+            endpointsJson.add(endpointJson);
+        }
+        return endpointsJson;
     }
 }

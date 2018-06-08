@@ -14,6 +14,7 @@ import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -778,8 +779,7 @@ public class TestUtils {
                 return addresses.length > 0;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            }
-            catch (UnknownHostException ignore) {
+            } catch (UnknownHostException ignore) {
             }
         }
         return false;
@@ -1042,5 +1042,19 @@ public class TestUtils {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public static void waitUntilCondition(Callable<String> fn, String expected, TimeoutBudget budget) throws Exception {
+        String actual = "Too small time out budget!!";
+        while (!budget.timeoutExpired()) {
+            actual = fn.call();
+            log.debug(actual);
+            if (actual.contains(expected)) {
+                return;
+            }
+            log.debug("next iteration, remaining time: {}", budget.timeLeft());
+            Thread.sleep(1000);
+        }
+        Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 }
