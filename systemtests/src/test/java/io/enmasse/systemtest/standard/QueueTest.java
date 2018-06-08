@@ -92,7 +92,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Destination q2 = new Destination("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), "sharded-queue");
         addressApiClient.createAddress(q2);
 
-        setAddresses(q1);
+        appendAddresses(q1);
         waitForDestinationsReady(q2);
 
         AmqpClient client = amqpClientFactory.createQueueClient();

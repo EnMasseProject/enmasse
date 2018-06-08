@@ -73,11 +73,12 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), "sharded-topic");
         addressApiClient.createAddress(t2);
 
-        setAddresses(t1);
+        appendAddresses(t1);
         waitForDestinationsReady(t2);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
         runTopicTest(topicClient, t1, 2048);
+        runTopicTest(topicClient, t2, 2048);
     }
 
     @Test
