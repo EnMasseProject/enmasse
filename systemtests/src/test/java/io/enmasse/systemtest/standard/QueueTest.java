@@ -87,6 +87,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
+    @Disabled("Disabled due to #1327")
     void testShardedQueues() throws Exception {
         Destination q1 = Destination.queue("shardedQueue1", "sharded-queue");
         Destination q2 = new Destination("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), "sharded-queue");
