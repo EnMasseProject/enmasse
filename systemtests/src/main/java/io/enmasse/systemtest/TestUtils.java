@@ -411,6 +411,7 @@ public class TestUtils {
 
     public static AddressSpace getAddressSpaceObject(AddressApiClient apiClient, String addressSpaceName) throws Exception {
         JsonObject addressSpaceJson = apiClient.getAddressSpace(addressSpaceName);
+        log.info("address space received {}", addressSpaceJson.toString());
         return convertToAddressSpaceObject(addressSpaceJson).get(0);
     }
 
