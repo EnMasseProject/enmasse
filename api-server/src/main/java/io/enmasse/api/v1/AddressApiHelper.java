@@ -118,4 +118,11 @@ public class AddressApiHelper {
         }
         return labels;
     }
+
+    public void deleteAddresses(String namespace) {
+        for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {
+            AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
+            addressApi.deleteAddresses(namespace);
+        }
+    }
 }

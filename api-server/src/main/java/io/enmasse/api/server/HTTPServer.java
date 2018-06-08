@@ -11,15 +11,24 @@ import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
-import io.enmasse.api.v1.http.*;
+import io.enmasse.api.v1.http.HttpAddressService;
+import io.enmasse.api.v1.http.HttpAddressSpaceService;
+import io.enmasse.api.v1.http.HttpApiRootService;
+import io.enmasse.api.v1.http.HttpHealthService;
+import io.enmasse.api.v1.http.HttpNestedAddressService;
+import io.enmasse.api.v1.http.HttpRootService;
+import io.enmasse.api.v1.http.HttpSchemaService;
+import io.enmasse.api.v1.http.SwaggerSpecEndpoint;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
@@ -84,7 +93,11 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());
 
-        VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);
+        VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, deployment);
+        Handler<HttpServerRequest> requestHandler = event -> {
+            log.info("Request {} {}", event.method(), event.path());
+            vertxRequestHandler.handle(event);
+        };
 
         Future<Void> secureReady = Future.future();
         Future<Void> openReady = Future.future();
@@ -111,7 +124,7 @@ public class HTTPServer extends AbstractVerticle {
         }
     }
 
-    private void createSecureServer(VertxRequestHandler requestHandler, Future<Void> startPromise) {
+    private void createSecureServer(Handler<HttpServerRequest> requestHandler, Future<Void> startPromise) {
         if (new File(certDir).exists()) {
             HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
@@ -155,7 +168,7 @@ public class HTTPServer extends AbstractVerticle {
         }
     }
 
-    private void createOpenServer(VertxRequestHandler requestHandler, Future<Void> startPromise) {
+    private void createOpenServer(Handler<HttpServerRequest> requestHandler, Future<Void> startPromise) {
         httpServer = vertx.createHttpServer()
                 .requestHandler(requestHandler)
                 .listen(PORT, ar -> {

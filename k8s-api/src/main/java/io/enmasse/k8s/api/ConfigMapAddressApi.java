@@ -102,6 +102,15 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
+    public void deleteAddresses(String namespace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.TYPE, "address-config");
+        labels.put(LabelKeys.NAMESPACE, namespace);
+
+        client.configMaps().inNamespace(this.namespace).withLabels(labels).delete();
+    }
+
+    @Override
     public void createAddress(Address address) {
         String name = getConfigMapName(address.getName());
         ConfigMap map = create(address);
