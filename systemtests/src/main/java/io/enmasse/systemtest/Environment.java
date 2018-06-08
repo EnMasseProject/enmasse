@@ -17,6 +17,7 @@ public class Environment {
     private final String testLogDir = System.getenv().getOrDefault("OPENSHIFT_TEST_LOGDIR", "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
     private final String keycloakAdminPassword = System.getenv("KEYCLOAK_ADMIN_PASSWORD");
+    private final boolean registerApiServer = Boolean.parseBoolean(System.getenv("REGISTER_API_SERVER"));
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
 
     /**
@@ -44,6 +45,10 @@ public class Environment {
 
     public String openShiftUser() {
         return user;
+    }
+
+    public boolean registerApiServer() {
+        return registerApiServer;
     }
 
     public boolean useTLS() {
@@ -85,4 +90,6 @@ public class Environment {
     public boolean storeScreenshots() {
         return storeScreenshots;
     }
+
+
 }

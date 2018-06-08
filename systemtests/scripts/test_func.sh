@@ -22,6 +22,7 @@ function setup_test() {
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
+    export REGISTER_API_SERVER=${REGISTER_API_SERVER:-true}
 
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
@@ -30,7 +31,7 @@ function setup_test() {
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
     ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/install.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "namespace=${OPENSHIFT_PROJECT} admin_user=${OPENSHIFT_USER}"
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/install.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "namespace=${OPENSHIFT_PROJECT} admin_user=${OPENSHIFT_USER} register_api_server=${REGISTER_API_SERVER}"
 }
 
 function wait_until_up(){

@@ -5,6 +5,9 @@
 
 package io.enmasse.systemtest;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class Endpoint {
     private final String host;
     private final int port;
@@ -12,6 +15,17 @@ public class Endpoint {
     public Endpoint(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    public Endpoint(String url) {
+        URL myurl = null;
+        try {
+            myurl = new URL(url);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        this.host = myurl.getHost();
+        this.port = myurl.getPort();
     }
 
     public String getHost() {
