@@ -9,9 +9,13 @@
 - name: Create cluster wide roles used by service broker
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/service-broker.yaml
 - name: Grant service-broker cluster role privileges to service account
-  shell: oc adm policy add-cluster-role-to-user enmasse.io:service-broker -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:service-broker -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin --rolebinding-name={{ namespace }}-service-broker-enmasse-admin
+- name: Label clusterrolebindings {{ namespace }}-service-broker-enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} clusterrolebindings {{ namespace }}-service-broker-enmasse-admin app=enmasse
 - name: Grant auth delegation privileges to service account
-  shell: oc adm policy add-cluster-role-to-user system:auth-delegator -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user system:auth-delegator -n {{ namespace }} system:serviceaccount:{{ namespace }}:enmasse-admin --rolebinding-name={{ namespace }}-auth-delegator-enmasse-admin
+- name: Label clusterrolebindings {{ namespace }}-auth-delegator-enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} clusterrolebindings {{ namespace }}-auth-delegator-enmasse-admin app=enmasse
 - name: Create EnMasse Service Broker Deployment
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/deployment.yaml"
 - name: Create EnMasse Service Broker Service
@@ -34,6 +38,8 @@
       apiVersion: v1
       kind: Secret
       metadata:
+        labels:
+          app: enmasse
         name: service-broker-secret
       type: Opaque
       data:
@@ -51,6 +57,8 @@
   when: (keycloak_http_url is not defined)
 - name: Create the service broker console route
   shell: oc create route passthrough console -n {{ namespace }} --service=service-broker
+- name: Label route console
+  shell: oc label --overwrite -n {{ namespace }} route console app=enmasse
 - name: Retrieve service broker cluster ip
   when: (osb_console_prefix is not defined)
   shell: oc get service -n {{ namespace }} service-broker -o jsonpath={.spec.clusterIP}
@@ -71,6 +79,8 @@
   register: token_result
 - set_fact:
     enmasse_admin_token: "{{ token_result.stdout }}"
+- name: Label configmap service-broker-config
+  shell: oc label --overwrite -n {{ namespace }} configmap service-broker-config app=enmasse
 - name: Check if secret exists
   shell: oc get secret -n {{ namespace }} service-catalog-credentials
   register: catalog_secret_exists
@@ -83,6 +93,8 @@
   register: secret_result
 - set_fact:
     ca_bundle: "{{ secret_result.stdout }}"
+- name: Label secret service-catalog-credentials
+  shell: oc label --overwrite -n {{ namespace }} secret service-catalog-credentials app=enmasse
 - name: Register Service Broker with Service Catalog
   shell:
     cmd: |
@@ -90,6 +102,8 @@
       apiVersion: servicecatalog.k8s.io/v1beta1
       kind: ClusterServiceBroker
       metadata:
+        labels:
+          app: enmasse
         name: enmasse
         uid: 53bd3760-1576-11e8-8bc3-0242ac110007
       spec:

@@ -1,1 +1,4 @@
 generated/*
+
+#Ansible installer retry file
+install/ansible/playbooks/openshift/install.retry

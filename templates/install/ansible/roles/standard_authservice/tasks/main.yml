@@ -12,8 +12,12 @@
 - name: Create secret with the keycloak credentials
   when: secret_exists.failed
   shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
+- name: Label secret keycloak-credentials
+  shell: oc label --overwrite -n {{ namespace }} secret keycloak-credentials app=enmasse
 - name: Give user lookup permissions for the keycloak controller
-  shell: oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:{{ namespace }}:enmasse-admin
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:{{ namespace }}:enmasse-admin --rolebinding-name={{ namespace }}-keycloak-controller-enmasse-admin
+- name: Label clusterrolebindings {{ namespace }}-keycloak-controller-enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} clusterrolebindings {{ namespace }}-keycloak-controller-enmasse-admin app=enmasse
 - name: Create the standard authentication service service
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/service.yaml
 - name: Create the standard authentication service deployment
@@ -47,6 +51,8 @@
 - name: Annotate OAUTH service account
   shell: oc annotate sa -n {{ namespace }} kc-oauth serviceaccounts.openshift.io/oauth-redirecturi.first={{ keycloak_http_url }}
   when: oauth_sa_exists.failed
+- name: Label SA kc-oauth
+  shell: oc label --overwrite -n {{ namespace }} sa kc-oauth app=enmasse
 - shell: oc sa get-token -n {{ namespace }} kc-oauth
   register: token_result
 - set_fact:
@@ -67,3 +73,5 @@
 - name: Create configmap with the keycloak info
   when: config_exists.failed and (keycloak_http_url is defined)
   shell: oc create configmap keycloak-config -n {{ namespace }} --from-literal=hostname=standard-authservice.{{ namespace }}.svc --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert --from-literal=httpUrl={{ keycloak_http_url }} --from-literal=identityProviderClientId=system:serviceaccount:{{ namespace }}:kc-oauth --from-literal=identityProviderClientSecret={{ oauth_token }} --from-literal=identityProviderUrl={{ identity_url }}
+- name: Label configmap keycloak-config
+  shell: oc label --overwrite -n {{ namespace }} configmap keycloak-config app=enmasse

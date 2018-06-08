@@ -6,3 +6,5 @@
 - name: Create enmasse-admin SA
   shell: oc create sa enmasse-admin -n {{ namespace }}
   when: sa_exists.failed
+- name: Label SA enmasse-admin
+  shell: oc label --overwrite -n {{ namespace }} sa enmasse-admin app=enmasse
