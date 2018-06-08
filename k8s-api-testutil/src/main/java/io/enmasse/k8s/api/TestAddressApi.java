@@ -10,6 +10,8 @@ import io.enmasse.address.model.Status;
 import io.enmasse.k8s.api.cache.Store;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -60,12 +62,23 @@ public class TestAddressApi implements AddressApi {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        return new LinkedHashSet<>(addresses);
+        Set<Address> listed = new LinkedHashSet<>();
+        for (Address address : addresses) {
+            if (namespace.equals(address.getNamespace())) {
+                listed.add(address);
+            }
+        }
+        return listed;
     }
 
     @Override
     public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labels) {
         return listAddresses(namespace);
+    }
+
+    @Override
+    public void deleteAddresses(String namespace) {
+        addresses.removeIf(address -> namespace.equals(address.getNamespace()));
     }
 
     public void setAllAddressesReady(boolean ready) {

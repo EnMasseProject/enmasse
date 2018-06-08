@@ -19,6 +19,7 @@ public interface AddressApi {
     Optional<Address> getAddressWithName(String namespace, String name);
     Set<Address> listAddresses(String namespace);
     Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labels);
+    void deleteAddresses(String namespace);
 
     void createAddress(Address address);
     void replaceAddress(Address address);

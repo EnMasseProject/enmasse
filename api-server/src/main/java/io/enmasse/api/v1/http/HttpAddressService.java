@@ -72,4 +72,9 @@ public class HttpAddressService extends HttpAddressServiceBase {
         String addressSpace = parseAddressSpace(addressName);
         return super.deleteAddress(securityContext, namespace, addressSpace, addressName);
     }
+
+    @DELETE
+    public Response deleteAddresses(@Context SecurityContext securityContext, @PathParam("namespace") String namespace) throws Exception {
+        return super.deleteAddresses(securityContext, namespace);
+    }
 }

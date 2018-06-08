@@ -150,7 +150,6 @@ public class HttpAddressSpaceService {
 
     @DELETE
     @Path("{addressSpace}")
-    @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName) throws Exception {
         return doRequest("Error deleting address space " + addressSpaceName, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
@@ -160,4 +159,14 @@ public class HttpAddressSpaceService {
             return Response.ok().build();
         });
     }
+
+    @DELETE
+    public Response deleteAddressSpaces(@Context SecurityContext securityContext, @PathParam("namespace") String namespace) throws Exception {
+        return doRequest("Error deleting address space s", () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
+            addressSpaceApi.deleteAddressSpaces(namespace);
+            return Response.ok().build();
+        });
+    }
+
 }

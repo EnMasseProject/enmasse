@@ -119,6 +119,13 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         return instances;
     }
 
+    @Override
+    public void deleteAddressSpaces(String namespace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.TYPE, "address-space");
+        labels.put(LabelKeys.NAMESPACE, namespace);
+        client.configMaps().withLabels(labels).delete();
+    }
 
     private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
         try {

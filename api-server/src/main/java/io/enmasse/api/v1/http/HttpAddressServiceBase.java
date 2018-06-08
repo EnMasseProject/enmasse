@@ -148,4 +148,12 @@ public class HttpAddressServiceBase {
             return Response.ok().build();
         });
     }
+
+    protected Response deleteAddresses(SecurityContext securityContext, String namespace) throws Exception {
+        return doRequest("Error deleting addresses", () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
+            apiHelper.deleteAddresses(namespace);
+            return Response.ok().build();
+        });
+    }
 }

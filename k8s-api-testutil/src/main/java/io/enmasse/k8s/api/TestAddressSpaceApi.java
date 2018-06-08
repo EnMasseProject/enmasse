@@ -61,6 +61,16 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
+    public void deleteAddressSpaces(String namespace) {
+        for (AddressSpace addressSpace : new HashSet<>(addressSpaces.values())) {
+            if (namespace.equals(addressSpace.getNamespace())) {
+                addressSpaces.remove(addressSpace.getName());
+                addressApiMap.remove(addressSpace.getName());
+            }
+        }
+    }
+
+    @Override
     public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception {
         return null;
     }

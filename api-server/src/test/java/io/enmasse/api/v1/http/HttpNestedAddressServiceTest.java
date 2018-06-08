@@ -79,7 +79,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testList() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "myspace", null, null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace", null, null));
 
         assertThat(response.getStatus(), is(200));
         AddressList list = (AddressList) response.getEntity();
@@ -91,7 +91,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testGetByAddress() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "myspace", "A1", null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace", "A1", null));
 
         assertThat(response.getStatus(), is(200));
         Address address = (Address) response.getEntity();
@@ -101,7 +101,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testGetByAddressNotFound() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "myspace","b1", null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace","b1", null));
 
         assertThat(response.getStatus(), is(404));
     }
@@ -109,13 +109,13 @@ public class HttpNestedAddressServiceTest {
     @Test
     public void testListException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "myspace", null, null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace", null, null));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGet() {
-        Response response = invoke(() -> addressService.getAddress(securityContext, null, "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, "ns", "myspace", "q1"));
         assertThat(response.getStatus(), is(200));
         Address address = (Address) response.getEntity();
 
@@ -125,13 +125,13 @@ public class HttpNestedAddressServiceTest {
     @Test
     public void testGetException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.getAddress(securityContext, null, "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, "ns", "myspace", "q1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGetUnknown() {
-        Response response = invoke(() -> addressService.getAddress(securityContext, null, "myspace", "doesnotexist"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, "ns", "myspace", "doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 
@@ -148,7 +148,7 @@ public class HttpNestedAddressServiceTest {
         assertThat(response.getStatus(), is(201));
 
         Address a2ns = new Address.Builder(a2).setNamespace("ns").build();
-        assertThat(addressApi.listAddresses(null), hasItem(a2ns));
+        assertThat(addressApi.listAddresses("ns"), hasItem(a2ns));
     }
 
     @Test
@@ -160,7 +160,7 @@ public class HttpNestedAddressServiceTest {
                 .setAddressSpace("myspace")
                 .setType("anycast")
                 .build();
-        Response response = invoke(() -> addressService.createAddress(securityContext, null, null, "myspace", Either.createLeft(a2)));
+        Response response = invoke(() -> addressService.createAddress(securityContext, null, "ns", "myspace", Either.createLeft(a2)));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -169,8 +169,8 @@ public class HttpNestedAddressServiceTest {
         Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
         assertThat(response.getStatus(), is(200));
 
-        assertThat(addressApi.listAddresses(null), hasItem(q1));
-        assertThat(addressApi.listAddresses(null).size(), is(1));
+        assertThat(addressApi.listAddresses("ns"), hasItem(q1));
+        assertThat(addressApi.listAddresses("ns").size(), is(1));
     }
 
     @Test
@@ -178,5 +178,16 @@ public class HttpNestedAddressServiceTest {
         addressApi.throwException = true;
         Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
         assertThat(response.getStatus(), is(500));
+    }
+
+    @Test
+    public void deleteAllAddresses() {
+        Response response = invoke(() -> addressService.deleteAddresses(securityContext, "unknown"));
+        assertThat(response.getStatus(), is(200));
+        assertThat(addressApi.listAddresses("ns").size(), is(2));
+
+        response = invoke(() -> addressService.deleteAddresses(securityContext, "ns"));
+        assertThat(response.getStatus(), is(200));
+        assertThat(addressApi.listAddresses("ns").size(), is(0));
     }
 }
