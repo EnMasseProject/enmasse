@@ -583,7 +583,7 @@ public class TestUtils {
         JsonArray endpointsStatusJson = addressSpaceJson.getJsonObject("status").getJsonArray("endpointStatuses");
         if (endpointsStatusJson != null) {
             for (int i = 0; i < endpointsStatusJson.size(); i++) {
-                JsonObject endpointJson = endpointsJson.getJsonObject(i);
+                JsonObject endpointJson = endpointsStatusJson.getJsonObject(i);
                 String ename = endpointJson.getString("name");
 
                 String host = null;
