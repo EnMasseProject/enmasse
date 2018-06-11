@@ -10,7 +10,7 @@
     <h1>Browser based testing</h1>
 
     <script type="text/javascript">
-        var connect_to_enmasse = function(server, address, count, username, password){
+        var connect_to_enmasse = function(server, address, count, username, password, protocols){
             var requests = parseInt(count);
             var current = 1;
             var sender;
@@ -38,7 +38,7 @@
                 }
             });
             var ws = client.websocket_connect(WebSocket);
-            var connection = client.connect({"connection_details":ws(server, ["binary", "AMQPWSB10", "amqp"]), transport: 'tls',
+            var connection = client.connect({"connection_details":ws(server, protocols), transport: 'tls',
                 username: username, password: password, "reconnect":false});
             connection.open_receiver(address);
             sender = connection.open_sender(address);

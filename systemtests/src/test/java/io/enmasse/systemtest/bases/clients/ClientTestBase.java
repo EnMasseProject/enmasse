@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.bases.clients;
 
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Destination;
@@ -73,8 +74,12 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        if (websocket)
+        if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
+            if (sharedAddressSpace.getType() == AddressSpaceType.STANDARD) {
+                arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+            }
+        }
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);

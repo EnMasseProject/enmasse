@@ -45,7 +45,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         int count = 10;
 
         rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(),
-                count, defaultCredentials);
+                count, defaultCredentials, sharedAddressSpace.getType());
         assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }
 }
