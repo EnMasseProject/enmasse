@@ -212,14 +212,17 @@ do
         if [ -n "$USE_OPENSHIFT" ]; then
             runcmd "oc create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/route.yaml" "Create standard authservice route"
             OAUTH_DISABLED="false"
-            HTTP_URL="https://$($CMD get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
+            HTTP_URL="https://$(oc get route keycloak -o yaml -o jsonpath={.spec.host})/auth"
+            if [[ "$HTTP_URL" == *"127.0.0.1."* ]] ; then
+                HTTP_URL="https://$($CMD get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
+            fi
         else
             runcmd "kubectl create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/external-service.yaml" "Create standard authservice external service"
             OAUTH_DISABLED="true"
             HTTP_URL="https://$($CMD get service standard-authservice -n ${NAMESPACE} -o jsonpath={.spec.clusterIP}):8443/auth"
         fi
         runcmd "$CMD create -n ${NAMESPACE} configmap keycloak-config --from-literal=hostname=standard-authservice.${NAMESPACE}.svc --from-literal=oauthDisabled=${OAUTH_DISABLED} --from-literal=httpUrl=${HTTP_URL} --from-literal=port=5671 --from-literal=caSecretName=standard-authservice-cert" "Create standard authentication service configuration"
-	runcmd "$CMD label -n ${NAMESPACE} configmap keycloak-config app=enmasse"
+        runcmd "$CMD label -n ${NAMESPACE} configmap keycloak-config app=enmasse"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/pvc.yaml" "Create standard authservice persistent volume"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/keycloak-deployment.yaml" "Create standard authservice deployment"
         runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/standard-authservice/controller-deployment.yaml" "Create standard authservice controller"
@@ -243,7 +246,7 @@ elif [ $MODE == "multitenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/brokered-plans.yaml" "Create brokered address space plans"
     if [ "$USE_OPENSHIFT" == "true" ]; then
         runcmd "$CMD create -n ${NAMESPACE} configmap api-server-config --from-literal=enableRbac=false" "Create api-server configmap"
-	runcmd "$CMD label -n ${NAMESPACE} configmap api-server-config app=enmasse"
+        runcmd "$CMD label -n ${NAMESPACE} configmap api-server-config app=enmasse"
     fi
 else
     echo "Unknown deployment mode $MODE"
