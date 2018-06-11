@@ -195,6 +195,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
+        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
         AddressSpace addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
         addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
         return !addrSpaceResponse.getEndpoints().isEmpty();
