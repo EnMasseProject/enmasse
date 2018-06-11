@@ -4,8 +4,9 @@ source ${CURDIR}/test_func.sh
 
 ENMASSE_DIR=$1
 KUBEADM=$2
-TESTCASE=${3:-"io.enmasse.**"}
-TEST_PROFILE=${4}
+TEST_PROFILE=${3}
+TESTCASE=${4:-"io.enmasse.**"}
+
 failure=0
 
 SANITIZED_PROJECT=$OPENSHIFT_PROJECT
