@@ -37,7 +37,10 @@ LOGS_PID=$!
 echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
 #run tests
-if [ "${TEST_PROFILE}" = "systemtests-marathon" ]; then
+if [[ "${TEST_PROFILE}" = "systemtests-pr" ]]; then
+    run_test ${TESTCASE} systemtests-shared-pr || failure=$(($failure + 1))
+    run_test ${TESTCASE} systemtests-isolated-pr || failure=$(($failure + 1))
+elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]]; then
     run_test ${TESTCASE} ${TEST_PROFILE} || failure=$(($failure + 1))
 else
     run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))

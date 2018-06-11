@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>systemtests</artifactId>
     <properties>
-        <tests></tests>
+        <tags></tags>
+        <skip.tags></skip.tags>
         <skip.tests>true</skip.tests>
     </properties>
     <dependencies>
@@ -126,7 +127,8 @@
                 <version>2.19.1</version>
                 <configuration>
                     <properties>
-                        <includeTags>${tests}</includeTags>
+                        <includeTags>${tags}</includeTags>
+                        <excludeTags>${skip.tags}</excludeTags>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>
                 </configuration>
@@ -150,27 +152,43 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <tests>shared,isolated</tests>
+                <tags>shared,isolated</tags>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-shared-pr</id>
+            <properties>
+                <skip.tests>false</skip.tests>
+                <tags>shared</tags>
+                <skip.tags>nonPR</skip.tags>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-isolated-pr</id>
+            <properties>
+                <skip.tests>false</skip.tests>
+                <tags>isolated</tags>
+                <skip.tags>nonPR</skip.tags>
             </properties>
         </profile>
         <profile>
             <id>systemtests-isolated</id>
             <properties>
-                <tests>isolated</tests>
+                <tags>isolated</tags>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>systemtests-shared</id>
             <properties>
-                <tests>shared</tests>
+                <tags>shared</tags>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>systemtests-marathon</id>
             <properties>
-                <tests>marathon</tests>
+                <tags>marathon</tags>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
