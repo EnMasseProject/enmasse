@@ -71,7 +71,6 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("Disabled due to #1327")
     void testShardedTopic() throws Exception {
         Destination t1 = Destination.topic("shardedTopic1", "sharded-topic");
         Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), "sharded-topic");
