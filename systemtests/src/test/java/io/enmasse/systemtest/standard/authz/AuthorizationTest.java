@@ -7,7 +7,10 @@ package io.enmasse.systemtest.standard.authz;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import static io.enmasse.systemtest.TestTag.nonPR;
 
 class AuthorizationTest extends AuthorizationTestBase implements ITestBaseStandard {
 
@@ -28,11 +31,13 @@ class AuthorizationTest extends AuthorizationTestBase implements ITestBaseStanda
     }
 
     @Test
+    @Tag(nonPR)
     void testSendAuthzWithWIldcards() throws Exception {
         doTestSendAuthzWithWIldcards();
     }
 
     @Test
+    @Tag(nonPR)
     void testReceiveAuthzWithWIldcards() throws Exception {
         doTestReceiveAuthzWithWIldcards();
     }

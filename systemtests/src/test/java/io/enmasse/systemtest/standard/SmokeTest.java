@@ -13,6 +13,7 @@ import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -30,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This is a simple smoketest of EnMasse. If this passes, the chances of something being
  * very wrong is minimized. The test should not take to long too execute
  */
+@Tag(nonPR)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private Destination queue = Destination.queue("smokeQueue_1", "pooled-queue");

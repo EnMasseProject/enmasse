@@ -21,6 +21,7 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -31,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,6 +57,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
+    @Tag(nonPR)
     void testColocatedTopics() throws Exception {
         Destination t1 = Destination.topic("col-topic1", "pooled-topic");
         Destination t2 = Destination.topic("col-topic2", "pooled-topic");
@@ -77,6 +80,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
+    @Tag(nonPR)
     void testRestApi() throws Exception {
         Destination t1 = Destination.topic("topicRest1", getDefaultPlan(AddressType.TOPIC));
         Destination t2 = Destination.topic("topicRest2", getDefaultPlan(AddressType.TOPIC));
@@ -85,6 +89,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
+    @Tag(nonPR)
     void testMessageSelectorsAppProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicAppProp", "sharded-topic");
         String linkName = "linkSelectorTopicAppProp";

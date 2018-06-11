@@ -13,6 +13,7 @@ import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -89,6 +91,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
+    @Tag(nonPR)
     void testRestApi() throws Exception {
         Destination t1 = Destination.topic("topic1", getDefaultPlan(AddressType.TOPIC));
         Destination t2 = Destination.topic("topic2", getDefaultPlan(AddressType.TOPIC));
