@@ -23,7 +23,7 @@ public class Address {
     private final String addressSpace;
     private final String type;
     private final String plan;
-    private final Optional<String> topic;
+    private final String topic;
     private final Status status;
     private final Map<String, String> labels;
     private final Map<String, String> annotations;
@@ -39,7 +39,7 @@ public class Address {
         this.addressSpace = addressSpace;
         this.type = type;
         this.plan = plan;
-        this.topic = topic;
+        this.topic = topic.isPresent() ? topic.get() : null;
         this.status = status;
         this.labels = labels;
         this.annotations = annotations;
@@ -74,7 +74,7 @@ public class Address {
     }
 
     public Optional<String> getTopic() {
-        return topic;
+        return Optional.ofNullable(topic);
     }
 
     public Status getStatus() {
@@ -118,8 +118,8 @@ public class Address {
         sb.append("annotations=").append(annotations).append(",");
         sb.append("type=").append(type).append(",");
         sb.append("plan=").append(plan).append(",");
-        if (topic.isPresent()) {
-            sb.append("topic=").append(topic.get()).append(",");
+        if (topic != null) {
+            sb.append("topic=").append(topic).append(",");
         }
         sb.append("status=").append(status).append(",");
         sb.append("resourceVersion=").append(resourceVersion).append("}");
