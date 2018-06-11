@@ -24,6 +24,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    @Disabled("due to issue #1327")
     void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic1", "pooled-topic"),
                 Destination.topic("test-topic2", "sharded-topic"));
