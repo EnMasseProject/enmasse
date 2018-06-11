@@ -87,21 +87,26 @@ public abstract class Kubernetes {
 
     public HashMap<String, String> getLogsOfTerminatedPods(String namespace) {
         HashMap<String, String> terminatedPodsLogs = new HashMap<>();
-        client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
-            pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
-                log.info("pod:'{}' : restart count '{}'",
-                        pod.getMetadata().getName(),
-                        containerStatus.getRestartCount());
-                if (containerStatus.getRestartCount() > 0) {
-                    terminatedPodsLogs.put(
+        try {
+            client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
+                pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
+                    log.info("pod:'{}' : restart count '{}'",
                             pod.getMetadata().getName(),
-                            client.pods().inNamespace(namespace)
-                                    .withName(pod.getMetadata().getName())
-                                    .inContainer(containerStatus.getName())
-                                    .terminated().getLog());
-                }
+                            containerStatus.getRestartCount());
+                    if (containerStatus.getRestartCount() > 0) {
+                        terminatedPodsLogs.put(
+                                pod.getMetadata().getName(),
+                                client.pods().inNamespace(namespace)
+                                        .withName(pod.getMetadata().getName())
+                                        .inContainer(containerStatus.getName())
+                                        .terminated().getLog());
+                    }
+                });
             });
-        });
+        } catch (Exception allExceptions) {
+            log.warn("Searching in terminated pods failed! No logs of terminated pods will be stored.");
+            allExceptions.printStackTrace();
+        }
         return terminatedPodsLogs;
     }
 
