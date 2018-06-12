@@ -1,6 +1,6 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-BUILD_DIRS     = agent none-authservice templates
-DOCKER_DIRS	   = topic-forwarder artemis api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
+BUILD_DIRS     = none-authservice templates
+DOCKER_DIRS	   = agent topic-forwarder artemis api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io
 OPENSHIFT_PROJECT ?= $(shell oc project -q)
@@ -17,10 +17,10 @@ ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS="-DskipTests"
 endif
 
-all: init build test package docker_build
+all: init build_java docker_build
 
 build_java:
-	mvn -q test package -B $(MAVEN_ARGS)
+	mvn package -B $(MAVEN_ARGS)
 
 clean_java:
 	mvn -B clean
@@ -33,7 +33,7 @@ coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
 
 java_coverage:
-	mvn test -Pcoverage package -B $(MAVEN_ARGS)
+	mvn test -Pcoverage -B $(MAVEN_ARGS)
 	mvn jacoco:report-aggregate
 
 $(BUILD_TARGETS): $(BUILD_DIRS)

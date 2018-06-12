@@ -22,8 +22,6 @@ python:
 - "2.7.14"
 before_install:
 - sudo pip install requests[security] ansible
-- npm install -g mocha mocha-junit-reporter
-- npm install rhea debug
 script:
 - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
 - "./.travis/build.sh"

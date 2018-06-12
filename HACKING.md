@@ -9,16 +9,9 @@ To build EnMasse, you need
    * [Python](https://www.python.org/)
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
-   * [Node.js](https://nodejs.org/en/) >= 6
-   * [Npm >= 3](https://www.npmjs.com/)
    * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
-   * [Asciidoctor](http://asciidoc.org/) (optional, only required for docs)
 
-The EnMasse java modules are built using maven. Node.js modules are built using make. All docker images
-are built using make.
-
-*Note*: asciidoctor is only required to build the help page for the
-console.
+The EnMasse java and node modules are built using maven. All docker images are built using make.
 
 ## Check out submodules
 
@@ -71,7 +64,7 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Install systemtests dependencies
 
-    ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml
+    ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml --tags clients --skip-tags dependencies
 
 #### Running the systemtests
 
