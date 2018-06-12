@@ -16,6 +16,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +46,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
+    @Tag(nonPR)
     void messageGroupTest() throws Exception {
         Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
@@ -88,6 +91,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
+    @Tag(nonPR)
     void testRestApi() throws Exception {
         Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
         Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));

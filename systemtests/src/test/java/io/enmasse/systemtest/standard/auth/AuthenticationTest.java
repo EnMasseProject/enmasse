@@ -7,11 +7,15 @@ package io.enmasse.systemtest.standard.auth;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import static io.enmasse.systemtest.TestTag.nonPR;
 
 class AuthenticationTest extends AuthenticationTestBase implements ITestBaseStandard {
 
     @Test
+    @Tag(nonPR)
     void testStandardAuthenticationService() throws Exception {
         testStandardAuthenticationServiceGeneral(AddressSpaceType.STANDARD);
     }

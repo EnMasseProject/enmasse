@@ -7,9 +7,13 @@ package io.enmasse.systemtest.common.plans.web;
 import io.enmasse.systemtest.bases.web.WebConsolePlansTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 
+import static io.enmasse.systemtest.TestTag.nonPR;
+
+@Tag(nonPR)
 class ChromeWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderChrome {
 
     @Test

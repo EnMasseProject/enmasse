@@ -11,10 +11,13 @@ import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Tag(nonPR)
 class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, ISeleniumProviderChrome {
 
     @Test

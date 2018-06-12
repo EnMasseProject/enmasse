@@ -23,6 +23,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
+import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -248,6 +249,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
     }
 
     @Test
+    @Tag(nonPR)
     @Disabled("test disabled as per-address limit enforcement has been removed")
     void testGlobalSizeLimitations() throws Exception {
         KeycloakCredentials user = new KeycloakCredentials("test", "test");
@@ -307,6 +309,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
     }
 
     @Test
+    @Tag(nonPR)
     void testAutoScaleAfterManualScale() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.4));
