@@ -386,19 +386,56 @@ public class AddressProvisionerTest {
                 createAddress("t2", "topic", "small-topic"),
                 createSubscription("s1", "t1", "small-subscription"));
 
+
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
 
         assertThat(neededMap.keySet().size(), is(2));
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
-
-        List<BrokerCluster> brokerClusters = Arrays.asList(
-                createCluster("broker", 1));
-
-        provisioner.provisionResources(new RouterCluster("router", 1), brokerClusters, neededMap, addressSet);
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("router")), is(1));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
 
         for (Address address : addressSet) {
             assertThat(address.getStatus().getPhase(), is(Configuring));
+        }
+    }
+
+    @Test
+    public void testDurableSubscriptionsColocatedStaysOnTopicBroker() {
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 0, 2),
+                new ResourceAllowance("router", 0, 1),
+                new ResourceAllowance("aggregate", 0, 3)));
+
+        Set<Address> addressSet = Sets.newSet(
+                createAddress("t1", "topic", "small-topic"),
+                createSubscription("s1", "t1", "small-subscription"),
+                createSubscription("s2", "t1", "small-subscription"),
+                createSubscription("s3", "t1", "small-subscription"),
+                createSubscription("s4", "t1", "small-subscription"),
+                createSubscription("s5", "t1", "small-subscription"),
+                createSubscription("s6", "t1", "small-subscription"),
+                createSubscription("s7", "t1", "small-subscription"),
+                createSubscription("s8", "t1", "small-subscription"),
+                createSubscription("s9", "t1", "small-subscription"),
+                createSubscription("s10", "t1", "small-subscription"));
+
+
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
+
+        assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("router")), is(1));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
+
+
+        Set<String> expectedNotConfigured = Sets.newSet("s9", "s10");
+        for (Address address : addressSet) {
+            if (expectedNotConfigured.contains(address.getAddress())) {
+                assertThat(address.getStatus().getPhase(), is(Pending));
+            } else {
+                assertThat(address.getStatus().getPhase(), is(Configuring));
+            }
         }
     }
 
