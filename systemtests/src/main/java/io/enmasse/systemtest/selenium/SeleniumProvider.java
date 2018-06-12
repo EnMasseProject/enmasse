@@ -13,6 +13,9 @@ import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.*;
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogEntry;
+import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 
@@ -45,7 +48,26 @@ public class SeleniumProvider {
     public void onFailed(ExtensionContext extensionContext) {
         String getTestClassName = extensionContext.getTestClass().get().getName();
         String getTestMethodName = extensionContext.getTestMethod().get().getName();
+        saveBrowserLog(getTestClassName, getTestMethodName);
         saveScreenShots(getTestClassName, getTestMethodName);
+    }
+
+    public void saveBrowserLog(String className, String methodName) {
+        try {
+            log.info("Saving browser console log...");
+            Path path = Paths.get(
+                    environment.testLogDir(),
+                    webconsoleFolder,
+                    className,
+                    methodName);
+            Files.createDirectories(path);
+            File consoleLog = new File(path.toString(), "browser_console.log");
+            StringBuilder logEntries = formatedBrowserLogs();
+            Files.write(Paths.get(consoleLog.getPath()), logEntries.toString().getBytes());
+            log.info("Browser console log saved successfully");
+        } catch (Exception ex) {
+            log.warn("Cannot save browser log: " + ex.getMessage());
+        }
     }
 
     public void saveScreenShots(String className, String methodName) {
@@ -94,6 +116,22 @@ public class SeleniumProvider {
             browserScreenshots.clear();
         }
     }
+
+    private LogEntries getBrowserLog() {
+        return this.driver.manage().logs().get(LogType.BROWSER);
+    }
+
+    private StringBuilder formatedBrowserLogs() {
+        StringBuilder logEntries = new StringBuilder();
+        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (LogEntry logEntry : getBrowserLog().getAll()) {
+            logEntries.append(logEntry.getLevel()).append(": ")
+                    .append(sdfDate.format(logEntry.getTimestamp())).append(": ")
+                    .append(logEntry.getMessage()).append(System.lineSeparator());
+        }
+        return logEntries;
+    }
+
 
     public WebDriver getDriver() {
         return this.driver;
