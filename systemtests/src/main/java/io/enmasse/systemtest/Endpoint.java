@@ -17,13 +17,9 @@ public class Endpoint {
         this.port = port;
     }
 
-    public Endpoint(String url) {
+    public Endpoint(String url) throws MalformedURLException {
         URL myurl = null;
-        try {
-            myurl = new URL(url);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        myurl = new URL(url);
         this.host = myurl.getHost();
         this.port = myurl.getPort();
     }
