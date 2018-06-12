@@ -5,7 +5,7 @@ WORKDIR /opt/app-root/src/
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/agent-${VERSION}.tgz /opt/app-root/src/
+ADD target/agent-${VERSION}-dist.tar.gz /opt/app-root/src/
 
 EXPOSE 56720 8080
 

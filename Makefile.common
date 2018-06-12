@@ -23,9 +23,6 @@ clean_node:
 clean: clean_node
 	rm -rf build
 
-build_amqp_module:
-	cd $(TOPDIR)artemis/activemq-artemis/artemis-protocols/artemis-amqp-protocol && mvn -q install -DskipTests
-
 node_modules: package.json
 		npm install
 

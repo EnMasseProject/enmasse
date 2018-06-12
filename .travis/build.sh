@@ -17,8 +17,6 @@ then
     export DOCKER_REGISTRY="localhost:5000"
 fi
 
-export MOCHA_ARGS="--reporter=mocha-junit-reporter"
-
 echo "Building EnMasse with tag $TAG, commit $COMMIT, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
 make clean
 

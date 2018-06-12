@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
 ----
 
 ==== {ClientAmqpDotNetName}
-[source,c#,options="nowrap"]
+[source,csharp,options="nowrap"]
 ----
 using System;
 using Amqp;
