@@ -33,7 +33,9 @@ public class StandardControllerSchema {
                         "small-queue",
                         "pooled-queue-larger",
                         "pooled-queue-small",
-                        "pooled-queue-tiny"
+                        "pooled-queue-tiny",
+                        "small-topic",
+                        "small-subscription"
                 ))
                 .build();
 
@@ -100,6 +102,37 @@ public class StandardControllerSchema {
                                                 .setRequestedResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.2),
                                                         new ResourceRequest("broker", 2.0)))
+                                                .build()))
+                                .build(),
+                        new AddressType.Builder()
+                                .setName("topic")
+                                .setDescription("topic")
+                                .setAddressPlans(Arrays.asList(
+                                        new AddressPlan.Builder()
+                                                .setName("small-topic")
+                                                .setAddressType("topic")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.1),
+                                                        new ResourceRequest("broker", 0.2)))
+                                                .build(),
+                                        new AddressPlan.Builder()
+                                                .setName("xlarge-topic")
+                                                .setAddressType("topic")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.1),
+                                                        new ResourceRequest("broker", 1.0)))
+                                                .build()))
+                                .build(),
+                        new AddressType.Builder()
+                                .setName("subscription")
+                                .setDescription("subscription")
+                                .setAddressPlans(Arrays.asList(
+                                        new AddressPlan.Builder()
+                                                .setName("small-subscription")
+                                                .setAddressType("subscription")
+                                                .setRequestedResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.05),
+                                                        new ResourceRequest("broker", 0.1)))
                                                 .build()))
                                 .build()))
                 .build();
