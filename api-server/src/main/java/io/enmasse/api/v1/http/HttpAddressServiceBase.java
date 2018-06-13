@@ -106,7 +106,7 @@ public class HttpAddressServiceBase {
     }
 
     static Address setAddressDefaults(String namespace, String addressSpace, Address address) {
-        if (address.getNamespace() == null || address.getAddressSpace() == null) {
+        if (address.getNamespace() == null || address.getAddressSpace() == null || address.getName() == null) {
             Address.Builder builder = new Address.Builder(address);
             if (address.getNamespace() == null) {
                 builder.setNamespace(namespace);
@@ -115,6 +115,11 @@ public class HttpAddressServiceBase {
             if (address.getAddressSpace() == null) {
                 builder.setAddressSpace(addressSpace);
             }
+
+            if (address.getName() == null) {
+                builder.setName(Address.generateName(addressSpace, address.getAddress()));
+            }
+
             address = builder.build();
         }
 

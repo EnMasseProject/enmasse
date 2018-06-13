@@ -46,6 +46,7 @@ public class AddressControllerTest {
     @Test
     public void testAddressGarbageCollection() throws Exception {
         Address alive = new Address.Builder()
+                .setName("q1")
                 .setAddress("q1")
                 .setAddressSpace("myspace")
                 .setNamespace("ns")
@@ -55,6 +56,7 @@ public class AddressControllerTest {
                 .setStatus(new Status(true).setPhase(Status.Phase.Active))
                 .build();
         Address terminating = new Address.Builder()
+                .setName("q2")
                 .setAddress("q2")
                 .setAddressSpace("myspace")
                 .setNamespace("ns")

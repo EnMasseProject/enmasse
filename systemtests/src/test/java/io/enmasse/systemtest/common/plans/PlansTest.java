@@ -82,8 +82,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         setAddresses(weakAddressSpace, weakQueueDest, weakTopicDest);
 
         //get destinations
-        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getAddress()));
-        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getAddress()));
+        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getName()));
+        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getName()));
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
@@ -466,7 +466,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         assertEquals(getAddressesObjects(
                 messagePersistAddressSpace,
-                Optional.of(queue.getAddress())).get(10, TimeUnit.SECONDS).get(0).getPlan(),
+                Optional.of(queue.getName())).get(10, TimeUnit.SECONDS).get(0).getPlan(),
                 queuePlanSharded.getName(),
                 "New plan wasn't set correctly");
 
@@ -495,7 +495,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Destination[0]));
         List<Future<List<Address>>> getAddresses = new ArrayList<>();
         for (Destination dest : allowedDest) {
-            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getAddress())));
+            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getName())));
         }
 
         for (Future<List<Address>> getAddress : getAddresses) {
@@ -518,7 +518,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             }
 
             for (Destination dest : notAllowedDest) {
-                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getAddress())));
+                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getName())));
             }
 
             for (Future<List<Address>> getAddress : getAddresses) {

@@ -10,6 +10,7 @@ import io.enmasse.k8s.api.EventLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -58,7 +59,7 @@ public class AddressProvisioner {
             } else if (resourceRequest.getResourceName().equals("broker") && resourceRequest.getAmount() < 1) {
                 instanceId = getBrokerId(address).orElseThrow(() -> new IllegalArgumentException("Unexpected pooled address without broker id: " + address.getAddress()));
             } else if (resourceRequest.getResourceName().equals("broker")) {
-                instanceId = address.getNameWithoutAddressspace();
+                instanceId = getShardedClusterId(address);
             }
             Map<String, UsageInfo> resourceUsage = usageMap.computeIfAbsent(resourceRequest.getResourceName(), k -> new HashMap<>());
             UsageInfo info = resourceUsage.computeIfAbsent(instanceId, i -> new UsageInfo());
@@ -112,13 +113,14 @@ public class AddressProvisioner {
                     }
                 }
             } else if ("broker".equals(resourceName)) {
-                UsageInfo info = resourceUsage.get(address.getNameWithoutAddressspace());
+                UsageInfo info = resourceUsage.get(getShardedClusterId(address));
                 if (info != null) {
-                    throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getNameWithoutAddressspace());
+                    throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
                 }
                 info = new UsageInfo();
                 info.addUsed(resourceRequest.getAmount());
-                resourceUsage.put(address.getNameWithoutAddressspace(), info);
+                resourceUsage.put(getShardedClusterId(address), info);
+                address.putAnnotation(AnnotationKeys.CLUSTER_ID, getShardedClusterId(address));
             }
 
             double resourceNeeded = sumNeeded(resourceUsage);
@@ -170,11 +172,14 @@ public class AddressProvisioner {
         return needed;
     }
 
+    private static int MAX_ADDRESS_ID_LENGTH = 10;
+    public static String getShardedClusterId(Address address) {
+        return KubeUtil.sanitizeWithUuid(address.getAddress().substring(0, Math.min(MAX_ADDRESS_ID_LENGTH, address.getAddress().length())), UUID.nameUUIDFromBytes(address.getName().getBytes(StandardCharsets.UTF_8)).toString());
+    }
+
+
     public static Optional<String> getBrokerId(Address address) {
-        if (address.getAnnotations() != null) {
-            return Optional.ofNullable(address.getAnnotations().get(AnnotationKeys.BROKER_ID));
-        }
-        return Optional.empty();
+        return Optional.ofNullable(address.getAnnotation(AnnotationKeys.BROKER_ID));
     }
 
     private Map<String, Double> computeLimits() {
@@ -189,7 +194,7 @@ public class AddressProvisioner {
 
         Map<String, Address> addressByClusterId = new HashMap<>();
         for (Address address : addressSet) {
-            addressByClusterId.put(address.getNameWithoutAddressspace(), address);
+            addressByClusterId.put(address.getAnnotation(AnnotationKeys.CLUSTER_ID), address);
         }
 
         for (Map.Entry<String, Map<String, UsageInfo>> entry : neededMap.entrySet()) {
@@ -206,14 +211,14 @@ public class AddressProvisioner {
                 }
 
                 // Collect all sharded brokers
-                Map<String, Integer> sharedBrokers = new HashMap<>();
+                Map<String, Integer> shardedBrokers = new HashMap<>();
                 for (Map.Entry<String, UsageInfo> usageEntry : entry.getValue().entrySet()) {
                     if (addressByClusterId.containsKey(usageEntry.getKey())) {
-                        sharedBrokers.put(usageEntry.getKey(), usageEntry.getValue().getNeeded());
+                        shardedBrokers.put(usageEntry.getKey(), usageEntry.getValue().getNeeded());
                     }
                 }
 
-                for (Map.Entry<String, Integer> clusterIdEntry : sharedBrokers.entrySet()) {
+                for (Map.Entry<String, Integer> clusterIdEntry : shardedBrokers.entrySet()) {
                     Address address = addressByClusterId.get(clusterIdEntry.getKey());
                     AddressType addressType = addressResolver.getType(address);
                     AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
@@ -239,7 +244,7 @@ public class AddressProvisioner {
     private final Pattern pooledPattern = Pattern.compile("^broker-\\d+");
     private boolean scheduleAddress(Map<String, UsageInfo> usageMap, Address address, double credit) {
 
-        address.getAnnotations().put(AnnotationKeys.CLUSTER_ID, "broker");
+        address.putAnnotation(AnnotationKeys.CLUSTER_ID, "broker");
 
         List<BrokerInfo> brokers = new ArrayList<>();
         for (String host : usageMap.keySet()) {
@@ -271,7 +276,6 @@ public class AddressProvisioner {
 
         resourceNeeded.put("broker-" + numPooled, new UsageInfo());
     }
-
 
     private void provisionBroker(List<BrokerCluster> clusterList, String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address) {
         try {

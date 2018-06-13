@@ -89,7 +89,7 @@ describe('kubernetes_name', function () {
     it ('truncates names without special chars over 64 chars of length', function (done) {
         var too_long = 'abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-xxxxxxx';
         assert(too_long.length > 63);
-        var name = myutils.kubernetes_name(too_long);
+        var name = myutils.kubernetes_name(too_long).split(".")[0];
         assert(name.length <= 63);
         done();
     });
@@ -98,20 +98,23 @@ describe('kubernetes_name', function () {
         var long_b = 'abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-xxxxxxa';
         assert(long_a.length > 63);
         assert(long_b.length > 63);
-        var name_a = myutils.kubernetes_name(long_a);
-        var name_b = myutils.kubernetes_name(long_b);
-        assert(name_a.length <= 63);
-        assert(name_b.length <= 63);
-        assert.notEqual(name_a, name_b);
+        var name_a = myutils.kubernetes_name(long_a).split(".");
+        var name_b = myutils.kubernetes_name(long_b).split(".");
+        assert(name_a[0].length <= 63);
+        assert(name_b[0].length <= 63);
+        assert.equal(name_a[0], name_b[0]);
+        assert(name_a[1].length <= 63);
+        assert(name_b[1].length <= 63);
+        assert.notEqual(name_a[1], name_b[1]);
         done();
     });
     it ('truncates names with special chars over 64 chars of length', function (done) {
         var too_long = 'a!"£$%^&*()_+=-bcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
         assert(too_long.length > 63);
-        var name = myutils.kubernetes_name(too_long);
+        var name = myutils.kubernetes_name(too_long).split(".")[0];
         assert(name.length <= 63);
         var also_too_long = 'a!"£$%^&*()_+==bcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
-        var another_name = myutils.kubernetes_name(also_too_long);
+        var another_name = myutils.kubernetes_name(also_too_long).split(".")[0];
         assert(another_name.length <= 63);
         assert.notEqual(name, another_name);
         done();

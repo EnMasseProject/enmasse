@@ -195,7 +195,13 @@ public class AddressApiClient extends ApiClient {
      * @throws Exception
      */
     public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        String path = getAddressPath(addressSpace.getName()) + (addressName.map(s -> "/" + s).orElse(""));
+        String path = getAddressPath(addressSpace.getName()) + (addressName.map(s -> {
+            if (s.startsWith(addressSpace.getName())) {
+                return "/" + s;
+            } else {
+                return "/" + addressSpace.getName() + "." + s;
+            }
+        }).orElse(""));
         log.info("GET-addresses: path {}; ", path);
 
         return doRequestNTimes(initRetry, () -> {
@@ -257,7 +263,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void deleteAddress(String addressSpace, Destination destination) throws Exception {
-        doDelete(getAddressPath(addressSpace) + "/" + destination.getName());
+        doDelete(getAddressPath(addressSpace) + "/" + getAddressName(addressSpace, destination));
     }
 
     private void doDelete(String path) throws Exception {
@@ -283,6 +289,8 @@ public class AddressApiClient extends ApiClient {
         Set<Destination> desired = Sets.newHashSet(destinations);
 
         Set<Destination> toCreate = Sets.difference(desired, current);
+
+        log.info("Current: {}, desired: {}, toCreate: {}", current, desired, toCreate);
 
         destinations = toCreate.toArray(new Destination[0]);
         if (batchSize > destinations.length) {
@@ -332,7 +340,7 @@ public class AddressApiClient extends ApiClient {
             JsonObject item = new JsonObject();
             JsonObject metadata = new JsonObject();
             if (destination.getName() != null) {
-                metadata.put("name", destination.getName());
+                metadata.put("name", getAddressName(addressSpace.getName(), destination));
             }
             if (destination.getUuid() != null) {
                 metadata.put("uid", destination.getUuid());
@@ -382,13 +390,17 @@ public class AddressApiClient extends ApiClient {
         }
     }
 
+    private static String getAddressName(String addressSpace, Destination destination) {
+        return destination.getName().startsWith(addressSpace) ? destination.getName() : String.format("%s.%s", addressSpace, destination.getName());
+    }
+
     public void createAddress(Destination destination) throws Exception {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", "enmasse.io/v1alpha1");
         entry.put("kind", "Address");
         JsonObject metadata = new JsonObject();
         if (destination.getName() != null) {
-            metadata.put("name", destination.getAddressSpace() + "." + destination.getName());
+            metadata.put("name", getAddressName(destination.getAddressSpace(), destination));
         }
         if (destination.getUuid() != null) {
             metadata.put("uid", destination.getUuid());
@@ -430,7 +442,7 @@ public class AddressApiClient extends ApiClient {
         entry.put("kind", "Address");
         JsonObject metadata = new JsonObject();
         if (destination.getName() != null) {
-            metadata.put("name", destination.getName());
+            metadata.put("name", getAddressName(addressSpace.getName(), destination));
         }
         if (destination.getUuid() != null) {
             metadata.put("uid", destination.getUuid());

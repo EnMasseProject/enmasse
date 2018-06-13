@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -61,8 +62,10 @@ public class AddressTest {
                 .setPlan(b1.getPlan())
                 .setType(b1.getType())
                 .build();
-        System.out.println(b1.getName());
-        assertTrue(b1.getName().startsWith("myaddr1-"));
+        assertNull(b1.getName());
+        String generated = Address.generateName(b1.getAddressSpace(), b1.getAddress());
+        System.out.println(generated);
+        assertTrue(generated.startsWith("myspace.myaddr1."));
         assertThat(b1.getName(), is(b2.getName()));
         assertThat(b1.getAddress(), is(b2.getAddress()));
         assertThat(b1.getPlan(), is(b2.getPlan()));
@@ -86,43 +89,5 @@ public class AddressTest {
         assertTrue(b.getStatus().isReady());
         assertThat(b.getStatus().getPhase(), is(Status.Phase.Active));
         assertThat(b.getStatus().getMessages(), hasItem("foo"));
-    }
-
-    @Test public void testGetNameWithoutAddressSpace() {
-        Address a = new Address.Builder()
-                .setAddress("a1")
-                .setName("myspace.foo")
-                .setPlan("p1")
-                .setType("t1")
-                .setNamespace("ns")
-                .setAddressSpace("myspace")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
-                .build();
-        assertThat(a.getNameWithoutAddressspace(), is("foo"));
-
-        a = new Address.Builder()
-                .setAddress("a1")
-                .setName("myspace.foo")
-                .setPlan("p1")
-                .setType("t1")
-                .setNamespace("ns")
-                .setAddressSpace("foo")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
-                .build();
-
-        assertThat(a.getNameWithoutAddressspace(), is("myspace.foo"));
-
-        a = new Address.Builder()
-                .setAddress("a1")
-                .setName("foo")
-                .setPlan("p1")
-                .setType("t1")
-                .setNamespace("ns")
-                .setAddressSpace("foo")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
-                .build();
-
-        assertThat(a.getNameWithoutAddressspace(), is("foo"));
-        
     }
 }

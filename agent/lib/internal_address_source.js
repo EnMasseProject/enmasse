@@ -207,7 +207,7 @@ AddressSource.prototype.check_status = function (address_stats) {
 };
 
 function get_configmap_name_for_address(address, addressspace) {
-    return addressspace + "." + myutils.kubernetes_name(address, addressspace.length + 1);
+    return addressspace + "." + myutils.kubernetes_name(address);
 }
 
 AddressSource.prototype.create_address = function (definition) {

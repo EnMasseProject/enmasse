@@ -144,7 +144,6 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 .addToLabels(LabelKeys.TYPE, "address-config")
                 .addToAnnotations(address.getAnnotations())
                 // TODO: Support other ways of doing this
-                .addToAnnotations(AnnotationKeys.CLUSTER_ID, address.getName())
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
                 .endMetadata();
 

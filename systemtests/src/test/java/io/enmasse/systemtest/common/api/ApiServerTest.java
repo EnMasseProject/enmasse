@@ -22,10 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -162,7 +159,7 @@ class ApiServerTest extends TestBase {
                 "test-rest-api-queue", AddressType.QUEUE.toString(), "brokered-queue");
 
         setAddresses(addressSpace, dest1);
-        Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getAddress())).get(20, TimeUnit.SECONDS).get(0);
+        Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getName())).get(20, TimeUnit.SECONDS).get(0);
         assertEquals(uuid, dest1AddressObj.getUuid(), "Address uuid is not equal");
 
         logWithSeparator(log, "Check if name is optional");
@@ -186,7 +183,7 @@ class ApiServerTest extends TestBase {
         try {
             setAddresses(addressSpace, dest4);
         } catch (java.util.concurrent.ExecutionException ex) {
-            assertTrue(ex.getMessage().contains("does not match address space in url"),
+            assertTrue(ex.getMessage().contains("does not match address space"),
                     "Exception does not contain correct information");
         }
 
@@ -220,7 +217,7 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testCreateAddressResource() throws Exception {
-        AddressSpace addrSpace = new AddressSpace("create-address-resource", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
+        AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
         createAddressSpace(addrSpace, false);
 
         Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), "standard-anycast");
@@ -233,5 +230,12 @@ class ApiServerTest extends TestBase {
         addressApiClient.createAddress(multicast);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(2));
+
+        String uuid = UUID.randomUUID().toString();
+        Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), "sharded-queue");
+        addressApiClient.createAddress(longname);
+        addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        assertThat(addresses.size(), is(3));
+        TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 }

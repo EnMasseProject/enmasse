@@ -16,9 +16,8 @@ import static org.junit.Assert.assertThat;
 public class KubeUtilTest {
     @Test
     public void testLeaveSpaceForPodIdentifier() {
-        String address = "receiver-round-robincli_rhea";
-        String uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
-        String id = KubeUtil.sanitizeWithUuid(address, uuid);
+        String address = "receiver-round-robincli_rhearatherlongaddresswhichcanbeverylongblablabla";
+        String id = KubeUtil.sanitizeName(address);
         assertThat(id.length(), is(60));
         String id2 = KubeUtil.sanitizeName(id);
         assertThat(id, is(id2));

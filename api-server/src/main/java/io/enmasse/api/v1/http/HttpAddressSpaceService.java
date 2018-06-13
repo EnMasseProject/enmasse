@@ -87,6 +87,7 @@ public class HttpAddressSpaceService {
         return doRequest("Error creating address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, input, namespace);
+            addressSpace.validate();
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);

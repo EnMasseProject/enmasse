@@ -9,6 +9,8 @@ import io.enmasse.config.AnnotationKeys;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static io.enmasse.address.model.KubeUtil.sanitizeName;
+
 /**
  * An EnMasse Address addressspace.
  */
@@ -95,14 +97,6 @@ public class Address {
         return resourceVersion;
     }
 
-    public String getNameWithoutAddressspace() {
-        if(name.startsWith(addressSpace+".")) {
-            return name.substring(addressSpace.length()+1);
-        } else {
-            return name;
-        }
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -119,12 +113,26 @@ public class Address {
 
     public void validate() {
         Objects.requireNonNull(name, "name not set");
+        validateName(name);
         Objects.requireNonNull(namespace, "namespace not set");
         Objects.requireNonNull(address, "address not set");
         Objects.requireNonNull(addressSpace, "addressSpace not set");
         Objects.requireNonNull(plan, "plan not set");
         Objects.requireNonNull(type, "type not set");
         Objects.requireNonNull(status, "status not set");
+    }
+
+    private void validateName(String name) {
+        String[] components = name.split("\\.");
+        if (components.length < 2) {
+            throw new IllegalArgumentException("Address name must be on the form addressSpace.addressName");
+        }
+        if (!components[0].equals(addressSpace)) {
+            throw new IllegalArgumentException("Address space component of address name does not match address space");
+        }
+        for (String component : components) {
+            KubeUtil.validateName(component);
+        }
     }
 
     @Override
@@ -148,8 +156,18 @@ public class Address {
         return labels.get(labelKey);
     }
 
-    public void putLabel(String labelKey, String labelValue) {
+    public Address putLabel(String labelKey, String labelValue) {
         labels.put(labelKey, labelValue);
+        return this;
+    }
+
+    public Address putAnnotation(String annotationKey, String annotationValue) {
+        annotations.put(annotationKey, annotationValue);
+        return this;
+    }
+
+    public String getAnnotation(String annotationKey) {
+        return annotations.get(annotationKey);
     }
 
     public static class Builder {
@@ -192,7 +210,7 @@ public class Address {
         }
 
         public Builder setName(String name) {
-            this.name = KubeUtil.sanitizeName(name);
+            this.name = name;
             return this;
         }
 
@@ -267,12 +285,13 @@ public class Address {
             Objects.requireNonNull(status, "status not set");
             Objects.requireNonNull(labels, "labels not set");
             Objects.requireNonNull(annotations, "annotations not set");
-            if (name == null) {
-                String uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
-                putAnnotation(AnnotationKeys.UUID, uuid);
-                name = KubeUtil.sanitizeWithUuid(address, uuid);
-            }
+
             return new Address(name, namespace, selfLink, uid, creationTimestamp, resourceVersion, address, addressSpace, type, plan, status, labels, annotations);
         }
+    }
+
+    public static String generateName(String addressSpace, String address) {
+        String uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
+        return KubeUtil.sanitizeName(addressSpace) + "." + KubeUtil.sanitizeName(address) + "." + uuid;
     }
 }

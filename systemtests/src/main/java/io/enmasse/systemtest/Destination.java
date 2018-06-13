@@ -49,7 +49,7 @@ public class Destination {
     }
 
     public Destination(String name, String uuid, String addressSpace, String address, String type, String plan) {
-        this.name = name;
+        this.name = TestUtils.sanitizeAddress(name);
         this.address = address;
         this.type = type;
         this.plan = plan;
@@ -129,6 +129,6 @@ public class Destination {
 
     @Override
     public String toString() {
-        return address;
+        return "{name=" + name + ", address=" + address + "}";
     }
 }

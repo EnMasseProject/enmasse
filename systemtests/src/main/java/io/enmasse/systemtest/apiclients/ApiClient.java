@@ -56,7 +56,8 @@ public abstract class ApiClient {
                 HttpResponse<T> response = ar.result();
                 if (response.statusCode() < 200 || response.statusCode() >= 300) {
                     log.error("response status code: {}, body: {}", response.statusCode(), response.body());
-                    promise.completeExceptionally(new RuntimeException(response.body().toString()));
+                    T body = response.body();
+                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + body != null ? body.toString() : null));
                 } else {
                     promise.complete(ar.result().body());
                 }

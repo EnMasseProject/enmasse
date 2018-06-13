@@ -108,22 +108,6 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public List<String> listBrokers(String clusterId) {
-        List<String> addresses = new ArrayList<>();
-        for (Pod pod : client.pods().list().getItems()) {
-            if (pod.getMetadata().getAnnotations() != null &&
-                    clusterId.equals(pod.getMetadata().getAnnotations().get(AnnotationKeys.CLUSTER_ID))) {
-
-
-                String host = pod.getMetadata().getName();
-                log.info("Found endpoints for {}: {}", clusterId, host);
-                addresses.add(host);
-            }
-        }
-        return addresses;
-    }
-
-    @Override
     public void scaleDeployment(String name, int numReplicas) {
         log.info("Scaling deployment with id {} and {} replicas", name, numReplicas);
         client.extensions().deployments().withName(name).scale(numReplicas);
