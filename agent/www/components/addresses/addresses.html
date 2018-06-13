@@ -38,21 +38,32 @@
         </div>
       </div>
       <div class="list-view-pf-additional-info">
-        <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
           <span class="fa fa-sign-in"></span>
           <strong>{{item.messages_in_delta}}</strong> Messages In
         </div>
-        <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
           <span class="fa fa-sign-out"></span>
           <strong>{{item.messages_out_delta}}</strong> Messages Out
         </div>
-        <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-additional-info-item" ng-if="item.type === 'subscription'">
+          <span class="fa fa-sign-in"></span>
+          <strong>{{item.shards[0].enqueued}}</strong> Messages In
+        </div>
+        <div class="list-view-pf-additional-info-item" ng-if="item.type === 'subscription'">
+          <span class="fa fa-sign-out"></span>
+          <strong>{{item.shards[0].acknowledged + item.shards[0].killed}}</strong> Messages Out
+        </div>
+        <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
           <span class="fa pficon-import"></span> <strong>{{item.senders}}</strong> Senders
         </div>
-        <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
           <span class="fa pficon-export"></span><strong>{{item.receivers}}</strong> Receivers
         </div>
-        <div class="list-view-pf-additional-info-item"  ng-if="item.type === 'queue' || item.type === 'topic'">
+        <div class="list-view-pf-additional-info-item" ng-if="item.type === 'subscription'">
+          <span class="fa pficon-export"></span><strong>{{item.shards[0].consumers}}</strong> Receivers
+        </div>
+        <div class="list-view-pf-additional-info-item"  ng-if="item.type === 'queue' || item.type === 'topic' || item.type === 'subscription'">
           <span class="fa fa-envelope-o"></span><strong>{{item.depth}}</strong> Stored
         </div>
         <div class="list-view-pf-additional-info-item"  ng-if="item.type === 'queue' || item.type === 'topic'">

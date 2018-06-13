@@ -1,0 +1,182 @@
+= durable subscriptions =
+
+== overview ==
+
+Note: this covers only the standard address-space at present.
+
+The requirement is to expose durable subscriptions via the address
+model.
+
+If we require all durable subscriptions to be specified in this way it
+will simplify and improve our overall architecture.
+
+A new address type will be defined, 'subscription', that is used to
+define durable subscriptions.
+
+Addresses of this type have one mandatory property, 'topic', whose
+value must contain the name of an existing topic address. There will
+also be an optional 'filter' property, whose value would be an
+AMQP/JMS selector filter string.
+
+Subscription names will be unique within an address-space (as are the
+names of all address types).
+
+Consumers will use the subscription name as the source for a receiver
+link.
+
+Plans can be defined for subscriptions as for the other address types
+defining the amount of router and broker resource required. The broker
+resource should always be less than 1.
+
+A subscription is implemented by a queue on a broker that serves the
+topic the subscription is associated with, bound to the topic address.
+
+There are three options for configuration:
+
+(1) link routed
+
+    Here a link route for the 'out' direction would be created on the
+    routers.
+
+    This option prevents sending messages to the subscription address;
+    sender links targetting the subscription from being established.
+
+    This mechanism would only work for the currently defined simple
+    case where a subscription is associated with a single topic.
+
+    With this option the queue could be configured to only allow one
+    consumer in order to prevent sharing of the subscription. This
+    could be an additional optional property on the address.
+
+(2) message routed
+
+    With message routing all durable subscriptions would be shared;
+    there would be no way at present to enforce an exclusive
+    subscription.
+
+    Message routing would allow the same subscription address to be
+    associated with multiple topics if desired.
+
+    (a) an address with waypoint=true and an autolink for the 'out'
+        direction
+
+        This option also prevents sending messages to the subscription
+        address. Sender addresses can be established but they will
+        never be given credit.
+
+    (b) an address with waypoint=false and a connector on the broker
+        that sends messages from the subscription queue to the address
+
+         This option allows messages to be sent (reliably) direct to
+         the subscription address, as well as through the topic.
+
+Durable subscriptions overlap a little with mqtt style subscriptions.
+At present mqtt subscriptions use option 2b. However mqtt subscriptions
+need to be associated with multiple topics and generally are expected
+to need to scale further than the number of statically defined durable
+subscriptions. Any unification with mqtt is currently considered out
+of scope.
+
+It would be possible to support all three configuration options above,
+controlled via a property on the address. However for simplicity the
+task breakdown that follows assumes that the first option is used.
+
+== outstanding questions ==
+
+How should deletion of topics with existing subscriptions be handled?
+
+One option would be to refuse to delete the topic. This would need to
+be enforced in the rest-api and in the console.
+
+Another option would be to automatically delete subscriptions when the
+topic is deleted. This could be done by the standard-controller on
+detecting the deletion of the topic.
+
+== tasks ==
+
+=== templates and configuration ===
+
+Define plan(s) for subscription types with addressType 'subscription'.
+
+The broker.xml for sharded-topics should be edited. The qualified
+topic and associated divert can also be removed. Connectors should be
+defined to both the agent and the router network, using the hostname
+as the container id.
+
+There would also be no need for the colocated router in sharded topic
+deployments, so the relevant 'templates' should be edited to remove
+it.
+
+The colocated topic snippet should be removed from the router image.
+
+=== standard-controller ===
+
+The credit for subscriptions comes out of the maximum limit set by the
+credit for the address.
+
+The standard-controller will need to separately track the amount of
+credit used by subscriptions. It should ensure that this never exceed
+the total credit for the address. I.e. new subscriptions should not
+result in any changes to the number of pods.
+
+The topic associated with the address needs to be looked up. If the
+topic cannot be found the address phase should be set to failed and an
+error message added.
+
+If the topic associated with the subscription is on the pooled
+brokers, then the subscription must be allocated to that same
+broker.
+
+If the topic associated with the subscription is a sharded topic, then
+the subscription should be allocated to which ever of the brokers in
+that deployment has the most remaining capacity.
+
+The status check for a subscription address should verify that the
+single link route is active on the router network.
+
+=== agent ===
+
+The agent assumes that any subscription address in the confguring
+phase will have been allocated to a particular broker. It will then:
+
+* ensure a subscription queue exists on the specified broker, bound to
+  the topic address, with any specified filter and if the address is
+  exclusive max-consumers set to 1
+
+* ensure a link route for the out direction exists on all routers,
+  referencing the specified broker
+
+=== console ===
+
+The console needs to offer the new address type, add that type to the
+available values for type filtering[5] and of course include addresses
+of that type in the address list[6]. The address creation wizard will
+display a combobox containing all topics when the type selected is a
+subscription (this allows wildcard patterns to be entered).
+
+The console will retrieve statistics for all subscriptions from the
+broker hosting them. The sender field will not be relevant, nor will
+the shard count.
+
+The stats for topics will be unaffected. A durable subscription will
+continue to be reflected in the stats for the topic it belongs to.
+
+=== subserv ==
+
+The subscription location logic should be removed entirely.
+
+=== api-server ==
+
+This should not require any changes other than those to the common lib
+necessitated by the update to the standard-controller which uses that
+same common lib.
+
+=== tests ===
+
+* create and delete subscriptions through console and rest api
+
+* verify that messages published to the associated topic are received
+
+  (a) when receiver was active when message was published and
+
+  (b) when receiver is not connected when message was published

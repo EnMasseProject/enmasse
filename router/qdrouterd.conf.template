@@ -25,7 +25,7 @@ router {
     id: Router.${HOSTNAME}
     workerThreads: ${WORKER_THREADS}
     defaultDistribution: unavailable
-    allowResumableLinkRoute: ${ALLOW_DURABLE_SUBSCRIPTIONS}
+    allowResumableLinkRoute: false
 }
 
 sslProfile {
