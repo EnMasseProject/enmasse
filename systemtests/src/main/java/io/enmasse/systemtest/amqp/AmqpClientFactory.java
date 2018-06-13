@@ -70,7 +70,7 @@ public class AmqpClientFactory {
     public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         assertNotNull(addressSpace, "Address space is null");
         if (environment.useTLS()) {
-            Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
+            Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
             if (messagingEndpoint == null) {
                 String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
                 messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);

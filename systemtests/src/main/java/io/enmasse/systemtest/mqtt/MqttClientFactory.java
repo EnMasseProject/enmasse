@@ -72,7 +72,7 @@ public class MqttClientFactory {
         Endpoint mqttEndpoint;
 
         if (environment.useTLS()) {
-            mqttEndpoint = addressSpace.getEndpoint("mqtt");
+            mqttEndpoint = addressSpace.getEndpointByServiceName("mqtt");
             if (mqttEndpoint == null) {
                 String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
                 mqttEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);

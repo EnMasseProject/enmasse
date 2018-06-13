@@ -485,7 +485,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
-        Endpoint messagingEndpoint = addressSpace.getEndpoint("messaging");
+        Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
         if (messagingEndpoint == null) {
             String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
             messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
@@ -502,7 +502,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {
-        Endpoint consoleEndpoint = addressSpace.getEndpoint("console");
+        Endpoint consoleEndpoint = addressSpace.getEndpointByServiceName("console");
         if (consoleEndpoint == null) {
             String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
             consoleEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
