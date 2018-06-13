@@ -45,6 +45,7 @@ listener {
     port: 5672
     saslPlugin: auth_service
     linkCapacity: ${LINK_CAPACITY}
+    authenticatePeer: yes
 }
 
 listener {
@@ -68,6 +69,7 @@ listener {
     saslPlugin: auth_service
     sslProfile: ssl_details
     requireSsl: true
+    authenticatePeer: yes
 }
 
 listener {
@@ -76,6 +78,7 @@ listener {
     saslPlugin: auth_service
     sslProfile: ssl_details
     http: true
+    authenticatePeer: yes
 }
 
 sslProfile {
