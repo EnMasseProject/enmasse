@@ -61,7 +61,7 @@ public class HTTPServerTest {
         return new AddressSpace.Builder()
                 .setName(name)
                 .setNamespace(name)
-                .setType("mytype")
+                .setType("type1")
                 .setPlan("myplan")
                 .setStatus(new io.enmasse.address.model.AddressSpaceStatus(false))
                 .appendEndpoint(new EndpointSpec.Builder()
@@ -85,55 +85,64 @@ public class HTTPServerTest {
                 .build());
 
         HttpClient client = vertx.createHttpClient();
-        Async async = context.async(4);
         try {
-            HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
-                context.assertEquals(200, response.statusCode());
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    context.assertTrue(data.containsKey("items"));
-                    context.assertEquals("myinstance.addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
-                    async.complete();
+            {
+                Async async = context.async();
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                    context.assertEquals(200, response.statusCode());
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        context.assertTrue(data.containsKey("items"));
+                        context.assertEquals("myinstance.addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                        async.complete();
+                    });
                 });
-            });
-            putAuthzToken(r1);
-            r1.end();
-
-            HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addresses/addr1", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    System.out.println(data);
-                    context.assertTrue(data.containsKey("metadata"));
-                    context.assertEquals("myinstance.addr1", data.getJsonObject("metadata").getString("name"));
-                    async.complete();
+                putAuthzToken(r1);
+                r1.end();
+                async.awaitSuccess(60_000);
+            }
+            {
+                Async async = context.async();
+                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addresses/myinstance.addr1", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        context.assertTrue(data.containsKey("metadata"));
+                        context.assertEquals("myinstance.addr1", data.getJsonObject("metadata").getString("name"));
+                        async.complete();
+                    });
                 });
-            });
-            putAuthzToken(r2);
-            r2.end();
-
-            HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1alpha1/addresses/myinstance", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    context.assertTrue(data.containsKey("items"));
-                    context.assertEquals(2, data.getJsonArray("items").size());
-                    System.out.println(data.toString());
-                    async.complete();
+                putAuthzToken(r2);
+                r2.end();
+                async.awaitSuccess(60_000);
+            }
+            {
+                Async async = context.async();
+                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                    response.bodyHandler(buffer -> {
+                        context.assertEquals(201, response.statusCode());
+                        async.complete();
+                    });
                 });
-            });
-            putAuthzToken(r3);
-            r3.end("{\"apiVersion\":\"enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
-
-            HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/addresses/myinstance?address=addr1", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    context.assertTrue(data.containsKey("metadata"));
-                    context.assertEquals("addR1", data.getJsonObject("spec").getString("address"));
-                    async.complete();
+                r3.putHeader("Content-Type", "application/json");
+                putAuthzToken(r3);
+                r3.end("{\"apiVersion\":\"enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
+                async.awaitSuccess(60_000);
+            }
+            {
+                Async async = context.async();
+                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        System.out.println(data.toString());
+                        context.assertTrue(data.containsKey("metadata"));
+                        context.assertEquals("addR1", data.getJsonObject("spec").getString("address"));
+                        async.complete();
+                    });
                 });
-            });
-            putAuthzToken(r4);
-            r4.end();
-            async.awaitSuccess(60_000);
+                putAuthzToken(r4);
+                r4.end();
+                async.awaitSuccess(60_000);
+            }
         } finally {
             client.close();
         }
