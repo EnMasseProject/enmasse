@@ -5,12 +5,17 @@
 package io.enmasse.address.model;
 
 /**
- * Varioius static utilities that don't belong in a specific place
+ * Various static utilities that don't belong in a specific place
  */
 public class KubeUtil {
     private static int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
+    private static final String pattern = "[^a-z0-9\\-]";
     public static String sanitizeName(String name) {
-        String clean = name.toLowerCase().replaceAll("[^a-z0-9\\-.]", "");
+        if (name == null) {
+            return null;
+        }
+
+        String clean = name.toLowerCase().replaceAll(pattern, "");
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }
@@ -36,5 +41,19 @@ public class KubeUtil {
 
     public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {
         return "ca-" + addressSpace.getName();
+    }
+
+    public static void validateName(String name) {
+        if (name == null) {
+            return;
+        }
+
+        if (name.length() > MAX_KUBE_NAME) {
+            throw new IllegalArgumentException("Name length is longer than " + MAX_KUBE_NAME + " characters");
+        }
+
+        if (name.matches(pattern)) {
+            throw new IllegalArgumentException("Illegal characters found in " + name + ". Must not match " + pattern);
+        }
     }
 }

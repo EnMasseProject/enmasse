@@ -152,7 +152,7 @@ class RouterStatus {
         int ok = 0;
         for (RouterStatus routerStatus : routerStatusList) {
             for (String containerId : routerStatus.connections) {
-                if (containerId.startsWith(address.getNameWithoutAddressspace())) {
+                if (containerId.startsWith(address.getAnnotation(AnnotationKeys.CLUSTER_ID))) {
                     ok++;
                     break;
                 }

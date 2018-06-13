@@ -9,7 +9,6 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,55 +107,21 @@ public class AddressProvisionerTest {
     @Test
     public void testQuotaCheck() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(new Address.Builder()
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
-                .build());
-        addresses.add(new Address.Builder()
-                .setAddress("q2")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
-                .build());
-        addresses.add(new Address.Builder()
-                .setAddress("q3")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-1")
-                .build());
+        addresses.add(createQueue("q1", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-0"));
+        addresses.add(createQueue("q2", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-0"));
+        addresses.add(createQueue("q3", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1"));
 
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
-        Address largeQueue = new Address.Builder()
-                .setAddress("q4")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("xlarge-queue")
-                .build();
+        Address largeQueue = createQueue("q4", "xlarge-queue");
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(largeQueue));
 
         assertThat(neededMap, is(usageMap));
         assertThat(largeQueue.getStatus().getPhase(), is(Pending));
 
-        Address smallQueue = new Address.Builder()
-                .setAddress("q4")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("small-queue")
-                .build();
+        Address smallQueue = createQueue("q4", "small-queue");
         neededMap = provisioner.checkQuota(usageMap, Sets.newSet(smallQueue));
-
 
         assertThat(neededMap, is(not(usageMap)));
     }
@@ -165,13 +130,7 @@ public class AddressProvisionerTest {
     public void testQuotaCheckMany() {
         Map<String, Address> addresses = new HashMap<>();
         for (int i = 0; i < 200; i++) {
-            addresses.put("a" + i, new Address.Builder()
-                    .setAddress("a" + i)
-                    .setAddressSpace("myspace")
-                    .setNamespace("ns")
-                    .setPlan("small-anycast")
-                    .setType("anycast")
-                    .build());
+            addresses.put("a" + i, createAddress("a" + i, "anycast", "small-anycast"));
         }
 
 
@@ -193,33 +152,14 @@ public class AddressProvisionerTest {
     @Test
     public void testProvisioningColocated() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(new Address.Builder()
-                .setAddress("a1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-anycast")
-                .setType("anycast")
-                .build());
-        addresses.add(new Address.Builder()
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
-                .setPlan("small-queue")
-                .setType("queue")
-                .build());
+        addresses.add(createAddress("a1", "anycast", "small-anycast"));
+        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-0"));
 
 
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
-        Address queue = new Address.Builder()
-                .setAddress("q2")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .build();
+        Address queue = createAddress("q2", "queue", "small-queue");
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
         List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker", new KubernetesList()));
@@ -237,41 +177,14 @@ public class AddressProvisionerTest {
     @Test
     public void testScalingColocated() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(new Address.Builder()
-                .setAddress("a1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-anycast")
-                .setType("anycast")
-                .build());
-        addresses.add(new Address.Builder()
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
-                .build());
-        addresses.add(new Address.Builder()
-                .setAddress("q2")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
-                .build());
-
+        addresses.add(createAddress("a1", "anycast", "small-anycast"));
+        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-0"));
+        addresses.add(createAddress("q2", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-0"));
 
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
-        Address queue = new Address.Builder()
-                .setAddress("q3")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .build();
+        Address queue = createAddress("q3", "queue", "small-queue");
         Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue));
 
         List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker", new KubernetesList()));
@@ -291,18 +204,18 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("aggregate", 0, 2)));
 
         Set<Address> addressSet = Sets.newSet(
-                createAddress("q9", "pooled-queue-tiny"),
-                createAddress("q8", "pooled-queue-tiny"),
-                createAddress("q11", "pooled-queue-tiny"),
-                createAddress("q12", "pooled-queue-tiny"),
-                createAddress("q10", "pooled-queue-tiny"),
-                createAddress("q1", "pooled-queue-large"),
-                createAddress("q7", "pooled-queue-tiny"),
-                createAddress("q6", "pooled-queue-small"),
-                createAddress("q5", "pooled-queue-small"),
-                createAddress("q4", "pooled-queue-small"),
-                createAddress("q3", "pooled-queue-small"),
-                createAddress("q2", "pooled-queue-large"));
+                createQueue("q9", "pooled-queue-tiny"),
+                createQueue("q8", "pooled-queue-tiny"),
+                createQueue("q11", "pooled-queue-tiny"),
+                createQueue("q12", "pooled-queue-tiny"),
+                createQueue("q10", "pooled-queue-tiny"),
+                createQueue("q1", "pooled-queue-large"),
+                createQueue("q7", "pooled-queue-tiny"),
+                createQueue("q6", "pooled-queue-small"),
+                createQueue("q5", "pooled-queue-small"),
+                createQueue("q4", "pooled-queue-small"),
+                createQueue("q3", "pooled-queue-small"),
+                createQueue("q2", "pooled-queue-large"));
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet);
@@ -333,27 +246,26 @@ public class AddressProvisionerTest {
         return new BrokerCluster(clusterId, builder.build());
     }
 
-    private Address createAddress(String address, String plan) {
+    private Address createQueue(String address, String plan) {
+        return createAddress(address, "queue", plan);
+    }
+
+    private static Address createAddress(String address, String type, String plan) {
         return new Address.Builder()
+                .setName(address)
                 .setAddress(address)
                 .setAddressSpace("myspace")
                 .setNamespace("ns")
                 .setPlan(plan)
-                .setType("queue")
+                .setType(type)
                 .build();
     }
+
 
     @Test
     public void testProvisioningSharded() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(new Address.Builder()
-                .setAddress("a1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-anycast")
-                .setType("anycast")
-                .build());
-
+        addresses.add(createAddress("a1", "anycast", "small-anycast"));
 
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
                 new ResourceAllowance("broker", 0, 3),
@@ -361,48 +273,30 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("aggregate", 0, 4)));
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
-        Address q1 = new Address.Builder()
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("xlarge-queue")
-                .setType("queue")
-                .build();
-        Address q2 = new Address.Builder()
-                .setAddress("q2")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("large-queue")
-                .setType("queue")
-                .build();
+        Address q1 = createQueue("q1", "xlarge-queue");
+        Address q2 = createQueue("q2", "large-queue");
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1, q2));
 
-        when(generator.generateCluster(eq(q1.getName()), any(), anyInt(), eq(q1))).thenReturn(new BrokerCluster(q1.getName(), new KubernetesList()));
-        when(generator.generateCluster(eq(q2.getName()), any(), anyInt(), eq(q2))).thenReturn(new BrokerCluster(q2.getName(), new KubernetesList()));
+        when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(q1)), any(), anyInt(), eq(q1))).thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(q1), new KubernetesList()));
+        when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(q2)), any(), anyInt(), eq(q2))).thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(q2), new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, Sets.newSet(q1, q2));
 
         assertTrue(q1.getStatus().getMessages().toString(), q1.getStatus().getMessages().isEmpty());
         assertThat(q1.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(q1.getAnnotations().get(AnnotationKeys.BROKER_ID));
-        verify(generator).generateCluster(eq(q1.getName()), any(), eq(2), eq(q1));
+        verify(generator).generateCluster(eq(AddressProvisioner.getShardedClusterId(q1)), any(), eq(2), eq(q1));
 
         assertTrue(q2.getStatus().getMessages().toString(), q2.getStatus().getMessages().isEmpty());
         assertThat(q2.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(q2.getAnnotations().get(AnnotationKeys.BROKER_ID));
-        verify(generator).generateCluster(eq(q2.getName()), any(), eq(1), eq(q2));
+        verify(generator).generateCluster(eq(AddressProvisioner.getShardedClusterId(q2)), any(), eq(1), eq(q2));
     }
 
     @Test
     public void testScalingRouter() {
         Set<Address> addresses = new HashSet<>();
         for (int i = 0; i < 199; i++) {
-            addresses.add(new Address.Builder()
-                    .setAddress("a" + i)
-                    .setAddressSpace("myspace")
-                    .setNamespace("ns")
-                    .setPlan("small-anycast")
-                    .setType("anycast")
-                    .build());
+            addresses.add(createAddress("a" + i, "anycast", "small-anycast"));
         }
 
 

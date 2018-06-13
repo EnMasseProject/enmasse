@@ -158,12 +158,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         for (BrokerCluster cluster : clusters) {
             int numFound = 0;
             for (Address address : addressSet) {
-                String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
                 String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
-                String name = address.getNameWithoutAddressspace();
-                if (brokerId == null && name.equals(cluster.getClusterId())) {
-                    numFound++;
-                } else if (cluster.getClusterId().equals(clusterId)) {
+                if (cluster.getClusterId().equals(clusterId)) {
                     numFound++;
                 }
             }
@@ -247,7 +243,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             int ok = 0;
             switch (addressType.getName()) {
                 case "queue":
-                    ok += checkBrokerStatus(address, clusterOk, addressPlan);
+                    ok += checkBrokerStatus(address, clusterOk);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkAddress(address);
                         ok += routerStatus.checkAutoLinks(address);
@@ -255,7 +251,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
                     break;
                 case "topic":
-                    ok += checkBrokerStatus(address, clusterOk, addressPlan);
+                    ok += checkBrokerStatus(address, clusterOk);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkLinkRoutes(address);
                     }
@@ -278,8 +274,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         return numOk;
     }
 
-    private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk, AddressPlan addressPlan) {
-        String clusterId = isPooled(addressPlan) ? "broker" : address.getNameWithoutAddressspace();
+    private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk) {
+        String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
         if (!clusterOk.containsKey(clusterId)) {
             if (!kubernetes.isDestinationClusterReady(clusterId)) {
                 address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");

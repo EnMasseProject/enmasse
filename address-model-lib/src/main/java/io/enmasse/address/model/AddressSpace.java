@@ -139,6 +139,10 @@ public class AddressSpace {
         return resourceVersion;
     }
 
+    public void validate() {
+        KubeUtil.validateName(name);
+    }
+
     public static class Builder {
         private String name;
         private String namespace;

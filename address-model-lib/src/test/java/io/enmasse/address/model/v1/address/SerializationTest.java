@@ -23,7 +23,7 @@ public class SerializationTest {
     public void testSerializeAddress() throws IOException {
         String uuid = UUID.randomUUID().toString();
         Address address = new Address.Builder()
-                .setName("a1")
+                .setName("as1.a1")
                 .setAddress("addr1")
                 .setAddressSpace("as1")
                 .setNamespace("ns")
@@ -56,6 +56,7 @@ public class SerializationTest {
     @Test
     public void testSerializeAddressList() throws IOException {
         Address addr1 = new Address.Builder()
+                .setName("a1.a1")
                 .setAddress("addr1")
                 .setAddressSpace("a1")
                 .setNamespace("ns")
@@ -64,7 +65,7 @@ public class SerializationTest {
                 .build();
 
         Address addr2 = new Address.Builder()
-                .setName("a2")
+                .setName("a1.a2")
                 .setAddressSpace("a1")
                 .setAddress("addr2")
                 .setNamespace("ns")
