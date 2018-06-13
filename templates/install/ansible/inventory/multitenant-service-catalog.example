@@ -3,8 +3,8 @@ localhost ansible_connection=local
 
 [enmasse:vars]
 namespace=enmasse
-multitenant=true
-enable_rbac=true
-service_catalog=true
+multitenant=True
+enable_rbac=True
+service_catalog=True
 keycloak_admin_password=admin
 authentication_services=["standard"]
