@@ -71,7 +71,7 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Install systemtests dependencies
 
-    ansible-playbook templates/install/ansible/playbooks/openshift/systemtests-dependencies.yml
+    ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml
 
 #### Running the systemtests
 
