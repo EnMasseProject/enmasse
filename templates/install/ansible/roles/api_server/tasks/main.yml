@@ -56,7 +56,7 @@
         request-header-ca.crt: "{{ request_header_client_ca | b64encode }}"
       EOF
 - name: Create route for API server
-  shell: oc create route passthrough restapi -n {{ namespace }} --service=api-server
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/api-server/route.yaml"
   when: not register_api_server
 - name: Extract API Server CA
   when: register_api_server

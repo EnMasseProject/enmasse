@@ -50,7 +50,7 @@
     keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
   when: (keycloak_http_url is not defined)
 - name: Create the service broker console route
-  shell: oc create route passthrough console -n {{ namespace }} --service=service-broker
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/route.yaml"
 - name: Retrieve service broker cluster ip
   when: (osb_console_prefix is not defined)
   shell: oc get service -n {{ namespace }} service-broker -o jsonpath={.spec.clusterIP}
@@ -86,12 +86,11 @@
 - name: Register Service Broker with Service Catalog
   shell:
     cmd: |
-      cat <<EOF | oc create -f -
+      cat <<EOF | oc apply -f -
       apiVersion: servicecatalog.k8s.io/v1beta1
       kind: ClusterServiceBroker
       metadata:
         name: enmasse
-        uid: 53bd3760-1576-11e8-8bc3-0242ac110007
       spec:
         url: "https://service-broker.{{ namespace }}.svc:8443/osbapi/"
         authInfo:
