@@ -55,7 +55,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
             log.info("Waiting on event queue for {} ms unless notified", sleepTime);
             queue.pop(processor, sleepTime, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            Thread.interrupted();
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.warn("Exception doing resource update", e);
             // TODO: We can attempt to requeue here

@@ -48,7 +48,7 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
                 watcher.onUpdate(items);
                 log.debug("Woke up from monitor");
             } catch (InterruptedException e) {
-                Thread.interrupted();
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
                 log.warn("Exception in checker task", e);
             }
