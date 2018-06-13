@@ -57,7 +57,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) {
         if (addressSpace.getType().equals(AddressSpaceType.STANDARD) && websocket) {
-            Endpoint messagingEndpoint = addressSpace.getEndpoint("amqp-wss");
+            Endpoint messagingEndpoint = addressSpace.getEndpointByName("amqp-wss");
             if (TestUtils.resolvable(messagingEndpoint)) {
                 return messagingEndpoint;
             } else {

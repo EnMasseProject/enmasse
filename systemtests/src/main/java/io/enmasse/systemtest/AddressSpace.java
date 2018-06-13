@@ -85,9 +85,23 @@ public class AddressSpace {
         this(name, name, type, plan, authService);
     }
 
-    public Endpoint getEndpoint(String endpointService) {
+    public Endpoint getEndpointByName(String endpoint) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
-            if (addrSpaceEndpoint.getName().equals(endpointService)) {
+            if (addrSpaceEndpoint.getName().equals(endpoint)) {
+                if (addrSpaceEndpoint.getHost() == null) {
+                    return null;
+                } else {
+                    return new Endpoint(addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
+                }
+            }
+        }
+        throw new IllegalStateException(String.format("Endpoint wih name '%s' doesn't exist in address space '%s'",
+                endpoint, name));
+    }
+
+    public Endpoint getEndpointByServiceName(String endpointService) {
+        for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
+            if (addrSpaceEndpoint.getService().equals(endpointService)) {
                 if (addrSpaceEndpoint.getHost() == null) {
                     return null;
                 } else {
