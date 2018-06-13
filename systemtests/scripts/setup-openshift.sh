@@ -17,7 +17,7 @@ DOCKER=${DOCKER:-docker}
 stop_and_check_openshift
 check_if_ansible_ready
 
-ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/environment.yml \
+ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/environment.yml \
     --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
 
 clean_docker_images
