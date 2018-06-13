@@ -470,7 +470,9 @@ BrokerController.prototype._sync_broker_addresses = function () {
         self._set_sync_status(stale.length, missing.length);
         return self.delete_addresses(stale).then(
             function () {
-                return self.create_addresses(missing);
+                return self.create_addresses(missing.filter(function (o) { return o.type !== 'subscription' })).then(function () {
+                    return self.create_addresses(missing.filter(function (o) { return o.type === 'subscription' }));
+                });
             });
     }).catch(function (e) {
         log.error('[%s] failed to retrieve addresses: %s', self.id, e);

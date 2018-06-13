@@ -308,7 +308,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_address({prefix:def.address, distribution:'balanced', waypoint:true});
             config.add_autolink_pair({addr:def.address, containerId: def.allocated_to || def.address});
         } else if (def.type === 'topic') {
-            config.add_linkroute_pair({prefix:def.address, containerId: def.allocated_to ? def.allocated_to : null});
+            config.add_linkroute_pair({prefix:def.address, containerId: def.allocated_to ? def.allocated_to : def.address});
         } else if (def.type === 'subscription') {
             if (def.allocated_to) {
                 config.add_linkroute({prefix:def.topic+'::'+def.address, containerId: def.allocated_to, direction:'out'});
