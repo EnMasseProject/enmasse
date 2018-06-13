@@ -25,7 +25,7 @@ before_install:
 - npm install -g mocha mocha-junit-reporter
 - npm install rhea debug
 script:
-- "./.travis/setup-kubernetes.sh 'templates/install' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
+- "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
 - "./.travis/build.sh"
 after_failure:
 - "./.travis/upload-artifacts.sh false"
