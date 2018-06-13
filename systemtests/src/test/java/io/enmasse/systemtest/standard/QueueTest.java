@@ -269,11 +269,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1);
         sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1);
         sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1);
         sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1, DeliveryMode.PERSISTENT);
         sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1, DeliveryMode.PERSISTENT);
         sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1, DeliveryMode.PERSISTENT);
         sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);

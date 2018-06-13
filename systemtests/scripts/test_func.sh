@@ -10,7 +10,7 @@ function download_enmasse() {
 }
 
 function setup_test() {
-    ENMASSE_DIR=$1
+    TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
 
     export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
@@ -29,7 +29,8 @@ function setup_test() {
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
-    ansible-playbook ${ENMASSE_DIR}/ansible/playbooks/openshift/systemtests.yml --extra-vars "namespace=${OPENSHIFT_PROJECT} admin_user=${OPENSHIFT_USER}"
+    ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/install.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "namespace=${OPENSHIFT_PROJECT} admin_user=${OPENSHIFT_USER}"
 }
 
 function wait_until_up(){

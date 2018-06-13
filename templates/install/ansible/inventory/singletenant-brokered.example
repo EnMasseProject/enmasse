@@ -2,6 +2,6 @@
 localhost ansible_connection=local
 
 [enmasse:vars]
-multitenant=false
+multitenant=False
 address_space_type=brokered
 address_space_plan=unlimited-brokered
