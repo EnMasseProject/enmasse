@@ -776,8 +776,10 @@ public class TestUtils {
                 InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
                 Thread.sleep(1000);
                 return addresses.length > 0;
-            } catch (Exception e) {
-                Thread.interrupted();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            catch (UnknownHostException ignore) {
             }
         }
         return false;
