@@ -11,6 +11,7 @@ import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -171,6 +172,8 @@ public class Forwarder extends AbstractVerticle {
         }
         if (!isMessageReplicated(message)) {
             forwardMessage(protonSender, protonReceiver, protonDelivery, message);
+        } else {
+            protonDelivery.disposition(Accepted.getInstance(), true);
         }
     }
 
