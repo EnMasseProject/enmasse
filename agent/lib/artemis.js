@@ -162,7 +162,7 @@ Artemis.prototype._request = function (resource, operation, parameters) {
 
 Artemis.prototype.createQueue = function (name) {
     return this._request('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, true/*durable*/,
-                                                   -1/*max consumers*/, false/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+                                                   -1/*max consumers*/, false/*purgeOnNoConsumers*/, false/*autoCreateAddress*/]);
 }
 
 Artemis.prototype.deployQueue = function (name, durable) {

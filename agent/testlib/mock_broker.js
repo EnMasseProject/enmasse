@@ -117,10 +117,8 @@ function MockBroker (name) {
             return self.list_queues().map(function (a) { return a.name; });
         },
         createQueue : function (address, routingTypes, name, filter, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
-            assert.equal(routingTypes, 'ANYCAST');
             assert.equal(filter, null);
             assert.equal(purgeOnNoConsumers, false);
-            assert.equal(autoCreateAddress, true);
             if (self.objects.some(function (o) { return o.type === 'queue' && o.name === name})) {
                 throw new Error('queue ' + name + ' already exists!');
             } else {

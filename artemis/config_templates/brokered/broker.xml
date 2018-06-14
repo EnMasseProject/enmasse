@@ -92,6 +92,7 @@ under the License.
             <max-size-bytes>52428800</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
             <address-full-policy>FAIL</address-full-policy>
+            <auto-create-addresses>false</auto-create-addresses>
          </address-setting>
       </address-settings>
    </core>
