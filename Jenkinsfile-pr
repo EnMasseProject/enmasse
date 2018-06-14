@@ -77,7 +77,7 @@ pipeline {
         stage('system tests') {
             environment {
                 ARTIFACTS_DIR = 'artifacts'
-                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME).toLowerCase()}"
                 OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
                 USE_DUMMY_ADDRESS = true
             }
