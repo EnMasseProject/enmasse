@@ -111,7 +111,7 @@ public class Forwarder extends AbstractVerticle {
         if (certDir != null) {
             options.setHostnameVerificationAlgorithm("")
                     .setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
+                    .addEnabledSaslMechanism("ANONYMOUS")
                     .setHostnameVerificationAlgorithm("")
                     .setPemTrustOptions(new PemTrustOptions()
                             .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
