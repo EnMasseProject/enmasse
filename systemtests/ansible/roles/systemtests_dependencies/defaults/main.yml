@@ -1,7 +1,7 @@
 ---
 enmasse_tmp_dir: '/tmp/enmasse/'
 # vars for clients tasks
-systemtests_dir: "{{ playbook_dir }}../../"
+systemtests_dir: "{{ playbook_dir }}../../../"
 client_executable_folder: "{{ systemtests_dir }}/client_executable"
 cli_java_git_path: "{{ systemtests_dir }}/cli-java"
 rhea_path: "{{ client_executable_folder }}/rhea"
