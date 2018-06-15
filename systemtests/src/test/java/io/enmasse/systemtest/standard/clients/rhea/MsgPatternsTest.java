@@ -10,7 +10,6 @@ import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +23,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
     }
 
     @Test
-    @Ignore // Issue #403
     void testBasicMessageWebSocket() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }
