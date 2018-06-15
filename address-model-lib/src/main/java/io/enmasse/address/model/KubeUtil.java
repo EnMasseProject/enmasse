@@ -35,6 +35,10 @@ public class KubeUtil {
     }
 
     public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {
-        return "ca-" + addressSpace.getName();
+        return sanitizeName("ca-" + addressSpace.getName());
+    }
+
+    public static String getAddressSpaceExternalCaSecretName(AddressSpace addressSpace) {
+        return sanitizeName("route-ca-" + addressSpace.getName());
     }
 }

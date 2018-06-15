@@ -4,14 +4,16 @@
  */
 package io.enmasse.controller.auth;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SelfsignedCertProvider implements CertProvider {
     private static final Logger log = LoggerFactory.getLogger(SelfsignedCertProvider.class);
@@ -25,12 +27,31 @@ public class SelfsignedCertProvider implements CertProvider {
         this.certManager = certManager;
     }
 
+    private Secret issueAddressSpaceCert(final AddressSpace addressSpace) {
+        try {
+            final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace);
+            Secret secret = certManager.getCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
+            if (secret == null) {
+                secret = certManager.createSelfSignedCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
+            }
+            return secret;
+        } catch (Exception e) {
+            log.warn("Error issuing self-signed external route ca certificate", e);
+            return null;
+        }
+    }
+
     @Override
-    public Secret provideCert(AddressSpace addressSpace, EndpointSpec endpoint) {
-        Secret secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withName(certSpec.getSecretName()).get();
+    public Secret provideCert(AddressSpace addressSpace, String cn, Set<String> sans) {
+        String namespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
+        Secret secret = client.secrets().inNamespace(namespace).withName(certSpec.getSecretName()).get();
         if (secret == null) {
-            log.info("Creating self-signed certificates for {}", endpoint);
-            secret = certManager.createSelfSignedCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), certSpec.getSecretName());
+            log.info("Creating self-signed certificates for {}", cn);
+            Secret ca = issueAddressSpaceCert(addressSpace);
+            CertComponent component = new CertComponent(cn, namespace, certSpec.getSecretName());
+            CertSigningRequest csr = certManager.createCsr(component);
+            Cert cert = certManager.signCsr(csr, ca, sans);
+            secret = certManager.createSecret(cert, ca);
         }
         return secret;
     }

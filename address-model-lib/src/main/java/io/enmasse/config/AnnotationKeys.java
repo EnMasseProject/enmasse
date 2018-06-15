@@ -21,4 +21,5 @@ public interface AnnotationKeys {
     String NAMESPACE = "enmasse.io/namespace";
     String REALM_NAME = "enmasse.io/realm-name";
     String UUID = "enmasse.io/uuid";
+    String ENDPOINT = "enmasse.io/endpoint";
 }
