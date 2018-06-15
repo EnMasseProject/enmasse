@@ -23,6 +23,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
     }
 
     @Test
+    @Disabled("Issue #403")
     void testBasicMessageWebSocket() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }
