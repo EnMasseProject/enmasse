@@ -15,8 +15,6 @@ import java.util.Optional;
 
 public final class ControllerOptions {
 
-    private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
-
     private final File templateDir;
     private final NoneAuthServiceInfo noneAuthService;
     private final StandardAuthServiceInfo standardAuthService;

@@ -6,7 +6,6 @@ package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -15,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class WildcardCertProvider implements CertProvider {
     private static final Logger log = LoggerFactory.getLogger(WildcardCertProvider.class);
@@ -29,7 +29,7 @@ public class WildcardCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, EndpointSpec endpoint) {
+    public Secret provideCert(AddressSpace addressSpace, String cn, Set<String> sans) {
         Secret secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withName(certSpec.getSecretName()).get();
         if (secret == null) {
             Secret wildcardSecret = null;
@@ -40,7 +40,7 @@ public class WildcardCertProvider implements CertProvider {
                 String message = String.format("Requested 'wildcard' certificate provider but no secret '%s' found", wildcardSecretName);
                 throw new IllegalStateException(message);
             }
-            log.info("Copying wildcard certificate for {}", endpoint);
+            log.info("Copying wildcard certificate for {}", cn);
 
             Map<String, String> data = new LinkedHashMap<>();
             data.put("tls.key", wildcardSecret.getData().get("tls.key"));

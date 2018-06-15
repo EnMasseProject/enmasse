@@ -45,6 +45,7 @@ public class EndpointControllerTest {
                 .withName("myservice-external")
                 .withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))
                 .addToLabels(LabelKeys.TYPE, "loadbalancer")
+                .addToAnnotations(AnnotationKeys.ENDPOINT, "myservice")
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, "messaging")
                 .endMetadata()
@@ -65,7 +66,7 @@ public class EndpointControllerTest {
         AddressSpace newspace = controller.handle(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myservice-external"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myservice"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getHost(), is("messaging.example.com"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging.myns.svc"));
     }

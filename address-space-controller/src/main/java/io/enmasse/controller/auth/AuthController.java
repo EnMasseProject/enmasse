@@ -4,12 +4,10 @@
  */
 package io.enmasse.controller.auth;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.CertProviderFactory;
 import io.enmasse.controller.Controller;
@@ -42,26 +40,50 @@ public class AuthController implements Controller {
         this.certProviderFactory = certProviderFactory;
     }
 
-    public void issueExternalCertificates(AddressSpace addressSpace) throws Exception {
+    public void issueExternalCertificates(AddressSpace addressSpace) {
         List<EndpointSpec> endpoints = addressSpace.getEndpoints();
         if (endpoints != null) {
+            Map<String, EndpointSpec> endpointSpecMap = new HashMap<>();
+            Map<String, EndpointInfo> endpointInfoMap = new HashMap<>();
+
             for (EndpointSpec endpoint : endpoints) {
+                endpointSpecMap.put(endpoint.getName(), endpoint);
                 if (endpoint.getCertSpec().isPresent()) {
-                    try {
-                        CertProvider certProvider = certProviderFactory.createProvider(endpoint.getCertSpec().get());
-                        Secret secret = certProvider.provideCert(addressSpace, endpoint);
-                        certManager.grantServiceAccountAccess(secret, "default", addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
-                    } catch (Exception e) {
-                        log.warn("Error providing certificate for {}: {}", endpoint, e.getMessage(), e);
+                    EndpointInfo info = endpointInfoMap.get(endpoint.getService());
+                    if (info == null) {
+                        info = new EndpointInfo(endpoint.getService(), endpoint.getCertSpec().get());
+                        endpointInfoMap.put(endpoint.getService(), info);
                     }
+                }
+            }
+
+            for (EndpointStatus status : addressSpace.getStatus().getEndpointStatuses()) {
+                EndpointSpec spec = endpointSpecMap.get(status.getName());
+                EndpointInfo info = endpointInfoMap.get(spec.getService());
+                if (info != null && status.getHost() != null && !status.getHost().isEmpty()) {
+                    info.addHost(status.getHost());
+                }
+            }
+
+            for (EndpointInfo info : endpointInfoMap.values()) {
+                try {
+                    CertProvider certProvider = certProviderFactory.createProvider(info.getCertSpec());
+                    Set<String> hosts = info.getHosts();
+                    String cn = null;
+                    if (!hosts.isEmpty()) {
+                        cn = hosts.iterator().next();
+                    }
+                    Secret secret = certProvider.provideCert(addressSpace, cn, hosts);
+                    certManager.grantServiceAccountAccess(secret, "default", addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
+                } catch (Exception e) {
+                    log.warn("Error providing certificate for service {} hosts {}: {}", info.getServiceName(), info.getHosts(), e.getMessage(), e);
                 }
             }
         }
     }
 
 
-    public Secret issueAddressSpaceCert(final AddressSpace addressSpace)
-    {
+    public Secret issueAddressSpaceCert(final AddressSpace addressSpace) {
         try {
             final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
             Secret secret = certManager.getCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
@@ -83,7 +105,7 @@ public class AuthController implements Controller {
             List<Cert> certs = certManager.listComponents(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).stream()
                     .filter(component -> !certManager.certExists(component))
                     .map(certManager::createCsr)
-                    .map(request -> certManager.signCsr(request, addressSpaceCaSecret))
+                    .map(request -> certManager.signCsr(request, addressSpaceCaSecret, Collections.emptySet()))
                     .map(cert -> {
                         certManager.createSecret(cert, addressSpaceCaSecret);
                         return cert; })
