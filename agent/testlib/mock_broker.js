@@ -117,6 +117,7 @@ function MockBroker (name) {
             return self.list_queues().map(function (a) { return a.name; });
         },
         createQueue : function (address, routingTypes, name, filter, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
+            assert.equal(routingTypes, 'ANYCAST');
             assert.equal(filter, null);
             assert.equal(purgeOnNoConsumers, false);
             if (self.objects.some(function (o) { return o.type === 'queue' && o.name === name})) {
@@ -125,15 +126,16 @@ function MockBroker (name) {
                 self.add_queue(name, {'durable':durable});
                 if (!self.objects.some(function (o) { return o.type === 'address' && o.name === address; })) {
                     self.add_address(address, false, 0, [name]);
+                } else {
+                    self.objects.forEach(function (o) { if(o.type === 'address' && o.name === address) { o.queueNames = [ address ]; o.routingTypesAsJSON = [ 'ANYCAST'] } })
                 }
             }
         },
         createAddress : function (name, routingTypes) {
-            assert.equal(routingTypes, 'MULTICAST');
             if (self.objects.some(function (o) { return o.type === 'address' && o.name === name; })) {
                 throw new Error('address ' + name + ' already exists!');
             } else {
-                self.add_address(name, true);
+                self.add_address(name, routingTypes === 'MULTICAST');
             }
         },
         destroyQueue : function (name) {
