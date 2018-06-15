@@ -9,7 +9,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
-class PlansTest extends TestBase implements ISeleniumProviderFirefox {
+class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     private static Logger log = CustomLogger.getLogger();
     private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
@@ -38,7 +38,7 @@ class PlansTest extends TestBase implements ISeleniumProviderFirefox {
     void setUp() throws Exception {
         plansProvider.setUp();
         if (selenium.getDriver() == null)
-            selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
+            selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
         else
             selenium.clearScreenShots();
     }
