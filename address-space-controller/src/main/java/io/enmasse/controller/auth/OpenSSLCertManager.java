@@ -119,32 +119,46 @@ public class OpenSSLCertManager implements CertManager {
     public CertSigningRequest createCsr(CertComponent component) {
         File keyFile = new File(certDir, component.getNamespace() + "." + component.getName() + ".key");
         File csrFile = new File(certDir, component.getNamespace() + "." + component.getName() + ".csr");
-        runCommand("openssl", "req", "-new", "-batch", "-nodes", "-keyout", keyFile.getAbsolutePath(), "-subj", "/O=io.enmasse/CN=" + component.getName(), "-out", csrFile.getAbsolutePath());
+        String subjString = "/O=io.enmasse";
+        if (component.getName().length() <= 64) {
+            subjString += "/CN=" + component.getName();
+        }
+        runCommand("openssl", "req", "-new", "-batch", "-nodes", "-keyout", keyFile.getAbsolutePath(), "-subj", subjString, "-out", csrFile.getAbsolutePath());
         return new CertSigningRequest(component, csrFile, keyFile);
     }
 
     @Override
-    public Cert signCsr(CertSigningRequest request, Secret secret) {
+    public Cert signCsr(CertSigningRequest request, Secret secret, Set<String> sans) {
         File crtFile = new File(certDir, request.getCertComponent().getNamespace() + "." + request.getCertComponent().getName() + ".crt");
 
         File caKey = createTempFileFromSecret(secret, "tls.key");
         File caCert = createTempFileFromSecret(secret, "tls.crt");
 
         try {
-            runCommand("openssl",
-                    "x509",
-                    "-req",
-                    "-days",
-                    "11000",
-                    "-in",
-                    request.getCsrFile().getAbsolutePath(),
-                    "-CA",
-                    caCert.getAbsolutePath(),
-                    "-CAkey",
-                    caKey.getAbsolutePath(),
-                    "-CAcreateserial",
-                    "-out",
-                    crtFile.getAbsolutePath());
+            if (sans.size() > 0) {
+                String sansString = "subjectAltName=DNS:" + sans.stream().collect(Collectors.joining(",DNS:"));
+                runCommand("bash",
+                        "-c",
+                        "openssl x509 -req -extfile <(printf \"" + sansString + "\") -days 11000 -in " + request.getCsrFile().getAbsolutePath() +
+                                " -CA " + caCert.getAbsolutePath() +
+                                " -CAkey " + caKey.getAbsolutePath() +
+                                " -CAcreateserial -out " + crtFile.getAbsolutePath());
+            } else {
+                runCommand("openssl",
+                        "x509",
+                        "-req",
+                        "-days",
+                        "11000",
+                        "-in",
+                        request.getCsrFile().getAbsolutePath(),
+                        "-CA",
+                        caCert.getAbsolutePath(),
+                        "-CAkey",
+                        caKey.getAbsolutePath(),
+                        "-CAcreateserial",
+                        "-out",
+                        crtFile.getAbsolutePath());
+            }
             return new Cert(request.getCertComponent(), request.getKeyFile(), crtFile);
         } finally {
             caKey.delete();
@@ -168,7 +182,7 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public void createSecret(Cert cert, Secret caSecret) {
+    public Secret createSecret(Cert cert, Secret caSecret) {
         try {
             Map<String, String> data = new LinkedHashMap<>();
             Base64.Encoder encoder = Base64.getEncoder();
@@ -176,7 +190,7 @@ public class OpenSSLCertManager implements CertManager {
             data.put("tls.crt", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getCertFile())));
             data.put("ca.crt", caSecret.getData().get("tls.crt"));
 
-            client.secrets().inNamespace(cert.getComponent().getNamespace()).createNew()
+            return client.secrets().inNamespace(cert.getComponent().getNamespace()).createNew()
                     .editOrNewMetadata()
                     .withName(cert.getComponent().getSecretName())
                     .endMetadata()

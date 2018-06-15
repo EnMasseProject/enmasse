@@ -56,10 +56,12 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
 
             Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-            for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-                endpoint.getCertSpec().ifPresent(cert -> {
-                    serviceCertMapping.put(endpoint.getService(), cert);
-                });
+            if (addressSpace.getEndpoints() != null) {
+                for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
+                    endpoint.getCertSpec().ifPresent(cert -> {
+                        serviceCertMapping.put(endpoint.getService(), cert);
+                    });
+                }
             }
 
             if (serviceCertMapping.containsKey("messaging")) {

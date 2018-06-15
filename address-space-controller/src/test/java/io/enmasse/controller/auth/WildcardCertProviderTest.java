@@ -17,6 +17,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -46,14 +48,7 @@ public class WildcardCertProviderTest {
                 .setPlan("myplan")
                 .build();
 
-        EndpointSpec endpoint = new EndpointSpec.Builder()
-                .setCertSpec(new CertSpec("wildcard", "mycerts"))
-                .setName("messaging")
-                .setService("svc")
-                .setServicePort("amqps")
-                .build();
-
-        certProvider.provideCert(space, endpoint);
+        certProvider.provideCert(space, "messaging.example.com", Collections.emptySet());
     }
 
     @Test
@@ -66,13 +61,6 @@ public class WildcardCertProviderTest {
                 .setType("standard")
                 .build();
 
-        EndpointSpec endpoint = new EndpointSpec.Builder()
-                .setCertSpec(new CertSpec("wildcard", "mycerts"))
-                .setName("messaging")
-                .setService("svc")
-                .setServicePort("amqps")
-                .build();
-
         client.secrets().create(new SecretBuilder()
                 .editOrNewMetadata()
                 .withName("wildcardcert")
@@ -81,7 +69,7 @@ public class WildcardCertProviderTest {
                 .addToData("tls.crt", "myvalue")
                 .build());
 
-        certProvider.provideCert(space, endpoint);
+        certProvider.provideCert(space, "messaging.example.com", Collections.emptySet());
 
         Secret cert = client.secrets().inNamespace(space.getAnnotation(AnnotationKeys.NAMESPACE)).withName("mycerts").get();
         assertThat(cert.getData().get("tls.key"), is("mykey"));

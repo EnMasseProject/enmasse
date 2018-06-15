@@ -7,6 +7,7 @@ package io.enmasse.controller.auth;
 import io.fabric8.kubernetes.api.model.Secret;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Interface for certificate managers
@@ -16,8 +17,8 @@ public interface CertManager {
     boolean certExists(CertComponent component);
     Secret getCertSecret(String namespace, String name);
     CertSigningRequest createCsr(CertComponent component);
-    Cert signCsr(CertSigningRequest request, Secret secret);
-    void createSecret(Cert cert, final Secret caSecret);
+    Cert signCsr(CertSigningRequest request, Secret secret, Set<String> hosts);
+    Secret createSecret(Cert cert, final Secret caSecret);
 
     Secret createSelfSignedCertSecret(String namespace, String secretName);
 

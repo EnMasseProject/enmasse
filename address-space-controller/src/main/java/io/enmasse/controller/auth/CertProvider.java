@@ -5,9 +5,11 @@
 package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 
+import java.util.Set;
+
 public interface CertProvider {
-    Secret provideCert(AddressSpace addressSpace, EndpointSpec endpoint);
+    Secret provideCert(AddressSpace addressSpace, String cn, Set<String> sans);
+
 }

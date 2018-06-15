@@ -67,6 +67,7 @@ public class EndpointController implements Controller {
         Map<String, String> annotations = route.getMetadata().getAnnotations();
 
         String serviceName = annotations.get(AnnotationKeys.SERVICE_NAME);
+        String endpointName = annotations.get(AnnotationKeys.ENDPOINT);
 
         Map<String, Integer> servicePorts = new HashMap<>();
         for (String annotationKey : annotations.keySet()) {
@@ -78,7 +79,7 @@ public class EndpointController implements Controller {
         }
 
         EndpointStatus.Builder builder = new EndpointStatus.Builder()
-                .setName(route.getMetadata().getName())
+                .setName(endpointName)
                 .setHost(route.getSpec().getHost())
                 .setPort(443)
                 .setServiceHost(serviceName + "." + addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) + ".svc")
@@ -89,14 +90,16 @@ public class EndpointController implements Controller {
 
     private EndpointStatus serviceToEndpoint(AddressSpace addressSpace, Service service) {
         String serviceName = service.getMetadata().getAnnotations().get(AnnotationKeys.SERVICE_NAME);
+        String endpointName = service.getMetadata().getAnnotations().get(AnnotationKeys.ENDPOINT);
         EndpointStatus.Builder builder = new EndpointStatus.Builder()
-                .setName(service.getMetadata().getName())
+                .setName(endpointName)
                 .setServiceHost(serviceName + "." + addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) + ".svc");
 
         if (service.getSpec().getPorts().size() > 0) {
             Integer nodePort = service.getSpec().getPorts().get(0).getNodePort();
             Integer port = service.getSpec().getPorts().get(0).getPort();
 
+            builder.setHost(service.getSpec().getLoadBalancerIP());
             if (nodePort != null) {
                 builder.setPort(nodePort);
             } else if (port != null) {
