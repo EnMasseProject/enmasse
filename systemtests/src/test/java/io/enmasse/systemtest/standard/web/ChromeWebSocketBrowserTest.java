@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 
-@Disabled("Issue #403")
 @Tag(nonPR)
 class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard, ISeleniumProviderChrome {
 
