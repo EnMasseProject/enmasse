@@ -60,6 +60,8 @@ data:
           "ssl": true}'
       kind: ConfigMap
       metadata:
+        labels:
+          app: enmasse
         name: broker-prometheus-config
     - apiVersion: extensions/v1beta1
       kind: Deployment
@@ -977,6 +979,8 @@ data:
           "ssl": true}'
       kind: ConfigMap
       metadata:
+        labels:
+          app: enmasse
         name: broker-prometheus-config
     - apiVersion: extensions/v1beta1
       kind: Deployment
@@ -2014,6 +2018,8 @@ data:
           "ssl": true}'
       kind: ConfigMap
       metadata:
+        labels:
+          app: enmasse
         name: broker-prometheus-config
     - apiVersion: v1
       kind: PersistentVolumeClaim
