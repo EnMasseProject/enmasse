@@ -221,8 +221,8 @@ data:
                 value: "/etc/qpid-dispatch/config/qdrouterd.conf"
               - name: QDROUTERD_AUTO_MESH_DISCOVERY
                 value: "INFER"
-              - name: APPLICATION_NAME
-                value: "qdrouterd"
+              - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
+                value: "qdrouterd-headless"
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -894,8 +894,8 @@ data:
                       value: "/etc/qpid-dispatch/config/qdrouterd.conf:/etc/qpid-dispatch/additional-config/colocated-topic.conf"
                     - name: QDROUTERD_AUTO_MESH_DISCOVERY
                       value: "INFER"
-                    - name: APPLICATION_NAME
-                      value: "qdrouterd"
+                    - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
+                      value: "qdrouterd-headless"
                     image: ${ROUTER_IMAGE}
                     livenessProbe:
                       initialDelaySeconds: 60
@@ -1322,8 +1322,8 @@ data:
                 value: "/etc/qpid-dispatch/config/qdrouterd.conf"
               - name: QDROUTERD_AUTO_MESH_DISCOVERY
                 value: "INFER"
-              - name: APPLICATION_NAME
-                value: "qdrouterd"
+              - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
+                value: "qdrouterd-headless"
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -1995,8 +1995,8 @@ data:
                       value: "/etc/qpid-dispatch/config/qdrouterd.conf:/etc/qpid-dispatch/additional-config/colocated-topic.conf"
                     - name: QDROUTERD_AUTO_MESH_DISCOVERY
                       value: "INFER"
-                    - name: APPLICATION_NAME
-                      value: "qdrouterd"
+                    - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
+                      value: "qdrouterd-headless"
                     image: ${ROUTER_IMAGE}
                     livenessProbe:
                       initialDelaySeconds: 60
