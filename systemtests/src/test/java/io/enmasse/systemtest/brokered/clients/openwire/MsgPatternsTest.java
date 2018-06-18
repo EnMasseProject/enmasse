@@ -28,7 +28,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
     }
 
     @Test
-    @Disabled("disabled due to issue #660")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
@@ -49,7 +48,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
     }
 
     @Test
-    @Disabled("disabled due to issue #660")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);

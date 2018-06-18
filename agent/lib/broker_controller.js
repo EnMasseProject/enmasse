@@ -359,10 +359,13 @@ BrokerController.prototype.create_address = function (a) {
     var self = this;
     if (a.type === 'queue') {
         log.info('[%s] Creating queue "%s"...', self.id, a.address);
-        return self.broker.createQueue(a.address).then(function () {
+        return self.broker.createAddress(a.address, {anycast:false}).then(function () { return self.broker.createQueue(a.address).then(function () {
             log.info('[%s] Created queue "%s"', self.id, a.address);
             self.post_event(myevents.address_create(a));
         }).catch(function (error) {
+            log.error('[%s] Failed to create queue "%s": %s', self.id, a.address, error);
+            self.post_event(myevents.address_failed_create(a, error));
+        })}).catch(function (error) {
             log.error('[%s] Failed to create queue "%s": %s', self.id, a.address, error);
             self.post_event(myevents.address_failed_create(a, error));
         });
