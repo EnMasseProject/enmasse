@@ -37,13 +37,9 @@
   register: config_exists
   ignore_errors: True
 
-- name: Retrieve service cluster ip
-  when: config_exists.failed and (keycloak_http_url is not defined)
-  shell: oc get service -n {{ namespace }} standard-authservice -o jsonpath={.spec.clusterIP}
-  register: authservice_clusterip
-- set_fact:
-    keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
-  when: config_exists.failed and (keycloak_http_url is not defined)
+- name: Keycloak http setting
+  include_role:
+    name: standard_authservice_url
 
 - name: Check if OAUTH service account exists
   shell: oc get sa -n {{ namespace }} kc-oauth

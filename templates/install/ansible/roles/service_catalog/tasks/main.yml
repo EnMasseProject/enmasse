@@ -16,6 +16,8 @@
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/deployment.yaml"
 - name: Create EnMasse Service Broker Service
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/service.yaml"
+- name: Create the service broker console route
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/route.yaml"
 - shell: oc extract secret/standard-authservice-cert -n {{ namespace }} --keys=tls.crt --to=-
   register: secret_result
   when: (keycloak_ca_cert is not defined)
@@ -42,15 +44,17 @@
         keycloakCa.crt: "{{ keycloak_ca_cert | b64encode }}"
       EOF
 
-- name: Retrieve keycloak service cluster ip
-  when: (keycloak_http_url is not defined)
-  shell: oc get service -n {{ namespace }} standard-authservice -o jsonpath={.spec.clusterIP}
-  register: authservice_clusterip
+- name: Keycloak http setting
+  include_role:
+    name: standard_authservice_url
+
+- name: Check if console route exists
+  shell: oc get route console -n {{ namespace }} -o yaml -o jsonpath={.spec.host}
+  register: console_route
+  ignore_errors: True
 - set_fact:
-    keycloak_http_url: "https://{{ authservice_clusterip.stdout }}:8443/auth"
-  when: (keycloak_http_url is not defined)
-- name: Create the service broker console route
-  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/service-broker/route.yaml"
+    osb_console_prefix: "https://{{ console_route.stdout }}/console"
+  when: (osb_console_prefix is not defined) and (not (console_route.stdout | search("127.0.0.1")))
 - name: Retrieve service broker cluster ip
   when: (osb_console_prefix is not defined)
   shell: oc get service -n {{ namespace }} service-broker -o jsonpath={.spec.clusterIP}
