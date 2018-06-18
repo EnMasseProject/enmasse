@@ -363,8 +363,9 @@ public class KubernetesHelper implements Kubernetes {
 
     private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList) {
 
-        String apiVersion = client.isAdaptable(OpenShiftClient.class) ? "v1" : "rbac.authorization.k8s.io/v1beta1";
-        String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
+        Boolean isOpenShift = client.isAdaptable(OpenShiftClient.class);
+        String apiVersion = isOpenShift ? "v1" : "rbac.authorization.k8s.io/v1";
+        String apiPath = isOpenShift ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1";
 
         JsonObject body = new JsonObject();
 
@@ -386,7 +387,9 @@ public class KubernetesHelper implements Kubernetes {
 
         for (Subject subjectEntry : subjectList) {
             JsonObject subject = new JsonObject();
-            subject.put("apiGroup", "rbac.authorization.k8s.io");
+            if (isOpenShift) {
+                subject.put("apiGroup", "rbac.authorization.k8s.io");
+            }
             subject.put("kind", subjectEntry.getKind());
             subject.put("name", subjectEntry.getName());
             if (subjectEntry.getNamespace() != null) {
@@ -403,7 +406,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
-        if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
+        if (isRBACSupported()) {
             createRoleBinding("addressspace-admins", addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), "ClusterRole", "admin", Arrays.asList(
                     new Subject("ServiceAccount", addressControllerSa, namespace)));
         }
@@ -434,26 +437,18 @@ public class KubernetesHelper implements Kubernetes {
     public void addAddressSpaceRoleBindings(AddressSpace addressSpace) {
         String namespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
 
-        if (isRBACSupported() && client.isAdaptable(OpenShiftClient.class)) {
+        if (isRBACSupported()) {
             createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
-                    new Subject("ServiceAccount", "default", namespace)));;
+                    new Subject("ServiceAccount", "default", namespace)));
             createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
                     new Subject("ServiceAccount", addressSpaceAdminSa, namespace)));
-            if (hasClusterRole("event-reporter")) {
-                try {
-                    createRoleBinding("event-reporters", namespace, "ClusterRole", "event-reporter", Arrays.asList(
-                            new Subject("ServiceAccount", addressSpaceAdminSa, namespace)));
-                } catch (Exception e) {
-                    log.warn("Unable to grant event create privileges");
-                }
-            }
         } else {
             log.info("No support for RBAC, won't add to address-admin role");
         }
     }
 
     private boolean hasClusterRole(String roleName) {
-        String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
+        String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1";
         return doRawHttpRequest(apiPath + "/clusterroles/" + roleName, "GET", null, true, null) != null;
     }
 
