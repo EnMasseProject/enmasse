@@ -92,6 +92,37 @@ individual module:
 
 Some of these tasks can be configured using environment variables as listed below.
 
+#### Debugging Java Code on OpenShift or Kubernetes
+
+To enable debug mode for the Java based components, it's necessary to setup following environment variables:
+
+   * JAVA_DEBUG - set to true to enable or false to disable
+   * JAVA_DEBUG_PORT - 8787 by default and can be any value above 1000 if need to change it
+
+Use this command to change environment variables values for the deployment
+
+    $CMD set env deployments/<deployment-name> JAVA_DEBUG=true
+
+Where $CMD is `oc` or `kubectl` command depends of the environment.
+
+The following deployment names are available depending on their types and EnMasse configuration:
+
+   * `address-space-controller`
+   * `admin`
+   * `api-server`
+   * `keycloak-controller`
+   * `standard-controller`
+   * `service-broker`
+   * `topic-forwarder`
+   * `mqtt-gateway`
+   * `mqtt-lwt`
+   * `queue-scheduler`
+
+For forwarding port from the remote pod to the local host invoke following command (it will lock terminal) and then
+connect with development tool to the forwarded port on localhost
+
+   $CMD port-forward $(oc get pods | grep <deployment-name> | awk '{print $1}') $JAVA_DEBUG_PORT:$JAVA_DEBUG_PORT
+
 #### Environment variables
 
 There are several environment variables that control the behavior of the build. Some of them are
