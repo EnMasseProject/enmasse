@@ -71,7 +71,8 @@ prepare:
 	mkdir -p install/resources/address-space-controller
 	mkdir -p install/resources/api-server
 	mkdir -p install/resources/resource-definitions
-	mkdir -p install/resources/cluster-roles
+	mkdir -p install/resources/cluster-roles/kubernetes
+	mkdir -p install/resources/cluster-roles/openshift
 	mkdir -p install/resources/plans
 	cat include/address-space-definitions.yaml | \
 		STANDARD_CONTROLLER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(STANDARD_CONTROLLER_IMAGE):$(COMMIT) \
@@ -87,6 +88,8 @@ prepare:
 		envsubst '$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${BROKER_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > install/resources/address-space-controller/address-space-definitions.yaml
 	cp -f include/resource-definitions.yaml install/resources/resource-definitions
 	cp -f include/cluster-roles/*.yaml install/resources/cluster-roles
+	cp -f include/cluster-roles/kubernetes/*.yaml install/resources/cluster-roles/kubernetes
+	cp -f include/cluster-roles/openshift/*.yaml install/resources/cluster-roles/openshift
 	cp -f include/*-plans.yaml install/resources/plans/
 	cp -f include/address.yaml include/address-space.yaml include/service-broker.yaml install/resources/templates
 
