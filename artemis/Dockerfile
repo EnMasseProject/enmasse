@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:8-6
+FROM enmasseproject/java-base:8-7
 
 RUN yum -y install which libaio python gettext hostname iputils openssl && yum clean all -y && mkdir -p /var/run/artemis/
 
