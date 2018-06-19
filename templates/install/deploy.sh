@@ -192,6 +192,11 @@ runcmd "$CMD create rolebinding -n ${NAMESPACE} default-view --clusterrole=view 
 runcmd "$CMD create rolebinding -n ${NAMESPACE} enmasse-admin-admin --clusterrole=admin --serviceaccount=${NAMESPACE}:enmasse-admin" "Create admin role binding for the enmasse-admin service account"
 runcmd "$CMD label -n ${NAMESPACE} rolebinding default-view app=enmasse"
 runcmd "$CMD label -n ${NAMESPACE} rolebinding enmasse-admin-admin app=enmasse"
+if [ -z "$USE_OPENSHIFT" ]; then
+    runcmd "$CMD create -f ${RESOURCE_DIR}/cluster-roles/kubernetes/k8s-api-get-root-url.yaml" "Create cluster role needed for applying OpenShift templates"
+    runcmd "$CMD create clusterrolebinding enmasse.io:serviceaccounts-k8s-api-get-root-url --clusterrole=enmasse.io:k8s-api-get-root-url --group=system:serviceaccounts" "Add permissions needed for applying OpenShift templates"
+    runcmd "$CMD label -n ${NAMESPACE} clusterrolebinding enmasse.io:serviceaccounts-k8s-api-get-root-url app=enmasse"
+fi
 
 for auth_service in ${AUTH_SERVICES//,/ }
 do
@@ -275,19 +280,23 @@ if [ $MODE == "multitenant" ]; then
     if [ -n "$OS_ALLINONE" ] && [ -n "$USE_OPENSHIFT" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
-        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/address-space-controller.yaml -n $NAMESPACE" "Create cluster roles needed for address-space-controller"
+        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/openshift/address-space-controller.yaml -n $NAMESPACE" "Create cluster roles needed for address-space-controller"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/api-server.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant api server"
-        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/keycloak-controller.yaml -n $NAMESPACE" "Create cluster roles needed for keycloak controller"
+        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/openshift/keycloak-controller.yaml -n $NAMESPACE" "Create cluster roles needed for keycloak controller"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting api-server rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting keycloak-controller rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting auth-delegator rights to enmasse-admin"
         runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
     elif [ -n "$USE_OPENSHIFT" ]; then
-        echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/'"
+        echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/' and 'oc create -f ${RESOURCE_DIR}/cluster-roles/openshift/'"
         echo "Please add enmasse.io:address-space-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add enmasse.io:api-server to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add enmasse.io:keycloak-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add system:auth-delegator to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin'"
+    else
+        runcmd "$CMD create -f ${RESOURCE_DIR}/cluster-roles/kubernetes/address-space-controller.yaml" "Create cluster roles needed for address-space-controller"
+        runcmd "$CMD create clusterrolebinding enmasse.io:address-space-controller-enmasse-admin-${NAMESPACE} --clusterrole=enmasse.io:address-space-controller --serviceaccount=${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
+        runcmd "$CMD label -n ${NAMESPACE} clusterrolebinding enmasse.io:address-space-controller-enmasse-admin-${NAMESPACE} app=enmasse"
     fi
 fi

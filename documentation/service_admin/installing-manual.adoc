@@ -155,7 +155,7 @@ ifeval::["{cmdcli}" == "oc"]
 [options="nowrap"]
 ----
 oc login -u system:admin
-oc create -f ./resources/cluster-roles/address-space-controller.yaml
+oc create -f ./resources/cluster-roles/openshift/address-space-controller.yaml
 ----
 
 . Grant privileges to service account:

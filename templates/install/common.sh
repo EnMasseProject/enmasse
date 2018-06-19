@@ -39,14 +39,19 @@ function create_address_space() {
   local CMD=$1
   local name=$2
   local namespace=$3
+  local address_space_ns=${4:-${namespace}}
 
-  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1alpha1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"${namespace}\\\", \\\"labels\\\": {\\\"namespace\\\": \\\"$namespace\\\" }, \\\"annotations\\\": {\\\"enmasse.io/namespace\\\": \\\"$namespace\\\", \\\"enmasse.io/realm-name\\\": \\\"$namespace\\\"} }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\", \\\"plan\\\": \\\"unlimited-standard\\\" } }"
+  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1alpha1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"${namespace}\\\", \\\"labels\\\": {\\\"namespace\\\": \\\"$namespace\\\" }, \\\"annotations\\\": {\\\"enmasse.io/namespace\\\": \\\"${address_space_ns}\\\", \\\"enmasse.io/realm-name\\\": \\\"${address_space_ns}\\\"} }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\", \\\"plan\\\": \\\"unlimited-standard\\\" } }"
 
   runcmd "cat <<EOF | $CMD create -n ${namespace} -f -
 {
     \"apiVersion\": \"v1\",
     \"kind\": \"ConfigMap\",
     \"metadata\": {
+        \"annotations\": {
+            \"enmasse.io/namespace\": \"${address_space_ns}\",
+            \"enmasse.io/realm-name\": \"${address_space_ns}\"
+        },
         \"name\": \"${namespace}.${name}\",
         \"labels\": {
             \"type\": \"address-space\",
