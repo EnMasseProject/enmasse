@@ -25,7 +25,6 @@ class AuthorizationTest extends AuthorizationTestBase implements ITestBaseStanda
     }
 
     @Test
-    @Disabled("related issue: #786")
     void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }
