@@ -1,0 +1,12 @@
+- name: Ensure user has cluster admin access
+  shell: oc policy can-i create clusterroles
+  register: is_admin
+  ignore_errors: True
+- name: Create cluster wide roles used by keycloak-controller
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/keycloak-controller.yaml
+  when: is_admin.stdout != "no"
+- name: Give user lookup permissions for the keycloak controller
+  shell: oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:{{ namespace }}:enmasse-admin
+  when: is_admin.stdout != "no"
+- name: Create the standard authentication service controller
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/controller-deployment.yaml
