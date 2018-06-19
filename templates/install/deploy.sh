@@ -188,13 +188,10 @@ fi
 runcmd "$CMD create sa enmasse-admin -n $NAMESPACE" "Create service account for address space controller"
 runcmd "$CMD label -n ${NAMESPACE} sa enmasse-admin app=enmasse"
 
-if [ -n "$USE_OPENSHIFT" ]; then
-    runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default --rolebinding-name=enmasse-view" "Add permissions for viewing OpenShift resources to default user"
-    runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:enmasse-admin --rolebinding-name=enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
-
-    runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-view app=enmasse"
-    runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-admin app=enmasse"
-fi
+runcmd "$CMD create rolebinding -n ${NAMESPACE} default-view --clusterrole=view --serviceaccount=${NAMESPACE}:default" "Create view role binding for the default service account"
+runcmd "$CMD create rolebinding -n ${NAMESPACE} enmasse-admin-admin --clusterrole=admin --serviceaccount=${NAMESPACE}:enmasse-admin" "Create admin role binding for the enmasse-admin service account"
+runcmd "$CMD label -n ${NAMESPACE} rolebinding default-view app=enmasse"
+runcmd "$CMD label -n ${NAMESPACE} rolebinding enmasse-admin-admin app=enmasse"
 
 for auth_service in ${AUTH_SERVICES//,/ }
 do
@@ -234,11 +231,8 @@ if [ "$MODE" == "singletenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/plans/standard-plans.yaml" "Create standard address space plans"
     runcmd "$CMD create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
     runcmd "$CMD label -n ${NAMESPACE} sa address-space-admin app=enmasse"
-    if [ -n "$USE_OPENSHIFT" ]; then
-        runcmd "oc policy add-role-to-user admin system:serviceaccount:${NAMESPACE}:address-space-admin --rolebinding-name=enmasse-addressspace-admin" "Add permissions for editing OpenShift resources to address space admin SA"
-        runcmd "oc label -n ${NAMESPACE} rolebinding enmasse-addressspace-admin app=enmasse"
-    fi
-
+    runcmd "$CMD create rolebinding -n ${NAMESPACE} address-space-admin-admin --clusterrole=admin --serviceaccount=${NAMESPACE}:address-space-admin" "Create address space admin rolebinding"
+    runcmd "$CMD label -n ${NAMESPACE} rolebinding address-space-admin-admin app=enmasse"
     create_address_space "$CMD" "default" $NAMESPACE
 elif [ $MODE == "multitenant" ]; then
     runcmd "$CMD create -n ${NAMESPACE} -f $RESOURCE_DIR/resource-definitions/resource-definitions.yaml" "Create resource definitions"
