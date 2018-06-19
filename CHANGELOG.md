@@ -1,3 +1,11 @@
+## 0.21.0 (June 19, 2018)
+* Upgrade to dispatch router 1.1.0 + some extra bugfixes
+* Add support for web sockets in standard address space
+* Set common name and subject alternative names for self-signed route certs on OpenShift
+* Bug fixes to allow console and rest api to work better on addresses created by the other
+* Bug fix to topic-forwarder allowing queues and topics with multiple shards to work again
+* Allow kubernetes - api server connection to be secured using mutual TLS
+
 ## 0.20.0 (May 23, 2018)
 * REST API now served by a new component, api-server, code moved from the old address-controller.  The intention is to have this act as a kubernetes API server, allowing custom resource support for address spaces and addresses. This is experimental at present and not ready for production use[2]. An example ansible inventory file that can be used with the ansible install procedure[3] is provided.
 * REST API paths have changed in preparation for custom resources support. An API reference available at [4]. A short summary:
