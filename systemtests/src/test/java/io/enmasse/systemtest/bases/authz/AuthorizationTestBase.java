@@ -89,6 +89,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         createUser(sharedAddressSpace, user, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
         assertReceive(user);
         removeUser(sharedAddressSpace, user.getUsername());
+        Thread.sleep(5000);
 
         createUser(sharedAddressSpace, user, "pepa_group");
         assertCannotReceive(user);
