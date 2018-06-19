@@ -25,7 +25,6 @@ class AuthorizationTest extends AuthorizationTestBase implements ITestBaseBroker
     }
 
     @Test
-    @Disabled("disabled due to issue #786")
     void testUserPermissionAfterRemoveAuthz() throws Exception {
         doTestUserPermissionAfterRemoveAuthz();
     }
