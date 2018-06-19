@@ -40,6 +40,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
@@ -59,7 +60,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Kubernetes kubernetes = Kubernetes.create(environment);
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
-    protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
+    protected static AddressApiClient addressApiClient;
     private static Logger log = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
@@ -82,7 +83,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws MalformedURLException {
+        if(addressApiClient == null){
+             addressApiClient = new AddressApiClient(kubernetes);
+        }
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials);

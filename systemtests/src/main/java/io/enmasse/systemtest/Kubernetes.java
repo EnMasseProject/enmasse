@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -68,7 +69,7 @@ public abstract class Kubernetes {
         return getEndpoint(globalNamespace, "service-broker", "https");
     }
 
-    public abstract Endpoint getRestEndpoint();
+    public abstract Endpoint getRestEndpoint() throws MalformedURLException;
 
     public abstract Endpoint getKeycloakEndpoint();
 

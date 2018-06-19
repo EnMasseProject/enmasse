@@ -17,6 +17,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -33,7 +34,7 @@ public class AddressApiClient extends ApiClient {
     private final String addressNestedPathPattern;
     private final String addressResourcePath;
 
-    public AddressApiClient(Kubernetes kubernetes) {
+    public AddressApiClient(Kubernetes kubernetes) throws MalformedURLException {
         super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1");
         this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
         this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";

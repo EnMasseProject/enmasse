@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.util.concurrent.TimeUnit;
 
 public class Minikube extends Kubernetes {
@@ -51,8 +52,12 @@ public class Minikube extends Kubernetes {
     }
 
     @Override
-    public Endpoint getRestEndpoint() {
-        return new Endpoint(getIp(globalNamespace, "restapi"), Integer.parseInt(getPort(globalNamespace, "restapi")));
+    public Endpoint getRestEndpoint() throws MalformedURLException {
+        if (environment.registerApiServer()) {
+            return new Endpoint(environment.openShiftUrl());
+        } else {
+            return new Endpoint(getIp(globalNamespace, "restapi"), Integer.parseInt(getPort(globalNamespace, "restapi")));
+        }
     }
 
     @Override

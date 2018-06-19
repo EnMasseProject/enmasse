@@ -10,6 +10,8 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 
+import java.net.MalformedURLException;
+
 /**
  * Handles interaction with openshift cluster
  */
@@ -22,10 +24,16 @@ public class OpenShift extends Kubernetes {
                 .withUsername(environment.openShiftUser()).build()), globalNamespace);
     }
 
-    public Endpoint getRestEndpoint() {
+    public Endpoint getRestEndpoint() throws MalformedURLException {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        Route route = openShift.routes().inNamespace(globalNamespace).withName("restapi").get();
-        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
+        Endpoint endpoint;
+        if (environment.registerApiServer()) {
+            endpoint = new Endpoint(environment.openShiftUrl());
+        } else {
+            Route route = openShift.routes().inNamespace(globalNamespace).withName("restapi").get();
+            endpoint = new Endpoint(route.getSpec().getHost(), 443);
+        }
+
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
