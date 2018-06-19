@@ -49,8 +49,8 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
-    public Response replaceAddresses(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull Address address) throws Exception {
-        return super.replaceAddresses(securityContext, namespace, addressSpace, address);
+    public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String addressName, @NotNull Address payload) throws Exception {
+        return super.replaceAddress(securityContext, namespace, addressSpace, addressName, payload);
     }
 
     @DELETE

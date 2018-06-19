@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -162,6 +163,33 @@ public class HttpNestedAddressServiceTest {
                 .build();
         Response response = invoke(() -> addressService.createAddress(securityContext, null, "ns", "myspace", Either.createLeft(a2)));
         assertThat(response.getStatus(), is(500));
+    }
+
+    @Test
+    public void testPut() {
+        Set<Address> addresses = addressApi.listAddresses("ns");
+        assertThat(addresses.isEmpty(), is(false));
+        Address address = addresses.iterator().next();
+        Address a1 = new Address.Builder(address).setPlan("plan1").build();
+        
+        Response response = invoke(() -> addressService.replaceAddress(securityContext, "ns", "myspace", a1.getName(), a1));
+        assertThat(response.getStatus(), is(200));
+
+        Address a2ns = new Address.Builder(a1).setNamespace("ns").build();
+        assertThat(addressApi.listAddresses("ns"), hasItem(a2ns));
+    }
+
+    @Test
+    public void testPutNonMatchingAddressName() {
+        Address a2 = new Address.Builder()
+                .setName("a2")
+                .setAddress("a2")
+                .setType("anycast")
+                .setPlan("plan1")
+                .setAddressSpace("myspace")
+                .build();
+        Response response = invoke(() -> addressService.replaceAddress(securityContext, "ns", "myspace", "xxxxxxx", a2));
+        assertThat(response.getStatus(), is(400));
     }
 
     @Test

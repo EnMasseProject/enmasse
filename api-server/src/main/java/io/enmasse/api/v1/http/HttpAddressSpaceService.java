@@ -83,7 +83,7 @@ public class HttpAddressSpaceService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull  AddressSpace input) throws Exception {
+    public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull AddressSpace input) throws Exception {
         return doRequest("Error creating address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, input, namespace);
@@ -136,10 +136,14 @@ public class HttpAddressSpaceService {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public Response replaceAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @NotNull  AddressSpace input) throws Exception {
-        return doRequest("Error replacing address space " + input.getName(), () -> {
+    @Path("{addressSpace}")
+    public Response replaceAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName, @NotNull AddressSpace payload) throws Exception {
+        checkRequestBodyNotNull(payload);
+        checkAddressSpaceObjectNameNotNull(payload, addressSpaceName);
+        checkMatchingAddressSpaceName(addressSpaceName, payload);
+        return doRequest("Error replacing address space " + payload.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
-            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, input, namespace);
+            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, payload, namespace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
@@ -147,6 +151,24 @@ public class HttpAddressSpaceService {
             AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
             return Response.ok().entity(replaced).build();
         });
+    }
+
+    private void checkRequestBodyNotNull(Object object) {
+        if (object == null) {
+            throw new BadRequestException("Missing request body");
+        }
+    }
+
+    private void checkAddressSpaceObjectNameNotNull(AddressSpace addressSpace, String addressSpaceNameFromURL) {
+        if (addressSpace.getName() == null) {
+            throw new BadRequestException("the name of the object (" + addressSpaceNameFromURL + " based on URL) was undeterminable: name must be provided");
+        }
+    }
+
+    private void checkMatchingAddressSpaceName(String addressSpaceNameFromURL, AddressSpace addressSpaceFromPayload) {
+        if (addressSpaceFromPayload.getName() != null && !addressSpaceFromPayload.getName().equals(addressSpaceNameFromURL)) {
+            throw new BadRequestException("the name of the object (" + addressSpaceFromPayload.getName() + ") does not match the name on the URL (" + addressSpaceNameFromURL + ")");
+        }
     }
 
     @DELETE
