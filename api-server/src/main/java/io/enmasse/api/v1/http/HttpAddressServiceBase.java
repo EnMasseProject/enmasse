@@ -17,7 +17,6 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.Map;
@@ -94,7 +93,7 @@ public class HttpAddressServiceBase {
     }
 
     private Response createAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Address address) throws Exception {
-        checkNotNull(address);
+        checkRequestBodyNotNull(address);
         Address finalAddress = setAddressDefaults(namespace, addressSpace, address);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
@@ -130,20 +129,34 @@ public class HttpAddressServiceBase {
         return address;
     }
 
-    private void checkNotNull(Object object) {
+    private void checkRequestBodyNotNull(Object object) {
         if (object == null) {
             throw new BadRequestException("Missing request body");
         }
     }
 
-    Response replaceAddresses(SecurityContext securityContext, String namespace, String addressSpace, Address address) throws Exception {
-        checkNotNull(address);
-        Address finalAddress = setAddressDefaults(namespace, addressSpace, address);
+    Response replaceAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressNameFromURL, Address payload) throws Exception {
+        checkRequestBodyNotNull(payload);
+        checkAddressObjectNameNotNull(payload, addressNameFromURL);
+        checkMatchingAddressName(addressNameFromURL, payload);
+        Address finalAddress = setAddressDefaults(namespace, addressSpace, payload);
         return doRequest("Error updating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
             Address replaced = apiHelper.replaceAddress(addressSpace, finalAddress);
             return Response.ok(replaced).build();
         });
+    }
+
+    protected void checkAddressObjectNameNotNull(Address address, String addressNameFromURL) {
+        if (address.getName() == null) {
+            throw new BadRequestException("the name of the object (" + addressNameFromURL + " based on URL) was undeterminable: name must be provided");
+        }
+    }
+
+    private void checkMatchingAddressName(String addressNameFromURL, Address addressFromPayload) {
+        if (addressFromPayload.getName() != null && !addressFromPayload.getName().equals(addressNameFromURL)) {
+            throw new BadRequestException("the name of the object (" + addressFromPayload.getName() + ") does not match the name on the URL (" + addressNameFromURL + ")");
+        }
     }
 
     Response deleteAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressName) throws Exception {

@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.v1.Either;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.common.UnprocessableEntityException;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
 import javax.validation.constraints.NotNull;
@@ -42,15 +43,18 @@ public class HttpAddressService extends HttpAddressServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
-    public Response getAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String address) throws Exception {
-        String addressSpace = parseAddressSpace(address);
-        return super.getAddress(securityContext, namespace, addressSpace, address);
+    public Response getAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName) throws Exception {
+        String addressSpace = parseAddressSpace(addressName);
+        return super.getAddress(securityContext, namespace, addressSpace, addressName);
     }
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull Address payload) throws Exception {
+        if (payload.getName() == null) {
+            throw new UnprocessableEntityException("Required value: name is required");
+        }
         String addressSpace = parseAddressSpace(payload.getName());
         return super.createAddress(securityContext, uriInfo, namespace, addressSpace, Either.<Address, AddressList>createLeft(payload));
     }
@@ -59,9 +63,10 @@ public class HttpAddressService extends HttpAddressServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
-    public Response replaceAddresses(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @NotNull Address address) throws Exception {
-        String addressSpace = parseAddressSpace(address.getName());
-        return super.replaceAddresses(securityContext, namespace, addressSpace, address);
+    public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName, @NotNull Address payload) throws Exception {
+        checkAddressObjectNameNotNull(payload, addressName);
+        String addressSpace = parseAddressSpace(payload.getName());
+        return super.replaceAddress(securityContext, namespace, addressSpace, addressName, payload);
     }
 
     @DELETE

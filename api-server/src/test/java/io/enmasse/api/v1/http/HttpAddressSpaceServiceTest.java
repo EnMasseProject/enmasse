@@ -19,7 +19,9 @@ import javax.ws.rs.core.SecurityContext;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -133,6 +135,23 @@ public class HttpAddressSpaceServiceTest {
         assertThat(response.getStatus(), is(500));
     }
 
+    @Test
+    public void testPut() {
+        addressSpaceApi.createAddressSpace(a1);
+        AddressSpace a1Adapted = new AddressSpace.Builder(a1).setNamespace("ns").build();
+        assertThat(a1Adapted, not(equalTo(a1)));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getName(), a1Adapted));
+        assertThat(response.getStatus(), is(200));
+
+        assertThat(addressSpaceApi.listAddressSpaces(null), hasItem(a1Adapted));
+    }
+
+    @Test
+    public void testPutNonMatchingAddressSpaceName() {
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, "xxxxxx", a1));
+        assertThat(response.getStatus(), is(400));
+    }
+    
     @Test
     public void testDelete() {
         addressSpaceApi.createAddressSpace(a1);

@@ -11,6 +11,10 @@ public class UnprocessableEntityException extends ClientErrorException {
 
     public static final int STATUS = 422;
 
+    public UnprocessableEntityException(String message) {
+        super(message, STATUS);
+    }
+    
     public UnprocessableEntityException(String message, Response response) {
         super(message, response);
     }

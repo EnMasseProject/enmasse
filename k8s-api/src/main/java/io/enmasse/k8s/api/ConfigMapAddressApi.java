@@ -124,6 +124,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         String name = getConfigMapName(address.getName());
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
+            log.warn("Cannot replace address {}: No previous configMap found", address.getName());
             return;
         }
         ConfigMap newMap = create(address);
