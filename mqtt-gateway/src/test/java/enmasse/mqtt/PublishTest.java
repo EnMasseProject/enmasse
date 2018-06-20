@@ -28,6 +28,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
+
 /**
  * Tests related to publish
  */
@@ -36,6 +38,7 @@ public class PublishTest extends MockMqttGatewayTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
+    private static final String MQTT_LARGE_MESSAGE = String.join("a", Collections.nCopies(64000, ""));
     private static final String SUBSCRIBER_ID = "my_subscriber_id";
     private static final String PUBLISHER_ID = "my_publisher_id";
 
@@ -100,6 +103,17 @@ public class PublishTest extends MockMqttGatewayTestBase {
     }
 
     @Test
+    public void mqttPublishLargeQoS1toMqtt(TestContext context) {
+
+        Async messageReceived = context.async();
+        this.mqttReceiver(context, MQTT_TOPIC, 1, messageReceived);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_LARGE_MESSAGE, 1);
+
+        messageReceived.await();
+        context.assertTrue(true);
+    }
+
+    @Test
     public void mqttPublishQoS2toMqtt(TestContext context) {
 
         Async messageReceived = context.async();
@@ -127,6 +141,17 @@ public class PublishTest extends MockMqttGatewayTestBase {
         Async messageReceived = context.async();
         this.amqpReceiver(context, MQTT_TOPIC, 1, messageReceived);
         this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+
+        messageReceived.await();
+        context.assertTrue(true);
+    }
+
+    @Test
+    public void mqttPublishLargeQoS1toAmqp(TestContext context) {
+
+        Async messageReceived = context.async();
+        this.amqpReceiver(context, MQTT_TOPIC, 1, messageReceived);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_LARGE_MESSAGE, 1);
 
         messageReceived.await();
         context.assertTrue(true);
