@@ -322,8 +322,10 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift))
-            throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
+        if(defaultAddressSpace.getAuthService().equals(AuthService.STANDARD)) {
+            if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift))
+                throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
+        }
     }
 
 

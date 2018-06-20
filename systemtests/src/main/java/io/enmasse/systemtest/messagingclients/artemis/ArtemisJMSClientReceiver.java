@@ -2,11 +2,11 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.clients.artemis;
+package io.enmasse.systemtest.messagingclients.artemis;
 
-import io.enmasse.systemtest.clients.ClientArgumentMap;
-import io.enmasse.systemtest.clients.ClientType;
-import io.enmasse.systemtest.clients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 
 public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
     public ArtemisJMSClientReceiver() {

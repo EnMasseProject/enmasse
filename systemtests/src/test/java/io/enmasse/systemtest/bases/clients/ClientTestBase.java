@@ -6,10 +6,10 @@ package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.ClientArgument;
-import io.enmasse.systemtest.clients.ClientArgumentMap;
-import io.enmasse.systemtest.clients.ClientType;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;

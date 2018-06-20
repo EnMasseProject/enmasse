@@ -7,7 +7,7 @@ package io.enmasse.systemtest.common.plans;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.clients.rhea.RheaClientSender;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;

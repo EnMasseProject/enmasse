@@ -12,12 +12,12 @@ import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.clients.AbstractClient;
-import io.enmasse.systemtest.clients.ClientArgument;
-import io.enmasse.systemtest.clients.ClientArgumentMap;
-import io.enmasse.systemtest.clients.rhea.RheaClientConnector;
-import io.enmasse.systemtest.clients.rhea.RheaClientReceiver;
-import io.enmasse.systemtest.clients.rhea.RheaClientSender;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
@@ -78,14 +78,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    AddressSpace getSharedAddressSpace() {
+    protected AddressSpace getSharedAddressSpace() {
         return null;
     }
 
     @BeforeEach
     public void setup() throws MalformedURLException {
-        if(addressApiClient == null){
-             addressApiClient = new AddressApiClient(kubernetes);
+        if (addressApiClient == null) {
+            addressApiClient = new AddressApiClient(kubernetes);
         }
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials);
@@ -279,8 +279,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return list of addresses
      * @throws Exception
      */
+    protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName, Optional<HashMap<String, String>> requestParams) throws Exception {
+        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, requestParams, new ArrayList<>());
+    }
+
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
+        return getAddressesObjects(addressSpace, addressName, Optional.empty());
     }
 
     /**
