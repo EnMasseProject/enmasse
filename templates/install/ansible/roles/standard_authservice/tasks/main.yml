@@ -1,5 +1,5 @@
 - include_role:
-    name: standard_authservice_keycloak
+    name: "{{ standard_authservice_resources }}"
 - include_role:
     name: standard_authservice_controller
 - include_role:
