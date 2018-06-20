@@ -32,6 +32,11 @@
     extra_opts: [--strip-components=1]
   tags: openshift
 
+- name: OpenShift | Remove old symlink
+  file:
+   path: "/usr/bin/oc"
+   state: absent
+
 - name: OpenShift | Create symlink
   file:
     force: yes
@@ -62,6 +67,11 @@
     mode: "a+x"
   tags: kubectl
 
+- name: Kubectl | Remove old symlink
+  file:
+   path: "/usr/bin/kubectl"
+   state: absent
+
 - name: Kubectl | Create symlink
   file:
     force: yes
@@ -91,6 +101,11 @@
     dest: "{{ minikube_path }}/minikube"
     mode: "a+x"
   tags: minikube
+
+- name: Minikube | Remove old symlink
+  file:
+   path: "/usr/bin/minikube"
+   state: absent
 
 - name: Minikube | Create symlink
   file:

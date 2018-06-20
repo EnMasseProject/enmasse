@@ -8,7 +8,7 @@ source "${CURDIR}/test_func.sh"
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
 # {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
 SYSTEMTESTS_DIR=${1}
-OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
+OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz"}
 OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 DOCKER=${DOCKER:-docker}
 
