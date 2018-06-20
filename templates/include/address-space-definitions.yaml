@@ -1868,6 +1868,8 @@ data:
                 value: /etc/mqtt-gateway/ssl/tls.crt
               - name: ENMASSE_MQTT_LISTENPORT
                 value: '8883'
+              - name: ENMASSE_MQTT_MAXMESSAGESIZE
+                value: ${MQTT_MAXMESSAGESIZE}
               image: ${MQTT_GATEWAY_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -1992,6 +1994,9 @@ data:
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
       value: address-space-admin
+    - description: Maximum message size allowed by the MQTT Gateway
+      name: MQTT_MAXMESSAGESIZE
+      value: '131072'
   brokered-space-infra.yaml: |-
     apiVersion: v1
     kind: Template
