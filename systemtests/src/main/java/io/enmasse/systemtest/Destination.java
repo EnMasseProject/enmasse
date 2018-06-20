@@ -147,17 +147,25 @@ public class Destination {
         return entry;
     }
 
+    private String getAddressName(String addressSpace) {
+        return this.getName().startsWith(addressSpace) ? this.getName() : String.format("%s.%s", addressSpace, this.getName());
+    }
 
     public JsonObject jsonMetadata() {
+        return jsonMetadata(addressSpace);
+    }
+
+    public JsonObject jsonMetadata(String addressSpace) {
         JsonObject metadata = new JsonObject();
         if (this.getName() != null) {
-            metadata.put("name", this.getAddressSpace() + "." + this.getName());
+            metadata.put("name", getAddressName(addressSpace));
         }
         if (this.getUuid() != null) {
             metadata.put("uid", this.getUuid());
         }
         return metadata;
     }
+
 
     public JsonObject jsonSpec() {
         JsonObject spec = new JsonObject();
