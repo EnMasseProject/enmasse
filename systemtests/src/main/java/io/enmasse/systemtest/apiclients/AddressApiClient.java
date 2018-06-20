@@ -19,10 +19,7 @@ import org.slf4j.Logger;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -146,6 +143,16 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
+
+    private <T> HttpRequest<T> addRequestParameters(HttpRequest<T> request, Optional<HashMap<String, String>> params) {
+        if (params.isPresent()) {
+            params.get().entrySet().iterator().forEachRemaining(
+                    stringStringEntry -> request.addQueryParam(stringStringEntry.getKey(), stringStringEntry.getValue()));
+        }
+
+        return request;
+    }
+
     /**
      * give you JsonObject with AddressesList or Address kind
      *
@@ -153,7 +160,7 @@ public class AddressApiClient extends ApiClient {
      * @return
      * @throws Exception
      */
-    public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+    public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName, Optional<HashMap<String, String>> params) throws Exception {
         String path = getAddressPath(addressSpace.getName()) + (addressName.map(s -> {
             if (s.startsWith(addressSpace.getName())) {
                 return "/" + s;
@@ -165,15 +172,20 @@ public class AddressApiClient extends ApiClient {
 
         return doRequestNTimes(initRetry, () -> {
                     CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-                    client.get(endpoint.getPort(), endpoint.getHost(), path)
+                    HttpRequest<JsonObject> request = client.get(endpoint.getPort(), endpoint.getHost(), path)
                             .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                             .as(BodyCodec.jsonObject())
-                            .timeout(20_000)
-                            .send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
+                            .timeout(20_000);
+                    request = addRequestParameters(request, params);
+                    request.send(ar -> responseHandler(ar, responsePromise, "Error: get addresses"));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
                 Optional.of(() -> kubernetes.getRestEndpoint()),
                 Optional.empty());
+    }
+
+    public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return getAddresses(addressSpace, addressName, Optional.empty());
     }
 
     /**
@@ -222,7 +234,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void deleteAddress(String addressSpace, Destination destination) throws Exception {
-        doDelete(getAddressPath(addressSpace) + "/" + getAddressName(addressSpace, destination));
+        doDelete(getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace));
     }
 
     private void doDelete(String path) throws Exception {
@@ -296,21 +308,7 @@ public class AddressApiClient extends ApiClient {
         addressList.put("kind", "AddressList");
         JsonArray items = new JsonArray();
         for (Destination destination : destinations) {
-            JsonObject item = new JsonObject();
-            JsonObject metadata = new JsonObject();
-            if (destination.getName() != null) {
-                metadata.put("name", getAddressName(addressSpace.getName(), destination));
-            }
-            if (destination.getUuid() != null) {
-                metadata.put("uid", destination.getUuid());
-            }
-            if (destination.getAddressSpace() != null) {
-                metadata.put("addressSpace", destination.getAddressSpace());
-            } else {
-                metadata.put("addressSpace", addressSpace.getName());
-            }
-            item.put("metadata", metadata);
-            item.put("spec", destination.jsonSpec());
+            JsonObject item = destination.toJson(this.getApiVersion(), addressSpace.getName());
             items.add(item);
         }
         addressList.put("items", items);
@@ -338,10 +336,6 @@ public class AddressApiClient extends ApiClient {
         }
     }
 
-    private static String getAddressName(String addressSpace, Destination destination) {
-        return destination.getName().startsWith(addressSpace) ? destination.getName() : String.format("%s.%s", addressSpace, destination.getName());
-    }
-
     public void createAddress(Destination destination) throws Exception {
         JsonObject addressJson = destination.toJson(apiVersion);
         log.info("POST-address: path {}; body: {}", addressResourcePath, addressJson.toString());
@@ -362,24 +356,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void createAddress(AddressSpace addressSpace, Destination destination) throws Exception {
-        JsonObject entry = new JsonObject();
-        entry.put("apiVersion", "enmasse.io/v1alpha1");
-        entry.put("kind", "Address");
-        JsonObject metadata = new JsonObject();
-        if (destination.getName() != null) {
-            metadata.put("name", getAddressName(addressSpace.getName(), destination));
-        }
-        if (destination.getUuid() != null) {
-            metadata.put("uid", destination.getUuid());
-        }
-        if (destination.getAddressSpace() != null) {
-            metadata.put("addressSpace", destination.getAddressSpace());
-        } else {
-            metadata.put("addressSpace", addressSpace.getName());
-        }
-        entry.put("metadata", metadata);
-        entry.put("spec", destination.jsonSpec());
-
+        JsonObject entry = destination.toJson(this.getApiVersion(), addressSpace.getName());
         log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();

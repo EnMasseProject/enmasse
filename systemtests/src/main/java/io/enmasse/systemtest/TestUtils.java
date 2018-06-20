@@ -436,8 +436,9 @@ public class TestUtils {
      * get list of Address objects by REST API
      */
     public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace,
-                                                            Optional<String> addressName, List<String> skipAddresses) throws Exception {
-        JsonObject response = apiClient.getAddresses(addressSpace, addressName);
+                                                            Optional<String> addressName, Optional<HashMap<String, String>> queryParams,
+                                                            List<String> skipAddresses) throws Exception {
+        JsonObject response = apiClient.getAddresses(addressSpace, addressName, queryParams);
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
         listOfAddresses.complete(convertToListAddress(response, Address.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
         return listOfAddresses;

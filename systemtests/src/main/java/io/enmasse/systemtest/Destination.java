@@ -138,16 +138,21 @@ public class Destination {
         return "{name=" + name + ", address=" + address + "}";
     }
 
+
     public JsonObject toJson(String version) {
+        return toJson(version, this.addressSpace);
+    }
+
+    public JsonObject toJson(String version, String addressSpace) {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", version);
         entry.put("kind", "Address");
-        entry.put("metadata", this.jsonMetadata());
+        entry.put("metadata", this.jsonMetadata(addressSpace));
         entry.put("spec", this.jsonSpec());
         return entry;
     }
 
-    private String getAddressName(String addressSpace) {
+    public String getAddressName(String addressSpace) {
         return this.getName().startsWith(addressSpace) ? this.getName() : String.format("%s.%s", addressSpace, this.getName());
     }
 
@@ -162,6 +167,11 @@ public class Destination {
         }
         if (this.getUuid() != null) {
             metadata.put("uid", this.getUuid());
+        }
+        if (this.getAddressSpace() != null) {
+            metadata.put("addressSpace", this.getAddressSpace());
+        } else if (addressSpace != null) {
+            metadata.put("addressSpace", addressSpace);
         }
         return metadata;
     }

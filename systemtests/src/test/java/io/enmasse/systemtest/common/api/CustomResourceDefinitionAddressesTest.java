@@ -12,11 +12,15 @@ import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -25,6 +29,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag(isolated)
 public class CustomResourceDefinitionAddressesTest extends TestBase implements ISeleniumProviderChrome {
     private AddressSpace brokered;
+
+    protected AddressSpace getSharedAddressSpace() {
+        return brokered;
+    }
 
     @BeforeEach
     void setUpAddressSpace() throws Exception {
@@ -40,8 +48,14 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         }
     }
 
+    @AfterEach
+    void tearDownAddresses() throws Exception {
+        if (brokered != null) {
+            setAddresses(brokered);
+        }
+    }
+
     @Test
-    @Disabled("Disabled until  pr #1350 will be merged")
     void testAddressCreateViaAgentApiRemoveViaCmd() throws Exception {
         Destination dest1 = Destination.topic("mytopic-agent", "brokered-topic");
         Destination dest2 = Destination.topic("mytopic-api", "brokered-topic");
@@ -59,30 +73,33 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
 
         assertAll(() -> {
-            assertTrue(output.contains(fullDestinationName(brokered, dest1)),
+            assertTrue(output.contains(dest1.getAddressName(brokered.getName())),
                     String.format("Get all addresses should contains '%s'; but contains only: %s",
-                            fullDestinationName(brokered, dest1), output));
-            assertTrue(output.contains(fullDestinationName(brokered, dest2)),
+                            dest1.getAddressName(brokered.getName()), output));
+            assertTrue(output.contains(dest2.getAddressName(brokered.getName())),
                     String.format("Get all addresses should contains '%s'; but contains only: %s",
-                            fullDestinationName(brokered, dest2), output));
+                            dest2.getAddressName(brokered.getName()), output));
         });
 
-        CRDCmdClient.deleteAddress(environment.namespace(), fullDestinationName(brokered, dest1));
-        CRDCmdClient.deleteAddress(environment.namespace(), fullDestinationName(brokered, dest2));
+
+        HashMap<String, String> queryParams = new HashMap<>();
+        queryParams.put("address", dest1.getAddress());
+        Future<List<Address>> addressesObjects = getAddressesObjects(brokered, Optional.empty(), Optional.of(queryParams));
+        List<Address> dest1Response = addressesObjects.get(11, TimeUnit.SECONDS);
+        assertEquals(1, dest1Response.size(), String.format("Received unexpected count of addresses! got following addresses %s",
+                dest1Response.stream().map(address -> address.getName()).reduce("", String::concat)));
+
+        CRDCmdClient.deleteAddress(environment.namespace(), dest1Response.get(0).getName());
+        CRDCmdClient.deleteAddress(environment.namespace(), dest2.getAddressName(brokered.getName()));
 
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = CRDCmdClient.getAddress(environment.namespace(), "-a");
-            return allAddresses.getStdErr();
+            return allAddresses.getStdErr() + allAddresses.getStdOut();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
-    private String fullDestinationName(AddressSpace addressSpace, Destination dest) {
-        return String.format("%s.%s", addressSpace.getName(), dest.getName());
-
-    }
 
     @Test
-    @Disabled("disabled due to issue: #1380")
     void testAddressCreateViaCmdRemoveViaAgentApi() throws Exception {
         Destination dest1 = new Destination("myqueue1", null, brokered.getName(), "myqueue1",
                 Destination.QUEUE, "brokered-queue");
@@ -109,12 +126,12 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         result = CRDCmdClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();
 
-        assertTrue(output.contains(fullDestinationName(brokered, dest1)),
+        assertTrue(output.contains(dest1.getAddressName(brokered.getName())),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
-                        fullDestinationName(brokered, dest1), output));
-        assertTrue(output.contains(fullDestinationName(brokered, dest2)),
+                        dest1.getAddressName(brokered.getName()), output));
+        assertTrue(output.contains(dest2.getAddressName(brokered.getName())),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
-                        fullDestinationName(brokered, dest2), output));
+                        dest2.getAddressName(brokered.getName()), output));
 
         ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new KeycloakCredentials(null, null));
         consoleWeb.openWebConsolePage();

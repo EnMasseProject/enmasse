@@ -126,8 +126,12 @@ public abstract class TestBaseWithShared extends TestBase {
         return address.contains(destination.getAddress());
     }
 
+    protected Future<List<Address>> getAddressesObjects(Optional<String> addressName, Optional<HashMap<String, String>> requestParams) throws Exception {
+        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, requestParams, Collections.singletonList(dummyAddress.getAddress()));
+    }
+
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getAddress()));
+        return getAddressesObjects(addressName, Optional.empty());
     }
 
     private Future<List<Destination>> getDestinationsObjects(Optional<String> addressName) throws Exception {
