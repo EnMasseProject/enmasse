@@ -1,0 +1,101 @@
+== Shared address spaces
+
+This document explores what would be required to support sharing the router (and broker) infrastructure between
+multiple standard address space instances.
+
+Address spaces in EnMasse are currently isolated, i.e. they don't share infrastructure. Sharing
+infrastructure allows sharing resources and reducing the footprint. This document will consider only
+the standard address space which has the largest per-addressspace impact and is the main address
+space type in EnMasse.
+
+The term 'namespace' in this document will refer to an OpenShift namespace, where one can
+potantially support multiple address spaces.
+
+The term 'infrastructure' is used to mean the router network, admin components, brokers etc that are
+part of the standard address space.
+
+The 'mqtt' aspect is not considered in this proposal, but there are probably several things that
+needs to be fixed for that to work.
+
+== what/how
+
+=== User configuration
+
+One way of triggering the use of a shared infrastructure is through plans. Today the standard
+address space has a single plan. The notion of using a shared insfrastructure while keeping todays
+isolated approach could be introduced through providing 2 plans:
+
+* isolated
+* shared
+
+One can further imagine finer grained variants of these depending on preferences:
+
+* shared small
+* shared large
+* isolated small
+* isolated large
+
+One can then choose to implement 'shared small' and 'shared large' as 2 separate infrastructure
+deployments and apply the same quotas for all address spaces with that plan, or use a single
+infrastructure and apply different quotas to different address spaces.
+
+=== Configuration of the infrastructure
+
+The assumption is that the infrastructure supporting multiple address spaces will be contained in a
+single namespace for ease of deployment.
+
+Configuring the infrastructure requires making the components within the namespace aware of
+multiple address spaces. It i desireable that the components do not need to lookup this config from
+outside their own namespace.
+
+One approach to handle this would be to store the address space configs within the namespaces they
+configure. Care must be taken so that incompatible address space configs are not mixed in the same
+namespace. The infrastructure can then lookup what address spaces it should support by looking at
+the resources within its namespace.
+
+=== Router config using vhosts
+
+This section will cover router configuration proposal using vhosts feature. Other approaches should
+be considered.
+
+Since address spaces share infrastructure, we need to consider how messaging clients connect to the
+dispatch router network. Clients need to connect to separate hostnames for the dispatch router to
+understand which address space they connect to. This means that a separate service _and_ route is
+needed for each address space.
+
+The dispatch router would then have to be configured with a vhost entry for each service (messaging-a.svc,
+messaging-b.svc) and route host (messaging-a.shared.example.com, messaging-b.shared.example.com).
+Having the ability to match multiple hosts for the same vhost rule would be nice.
+
+The information needed by ragent would be address spaces that the routing network should handle. For each
+address space it would be able to retrieve both the route and service hostnames that it should use
+for vhost config.
+
+Each configured address has a reference to its address space, so when configuring an address it would
+have to 
+
+1. lookup address space
+2. retrieve route and service endpoints
+3. add required configuration referencing the appropriate vhost
+
+=== Broker config
+
+The broker 'tier' of the infrastructure does also have a 'shared' and 'isolated' type of plans
+(called pooled and standalone today), but there is the possibility of a third alternative sharing
+across address spaces as well:
+
+1. broker isolated single address (todays 'standard')
+2. broker shared with multiple addresses in a single address space (todays 'pooled')
+3. broker shared with multiple addresses in multiple address spaces
+
+The first 2 alternatives can continue to work as today, because they don't need to be aware of
+multiple address spaces. The third alternative provides the highest density, and requires the broker
+(and queue-scheduler) to be aware of multiple address spaces.
+
+== testing
+
+What is the test plan for the feature/change?
+
+== documentation
+
+What documentation will be created for this feature?
