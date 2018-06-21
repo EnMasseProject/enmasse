@@ -165,7 +165,7 @@ public class HTTPServerTest {
                         JsonObject data = buffer.toJsonObject();
                         context.assertTrue(data.containsKey("resources"));
                         JsonArray resources = data.getJsonArray("resources");
-                        context.assertEquals(2, resources.size());
+                        context.assertEquals(4, resources.size());
                         async.complete();
                     });
                 });

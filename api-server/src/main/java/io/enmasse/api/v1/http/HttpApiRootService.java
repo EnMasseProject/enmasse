@@ -51,6 +51,10 @@ public class HttpApiRootService {
 
     private static final APIResourceList apiResourceList = new APIResourceList("enmasse.io/v1alpha1",
         Arrays.asList(
+                new APIResource("addressspacequotas", "", false, "AddressSpaceQuota",
+                        Arrays.asList("create", "delete", "get", "list")),
+                new APIResource("addressspacequotareviews", "", false, "AddressSpaceQuotaReview",
+                        Arrays.asList("create")),
                 new APIResource("addressspaces", "", true, "AddressSpace",
                     Arrays.asList("create", "delete", "get", "list")),
                 new APIResource("addresses", "", true, "Address",

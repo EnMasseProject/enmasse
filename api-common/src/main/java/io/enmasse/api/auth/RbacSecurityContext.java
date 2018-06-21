@@ -66,6 +66,14 @@ public class RbacSecurityContext implements SecurityContext {
         return accessReview.isAllowed();
     }
 
+    public static String rbacToClusterRole(ResourceVerb verb, String resource) {
+        JsonObject object = new JsonObject();
+        object.put("type",  "resource");
+        object.put("verb", verb);
+        object.put("resource", resource);
+        return object.toString();
+    }
+
     public static String rbacToRole(String namespace, ResourceVerb verb, String resource) {
         JsonObject object = new JsonObject();
         object.put("type",  "resource");
