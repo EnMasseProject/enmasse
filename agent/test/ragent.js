@@ -554,8 +554,8 @@ describe('basic router configuration', function() {
         };
         router.special = f.bind(router);
     }));
-    it('configures large number of anycast addresses', simple_address_test(generate_address_list(2000, ['anycast']), undefined, undefined, 2000));
-    it('configures large number of multicast addresses', simple_address_test(generate_address_list(2000, ['multicast']), undefined, undefined, 2000));
+    it('configures large number of anycast addresses', simple_address_test(generate_address_list(2000, ['anycast']), undefined, undefined, 6000));
+    it('configures large number of multicast addresses', simple_address_test(generate_address_list(2000, ['multicast']), undefined, undefined, 6000));
     it('configures large number of queues', simple_address_test(generate_address_list(2000, ['queue']), undefined, undefined, 6000));
     it('configures large number of topics', simple_address_test(generate_address_list(2000, ['topic']), undefined, undefined, 6000));
     it('configures large number of mixed addresses', simple_address_test(generate_address_list(2000), undefined, undefined, 6000));
