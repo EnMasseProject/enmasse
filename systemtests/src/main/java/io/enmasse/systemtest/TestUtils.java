@@ -284,9 +284,9 @@ public class TestUtils {
      * @return JsonObject
      * @throws Exception
      */
-    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, URL url,
+    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, URL url, int expectedCode,
                                                 Optional<JsonObject> payload) throws Exception {
-        return apiClient.sendRequest(method, url, payload);
+        return apiClient.sendRequest(method, url, expectedCode, payload);
     }
 
 

@@ -263,8 +263,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
-    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {
-        return TestUtils.sendRestApiRequest(addressApiClient, method, url, payload);
+    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, int expectedCode, Optional<JsonObject> payload) throws Exception {
+        return TestUtils.sendRestApiRequest(addressApiClient, method, url, expectedCode, payload);
     }
 
     /**

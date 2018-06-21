@@ -49,13 +49,13 @@ public abstract class ApiClient {
                 .setVerifyHost(false));
     }
 
-    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise,
+    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, int expectedCode,
                                        String warnMessage) {
         try {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
-                if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                    log.error("response status code: {}, body: {}", response.statusCode(), response.body());
+                if (response.statusCode() != expectedCode) {
+                    log.error("expected-code: {}, responsep-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
                     T body = response.body();
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + body != null ? body.toString() : null));
                 } else {
