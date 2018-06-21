@@ -168,6 +168,14 @@ class ApiServerTest extends TestBase {
         deleteAddresses(addressSpace);
         setAddresses(addressSpace, dest2);
 
+        HashMap<String, String> queryParams = new HashMap<>();
+        queryParams.put("address", dest2.getAddress());
+        Future<List<Address>> addressesObjects = getAddressesObjects(addressSpace, Optional.empty(), Optional.of(queryParams));
+        Address returnedAddress = addressesObjects.get(30, TimeUnit.SECONDS).get(0);
+        log.info("Got address: {}", returnedAddress.getName());
+        assertTrue(returnedAddress.getName().contains(String.format("%s.%s", addressSpace.getName(), dest2.getAddress())),
+                "Address name is wrongly generated");
+
         logWithSeparator(log, "Check if adddressSpace is optional");
         Destination dest3 = new Destination(null, null, null,
                 "test-rest-api-queue3", AddressType.QUEUE.toString(), "brokered-queue");
