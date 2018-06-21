@@ -4,8 +4,8 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.AddressSpaceQuota;
-import io.enmasse.address.model.AddressSpaceQuotaList;
+import io.enmasse.address.model.quota.AddressSpaceQuota;
+import io.enmasse.address.model.quota.AddressSpaceQuotaList;
 
 import java.util.Map;
 import java.util.Optional;

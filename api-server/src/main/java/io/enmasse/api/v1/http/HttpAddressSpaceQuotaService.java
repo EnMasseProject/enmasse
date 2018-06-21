@@ -4,15 +4,12 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.quota.AddressSpaceQuota;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.api.v1.AddressApiHelper;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
-import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.AddressSpaceQuotaApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
