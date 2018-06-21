@@ -214,7 +214,7 @@ function categorize_dockerlogs {
 function stop_and_check_openshift() {
     if ! oc; then
         info "oc command not found, nothing to stop"
-        exit 0
+        return
     fi
     if oc whoami; then
         oc logout
