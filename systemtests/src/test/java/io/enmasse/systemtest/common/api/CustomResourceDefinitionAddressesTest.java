@@ -12,10 +12,7 @@ import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,13 +31,19 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         return brokered;
     }
 
-    @BeforeEach
+    @BeforeAll
     void setUpAddressSpace() throws Exception {
-        if (brokered == null) {
-            brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.NONE);
-            createAddressSpace(brokered);
-        }
+        brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.NONE);
+        createAddressSpace(brokered);
+    }
 
+    @AfterAll
+    void tearDownAddressSpace() throws Exception {
+        deleteAddressSpace(brokered);
+    }
+
+    @BeforeEach
+    void setUpSelenium() throws Exception {
         if (selenium.getDriver() == null) {
             selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
         } else {
