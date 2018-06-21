@@ -31,12 +31,6 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         return brokered;
     }
 
-    @BeforeAll
-    void setUpAddressSpace() throws Exception {
-        brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.NONE);
-        createAddressSpace(brokered);
-    }
-
     @AfterAll
     void tearDownAddressSpace() throws Exception {
         deleteAddressSpace(brokered);
@@ -44,6 +38,10 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @BeforeEach
     void setUpSelenium() throws Exception {
+        if(brokered == null){
+            brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.NONE);
+            createAddressSpace(brokered);
+        }
         if (selenium.getDriver() == null) {
             selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
         } else {
