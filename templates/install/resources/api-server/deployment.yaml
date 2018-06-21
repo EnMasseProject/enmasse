@@ -41,12 +41,18 @@ spec:
             path: /healthz
             port: http
             scheme: HTTP
+          initialDelaySeconds: 30
         name: api-server
         ports:
         - containerPort: 8080
           name: http
         - containerPort: 8443
           name: https
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
         resources:
           limits:
             memory: 256Mi

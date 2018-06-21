@@ -111,6 +111,14 @@ local images = import "images.jsonnet";
                   "path": "/healthz",
                   "scheme": "HTTP",
                   "port": "http"
+                },
+                "initialDelaySeconds": 30
+              },
+              "readinessProbe": {
+                "httpGet": {
+                  "path": "/healthz",
+                  "scheme": "HTTP",
+                  "port": "http"
                 }
               },
               "resources": {
