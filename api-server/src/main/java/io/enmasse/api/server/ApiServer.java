@@ -8,10 +8,8 @@ package io.enmasse.api.server;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.api.common.CachingSchemaProvider;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapSchemaApi;
-import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.k8s.api.*;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.*;
@@ -41,8 +39,10 @@ public class ApiServer extends AbstractVerticle {
 
         AuthApi authApi = new KubeAuthApi(controllerClient, null, controllerClient.getConfiguration().getOauthToken());
 
+        AddressSpaceQuotaApi quotaApi = new ConfigMapAddressSpaceQuotaApi(controllerClient.adapt(NamespacedKubernetesClient.class));
+
         deployVerticles(startPromise,
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), options.getRequestHeaderClientCa(), authApi, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), options.getRequestHeaderClientCa(), authApi, quotaApi, options.isEnableRbac(), options.isEnableQuota()), new DeploymentOptions().setWorker(true)));
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {

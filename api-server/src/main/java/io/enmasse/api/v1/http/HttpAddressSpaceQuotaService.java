@@ -4,7 +4,7 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.quota.AddressSpaceQuota;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuota;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
@@ -80,15 +80,15 @@ public class HttpAddressSpaceQuotaService {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     public Response createAddressSpaceQuota(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @NotNull AddressSpaceQuota input) throws Exception {
-        return doRequest("Error creating address space quota " + input.getName(), () -> {
+        return doRequest("Error creating address space quota " + input.getMetadata().getName(), () -> {
             verifyAuthorized(securityContext, ResourceVerb.create);
 
             // TODO: Validate rules
 
             quotaApi.createAddressSpaceQuota(input);
-            AddressSpaceQuota created = quotaApi.getAddressSpaceQuotaWithName(input.getName()).orElse(input);
+            AddressSpaceQuota created = quotaApi.getAddressSpaceQuotaWithName(input.getMetadata().getName()).orElse(input);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-            builder.path(created.getName());
+            builder.path(created.getMetadata().getName());
             return Response.created(builder.build()).entity(created).build();
         });
     }
@@ -101,7 +101,7 @@ public class HttpAddressSpaceQuotaService {
             verifyAuthorized(securityContext, ResourceVerb.delete);
             AddressSpaceQuota addressSpaceQuota = quotaApi.getAddressSpaceQuotaWithName(addressSpaceQuotaName)
                     .orElseThrow(() -> new NotFoundException("Unable to find address space quota " + addressSpaceQuotaName));
-            quotaApi.deleteAddressSpace(addressSpaceQuota);
+            quotaApi.deleteAddressSpaceQuota(addressSpaceQuotaName);
             return Response.ok().build();
         });
     }

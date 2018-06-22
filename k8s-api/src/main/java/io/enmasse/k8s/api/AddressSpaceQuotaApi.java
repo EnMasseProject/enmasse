@@ -4,8 +4,8 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.quota.AddressSpaceQuota;
-import io.enmasse.address.model.quota.AddressSpaceQuotaList;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuota;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuotaList;
 
 import java.util.Map;
 import java.util.Optional;
@@ -15,5 +15,5 @@ public interface AddressSpaceQuotaApi {
     AddressSpaceQuotaList listAddressSpaceQuotas();
     Optional<AddressSpaceQuota> getAddressSpaceQuotaWithName(String addressSpaceQuotaName);
     void createAddressSpaceQuota(AddressSpaceQuota addressSpaceQuota);
-    void deleteAddressSpace(AddressSpaceQuota addressSpaceQuota);
+    void deleteAddressSpaceQuota(String addressSpaceQuotaName);
 }

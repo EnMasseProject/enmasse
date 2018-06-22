@@ -11,15 +11,9 @@ import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
-import io.enmasse.api.v1.http.HttpAddressService;
-import io.enmasse.api.v1.http.HttpAddressSpaceService;
-import io.enmasse.api.v1.http.HttpApiRootService;
-import io.enmasse.api.v1.http.HttpHealthService;
-import io.enmasse.api.v1.http.HttpNestedAddressService;
-import io.enmasse.api.v1.http.HttpRootService;
-import io.enmasse.api.v1.http.HttpSchemaService;
-import io.enmasse.api.v1.http.SwaggerSpecEndpoint;
+import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AddressSpaceQuotaApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -51,19 +45,23 @@ public class HTTPServer extends AbstractVerticle {
     private final String clientCa;
     private final String requestHeaderClientCa;
     private final AuthApi authApi;
+    private final AddressSpaceQuotaApi quotaApi;
     private final boolean isRbacEnabled;
+    private final boolean isQuotaEnabled;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, String requestHeaderClientCa, AuthApi authApi, boolean isRbacEnabled) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, String requestHeaderClientCa, AuthApi authApi, AddressSpaceQuotaApi quotaApi, boolean isRbacEnabled, boolean isQuotaEnabled) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
         this.clientCa = clientCa;
         this.requestHeaderClientCa = requestHeaderClientCa;
         this.authApi = authApi;
+        this.quotaApi = quotaApi;
         this.isRbacEnabled = isRbacEnabled;
+        this.isQuotaEnabled = isQuotaEnabled;
     }
 
     @Override
@@ -92,6 +90,10 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());
+        if (isQuotaEnabled) {
+            deployment.getRegistry().addSingletonResource(new HttpAddressSpaceQuotaService(quotaApi, schemaProvider));
+
+        }
 
         VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, deployment);
         Handler<HttpServerRequest> requestHandler = event -> {
