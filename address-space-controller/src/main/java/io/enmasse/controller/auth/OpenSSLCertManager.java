@@ -128,7 +128,7 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public Cert signCsr(CertSigningRequest request, Secret secret, Set<String> sans) {
+    public Cert signCsr(CertSigningRequest request, Secret secret, Collection<String> sans) {
         File crtFile = new File(certDir, request.getCertComponent().getNamespace() + "." + request.getCertComponent().getName() + ".crt");
 
         File caKey = createTempFileFromSecret(secret, "tls.key");

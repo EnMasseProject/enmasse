@@ -185,41 +185,6 @@ public class SerializationTest {
     }
 
     @Test
-    public void testSerializeAddressSpaceWithNullEndpoints() throws IOException {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("mynamespace")
-                .setPlan("default")
-                .setType("standard")
-                .setStatus(new AddressSpaceStatus(true).appendMessage("hello"))
-                .setEndpointList(null)
-                .build();
-
-        String serialized = CodecV1.getMapper().writeValueAsString(addressSpace);
-        AddressSpace deserialized = CodecV1.getMapper().readValue(serialized, AddressSpace.class);
-
-        assertThat(deserialized.getName(), is(addressSpace.getName()));
-        assertThat(deserialized.getNamespace(), is(addressSpace.getNamespace()));
-        assertThat(deserialized.getType(), is(addressSpace.getType()));
-        assertThat(deserialized.getPlan(), is(addressSpace.getPlan()));
-        assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
-        assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
-        assertNull(deserialized.getEndpoints());
-        assertThat(addressSpace, is(deserialized));
-
-        AddressSpace copied = new AddressSpace.Builder(deserialized).build();
-        assertThat(copied.getName(), is(addressSpace.getName()));
-        assertThat(copied.getNamespace(), is(addressSpace.getNamespace()));
-        assertThat(copied.getType(), is(addressSpace.getType()));
-        assertThat(copied.getPlan(), is(addressSpace.getPlan()));
-        assertThat(copied.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
-        assertThat(copied.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
-        assertNull(copied.getEndpoints());
-
-        assertThat(addressSpace, is(copied));
-    }
-
-    @Test
     public void testDeserializeAddressSpacePlan() throws IOException {
         String json = "{" +
                 "\"apiVersion\":\"enmasse.io/v1alpha1\"," +

@@ -181,94 +181,6 @@ public class KubernetesHelper implements Kubernetes {
         return client.services().inNamespace(namespace).withName(service).get() != null;
     }
 
-    @Override
-    public HasMetadata createEndpoint(EndpointSpec endpoint, Service service, String addressSpaceName, String namespace) {
-        if (service == null || service.getMetadata().getAnnotations() == null) {
-            log.info("Skipping creating endpoint for unknown service {}", endpoint.getService());
-            return null;
-        }
-
-        if (client.isAdaptable(OpenShiftClient.class)) {
-            RouteBuilder route = new RouteBuilder()
-                    .editOrNewMetadata()
-                    .withName(endpoint.getName())
-                    .withNamespace(namespace)
-                    .addToAnnotations(AnnotationKeys.ENDPOINT, endpoint.getName())
-                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
-                    .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
-                    .endMetadata()
-                    .editOrNewSpec()
-                    .withHost(endpoint.getHost().orElse(""))
-                    .withNewTo()
-                    .withName(endpoint.getService())
-                    .withKind("Service")
-                    .endTo()
-                    .withNewPort()
-                    .editOrNewTargetPort()
-                    .withStrVal(endpoint.getServicePort())
-                    .endTargetPort()
-                    .endPort()
-                    .endSpec();
-
-            Map<String, String> serviceAnnotations = service.getMetadata().getAnnotations();
-            for (Map.Entry<String, String> annotationEntry : serviceAnnotations.entrySet()) {
-                if (annotationEntry.getKey().startsWith(AnnotationKeys.SERVICE_PORT_PREFIX)) {
-                    route.editOrNewMetadata()
-                            .addToAnnotations(annotationEntry.getKey(), annotationEntry.getValue())
-                            .endMetadata();
-                }
-            }
-
-            if (endpoint.getCertSpec().isPresent()) {
-                route.editOrNewMetadata()
-                        .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertSpec().get().getProvider())
-                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertSpec().get().getSecretName())
-                        .endMetadata()
-                        .editOrNewSpec()
-                        .withNewTls()
-                        .withTermination("passthrough")
-                        .endTls()
-                        .endSpec();
-            }
-            return route.build();
-        } else {
-            if (service.getSpec().getPorts().isEmpty()) {
-                return null;
-            }
-            ServicePort servicePort = null;
-            for (ServicePort port : service.getSpec().getPorts()) {
-                if (port.getName().equals(endpoint.getServicePort())) {
-                    servicePort = port;
-                    break;
-                }
-            }
-            if (servicePort != null) {
-                ServiceBuilder svc = new ServiceBuilder()
-                        .editOrNewMetadata()
-                        .withName(endpoint.getName() + "-external")
-                        .withNamespace(namespace)
-                        .addToAnnotations(AnnotationKeys.ENDPOINT, endpoint.getName())
-                        .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
-                        .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
-                        .addToLabels(LabelKeys.TYPE, "loadbalancer")
-                        .endMetadata()
-                        .editOrNewSpec()
-                        .withPorts(servicePort)
-                        .withSelector(service.getSpec().getSelector())
-                        .withType("LoadBalancer")
-                        .endSpec();
-                if (endpoint.getCertSpec().isPresent()) {
-                    svc.editOrNewMetadata()
-                            .addToAnnotations(AnnotationKeys.CERT_PROVIDER, endpoint.getCertSpec().get().getProvider())
-                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertSpec().get().getSecretName())
-                            .endMetadata();
-                }
-                return svc.build();
-            }
-        }
-        return null;
-    }
-
     public Set<Deployment> getReadyDeployments() {
         return client.extensions().deployments().inNamespace(namespace).list().getItems().stream()
                 .filter(KubernetesHelper::isReady)
@@ -308,13 +220,6 @@ public class KubernetesHelper implements Kubernetes {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
     }
 
-
-    @Override
-    public Optional<Secret> getSecret(String secretName, String namespace) {
-        return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
-    }
-
-
     private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk, String impersonateUser) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
@@ -347,14 +252,6 @@ public class KubernetesHelper implements Kubernetes {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-
-    @Override
-    public boolean isRBACEnabled() {
-        return enableRbac && isRBACSupported();
-
-
     }
 
     private boolean isRBACSupported() {

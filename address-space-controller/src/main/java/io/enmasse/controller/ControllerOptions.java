@@ -7,8 +7,6 @@ package io.enmasse.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +18,7 @@ public final class ControllerOptions {
     private final StandardAuthServiceInfo standardAuthService;
     private final boolean enableRbac;
     private final boolean enableEventLogger;
+    private final boolean exposeEndpointsByDefault;
 
     private final String environment;
     private final String addressControllerSa;
@@ -32,12 +31,13 @@ public final class ControllerOptions {
 
     private final String impersonateUser;
 
-    private ControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
+    private ControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, boolean exposeEndpointsByDefault, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
         this.templateDir = templateDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
         this.enableRbac = enableRbac;
         this.enableEventLogger = enableEventLogger;
+        this.exposeEndpointsByDefault = exposeEndpointsByDefault;
         this.environment = environment;
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
@@ -111,6 +111,8 @@ public final class ControllerOptions {
 
         boolean enableEventLogger = getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false);
 
+        boolean exposeEndpointsByDefault = getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true);
+
         String environment = getEnv(env, "ENVIRONMENT").orElse("development");
 
         String addressControllerSa = getEnv(env, "ADDRESS_CONTROLLER_SA").orElse("enmasse-admin");
@@ -137,7 +139,9 @@ public final class ControllerOptions {
                 noneAuthService,
                 standardAuthService,
                 enableRbac,
-                enableEventLogger, environment,
+                enableEventLogger,
+                exposeEndpointsByDefault,
+                environment,
                 addressControllerSa,
                 addressSpaceAdminSa,
                 wildcardCertSecret,
@@ -173,5 +177,9 @@ public final class ControllerOptions {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
         }
         return var;
+    }
+
+    public boolean isExposeEndpointsByDefault() {
+        return exposeEndpointsByDefault;
     }
 }

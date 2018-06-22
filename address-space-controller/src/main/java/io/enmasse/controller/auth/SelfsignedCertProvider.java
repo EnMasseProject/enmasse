@@ -11,9 +11,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
 
 public class SelfsignedCertProvider implements CertProvider {
     private static final Logger log = LoggerFactory.getLogger(SelfsignedCertProvider.class);
@@ -42,7 +40,7 @@ public class SelfsignedCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, String cn, Set<String> sans) {
+    public Secret provideCert(AddressSpace addressSpace, String cn, Collection<String> sans) {
         String namespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
         Secret secret = client.secrets().inNamespace(namespace).withName(certSpec.getSecretName()).get();
         if (secret == null) {

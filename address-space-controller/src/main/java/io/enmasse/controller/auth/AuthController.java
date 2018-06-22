@@ -60,15 +60,18 @@ public class AuthController implements Controller {
             for (EndpointStatus status : addressSpace.getStatus().getEndpointStatuses()) {
                 EndpointSpec spec = endpointSpecMap.get(status.getName());
                 EndpointInfo info = endpointInfoMap.get(spec.getService());
-                if (info != null && status.getHost() != null && !status.getHost().isEmpty()) {
-                    info.addHost(status.getHost());
+                if (info != null) {
+                    info.addHost(status.getServiceHost());
+                    if (status.getHost() != null && !status.getHost().isEmpty()) {
+                        info.addHost(status.getHost());
+                    }
                 }
             }
 
             for (EndpointInfo info : endpointInfoMap.values()) {
                 try {
                     CertProvider certProvider = certProviderFactory.createProvider(info.getCertSpec());
-                    Set<String> hosts = info.getHosts();
+                    List<String> hosts = info.getHosts();
                     String cn = null;
                     if (!hosts.isEmpty()) {
                         cn = hosts.iterator().next();

@@ -54,10 +54,7 @@ public class AddressSpace {
     }
 
     public List<EndpointSpec> getEndpoints() {
-        if (endpointList != null) {
-            return Collections.unmodifiableList(endpointList);
-        }
-        return null;
+        return Collections.unmodifiableList(endpointList);
     }
 
     public String getPlan() {
@@ -166,11 +163,7 @@ public class AddressSpace {
             this.name = addressSpace.getName();
             this.namespace = addressSpace.getNamespace();
             this.type = addressSpace.getType();
-            if (addressSpace.getEndpoints() != null) {
-                this.endpointList = new ArrayList<>(addressSpace.getEndpoints());
-            } else {
-                this.endpointList = null;
-            }
+            this.endpointList = new ArrayList<>(addressSpace.getEndpoints());
             this.plan = addressSpace.getPlan();
             this.status = new AddressSpaceStatus(addressSpace.getStatus());
             this.authenticationService = addressSpace.getAuthenticationService();
@@ -222,11 +215,7 @@ public class AddressSpace {
         }
 
         public Builder setEndpointList(List<EndpointSpec> endpointList) {
-            if (endpointList != null) {
-                this.endpointList = new ArrayList<>(endpointList);
-            } else {
-                this.endpointList = null;
-            }
+            this.endpointList = new ArrayList<>(endpointList);
             return this;
         }
 

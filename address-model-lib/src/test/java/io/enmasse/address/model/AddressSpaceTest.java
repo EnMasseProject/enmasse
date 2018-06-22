@@ -72,31 +72,16 @@ public class AddressSpaceTest {
     }
 
     @Test
-    public void testNullMeansNullForEndpoints() {
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("name")
-                .setType("type")
-                .setPlan("plan")
-                .setEndpointList(null)
-                .build();
-
-        assertNull(space.getEndpoints());
-
-    }
-
-    @Test
     public void testEqualityIsBasedOnNameAndNamespace() {
         AddressSpace space1 = new AddressSpace.Builder()
                 .setName("name")
                 .setType("type")
                 .setPlan("plan")
-                .setEndpointList(null)
                 .build();
         AddressSpace space2 = new AddressSpace.Builder()
                 .setName("name")
                 .setType("type2")
                 .setPlan("plan")
-                .setEndpointList(null)
                 .build();
         assertEquals(space1, space2);
         AddressSpace space3 = new AddressSpace.Builder()
@@ -104,7 +89,6 @@ public class AddressSpaceTest {
                 .setNamespace("ns")
                 .setType("type2")
                 .setPlan("plan")
-                .setEndpointList(null)
                 .build();
         assertNotEquals(space1, space3);
         AddressSpace space4 = new AddressSpace.Builder()
@@ -112,7 +96,6 @@ public class AddressSpaceTest {
                 .setNamespace("ns")
                 .setType("type")
                 .setPlan("plan2")
-                .setEndpointList(null)
                 .build();
         assertEquals(space3, space4);
         AddressSpace space5 = new AddressSpace.Builder()
@@ -120,7 +103,6 @@ public class AddressSpaceTest {
                 .setNamespace("ns")
                 .setType("type")
                 .setPlan("plan2")
-                .setEndpointList(null)
                 .build();
         assertNotEquals(space4, space5);
 
