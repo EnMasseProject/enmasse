@@ -56,7 +56,7 @@ public class Main extends AbstractVerticle {
         ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, kubernetes.getNamespace(), eventLogger, authController.getDefaultCertProvider()));
         controllerChain.addController(new StatusController(kubernetes, infraResourceFactory));
-        controllerChain.addController(new EndpointController(controllerClient));
+        controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
 
         HTTPServer httpServer = new HTTPServer(8080);

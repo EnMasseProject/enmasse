@@ -4,9 +4,7 @@
  */
 package io.enmasse.keycloak.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationService;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,6 +88,23 @@ public class KeycloakManagerTest {
     }
 
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {
-        return new AddressSpace.Builder().setName(name).setPlan("myplan").setType("standard").putAnnotation(AnnotationKeys.CREATED_BY, "developer").setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
+        return new AddressSpace.Builder()
+                .setName(name)
+                .setPlan("myplan")
+                .setType("standard")
+                .putAnnotation(AnnotationKeys.CREATED_BY, "developer")
+                .appendEndpoint(new EndpointSpec.Builder()
+                        .setName("console")
+                        .setService("console")
+                        .setServicePort("https")
+                        .build())
+                .setStatus(new AddressSpaceStatus(true)
+                        .appendEndpointStatus(new EndpointStatus.Builder()
+                                .setName("console")
+                                .setServiceHost("console.svc")
+                                .setPort(443)
+                                .setHost("console.example.com")
+                                .build()))
+                .setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
     }
 }

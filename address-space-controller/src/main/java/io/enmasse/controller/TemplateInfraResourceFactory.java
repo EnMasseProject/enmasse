@@ -6,12 +6,10 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
 import io.enmasse.api.common.SchemaProvider;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,12 +54,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
 
             Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-            if (addressSpace.getEndpoints() != null) {
-                for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
+            for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
                     endpoint.getCertSpec().ifPresent(cert -> {
-                        serviceCertMapping.put(endpoint.getService(), cert);
-                    });
-                }
+                    serviceCertMapping.put(endpoint.getService(), cert);
+                });
             }
 
             if (serviceCertMapping.containsKey("messaging")) {
@@ -83,20 +79,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
             // Step 5: Create infrastructure
             resourceList.addAll(kubernetes.processTemplate(resourceDefinition.getTemplateName().get(), parameterValues.toArray(new ParameterValue[0])).getItems());
-
-            for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-                Service service = null;
-                for (HasMetadata resource : resourceList) {
-                    if (resource.getKind().equals("Service") && resource.getMetadata().getName().equals(endpoint.getService())) {
-                        service = (Service) resource;
-                        break;
-                    }
-                }
-                HasMetadata item = kubernetes.createEndpoint(endpoint, service, addressSpace.getName(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
-                if (item != null) {
-                    resourceList.add(item);
-                }
-            }
         }
         return resourceList;
     }

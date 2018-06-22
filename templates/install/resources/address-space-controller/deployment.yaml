@@ -29,6 +29,12 @@ spec:
               key: enableEventLogger
               name: address-space-controller-config
               optional: true
+        - name: EXPOSE_ENDPOINTS_BY_DEFAULT
+          valueFrom:
+            configMapKeyRef:
+              key: exposeEndpointsByDefault
+              name: address-space-controller-config
+              optional: true
         - name: ENVIRONMENT
           valueFrom:
             configMapKeyRef:

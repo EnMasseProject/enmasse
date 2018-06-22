@@ -7,6 +7,7 @@ package io.enmasse.keycloak.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.Watcher;
@@ -31,16 +32,36 @@ public class KeycloakManager implements Watcher<AddressSpace>
         this.kube = kube;
     }
 
-    private String getConsoleRedirectURI(AddressSpace addressSpace) {
-        for (EndpointStatus endpoint : addressSpace.getStatus().getEndpointStatuses()) {
-            if (endpoint.getName().equals("console") && endpoint.getHost() != null) {
-                String uri = "https://" + endpoint.getHost() + "/*";
-                log.info("Using {} as redirect URI for enmasse-console", uri);
-                return uri;
+    private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
+        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
+            if (endpoint.getService().equals("console")) {
+                return endpoint;
             }
         }
-        log.info("Address space {} has no endpoints defined", addressSpace.getName());
         return null;
+    }
+
+    private EndpointStatus getConsoleEndpointStatus(AddressSpace addressSpace) {
+        EndpointSpec spec = getConsoleEndpoint(addressSpace);
+        if (spec == null) {
+            return null;
+        }
+
+        for (EndpointStatus endpoint : addressSpace.getStatus().getEndpointStatuses()) {
+            if (endpoint.getName().equals(spec.getName())) {
+                return endpoint;
+            }
+        }
+        return null;
+    }
+
+    private String getConsoleUri(EndpointStatus endpoint) {
+        String uri = null;
+        if (endpoint.getHost() != null) {
+            uri = "https://" + endpoint.getHost() + "/*";
+            log.info("Using {} as redirect URI for enmasse-console", uri);
+        }
+        return uri;
     }
 
     @Override
@@ -67,7 +88,16 @@ public class KeycloakManager implements Watcher<AddressSpace>
             if (userId == null || userId.isEmpty()) {
                 userId = kube.findUserId(userName);
             }
-            keycloak.createRealm(realmName, userName, userId, getConsoleRedirectURI(addressSpace));
+
+            EndpointStatus endpointStatus = getConsoleEndpointStatus(addressSpace);
+            if (endpointStatus == null) {
+                log.info("Address space {} has no endpoints defined", addressSpace.getName());
+            } else if (endpointStatus.getHost() == null && endpointStatus.getPort() == 0) {
+                log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
+            } else {
+                String consoleUri = getConsoleUri(endpointStatus);
+                keycloak.createRealm(realmName, userName, userId, consoleUri);
+            }
         }
     }
 }

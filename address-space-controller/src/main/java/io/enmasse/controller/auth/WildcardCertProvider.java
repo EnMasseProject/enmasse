@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +30,7 @@ public class WildcardCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, String cn, Set<String> sans) {
+    public Secret provideCert(AddressSpace addressSpace, String cn, Collection<String> sans) {
         Secret secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withName(certSpec.getSecretName()).get();
         if (secret == null) {
             Secret wildcardSecret = null;

@@ -32,15 +32,10 @@ public interface Kubernetes {
 
     boolean hasService(String service);
 
-    HasMetadata createEndpoint(EndpointSpec endpoint, Service service, String addressSpaceName, String namespace);
-
     Set<Deployment> getReadyDeployments();
 
     Optional<Secret> getSecret(String secretName);
 
-    Optional<Secret> getSecret(String secretName, String namespace);
-
-    boolean isRBACEnabled();
     void addAddressSpaceRoleBindings(AddressSpace namespace);
     void addSystemImagePullerPolicy(String namespace, AddressSpace tenantNamespace);
 

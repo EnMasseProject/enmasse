@@ -6,13 +6,12 @@ package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.CertSpec;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 class EndpointInfo {
     private final String serviceName;
     private final CertSpec certs;
-    private final Set<String> hosts = new HashSet<>();
+    private final List<String> hosts = new ArrayList<>();
 
     EndpointInfo(String serviceName, CertSpec certs) {
         this.serviceName = serviceName;
@@ -27,7 +26,7 @@ class EndpointInfo {
         return certs;
     }
 
-    public Set<String> getHosts() {
+    public List<String> getHosts() {
         return hosts;
     }
 

@@ -17,7 +17,7 @@ public interface CertManager {
     boolean certExists(CertComponent component);
     Secret getCertSecret(String namespace, String name);
     CertSigningRequest createCsr(CertComponent component);
-    Cert signCsr(CertSigningRequest request, Secret secret, Set<String> hosts);
+    Cert signCsr(CertSigningRequest request, Secret secret, Collection<String> hosts);
     Secret createSecret(Cert cert, final Secret caSecret);
 
     Secret createSelfSignedCertSecret(String namespace, String secretName);

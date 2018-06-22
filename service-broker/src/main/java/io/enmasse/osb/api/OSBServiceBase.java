@@ -78,7 +78,6 @@ public abstract class OSBServiceBase {
                 .putAnnotation(AnnotationKeys.CREATED_BY_UID, userId)
                 .setAuthenticationService(authService)
                 .putLabel(LabelKeys.SERVICE_INSTANCE_ID, instanceId)
-                .setEndpointList(null)
                 .build();
         addressSpace = setDefaults(addressSpace, namespace);
         addressSpaceApi.createAddressSpace(addressSpace);

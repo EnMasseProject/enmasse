@@ -5,69 +5,112 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.api.model.RouteBuilder;
-import io.fabric8.openshift.api.model.RouteListBuilder;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
 
 public class EndpointControllerTest {
 
+    @Rule
+    public KubernetesServer server = new KubernetesServer(true, true);
+
+    private KubernetesClient client;
+
+    @Before
+    public void setup() {
+        client = server.getClient();
+    }
+
     @Test
-    public void testRoutesCreated() {
+    public void testRoutesNotCreated() {
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
                 .setNamespace("mynamespace")
                 .putAnnotation(AnnotationKeys.NAMESPACE, "myns")
+                .appendEndpoint(new EndpointSpec.Builder()
+                        .setName("myendpoint")
+                        .setService("messaging")
+                        .setServicePort("amqps")
+                        .build())
                 .setType("type1")
                 .setPlan("myplan")
                 .build();
 
 
-        OpenShiftClient client = mock(OpenShiftClient.class);
-        when(client.isAdaptable(OpenShiftClient.class)).thenReturn(true);
-        when(client.adapt(OpenShiftClient.class)).thenReturn(client);
-
-        EndpointController controller = new EndpointController(client);
-
-        Route route = new RouteBuilder()
+        client.services().inNamespace("myns").createNew()
                 .editOrNewMetadata()
-                .withName("myservice-external")
-                .withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))
-                .addToLabels(LabelKeys.TYPE, "loadbalancer")
-                .addToAnnotations(AnnotationKeys.ENDPOINT, "myservice")
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
-                .addToAnnotations(AnnotationKeys.SERVICE_NAME, "messaging")
+                .withName("messaging")
+                .addToAnnotations(AnnotationKeys.SERVICE_PORT_PREFIX + "amqps", "5671")
                 .endMetadata()
                 .editOrNewSpec()
-                .withHost("messaging.example.com")
-                .withNewTo()
-                .withName("messaging")
-                .endTo()
+                .addNewPort()
+                .withName("amqps")
+                .withPort(1234)
+                .withNewTargetPort("amqps")
+                .endPort()
+                .addToSelector("component", "router")
                 .endSpec()
-                .build();
+                .done();
 
-
-        MixedOperation op = mock(MixedOperation.class);
-        when(client.routes()).thenReturn(op);
-        when(op.inNamespace(any())).thenReturn(op);
-        when(op.list()).thenReturn(new RouteListBuilder().addToItems(route).build());
+        EndpointController controller = new EndpointController(client, false);
 
         AddressSpace newspace = controller.handle(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myservice"));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getHost(), is("messaging.example.com"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging.myns.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getPort(), is(0));
+        assertNull(client.services().inNamespace("myns").withName("myendpoint-external").get());
+    }
+
+    @Test
+    public void testExternalCreated() {
+        AddressSpace addressSpace = new AddressSpace.Builder()
+                .setName("myspace")
+                .setNamespace("mynamespace")
+                .putAnnotation(AnnotationKeys.NAMESPACE, "myns")
+                .appendEndpoint(new EndpointSpec.Builder()
+                        .setName("myendpoint")
+                        .setService("messaging")
+                        .setServicePort("amqps")
+                        .build())
+                .setType("type1")
+                .setPlan("myplan")
+                .build();
+
+
+        client.services().inNamespace("myns").createNew()
+                .editOrNewMetadata()
+                .withName("messaging")
+                .addToAnnotations(AnnotationKeys.SERVICE_PORT_PREFIX + "amqps", "5671")
+                .endMetadata()
+                .editOrNewSpec()
+                .addNewPort()
+                .withName("amqps")
+                .withPort(1234)
+                .withNewTargetPort("amqps")
+                .endPort()
+                .addToSelector("component", "router")
+                .endSpec()
+                .done();
+
+        EndpointController controller = new EndpointController(client, true);
+
+        AddressSpace newspace = controller.handle(addressSpace);
+
+        assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging.myns.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getPort(), is(1234));
+        assertNotNull(client.services().inNamespace("myns").withName("myendpoint-external").get());
     }
 }

@@ -52,6 +52,16 @@ local images = import "images.jsonnet";
                   }
                 },
                 {
+                  "name": "EXPOSE_ENDPOINTS_BY_DEFAULT",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "address-space-controller-config",
+                      "key": "exposeEndpointsByDefault",
+                      "optional": true
+                    }
+                  }
+                },
+                {
                   "name": "ENVIRONMENT",
                   "valueFrom": {
                     "configMapKeyRef": {
