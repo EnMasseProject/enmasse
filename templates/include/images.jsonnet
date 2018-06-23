@@ -26,12 +26,6 @@ local registry = std.extVar("REGISTRY");
   router_metrics::
     self.image(std.extVar("ROUTER_METRICS_IMAGE")),
 
-  configserv::
-    self.image(std.extVar("CONFIGSERV_IMAGE")),
-
-  queue_scheduler::
-    self.image(std.extVar("QUEUE_SCHEDULER_IMAGE")),
-
   agent::
     self.image(std.extVar("AGENT_IMAGE")),
 
