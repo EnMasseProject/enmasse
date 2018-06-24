@@ -62,6 +62,7 @@ prepare:
 	mkdir -p install/resources/templates
 	mkdir -p install/resources/address-space-controller
 	mkdir -p install/resources/api-server
+	mkdir -p install/resources/service-broker
 	mkdir -p install/resources/resource-definitions
 	mkdir -p install/resources/cluster-roles/kubernetes
 	mkdir -p install/resources/cluster-roles/openshift
@@ -84,6 +85,8 @@ prepare:
 	cp -f include/cluster-roles/openshift/*.yaml install/resources/cluster-roles/openshift
 	cp -f include/*-plans.yaml install/resources/plans/
 	cp -f include/address.yaml include/address-space.yaml include/service-broker.yaml install/resources/templates
+	cp -f include/api-server/*.yaml install/resources/api-server
+	cp -f include/service-broker/*.yaml install/resources/service-broker
 
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
