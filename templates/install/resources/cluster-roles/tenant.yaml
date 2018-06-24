@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ClusterRole
-metadata:
-  name: enmasse.io:tenant
-rules:
-  - apiGroups: [ "enmasse.io" ]
-    resources: [ "addresses", "addressspaces" ]
-    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
