@@ -4,8 +4,8 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.v1.quota.AddressSpaceQuota;
-import io.enmasse.address.model.v1.quota.AddressSpaceQuotaList;
+import io.enmasse.address.model.v1.quota.*;
+import io.enmasse.config.LabelKeys;
 
 import java.util.*;
 
@@ -57,5 +57,16 @@ public class TestAddressSpaceQuotaApi implements AddressSpaceQuotaApi {
             throw throwException;
         }
         quotaMap.remove(addressSpaceQuotaName);
+    }
+
+    public static AddressSpaceQuota createQuota(String name, String who, AddressSpaceQuotaRule ... rules) {
+        return new AddressSpaceQuota(
+                new AddressSpaceQuotaMetadata(
+                        name,
+                        Collections.singletonMap(LabelKeys.USER, who),
+                        null),
+                new AddressSpaceQuotaSpec(
+                        who,
+                        Arrays.asList(rules)));
     }
 }

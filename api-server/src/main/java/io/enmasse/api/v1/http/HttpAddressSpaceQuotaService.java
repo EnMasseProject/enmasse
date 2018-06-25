@@ -10,6 +10,7 @@ import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.api.v1.AddressApiHelper;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceQuotaApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +27,11 @@ public class HttpAddressSpaceQuotaService {
     static final String BASE_URI = "/apis/enmasse.io/v1alpha1/addressspacequotas";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceQuotaService.class.getName());
-    private final SchemaProvider schemaProvider;
 
     private final AddressSpaceQuotaApi quotaApi;
 
-    public HttpAddressSpaceQuotaService(AddressSpaceQuotaApi quotaApi, SchemaProvider schemaProvider) {
+    public HttpAddressSpaceQuotaService(AddressSpaceQuotaApi quotaApi) {
         this.quotaApi = quotaApi;
-        this.schemaProvider = schemaProvider;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -84,6 +83,7 @@ public class HttpAddressSpaceQuotaService {
             verifyAuthorized(securityContext, ResourceVerb.create);
 
             // TODO: Validate rules
+            input.getMetadata().putLabel(LabelKeys.USER, input.getSpec().getUser());
 
             quotaApi.createAddressSpaceQuota(input);
             AddressSpaceQuota created = quotaApi.getAddressSpaceQuotaWithName(input.getMetadata().getName()).orElse(input);

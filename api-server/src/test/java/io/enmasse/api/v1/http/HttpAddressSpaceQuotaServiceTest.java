@@ -34,7 +34,7 @@ public class HttpAddressSpaceQuotaServiceTest {
     @Before
     public void setup() {
         testQuotaApi = new TestAddressSpaceQuotaApi();
-        quotaService = new HttpAddressSpaceQuotaService(testQuotaApi, new TestSchemaProvider());
+        quotaService = new HttpAddressSpaceQuotaService(testQuotaApi);
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 

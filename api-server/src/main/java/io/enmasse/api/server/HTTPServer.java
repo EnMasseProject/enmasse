@@ -11,6 +11,7 @@ import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.quota.AddressSpaceQuotaReviewer;
 import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.AddressSpaceQuotaApi;
@@ -82,6 +83,8 @@ public class HTTPServer extends AbstractVerticle {
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
         }
 
+        AddressSpaceQuotaReviewer quotaReviewer = new AddressSpaceQuotaReviewer(quotaApi, addressSpaceApi);
+
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
         deployment.getRegistry().addSingletonResource(new HttpNestedAddressService(addressSpaceApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider));
@@ -90,9 +93,10 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());
-        if (isQuotaEnabled) {
-            deployment.getRegistry().addSingletonResource(new HttpAddressSpaceQuotaService(quotaApi, schemaProvider));
 
+        if (isQuotaEnabled) {
+            deployment.getRegistry().addSingletonResource(new HttpAddressSpaceQuotaService(quotaApi));
+            deployment.getRegistry().addSingletonResource(new HttpAddressSpaceQuotaReviewService(quotaReviewer));
         }
 
         VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, deployment);

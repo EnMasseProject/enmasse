@@ -71,6 +71,20 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
+    public Set<AddressSpace> listAddressSpacesWithLabels(Map<String, String> labels) {
+        Set<AddressSpace> returned = new HashSet<>();
+        for (AddressSpace addressSpace : addressSpaces.values()) {
+            Map<String, String> addressSpaceLabels = addressSpace.getLabels();
+            for (Map.Entry<String, String> label : labels.entrySet()) {
+                if (addressSpaceLabels.containsKey(label.getKey()) && addressSpaceLabels.get(label.getKey()).equals(label.getValue())) {
+                    returned.add(addressSpace);
+                }
+            }
+        }
+        return returned;
+    }
+
+    @Override
     public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception {
         return null;
     }

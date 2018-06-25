@@ -8,12 +8,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressSpaceQuotaMetadata {
     private final String name;
-    private final Map<String, String> labels;
+
+
+    private final Map<String, String> labels = new HashMap<>();
     private final Map<String, String> annotations;
 
     @JsonCreator
@@ -21,8 +24,10 @@ public class AddressSpaceQuotaMetadata {
                                      @JsonProperty("labels") Map<String, String> labels,
                                      @JsonProperty("annotations") Map<String, String> annotations) {
         this.name = name;
-        this.labels = labels;
         this.annotations = annotations;
+        if (labels != null) {
+            this.labels.putAll(labels);
+        }
     }
 
     public String getName() {
@@ -31,5 +36,9 @@ public class AddressSpaceQuotaMetadata {
 
     public Map<String,String> getLabels() {
         return labels;
+    }
+
+    public void putLabel(String key, String value) {
+        labels.put(key, value);
     }
 }
