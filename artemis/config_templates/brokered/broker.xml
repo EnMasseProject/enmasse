@@ -48,9 +48,8 @@ under the License.
       <journal-pool-files>-1</journal-pool-files>
 
       <journal-file-size>10M</journal-file-size>
-      
-      <journal-buffer-timeout>2212000</journal-buffer-timeout>
 
+      <journal-buffer-timeout>2212000</journal-buffer-timeout>
 
       <!-- how often we are looking for how many bytes are being used on the disk in ms -->
       <disk-scan-period>5000</disk-scan-period>
@@ -67,6 +66,8 @@ under the License.
       <critical-analyzer-check-period>60000</critical-analyzer-check-period>
 
       <critical-analyzer-policy>HALT</critical-analyzer-policy>
+
+      <global-max-size>${GLOBAL_MAX_SIZE}</global-max-size>
 
       <acceptors>
          <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP,CORE,OPENWIRE,MQTT;saslMechanisms=PLAIN</acceptor>
@@ -89,7 +90,7 @@ under the License.
             <dead-letter-address>DLQ</dead-letter-address>
             <redelivery-delay>0</redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
-            <max-size-bytes>52428800</max-size-bytes>
+            <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
             <address-full-policy>FAIL</address-full-policy>
          </address-setting>
