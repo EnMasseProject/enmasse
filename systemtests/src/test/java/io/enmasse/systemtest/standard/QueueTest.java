@@ -261,6 +261,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
+    @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
