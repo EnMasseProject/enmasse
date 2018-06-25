@@ -104,8 +104,8 @@ public class TestUtils {
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
+        List<Pod> pods;
         do {
-            List<Pod> pods;
             if (annotationSelector.isEmpty()) {
                 pods = kubernetes.listPods(tenantNamespace, labelSelector);
             } else {
@@ -123,10 +123,12 @@ public class TestUtils {
             } else if (!readyRequired || actualReplicas == pods.size()) {
                 done = true;
             }
-        } while (budget.timeLeft() >= 0 && !done);
+        } while (!budget.timeoutExpired() && !done);
 
         if (!done) {
-            throw new RuntimeException("Only " + actualReplicas + " out of " + expectedReplicas + " in state 'Running' before timeout");
+            String message = String.format("Only '%s' out of '%s' in state 'Running' before timeout %s", actualReplicas, expectedReplicas,
+                    String.join(",", pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList())));
+            throw new RuntimeException(message);
         }
     }
 
