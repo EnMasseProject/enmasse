@@ -2070,6 +2070,8 @@ data:
                 value: brokered
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -2107,6 +2109,11 @@ data:
                   - -c
                   - $ARTEMIS_HOME/bin/probe.sh
                 initialDelaySeconds: 10
+              resources:
+                limits:
+                  memory: ${BROKER_MEMORY_LIMIT}
+                requests:
+                  memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /var/run/artemis
                 name: data
@@ -2317,3 +2324,10 @@ data:
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
       value: address-space-admin
+    - description: Memory limits for container
+      name: BROKER_MEMORY_LIMIT
+      value: 512Mi
+    - description: Global max size for all addresses in broker. Cannot be larger than
+        a quarter of BROKER_MEMORY_LIMIT
+      name: GLOBAL_MAX_SIZE
+      value: 128Mb
