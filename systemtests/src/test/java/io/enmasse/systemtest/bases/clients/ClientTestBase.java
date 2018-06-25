@@ -116,7 +116,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
-        arguments.put(ClientArgument.TIMEOUT, "60");
+        arguments.put(ClientArgument.TIMEOUT, "100");
 
 
         receiver.setArguments(arguments);
