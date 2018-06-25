@@ -6,6 +6,8 @@ package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
+import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
@@ -14,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 
 @ExtendWith(ExtensionContextParameterResolver.class)
@@ -38,12 +39,18 @@ public interface ITestSeparator {
 
     @BeforeEach
     default void beforeEachTest(TestInfo testInfo) {
+        TimeMeasuringSystem.setTestName(
+                String.format("%s.%s",
+                        testInfo.getTestClass().get().getName(),
+                        testInfo.getTestMethod().get().getName()));
+        TimeMeasuringSystem.startOperation(Operation.TEST_EXECUTION);
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
         log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
     }
 
     @AfterEach
     default void afterEachTest(TestInfo testInfo, ExtensionContext context) {
+        TimeMeasuringSystem.stopOperation(Operation.TEST_EXECUTION);
         if (context.getExecutionException().isPresent()) { // on failed
             Throwable ex = context.getExecutionException().get();
             if (ex instanceof OutOfMemoryError) {
