@@ -16,6 +16,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -212,6 +213,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
+    @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);

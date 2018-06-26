@@ -28,6 +28,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
     }
 
     @Test
+    @Disabled("Due to issue with rhea, will be fixed in cli-rhea")
     void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
         doRoundRobinReceiverTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
