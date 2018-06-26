@@ -7,6 +7,8 @@ package io.enmasse.systemtest.selenium;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.cmdclients.DockerCmdClient;
+import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -23,6 +25,7 @@ public class SeleniumContainers {
     private static final String CHROME_CONTAINER_NAME = "selenium-chrome";
 
     public static void deployFirefoxContainer() {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox container");
         DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
         stopAndRemoveFirefoxContainer();
@@ -30,9 +33,11 @@ public class SeleniumContainers {
                 generateSeleniumOpts("4444", ":99"));
         copyRheaWebPageFirefox();
         assertTrue(DockerCmdClient.isContainerRunning(FIREFOX_CONTAINER_NAME));
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void deployChromeContainer() {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome container");
         DockerCmdClient.pull("docker.io", CHROME_IMAGE, "latest");
         stopAndRemoveChromeContainer();
@@ -40,16 +45,21 @@ public class SeleniumContainers {
                 generateSeleniumOpts("4443", ":98"));
         copyRheaWebPageChrome();
         assertTrue(DockerCmdClient.isContainerRunning(CHROME_CONTAINER_NAME));
+        TimeMeasuringSystem.stopOperation(Operation.CREATE_SELENIUM_CONTAINER);
     }
 
     public static void stopAndRemoveFirefoxContainer() {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_SELENIUM_CONTAINER);
         DockerCmdClient.stopContainer(FIREFOX_CONTAINER_NAME);
         DockerCmdClient.removeContainer(FIREFOX_CONTAINER_NAME);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void stopAndRemoveChromeContainer() {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_SELENIUM_CONTAINER);
         DockerCmdClient.stopContainer(CHROME_CONTAINER_NAME);
         DockerCmdClient.removeContainer(CHROME_CONTAINER_NAME);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     private static void copyRheaWebPage(String containerName) {

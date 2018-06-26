@@ -7,8 +7,6 @@ package io.enmasse.systemtest.ability;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
@@ -19,7 +17,6 @@ import java.net.MalformedURLException;
 
 public class ExecutionListener implements TestExecutionListener {
     static final Logger log = CustomLogger.getLogger();
-
 
 
     @Override

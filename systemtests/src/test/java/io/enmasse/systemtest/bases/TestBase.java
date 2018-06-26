@@ -125,7 +125,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
         List<AddressSpace> addrSpacesResponse = new ArrayList<>();
         ArrayList<AddressSpace> spaces = new ArrayList<>();
         for (AddressSpace addressSpace : addressSpaces) {
@@ -159,11 +159,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
             log.info(String.format("Address-space successfully created: %s", originalAddrSpace));
         });
-        TimeMeasuringSystem.stopOperation(Operation.CREATE_ADDRESS_SPACE);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
         AddressSpace addrSpaceResponse;
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
@@ -187,7 +187,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             log.info("Address-space '{}' endpoints successfully set.", addressSpace.getName());
         }
         log.info("Address-space successfully created: '{}'", addressSpace);
-        TimeMeasuringSystem.stopOperation(Operation.CREATE_ADDRESS_SPACE);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     //!TODO: protected void appendAddressSpace(...)

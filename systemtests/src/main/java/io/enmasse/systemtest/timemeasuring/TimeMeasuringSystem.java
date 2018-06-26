@@ -4,27 +4,28 @@
  */
 package io.enmasse.systemtest.timemeasuring;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
 public class TimeMeasuringSystem {
     private static final Logger log = CustomLogger.getLogger();
     private static TimeMeasuringSystem instance;
-    private Map<String, TestTimeDuration> measuringMap;
+    private Map<String, MeasureRecord> measuringMap;
     private String testName;
-    private int operationCounter;
-
 
     //===============================================================
     // private instance methods
     //===============================================================
     private TimeMeasuringSystem() {
-        measuringMap = new HashMap<>();
+        measuringMap = new LinkedHashMap<>();
     }
 
     private static synchronized TimeMeasuringSystem getInstance() {
@@ -34,25 +35,54 @@ public class TimeMeasuringSystem {
         return instance;
     }
 
-    private void setStartTime(Operation operationID) {
-        String id = String.format("%s-%s", testName, operationID);
-        if (measuringMap.get(id) != null) {
-            id = String.format("%s-%s", id, ++operationCounter);
+    private String createOperationsID(Operation operation) {
+        String id = String.format("%s-%s", testName, operation);
+        if (!operation.equals(Operation.TEST_EXECUTION)) {
+            id = String.format("%s-%s", id, UUID.randomUUID().toString().split("-")[0]);
         }
-        measuringMap.put(id, new TestTimeDuration(System.currentTimeMillis()));
+        return id;
     }
 
-    private void setEndTime(Operation operationID) {
-        measuringMap.get(String.format("%s-%s", testName, operationID)).setEndTime(System.currentTimeMillis());
+    private String setStartTime(Operation operation) {
+        String id = createOperationsID(operation);
+        try {
+            measuringMap.put(id, new MeasureRecord(System.currentTimeMillis()));
+            log.info("Start time of operation {} is correctly stored", id);
+        } catch (Exception ex) {
+            log.warn("Start time of operation {} is not set due to exception", id);
+        }
+        return id;
     }
 
-    private void serTestNameID(String id) {
-        this.operationCounter = 0;
-        this.testName = id;
+    private void setEndTime(String id) {
+        if (id.equals(Operation.TEST_EXECUTION.toString())) {
+            id = createOperationsID(Operation.TEST_EXECUTION);
+        }
+        try {
+            measuringMap.get(id).setEndTime(System.currentTimeMillis());
+            log.info("End time of operation {} is correctly stored", id);
+        } catch (Exception ex) {
+            log.warn("End time of operation {} is not set due to exception", id);
+        }
+    }
+
+    private void serTestNameID(String testName) {
+        this.testName = testName;
     }
 
     private void printAndSaveResults() {
-        measuringMap.forEach((id, timeObject) -> log.info("Operation id: {} duration: {}", id, timeObject.getDurationHumanReadable()));
+        String tmpID = "";
+        for (Map.Entry<String, MeasureRecord> record : measuringMap.entrySet()) {
+            if (!record.getKey().contains(tmpID) || tmpID.isEmpty()) {
+                log.info("================================================");
+            }
+            log.info("Operation id: {} duration: {} started: {} ended: {}",
+                    record.getKey(),
+                    record.getValue().getDurationHumanReadable(),
+                    record.getValue().getStartTimeHumanReadable(),
+                    record.getValue().getEndTimeHumanReadable());
+            tmpID = record.getKey().split("-")[0];
+        }
     }
 
     //===============================================================
@@ -62,12 +92,16 @@ public class TimeMeasuringSystem {
         TimeMeasuringSystem.getInstance().serTestNameID(name);
     }
 
-    public static void startOperation(Operation operationID) {
-        TimeMeasuringSystem.getInstance().setStartTime(operationID);
+    public static String startOperation(Operation operation) {
+        return TimeMeasuringSystem.getInstance().setStartTime(operation);
     }
 
-    public static void stopOperation(Operation operationID) {
-        TimeMeasuringSystem.getInstance().setEndTime(operationID);
+    public static void stopOperation(String operationId) {
+        TimeMeasuringSystem.getInstance().setEndTime(operationId);
+    }
+
+    public static void stopOperation(Operation operationId) {
+        TimeMeasuringSystem.stopOperation(operationId.toString());
     }
 
     public static void printResults() {
@@ -77,40 +111,40 @@ public class TimeMeasuringSystem {
     /**
      * Test time duration class
      */
-    private class TestTimeDuration {
+    private class MeasureRecord {
         long startTime;
         long endTime;
 
-        public TestTimeDuration(long startTime, long endTime) {
+        MeasureRecord(long startTime, long endTime) {
             this.startTime = startTime;
             this.endTime = endTime;
         }
 
-        public TestTimeDuration(long startTime) {
+        MeasureRecord(long startTime) {
             this.startTime = startTime;
         }
 
-        public long getStartTime() {
+        long getStartTime() {
             return startTime;
         }
 
-        public long getEndTime() {
+        long getEndTime() {
             return endTime;
         }
 
-        public void setStartTime(long startTime) {
+        void setStartTime(long startTime) {
             this.startTime = startTime;
         }
 
-        public void setEndTime(long endTime) {
+        void setEndTime(long endTime) {
             this.endTime = endTime;
         }
 
-        public long getDuration() {
+        long getDuration() {
             return endTime - startTime;
         }
 
-        public String getDurationHumanReadable() {
+        String getDurationHumanReadable() {
             long milis = getDuration();
             long hours = TimeUnit.MILLISECONDS.toHours(milis);
             long minutes = TimeUnit.MILLISECONDS.toMinutes(milis) - (TimeUnit.MILLISECONDS.toHours(milis) * 60);
@@ -118,6 +152,20 @@ public class TimeMeasuringSystem {
             long milliseconds = TimeUnit.MILLISECONDS.toMillis(milis) - (TimeUnit.MILLISECONDS.toSeconds(milis) * 1000);
 
             return String.format("%02d:%02d:%02d,%03d", hours, minutes, seconds, milliseconds);
+        }
+
+        String getStartTimeHumanReadable() {
+            return transformMillisToDateTime(startTime);
+        }
+
+        String getEndTimeHumanReadable() {
+            return transformMillisToDateTime(endTime);
+        }
+
+        private String transformMillisToDateTime(long millis) {
+            Date date = new Date(millis);
+            SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss,SSS");
+            return format.format(date);
         }
     }
 }

@@ -214,9 +214,9 @@ public class TestUtils {
      * @throws Exception
      */
     public static void delete(AddressApiClient apiClient, AddressSpace addressSpace, Destination... destinations) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS);
         apiClient.deleteAddresses(addressSpace, destinations);
-        TimeMeasuringSystem.stopOperation(Operation.DELETE_ADDRESS);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     /**
@@ -230,7 +230,7 @@ public class TestUtils {
      * @throws Exception
      */
     public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(destinations.length > 0 ? Operation.CREATE_ADDRESS : Operation.DELETE_ADDRESS);
         apiClient.setAddresses(addressSpace, destinations);
         if (wait) {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
@@ -241,11 +241,11 @@ public class TestUtils {
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
-        TimeMeasuringSystem.stopOperation(Operation.CREATE_ADDRESS);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
         apiClient.appendAddresses(addressSpace, destinations);
         if (wait) {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
@@ -256,11 +256,11 @@ public class TestUtils {
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
-        TimeMeasuringSystem.stopOperation(Operation.APPEND_ADDRESS);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
         apiClient.appendAddresses(addressSpace, batchSize, destinations);
         if (wait) {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
@@ -271,7 +271,7 @@ public class TestUtils {
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
-        TimeMeasuringSystem.stopOperation(Operation.APPEND_ADDRESS);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     /**
@@ -1014,23 +1014,23 @@ public class TestUtils {
     }
 
     public static void deleteAddressSpace(AddressApiClient addressApiClient, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents(addressSpace.getNamespace());
         logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         logCollector.collectConfigMaps(addressSpace.getNamespace());
         addressApiClient.deleteAddressSpace(addressSpace);
-        TimeMeasuringSystem.stopOperation(Operation.DELETE_ADDRESS_SPACE);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
-        TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents(addressSpace.getNamespace());
         logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         logCollector.collectConfigMaps(addressSpace.getNamespace());
         kubernetes.deleteNamespace(namespace);
         waitForNamespaceDeleted(kubernetes, namespace);
         waitForAddressSpaceDeleted(kubernetes, addressSpace);
-        TimeMeasuringSystem.stopOperation(Operation.DELETE_ADDRESS_SPACE);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
