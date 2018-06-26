@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class TimeMeasuringSystem {
     private static final Logger log = CustomLogger.getLogger();
     private static TimeMeasuringSystem instance;
-    private Map<String, MeasureRecord> measuringMap;
+    private Map<String, Map<String, MeasureRecord>> measuringMap;
+    private String testClass;
     private String testName;
 
     //===============================================================
@@ -43,10 +44,20 @@ public class TimeMeasuringSystem {
         return id;
     }
 
+    private void addRecord(String testClassID, String operationID, MeasureRecord record) {
+        if (measuringMap.get(testClassID) == null) {
+            LinkedHashMap<String, MeasureRecord> newData = new LinkedHashMap<>();
+            newData.put(operationID, record);
+            measuringMap.put(testClassID, newData);
+        } else {
+            measuringMap.get(testClassID).put(operationID, record);
+        }
+    }
+
     private String setStartTime(Operation operation) {
         String id = createOperationsID(operation);
         try {
-            measuringMap.put(id, new MeasureRecord(System.currentTimeMillis()));
+            addRecord(testClass, id, new MeasureRecord(System.currentTimeMillis()));
             log.info("Start time of operation {} is correctly stored", id);
         } catch (Exception ex) {
             log.warn("Start time of operation {} is not set due to exception", id);
@@ -59,37 +70,51 @@ public class TimeMeasuringSystem {
             id = createOperationsID(Operation.TEST_EXECUTION);
         }
         try {
-            measuringMap.get(id).setEndTime(System.currentTimeMillis());
+            measuringMap.get(testClass).get(id).setEndTime(System.currentTimeMillis());
             log.info("End time of operation {} is correctly stored", id);
         } catch (Exception ex) {
             log.warn("End time of operation {} is not set due to exception", id);
         }
     }
 
-    private void serTestNameID(String testName) {
+    private void setTestName(String testName) {
         this.testName = testName;
     }
 
-    private void printAndSaveResults() {
-        String tmpID = "";
-        for (Map.Entry<String, MeasureRecord> record : measuringMap.entrySet()) {
-            if (!record.getKey().contains(tmpID) || tmpID.isEmpty()) {
-                log.info("================================================");
+    private void setTestClass(String testClass) {
+        this.testClass = testClass;
+    }
+
+    private void printResults() {
+        for (Map.Entry<String, Map<String, MeasureRecord>> baseRecord : measuringMap.entrySet()) {
+            log.info("================================================");
+            log.info("================================================");
+            log.info(baseRecord.getKey());
+            String tmpID = "";
+            for (Map.Entry<String, MeasureRecord> record : baseRecord.getValue().entrySet()) {
+                if (!record.getKey().contains(tmpID)) {
+                    log.info("---------------------------------------------");
+                }
+                log.info("Operation id: {} duration: {} started: {} ended: {}",
+                        record.getKey(),
+                        record.getValue().getDurationHumanReadable(),
+                        record.getValue().getStartTimeHumanReadable(),
+                        record.getValue().getEndTimeHumanReadable());
+                tmpID = record.getKey().split("-")[0];
             }
-            log.info("Operation id: {} duration: {} started: {} ended: {}",
-                    record.getKey(),
-                    record.getValue().getDurationHumanReadable(),
-                    record.getValue().getStartTimeHumanReadable(),
-                    record.getValue().getEndTimeHumanReadable());
-            tmpID = record.getKey().split("-")[0];
         }
+    }
+
+    private void saveResults() {
+
     }
 
     //===============================================================
     // public static methods
     //===============================================================
-    public static void setTestName(String name) {
-        TimeMeasuringSystem.getInstance().serTestNameID(name);
+    public static void setTestName(String testClass, String testName) {
+        TimeMeasuringSystem.getInstance().setTestName(testName);
+        TimeMeasuringSystem.getInstance().setTestClass(testClass);
     }
 
     public static String startOperation(Operation operation) {
@@ -104,8 +129,9 @@ public class TimeMeasuringSystem {
         TimeMeasuringSystem.stopOperation(operationId.toString());
     }
 
-    public static void printResults() {
-        TimeMeasuringSystem.getInstance().printAndSaveResults();
+    public static void printAndSaveResults() {
+        TimeMeasuringSystem.getInstance().printResults();
+        TimeMeasuringSystem.getInstance().saveResults();
     }
 
     /**

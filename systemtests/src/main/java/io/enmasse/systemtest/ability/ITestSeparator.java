@@ -39,10 +39,7 @@ public interface ITestSeparator {
 
     @BeforeEach
     default void beforeEachTest(TestInfo testInfo) {
-        TimeMeasuringSystem.setTestName(
-                String.format("%s.%s",
-                        testInfo.getTestClass().get().getName(),
-                        testInfo.getTestMethod().get().getName()));
+        TimeMeasuringSystem.setTestName(testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName());
         TimeMeasuringSystem.startOperation(Operation.TEST_EXECUTION);
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
         log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));

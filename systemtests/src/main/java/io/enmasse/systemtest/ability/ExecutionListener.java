@@ -48,6 +48,6 @@ public class ExecutionListener implements TestExecutionListener {
         } else {
             log.warn("Remove address spaces when test run finished - SKIPPED!");
         }
-        TimeMeasuringSystem.printResults();
+        TimeMeasuringSystem.printAndSaveResults();
     }
 }
