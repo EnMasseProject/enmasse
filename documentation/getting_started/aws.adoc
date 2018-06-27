@@ -21,12 +21,11 @@ are persisted.
 [[prerequisites-aws]]
 === Prerequisites
 
-First, you must have created an https://aws.amazon.com/ec2/[EC2
-instance]. EnMasse runs on OpenShift and Kubernetes, but this post uses
-OpenShift purely for convenience. Have a look at the
-https://docs.openshift.org/latest/install_config/install/prerequisites.html[OpenShift
-prerequisites] for the required hardware configuration. The installation
-will be done using https://www.ansible.com[Ansible], so make sure
+First, you must have created an https://aws.amazon.com/ec2/[EC2 instance]. EnMasse runs on OpenShift
+and Kubernetes, but this post uses OpenShift purely for convenience. For the required hardware
+configuration, see the
+https://docs.openshift.org/latest/getting_started/administrators.html#prerequisites[OpenShift
+prerequisites]. The installation will be done using https://www.ansible.com[Ansible], so make sure
 Ansible is installed on laptop or workstation.
 
 [[configure-ansible-to-handle-passwordless-sudo]]

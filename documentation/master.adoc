@@ -24,6 +24,10 @@
 
 = Documentation for {ProductName}
 
+== Overview
+
+include::common/overview.adoc[leveloffset=+1]
+
 == Installation
 
 include::service_admin/installing-openshift.adoc[leveloffset=+1]

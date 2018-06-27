@@ -1,0 +1,31 @@
+[[enmasse_overview]]
+
+
+EnMasse is an open source project for managed, self-service messaging on [Kubernetes](https://kubernetes.io). EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization.
+
+The service admin can deploy and manage messaging infrastructure, while tenants can request messaging resources, both using cloud-native APIs and tools.
+
+=== Features
+
+* Built-in authentication and authorization of clients and identity management
+* Runs on Kubernetes: deploy on-premise or in the cloud
+* Different messaging patterns such as request-response, publish-subscribe and events
+* Decouple operation of infrastructure from configuration and use by applications
+
+EnMasse can be used for many purposes, such as moving your messaging infrastructure to the cloud without depending on a specific cloud provider, building a scalable messaging backbone for IoT, or just as a cloud-ready version of a message broker.
+
+EnMasse can provision different types of messaging depending on your use case. A user can request messaging resources by creating an <<address_space>>.
+
+EnMasse currently supports a `standard` and a `brokered` address space type, each with different semantics. 
+
+== Standard address space
+
+The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols, with more to come in the future. This address space type is based on other open source projects such as [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/) and [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and provides elastic scaling of these components.  This image illustrates the high-level architecture of the standard address space:
+
+image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/overview/enmasse_overall_view.png[Standard Address Space]
+
+== Brokered address space
+
+The brokered address space type is the "classic" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on. These features are useful for building complex messaging patterns. This address space is also more lightweight as it features only a single broker and a management console.  This image illustrates the high-level architecture of the brokered address space: 
+
+image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/overview/enmasse_brokered_view.png[Brokered Address Space]

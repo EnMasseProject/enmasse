@@ -8,6 +8,7 @@ The {ProductName} address model involves three distinct concepts:
 * types of addresses within each address space
 * available plans
 
+[[address_space]]
 === Address Space
 An address space is a group of addresses that can be accessed through a single connection (per protocol). This means that clients connected to the endpoints of an address space can send messages to or receive messages from any address it is authorized to send messages to or receive messages from within that address space. An address space can support multiple protocols, which is defined by the address space type.
 
