@@ -4,9 +4,15 @@
  */
 package io.enmasse.systemtest.timemeasuring;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
 import org.slf4j.Logger;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -16,9 +22,10 @@ import java.util.concurrent.TimeUnit;
 
 
 public class TimeMeasuringSystem {
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private static final Logger log = CustomLogger.getLogger();
     private static TimeMeasuringSystem instance;
-    private Map<String, Map<String, MeasureRecord>> measuringMap;
+    private Map<String, Map<String, Map<String, MeasureRecord>>> measuringMap;
     private String testClass;
     private String testName;
 
@@ -37,27 +44,33 @@ public class TimeMeasuringSystem {
     }
 
     private String createOperationsID(Operation operation) {
-        String id = String.format("%s-%s", testName, operation);
+        String id = operation.toString();
         if (!operation.equals(Operation.TEST_EXECUTION)) {
             id = String.format("%s-%s", id, UUID.randomUUID().toString().split("-")[0]);
         }
         return id;
     }
 
-    private void addRecord(String testClassID, String operationID, MeasureRecord record) {
-        if (measuringMap.get(testClassID) == null) {
-            LinkedHashMap<String, MeasureRecord> newData = new LinkedHashMap<>();
-            newData.put(operationID, record);
-            measuringMap.put(testClassID, newData);
+    private void addRecord(String operationID, MeasureRecord record) {
+        if (measuringMap.get(testClass) == null) {
+            LinkedHashMap<String, Map<String, MeasureRecord>> newData = new LinkedHashMap<>();
+            LinkedHashMap<String, MeasureRecord> newRecord = new LinkedHashMap<>();
+            newData.put(testName, newRecord);
+            newRecord.put(operationID, record);
+            measuringMap.put(testClass, newData);
+        } else if (measuringMap.get(testClass).get(testName) == null){
+            LinkedHashMap<String, MeasureRecord> newRecord = new LinkedHashMap<>();
+            newRecord.put(operationID, record);
+            measuringMap.get(testClass).put(testName, newRecord);
         } else {
-            measuringMap.get(testClassID).put(operationID, record);
+            measuringMap.get(testClass).get(testName).put(operationID, record);
         }
     }
 
     private String setStartTime(Operation operation) {
         String id = createOperationsID(operation);
         try {
-            addRecord(testClass, id, new MeasureRecord(System.currentTimeMillis()));
+            addRecord(id, new MeasureRecord(System.currentTimeMillis()));
             log.info("Start time of operation {} is correctly stored", id);
         } catch (Exception ex) {
             log.warn("Start time of operation {} is not set due to exception", id);
@@ -70,7 +83,7 @@ public class TimeMeasuringSystem {
             id = createOperationsID(Operation.TEST_EXECUTION);
         }
         try {
-            measuringMap.get(testClass).get(id).setEndTime(System.currentTimeMillis());
+            measuringMap.get(testClass).get(testName).get(id).setEndTime(System.currentTimeMillis());
             log.info("End time of operation {} is correctly stored", id);
         } catch (Exception ex) {
             log.warn("End time of operation {} is not set due to exception", id);
@@ -86,26 +99,37 @@ public class TimeMeasuringSystem {
     }
 
     private void printResults() {
-        for (Map.Entry<String, Map<String, MeasureRecord>> baseRecord : measuringMap.entrySet()) {
+        measuringMap.forEach((testClassID, testClassRecords) -> {
             log.info("================================================");
             log.info("================================================");
-            log.info(baseRecord.getKey());
-            String tmpID = "";
-            for (Map.Entry<String, MeasureRecord> record : baseRecord.getValue().entrySet()) {
-                if (!record.getKey().contains(tmpID)) {
-                    log.info("---------------------------------------------");
-                }
-                log.info("Operation id: {} duration: {} started: {} ended: {}",
-                        record.getKey(),
-                        record.getValue().getDurationHumanReadable(),
-                        record.getValue().getStartTimeHumanReadable(),
-                        record.getValue().getEndTimeHumanReadable());
-                tmpID = record.getKey().split("-")[0];
-            }
-        }
+            log.info(testClassID);
+            testClassRecords.forEach((testID, testRecord) -> {
+                log.info("---------------------------------------------");
+                log.info(testID);
+                testRecord.forEach((operationID, record) -> {
+                    log.info("Operation id: {} duration: {} started: {} ended: {}",
+                            operationID,
+                            record.getDurationReadable(),
+                            record.getStartTimeHumanReadable(),
+                            record.getEndTimeHumanReadable());
+                });
+            });
+        });
     }
 
     private void saveResults() {
+        try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String json = gson.toJson(measuringMap);
+            Environment env = new Environment();
+            Date timestamp = new Date(System.currentTimeMillis());
+            Path logPath = Paths.get(env.testLogDir(), "timeMeasuring");
+            Files.createDirectories(logPath);
+            Files.write(Paths.get(logPath.toString(),
+                    String.format("duration_report-%s.json", dateFormat.format(timestamp))), json.getBytes());
+        } catch (Exception ex) {
+            log.warn("Cannot save output of time measuring: " + ex.getMessage());
+        }
 
     }
 
@@ -138,12 +162,16 @@ public class TimeMeasuringSystem {
      * Test time duration class
      */
     private class MeasureRecord {
-        long startTime;
-        long endTime;
+        private long startTime;
+        private long endTime;
+        private long duration;
+        private String durationReadable;
 
         MeasureRecord(long startTime, long endTime) {
             this.startTime = startTime;
             this.endTime = endTime;
+            this.duration = endTime - startTime;
+            this.durationReadable = getDurationHumanReadable();
         }
 
         MeasureRecord(long startTime) {
@@ -162,20 +190,26 @@ public class TimeMeasuringSystem {
             this.startTime = startTime;
         }
 
-        void setEndTime(long endTime) {
-            this.endTime = endTime;
+        long getDuration() {
+            return this.duration;
         }
 
-        long getDuration() {
-            return endTime - startTime;
+        String getDurationReadable() {
+            return this.durationReadable;
+        }
+
+        void setEndTime(long endTime) {
+            this.endTime = endTime;
+            this.duration = endTime - startTime;
+            this.durationReadable = getDurationHumanReadable();
         }
 
         String getDurationHumanReadable() {
-            long milis = getDuration();
-            long hours = TimeUnit.MILLISECONDS.toHours(milis);
-            long minutes = TimeUnit.MILLISECONDS.toMinutes(milis) - (TimeUnit.MILLISECONDS.toHours(milis) * 60);
-            long seconds = TimeUnit.MILLISECONDS.toSeconds(milis) - (TimeUnit.MILLISECONDS.toMinutes(milis) * 60);
-            long milliseconds = TimeUnit.MILLISECONDS.toMillis(milis) - (TimeUnit.MILLISECONDS.toSeconds(milis) * 1000);
+            long millis = getDuration();
+            long hours = TimeUnit.MILLISECONDS.toHours(millis);
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(millis) - (TimeUnit.MILLISECONDS.toHours(millis) * 60);
+            long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) - (TimeUnit.MILLISECONDS.toMinutes(millis) * 60);
+            long milliseconds = TimeUnit.MILLISECONDS.toMillis(millis) - (TimeUnit.MILLISECONDS.toSeconds(millis) * 1000);
 
             return String.format("%02d:%02d:%02d,%03d", hours, minutes, seconds, milliseconds);
         }
