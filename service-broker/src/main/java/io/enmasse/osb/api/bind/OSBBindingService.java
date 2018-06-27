@@ -78,6 +78,7 @@ public class OSBBindingService extends OSBServiceBase {
             this.random.nextBytes(passwordBytes);
             String password = Base64.getEncoder().encodeToString(passwordBytes);
 
+            log.info("User: {}, password; {}", username, password);
             UserRepresentation userRep = keycloakClient.createUser(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME), username, password);
 
             createGroupMapping(keycloakClient, addressSpace, userRep.getId(), groupIds);
