@@ -209,13 +209,13 @@ public class KeycloakClient {
                     Thread.sleep(2000);
                 }
             }
+            for (String group : groups) {
+                createGroup(realm, group);
+                joinGroup(realm, group, credentials.getUsername());
+            }
+        }finally {
+            TimeMeasuringSystem.stopOperation(operationID);
         }
-
-        for (String group : groups) {
-            createGroup(realm, group);
-            joinGroup(realm, group, credentials.getUsername());
-        }
-        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, long timeout, TimeUnit timeUnit) throws Exception {
@@ -262,8 +262,9 @@ public class KeycloakClient {
             if (response.getStatus() != 204) {
                 throw new RuntimeException(String.format("User {} is not deleted from keycloak", userName));
             }
+        }finally {
+            TimeMeasuringSystem.stopOperation(operationID);
         }
-        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     @FunctionalInterface
