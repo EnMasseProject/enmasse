@@ -18,7 +18,7 @@ import java.util.List;
 
 public class KeycloakInstance implements KeycloakClient {
     private final Keycloak keycloak;
-    private static final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(KeycloakInstance.class);
 
     public KeycloakInstance(Keycloak keycloak) {
         this.keycloak = keycloak;
