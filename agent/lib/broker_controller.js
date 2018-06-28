@@ -288,6 +288,10 @@ function is_temp_queue(a) {
     return a.type === 'queue' && a.temporary;
 }
 
+function is_durable_subscription(a) {
+    return a.durable && !a.purgeOnNoConsumers;
+}
+
 /**
  * Translate from the address details we get back from artemis to the
  * structure used for the definition, for easier comparison.
@@ -326,7 +330,7 @@ BrokerController.prototype.delete_address = function (a) {
                 self.post_event(myevents.address_failed_delete(a, error));
             });
         });
-    } else {
+    } else if (a.type === 'topic') {
         log.info('[%s] Deleting topic "%s"...', self.id, a.address);
         return self.broker.deleteAddressAndBindings(a.address).then(function () {
             log.info('[%s] Deleted topic "%s"', self.id, a.address);
@@ -334,6 +338,14 @@ BrokerController.prototype.delete_address = function (a) {
         }).catch(function (error) {
             log.error('[%s] Failed to delete topic %s: %s', self.id, a.address, error);
             self.post_event(myevents.address_failed_delete(a, error));
+        });
+    } else if (a.type === 'subscription') {
+        log.info('[%s] Deleting subscription "%s"...', self.id, a.address);
+        return self.broker.destroyQueue(a.address).then(function () {
+            log.info('[%s] Deleted subscription "%s"', self.id, a.address);
+            self.post_event(myevents.address_delete(a));
+        }).catch(function (error) {
+            log.error('[%s] Failed to delete subscription %s: %s', self.id, a.address, error);
         });
     }
 };
@@ -366,13 +378,22 @@ BrokerController.prototype.create_address = function (a) {
             log.error('[%s] Failed to create queue "%s": %s', self.id, a.address, error);
             self.post_event(myevents.address_failed_create(a, error));
         });
-    } else {
+    } else if (a.type === 'topic') {
         log.info('[%s] Creating topic "%s"', self.id, a.address);
         return self.broker.createAddress(a.address, {multicast:true}).then(function () {
             log.info('[%s] Created topic "%s"', self.id, a.address);
             self.post_event(myevents.address_create(a));
         }).catch(function (error) {
             log.error('[%s] Failed to create topic "%s": %s', self.id, a.address, error);
+            self.post_event(myevents.address_failed_create(a, error));
+        });
+    } else if (a.type === 'subscription') {
+        log.info('[%s] Creating subscription "%s" on "%s"...', self.id, a.address, a.topic);
+        return self.broker.createSubscription(a.address, a.topic).then(function () {
+            log.info('[%s] Created subscription "%s" on "%s"', self.id, a.address, a.topic);
+            self.post_event(myevents.address_create(a));
+        }).catch(function (error) {
+            log.error('[%s] Failed to create subscription "%s" on "%s": %s', self.id, a.address, a.topic, error);
             self.post_event(myevents.address_failed_create(a, error));
         });
     }
@@ -449,7 +470,9 @@ BrokerController.prototype._sync_broker_addresses = function () {
         self._set_sync_status(stale.length, missing.length);
         return self.delete_addresses(stale).then(
             function () {
-                return self.create_addresses(missing);
+                return self.create_addresses(missing.filter(function (o) { return o.type !== 'subscription' })).then(function () {
+                    return self.create_addresses(missing.filter(function (o) { return o.type === 'subscription' }));
+                });
             });
     }).catch(function (e) {
         log.error('[%s] failed to retrieve addresses: %s', self.id, e);

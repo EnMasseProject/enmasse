@@ -266,6 +266,7 @@ Ragent.prototype.configure_handlers = function () {
         } else if (product === 'apache-activemq-artemis') {
             var broker = broker_controller.create_controller(context.connection, self.event_sink);
             self.connected_brokers[broker.id] = broker;
+            log.info('broker %s connected', broker.id);
             self.sync_broker(broker);
             context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
             context.connection.on('connection_close', self.on_broker_disconnect.bind(self));

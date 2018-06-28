@@ -117,21 +117,22 @@ function MockBroker (name) {
             return self.list_queues().map(function (a) { return a.name; });
         },
         createQueue : function (address, routingTypes, name, filter, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
-            assert.equal(routingTypes, 'ANYCAST');
-            assert.equal(filter, null);
-            assert.equal(purgeOnNoConsumers, false);
-            assert.equal(autoCreateAddress, true);
             if (self.objects.some(function (o) { return o.type === 'queue' && o.name === name})) {
                 throw new Error('queue ' + name + ' already exists!');
             } else {
-                self.add_queue(name, {'durable':durable});
-                if (!self.objects.some(function (o) { return o.type === 'address' && o.name === address; })) {
-                    self.add_address(address, false, 0, [name]);
+                if (autoCreateAddress) {
+                    if (!self.objects.some(function (o) { return o.type === 'address' && o.name === address; })) {
+                        self.add_address(address, false, 0, [name]);
+                    }
+                } else {
+                    if (!self.objects.some(function (o) { return o.type === 'address' && o.name === address; })) {
+                        throw new Error('No such address ' + address + ' for queue ' + name);
+                    }
                 }
+                self.add_queue(name, {'durable':durable, 'maxConsumers':maxConsumers, 'address':address, 'filter':filter, 'purgeOnNoConsumers':purgeOnNoConsumers});
             }
         },
         createAddress : function (name, routingTypes) {
-            assert.equal(routingTypes, 'MULTICAST');
             if (self.objects.some(function (o) { return o.type === 'address' && o.name === name; })) {
                 throw new Error('address ' + name + ' already exists!');
             } else {
@@ -457,18 +458,12 @@ MockBroker.prototype.verify_topic = function (addresses, name) {
     return results[0];
 };
 
-MockBroker.prototype.verify_addresses = function (expected) {
-    var addresses = this.list_addresses();
-    var queues = this.list_queues();
-    for (var i = 0; i < expected.length; i++) {
-        if (expected[i].type === 'queue') {
-            this.verify_queue(addresses, queues, expected[i].address);
-        } else if (expected[i].type === 'topic') {
-            this.verify_topic(addresses, expected[i].address);
-        }
-    }
-    assert.equal(addresses.length, 0);
-    assert.equal(queues.length, 0);
+MockBroker.prototype.verify_subscription = function (queues, name, topic) {
+    var results = remove(queues, function (o) { return o.name === name; });
+    assert.equal(results.length, 1, util.format('subscription queue %s not found', name));
+    assert.equal(results[0].name, name);
+    assert.equal(results[0].address, topic);
+    return results[0];
 };
 
 MockBroker.prototype.verify_addresses = function (expected) {
@@ -479,6 +474,8 @@ MockBroker.prototype.verify_addresses = function (expected) {
             this.verify_queue(addresses, queues, expected[i].address);
         } else if (expected[i].type === 'topic') {
             this.verify_topic(addresses, expected[i].address);
+        } else if (expected[i].type === 'subscription') {
+            this.verify_subscription(queues, expected[i].address, expected[i].topic);
         }
     }
     assert.equal(addresses.length, 0);
