@@ -626,7 +626,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws
             InterruptedException {
-        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
         TestUtils.waitForNReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, Collections.singletonMap("name", "qdrouterd"), budget);
     }
 
@@ -634,7 +634,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         log.info("Set '{}' replicas and wait for autoscale to '{}'", setValue, expectedValue);
         CompletableFuture<Void> scaleCheckerDown = CompletableFuture.runAsync(() -> {
             try {
-                waitForBrokerReplicas(addressSpace, dest, setValue, false, new TimeoutBudget(2, TimeUnit.MINUTES), 1);
+                waitForBrokerReplicas(addressSpace, dest, setValue, false, new TimeoutBudget(3, TimeUnit.MINUTES), 1);
                 log.info("Waiting for expected replicas {} finished!", setValue);
             } catch (InterruptedException e) {
                 e.printStackTrace();
