@@ -66,7 +66,6 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
     }
 
     @Test
-    @Disabled("due to failure, debugging is in separated branch")
     void testScaleRouterAutomatically() throws Exception {
         //deploy addresses
         ArrayList<Destination> dest = new ArrayList<>();
