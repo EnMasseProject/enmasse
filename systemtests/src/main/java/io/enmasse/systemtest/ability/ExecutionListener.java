@@ -6,6 +6,7 @@ package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.net.MalformedURLException;
 
 public class ExecutionListener implements TestExecutionListener {
     static final Logger log = CustomLogger.getLogger();
+
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
@@ -46,5 +48,6 @@ public class ExecutionListener implements TestExecutionListener {
         } else {
             log.warn("Remove address spaces when test run finished - SKIPPED!");
         }
+        TimeMeasuringSystem.printAndSaveResults();
     }
 }

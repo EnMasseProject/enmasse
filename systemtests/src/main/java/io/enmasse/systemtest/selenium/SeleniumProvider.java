@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class SeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private WebDriver driver;
     private NgWebDriver angularDriver;
     private WebDriverWait driverWait;

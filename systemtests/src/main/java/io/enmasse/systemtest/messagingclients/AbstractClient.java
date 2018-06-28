@@ -268,7 +268,7 @@ public abstract class AbstractClient {
                 if (!Objects.equals(line, "") && !line.trim().isEmpty()) {
                     try {
                         messages.add(new JsonObject(line));
-                    } catch (Exception ex) {
+                    } catch (Exception ignored) {
                     }
                 }
             }

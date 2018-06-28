@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -178,7 +180,7 @@ public class KeycloakClient {
 
     public void createUser(String realm, KeycloakCredentials credentials, long timeout, TimeUnit timeUnit, String... groups)
             throws Exception {
-
+        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_USER);
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
@@ -207,11 +209,12 @@ public class KeycloakClient {
                     Thread.sleep(2000);
                 }
             }
-        }
-
-        for (String group : groups) {
-            createGroup(realm, group);
-            joinGroup(realm, group, credentials.getUsername());
+            for (String group : groups) {
+                createGroup(realm, group);
+                joinGroup(realm, group, credentials.getUsername());
+            }
+        }finally {
+            TimeMeasuringSystem.stopOperation(operationID);
         }
     }
 
@@ -251,6 +254,7 @@ public class KeycloakClient {
     }
 
     public void deleteUser(String realm, String userName) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_USER);
         log.info("User '{}' will be removed", userName);
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, this.credentials, trustStore)) {
             String id = getClientId(keycloak, realm, userName);
@@ -258,6 +262,8 @@ public class KeycloakClient {
             if (response.getStatus() != 204) {
                 throw new RuntimeException(String.format("User {} is not deleted from keycloak", userName));
             }
+        }finally {
+            TimeMeasuringSystem.stopOperation(operationID);
         }
     }
 
