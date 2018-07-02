@@ -12,7 +12,7 @@ if [ -z "$RAGENT_SERVICE_HOST" ]; then
     fi
 fi
 if [ -z "$LINK_CAPACITY" ]; then
-    export LINK_CAPACITY=50
+    export LINK_CAPACITY=250
 fi
 if [ -z "$WORKER_THREADS" ]; then
     export WORKER_THREADS=4
