@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:tenant-edit
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addresses", "addressspaces" ]
+    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
