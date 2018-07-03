@@ -347,6 +347,10 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        setAddresses(addressSpace, HTTP_OK, destinations);
+    }
+
+    public void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
         Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 

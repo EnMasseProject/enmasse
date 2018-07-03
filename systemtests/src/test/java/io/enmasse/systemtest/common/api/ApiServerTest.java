@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.net.HttpURLConnection;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -189,7 +190,7 @@ class ApiServerTest extends TestBase {
         Destination dest4 = new Destination(null, null, addressSpace2.getName(),
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), "brokered-queue");
         try {
-            setAddresses(addressSpace, dest4);
+            setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4);
         } catch (java.util.concurrent.ExecutionException ex) {
             assertTrue(ex.getMessage().contains("does not match address space"),
                     "Exception does not contain correct information");
@@ -197,7 +198,7 @@ class ApiServerTest extends TestBase {
 
         try { //missing address
             Destination destWithouAddress = Destination.queue(null, "brokered-queue");
-            setAddresses(addressSpace, destWithouAddress);
+            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithouAddress);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("message"),
@@ -206,7 +207,7 @@ class ApiServerTest extends TestBase {
 
         try { //missing type
             Destination destWithoutType = new Destination("not-created-address", null, "brokered-queue");
-            setAddresses(addressSpace, destWithoutType);
+            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("message"),
@@ -215,7 +216,7 @@ class ApiServerTest extends TestBase {
 
         try { //missing plan
             Destination destWithouPlan = Destination.queue("not-created-queue", null);
-            setAddresses(addressSpace, destWithouPlan);
+            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithouPlan);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("message"),
