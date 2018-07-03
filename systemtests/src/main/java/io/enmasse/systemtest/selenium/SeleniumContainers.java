@@ -6,6 +6,7 @@ package io.enmasse.systemtest.selenium;
 
 
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.cmdclients.DockerCmdClient;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,29 +25,51 @@ public class SeleniumContainers {
     private static final String CHROME_IMAGE = "selenium/standalone-chrome-debug";
     private static final String FIREFOX_CONTAINER_NAME = "selenium-firefox";
     private static final String CHROME_CONTAINER_NAME = "selenium-chrome";
+    private static final String RUNNING_CONTAINER_MESSAGE = "'%s' is not in running state!";
+    private static final int RETRY = 10;
 
-    public static void deployFirefoxContainer() {
+    public static void deployFirefoxContainer() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox container");
         DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
-        stopAndRemoveFirefoxContainer();
-        DockerCmdClient.runContainer(FIREFOX_IMAGE, FIREFOX_CONTAINER_NAME,
-                generateSeleniumOpts("4444", ":99"));
-        copyRheaWebPageFirefox();
-        assertTrue(DockerCmdClient.isContainerRunning(FIREFOX_CONTAINER_NAME));
-        TimeMeasuringSystem.stopOperation(operationID);
+        try {
+            TestUtils.doRequestNTimes(RETRY, () -> {
+                stopAndRemoveFirefoxContainer();
+                DockerCmdClient.runContainer(FIREFOX_IMAGE, FIREFOX_CONTAINER_NAME,
+                        generateSeleniumOpts("4444", ":99"));
+                copyRheaWebPageFirefox();
+                assertTrue(DockerCmdClient.isContainerRunning(FIREFOX_CONTAINER_NAME),
+                        String.format(RUNNING_CONTAINER_MESSAGE, FIREFOX_CONTAINER_NAME));
+                return true;
+            }, Optional.empty());
+        } catch (Exception e) {
+            log.error(String.format(RUNNING_CONTAINER_MESSAGE, FIREFOX_CONTAINER_NAME));
+            throw e;
+        } finally {
+            TimeMeasuringSystem.stopOperation(operationID);
+        }
     }
 
-    public static void deployChromeContainer() {
+    public static void deployChromeContainer() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome container");
         DockerCmdClient.pull("docker.io", CHROME_IMAGE, "latest");
-        stopAndRemoveChromeContainer();
-        DockerCmdClient.runContainer(CHROME_IMAGE, CHROME_CONTAINER_NAME,
-                generateSeleniumOpts("4443", ":98"));
-        copyRheaWebPageChrome();
-        assertTrue(DockerCmdClient.isContainerRunning(CHROME_CONTAINER_NAME));
-        TimeMeasuringSystem.stopOperation(Operation.CREATE_SELENIUM_CONTAINER);
+        try {
+            TestUtils.doRequestNTimes(RETRY, () -> {
+                stopAndRemoveChromeContainer();
+                DockerCmdClient.runContainer(CHROME_IMAGE, CHROME_CONTAINER_NAME,
+                        generateSeleniumOpts("4443", ":98"));
+                copyRheaWebPageChrome();
+                assertTrue(DockerCmdClient.isContainerRunning(CHROME_CONTAINER_NAME),
+                        String.format(RUNNING_CONTAINER_MESSAGE, CHROME_CONTAINER_NAME));
+                return true;
+            }, Optional.empty());
+        } catch (Exception e) {
+            log.error(String.format(RUNNING_CONTAINER_MESSAGE, CHROME_CONTAINER_NAME));
+            throw e;
+        } finally {
+            TimeMeasuringSystem.stopOperation(operationID);
+        }
     }
 
     public static void stopAndRemoveFirefoxContainer() {

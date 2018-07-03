@@ -7,7 +7,6 @@ package io.enmasse.systemtest.common.plans.web;
 import io.enmasse.systemtest.bases.web.WebConsolePlansTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
 
 class FirefoxWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderFirefox {
 

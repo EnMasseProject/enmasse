@@ -16,7 +16,7 @@ public interface ISeleniumProviderChrome extends ISeleniumProvider {
     }
 
     @BeforeAll
-    default void deployContainer() {
+    default void deployContainer() throws Exception {
         SeleniumContainers.deployChromeContainer();
     }
 
