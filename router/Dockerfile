@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.2.0-rc2
+FROM enmasseproject/qdrouterd-base:1.2.0
 ARG version=latest
 ENV VERSION=${version}
 
