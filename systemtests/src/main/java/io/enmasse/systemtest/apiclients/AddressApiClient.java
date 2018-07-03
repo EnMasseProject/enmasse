@@ -363,7 +363,7 @@ public class AddressApiClient extends ApiClient {
 
         log.info("Deleting {}", toDelete);
         for (Destination destination : toDelete) {
-            deleteAddress(addressSpace.getName(), destination, HTTP_CREATED);
+            deleteAddress(addressSpace.getName(), destination, HTTP_OK);
         }
     }
 
