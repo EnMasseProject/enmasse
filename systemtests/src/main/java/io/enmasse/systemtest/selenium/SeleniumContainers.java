@@ -45,8 +45,9 @@ public class SeleniumContainers {
         } catch (Exception e) {
             log.error(String.format(RUNNING_CONTAINER_MESSAGE, FIREFOX_CONTAINER_NAME));
             throw e;
+        } finally {
+            TimeMeasuringSystem.stopOperation(operationID);
         }
-        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void deployChromeContainer() throws Exception {
@@ -66,8 +67,9 @@ public class SeleniumContainers {
         } catch (Exception e) {
             log.error(String.format(RUNNING_CONTAINER_MESSAGE, CHROME_CONTAINER_NAME));
             throw e;
+        } finally {
+            TimeMeasuringSystem.stopOperation(operationID);
         }
-        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void stopAndRemoveFirefoxContainer() {
