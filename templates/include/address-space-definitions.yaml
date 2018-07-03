@@ -88,6 +88,18 @@ data:
               capability: router
               name: qdrouterd
           spec:
+            strategy:
+              type: Recreate
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: LINK_CAPACITY
@@ -200,6 +212,16 @@ data:
               app: enmasse
               name: admin
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: CERT_DIR
@@ -442,6 +464,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: QUEUE_NAME
@@ -632,6 +664,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: TOPIC_NAME
@@ -1007,6 +1049,16 @@ data:
               capability: router
               name: qdrouterd
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: LINK_CAPACITY
@@ -1119,6 +1171,16 @@ data:
               app: enmasse
               name: admin
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: CERT_DIR
@@ -1361,6 +1423,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: QUEUE_NAME
@@ -1551,6 +1623,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: TOPIC_NAME
@@ -1789,6 +1871,16 @@ data:
               app: enmasse
               name: subserv
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - command:
               - node
@@ -1858,6 +1950,16 @@ data:
               app: enmasse
               name: mqtt-gateway
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: ENMASSE_MQTT_SSL
@@ -1918,6 +2020,16 @@ data:
               app: enmasse
               name: mqtt-lwt
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: CERT_DIR
@@ -2064,6 +2176,16 @@ data:
               name: broker
               role: broker
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: ADDRESS_SPACE_TYPE
@@ -2200,6 +2322,16 @@ data:
               name: agent
               role: agent
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: ADDRESS_SPACE

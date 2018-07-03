@@ -113,6 +113,26 @@ local images = import "images.jsonnet";
             }
           },
           "spec": {
+            "affinity": {
+              "nodeAffinity": {
+                "preferredDuringSchedulingIgnoredDuringExecution": [
+                  {
+                    "weight": 1,
+                    "preference": {
+                      "matchExpressions": [
+                        {
+                          "key": "nodetype",
+                          "operator": "In",
+                          "values": [
+                            "enmasse"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
             "serviceAccount": "enmasse-admin",
             "containers": [
               {
@@ -221,6 +241,26 @@ local images = import "images.jsonnet";
             }
           },
           "spec": {
+            "affinity": {
+              "nodeAffinity": {
+                "preferredDuringSchedulingIgnoredDuringExecution": [
+                  {
+                    "weight": 1,
+                    "preference": {
+                      "matchExpressions": [
+                        {
+                          "key": "nodetype",
+                          "operator": "In",
+                          "values": [
+                            "enmasse"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
             "initContainers": [
               {
                 "image": images.keycloak_plugin,
@@ -369,6 +409,26 @@ local images = import "images.jsonnet";
             }
           },
           "spec": {
+            "affinity": {
+              "nodeAffinity": {
+                "preferredDuringSchedulingIgnoredDuringExecution": [
+                  {
+                    "weight": 1,
+                    "preference": {
+                      "matchExpressions": [
+                        {
+                          "key": "nodetype",
+                          "operator": "In",
+                          "values": [
+                            "enmasse"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
             "containers": [
               {
                 "image": images.none_authservice,
