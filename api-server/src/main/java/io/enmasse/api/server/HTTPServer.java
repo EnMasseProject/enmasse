@@ -11,14 +11,7 @@ import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
-import io.enmasse.api.v1.http.HttpAddressService;
-import io.enmasse.api.v1.http.HttpAddressSpaceService;
-import io.enmasse.api.v1.http.HttpApiRootService;
-import io.enmasse.api.v1.http.HttpHealthService;
-import io.enmasse.api.v1.http.HttpNestedAddressService;
-import io.enmasse.api.v1.http.HttpRootService;
-import io.enmasse.api.v1.http.HttpSchemaService;
-import io.enmasse.api.v1.http.SwaggerSpecEndpoint;
+import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
@@ -85,6 +78,7 @@ public class HTTPServer extends AbstractVerticle {
         }
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
+        deployment.getRegistry().addSingletonResource(new HttpOpenApiService());
         deployment.getRegistry().addSingletonResource(new HttpNestedAddressService(addressSpaceApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new HttpSchemaService(schemaProvider));
