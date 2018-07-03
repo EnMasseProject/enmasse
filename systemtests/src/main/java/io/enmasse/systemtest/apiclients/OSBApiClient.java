@@ -82,7 +82,7 @@ public class OSBApiClient extends ApiClient {
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
                     .sendJsonObject(payload,
-                            ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_CREATED, "Error: put service instance"));
+                            ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_ACCEPTED, "Error: put service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("PUT-ServiceInstance: Async operation done with result: {}", response.toString());
