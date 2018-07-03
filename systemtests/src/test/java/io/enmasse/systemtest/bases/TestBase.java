@@ -262,8 +262,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
+    protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
+        setAddresses(addressSpace, timeout, java.net.HttpURLConnection.HTTP_OK, destinations);
+    }
+
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
-        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, destinations);
+        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
