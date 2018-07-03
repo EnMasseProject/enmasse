@@ -231,7 +231,7 @@ public class TestUtils {
      */
     public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int expectedCode, Destination... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(destinations.length > 0 ? Operation.CREATE_ADDRESS : Operation.DELETE_ADDRESS);
-        apiClient.setAddresses(addressSpace, destinations);
+        apiClient.setAddresses(addressSpace, expectedCode, destinations);
         if (wait) {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
             if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
@@ -245,7 +245,7 @@ public class TestUtils {
     }
 
     public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
-        setAddresses(apiClient, kubernetes, budget, addressSpace, wait, java.net.HttpURLConnection.HTTP_OK, destinations);
+        setAddresses(apiClient, kubernetes, budget, addressSpace, wait, HttpURLConnection.HTTP_CREATED, destinations);
     }
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {

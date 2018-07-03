@@ -42,6 +42,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -258,12 +259,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        setAddresses(addressSpace, java.net.HttpURLConnection.HTTP_OK, destinations);
+        setAddresses(addressSpace, HttpURLConnection.HTTP_CREATED, destinations);
     }
 
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        setAddresses(addressSpace, timeout, java.net.HttpURLConnection.HTTP_OK, destinations);
+        setAddresses(addressSpace, timeout, HttpURLConnection.HTTP_CREATED, destinations);
     }
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {

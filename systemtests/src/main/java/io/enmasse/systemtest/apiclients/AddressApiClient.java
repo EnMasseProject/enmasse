@@ -347,7 +347,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        setAddresses(addressSpace, HTTP_OK, destinations);
+        setAddresses(addressSpace, HTTP_CREATED, destinations);
     }
 
     public void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
@@ -362,7 +362,7 @@ public class AddressApiClient extends ApiClient {
         log.info("Creating {}", toCreate);
 
         for (Destination destination : toCreate) {
-            createAddress(addressSpace, destination, HTTP_CREATED);
+            createAddress(addressSpace, destination, expectedCode);
         }
 
         log.info("Deleting {}", toDelete);
