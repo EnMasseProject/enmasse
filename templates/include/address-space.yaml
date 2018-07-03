@@ -16,8 +16,10 @@ objects:
           "kind": "AddressSpace",
           "metadata": {
             "name": "${NAME}",
+            "namespace": "${NAMESPACE}",
             "annotations": {
-              "enmasse.io/namespace": "${NAMESPACE}"
+              "enmasse.io/namespace": "${NAMESPACE}",
+              "enmasse.io/realm-name": "${NAMESPACE}"
             }
           },
           "spec": {
