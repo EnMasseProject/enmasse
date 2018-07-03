@@ -55,9 +55,9 @@ public abstract class ApiClient {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
                 if (response.statusCode() != expectedCode) {
-                    log.error("expected-code: {}, responsep-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
+                    log.error("expected-code: {}, response-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
                     T body = response.body();
-                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + body != null ? body.toString() : null));
+                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
                 } else {
                     promise.complete(ar.result().body());
                 }
