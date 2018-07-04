@@ -60,9 +60,9 @@ public abstract class ApiClient {
                     log.error("expected-code: {}, response-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
                 } else if (response.statusCode() < HttpURLConnection.HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                    promise.complete(ar.result().body());
+                    promise.completeExceptionally(new RuntimeException(body.toString()));
                 } else {
-                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + body != null ? body.toString() : null));
+                    promise.complete(ar.result().body());
                 }
             } else {
                 log.warn(warnMessage);
