@@ -12,6 +12,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.slf4j.Logger;
 
+import java.net.HttpURLConnection;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -54,12 +55,14 @@ public abstract class ApiClient {
         try {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
+                T body = response.body();
                 if (response.statusCode() != expectedCode) {
                     log.error("expected-code: {}, response-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
-                    T body = response.body();
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
-                } else {
+                } else if (response.statusCode() < HttpURLConnection.HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
                     promise.complete(ar.result().body());
+                } else {
+                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + body != null ? body.toString() : null));
                 }
             } else {
                 log.warn(warnMessage);
