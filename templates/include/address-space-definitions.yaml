@@ -566,6 +566,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -588,6 +589,9 @@ data:
           - description: The address to use for the queue
             name: ADDRESS
             value: ''
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: Name of secret containing router key and certificate
             name: COLOCATED_ROUTER_SECRET
             required: true
@@ -846,6 +850,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -853,6 +858,9 @@ data:
           - description: Storage capacity required for volume claims
             name: STORAGE_CAPACITY
             value: 2Gi
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: The link capacity setting for router
             name: ROUTER_LINK_CAPACITY
             value: '50'
@@ -1525,6 +1533,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -1532,6 +1541,9 @@ data:
           - description: Storage capacity required for volume claims
             name: STORAGE_CAPACITY
             value: 2Gi
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: The link capacity setting for router
             name: ROUTER_LINK_CAPACITY
             value: '50'
@@ -1805,6 +1817,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -1812,6 +1825,9 @@ data:
           - description: Storage capacity required for volume claims
             name: STORAGE_CAPACITY
             value: 2Gi
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: The link capacity setting for router
             name: ROUTER_LINK_CAPACITY
             value: '50'
@@ -2149,6 +2165,7 @@ data:
       spec:
         accessModes:
         - ReadWriteOnce
+        storageClassName: ${STORAGE_CLASS}
         resources:
           requests:
             storage: ${STORAGE_CAPACITY}
@@ -2423,6 +2440,9 @@ data:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
       value: 2Gi
+    - description: Storage class used for persistent volumes
+      name: STORAGE_CLASS
+      value: null
     - description: The name of our address space
       name: ADDRESS_SPACE
       required: true
