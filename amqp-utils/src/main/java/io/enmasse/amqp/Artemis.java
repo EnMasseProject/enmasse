@@ -5,22 +5,15 @@
 
 package io.enmasse.amqp;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
-import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -29,97 +22,13 @@ import java.util.concurrent.TimeoutException;
  */
 public class Artemis implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(Artemis.class.getName());
-    private static final int maxRetries = 10;
-    private final Context context;
-    private final ProtonConnection connection;
-    private final ProtonSender sender;
-    private final ProtonReceiver receiver;
-    private final String replyTo;
-    private final BlockingQueue<Message> replies;
     private final String brokerContainerId;
     private long requestTimeoutMillis = 10_000;
+    private final SyncRequestClient syncRequestClient;
 
-    private Artemis(Context context, ProtonConnection connection, ProtonSender sender, ProtonReceiver receiver, String replyTo, BlockingQueue<Message> replies) {
-        this.context = context;
-        this.connection = connection;
-        this.brokerContainerId = connection.getRemoteContainer();
-        this.sender = sender;
-        this.receiver = receiver;
-        this.replyTo = replyTo;
-        this.replies = replies;
-    }
-
-    public Artemis setRequestTimeout(long timeout, TimeUnit timeUnit) {
-        this.requestTimeoutMillis = timeUnit.toMillis(timeout);
-        return this;
-    }
-
-    public static Future<Artemis> createFromConnection(Vertx vertx, ProtonConnection connection) {
-        Future<Artemis> promise = Future.future();
-        connection.sessionOpenHandler(ProtonSession::open);
-        createSender(vertx, connection, promise, 0);
-        return promise;
-    }
-
-    public static Future<Artemis> create(Vertx vertx, ProtonClientOptions protonClientOptions, String host, int port) throws InterruptedException {
-        Future<Artemis> promise = Future.future();
-        ProtonClient client = ProtonClient.create(vertx);
-        client.connect(protonClientOptions, host, port, result -> {
-            if (result.succeeded()) {
-                ProtonConnection connection = result.result();
-                createSender(vertx, connection, promise, 0);
-                connection.open();
-            } else {
-                promise.fail(result.cause());
-            }
-        });
-        return promise;
-    }
-
-    private static void createSender(Vertx vertx, ProtonConnection connection, Future<Artemis> promise, int retries) {
-        ProtonSender sender = connection.createSender("activemq.management");
-        sender.openHandler(result -> {
-            if (result.succeeded()) {
-                createReceiver(vertx, connection, sender, promise, 0);
-            } else {
-                if (retries > maxRetries) {
-                    promise.fail(result.cause());
-                } else {
-                    log.info("Error creating sender, retries = {}", retries);
-                    vertx.setTimer(1000, id -> createSender(vertx, connection, promise, retries + 1));
-                }
-            }
-        });
-        sender.open();
-    }
-
-    private static void createReceiver(Vertx vertx, ProtonConnection connection, ProtonSender sender, Future<Artemis> promise, int retries) {
-        BlockingQueue<Message> replies = new LinkedBlockingDeque<>();
-        ProtonReceiver receiver = connection.createReceiver("activemq.management");
-        Source source = new Source();
-        source.setDynamic(true);
-        receiver.setSource(source);
-        receiver.openHandler(h -> {
-            if (h.succeeded()) {
-                promise.complete(new Artemis(vertx.getOrCreateContext(), connection, sender, receiver, h.result().getRemoteSource().getAddress(), replies));
-            } else {
-                if (retries > maxRetries) {
-                    promise.fail(h.cause());
-                } else {
-                    log.info("Error creating receiver, retries = {}", retries);
-                    vertx.setTimer(1000, id -> createReceiver(vertx, connection, sender, promise, retries + 1));
-                }
-            }
-        });
-        receiver.handler(((protonDelivery, message) -> {
-            try {
-                replies.put(message);
-                ProtonHelper.accepted(protonDelivery, true);
-            } catch (Exception e) {
-                ProtonHelper.rejected(protonDelivery, true);
-            }
-        }));
-        receiver.open();
+    public Artemis(SyncRequestClient syncRequestClient) {
+        this.syncRequestClient = syncRequestClient;
+        this.brokerContainerId = syncRequestClient.getRemoteContainer();
     }
 
     private Message doOperation(String resource, String operation, Object ... parameters) throws TimeoutException {
@@ -155,7 +64,7 @@ public class Artemis implements AutoCloseable {
         }
 
         message.setBody(new AmqpValue(Json.encode(params)));
-        return sendMessage(message, timeout, timeUnit);
+        return syncRequestClient.request(message, timeout, timeUnit);
     }
 
     private Message createOperationMessage(String resource, String operation) {
@@ -163,8 +72,6 @@ public class Artemis implements AutoCloseable {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("_AMQ_ResourceName", resource);
         properties.put("_AMQ_OperationName", operation);
-        properties.put("JMSReplyTo", replyTo);
-        message.setReplyTo(replyTo);
         message.setApplicationProperties(new ApplicationProperties(properties));
         return message;
     }
@@ -174,20 +81,8 @@ public class Artemis implements AutoCloseable {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("_AMQ_ResourceName", resource);
         properties.put("_AMQ_Attribute", attribute);
-        properties.put("JMSReplyTo", replyTo);
-        message.setReplyTo(replyTo);
         message.setApplicationProperties(new ApplicationProperties(properties));
         return message;
-    }
-
-    private Message sendMessage(Message message, long timeout, TimeUnit timeUnit) {
-        context.runOnContext(h -> sender.send(message));
-        try {
-            Message m = replies.poll(timeout, timeUnit);
-            return m;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void deployQueue(String name, String address) throws TimeoutException {
@@ -253,7 +148,7 @@ public class Artemis implements AutoCloseable {
             JsonArray inner = payload.getJsonArray(i);
             for (int j = 0; j < inner.size(); j++) {
                 String queueName = inner.getString(j);
-                if (!queueName.equals(replyTo)) {
+                if (!queueName.equals(syncRequestClient.getReplyTo())) {
                     queues.add(queueName);
                 }
             }
@@ -262,7 +157,7 @@ public class Artemis implements AutoCloseable {
     }
 
     public void close() {
-        context.runOnContext(id -> connection.close());
+        syncRequestClient.close();
     }
 
     public void pauseQueue(String queueName) throws TimeoutException {

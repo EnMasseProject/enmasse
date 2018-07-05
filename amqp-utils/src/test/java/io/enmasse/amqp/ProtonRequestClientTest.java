@@ -5,7 +5,6 @@
 
 package io.enmasse.amqp;
 
-import io.enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
@@ -22,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
-public class SyncRequestClientTest {
+public class ProtonRequestClientTest {
     private Vertx vertx;
     private ProtonServer server;
 
@@ -80,7 +79,10 @@ public class SyncRequestClientTest {
 
     @Test
     public void testRequest() throws Exception {
-        try (SyncRequestClient client = new SyncRequestClient("127.0.0.1", 12347)) {
+        try (ProtonRequestClient client = new ProtonRequestClient(Vertx.vertx())) {
+            CompletableFuture<Void> future = new CompletableFuture<>();
+            client.connect("127.0.0.1", 12347, future);
+            future.get(10, TimeUnit.SECONDS);
             Message request = Message.Factory.create();
             request.setAddress("health-check");
             request.setBody(new AmqpValue("[{\"name\":\"myqueue\",\"store_and_forward\":true,\"multicast\":false}]"));

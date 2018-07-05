@@ -6,48 +6,71 @@
 package enmasse.broker.prestop;
 
 import enmasse.discovery.Host;
+import io.enmasse.amqp.Artemis;
+import io.enmasse.amqp.PubSubBroker;
 import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClientOptions;
-import org.junit.After;
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Ignore;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+@RunWith(VertxUnitRunner.class)
 public class QueueDrainerTest {
     private QueueDrainer client;
-    private Host from = TestUtil.createHost("127.0.0.1", 11111);
-    private Host to = TestUtil.createHost("127.0.0.1", 22222);
-    private TestBroker fromServer;
-    private TestBroker toServer;
+    private PubSubBroker fromServer;
+    private PubSubBroker toServer;
+    private TestManagementServer localBroker;
+    private Host from;
+    private Host to;
+    private Vertx vertx;
+
 
     @Before
-    public void setup() throws Exception {
-        fromServer = new TestBroker(from.amqpEndpoint(), Arrays.asList("myqueue", "queue2"), false);
-        toServer = new TestBroker(to.amqpEndpoint(), Arrays.asList("myqueue", "queue2"), false);
-        fromServer.start();
-        toServer.start();
-        client = new QueueDrainer(Vertx.vertx(), from, new ArtemisBrokerFactory(20_000), new ProtonClientOptions(), Optional.empty());
-    }
+    public void setup(TestContext context) throws Exception {
+        vertx = Vertx.vertx();
+        fromServer = new PubSubBroker("fromServer");
+        toServer = new PubSubBroker("toServer");
+        Async async = context.async(2);
+        vertx.deployVerticle(fromServer, ar -> {
+            if (ar.succeeded()) {
+                async.countDown();
+            } else {
+                context.fail(ar.cause());
+            }
+        });
 
-    @After
-    public void teardown() throws Exception {
-        fromServer.stop();
-        toServer.stop();
+        vertx.deployVerticle(toServer, ar -> {
+            if (ar.succeeded()) {
+                async.countDown();
+            } else {
+                context.fail(ar.cause());
+            }
+        });
+        async.awaitSuccess(30_000);
+        from = TestUtil.createHost("127.0.0.1", fromServer.port());
+        to = TestUtil.createHost("127.0.0.1", toServer.port());
+        localBroker = new TestManagementServer();
+
+        client = new QueueDrainer(Vertx.vertx(), from, (vertx, clientOptions, endpoint) -> new Artemis(localBroker), new ProtonClientOptions(), Optional.empty());
     }
 
     @Test
-    @Ignore
     public void testDrain() throws Exception {
         sendMessages(fromServer, "myqueue", "testfrom", 100);
         sendMessages(fromServer, "queue2", "q2from", 10);
@@ -55,9 +78,29 @@ public class QueueDrainerTest {
         sendMessages(toServer, "queue2", "q2to", 1);
 
         System.out.println("Starting drain");
+
+        localBroker.setHandler(message -> {
+            Map<String, Object> props = message.getApplicationProperties().getValue();
+            Message response = Proton.message();
+            String resourceName = (String) props.get("_AMQ_ResourceName");
+            if ("broker".equals(resourceName) &&
+                "getQueueNames".equals(props.get("_AMQ_OperationName"))) {
+                response.setBody(new AmqpValue("[[\"myqueue\"],[\"queue2\"]]"));
+            } else if ("queue.myqueue".equals(resourceName) &&
+                    "messageCount".equals(props.get("_AMQ_Attribute"))) {
+                response.setBody(new AmqpValue("[" + fromServer.numMessages("myqueue") + "]"));
+            } else if ("queue.queue2".equals(resourceName) &&
+                "messageCount".equals(props.get("_AMQ_Attribute"))) {
+                response.setBody(new AmqpValue("[" + fromServer.numMessages("queue2") + "]"));
+            } else {
+                response.setBody(new AmqpValue("[]"));
+            }
+            return response;
+        });
+
         client.drainMessages(to.amqpEndpoint(), "");
-        assertThat(toServer.numMessages("myqueue"), is(200L));
-        assertThat(toServer.numMessages("queue2"), is(11L));
+        assertThat(toServer.numMessages("myqueue"), is(200));
+        assertThat(toServer.numMessages("queue2"), is(11));
 
         assertReceive(toServer, "myqueue", "testto", 100);
         assertReceive(toServer, "myqueue", "testfrom", 100);
@@ -65,17 +108,16 @@ public class QueueDrainerTest {
         assertReceive(toServer, "queue2", "q2from", 10);
 
         System.out.println("Checking shutdown");
-        fromServer.assertShutdown(1, TimeUnit.MINUTES);
     }
 
-    private static void sendMessages(TestBroker broker, String address, String prefix, int numMessages) throws IOException, InterruptedException {
+    private static void sendMessages(PubSubBroker broker, String address, String prefix, int numMessages) throws IOException, InterruptedException {
         List<String> messages = IntStream.range(0, numMessages)
                 .mapToObj(i -> prefix + i)
                 .collect(Collectors.toList());
         broker.sendMessages(address, messages);
     }
 
-    private static void assertReceive(TestBroker broker, String address, String prefix, int numMessages) throws IOException, InterruptedException {
+    private static void assertReceive(PubSubBroker broker, String address, String prefix, int numMessages) throws IOException, InterruptedException {
         List<String> messages = broker.recvMessages(address, numMessages);
         for (int i = 0; i < numMessages; i++) {
             String actualBody = messages.get(i);
