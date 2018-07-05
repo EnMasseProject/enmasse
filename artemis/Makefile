@@ -1,9 +1,9 @@
 include ../Makefile.java.mk
 ARTIFACT_BASE=build/artemis-image
-ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis-2.5.0
+ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis-2.6.1
 
 build/apache-artemis-bin.tar.gz:
-	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.5.0/apache-artemis-2.5.0-bin.tar.gz
+	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.6.1/apache-artemis-2.6.1-bin.tar.gz
 
 clean_modules:
 	rm -rf sasl-delegation/target
