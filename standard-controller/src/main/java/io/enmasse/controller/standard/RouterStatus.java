@@ -5,29 +5,9 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.vertx.core.Vertx;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClientOptions;
-import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.message.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
-import static io.enmasse.controller.standard.ControllerReason.RouterCheckFailed;
-import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 class RouterStatus {
     private final String routerId;

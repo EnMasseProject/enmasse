@@ -4,10 +4,13 @@
  */
 package io.enmasse.controller.standard;
 
+import com.sun.corba.se.impl.orbutil.concurrent.Sync;
+import io.enmasse.amqp.ProtonRequestClient;
 import io.enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
@@ -21,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 class RouterStatusCollector {
@@ -56,21 +60,27 @@ class RouterStatusCollector {
                     .setPemKeyCertOptions(new PemKeyCertOptions()
                             .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
                             .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-            SyncRequestClient client = new SyncRequestClient(router.getStatus().getPodIP(), port, vertx, clientOptions);
+            try (ProtonRequestClient client = new ProtonRequestClient(vertx)) {
+                CompletableFuture<Void> promise = new CompletableFuture<>();
+                client.connect(router.getStatus().getPodIP(), port, clientOptions, "$management", promise);
 
-            List<String> addresses = filterOnAttribute(collectRouter(client,"org.apache.qpid.dispatch.router.config.address",
-                    Arrays.asList("prefix")), 0);
-
-            List<List<String>> autoLinks = collectRouter(client, "org.apache.qpid.dispatch.router.config.autoLink",
-                    Arrays.asList("addr", "containerId", "dir", "operStatus"));
-            List<List<String>> linkRoutes = collectRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute",
-                    Arrays.asList("prefix", "containerId", "dir", "operStatus"));
-            List<String> connections = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.connection",
-                    Arrays.asList("container")), 0);
+                promise.get(10, TimeUnit.SECONDS);
 
 
-            String routerId = router.getMetadata().getName();
-            return new RouterStatus(routerId, addresses, autoLinks, linkRoutes, connections);
+                List<String> addresses = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.router.config.address",
+                        Arrays.asList("prefix")), 0);
+
+                List<List<String>> autoLinks = collectRouter(client, "org.apache.qpid.dispatch.router.config.autoLink",
+                        Arrays.asList("addr", "containerId", "dir", "operStatus"));
+                List<List<String>> linkRoutes = collectRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute",
+                        Arrays.asList("prefix", "containerId", "dir", "operStatus"));
+                List<String> connections = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.connection",
+                        Arrays.asList("container")), 0);
+
+
+                String routerId = router.getMetadata().getName();
+                return new RouterStatus(routerId, addresses, autoLinks, linkRoutes, connections);
+            }
         } else {
             log.info("Unable to find appropriate router port, skipping address check");
             return null;
@@ -94,7 +104,6 @@ class RouterStatusCollector {
         body.put("attributeNames", attributeNames);
 
         Message message = Proton.message();
-        message.setAddress("$management");
         message.setApplicationProperties(new ApplicationProperties(properties));
         message.setBody(new AmqpValue(body));
 

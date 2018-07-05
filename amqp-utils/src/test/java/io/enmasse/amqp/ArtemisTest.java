@@ -5,69 +5,87 @@
 
 package io.enmasse.amqp;
 
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClientOptions;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@RunWith(VertxUnitRunner.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class ArtemisTest {
 
-    private Vertx vertx;
-    private TestArtemis server;
+    private static class TestClient implements SyncRequestClient {
 
-    @Before
-    public void setup() throws Exception {
-        vertx = Vertx.vertx();
-        server = new TestArtemis("localhost", 12346);
-        server.start();
+        Message response;
+        Message request;
+
+        @Override
+        public void connect(String host, int port, ProtonClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise) {
+
+        }
+
+        @Override
+        public String getRemoteContainer() {
+            return null;
+        }
+
+        @Override
+        public String getReplyTo() {
+            return "tome";
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        @Override
+        public Message request(Message message, long timeout, TimeUnit timeUnit) {
+            request = message;
+            return response;
+        }
     }
-
-    @After
-    public void teardown() {
-        vertx.close();
-    }
-
 
     @Test
-    public void testManagement(TestContext testContext) throws InterruptedException, ExecutionException, TimeoutException {
-        Future<Artemis> promise = Artemis.create(vertx, new ProtonClientOptions(), "localhost", 12346);
-        Async async = testContext.async();
-        promise.setHandler(result -> {
-            testContext.assertTrue(result.succeeded());
-            Artemis artemis = result.result();
+    public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
+        TestClient testClient = new TestClient();
+        Artemis artemis = new Artemis(testClient);
 
-            vertx.executeBlocking(p -> {
-                try {
-                    artemis.deployQueue("queue1", "queue1");
-                    artemis.deployQueue("queue2", "queue2");
+        testClient.response = Proton.message();
+        artemis.deployQueue("queue1", "queue1");
+        String body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+        assertEquals("[\"queue1\",\"queue1\",null,false]", body);
+        assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+        assertEquals("deployQueue", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
 
-                    long numQueues = artemis.getNumQueues();
-                    long endTime = System.currentTimeMillis() + 60_000;
-                    while (numQueues != 2L && System.currentTimeMillis() < endTime) {
-                        Thread.sleep(2000);
-                        numQueues = artemis.getNumQueues();
-                    }
-                    testContext.assertEquals(2L, numQueues);
-                    testContext.assertEquals(0L, artemis.getQueueMessageCount("queue1"));
-                    p.complete();
-                } catch (Exception e) {
-                    p.fail(e);
-                }
-            }, r -> {
-                testContext.assertTrue(r.succeeded());
-                async.complete();
-            });
-        });
+        artemis.deployQueue("queue2", "queue2");
+        body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+        assertEquals("[\"queue2\",\"queue2\",null,false]", body);
+        assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+        assertEquals("deployQueue", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
+
+        testClient.response = Proton.message();
+        testClient.response.setBody(new AmqpValue("[[\"q1\"],[\"q2\"],[\"tome\"]]"));
+        long numQueues = artemis.getNumQueues();
+        assertEquals(2, numQueues);
+        body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+        assertEquals("[]", body);
+        assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+        assertEquals("getQueueNames", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
+
+        testClient.response = Proton.message();
+        testClient.response.setBody(new AmqpValue("[42]"));
+        long messageCount = artemis.getQueueMessageCount("q1");
+        assertEquals(42, messageCount);
+        body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+        assertEquals("[]", body);
+        assertEquals("queue.q1", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+        assertEquals("messageCount", testClient.request.getApplicationProperties().getValue().get("_AMQ_Attribute"));
     }
 }

@@ -43,32 +43,30 @@ public class TestSubscriber implements AutoCloseable {
                     System.out.println("CLIENT cONN cLOSED");
                 });
                 this.connection = conn;
-                conn.openHandler(result -> {
-                    System.out.println("Connected: " + result.result().getRemoteContainer());
-                    Source source = new Source();
-                    source.setAddress(address);
-                    source.setCapabilities(Symbol.getSymbol("topic"));
-                    source.setDurable(TerminusDurability.UNSETTLED_STATE);
-                    ProtonReceiver receiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(containerId));
-                    receiver.setSource(source);
-                    receiver.openHandler(res -> {
-                        if (res.succeeded()) {
-                            System.out.println("Opened receiver");
-                            latch.countDown();
-                        } else {
-                            System.out.println("Failed opening received: " + res.cause().getMessage());
-                        }
-                    });
-                    receiver.closeHandler(res -> {
-                        System.out.println("CLIENT CLOSED");
-                        conn.close();
-                    });
-                    receiver.handler((delivery, message) -> {
-                        System.out.println("GOT MESSAGE");
-                        received.add(message);
-                    });
-                    receiver.open();
+                System.out.println("Connected: " + connection.result().getRemoteContainer());
+                Source source = new Source();
+                source.setAddress(address);
+                source.setCapabilities(Symbol.getSymbol("topic"));
+                source.setDurable(TerminusDurability.UNSETTLED_STATE);
+                ProtonReceiver receiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(containerId));
+                receiver.setSource(source);
+                receiver.openHandler(res -> {
+                    if (res.succeeded()) {
+                        System.out.println("Opened receiver");
+                        latch.countDown();
+                    } else {
+                        System.out.println("Failed opening received: " + res.cause().getMessage());
+                    }
                 });
+                receiver.closeHandler(res -> {
+                    System.out.println("CLIENT CLOSED");
+                    conn.close();
+                });
+                receiver.handler((delivery, message) -> {
+                    System.out.println("GOT MESSAGE");
+                    received.add(message);
+                });
+                receiver.open();
                 conn.open();
             } else {
                 System.out.println("Connection failed: " + connection.cause().getMessage());

@@ -74,6 +74,7 @@ public class QueueDrainer {
         AtomicBoolean first = new AtomicBoolean(false);
         Endpoint from = fromHost.amqpEndpoint();
         ProtonClient client = ProtonClient.create(vertx);
+        log.info("Connecting to destination {}:{}", to.hostname(), to.port());
         client.connect(protonClientOptions, to.hostname(), to.port(), sendHandle -> {
             if (sendHandle.succeeded()) {
                 ProtonConnection sendConn = sendHandle.result();
@@ -85,6 +86,7 @@ public class QueueDrainer {
                 ProtonSender sender = sendConn.createSender(address);
                 sender.openHandler(handle -> {
                     if (handle.succeeded()) {
+                        log.info("Connecting to source {}:{}", from.hostname(), from.port());
                         client.connect(protonClientOptions, from.hostname(), from.port(), recvHandle -> {
                             if (recvHandle.succeeded()) {
                                 ProtonConnection recvConn = recvHandle.result();
@@ -93,35 +95,32 @@ public class QueueDrainer {
                                     log.info("Receiver closed: " + h.succeeded());
                                 });
                                 log.info("Connected to receiver: " + recvConn.getRemoteContainer());
-                                recvConn.openHandler(h -> {
-                                    log.info("Receiver other end opened: " + h.result().getRemoteContainer());
-                                    ProtonReceiver receiver = recvConn.createReceiver(address);
-                                    receiver.setPrefetch(0);
-                                    receiver.openHandler(handler -> {
-                                        log.info("Receiver open: " + handle.succeeded());
-                                        receiver.flow(1);
-                                    });
-                                    receiver.handler((protonDelivery, message) -> {
-                                        //System.out.println("Got Message to forwarder: " + ((AmqpValue)message.getBody()).getValue());
-                                        sender.send(message, targetDelivery -> {
-                                                log.info("Got delivery confirmation, id = " + message.getMessageId() + ", remoteState = " + targetDelivery.getRemoteState() + ", remoteSettle = " + targetDelivery.remotelySettled());
-                                                receiver.flow(1);
-                                                protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()); });
-
-                                        // This is for debugging only
-                                        if (!first.getAndSet(true)) {
-                                            log.info("Forwarded first message");
-                                            if (debugFn.isPresent()) {
-                                                vertx.executeBlocking((Future<Integer> future) -> {
-                                                    debugFn.get().run();
-                                                    future.complete(0);
-                                                }, (AsyncResult<Integer> result) -> {
-                                                });
-                                            }
-                                        }
-                                    });
-                                    receiver.open();
+                                ProtonReceiver receiver = recvConn.createReceiver(address);
+                                receiver.setPrefetch(0);
+                                receiver.openHandler(handler -> {
+                                    log.info("Receiver open: " + handle.succeeded());
+                                    receiver.flow(1);
                                 });
+                                receiver.handler((protonDelivery, message) -> {
+                                    //System.out.println("Got Message to forwarder: " + ((AmqpValue)message.getBody()).getValue());
+                                    sender.send(message, targetDelivery -> {
+                                            log.info("Got delivery confirmation, id = " + message.getMessageId() + ", remoteState = " + targetDelivery.getRemoteState() + ", remoteSettle = " + targetDelivery.remotelySettled());
+                                            receiver.flow(1);
+                                            protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()); });
+
+                                    // This is for debugging only
+                                    if (!first.getAndSet(true)) {
+                                        log.info("Forwarded first message");
+                                        if (debugFn.isPresent()) {
+                                            vertx.executeBlocking((Future<Integer> future) -> {
+                                                debugFn.get().run();
+                                                future.complete(0);
+                                            }, (AsyncResult<Integer> result) -> {
+                                            });
+                                        }
+                                    }
+                                });
+                                receiver.open();
                                 recvConn.open();
                             } else {
                                 log.warn("Error connecting to receiver " + from.hostname() + ":" + from.port() + ": " + recvHandle.cause().getMessage());
@@ -155,6 +154,7 @@ public class QueueDrainer {
                 }
             } catch (Exception e) {
                 // Retry
+                e.printStackTrace();
                 log.warn("Queue check failed: " + e.getMessage());
             }
             Thread.sleep(2000);
