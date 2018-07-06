@@ -642,6 +642,8 @@ public class ConsoleWebPage implements IWebPage {
         //open addresses
         openAddressesPageWebConsole();
 
+        selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
+        
         AddressWebItem addressItem = getAddressItem(destination);
         assertNotNull(addressItem, "Failed to find address " + destination.getAddress());
 
