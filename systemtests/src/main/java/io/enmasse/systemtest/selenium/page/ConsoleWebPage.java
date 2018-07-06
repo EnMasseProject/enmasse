@@ -262,6 +262,7 @@ public class ConsoleWebPage implements IWebPage {
     public List<AddressWebItem> getAddressItems() throws Exception {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
+        log.info(String.format("Got %d addresses", elements.size()));
         List<AddressWebItem> addressItems = new ArrayList<>();
         for (WebElement element : elements) {
             AddressWebItem item = new AddressWebItem(element);
@@ -642,6 +643,7 @@ public class ConsoleWebPage implements IWebPage {
         openAddressesPageWebConsole();
 
         AddressWebItem addressItem = getAddressItem(destination);
+        assertNotNull(addressItem, "Failed to find address " + destination.getAddress());
 
         //click on check box
         selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());
