@@ -230,7 +230,7 @@ public class AddressProvisioner {
 
         if (router.hasChanged()) {
             log.info("Scaling router to {} replicas", router.getNewReplicas());
-            kubernetes.scaleDeployment(router.getName(), router.getNewReplicas());
+            kubernetes.scaleStatefulSet(router.getName(), router.getNewReplicas());
         }
         for (BrokerCluster cluster : existingClusters) {
             if (cluster.hasChanged()) {
