@@ -5,7 +5,10 @@
 
 package io.enmasse.artemis.sasl_delegation;
 
+import org.apache.activemq.artemis.protocol.amqp.broker.ActiveMQProtonRemotingConnection;
+import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.security.jaas.CertificateCallback;
+import org.apache.activemq.artemis.spi.core.security.jaas.JaasCallbackHandler;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.activemq.artemis.spi.core.security.jaas.UserPrincipal;
 import org.apache.qpid.proton.Proton;
@@ -21,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
@@ -84,6 +88,21 @@ public class SaslDelegatingLogin implements LoginModule {
     private List<String> defaultRolesAuthenticated = new ArrayList<>();
     private List<String> defaultRolesUnauthenticated = new ArrayList<>();
     private String securitySettings;
+    private Subject existingSubject;
+    private RemotingConnection remoteConnection;
+
+    private static volatile Field REMOTING_CONNECTION_FIELD;
+    private static final Map<RemotingConnection, Subject> AUTHENTICATED_CONNECTIONS = new WeakHashMap<>();
+
+    static {
+        try {
+            Class jassCallbackHandlerClass = Class.forName("org.apache.activemq.artemis.spi.core.security.jaas.JaasCallbackHandler");
+            REMOTING_CONNECTION_FIELD = jassCallbackHandlerClass.getField("remotingConnection");
+            REMOTING_CONNECTION_FIELD.setAccessible(true);
+        } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+
+        }
+    }
 
     @Override
     public void initialize(Subject subject,
@@ -170,51 +189,63 @@ public class SaslDelegatingLogin implements LoginModule {
 
         boolean success = false;
         try {
-            List<X509Certificate> certs = new ArrayList<>();
+            if (this.callbackHandler instanceof JaasCallbackHandler) {
+                try {
+                    remoteConnection =
+                            (RemotingConnection) REMOTING_CONNECTION_FIELD.get(this.callbackHandler);
+                    existingSubject = AUTHENTICATED_CONNECTIONS.get(remoteConnection);
+                    success = existingSubject != null;
+                } catch (IllegalAccessException e) {
 
-            if(isAuthenticatedUsingCerts(certs)) {
-                success = populateUserAndRolesFromCert(certs.get(0));
-            } else {
-
-                Transport transport = Proton.transport();
-                Connection connection = Proton.connection();
-                transport.bind(connection);
-                Sasl sasl = transport.sasl();
-                sasl.client();
-
-                Socket socket = createSocket();
-
-                InputStream in = socket.getInputStream();
-                OutputStream out = socket.getOutputStream();
-
-                transport.open();
-
-                // write Headers
-                writeToNetwork(connection, out);
-
-                SaslMechanism mechanism = chooseSaslMechanismAndSendInit(connection, in, out);
-
-                performSaslSteps(connection, in, out, mechanism);
-
-                if (isSaslAuthenticated(connection, mechanism)) {
-                    performConnectionOpen(connection, in, out);
-                    getUserAndRolesFromConnection(connection);
-                    success = true;
-                } else {
-                    LOG.debug("Login failed");
                 }
-
-                connection.close();
-                transport.close();
-                socket.close();
             }
+            if (!success) {
+                List<X509Certificate> certs = new ArrayList<>();
 
-        } catch (IOException | UnsupportedCallbackException | InvalidNameException e) {
+                if (isAuthenticatedUsingCerts(certs)) {
+                    success = populateUserAndRolesFromCert(certs.get(0));
+                } else {
+
+                    Transport transport = Proton.transport();
+                    Connection connection = Proton.connection();
+                    transport.bind(connection);
+                    Sasl sasl = transport.sasl();
+                    sasl.client();
+
+                    Socket socket = createSocket();
+
+                    InputStream in = socket.getInputStream();
+                    OutputStream out = socket.getOutputStream();
+
+                    transport.open();
+
+                    // write Headers
+                    writeToNetwork(connection, out);
+
+                    SaslMechanism mechanism = chooseSaslMechanismAndSendInit(connection, in, out);
+
+                    performSaslSteps(connection, in, out, mechanism);
+
+                    if (isSaslAuthenticated(connection, mechanism)) {
+                        performConnectionOpen(connection, in, out);
+                        getUserAndRolesFromConnection(connection);
+                        success = true;
+                    } else {
+                        LOG.debug("Login failed");
+                    }
+
+                    connection.close();
+                    transport.close();
+                    socket.close();
+                }
+            }
+        } catch(IOException | UnsupportedCallbackException | InvalidNameException e){
             LoginException loginException = new LoginException("Exception attempting to authenticate using SASL delegation");
             loginException.initCause(e);
             LOG.warn(e);
             throw loginException;
         }
+
         loginSucceeded = success;
         return success;
     }
@@ -224,17 +255,23 @@ public class SaslDelegatingLogin implements LoginModule {
         boolean result = loginSucceeded;
         try {
             if (result) {
-                UserPrincipal userPrincipal = new UserPrincipal(user);
-                principals.add(userPrincipal);
-                LOG.debugv("Adding user principal for: {0}", user);
-                for (String entry : roles) {
-                    LOG.debugv("Adding role principal for: {0}", entry);
-                    principals.add(new RolePrincipal(entry));
+                if (existingSubject == null) {
+                    UserPrincipal userPrincipal = new UserPrincipal(user);
+                    principals.add(userPrincipal);
+                    LOG.debugv("Adding user principal for: {0}", user);
+                    for (String entry : roles) {
+                        LOG.debugv("Adding role principal for: {0}", entry);
+                        principals.add(new RolePrincipal(entry));
+                    }
+
+                    subject.getPrincipals().addAll(principals);
+                    if(remoteConnection != null) {
+                        AUTHENTICATED_CONNECTIONS.put(remoteConnection, existingSubject);
+                    }
+                } else {
+                    subject.getPrincipals().addAll(existingSubject.getPrincipals());
                 }
-
-                subject.getPrincipals().addAll(principals);
             }
-
             clear();
 
             LOG.debugv("commit, result: {0}", result);
@@ -267,6 +304,8 @@ public class SaslDelegatingLogin implements LoginModule {
         principals.clear();
         roles.clear();
         loginSucceeded = false;
+        remoteConnection = null;
+        existingSubject = null;
     }
 
 
