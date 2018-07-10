@@ -229,9 +229,9 @@ public class TestUtils {
      * @param destinations
      * @throws Exception
      */
-    public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+    public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int expectedCode, Destination... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(destinations.length > 0 ? Operation.CREATE_ADDRESS : Operation.DELETE_ADDRESS);
-        apiClient.setAddresses(addressSpace, destinations);
+        apiClient.setAddresses(addressSpace, expectedCode, destinations);
         if (wait) {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
             if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
@@ -242,6 +242,10 @@ public class TestUtils {
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+        setAddresses(apiClient, kubernetes, budget, addressSpace, wait, HttpURLConnection.HTTP_CREATED, destinations);
     }
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
@@ -284,9 +288,9 @@ public class TestUtils {
      * @return JsonObject
      * @throws Exception
      */
-    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, URL url,
+    public static JsonObject sendRestApiRequest(AddressApiClient apiClient, HttpMethod method, URL url, int expectedCode,
                                                 Optional<JsonObject> payload) throws Exception {
-        return apiClient.sendRequest(method, url, payload);
+        return apiClient.sendRequest(method, url, expectedCode, payload);
     }
 
 

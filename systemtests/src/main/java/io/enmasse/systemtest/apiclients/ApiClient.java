@@ -12,6 +12,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.slf4j.Logger;
 
+import java.net.HttpURLConnection;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -49,15 +50,17 @@ public abstract class ApiClient {
                 .setVerifyHost(false));
     }
 
-    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise,
+    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, int expectedCode,
                                        String warnMessage) {
         try {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
-                if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                    log.error("response status code: {}, body: {}", response.statusCode(), response.body());
-                    T body = response.body();
-                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + body != null ? body.toString() : null));
+                T body = response.body();
+                if (response.statusCode() != expectedCode) {
+                    log.error("expected-code: {}, response-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
+                    promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
+                } else if (response.statusCode() < HttpURLConnection.HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
+                    promise.completeExceptionally(new RuntimeException(body.toString()));
                 } else {
                     promise.complete(ar.result().body());
                 }

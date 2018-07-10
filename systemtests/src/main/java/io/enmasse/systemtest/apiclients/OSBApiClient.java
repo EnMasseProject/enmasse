@@ -15,6 +15,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
+import java.net.HttpURLConnection;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -81,7 +82,7 @@ public class OSBApiClient extends ApiClient {
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
                     .sendJsonObject(payload,
-                            ar -> responseHandler(ar, responsePromise, "Error: put service instance"));
+                            ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_ACCEPTED, "Error: put service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("PUT-ServiceInstance: Async operation done with result: {}", response.toString());
@@ -121,7 +122,7 @@ public class OSBApiClient extends ApiClient {
                     .addQueryParam("plan_id", planId)
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: delete service instance"));
+                    .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error: delete service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("DELETE-ServiceInstance: Async operation done with result: {}", response.toString());
@@ -166,7 +167,7 @@ public class OSBApiClient extends ApiClient {
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
                     .sendJsonObject(payload,
-                            ar -> responseHandler(ar, responsePromise, "Error: put service bindings"));
+                            ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_CREATED, "Error: put service bindings"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("PUT-ServiceBindings: finished successfully with response {}; ", response.toString());
@@ -192,7 +193,7 @@ public class OSBApiClient extends ApiClient {
                     .addQueryParam("plan_id", planId)
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: delete binding instance"));
+                    .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error: delete binding instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
         log.info("DELETE-Binding: operation done with result: {}", response.toString());
@@ -217,7 +218,7 @@ public class OSBApiClient extends ApiClient {
                     .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
-                    .send(ar -> responseHandler(ar, responsePromise, "Error: get last operation on service instance"));
+                    .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error: get last operation on service instance"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
     }
@@ -239,7 +240,7 @@ public class OSBApiClient extends ApiClient {
                     .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                     .as(BodyCodec.jsonObject())
                     .timeout(10_000)
-                    .send((ar) -> responseHandler(ar, responsePromise, "Error: get service catalog"));
+                    .send((ar) -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error: get service catalog"));
             return responsePromise.get(20, TimeUnit.SECONDS);
         }, Optional.empty(), Optional.of(() -> reconnect()));
     }

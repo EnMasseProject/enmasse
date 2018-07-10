@@ -42,6 +42,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -252,19 +253,27 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
-    protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+    protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        setAddresses(addressSpace, budget, destinations);
+        setAddresses(addressSpace, budget, expectedCode, destinations);
+    }
+
+    protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        setAddresses(addressSpace, HttpURLConnection.HTTP_CREATED, destinations);
     }
 
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, destinations);
+        setAddresses(addressSpace, timeout, HttpURLConnection.HTTP_CREATED, destinations);
+    }
+
+    protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
+        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
         logCollector.collectConfigMaps(addressSpace.getNamespace());
     }
 
-    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, Optional<JsonObject> payload) throws Exception {
-        return TestUtils.sendRestApiRequest(addressApiClient, method, url, payload);
+    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, int expectedCode, Optional<JsonObject> payload) throws Exception {
+        return TestUtils.sendRestApiRequest(addressApiClient, method, url, expectedCode, payload);
     }
 
     /**
