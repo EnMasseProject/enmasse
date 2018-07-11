@@ -266,7 +266,7 @@ public class SaslDelegatingLogin implements LoginModule {
 
                     subject.getPrincipals().addAll(principals);
                     if(remoteConnection != null) {
-                        AUTHENTICATED_CONNECTIONS.put(remoteConnection, existingSubject);
+                        AUTHENTICATED_CONNECTIONS.put(remoteConnection, subject);
                     }
                 } else {
                     subject.getPrincipals().addAll(existingSubject.getPrincipals());
