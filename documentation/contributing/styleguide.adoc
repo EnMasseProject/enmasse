@@ -47,60 +47,78 @@
   `[subs=+quotes]`.
 * Do not use the word 'the' before 'Broker'. It is just 'Broker'
 
+[[naming-files-style]]
+=== Naming files
+
+.File Names Quick Reference
+[cols="33%,33%a,33%a",options="header"]
+|===
+|Item |Use |Not
+.2+|Custom attributes
+.2+|\`ThisStyle`
+|\`this-style`
+|\`this_style`
+.2+|File and directory names
+.2+|\`module_this-style`
+|\`module-this_style`
+|\`ModuleThisStyle`
+|===
+
+Learn more about naming files in the xref:files-and-attributes[Files and Attributes] appendix.
+
 [[headings-titles]]
-=== Styling Headings and Titles
+=== Styling headings and titles
 
-In headline-style capitalization, capitalize the initial letter of the following words:
-
-* The first and last words of the text
-* All nouns, pronouns, adjectives, verbs, adverbs, and subordinating conjunctions, such as 'after', 'although', 'because', 'before', 'how', 'if', 'than', 'that', 'though', 'until', 'when', 'where', 'whether', and 'while'
-* Any word in a hyphenated compound that is not an article, preposition, or coordinating conjunction
-* The last word in a hyphenated compound, regardless of its part of speech
-
-In headline-style capitalization, do not capitalize the initial letter of the following words:
-
-* Articles, except as the first word
-* Coordinating conjunctions
-* Prepositions, except as the first or last word
-* The 'to' in an infinitive
-
-NOTE: To learn more about Headline-style titles see, the _Capitalization_ section in Chapter 1 of the _IBM Style Guide_.
+AMQ 7 uses sentence-case headings for modules, tables, and figures.
 
 .Headings Quick Reference
 [cols="33%,33%a,33%a",options="header"]
 |===
 |Item |Use |Not
-.2+|Section headings .2+|Configuring the System with Fedora
-|Configuring the system with Fedora
-|Configuring The System With Fedora
+.2+|Section headings .2+|Configuring the system with RHEL
+|Configuring the System with RHEL
+|Configuring The System With RHEL
 |Procedure Titles (_gerund_) |Configuring | Configure
-.2+|Table and block titles .2+|This is an Example
-|This is an example
+.2+|Table and block titles .2+|This is an example
+|This is an Example
 |This Is An Example
-.2+|Hyphenated headings .2+| Configuring Point-to-Point Messaging | Configuring Point-To-Point Messaging | Configuring Point-to-point Messaging
-.2+|Document IDs .2+|\[[this_heading_here]]
-|\[[this-heading-here]]
-|\[[ThisHeadingHere]]
+.2+|Hyphenated headings .2+| Configuring point-to-point messaging | Configuring Point-To-Point Messaging | Configuring Point-to-point Messaging
 |Unnumbered titled sections |_[discrete]_ |
 |===
 
-=== Styling Replaceables
+[[ids]]
+=== Section IDs
 
-.Replaceables Quick Reference
+The format defined here is recommended because it is the most stable and versatile of anchor formats, and supports variables that enable topics to be reused and cross-referenced properly. Other anchor formats include `+++[[anchor-name]]+++` and `+++[#anchor-name]+++`, but these formats either do not support variables for content reuse or do not support certain character types, such as periods. These limitations cause errors at build time.
+
+Learn more about reusing content in the link:https://redhat-documentation.github.io/modular-docs/#reusing-modules[Modular Documentation Reference Guide^].
+
+.IDs quick reference
+[cols="33%,33%a,33%a",options="header"]
+|===
+|Item |Use |Not
+.3+|Document IDs .3+|++[id="same-as-section-heading-{context}"]++
+|\[[this-heading-here]]
+|\[[ThisHeadingHere]]
+|++[#anchor-name]++
+|===
+
+[[replaceables]]
+=== Styling replaceables
+
+Replaceable values in the text and code should be styles using monospace, lowercase, arrow brackets, and hyphens.
+
+.Replaceables quick reference
 [cols="50%,50%a",options="header"]
 |===
 |Item |Use
-|Replaceable value |\`\_SOME_VAR_`
-|Location of broker instance |\`\_BROKER_INSTANCE_DIR_`
-|Component install directory |\`\_INSTALL_DIR_`
+|Replaceable value |\`<some-value>`
+|Location of broker instance |\`<broker-instance-dir>`
+|Component install directory |\`<install-dir>`
 |===
 
 TIP: If using a replaceable within a source block, you will need to add
 `subs="+quotes"`` to the source tag for it to render. (For example : `++[source,options="nowrap",subs="+quotes"]++`).
-
-.Additional Replaceable Guidelines
-* Use callouts for replaceables in code segments to make it clear to the user
-  that a replaceable is present.
 
 === Styling Links
 
@@ -129,19 +147,3 @@ in double quotes if it contains a comma.
 * Refer to the top-level sections of books as chapters, not sections
   or topics.
 * Do not split link paths across lines when wrapping text. This will cause issues with the doc builds.
-
-=== Naming Files
-
-.File Names Quick Reference
-[cols="33%,33%a,33%a",options="header"]
-|===
-|Item |Use |Not
-.2+|Custom attributes
-.2+|\`ThisStyle`
-|\`this-style`
-|\`this_style`
-.2+|File and directory names
-.2+|\`this-style`
-|\`this_style`
-|\`ThisStyle`
-|===
