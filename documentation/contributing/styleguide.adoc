@@ -69,7 +69,7 @@ Learn more about naming files in the xref:files-and-attributes[Files and Attribu
 [[headings-titles]]
 === Styling headings and titles
 
-AMQ 7 uses sentence-case headings for modules, tables, and figures.
+EnMasse uses sentence-case headings for modules, tables, and figures.
 
 .Headings Quick Reference
 [cols="33%,33%a,33%a",options="header"]
