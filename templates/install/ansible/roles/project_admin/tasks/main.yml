@@ -1,8 +1,5 @@
 ---
 - import_role:
-    name: address_controller_multitenant
-  when: multitenant
-- import_role:
     name: plans_standard
   when: multitenant or (not multitenant and address_space_type == "standard")
 - import_role:

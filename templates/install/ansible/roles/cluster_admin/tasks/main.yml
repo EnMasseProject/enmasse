@@ -1,0 +1,9 @@
+---
+- import_role:
+    name: cluster_roles
+- import_role:
+    name: service_catalog_cluster_admin 
+  when: service_catalog
+- import_role:
+    name: api_server_cluster_admin
+  when: api_server

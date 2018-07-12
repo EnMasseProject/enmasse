@@ -2,7 +2,7 @@
 localhost ansible_connection=local
 
 [enmasse:vars]
-namespace=enmasse
+namespace=enmasse-infra
 multitenant=True
 enable_rbac=False
 api_server=True

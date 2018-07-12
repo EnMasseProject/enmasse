@@ -12,7 +12,7 @@ Invoke the deployment script to deploy {ProductName}
 ===== Using ansible
 [options="nowrap",subs=attributes+]
 ....
-ansible-playbook -i ansible/inventory/singletenant-standard.example ansible/playbooks/openshift/install.yml
+ansible-playbook -i ansible/inventory/singletenant-standard.example ansible/playbooks/openshift/deploy_all.yml
 ....
 
 

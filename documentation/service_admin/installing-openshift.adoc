@@ -47,7 +47,7 @@ include::multitenant-all.inventory[]
 +
 [options="nowrap"]
 ----
-ansible-playbook -i <inventory file> ansible/playbooks/openshift/install.yml
+ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
 ----
 
 === Installing {ProductName} manually

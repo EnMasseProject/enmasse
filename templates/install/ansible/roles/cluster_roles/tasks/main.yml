@@ -1,0 +1,51 @@
+---
+- name: Ensure user has cluster admin access
+  shell: oc policy can-i create clusterroles
+  register: is_admin
+  failed_when: is_admin.stdout == "no"
+
+- name: Create address-space-controller cluster role used by enmasse admin service account {{ playbook_dir }}
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/openshift/address-space-controller.yaml
+
+- name: Create clusterrole binding for address-space-controller
+  include_role:
+    name: create_clusterrole_binding
+  vars:
+    clusterrole_name: enmasse.io:address-space-controller
+
+- name: Create api-server cluster role used by enmasse admin service account
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/api-server.yaml
+
+- name: Create clusterrole binding for api-server
+  include_role:
+    name: create_clusterrole_binding
+  vars:
+    clusterrole_name: enmasse.io:api-server
+
+- name: Create clusterrole binding for system:auth-delegator
+  when: enable_rbac
+  include_role:
+    name: create_clusterrole_binding
+  vars:
+    clusterrole_name: system:auth-delegator
+
+- name: Create keycloak-controller cluster role used by enmasse admin service account
+  when: '"standard" in authentication_services'
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir}}/resources/cluster-roles/openshift/keycloak-controller.yaml
+
+- name : Create clusterrole binding for keycloak-controller
+  when: '"standard" in authentication_services'
+  include_role:
+    name: create_clusterrole_binding
+  vars:
+    clusterrole_name: enmasse.io:keycloak-controller
+
+- name: Create clusterroles to allow tenants to view addressspaces and addresses
+  when: register_api_server
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/tenant-view.yaml
+
+- name: Create clusterroles to allow tenants full CRUD operations on addressspaces and addresses
+  when: register_api_server
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/tenant-edit.yaml
+
+

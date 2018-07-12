@@ -2,6 +2,7 @@
 localhost ansible_connection=local
 
 [enmasse:vars]
+namespace=enmasse
 multitenant=False
 address_space_type=standard
 address_space_plan=unlimited-standard
