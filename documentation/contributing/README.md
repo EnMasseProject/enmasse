@@ -6,6 +6,7 @@ This guide is meant to assist contributors to the EnMasse documentation.
   * [Additional Git Tips](git-tips.adoc)
 * [Contribution Guide](contributor-guide.adoc)
   * [Formatting Guidelines](formatting-guide.adoc)
+  * [Files & File Naming](files.adoc)
 * Content Templates
   * [Procedure Template](templates/template-procedure.adoc)
   * [Concept Template](templates/template-concept.adoc)

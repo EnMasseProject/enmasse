@@ -1,19 +1,36 @@
-[[brief_procedure_template]]
-= Brief Procedure Template and Guidelines
+// Module included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
 
-This paragraph explains why the user performs the procedure, sets the context of the procedure, and may explain or list special considerations specific to this procedure. Keep the information brief and focused on what is needed for this specific procedure. Suggested length is 1 to 3 sentences, can be longer if needed.
+// Base the file name and the ID on the module title. For example:
+// * file name: doing-procedure-a.adoc
+// * ID: [id='doing-procedure-a']
+// * Title: = Doing procedure A
 
+//declare context for ID Generation
+:context: brief-template
 
-.Prerequisites _(if needed)_
+// The ID is used as an anchor for linking to the module. Avoid changing it after the module has been published to ensure existing links are not broken.
+[id='doing-one-procedure_{context}']
+// The `context` attribute enables module reuse. Every module's ID includes {context}, which ensures that the module has a unique ID even if it is reused multiple times in a guide.
+= Brief template: Doing one procedure
+// Start the title with a verb, such as Creating or Create. See also _Wording of headings_ in _The IBM Style Guide_.
 
-* List
+This paragraph is the procedure module introduction: a short description of the procedure.
 
+[discrete]
+== Prerequisites
 
-.Procedure
+*
 
-. List
+[discrete]
+== Procedure
 
+. Start each step with an active verb.
 
-.Related Information _(if needed)_
+.
 
-* List
+[discrete]
+== Additional Resources
+
+*
