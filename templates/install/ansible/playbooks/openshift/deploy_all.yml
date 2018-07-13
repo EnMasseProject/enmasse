@@ -1,0 +1,5 @@
+- name: "Deploy EnMasse"
+  hosts: enmasse
+  roles:
+    - project_admin
+    - cluster_admin

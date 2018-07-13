@@ -1,0 +1,69 @@
+---
+- name: Check if API client CA secret exists
+  when: secure_api_server
+  shell: oc get secret -n {{ namespace }} api-server-client-ca
+  register: secret_exists
+  ignore_errors: True
+
+- name: Extract API Client CA
+  when: secure_api_server and secret_exists.failed
+  shell: oc get configmap extension-apiserver-authentication -n kube-system -o jsonpath={.data.client-ca-file}
+  register: clientca_result 
+- set_fact:
+
+    client_ca: "{{ clientca_result.stdout }}"
+  when: secure_api_server and secret_exists.failed
+
+- name: Extract API Request Header Client CA
+  when: secure_api_server and secret_exists.failed
+  shell: oc get configmap extension-apiserver-authentication -n kube-system -o jsonpath={.data.requestheader-client-ca-file}
+  register: requestheaderclientca_result
+
+- set_fact:
+    request_header_client_ca: "{{ requestheaderclientca_result.stdout }}"
+  when: secure_api_server and secret_exists.failed
+
+- name: Store API Client CA in secret
+  when: secure_api_server and secret_exists.failed
+  shell:
+    cmd: |
+      cat <<EOF | oc apply -n {{ namespace }} -f -
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: api-server-client-ca
+        namespace: "{{ namespace }}"
+      type: tls
+      data:
+        ca.crt: "{{ client_ca | b64encode }}"
+        request-header-ca.crt: "{{ request_header_client_ca | b64encode }}"
+      EOF
+
+- name: Extract API Server CA
+  when: register_api_server
+  shell: oc extract secret/api-server-cert -n {{ namespace }} --keys=tls.crt --to=-
+  register: secret_result
+
+- set_fact:
+    ca_bundle: "{{ secret_result.stdout }}"
+  when: register_api_server
+
+- name: Register API Server with API Aggregator
+  when: register_api_server
+  shell:
+    cmd: |
+      cat <<EOF | oc apply -f -
+      apiVersion: apiregistration.k8s.io/v1beta1
+      kind: APIService
+      metadata:
+        name: v1alpha1.enmasse.io
+      spec:
+        group: enmasse.io
+        groupPriorityMinimum: 1000
+        caBundle: "{{ ca_bundle | b64encode }}"
+        version: v1alpha1
+        versionPriority: 10
+        service:
+          name: api-server
+          namespace: "{{ namespace }}"
+      EOF

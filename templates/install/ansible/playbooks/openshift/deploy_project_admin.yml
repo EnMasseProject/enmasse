@@ -1,0 +1,4 @@
+- name: "Deploy EnMasse project admin resources"
+  hosts: enmasse
+  roles: 
+    - project_admin

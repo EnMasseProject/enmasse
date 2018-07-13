@@ -1,0 +1,10 @@
+---
+- name: Check if cluster rolebinding {{ clusterrole_name }}-{{ enmasse_serviceaccount }} exists
+  shell: oc get clusterrolebinding {{ clusterrole_name}}-{{ enmasse_serviceaccount }}
+  register: rolebinding_exists
+  ignore_errors: true
+
+- name: Grant clusterrole {{ clusterrole_name}} privileges to service account
+  when: rolebinding_exists.failed
+  shell: oc create clusterrolebinding {{ clusterrole_name }}-{{ enmasse_serviceaccount }} --clusterrole={{ clusterrole_name }} --serviceaccount={{ namespace }}:{{ enmasse_serviceaccount }}
+

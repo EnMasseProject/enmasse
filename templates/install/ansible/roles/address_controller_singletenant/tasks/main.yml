@@ -1,16 +1,12 @@
 ---
 - name: Check if address-space-admin SA exists
-  shell: oc get sa address-space-admin
+  shell: oc get sa address-space-admin -n {{ namespace }}
   register: sa_exists
   ignore_errors: True
 - name: Create address space admin SA
   shell: oc create sa address-space-admin -n {{ namespace }}
   when: sa_exists.failed
-- name: Grant view policy to default SA
-  shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace }}:default -n {{ namespace }}
-- name: Grant admin policy to enmasse-admin
-  shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:enmasse-admin -n {{ namespace }}
 - name: Grant admin policy to address-space-admin
   shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:address-space-admin -n {{ namespace }}
 - name: Deploy default address space
-  shell: oc process -f {{ playbook_dir }}/resources/templates/address-space.yaml NAME=default NAMESPACE={{ namespace }} TYPE={{ address_space_type }} PLAN={{ address_space_plan }} | oc apply -n {{ namespace }} -f -
+  shell: oc process -f {{ playbook_dir }}/resources/templates/address-space.yaml NAME=default INFRA_NNAMESPACE={{ namespace }} NAMESPACE={{ namespace }} TYPE={{ address_space_type }} PLAN={{ address_space_plan }} | oc apply -n {{ namespace }} -f -
