@@ -103,11 +103,18 @@ under the License.
       </addresses>
 
       <connector-services>
-        <connector-service name="amqp-connector">
+        <connector-service name="amqp-connector-in">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
-          <param key="containerId" value="$QUEUE_NAME" />
+          <param key="containerId" value="$QUEUE_NAME-in" />
+          <param key="clusterId" value="$QUEUE_NAME" />
+        </connector-service>
+        <connector-service name="amqp-connector-out">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
+          <param key="containerId" value="$QUEUE_NAME-out" />
           <param key="clusterId" value="$QUEUE_NAME" />
         </connector-service>
       </connector-services>

@@ -125,15 +125,22 @@ RouterConfig.prototype.add_linkroute = function (l) {
     this.linkroutes.push(myutils.merge({name:this.prefix + l.prefix + '-' + l.direction}, l));
 };
 
+function distinct_container_per_direction(props) {
+    if (props.containerId) {
+        props.containerId = props.containerId + '-' + props.direction;
+    }
+    return props;
+}
+
 RouterConfig.prototype.add_autolink_pair = function (def) {
     for (let i = 0; i < directions.length; i++) {
-        this.add_autolink(myutils.merge({direction:directions[i]}, def));
+        this.add_autolink(distinct_container_per_direction(myutils.merge({direction:directions[i]}, def)));
     }
 };
 
 RouterConfig.prototype.add_linkroute_pair = function (def) {
     for (let i = 0; i < directions.length; i++) {
-        this.add_linkroute(myutils.merge({direction:directions[i]}, def));
+        this.add_linkroute(distinct_container_per_direction(myutils.merge({direction:directions[i]}, def)));
     }
 };
 

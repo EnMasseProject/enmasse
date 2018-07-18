@@ -52,15 +52,19 @@ function verify_topic(name, all_linkroutes, containerId) {
     assert.equal(linkroutes.length, 2, 'no link routes found for topic ' + name);
     assert.equal(linkroutes[0].prefix, name);
     assert.equal(linkroutes[1].prefix, name);
-    if (containerId) {
-        assert.equal(linkroutes[0].containerId, containerId);
-        assert.equal(linkroutes[1].containerId, containerId);
-    }
     if (linkroutes[0].direction === 'in') {
         assert.equal(linkroutes[1].direction, 'out');
+        if (containerId) {
+            assert.equal(linkroutes[0].containerId, containerId + '-in');
+            assert.equal(linkroutes[1].containerId, containerId + '-out');
+        }
     } else {
         assert.equal(linkroutes[0].direction, 'out');
         assert.equal(linkroutes[1].direction, 'in');
+        if (containerId) {
+            assert.equal(linkroutes[0].containerId, containerId + '-out');
+            assert.equal(linkroutes[1].containerId, containerId + '-in');
+        }
     }
 }
 
@@ -75,11 +79,13 @@ function verify_queue(name, all_addresses, all_autolinks, containerId) {
     assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
     assert.equal(autolinks[0].addr, name);
     assert.equal(autolinks[1].addr, name);
-    assert.equal(autolinks[0].containerId, containerId || name);
-    assert.equal(autolinks[1].containerId, containerId || name);
     if (autolinks[0].direction === 'in') {
         assert.equal(autolinks[1].direction, 'out');
+        assert.equal(autolinks[0].containerId, util.format('%s-in', containerId || name));
+        assert.equal(autolinks[1].containerId, util.format('%s-out', containerId || name));
     } else {
+        assert.equal(autolinks[0].containerId, util.format('%s-out', containerId || name));
+        assert.equal(autolinks[1].containerId, util.format('%s-in', containerId || name));
         assert.equal(autolinks[0].direction, 'out');
         assert.equal(autolinks[1].direction, 'in');
     }
@@ -1066,7 +1072,7 @@ describe('broker configuration', function() {
     });
 
     it('creates lots of queues on associated brokers', function (done) {
-        this.timeout(40000);
+        this.timeout(60000);
         var router = routers.new_router();
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
@@ -1082,7 +1088,7 @@ describe('broker configuration', function() {
                 broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_a'; }));
                 broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_b'; }));
                 done();
-            }, 30000/*30 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }, 40000/*40 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         }).catch(done);
     });
 });
