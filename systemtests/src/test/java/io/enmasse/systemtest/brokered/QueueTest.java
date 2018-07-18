@@ -48,7 +48,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     @Tag(nonPR)
-    void messageGroupTest() throws Exception {
+    void testMessageGroup() throws Exception {
         Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -101,7 +101,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    void transactionCommitRejectTest(JmsProvider jmsProvider) throws Exception {
+    void testTransactionCommitReject(JmsProvider jmsProvider) throws Exception {
         Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
