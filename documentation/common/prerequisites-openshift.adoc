@@ -1,13 +1,13 @@
 [[prerequisites-openshift]]
 
-== Prerequisites
+.Prerequisites
 
-To install {ProductName}, you need to have the OpenShift client tools. You can download the OpenShift
-Origin client from https://github.com/openshift/origin/releases[OpenShift Origin]. {ProductName} has
+* To install {ProductName}, the OpenShift client tools are required. You can download the OpenShift
+Origin client from link:https://github.com/openshift/origin/releases[OpenShift Origin^]. {ProductName} has
 been tested to work with the latest stable release of the OpenShift Origin Client.
 
-If you do not have an OpenShift cluster available, see
-https://github.com/minishift/minishift[minishift] for an example of how to run a local instance of OpenShift
+* An OpenShift cluster is required. If you do not have an OpenShift cluster available, see
+link:https://github.com/minishift/minishift[Minishift^] for an example of how to run a local instance of OpenShift
 on your machine.
 
-You also need a way to generate certificates. This guide uses https://www.openssl.org/[OpenSSL].
+* A method to generate certificates is required. This guide uses link:https://www.openssl.org/[OpenSSL^].

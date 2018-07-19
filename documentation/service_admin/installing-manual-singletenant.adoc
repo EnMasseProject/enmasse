@@ -20,7 +20,7 @@ oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
 oc policy add-role-to-user admin system:serviceaccount:enmasse:address-space-admin
 ----
 
-. Install default plan and resource configuration
+. Install the default plan and resource configuration:
 +
 [options="nowrap"]
 ----
@@ -28,21 +28,23 @@ oc create -f ./resources/resource-definitions/resource-definitions.yaml
 oc create -f ./resources/plans/standard-plans.yaml
 ----
 
-. Deploy default address space
+. Deploy the default address space:
 +
 [options="nowrap"]
 ----
 oc process -f ./resources/templates/address-space.yaml NAME=default NAMESPACE=enmasse TYPE=standard PLAN=unlimited-standard | oc create -f -
 ----
 
-. Deploy template for creating addresses. You can use this later for creating addresses from the command line
+. Deploy the template for creating addresses:
 +
 [options="nowrap"]
 ----
 oc create -f ./resources/templates/address.yaml -n enmasse
 ----
++
+You can use this template later for creating addresses from the command line.
 
-. Deploy address-space-controller:
+. Deploy the address-space-controller:
 +
 [options="nowrap"]
 ----
@@ -51,10 +53,8 @@ oc create -f ./resources/address-space-controller/deployment.yaml
 ----
 +
 The deployments required for running {ProductName} are now created.
-This guide will walk through the manual deployment procedure and should work on any platform
-supporting the OpenShift client.
 
-. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
+. {ProductName} is running once all pods in the `enmasse` namespace are in the `Running` state:
 +
 [options="nowrap"]
 ----

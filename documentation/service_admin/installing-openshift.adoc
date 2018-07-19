@@ -9,33 +9,16 @@ include::common/prerequisites-openshift.adoc[leveloffset=+1]
 include::common/install-procedure.adoc[leveloffset+=1]
 
 {ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the
-`deploy.sh` script, or following the manual steps.
+`deploy.sh` script, or the manual steps.
 
 *NOTE*: You can invoke the deployment script with `-h` to view a list of options.
 
 === Installing {ProductName} using Ansible
 
-Installing with Ansible requires creating an inventory file with the variables for configuring the
-system. Example inventory files can be found in the `ansible/inventory` folder. The following
-options are supported:
+Installing {ProductName} using Ansible requires creating an inventory file with the variables for configuring the
+system. Example inventory files can be found in the `ansible/inventory` folder. For more information about the supported Ansible configuration settings see xref:ref_ansible-config-settings_{context}[Ansible configuration settings].
 
-.Table Ansible Configuration Settings
-|===
-|Name |Description |Default| Required
-|namespace|Namespace where {ProductName} should be installed.|- |yes
-|multitenant|Whether {ProductName} should be installed in the multitenant mode or not. Singletenant mode is recommended for evaluation purposes only. | true| no
-|enable_rbac|Enable RBAC authentication of REST APIs.|true |no
-|service_catalog|Enable integration with the Service Catalog.|false |no
-|osb_console_prefix|The HTTP URL of the console prefix for the Service Catalog Dashboard.| service broker service ip| no
-|authentication_services|List of authentication services to deploy. 'none' and 'standard' are supported. |["none"] |no
-|keycloak_admin_password|The admin password to use for the standard authentication service keycloak instance. |- |yes (if standard is enabled)
-|keycloak_http_url|The OAUTH URL to use for keycloak.| standard authentication service ip |no
-|api_server|Enable REST API server.|true |no
-|register_api_server|Register API server with Kubernetes master.|false |no
-|secure_api_server|Enable mutual TLS for API server.|false |no
-|===
-
-An example inventory that enables both the API server and Service Broker integration:
+An example inventory file that enables both the API server and Service Broker integration:
 
 [source,options="nowrap"]
 .link:service_admin/multitenant-all.inventory[multitenant-all.inventory]
@@ -43,7 +26,9 @@ An example inventory that enables both the API server and Service Broker integra
 include::multitenant-all.inventory[]
 ----
 
-. Run the ansible playbook.
+.Procedure
+
+* Run the ansible playbook:
 +
 [options="nowrap"]
 ----
@@ -52,7 +37,7 @@ ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
 
 === Installing {ProductName} manually
 
-This guide will walk through the manual deployment procedure and should work on any platform
+The manual deployment procedure can be performed on any platform
 supporting the OpenShift client.
 
 include::installing-manual.adoc[leveloffset+=1]
