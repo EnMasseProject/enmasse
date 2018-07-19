@@ -216,7 +216,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    public void concurrentOperationsTest() throws Exception {
+    public void testConcurrentOperations() throws Exception {
         HashMap<CompletableFuture<Void>, List<KeycloakCredentials>> company = new HashMap<>();
         int customersCount = 10;
         int usersCount = 5;
