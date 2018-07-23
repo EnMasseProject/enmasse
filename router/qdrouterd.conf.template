@@ -52,6 +52,7 @@ listener {
     host: ${MY_IP_ADDR}
     port: 55672
     role: inter-router
+    linkCapacity: ${LINK_CAPACITY}
     authenticatePeer: yes
     sslProfile: ssl_internal_details
     saslMechanisms: EXTERNAL
@@ -68,6 +69,7 @@ listener {
     port: 5671
     saslPlugin: auth_service
     sslProfile: ssl_details
+    linkCapacity: ${LINK_CAPACITY}
     requireSsl: true
     authenticatePeer: yes
 }
@@ -75,6 +77,7 @@ listener {
 listener {
     host: 0.0.0.0
     port: 8443
+    linkCapacity: ${LINK_CAPACITY}
     saslPlugin: auth_service
     sslProfile: ssl_details
     http: true
@@ -91,6 +94,7 @@ sslProfile {
 listener {
     host: 0.0.0.0
     port: 55671
+    linkCapacity: ${LINK_CAPACITY}
     sslProfile: ssl_internal_details
     saslMechanisms: EXTERNAL
     authenticatePeer: yes
@@ -99,6 +103,7 @@ listener {
 listener {
     host: 0.0.0.0
     port: 56671
+    linkCapacity: ${LINK_CAPACITY}
     sslProfile: ssl_internal_details
     saslMechanisms: EXTERNAL
     role: route-container
