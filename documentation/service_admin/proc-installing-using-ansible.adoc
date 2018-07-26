@@ -8,7 +8,7 @@ include::common/attributes.adoc[]
 = Installing {ProductName} using Ansible
 
 Installing {ProductName} using Ansible requires creating an inventory file with the variables for configuring the
-system. Example inventory files can be found in the `ansible/inventory` folder. For more information about the supported Ansible configuration settings see xref:ref_ansible-config-settings_{enmasse}[Ansible configuration settings].
+system. Example inventory files can be found in the `ansible/inventory` folder. For more information about the supported Ansible configuration settings see xref:ref_ansible-config-settings_enmasse[Ansible configuration settings].
 
 
 An example inventory file that enables both the API server and service broker integration:
