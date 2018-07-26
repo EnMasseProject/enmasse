@@ -1,3 +1,0 @@
-.Procedure 
-
-* Download one of the releases from the link:https://github.com/EnMasseProject/enmasse/releases[GitHub repository] and unpack it.

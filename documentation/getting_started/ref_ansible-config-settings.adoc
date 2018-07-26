@@ -5,7 +5,7 @@
 [id='ref_ansible-config-settings_{context}']
 = Ansible configuration settings
 
-The following Ansible configuration settings are supported:
+The following Ansible configuration settings are supported.
 
 .Ansible Configuration Settings
 |===
