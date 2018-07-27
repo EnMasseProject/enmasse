@@ -1,6 +1,7 @@
 // This assembly is included in the following assemblies:
 //
 // assembly-installing-openshift.adoc
+:parent-context: {context}
 
 include::common/attributes.adoc[]
 
@@ -9,8 +10,6 @@ include::common/attributes.adoc[]
 
 The manual deployment procedure can be performed on any platform
 supporting the OpenShift client.
-
-:parent-context: {context}
 
 :context: enmasse
 include::proc-creating-project.adoc[leveloffset=+1]
