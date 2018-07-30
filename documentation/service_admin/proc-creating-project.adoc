@@ -4,33 +4,13 @@
 
 include::common/attributes.adoc[]
 
-:cmdcli: oc
-
-[id='creating-project_{context}']
+[id='creating-project-{context}']
 = Creating the project for {ProductName}
 
-ifeval::["{cmdcli}" == "oc"]
-. Create the `enmasse` project:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} new-project enmasse
-----
-endif::[]
-ifeval::["{cmdcli}" == "kubectl"]
-
-. Create the `enmasse` namespace:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create namespace enmasse
-----
-
-. Set the `enmasse` namespace as the default namespace:
-+
-[options="nowrap",subs="attributes"]
-----
-kubectl config set-context $(kubectl config current-context) --namespace=enmasse
-----
+ifeval::[{cmdcli} == "oc"]
+include::common/snip-create-openshift-project.adoc[]
 endif::[]
 
+ifeval::[{cmdcli} == "kubectl"]
+include::common/snip-create-kubernetes-project.adoc[]
+endif::[]

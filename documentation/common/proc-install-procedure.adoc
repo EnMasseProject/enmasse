@@ -4,7 +4,7 @@
 
 include::attributes.adoc[]
 
-[id='downloading_{context}']
+[id='downloading-{context}']
 = Downloading {ProductName}
 
 .Procedure 

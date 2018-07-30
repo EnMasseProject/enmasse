@@ -4,7 +4,7 @@
 
 include::common/attributes.adoc[]
 
-[id='installing-using-ansible_{context}']
+[id='installing-using-ansible-{context}']
 = Installing {ProductName} using Ansible
 
 Installing {ProductName} using Ansible requires creating an inventory file with the variables for configuring the

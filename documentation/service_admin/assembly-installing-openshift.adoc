@@ -5,7 +5,7 @@
 
 include::common/attributes.adoc[]
 
-[id='installing-on-openshift_{context}']
+[id='installing-on-openshift-{context}']
 = Installing {ProductName} on OpenShift
 
 {ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the

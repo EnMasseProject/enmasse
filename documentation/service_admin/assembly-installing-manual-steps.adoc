@@ -5,13 +5,14 @@
 
 include::common/attributes.adoc[]
 
-[id='installing-using-manual-steps_{context}']
+[id='installing-using-manual-steps-{context}']
 = Installing {ProductName} manually
 
 The manual deployment procedure can be performed on any platform
 supporting the OpenShift client.
 
 :context: enmasse
+:cmdcli: oc
 include::proc-creating-project.adoc[leveloffset=+1]
 
 :context: enmasse

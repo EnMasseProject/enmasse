@@ -1,0 +1,70 @@
+////
+[[installing-kubernetes]]
+
+= Installing {ProductName} on Kubernetes
+
+
+
+include::common/prerequisites-kubernetes.adoc[leveloffset=+2]
+
+:context: enmasse
+include::common/proc-install-procedure.adoc[leveloffset+=2]
+
+To simplify deployment, see the `deploy.sh` script, which should work on Linux
+and Mac. You can invoke the deployment script with `-h` to view a list of options.
+
+This guide will walk through the manual deployment procedure and should work on any platform
+supporting the `kubectl` command-line client.
+
+:cmdcli: kubectl
+
+:context: kubectl
+include::assembly-installing-manual-steps.adoc[leveloffset+=2]
+////
+
+// This assembly is included in the following assemblies:
+//
+// assembly-installing-kubernetes.adoc
+:parent-context: {context}
+
+include::common/attributes.adoc[]
+
+[id='installing-using-manual-steps-{context}']
+= Installing {ProductName} manually
+
+The manual deployment procedure can be performed on any platform
+supporting the OpenShift client.
+
+.Prerequisite
+
+To install {ProductName}, you must have Kubernetes installed. You can use
+https://github.com/kubernetes/minikube[minikube] if you want to install {ProductName} on your
+laptop.
+
+:context: enmasse
+:cmdcli: kubectl
+include::proc-creating-project.adoc[leveloffset=+1]
+
+:context: enmasse
+:cmdcli: kubectl
+include::proc-deploying-auth-services.adoc[leveloffset=+1]
+
+:context: enmasse
+:cmdcli: kubectl
+include::proc-deploying-address-space-controller.adoc[leveloffset=+1]
+
+:context: enmasse
+:cmdcli: kubectl
+include::proc-deploying-api-server.adoc[leveloffset=+1]
+
+:context: enmasse
+:cmdcli: kubectl
+include::proc-deploying-service-broker.adoc[leveloffset=+1]
+
+:context: enmasse
+:cmdcli: kubectl
+include::proc-deploying-single-address-space.adoc[leveloffset=+1]
+
+:context: {parent-context}
+
+
