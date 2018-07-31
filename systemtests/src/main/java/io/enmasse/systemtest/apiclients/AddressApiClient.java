@@ -101,6 +101,25 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
+    public void deleteAddressSpaces(int expectedCode) throws Exception {
+        String path = addressSpacesPath;
+        log.info("DELETE-address-space: path '{}'", path);
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        doRequestNTimes(initRetry, () -> {
+                    client.delete(endpoint.getPort(), endpoint.getHost(), path)
+                            .as(BodyCodec.jsonObject())
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar,
+                                    responsePromise,
+                                    expectedCode,
+                                    String.format("Error: delete address spaces")));
+                    return responsePromise.get(2, TimeUnit.MINUTES);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
+    }
+
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         deleteAddressSpace(addressSpace, HTTP_OK);
     }
