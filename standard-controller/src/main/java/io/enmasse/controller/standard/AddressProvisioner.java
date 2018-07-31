@@ -172,8 +172,15 @@ public class AddressProvisioner {
         return needed;
     }
 
-    private static int MAX_ADDRESS_ID_LENGTH = 10;
+    private static final int MAX_ADDRESS_ID_LENGTH = 10;
+
     public static String getShardedClusterId(Address address) {
+        final String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
+
+        if ( clusterId != null ) {
+            return KubeUtil.sanitizeName(clusterId);
+        }
+
         return KubeUtil.sanitizeWithUuid(address.getAddress().substring(0, Math.min(MAX_ADDRESS_ID_LENGTH, address.getAddress().length())), UUID.nameUUIDFromBytes(address.getName().getBytes(StandardCharsets.UTF_8)).toString());
     }
 

@@ -15,9 +15,11 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static io.enmasse.address.model.Status.Phase.Configuring;
 import static io.enmasse.address.model.Status.Phase.Pending;
+import static java.util.Collections.singleton;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -247,18 +249,33 @@ public class AddressProvisionerTest {
     }
 
     private Address createQueue(String address, String plan) {
-        return createAddress(address, "queue", plan);
+        return createQueue(address, plan, null);
+    }
+    
+    private Address createQueue(String address, String plan, Consumer<Map<String,String>> customizeAnnotations) {
+        return createAddress(address, "queue", plan, customizeAnnotations);
     }
 
     private static Address createAddress(String address, String type, String plan) {
-        return new Address.Builder()
+        return createAddress(address, type, plan, null);
+    }
+    
+    private static Address createAddress(String address, String type, String plan, Consumer<Map<String,String>> customizeAnnotations) {
+        final Address.Builder addressBuilder = new Address.Builder()
                 .setName(address)
                 .setAddress(address)
                 .setAddressSpace("myspace")
                 .setNamespace("ns")
                 .setPlan(plan)
-                .setType(type)
-                .build();
+                .setType(type);
+
+        if ( customizeAnnotations != null ) {
+            final Map<String,String> annotations = new HashMap<>();
+            customizeAnnotations.accept(annotations);
+            addressBuilder.setAnnotations(annotations);
+        }
+
+        return addressBuilder.build();
     }
 
 
@@ -290,6 +307,38 @@ public class AddressProvisionerTest {
         assertThat(q2.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(q2.getAnnotations().get(AnnotationKeys.BROKER_ID));
         verify(generator).generateCluster(eq(AddressProvisioner.getShardedClusterId(q2)), any(), eq(1), eq(q2));
+    }
+
+    @Test
+    public void testProvisioningShardedWithClusterId() {
+        final Set<Address> addresses = new HashSet<>();
+        addresses.add(createAddress("a1", "anycast", "small-anycast"));
+
+        final AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 0, 3),
+                new ResourceAllowance("router", 0, 1),
+                new ResourceAllowance("aggregate", 0, 4)));
+        final Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
+
+        final String manualClusterId = "foobar";
+
+        final Address q = createQueue("q1", "xlarge-queue", annotations -> {
+            annotations.put(AnnotationKeys.CLUSTER_ID, manualClusterId);
+        });
+
+        final Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, singleton(q));
+
+        when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(q)), any(), anyInt(), eq(q)))
+            .thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(q), new KubernetesList()));
+
+        provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, singleton(q));
+
+        assertTrue(q.getStatus().getMessages().toString(), q.getStatus().getMessages().isEmpty());
+        assertThat(q.getStatus().getPhase(), is(Status.Phase.Configuring));
+        assertNull(q.getAnnotations().get(AnnotationKeys.BROKER_ID));
+
+        verify(generator)
+            .generateCluster(eq(manualClusterId), any(), eq(2), eq(q));
     }
 
     @Test
