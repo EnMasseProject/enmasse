@@ -130,7 +130,11 @@ error_handling() {
   echo "-XX:+ExitOnOutOfMemoryError"
 }
 
+jolokia_agent() {
+  test -r /jolokia-agent/jolokia.properties && echo "-javaagent:/jolokia-agent/agent.jar=config=/jolokia-agent/jolokia.properties"
+}
+
 initialize_container_limits > /dev/null
 
 ## Echo options, trimming trailing and multiple spaces
-echo "$(initial_memory) $(max_memory) $(gc_config) $(diagnostics) $(cpu_core_tunning) $(error_handling)" | awk '$1=$1'
+echo "$(initial_memory) $(max_memory) $(gc_config) $(diagnostics) $(cpu_core_tunning) $(error_handling) $(jolokia_agent)" | awk '$1=$1'

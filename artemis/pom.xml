@@ -14,5 +14,6 @@
      <module>sasl-delegation</module>
      <module>shutdown-hook</module>
      <module>jmx_exporter</module>
+     <module>jolokia-agent</module>
   </modules>
 </project>

@@ -30,6 +30,10 @@ build_tar:
 	mkdir -p $(ARTIFACT_BASE)/jmx_exporter
 	cp -f jmx_exporter/target/lib/jmx_prometheus_javaagent-0.1.0.jar $(ARTIFACT_BASE)/jmx_exporter/
 
+	mkdir -p $(ARTIFACT_BASE)/jolokia-agent
+	cp -f jolokia-agent/target/lib/jolokia-jvm-*-agent.jar $(ARTIFACT_BASE)/jolokia-agent/agent.jar
+	cp -f jolokia-agent/target/classes/jolokia.properties $(ARTIFACT_BASE)/jolokia-agent/
+
 	tar -czf build/artemis-image-$(VERSION).tar.gz -C build/artemis-image .
 
 package: build_tar build/apache-artemis-bin.tar.gz
