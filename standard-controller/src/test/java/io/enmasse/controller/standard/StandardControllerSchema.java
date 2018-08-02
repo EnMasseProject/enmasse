@@ -145,7 +145,10 @@ public class StandardControllerSchema {
                             .build(),
                         new ResourceDefinition.Builder()
                             .setName("broker")
-                            .build()))
+                            .build(),
+                        new ResourceDefinition.Builder()
+	                    .setName("broker-topic")
+	                    .build()))
                 .build();
     }
 
