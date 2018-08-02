@@ -166,7 +166,6 @@ class ApiServerTest extends TestBase {
         logWithSeparator(log, "Check if name is optional");
         Destination dest2 = new Destination(null, null, addressSpace.getName(),
                 "test-rest-api-queue2", AddressType.QUEUE.toString(), "brokered-queue");
-        deleteAddresses(addressSpace);
         setAddresses(addressSpace, dest2);
 
         HashMap<String, String> queryParams = new HashMap<>();
@@ -177,7 +176,7 @@ class ApiServerTest extends TestBase {
         assertTrue(returnedAddress.getName().contains(String.format("%s.%s", addressSpace.getName(), dest2.getAddress())),
                 "Address name is wrongly generated");
 
-        logWithSeparator(log, "Check if adddressSpace is optional");
+        logWithSeparator(log, "Check if addressSpace is optional");
         Destination dest3 = new Destination(null, null, null,
                 "test-rest-api-queue3", AddressType.QUEUE.toString(), "brokered-queue");
         deleteAddresses(addressSpace);
@@ -186,7 +185,7 @@ class ApiServerTest extends TestBase {
         Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
         assertEquals(addressSpace.getName(), dest3AddressObj.getAddressSpace(), "Addressspace name is empty");
 
-        logWithSeparator(log, "Check if behavior when addressSpace is set to another existing address space");
+        logWithSeparator(log, "Check behavior when addressSpace is set to another existing address space");
         Destination dest4 = new Destination(null, null, addressSpace2.getName(),
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), "brokered-queue");
         try {
@@ -197,8 +196,8 @@ class ApiServerTest extends TestBase {
         }
 
         try { //missing address
-            Destination destWithouAddress = Destination.queue(null, "brokered-queue");
-            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithouAddress);
+            Destination destWithoutAddress = Destination.queue(null, "brokered-queue");
+            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("message"),
@@ -211,17 +210,20 @@ class ApiServerTest extends TestBase {
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("message"),
-                    "Incorrect response from serveron missing type!");
+                    "Incorrect response from server on missing type!");
         }
 
         try { //missing plan
-            Destination destWithouPlan = Destination.queue("not-created-queue", null);
-            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithouPlan);
+            Destination destWithoutPlan = Destination.queue("not-created-queue", null);
+            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("message"),
                     "Incorrect response from server on missing plan!");
         }
+
+        logWithSeparator(log, "Removing all address spaces");
+        deleteAllAddressSpaces();
     }
 
     @Test
@@ -247,4 +249,5 @@ class ApiServerTest extends TestBase {
         assertThat(addresses.size(), is(3));
         TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
+
 }

@@ -1026,6 +1026,11 @@ public class TestUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
+    public static void deleteAllAddressSpaces(AddressApiClient addressApiClient) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        addressApiClient.deleteAddressSpaces(200);
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents(addressSpace.getNamespace());

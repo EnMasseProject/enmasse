@@ -81,6 +81,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
+    protected void deleteAllAddressSpaces() throws Exception {
+        TestUtils.deleteAllAddressSpaces(addressApiClient);
+        for (AddressSpace addressSpace : addressSpaceList) {
+            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+        }
+    }
+
     protected AddressSpace getSharedAddressSpace() {
         return null;
     }
