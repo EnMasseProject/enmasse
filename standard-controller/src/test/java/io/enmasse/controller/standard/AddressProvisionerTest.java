@@ -390,10 +390,11 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
 
-        assertThat(neededMap.keySet().size(), is(2));
+        assertThat(neededMap.keySet().size(), is(3));
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("router")), is(1));
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("subscription")), is(1));
 
         for (Address address : addressSet) {
             assertThat(address.getStatus().getPhase(), is(Configuring));
@@ -418,8 +419,9 @@ public class AddressProvisionerTest {
                 createSubscription("s7", "t1", "small-subscription"),
                 createSubscription("s8", "t1", "small-subscription"),
                 createSubscription("s9", "t1", "small-subscription"),
-                createSubscription("s10", "t1", "small-subscription"));
-
+                createSubscription("s10", "t1", "small-subscription"),
+                createSubscription("s11", "t1", "small-subscription"),
+                createSubscription("s12", "t1", "small-subscription"));
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
@@ -427,16 +429,24 @@ public class AddressProvisionerTest {
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("router")), is(1));
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("subscription")), is(1));
+
+        Set<Address> configured = new HashSet<Address>();
+        Set<Address> unConfigured = new HashSet<Address>();
 
 
-        Set<String> expectedNotConfigured = Sets.newSet("s9", "s10");
         for (Address address : addressSet) {
-            if (expectedNotConfigured.contains(address.getAddress())) {
-                assertThat(address.getStatus().getPhase(), is(Pending));
-            } else {
-                assertThat(address.getStatus().getPhase(), is(Configuring));
+            if (address.getStatus().getPhase().equals(Pending)) {
+                unConfigured.add(address);
+            } else if (address.getStatus().getPhase().equals(Configuring)) {
+                configured.add(address);
             }
         }
+        assertEquals(2, unConfigured.size());
+        assertEquals("contains topic + 10 subscriptions", 11, configured.size());
+        Iterator<Address> unconfiguredIterator = unConfigured.iterator();
+        assertFalse(configured.contains(unconfiguredIterator.next()));
+        assertFalse(configured.contains(unconfiguredIterator.next()));
     }
 
     @Test
@@ -446,24 +456,84 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("router", 0, 1),
                 new ResourceAllowance("aggregate", 0, 3)));
 
+        Address t1 = createAddress("t1", "topic", "xlarge-topic");
+        Address t2 = createAddress("t2", "topic", "xlarge-topic");
+        Address s1 = createSubscription("s1", "t1", "small-subscription");
         Set<Address> addressSet = Sets.newSet(
-                createAddress("t1", "topic", "xlarge-topic"),
-                createAddress("t2", "topic", "xlarge-topic"),
-                createSubscription("s1", "t1", "small-subscription"));
+                t1,
+                t2,
+                s1);
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
 
-        assertThat(neededMap.keySet().size(), is(2));
-        assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
+        assertThat(neededMap.keySet().size(), is(3));
+        assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(3));
 
-        List<BrokerCluster> brokerClusters = Arrays.asList(
-                createCluster("broker", 1));
+        List<BrokerCluster> brokerClusters = new ArrayList<BrokerCluster>(Arrays.asList(createCluster("broker", 1)));
 
-        provisioner.provisionResources(new RouterCluster("router", 1), brokerClusters, neededMap, addressSet);
+        when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(t1)), any(), anyInt(), eq(t1))).thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(t1), new KubernetesList()));
+        when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(t2)), any(), anyInt(), eq(t2))).thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(t2), new KubernetesList()));
+        provisioner.provisionResources(createDeployment(1), brokerClusters, neededMap, addressSet);
 
         for (Address address : addressSet) {
             assertThat(address.getStatus().getPhase(), is(Configuring));
         }
+        verify(generator).generateCluster(eq(AddressProvisioner.getShardedClusterId(t2)), any(), eq(1), eq(t2));
+        verify(generator).generateCluster(eq(AddressProvisioner.getShardedClusterId(t1)), any(), eq(1), eq(t1));
+    }
+
+    @Test
+    public void testDurableSubscriptionsShardedStaysOnTopicBroker() {
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 0, 2),
+                new ResourceAllowance("router", 0, 1),
+                new ResourceAllowance("aggregate", 0, 3)));
+
+        Address t1 = createAddress("t1", "topic", "small-topic");
+        Address t2 = createAddress("t2", "topic", "small-topic");
+
+        Set<Address> addressSet = Sets.newSet(
+                t1,
+                createSubscription("s1", "t1", "small-subscription"),
+                createSubscription("s2", "t1", "small-subscription"),
+                createSubscription("s3", "t1", "small-subscription"),
+                createSubscription("s4", "t1", "small-subscription"),
+                createSubscription("s5", "t1", "small-subscription"),
+                createSubscription("s6", "t1", "small-subscription"),
+                createSubscription("s7", "t1", "small-subscription"),
+                createSubscription("s8", "t1", "small-subscription"),
+                createSubscription("s9", "t1", "small-subscription"),
+                createSubscription("s10", "t1", "small-subscription"),
+                createSubscription("s11", "t1", "small-subscription"),
+                createSubscription("s12", "t1", "small-subscription"),
+                t2);
+
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
+
+        assertThat(neededMap.keySet().size(), is(3));
+        assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("router")), is(1));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
+        assertThat(AddressProvisioner.sumNeeded(neededMap.get("subscription")), is(1));
+
+        Set<Address> configured = new HashSet<Address>();
+        Set<Address> unConfigured = new HashSet<Address>();
+
+        for (Address address : addressSet) {
+            if (address.getStatus().getPhase().equals(Pending)) {
+                unConfigured.add(address);
+            } else if (address.getStatus().getPhase().equals(Configuring)) {
+                configured.add(address);
+            }
+        }
+        assertEquals(2, unConfigured.size());
+        assertTrue(configured.contains(t1));
+        assertTrue(configured.contains(t2));
+        assertEquals("contains 2 topic + 10 subscriptions", 12, configured.size());
+        Iterator<Address> unconfiguredIterator = unConfigured.iterator();
+        assertFalse(configured.contains(unconfiguredIterator.next()));
+        assertFalse(configured.contains(unconfiguredIterator.next()));
     }
 }
