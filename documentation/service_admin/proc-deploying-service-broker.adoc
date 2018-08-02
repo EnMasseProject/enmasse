@@ -4,8 +4,6 @@
 
 include::common/attributes.adoc[]
 
-:cmdcli: oc
-
 [id='deploying-service-broker_{context}']
 = (Optional) Deploying the service broker
 

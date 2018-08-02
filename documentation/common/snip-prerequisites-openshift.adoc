@@ -1,4 +1,4 @@
-:context: enmasse
+:context: maas
 
 .Prerequisites
 

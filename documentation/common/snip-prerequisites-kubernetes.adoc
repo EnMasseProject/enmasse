@@ -1,6 +1,6 @@
-[[prerequisites-kubernetes]]
+:context: maas
 
-= Prerequisite
+.Prerequisite
 
 To install {ProductName}, you must have Kubernetes installed. You can use
 https://github.com/kubernetes/minikube[minikube] if you want to install {ProductName} on your

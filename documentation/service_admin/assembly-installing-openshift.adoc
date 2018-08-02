@@ -15,16 +15,17 @@ NOTE: You can invoke the deployment script with `-h` to view a list of options.
 
 include::common/snip-prerequisites-openshift.adoc[]
 
-:context: enmasse
-include::common/proc-install-procedure.adoc[leveloffset=+1]
+:context: maas
 
-:context: enmasse
+include::common/proc-download-procedure.adoc[leveloffset=+1]
+
+:context: maas
 include::proc-installing-using-ansible.adoc[leveloffset=+1]
 
-//:context: enmasse
+//:context: maas
 //include::proc-installing-deploy-script.adoc[leveloffset=+1]
 
-:context: enmasse
+:context: maas
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
 
 :context: {parent-context}

@@ -4,8 +4,6 @@
 
 include::common/attributes.adoc[]
 
-:cmdcli: oc
-
 [id='deploying-api-server_{context}']
 = (Optional) Deploying the API server
 

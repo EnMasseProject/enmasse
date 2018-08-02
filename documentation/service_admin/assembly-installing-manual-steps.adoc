@@ -2,6 +2,8 @@
 //
 // assembly-installing-openshift.adoc
 :parent-context: {context}
+:context: maas
+:cmdcli: oc
 
 include::common/attributes.adoc[]
 
@@ -11,23 +13,16 @@ include::common/attributes.adoc[]
 The manual deployment procedure can be performed on any platform
 supporting the OpenShift client.
 
-:context: enmasse
-:cmdcli: oc
 include::proc-creating-project.adoc[leveloffset=+1]
 
-:context: enmasse
 include::proc-deploying-auth-services.adoc[leveloffset=+1]
 
-:context: enmasse
 include::proc-deploying-address-space-controller.adoc[leveloffset=+1]
 
-:context: enmasse
 include::proc-deploying-api-server.adoc[leveloffset=+1]
 
-:context: enmasse
 include::proc-deploying-service-broker.adoc[leveloffset=+1]
 
-:context: enmasse
 include::proc-deploying-single-address-space.adoc[leveloffset=+1]
 
 :context: {parent-context}

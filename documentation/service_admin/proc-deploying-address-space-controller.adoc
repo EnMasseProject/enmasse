@@ -4,8 +4,6 @@
 
 include::common/attributes.adoc[]
 
-:cmdcli: oc
-
 [id='deploying-address-space-controller_{context}']
 = Deploying the address space controller
 

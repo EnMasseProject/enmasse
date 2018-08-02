@@ -1,6 +1,7 @@
 // Module included in the following assemblies:
 //
 // assembly-installing-manual-steps.adoc
+// assembly-installing-kubernetes.adoc
 
 include::common/attributes.adoc[]
 

@@ -4,8 +4,6 @@
 
 include::common/attributes.adoc[]
 
-:cmdcli: oc
-
 [id='deploying-auth-services_{context}']
 = Deploying authentication services
 
