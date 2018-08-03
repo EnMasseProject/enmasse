@@ -8,10 +8,11 @@ include::common/attributes.adoc[]
 [id='creating-project-{context}']
 = Creating the project for {ProductName}
 
-ifeval::[{cmdcli} == "oc"]
+.Procedure
+ifeval::["{cmdcli}" == "oc"]
 include::common/snip-create-openshift-project.adoc[]
 endif::[]
 
-ifeval::[{cmdcli} == "kubectl"]
+ifeval::["{cmdcli}" == "kubectl"]
 include::common/snip-create-kubernetes-project.adoc[]
 endif::[]

@@ -1,4 +1,4 @@
-. Create the `enmasse` project:
+* Create the `enmasse` project:
 +
 [options="nowrap",subs="attributes"]
 ----

@@ -18,7 +18,6 @@ include::common/snip-prerequisites-kubernetes.adoc[]
 
 include::common/proc-download-procedure.adoc[leveloffset=+1]
 
-:cmdcli: kubectl
 include::proc-creating-project.adoc[leveloffset=+1]
 
 include::proc-deploying-auth-services.adoc[leveloffset=+1]
