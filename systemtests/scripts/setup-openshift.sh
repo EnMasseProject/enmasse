@@ -29,11 +29,11 @@ if [[ "${DOCKER_STATUS}" != "active" ]]; then
     sudo systemctl restart ${DOCKER}
 fi
 
-if ! oc cluster up --service-catalog "${OC_CLUSTER_ARGS}" ; then
+if ! oc cluster up "${OC_CLUSTER_ARGS}" ; then
     warn "OpenShift cluster didn't start properly, wait for 30s and try to restart..."
     sleep 30
     oc cluster down
-    oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
+    oc cluster up "${OC_CLUSTER_ARGS}"
 fi
 oc login -u system:admin
 
