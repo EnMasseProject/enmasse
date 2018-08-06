@@ -8,7 +8,7 @@ source "${CURDIR}/test_func.sh"
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
 # {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
 SYSTEMTESTS_DIR=${1}
-OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz"}
+OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.10.0/openshift-origin-client-tools-v3.10.0-dd10d17-linux-64bit.tar.gz"}
 OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 DOCKER=${DOCKER:-docker}
 
@@ -29,11 +29,11 @@ if [[ "${DOCKER_STATUS}" != "active" ]]; then
     sudo systemctl restart ${DOCKER}
 fi
 
-if ! oc cluster up --service-catalog "${OC_CLUSTER_ARGS}" ; then
+if ! oc cluster up "${OC_CLUSTER_ARGS}"  --enable=* --base-dir /var/lib/origin; then
     warn "OpenShift cluster didn't start properly, wait for 30s and try to restart..."
     sleep 30
     oc cluster down
-    oc cluster up --service-catalog "${OC_CLUSTER_ARGS}"
+    oc cluster up "${OC_CLUSTER_ARGS}" --enable=* --base-dir /var/lib/origin
 fi
 oc login -u system:admin
 
