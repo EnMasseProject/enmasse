@@ -29,11 +29,11 @@ if [[ "${DOCKER_STATUS}" != "active" ]]; then
     sudo systemctl restart ${DOCKER}
 fi
 
-if ! oc cluster up "${OC_CLUSTER_ARGS}" --enable=* ; then
+if ! oc cluster up "${OC_CLUSTER_ARGS}"  --enable=* --base-dir /var/lib/origin; then
     warn "OpenShift cluster didn't start properly, wait for 30s and try to restart..."
     sleep 30
     oc cluster down
-    oc cluster up "${OC_CLUSTER_ARGS}" --enable=*
+    oc cluster up "${OC_CLUSTER_ARGS}" --enable=* --base-dir /var/lib/origin
 fi
 oc login -u system:admin
 
