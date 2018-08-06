@@ -322,10 +322,11 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if(defaultAddressSpace.getAuthService().equals(AuthService.STANDARD)) {
+        if (defaultAddressSpace.getAuthService().equals(AuthService.STANDARD)) {
             if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift))
                 throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
         }
+        checkReachableWebPage();
     }
 
 
@@ -745,6 +746,6 @@ public class ConsoleWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        //TODO
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
     }
 }

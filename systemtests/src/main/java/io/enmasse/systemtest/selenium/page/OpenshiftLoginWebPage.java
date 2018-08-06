@@ -8,7 +8,10 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
+
+import java.time.Duration;
 
 public class OpenshiftLoginWebPage implements IWebPage {
 
@@ -60,6 +63,7 @@ public class OpenshiftLoginWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        //TODO
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("btn-lg")));
+
     }
 }
