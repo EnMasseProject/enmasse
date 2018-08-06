@@ -387,6 +387,6 @@ public class OpenshiftWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        //TODO
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("navbar-pf-vertical")));
     }
 }
