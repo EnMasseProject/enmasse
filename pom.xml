@@ -36,7 +36,7 @@
         <jboss.logging.annotations.version>2.1.0.Final</jboss.logging.annotations.version>
         <protonj.version>0.22.0</protonj.version>
         <qpidjms.version>0.26.0</qpidjms.version>
-        <selenium.version>3.11.0</selenium.version>
+        <selenium.version>3.14.0</selenium.version>
         <jacoco.version>0.7.9</jacoco.version>
         <license.maven.version>2.11</license.maven.version>
         <bouncycastle.version>1.56</bouncycastle.version>
