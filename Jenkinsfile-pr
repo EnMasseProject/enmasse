@@ -55,7 +55,7 @@ pipeline {
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh './systemtests/scripts/setup-openshift.sh "systemtests"'
+                    sh 'sudo ./systemtests/scripts/setup-openshift.sh "systemtests"'
                     sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
                 }
             }
