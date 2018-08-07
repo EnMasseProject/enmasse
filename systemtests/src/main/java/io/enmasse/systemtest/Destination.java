@@ -12,12 +12,14 @@ import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Destination {
     public static final String QUEUE = "queue";
     public static final String TOPIC = "topic";
     public static final String ANYCAST = "anycast";
     public static final String MULTICAST = "multicast";
+    public static final String SUBSCRIPTION = "subscription";
     private final String name;
 
     @Override
@@ -40,14 +42,10 @@ public class Destination {
     private final String plan;
     private final String uuid;
     private final String addressSpace;
+    private final String topic;
 
     public Destination(String name, String address, String type, String plan) {
-        this.name = name;
-        this.address = address;
-        this.type = type;
-        this.plan = plan;
-        this.uuid = null;
-        this.addressSpace = null;
+        this(name, address, type, plan, Optional.empty());
     }
 
     public Destination(String address, String type, String plan) {
@@ -61,6 +59,21 @@ public class Destination {
         this.plan = plan;
         this.uuid = uuid;
         this.addressSpace = addressSpace;
+        this.topic = null;
+    }
+
+    public Destination(String address, String type, String plan, Optional<String> topic) {
+        this(TestUtils.sanitizeAddress(address), address, type, plan, topic);
+    }
+
+    public Destination(String name, String address, String type, String plan, Optional<String> topic) {
+        this.name = name;
+        this.address = address;
+        this.type = type;
+        this.plan = plan;
+        this.uuid = null;
+        this.addressSpace = null;
+        this.topic = topic.orElse(null);
     }
 
     public static Destination queue(String address, String plan) {
@@ -87,6 +100,10 @@ public class Destination {
         return new Destination(address, MULTICAST, plan);
     }
 
+    public static Destination subscription(String address, String topic, String plan) {
+        return new Destination(address, SUBSCRIPTION, plan, Optional.of(topic));
+    }
+
     public static boolean isQueue(Destination d) {
         return QUEUE.equals(d.type);
     }
@@ -105,6 +122,10 @@ public class Destination {
 
     public String getAddress() {
         return address;
+    }
+
+    public String getQualifiedSubscriptionAddress() {
+        return topic == null ? address : topic + "::" + address;
     }
 
     public String getPlan() {
@@ -187,6 +208,9 @@ public class Destination {
         }
         if (this.getPlan() != null) {
             spec.put("plan", this.getPlan());
+        }
+        if (this.topic != null) {
+            spec.put("topic", this.topic);
         }
         return spec;
     }

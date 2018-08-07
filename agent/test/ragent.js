@@ -54,7 +54,7 @@ function verify_subscription(name, topic, all_linkroutes, containerId) {
     assert.equal(linkroutes[0].prefix, prefix);
     assert.equal(linkroutes[0].direction, 'out');
     if (containerId) {
-        assert.equal(linkroutes[0].containerId, containerId);
+        assert.equal(linkroutes[0].containerId, containerId + '-out');
     }
 }
 
