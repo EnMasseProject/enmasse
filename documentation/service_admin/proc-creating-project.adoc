@@ -1,0 +1,18 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+// assembly-installing-kubernetes.adoc
+
+include::common/attributes.adoc[]
+
+[id='creating-project-{context}']
+= Creating the project for {ProductName}
+
+.Procedure
+ifeval::["{cmdcli}" == "oc"]
+include::common/snip-create-openshift-project.adoc[]
+endif::[]
+
+ifeval::["{cmdcli}" == "kubectl"]
+include::common/snip-create-kubernetes-project.adoc[]
+endif::[]

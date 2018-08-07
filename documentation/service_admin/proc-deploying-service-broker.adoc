@@ -1,0 +1,117 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+include::common/attributes.adoc[]
+
+[id='deploying-service-broker_{context}']
+= (Optional) Deploying the service broker
+
+The service broker provides an implementation of the Open Service Broker API that integrates with the Kubernetes Service Catalog. The service broker requires the standard authentication service to be deployed.
+
+NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space[].
+
+.Prerequisite
+
+* The service broker requires the standard authentication service to be deployed.
+
+.Procedure
+
+. Create a service account for the {ProductName} service broker:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create sa enmasse-admin
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create cluster-wide roles used by the `enmasse-admin` service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc create -f ./resources/cluster-roles/service-broker.yaml
+----
+
+. Grant privileges to the service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:service-broker system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
+----
++
+*Note*: You can log in again as the regular user after this step.
+endif::[]
+
+. Create a certificate to use for the service broker. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p service-broker-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=service-broker.enmasse.svc.cluster.local" -out service-broker-cert/tls.crt -keyout service-broker-cert/tls.key
+----
+
+. Create a secret containing the service broker certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls service-broker-cert --cert=service-broker-cert/tls.crt --key=service-broker-cert/tls.key
+----
+
+. Create a secret containing the service broker secret configuration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls service-broker-secret --from-literal=keycloak.username=admin --from-literal=keycloak.password=admin --from-literal=keycloakCa.crt=`{cmdcli} extract secret/standard-authservice-cert --keys=tls.crt --to=-`
+----
+
+. Deploy the service broker:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/service-broker/deployment.yaml
+{cmdcli} create -f ./resources/service-broker/service.yaml
+----
+
+. To ensure the service broker redirects correctly, you must specify the `keycloakUrl` setting. If you are running a local cluster without a public DNS, use the internal service IP address for the host name; otherwise, use the host name of the external route. To obtain the service IP address, use this command:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
+ifeval::["{cmdcli}" == "oc"]
++
+Or, if you have a public host name, use this command to obtain the host name:
++
+[options="nowrap"]
+----
+oc get route keycloak -o jsonpath={.spec.host}
+----
+endif::[]
+
+. Create the service broker configuration:
++
+[options="nowrap",subs="attributes"]
+----
+AUTH_HOST=value from one of the previous commands
+AUTH_PORT=8443 if using the service ip, 443 if using the route host
+{cmdcli} create configmap service-broker-config --from-literal=enableRbac=false --from-literal=keycloakUrl=https://$AUTH_HOST:$AUTH_PORT/auth
+----
+
+. Create a secret with a token for the Service Catalog:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret generic service-catalog-credentials --from-literal=token=`{cmdcli} whoami -t`
+----
+
+. Register the service broker with the Service Catalog:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} process -f ./resources/templates/service-broker.yaml BROKER_NAMESPACE=enmasse | oc create -f -
+----
+

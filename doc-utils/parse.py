@@ -80,7 +80,7 @@ def parse(names, verbose):
     if verbose:
         print "Parsing ascii doc files for comments:"
     base = {}
-    p = re.compile("^// (.*?)\:(.*)")
+    p = re.compile("^// !(.*?)\:(.*)")
 
     for fname in names:
         try:

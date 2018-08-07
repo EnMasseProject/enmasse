@@ -1,0 +1,13 @@
+. Create the `enmasse` namespace:
++
+[options="nowrap",subs="attributes"]
+----
+kubectl create namespace enmasse
+----
+
+. Set the `enmasse` namespace as the default namespace:
++
+[options="nowrap",subs="attributes"]
+----
+kubectl config set-context $(kubectl config current-context) --namespace=enmasse
+----

@@ -1,0 +1,60 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+include::common/attributes.adoc[]
+
+[id='deploying-address-space-controller_{context}']
+= Deploying the address space controller
+
+The address space controller is responsible for creating the infrastructure used by address spaces.
+
+NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for creating namespaces and managing resources in those namespaces; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space[].
+
+.Procedure
+
+. Create a service account for the {ProductName} address space controller:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create sa enmasse-admin
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create cluster-wide roles used by the `enmasse-admin` service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc create -f ./resources/cluster-roles/openshift/address-space-controller.yaml
+----
+
+. Grant privileges to the service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:enmasse:enmasse-admin
+----
++
+*Note*: You can log in again as the regular user after this step.
+endif::[]
+
+. Install the default plan and resource configuration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/resource-definitions/resource-definitions.yaml
+{cmdcli} create -f ./resources/plans/standard-plans.yaml
+{cmdcli} create -f ./resources/plans/brokered-plans.yaml
+----
+
+. Deploy the address space controller:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/address-space-controller/address-space-definitions.yaml
+{cmdcli} create -f ./resources/address-space-controller/deployment.yaml
+----
+

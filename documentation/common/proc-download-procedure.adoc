@@ -1,0 +1,18 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-openshift.adoc
+// assembly-installing-kubernetes.adoc
+
+include::attributes.adoc[]
+
+[id='downloading-{context}']
+= Downloading {ProductName}
+
+.Procedure
+ifdef::Downloading[]
+* Download one of the releases from the link:https://github.com/EnMasseProject/enmasse/releases[GitHub repository] and unpack it.
+endif::Downloading[]
+
+ifdef::Productdownload[]
+* Download the release from 
+endif::Productdownload[]

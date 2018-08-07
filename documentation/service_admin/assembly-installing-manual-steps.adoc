@@ -1,0 +1,29 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-installing-openshift.adoc
+:parent-context: {context}
+:context: maas
+:cmdcli: oc
+
+include::common/attributes.adoc[]
+
+[id='installing-using-manual-steps-{context}']
+= Installing {ProductName} manually
+
+The manual deployment procedure can be performed on any platform
+supporting the OpenShift client.
+
+include::proc-creating-project.adoc[leveloffset=+1]
+
+include::proc-deploying-auth-services.adoc[leveloffset=+1]
+
+include::proc-deploying-address-space-controller.adoc[leveloffset=+1]
+
+include::proc-deploying-api-server.adoc[leveloffset=+1]
+
+include::proc-deploying-service-broker.adoc[leveloffset=+1]
+
+include::proc-deploying-single-address-space.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

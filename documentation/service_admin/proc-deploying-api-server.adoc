@@ -1,0 +1,92 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+include::common/attributes.adoc[]
+
+[id='deploying-api-server_{context}']
+= (Optional) Deploying the API server
+
+The API server provides a REST API for creating address spaces and addresses. It can also serve as
+a Kubernetes API server if it is registered as an APIService.
+
+NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space[].
+
+.Procedure
+
+. Create a service account for the {ProductName} API server:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create sa enmasse-admin
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create cluster-wide roles used by the `enmasse-admin` service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc create -f ./resources/cluster-roles/api-server.yaml
+----
+
+. Grant privileges to the service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
+oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
+----
++
+*Note*: You can log in again as the regular user after this step.
+endif::[]
+
+. Create a certificate to use with the API server. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p api-server-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+----
+
+. Create a secret containing the API server certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
+----
+
+. Create the API server configuration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create configmap api-server-config --from-literal=enableRbac=false
+----
+
+. Deploy the API server:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/api-server/deployment.yaml
+{cmdcli} create -f ./resources/api-server/service.yaml
+----
+ifeval::["{cmdcli}" == "oc"]
+[[{cmdcli}-register-apiservice]]
+
+. (Optional) Register the API server to support custom resources:
++
+[options="nowrap"]
+----
+oc process -f ./resources/templates/api-service.yaml ENMASSE_NAMESPACE=enmasse | oc create -f -
+----
+
+. (Optional) Create routes exposing the API server:
++
+[options="nowrap"]
+----
+oc create route passthrough restapi --service=api-server -n enmasse
+----
+endif::[]
+

@@ -1,5 +1,11 @@
-[[openshift-install-single-address-space]]
-==== Deploying {ProductName} limited to a single address space
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+include::common/attributes.adoc[]
+
+[id='deploying-single-address-space_{context}']
+= Deploying {ProductName} to a single address space
 
 .Procedure
 
@@ -44,7 +50,7 @@ oc create -f ./resources/templates/address.yaml -n enmasse
 +
 You can use this template later for creating addresses from the command line.
 
-. Deploy the address-space-controller:
+. Deploy the address space controller:
 +
 [options="nowrap"]
 ----

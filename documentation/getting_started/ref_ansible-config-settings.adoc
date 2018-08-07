@@ -1,0 +1,24 @@
+// Module included in the following assemblies:
+//
+// assembly_.adoc
+
+[id='ref_ansible-config-settings_{context}']
+= Ansible configuration settings
+
+The following Ansible configuration settings are supported.
+
+.Ansible Configuration Settings
+|===
+|Name |Description |Default value| Required
+|namespace|Specifies the namespace where {ProductName} is installed.|Not applicable |yes
+|multitenant|Specifies whether to install {ProductName} in multitenant mode. Single-tenant mode is recommended for evaluation purposes only. | true| no
+|enable_rbac|Specifies whether to enable RBAC authentication of REST APIs.|true |no
+|service_catalog|Specifies whether to enable integration with the Service Catalog.|false |no
+|osb_console_prefix|Specifies the HTTP URL of the Console prefix for the Service Catalog dashboard.| service broker service IP address| no
+|authentication_services|Specifies the list of authentication services to deploy. `none` and `standard` are supported. |`none` |no
+|keycloak_admin_password|Specifies the admin password to use for the standard authentication service Keycloak instance. |Not applicable |yes (if `standard` is enabled)
+|keycloak_http_url|Specifies the OAUTH URL to use for Keycloak.| standard authentication service IP address |no
+|api_server|Specifies whether to enable the REST API server.|true |no
+|register_api_server|Specifies whether to register the API server with Kubernetes master.|false |no
+|secure_api_server|Specifies whether to enable mutual TLS for the API server.|false |no
+|===

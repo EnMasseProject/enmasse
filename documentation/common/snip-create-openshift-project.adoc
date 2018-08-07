@@ -1,0 +1,6 @@
+* Create the `enmasse` project:
++
+[options="nowrap",subs="attributes"]
+----
+oc new-project enmasse
+----

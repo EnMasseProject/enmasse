@@ -30,8 +30,8 @@ include::common/overview.adoc[leveloffset=+1]
 
 == Installation
 
-include::service_admin/installing-openshift.adoc[leveloffset=+1]
-include::service_admin/installing-kubernetes.adoc[leveloffset=+1]
+include::service_admin/assembly-installing-openshift.adoc[leveloffset=+2]
+include::service_admin/assembly-installing-kubernetes.adoc[leveloffset=+2]
 
 == Configuring address space and address plans 
 

@@ -1,0 +1,32 @@
+// This assembly is included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+:parent-context: {context}
+
+include::common/attributes.adoc[]
+
+[id='installing-on-openshift-{context}']
+= Installing {ProductName} on OpenShift
+
+{ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the
+`deploy.sh` script, or the manual steps.
+
+NOTE: You can invoke the deployment script with `-h` to view a list of options.
+
+include::common/snip-prerequisites-openshift.adoc[]
+
+:context: maas
+
+include::common/proc-download-procedure.adoc[leveloffset=+1]
+
+:context: maas
+include::proc-installing-using-ansible.adoc[leveloffset=+1]
+
+//:context: maas
+//include::proc-installing-deploy-script.adoc[leveloffset=+1]
+
+:context: maas
+include::assembly-installing-manual-steps.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

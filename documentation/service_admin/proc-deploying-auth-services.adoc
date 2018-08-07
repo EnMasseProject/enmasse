@@ -1,0 +1,114 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+include::common/attributes.adoc[]
+
+[id='deploying-auth-services_{context}']
+= Deploying authentication services
+
+{ProductName} requires at least one authentication service to be deployed. The authentication service
+can be `none` (allow all), `standard` (Keycloak), or `external` (not managed by {ProductName}).
+
+== Deploying the `none` authentication service
+
+.Procedure
+
+. Create a certificate to use with the `none` authentication service. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p none-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+----
+
+. Create a secret with the `none` authentication service certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
+----
+
+. Create the `none` authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/none-authservice/service.yaml
+{cmdcli} create -f ./resources/none-authservice/deployment.yaml
+----
+
+== Deploying the `standard` authentication service
+
+.Procedure
+
+. Create a certificate to use with the `standard` authentication service. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p standard-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+----
+
+. Create a secret with the `standard` authentication service certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
+----
+
+. Create a secret with Keycloak admin credentials. Choose a password wisely as this user will have complete access over authentication and authorization policies:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Grant privileges to the service account:
++
+[options="nowrap"]
+----
+oc login -u system:admin
+oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:enmasse:enmasse-admin
+----
+endif::[]
+
+. Create the `standard` authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/standard-authservice/service.yaml
+{cmdcli} create -f ./resources/standard-authservice/keycloak-deployment.yaml
+{cmdcli} create -f ./resources/standard-authservice/controller-deployment.yaml
+{cmdcli} create -f ./resources/standard-authservice/pvc.yaml
+{cmdcli} create -f ./resources/standard-authservice/route.yaml
+----
+
+. Create the Keycloak configuration used by the controller and service. To make the standard authservice
+accessible for the messaging console and the Keycloak operator, you must specify the `httpUrl`
+setting. If you are running a local cluster without a public DNS, use the internal service
+IP address for the host name; otherwise, use the hostname of the external route. To obtain the service IP address:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get service standard-authservice -o jsonpath={.spec.clusterIP}
+----
+ifeval::["{cmdcli}" == "oc"]
++
+. Or, if you have a public host name:
++
+[options="nowrap"]
+----
+oc get route keycloak -o jsonpath={.spec.host}
+----
+endif::[]
+
+. Create the Keycloak configuration:
++
+[options="nowrap",subs="attributes"]
+----
+AUTH_HOST=value from one of the previous commands
+AUTH_PORT=8443 if using the service ip, 443 if using the route host
+{cmdcli} create configmap keycloak-config --from-literal=hostname=standard-authservice --from-literal=port=5671 --from-literal=httpUrl=https://$AUTH_HOST:$AUTH_PORT/auth --from-literal=caSecretName=standard-authservice-cert
+----
+
