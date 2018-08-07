@@ -51,7 +51,7 @@
            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
-           <directory>${project.basedir}/www</directory>
+           <directory>${project.basedir}/target/www</directory>
            <outputDirectory>www</outputDirectory>
            <includes>
               <include>**</include>
