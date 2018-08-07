@@ -311,7 +311,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_linkroute_pair({prefix:def.address, containerId: def.allocated_to ? def.allocated_to : def.address});
         } else if (def.type === 'subscription') {
             if (def.allocated_to) {
-                config.add_linkroute({prefix:def.topic+'::'+def.address, containerId: def.allocated_to, direction:'out'});
+                config.add_linkroute(distinct_container_per_direction({prefix:def.topic+'::'+def.address, containerId: def.allocated_to, direction:'out'}));
             } else {
                 log.warn('subscription %s not allocated to broker', def.address);
             }

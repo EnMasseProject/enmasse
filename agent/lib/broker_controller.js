@@ -32,7 +32,7 @@ function BrokerController(event_sink) {
     this.busy_count = 0;
     this.retrieve_count = 0;
     this.last_retrieval = undefined;
-    this.need_connector = false;
+    this.ignore_subscriptions = false;
 };
 
 util.inherits(BrokerController, events.EventEmitter);
@@ -42,6 +42,7 @@ BrokerController.prototype.start_polling = function (poll_frequency) {
 };
 
 BrokerController.prototype.connect = function (options) {
+    this.ignore_subscriptions = true;
     var container = rhea.create_container();
     container.on('connection_open', this.on_connection_open.bind(this));
     return container.connect(options);
@@ -66,7 +67,6 @@ BrokerController.prototype.on_connection_open = function (context) {
 BrokerController.prototype.set_connection = function (connection) {
     this.broker = new artemis.Artemis(connection);
     this.id = connection.container_id;
-    this.need_connector = true;
     log.info('[%s] broker controller ready', this.id);
 };
 
@@ -280,6 +280,10 @@ function values(map) {
     return Object.keys(map).map(function (key) { return map[key]; });
 }
 
+function exclude_subscriptions(type) {
+    return type === 'subscription';
+}
+
 function excluded_addresses(address) {
     return address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications';
 }
@@ -296,11 +300,12 @@ function is_durable_subscription(a) {
  * Translate from the address details we get back from artemis to the
  * structure used for the definition, for easier comparison.
  */
-function translate(addresses_in, exclude) {
+function translate(addresses_in, excluded_names, excluded_types) {
     var addresses_out = {};
     for (var name in addresses_in) {
-        if (exclude && exclude(name)) continue;
+        if (excluded_names && excluded_names(name)) continue;
         var a = addresses_in[name];
+        if (excluded_types && excluded_types(a.type)) continue;
         if (is_temp_queue(a)) {
             log.debug('ignoring temp queue %s', a.name);
             continue;
@@ -462,7 +467,7 @@ BrokerController.prototype._set_sync_status = function (stale, missing) {
 BrokerController.prototype._sync_broker_addresses = function () {
     var self = this;
     return this.broker.listAddresses().then(function (results) {
-        var actual = translate(results, excluded_addresses)
+        var actual = translate(results, excluded_addresses, self.ignore_subscriptions ? exclude_subscriptions : undefined);
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
         log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),

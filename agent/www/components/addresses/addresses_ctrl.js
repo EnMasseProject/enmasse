@@ -226,7 +226,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
               title:  'Type',
               placeholder: 'Filter by Type...',
                 filterType: 'select',
-                filterValues: ['queue', 'topic', 'multicast', 'anycast']
+                filterValues: ['queue', 'topic', 'multicast', 'anycast', 'subscription']
             }
           ],
           resultsCount: $scope.items.length,

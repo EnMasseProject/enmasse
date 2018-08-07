@@ -337,7 +337,7 @@ public class AddressProvisionerTest {
             annotations.put(AnnotationKeys.CLUSTER_ID, manualClusterId);
         });
 
-        final Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, singleton(q));
+        final Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, singleton(q), singleton(q));
 
         when(generator.generateCluster(eq(AddressProvisioner.getShardedClusterId(q)), any(), anyInt(), eq(q)))
             .thenReturn(new BrokerCluster(AddressProvisioner.getShardedClusterId(q), new KubernetesList()));

@@ -121,7 +121,7 @@ under the License.
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
-          <param key="containerId" value="$CONTAINER_ID" />
+          <param key="containerId" value="$CONTAINER_ID-out" /> <!-- currently only needed for subscriptions -->
           <param key="clusterId" value="$CONTAINER_ID" />
         </connector-service>
         <connector-service name="ragent-connector">
@@ -131,11 +131,18 @@ under the License.
           <param key="containerId" value="$CONTAINER_ID" />
           <param key="clusterId" value="$CONTAINER_ID" />
         </connector-service>
-        <connector-service name="address-connector">
+        <connector-service name="address-connector-in">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
-          <param key="containerId" value="$TOPIC_NAME" />
+          <param key="containerId" value="$TOPIC_NAME-in" />
+          <param key="clusterId" value="$TOPIC_NAME" />
+        </connector-service>
+        <connector-service name="address-connector-out">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
+          <param key="containerId" value="$TOPIC_NAME-out" />
           <param key="clusterId" value="$TOPIC_NAME" />
         </connector-service>
       </connector-services>

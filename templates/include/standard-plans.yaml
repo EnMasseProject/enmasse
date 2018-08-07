@@ -97,7 +97,8 @@ data:
         "sharded-queue",
         "pooled-queue",
         "sharded-topic",
-        "pooled-topic"
+        "pooled-topic",
+        "standard-subscription"
       ]
     }
 ---
@@ -330,7 +331,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: address-plan-subscription
+  name: address-plan-standard-subscription
   labels:
     type: address-plan
     app: enmasse

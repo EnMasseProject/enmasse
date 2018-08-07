@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
-    private static Set<String> validDestinationTypes = new HashSet<>(Arrays.asList("queue", "topic", "anycast", "multicast"));
+    private static Set<String> validDestinationTypes = new HashSet<>(Arrays.asList("queue", "topic", "anycast", "multicast", "subscription"));
 
     /**
      * scale up/down specific Destination (type: StatefulSet) in address space
