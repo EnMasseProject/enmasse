@@ -49,7 +49,7 @@ public class Main {
 
         KubeApi kubeApi = userName -> {
             if (client.supportsOpenShiftAPIGroup("user.openshift.io")) {
-                if (userName.isEmpty() || userName.contains(":")) {
+                if (userName == null || userName.isEmpty() || userName.contains(":")) {
                     return "";
                 }
                 try {
