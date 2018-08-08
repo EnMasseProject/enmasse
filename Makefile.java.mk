@@ -3,6 +3,9 @@ include $(TOPDIR)/Makefile.common
 ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
 endif
+ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
+	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
+endif
 
 ifneq ($(FULL_BUILD),true)
 build:

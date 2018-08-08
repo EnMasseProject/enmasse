@@ -16,6 +16,10 @@ SKIP_TESTS      ?= false
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS="-DskipTests"
 endif
+ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
+	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
+endif
+
 
 all: init build_java docker_build
 

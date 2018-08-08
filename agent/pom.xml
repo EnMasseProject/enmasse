@@ -9,7 +9,28 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.enmasse</groupId>
   <artifactId>agent</artifactId>
+  <properties>
+    <application.display.name>EnMasse</application.display.name>
+  </properties>
   <build>
+    <resources>
+      <resource>
+        <directory>www</directory>
+        <targetPath>${project.basedir}/target/www</targetPath>
+        <excludes>
+          <exclude>index.html</exclude>
+        </excludes>
+        <filtering>false</filtering>
+      </resource>
+      <resource>
+        <directory>www</directory>
+        <targetPath>${project.basedir}/target/www</targetPath>
+        <includes>
+          <include>index.html</include>
+        </includes>
+        <filtering>true</filtering>
+      </resource>
+    </resources>  
     <plugins>
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
