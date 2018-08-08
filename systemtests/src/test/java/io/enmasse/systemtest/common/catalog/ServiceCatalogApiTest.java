@@ -129,7 +129,7 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
         assertCanConnect(addressSpace, binding.getCredentials(), Arrays.asList(queue));
 
         //!TODO to deleteBinding is not implemented, returns 200 every time
-        deprovisionBinding(addressSpace,developer.getUsername(), provInstance.getInstanceId(), binding.getId());
+        deprovisionBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), binding.getId());
         deleteServiceInstance(addressSpace, developer.getUsername(), provInstance.getInstanceId());
     }
 
@@ -165,14 +165,12 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
             selenium.clearScreenShots();
         }
 
-        AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED);
+        AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
         ServiceInstance serviceInstance = createServiceInstance(brokeredSpace, developer.getUsername());
         waitForAddressSpaceReady(brokeredSpace);
         reloadAddressSpaceEndpoints(brokeredSpace);
-
         ConsoleWebPage consolePage = new ConsoleWebPage(selenium, serviceInstance.getDashboardUrl(),
                 addressApiClient, brokeredSpace, developer);
         consolePage.openWebConsolePage(true);
     }
-
 }

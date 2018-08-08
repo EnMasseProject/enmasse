@@ -21,7 +21,6 @@ public class OpenshiftLoginWebPage implements IWebPage {
 
     public OpenshiftLoginWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
-        checkReachableWebPage();
     }
 
     private WebElement getUsernameTextInput() {
@@ -54,6 +53,7 @@ public class OpenshiftLoginWebPage implements IWebPage {
     }
 
     public boolean login(String username, String password) throws Exception {
+        checkReachableWebPage();
         log.info("Try to login with credentials {} : {}", username, password);
         selenium.fillInputItem(getUsernameTextInput(), username);
         selenium.fillInputItem(getPasswordTextInput(), password);
@@ -63,7 +63,8 @@ public class OpenshiftLoginWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("btn-lg")));
-
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("inputPassword")));
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
+        selenium.takeScreenShot();
     }
 }

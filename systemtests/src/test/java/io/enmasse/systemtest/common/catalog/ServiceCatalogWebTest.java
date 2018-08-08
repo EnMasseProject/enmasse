@@ -113,7 +113,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     void testCreateBindingCreateAddressSendReceive() throws Exception {
         Destination queue = Destination.queue("test-queue", "brokered-queue");
         Destination topic = Destination.topic("test-topic", "brokered-topic");
-        AddressSpace brokered = new AddressSpace("test-messaging-space", AddressSpaceType.BROKERED);
+        AddressSpace brokered = new AddressSpace("test-messaging-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
@@ -183,5 +183,4 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
         consolePage.login(developer, true);
     }
-
 }
