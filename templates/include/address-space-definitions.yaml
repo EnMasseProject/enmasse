@@ -1791,7 +1791,7 @@ data:
           spec:
             containers:
             - command:
-              - node
+              - /opt/app-root/src/bin/launch_node.sh
               - /opt/app-root/src/bin/subserv.js
               image: ${AGENT_IMAGE}
               livenessProbe:
