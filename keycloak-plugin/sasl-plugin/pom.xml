@@ -12,7 +12,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-proton</artifactId>
-      <version>3.5.1</version>
+      <version>${vertx.version}</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>

@@ -11,9 +11,7 @@ import org.mockito.internal.util.collections.Sets;
 import java.time.Duration;
 import java.util.Set;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class ResourceCheckerTest {
     ResourceChecker<String> controller;

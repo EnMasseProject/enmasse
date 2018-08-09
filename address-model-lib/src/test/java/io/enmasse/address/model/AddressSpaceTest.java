@@ -6,7 +6,6 @@ package io.enmasse.address.model;
 
 
 import org.junit.Test;
-import org.mockito.internal.matchers.Null;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
