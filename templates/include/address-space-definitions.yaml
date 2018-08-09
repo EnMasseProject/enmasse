@@ -497,7 +497,7 @@ data:
                         memory: ${BROKER_MEMORY_LIMIT}
                     volumeMounts:
                     - mountPath: /var/run/artemis
-                      name: broker-data
+                      name: data
                       readOnly: false
                     - mountPath: /etc/enmasse-certs
                       name: broker-internal-cert
@@ -530,7 +530,7 @@ data:
                     cluster_id: ${CLUSTER_ID}
                   labels:
                     app: enmasse
-                  name: broker-data
+                  name: data
                 spec:
                   accessModes:
                   - ReadWriteOnce
@@ -687,7 +687,7 @@ data:
                         memory: ${BROKER_MEMORY_LIMIT}
                     volumeMounts:
                     - mountPath: /var/run/artemis
-                      name: broker-data
+                      name: data
                       readOnly: false
                     - mountPath: /etc/enmasse-certs
                       name: broker-internal-cert
@@ -800,7 +800,7 @@ data:
                     cluster_id: ${CLUSTER_ID}
                   labels:
                     app: enmasse
-                  name: broker-data
+                  name: data
                 spec:
                   accessModes:
                   - ReadWriteOnce
@@ -1416,7 +1416,7 @@ data:
                         memory: ${BROKER_MEMORY_LIMIT}
                     volumeMounts:
                     - mountPath: /var/run/artemis
-                      name: broker-data
+                      name: data
                       readOnly: false
                     - mountPath: /etc/enmasse-certs
                       name: broker-internal-cert
@@ -1449,7 +1449,7 @@ data:
                     cluster_id: ${CLUSTER_ID}
                   labels:
                     app: enmasse
-                  name: broker-data
+                  name: data
                 spec:
                   accessModes:
                   - ReadWriteOnce
@@ -1606,7 +1606,7 @@ data:
                         memory: ${BROKER_MEMORY_LIMIT}
                     volumeMounts:
                     - mountPath: /var/run/artemis
-                      name: broker-data
+                      name: data
                       readOnly: false
                     - mountPath: /etc/enmasse-certs
                       name: broker-internal-cert
@@ -1719,7 +1719,7 @@ data:
                     cluster_id: ${CLUSTER_ID}
                   labels:
                     app: enmasse
-                  name: broker-data
+                  name: data
                 spec:
                   accessModes:
                   - ReadWriteOnce

@@ -82,6 +82,9 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, addressSpace);
+        if (address != null) {
+            Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getAddress());
+        }
         return items;
     }
 }
