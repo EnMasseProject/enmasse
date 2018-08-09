@@ -3,10 +3,12 @@ BUILD_DIRS     = none-authservice templates
 DOCKER_DIRS	   = agent topic-forwarder artemis api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io
-OPENSHIFT_PROJECT ?= $(shell oc project -q)
-OPENSHIFT_USER    ?= $(shell oc whoami)
-OPENSHIFT_TOKEN   ?= $(shell oc whoami -t)
-OPENSHIFT_MASTER  ?= $(shell oc whoami --show-server=true)
+OPENSHIFT_PROJECT             ?= $(shell oc project -q)
+OPENSHIFT_USER                ?= $(shell oc whoami)
+OPENSHIFT_TOKEN               ?= $(shell oc whoami -t)
+OPENSHIFT_MASTER              ?= $(shell oc whoami --show-server=true)
+OPENSHIFT_USE_TLS             ?= true
+OPENSHIFT_REGISTER_API_SERVER ?= false
 
 DOCKER_TARGETS = docker_build docker_tag docker_push clean
 BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
@@ -52,7 +54,13 @@ deploy:
 	./templates/install/deploy.sh -n $(OPENSHIFT_PROJECT) -u $(OPENSHIFT_USER) -m $(OPENSHIFT_MASTER) -o multitenant -a "standard none"
 
 systemtests:
-	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) OPENSHIFT_USER=$(OPENSHIFT_USER) OPENSHIFT_URL=$(OPENSHIFT_MASTER) OPENSHIFT_USE_TLS=true REGISTER_API_SERVER=true ./systemtests/scripts/run_tests.sh $(SYSTEMTEST_ARGS) $(SYSTEMTESTS_PROFILE)
+	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) \
+		OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) \
+		OPENSHIFT_USER=$(OPENSHIFT_USER) \
+		OPENSHIFT_URL=$(OPENSHIFT_MASTER) \
+		OPENSHIFT_USE_TLS=$(OPENSHIFT_USE_TLS) \
+		REGISTER_API_SERVER=$(OPENSHIFT_REGISTER_API_SERVER) \
+		./systemtests/scripts/run_tests.sh $(SYSTEMTEST_ARGS) $(SYSTEMTESTS_PROFILE)
 
 client_install:
 	./systemtests/scripts/client_install.sh
