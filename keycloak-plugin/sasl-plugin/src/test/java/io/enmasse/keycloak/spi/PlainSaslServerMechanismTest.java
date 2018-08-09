@@ -70,14 +70,9 @@ public class PlainSaslServerMechanismTest {
             this.password = password;
         }
 
-        private boolean matches(final PasswordUserCredentialModel item) {
-            return item.getValue().equals(password);
-        }
-
         @Override
-        public boolean matches(final Object argument)
-        {
-            return argument instanceof PasswordUserCredentialModel && matches((PasswordUserCredentialModel)argument);
+        public boolean matches(final PasswordUserCredentialModel item) {
+            return item.getValue().equals(password);
         }
     }
 
