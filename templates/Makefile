@@ -67,6 +67,8 @@ prepare:
 	mkdir -p install/resources/cluster-roles/kubernetes
 	mkdir -p install/resources/cluster-roles/openshift
 	mkdir -p install/resources/plans
+
+install: prepare $(OBJS) yaml
 	cat include/address-space-definitions.yaml | \
 		STANDARD_CONTROLLER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(STANDARD_CONTROLLER_IMAGE):$(COMMIT) \
 		ROUTER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_IMAGE):$(COMMIT) \
@@ -88,7 +90,7 @@ prepare:
 	cp -f include/api-server/*.yaml install/resources/api-server
 	cp -f include/service-broker/*.yaml install/resources/service-broker
 
-package: prepare $(OBJS) yaml
+package: prepare $(OBJS) yaml install
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
 	cp -r install/* build/$(INSTALLDIR)                                                                                                                                        
 	tar -czf build/$(INSTALLDIR).tgz -C build $(INSTALLDIR)
