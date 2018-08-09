@@ -22,4 +22,5 @@ public interface AnnotationKeys {
     String REALM_NAME = "enmasse.io/realm-name";
     String UUID = "enmasse.io/uuid";
     String ENDPOINT = "enmasse.io/endpoint";
+    String ADDRESS = "enmasse.io/address";
 }

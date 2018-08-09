@@ -172,8 +172,6 @@ public class AddressProvisioner {
         return needed;
     }
 
-    private static final int MAX_ADDRESS_ID_LENGTH = 10;
-
     public static String getShardedClusterId(Address address) {
         final String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
 
@@ -181,9 +179,8 @@ public class AddressProvisioner {
             return KubeUtil.sanitizeName(clusterId);
         }
 
-        return KubeUtil.sanitizeWithUuid(address.getAddress().substring(0, Math.min(MAX_ADDRESS_ID_LENGTH, address.getAddress().length())), UUID.nameUUIDFromBytes(address.getName().getBytes(StandardCharsets.UTF_8)).toString());
+        return "b" + UUID.nameUUIDFromBytes(address.getAddress().getBytes(StandardCharsets.UTF_8)).toString();
     }
-
 
     public static Optional<String> getBrokerId(Address address) {
         return Optional.ofNullable(address.getAnnotation(AnnotationKeys.BROKER_ID));
