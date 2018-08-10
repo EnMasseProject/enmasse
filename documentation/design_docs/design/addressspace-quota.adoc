@@ -1,0 +1,148 @@
+== why
+
+At present there is no way to enforce limits on the number of address spaces a given user can
+create. As a service admin, having a mechanism to define quotas for users is a useful feature.
+EnMasse should enforce the quotas defined by the service admin when address spaces are to be
+created.
+
+If quotas are changed or deleted after address spaces have been created, the address spaces are not
+automatically deleted. Instead, a separate API is provided to allow for querying quota status and
+resolving the issue externally to EnMasse.
+
+== what/how
+
+=== API  to manage quotas
+
+A new cluster-wide resource type AddressSpaceQuota is defined:
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpaceQuota
+metadata:
+    name: developer-quota
+spec:
+    user: developer
+    rules: 
+    - count: 1                 // Number instances of this type
+      plan: unlimited-standard // (Optional) Restrict by plan
+      type: standard           // (Optional) Restrict by type
+    - count: 2                 
+      type: brokered           
+```
+
+If multiple quota resources concerning the same users is found, the rules are appended for the
+evaluation.
+
+If 2 rules matches the same set of address spaces, the most restrictive rule (the lowest quota) will
+be considered.
+
+The API server will provide a new REST API for managing quotas.
+
+To create:
+
+```
+POST /apis/enmasse.io/v1alpha1/addressspacequotas
+Request payload: quota definition payload
+Responses:
+* 201 Created if created
+* 401 Unauthorized if not allowed to create quota
+* 400 Bad request if invalid syntax is used, fields are missing, or referenced plans or types do not exist
+```
+
+To list:
+
+```
+GET /apis/enmasse.io/v1alpha1/addressspacequotas
+Response payload: AddressSpaceQuotaList
+Responses:
+* 200 OK if found
+* 401 Unauthorized if not allowed to list quotas
+```
+
+To get a single quota:
+
+```
+GET /apis/enmasse.io/v1alpha1/addressspacequotas/developer-quota
+Response payload: AddressSpaceQuota
+Responses:
+* 200 OK if found
+* 401 Unauthorized if not allowed to get quota
+* 404 Not found if not able to find quota
+```
+
+To delete a single quota:
+
+```
+GET /apis/enmasse.io/v1alpha1/addressspacequotas/developer-quota
+Responses:
+* 200 OK if deleted
+* 401 Unauthorized if not allowed to delete quota
+* 404 Not found if not able to find quota to delete
+```
+
+To update a single quota:
+
+```
+PUT /apis/enmasse.io/v1alpha1/addressspacequotas/developer-quota
+Request payload: quota definition payload
+Responses:
+* 200 OK if updated
+* 201 OK if created
+* 401 Unauthorized if not allowed to update quota
+* 404 Not found if not able to find quota to update
+```
+
+=== API to query quotas
+
+To check if a user is above quota, a review resource is used:
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpaceQuotaReview
+spec:
+    user: developer
+    rules: // (Optional: if not specified, use the rules defined in the quota)
+    - plan: unlimited-standard
+      type: standard
+```
+
+To create a review:
+
+```
+POST /apis/enmasse.io/v1alpha1/addressspacequotareviews
+Request payload: quota review payload
+Response payload: quota review payload with status set
+Responses:
+* 200 OK if created
+* 401 Unauthorized if not allowed to create quota reviews
+* 400 Bad request if invalid syntax is used, fields are missing, or referenced plans or types do not exist
+```
+
+The response has the following form:
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpaceQuotaReview
+spec:
+    user: developer
+    rules:  (Filled out by server if not specified)
+    ...
+status:
+    exceeded: false // Or true if exceeded quota
+```
+
+
+=== API server
+
+The API server will implement the above APIs. In addition, it will enforce the
+quotas at address space creation time. Therefore, the existing address space API will be modified to
+return 403 Forbidden with a message stating that quota limit has been reached and request cannot be
+fulfilled.
+
+== testing
+
+The tests should configure quotas and check that they are enforced.
+
+== documentation
+
+Documentation should cover how a service admin manages quotas for users.

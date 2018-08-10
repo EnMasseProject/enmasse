@@ -6,10 +6,16 @@
 package io.enmasse.api.server;
 
 import io.enmasse.address.model.*;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuota;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuotaMetadata;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuotaRule;
+import io.enmasse.address.model.v1.quota.AddressSpaceQuotaSpec;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
+import io.enmasse.k8s.api.AddressSpaceQuotaApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.api.TestAddressSpaceQuotaApi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -23,6 +29,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Arrays;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -44,12 +52,19 @@ public class HTTPServerTest {
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
 
+        AddressSpaceQuotaApi quotaApi = new TestAddressSpaceQuotaApi();
+        quotaApi.createAddressSpaceQuota(new AddressSpaceQuota(
+                new AddressSpaceQuotaMetadata("myquota", null, null),
+                new AddressSpaceQuotaSpec("developer", Arrays.asList(
+                        new AddressSpaceQuotaRule(1, "standard", "unlimited-standard"),
+                        new AddressSpaceQuotaRule(2, "brokered", "unlimited-brokered")))));
+
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
         when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, null, authApi, false), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, null, authApi, quotaApi, false, true), context.asyncAssertSuccess());
     }
 
     @After
@@ -143,6 +158,20 @@ public class HTTPServerTest {
                 r4.end();
                 async.awaitSuccess(60_000);
             }
+            {
+                Async async = context.async();
+                HttpClientRequest r5 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/addressspacequotas", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        context.assertTrue(data.containsKey("items"));
+                        context.assertEquals("myquota", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                        async.complete();
+                    });
+                });
+                putAuthzToken(r5);
+                r5.end();
+                async.awaitSuccess(60_000);
+            }
         } finally {
             client.close();
         }
@@ -165,7 +194,7 @@ public class HTTPServerTest {
                         JsonObject data = buffer.toJsonObject();
                         context.assertTrue(data.containsKey("resources"));
                         JsonArray resources = data.getJsonArray("resources");
-                        context.assertEquals(2, resources.size());
+                        context.assertEquals(4, resources.size());
                         async.complete();
                     });
                 });

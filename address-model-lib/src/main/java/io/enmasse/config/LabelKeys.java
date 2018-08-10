@@ -21,4 +21,6 @@ public interface LabelKeys {
     String ADDRESS_TYPE = "addressType";
     String ADDRESS_SPACE_TYPE = "addressSpaceType";
     String ADDRESS_SPACE = "addressSpace";
+    String USER = "user";
+    String CREATED_BY = "createdBy";
 }

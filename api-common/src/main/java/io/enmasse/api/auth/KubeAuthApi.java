@@ -143,7 +143,9 @@ public class KubeAuthApi implements AuthApi {
             JsonObject spec = new JsonObject();
 
             JsonObject resourceAttributes = new JsonObject();
-            resourceAttributes.put("namespace", namespace);
+            if (namespace != null) {
+                resourceAttributes.put("namespace", namespace);
+            }
             resourceAttributes.put("resource", resource);
             resourceAttributes.put("verb", verb);
 

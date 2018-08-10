@@ -20,6 +20,7 @@ public class ApiServerOptions {
     private String clientCa;
     private String requestHeaderClientCa;
     private boolean enableRbac;
+    private boolean enableQuota;
 
     public String getNamespace() {
         return namespace;
@@ -62,6 +63,7 @@ public class ApiServerOptions {
                 .orElse(Duration.ofMinutes(5)));
 
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
+        options.setEnableQuota(Boolean.parseBoolean(getEnv(env, "ENABLE_QUOTA").orElse("false")));
 
         return options;
     }
@@ -92,6 +94,14 @@ public class ApiServerOptions {
 
     public void setEnableRbac(boolean enableRbac) {
         this.enableRbac = enableRbac;
+    }
+
+    public boolean isEnableQuota() {
+        return enableQuota;
+    }
+
+    public void setEnableQuota(boolean enableQuota) {
+        this.enableQuota = enableQuota;
     }
 
     public void setRequestHeaderClientCa(String clientCa) {

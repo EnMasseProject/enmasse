@@ -25,6 +25,7 @@ public interface AddressSpaceApi {
     Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels);
     void deleteAddressSpaces(String namespace);
 
+    Set<AddressSpace> listAddressSpacesWithLabels(Map<String, String> labels);
     Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception;
 
     AddressApi withAddressSpace(AddressSpace addressSpace);

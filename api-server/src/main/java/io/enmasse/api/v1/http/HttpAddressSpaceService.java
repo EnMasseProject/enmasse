@@ -128,6 +128,7 @@ public class HttpAddressSpaceService {
 
             addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
             addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
+            addressSpace.putLabel(LabelKeys.CREATED_BY, createdBy);
         }
 
         return addressSpace;
