@@ -35,7 +35,6 @@
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
-			 <version>${maven-resources-plugin.version}</version>
           <executions>
               <execution>
                   <id>copy-favicon</id>
@@ -78,7 +77,6 @@
       <plugin>
 			<groupId>org.asciidoctor</groupId>
 			<artifactId>asciidoctor-maven-plugin</artifactId>
-			<version>${asciidoctor-maven-plugin.version}</version>
 			<configuration>
             <sourceDirectory>${project.basedir}/../documentation/messaging_app_developer</sourceDirectory>
             <sourceDocumentName>master.adoc</sourceDocumentName>
@@ -99,7 +97,6 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>${frontend-maven-plugin-version}</version>
         <executions>
           <execution>
             <id>install node and npm</id>
@@ -160,7 +157,6 @@
 		<plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>${exec-maven-plugin.version}</version>
         <executions>
           <execution>
             <phase>generate-resources</phase>
