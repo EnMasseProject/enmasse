@@ -71,6 +71,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.qpid</groupId>
+            <artifactId>proton-j</artifactId>
+            <version>${protonj.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.qpid</groupId>
             <artifactId>qpid-jms-client</artifactId>
             <version>${qpidjms.version}</version>
         </dependency>
