@@ -89,6 +89,10 @@ public class ProtonRequestClientTest {
             request.setSubject("health-check");
             Message response = client.request(request, 10, TimeUnit.SECONDS);
             assertTrue((Boolean) ((AmqpValue) response.getBody()).getValue());
+
+            future = new CompletableFuture<>();
+            client.connect("127.0.0.1", 12347, future);
+            future.get(10, TimeUnit.SECONDS);
         }
     }
 }

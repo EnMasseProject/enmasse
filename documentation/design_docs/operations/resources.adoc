@@ -1,0 +1,174 @@
+= Resources
+:toc:
+:toclevels: 3
+:sectnums:
+
+== Address Spaces
+
+=== Brokered
+Creates the following pods:
+
+  * agent
+  * broker
+
+[source=bash,options="nowrap"]
+----
+$ oc get pods
+
+NAME                     READY     STATUS    RESTARTS   AGE
+agent-84975f97-q69qn     1/1       Running   0          10s
+broker-d4f468475-56x45   0/1       Running   0          10s
+----
+
+
+=== Standard
+Creates the following pods:
+
+  * admin
+  * mqtt-gateway
+  * mqtt-lwt
+  * qdrouterd
+  * subserve
+
+[source-bash,options="nowrap"]
+----
+$ oc get pods
+
+NAME                            READY     STATUS    RESTARTS   AGE
+admin-5d46d9fbbf-cbn9m          2/2       Running   2          20h
+mqtt-gateway-7c778b4448-g5xwx   2/2       Running   0          21h
+mqtt-lwt-66449db6f8-gp496       1/1       Running   1          21h
+qdrouterd-65bff567bc-tjcs6      2/2       Running   0          21h
+subserv-6cb55f7c86-t658q        1/1       Running   0          21h
+----
+
+Broker is not initially created until an address space is created.
+
+== Addresses
+
+=== Brokered Queue
+
+Creates both an address and a queue on Artemis:
+[source=bash,options="nowrap"]
+----
+$ ./artemis address show --url tcp://<messaging-address>:<port>
+
+activemq.management.5d980c77-4875-4a50-ba32-d113ca6bd3ba
+activemq.notifications
+f2691084-1b1d-432d-9a58-0861e9047bc9
+myqueue
+
+$ ./artemis queue stat --url tcp://<messaging-address>:<port>
+
+|NAME                     |ADDRESS                  |CONSUMER_COUNT |MESSAGE_COUNT |MESSAGES_ADDED |DELIVERING_COUNT |MESSAGES_ACKED |
+|myqueue                  |myqueue                  |0              |0             |0              |0                |0              |
+----
+
+The _routingType_ of the address is Anycast:
+[source=bash,options="nowrap"]
+----
+./artemis address show --url tcp://<messaging-address>:<port> --name myqueue
+
+Address [name=myqueue, routingTypes={ANYCAST}, autoCreated=true]
+----
+
+=== Brokered Topic
+
+Creates an address on the broker:
+[source=bash,options="nowrap"]
+----
+$ ./artemis address show --url tcp://<messaging-address>:<port>
+
+activemq.management.f3826aae-88ef-4c69-9250-72884ee46ec6
+activemq.notifications
+f2691084-1b1d-432d-9a58-0861e9047bc9
+mytopic
+----
+
+The _routingType_ of the address is Multicast:
+----
+./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+Address [name=mytopic, routingTypes={MULTICAST}, autoCreated=false]
+----
+
+
+=== Pooled Queue
+==== Broker view 
+
+Creates both an address and a queue on Artemis:
+[source=bash,options="nowrap"]
+----
+$ ./artemis address show --url tcp://<messaging-address>:<port>
+
+activemq.management.5d980c77-4875-4a50-ba32-d113ca6bd3ba
+activemq.notifications
+f2691084-1b1d-432d-9a58-0861e9047bc9
+myqueue
+
+$ ./artemis queue stat --url tcp://<messaging-address>:<port>
+
+|NAME                     |ADDRESS                  |CONSUMER_COUNT |MESSAGE_COUNT |MESSAGES_ADDED |DELIVERING_COUNT |MESSAGES_ACKED |
+|myqueue                  |myqueue                  |0              |0             |0              |0                |0              |
+----
+
+The _routingType_ of the address is ANYCAST:
+[source=bash,options="nowrap"]
+----
+./artemis address show --url tcp://<messaging-address>:<port> --name myqueue
+
+Address [name=myqueue, routingTypes={ANYCAST}, autoCreated=true]
+----
+
+==== Router View
+
+//TODO more detail
+
+Creates two mobile addresses: One for routing messages from producer to outgoing autolink (Phase 0) and one for routing messages from incoming autolink to subscribers (Phase 1).
+----
+qdstat -a
+----
+
+Creates two AMQP links: one incoming and one outgoing link to the broker.
+----
+qdstat -l
+----
+
+An autolink is created to manage each of the two links above:
+----
+qdstat --autolinks
+----
+
+=== Pooled Topic
+==== Broker View
+
+Creates an address on the broker
+[source=bash,options="nowrap"]
+----
+$ ./artemis address show --url tcp://<messaging-address>:<port>
+
+activemq.management.f3826aae-88ef-4c69-9250-72884ee46ec6
+activemq.notifications
+f2691084-1b1d-432d-9a58-0861e9047bc9
+mytopic
+----
+
+The _routingType_ of the address is Multicast:
+[source=bash,options="nowrap"]
+----
+./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+Address [name=mytopic, routingTypes={MULTICAST}, autoCreated=false]
+----
+
+==== Router View
+
+// TODO more detail
+
+Creates two addresses i.e. in and out. 
+----
+qdstat -a
+----
+
+As the above are link route addresses they can also be viewed with
+----
+qdstat --linkroutes
+----

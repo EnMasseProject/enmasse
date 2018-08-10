@@ -34,7 +34,7 @@
         <keycloak.version>3.4.3.Final</keycloak.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jboss.logging.annotations.version>2.1.0.Final</jboss.logging.annotations.version>
-        <protonj.version>0.26.0</protonj.version>
+        <protonj.version>0.27.1</protonj.version>
         <qpidjms.version>0.34.0</qpidjms.version>
         <selenium.version>3.11.0</selenium.version>
         <jacoco.version>0.7.9</jacoco.version>
