@@ -9,4 +9,4 @@
 - name: Grant admin policy to address-space-admin
   shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:address-space-admin -n {{ namespace }}
 - name: Deploy default address space
-  shell: oc process -f {{ playbook_dir }}/resources/templates/address-space.yaml NAME=default INFRA_NNAMESPACE={{ namespace }} NAMESPACE={{ namespace }} TYPE={{ address_space_type }} PLAN={{ address_space_plan }} | oc apply -n {{ namespace }} -f -
+  shell: oc process -f {{ playbook_dir }}/resources/templates/address-space.yaml NAME=default NAMESPACE={{ namespace }} TYPE={{ address_space_type }} PLAN={{ address_space_plan }} | oc apply -n {{ namespace }} -f -
