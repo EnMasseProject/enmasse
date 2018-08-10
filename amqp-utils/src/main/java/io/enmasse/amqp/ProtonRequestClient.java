@@ -124,7 +124,6 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
 
     public Message request(Message message, long timeout, TimeUnit timeUnit) {
         Map<String, Object> properties = new HashMap<>();
-        properties.put("JMSReplyTo", replyTo);
         if (message.getApplicationProperties() != null) {
             properties.putAll(message.getApplicationProperties().getValue());
         }
