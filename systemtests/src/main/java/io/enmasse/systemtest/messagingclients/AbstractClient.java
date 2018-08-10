@@ -77,6 +77,15 @@ public abstract class AbstractClient {
     }
 
     /**
+     * Get all client arguments
+     *
+     * @return
+     */
+    public ArrayList<String> getArguments() {
+        return arguments;
+    }
+
+    /**
      * @param clientType
      */
     public void setClientType(ClientType clientType) {
@@ -218,7 +227,7 @@ public abstract class AbstractClient {
     /**
      * Run client async
      *
-     * @param logToOutput enable logging of stdOut and stdErr on output
+     * @param logToOutput           enable logging of stdOut and stdErr on output
      * @param timeoutInMilliseconds timeout to kill process
      * @return future of exit status of client
      */
