@@ -1,7 +1,8 @@
 = Resources
 :toc:
-:toclevels: 3
+:toclevels: 5
 :sectnums:
+:sectnumlevels: 5
 
 == Address Spaces
 
@@ -18,6 +19,53 @@ $ oc get pods
 NAME                     READY     STATUS    RESTARTS   AGE
 agent-84975f97-q69qn     1/1       Running   0          10s
 broker-d4f468475-56x45   0/1       Running   0          10s
+----
+
+==== Addresses
+
+===== Brokered Queue
+
+Creates both an address and a queue on Artemis:
+[source=bash,options="nowrap"]
+----
+$ ./artemis address show --url tcp://<messaging-address>:<port>
+
+activemq.management.5d980c77-4875-4a50-ba32-d113ca6bd3ba
+activemq.notifications
+f2691084-1b1d-432d-9a58-0861e9047bc9
+myqueue
+
+$ ./artemis queue stat --url tcp://<messaging-address>:<port>
+
+|NAME                     |ADDRESS                  |CONSUMER_COUNT |MESSAGE_COUNT |MESSAGES_ADDED |DELIVERING_COUNT |MESSAGES_ACKED |
+|myqueue                  |myqueue                  |0              |0             |0              |0                |0              |
+----
+
+The `routingType` of the address is `ANYCAST`:
+[source=bash,options="nowrap"]
+----
+./artemis address show --url tcp://<messaging-address>:<port> --name myqueue
+
+Address [name=myqueue, routingTypes={ANYCAST}, autoCreated=true]
+----
+
+===== Brokered Topic
+
+Creates an address on the broker:
+[source=bash,options="nowrap"]
+----
+$ ./artemis address show --url tcp://<messaging-address>:<port>
+
+activemq.management.f3826aae-88ef-4c69-9250-72884ee46ec6
+activemq.notifications
+f2691084-1b1d-432d-9a58-0861e9047bc9
+mytopic
+----
+
+The `routingType` of the address is `MULTICAST`:
+----
+./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+Address [name=mytopic, routingTypes={MULTICAST}, autoCreated=false]
 ----
 
 
@@ -44,9 +92,98 @@ subserv-6cb55f7c86-t658q        1/1       Running   0          21h
 
 Broker is not initially created until an address space is created.
 
-== Addresses
+==== Initial Router Resources
+Below is the initial router configuration when a standard address space without MQTT is created, before creating any addresses.
 
-=== Brokered Queue
+===== Connections
+Three connections are created by default on the router:
+
+ * A connection to the console (`admin`)
+ * A connection to the router agent (`ragent`)
+ * A connection to the container running `qdstat`
+
+[source=bash,options="nowrap"]
+----
+$ dstat -c
+Connections
+  id   host                 container                             role    dir  security                              authentication                tenant
+  =========================================================================================================================================================
+  3    172.17.0.9:34998     admin-78794c68c8-9jdd6                normal  in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  CN=admin,O=io.enmasse(x.509)  
+  12   172.30.188.174:5671  27803a14-42d2-6148-9491-a6c1e69e875a  normal  out  TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  x.509                         
+  567  127.0.0.1:43546      b240c652-82df-48dd-b54e-3b8bbaef16c6  normal  in   no-security                           PLAIN   
+----
+
+===== Router Addresses
+A number of addresses are created by default:
+
+* A management address used by the router (`$management`)
+* Inter-router addresses for managing router topology (`qdhello`, `qdrouter`, `qdrouter.ma`)
+* Addresses for handling MQTT Last will and testament (`$lwt`)
+* Temporary addresses in use by `qdstat`
+
+[source=bash,options="nowrap"]
+----
+$ qdstat -a
+
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  local     $_management_internal       closest       1        0      0       0      0      0      0     588      588
+  link-in   $lwt                        linkBalanced  0        0      0       0      0      0      0     0        0
+  link-out  $lwt                        linkBalanced  0        0      0       0      0      0      0     0        0
+  mobile    $management            0    closest       1        0      0       0      601    0      0     601      0
+  local     $management                 closest       1        0      0       0      2,925  0      0     2,925    0
+  local     qdhello                     flood         1        0      0       0      0      0      0     0        5,856
+  local     qdrouter                    flood         1        0      0       0      0      0      0     0        0
+  topo      qdrouter                    flood         1        0      0       0      0      0      0     0        196
+  local     qdrouter.ma                 multicast     1        0      0       0      0      0      0     0        0
+  topo      qdrouter.ma                 multicast     1        0      0       0      0      0      0     0        0
+  local     temp.VTXOKyyWsq7OEei        balanced      0        1      0       0      0      0      0     0        0
+  local     temp.k2RGQNPe6sDMvz4        balanced      0        1      0       0      0      3,511  0     0        3,511
+  local     temp.xg+y8I_Tr4Y94LA        balanced      0        1      0       0      0      5      0     0        5
+
+----
+
+===== Links
+A number of router links are created by default:
+
+* A link to the _management_ address
+* Links to the temporary addresses in use by _qdstat_
+* Links to the AMQP anonymous queue
+
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+  type      dir  conn id  id  peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  ====================================================================================================================================================
+  endpoint  in   3        8                                            250  0      0       3829  0        0       3829  0    0    0    enabled  up
+  endpoint  out  3        9         local   temp.k2RGQNPe6sDMvz4       250  0      0       3829  3829     0       0     0    0    0    enabled  up
+  endpoint  in   12       10                                           250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  out  12       11        local   temp.xg+y8I_Tr4Y94LA       250  0      0       5     5        0       0     0    0    0    enabled  up
+  endpoint  in   645      26        mobile  $management           0    50   0      0       1     0        0       1     0    0    0    enabled  up
+  endpoint  out  645      27        local   temp.0BrHJ1O+fi6whyg       50   0      0       0     0        0       0     0    0    0    enabled  up
+
+----
+
+===== Link Routes
+Two link routes are created by default to manage last will and testament:
+[source=bash,options="nowrap"]
+----
+$ qdstat --linkroutes
+
+Link Routes
+  address  dir  distrib       status
+  ======================================
+  $lwt     in   linkBalanced  inactive
+  $lwt     out  linkBalanced  inactive
+----
+
+==== Addresses
+
+===== Pooled Queue
+
+====== Broker view 
 
 Creates both an address and a queue on Artemis:
 [source=bash,options="nowrap"]
@@ -64,7 +201,7 @@ $ ./artemis queue stat --url tcp://<messaging-address>:<port>
 |myqueue                  |myqueue                  |0              |0             |0              |0                |0              |
 ----
 
-The _routingType_ of the address is Anycast:
+The `routingType` of the address is `ANYCAST`:
 [source=bash,options="nowrap"]
 ----
 ./artemis address show --url tcp://<messaging-address>:<port> --name myqueue
@@ -72,7 +209,95 @@ The _routingType_ of the address is Anycast:
 Address [name=myqueue, routingTypes={ANYCAST}, autoCreated=true]
 ----
 
-=== Brokered Topic
+====== Router View
+
+A pooled queue adds the following resources to the router:
+
+* A *connection* to the broker pod is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================          
+  246  172.17.0.12:51644    broker-0                              route-container  in   TLSv1.2(ECDHE-RSA-AES256-SHA384)      CN=broker,O=io.enmasse(x.509)  
+  ...
+----
+
+* Two *addresses* of type `mobile` are created for routing messages from producer to the outgoing autolink (Phase 0) and for routing messages from the incoming autolink to subscribers (Phase 1).
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -a
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  mobile    myqueue                1    balanced      0        0      0       0      0      0      0     0        0
+  mobile    myqueue                0    balanced      0        1      0       0      0      0      0     0        0
+  ...
+----
+
+* Two AMQP *links* are created: one incoming link and one outgoing link to the broker.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+  type      dir  conn id  id   peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  =====================================================================================================================================================
+  endpoint  in   246      33         mobile  myqueue               1    250  0      0       0     0        0       0     0    0    0    enabled  up
+  endpoint  out  246      34         mobile  myqueue               0    250  0      0       0     0        0       0     0    0    0    enabled  up
+  ...
+----
+
+* Two *autolinks* are created: one to manage each of the above links.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat --autolinks
+AutoLinks
+  addr     dir  phs  extAddr  link  status  lastErr
+  ===================================================
+  myqueue  in   1             33    active  
+  myqueue  out  0             34    active  
+----
+
+
+====== Adding Producers and Consumers
+
+When a producer and consumer are connected the following resources are observed on the router:
+
+* A *connection* is created to each consumer/producer.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  4803  172.17.0.1:50266     06254dd3-0093-5c47-a712-5d7c7a6bdc5c  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN                          
+  4805  172.17.0.1:50290     314d27d9-2134-734b-a862-150681b37cfc  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN     
+  ...
+----
+
+* In addition to the two existing *links* to the queue, a new link from each producer/consumer to the address is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+
+  endpoint  in   4664     2081        mobile  myqueue               1    250  0      0       15    0        0       15    0    250  0    enabled  up
+  endpoint  out  4664     2082        mobile  myqueue               0    250  0      0       15    0        0       15    0    0    0    enabled  up
+  endpoint  in   4882     2241        mobile  myqueue               0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  out  4884     2242        mobile  myqueue               1    250  0      0       5     0        0       5     0    0    0    enabled  up
+  ....
+----
+
+===== Pooled Topic
+
+====== Broker View
 
 Creates an address on the broker:
 [source=bash,options="nowrap"]
@@ -85,33 +310,118 @@ f2691084-1b1d-432d-9a58-0861e9047bc9
 mytopic
 ----
 
-The _routingType_ of the address is Multicast:
+The `routingType` of the address is `MULTICAST`:
+[source=bash,options="nowrap"]
 ----
-./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+$ ./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+
 Address [name=mytopic, routingTypes={MULTICAST}, autoCreated=false]
 ----
 
+====== Router View
 
-=== Pooled Queue
-==== Broker view 
 
-Creates both an address and a queue on Artemis:
+A pooled topic adds the following resources to the router:
+
+* A *connection* to the broker pod is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  665  172.17.0.12:37816    broker-0                              route-container  in   TLSv1.2(ECDHE-RSA-AES256-SHA384)      CN=broker,O=io.enmasse(x.509)  
+  ...
+----
+
+* Two *addresses* are created: a `link-in` and  a `link-out` address.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -a
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  link-in   mytopic                     linkBalanced  0        0      0       1      0      0      0     0        0
+  link-out  mytopic                     linkBalanced  0        0      0       1      0      0      0     0        0
+  ...
+----
+
+* These addresses are *link route* addresses.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat --linkroutes
+Link Routes
+  address  dir  distrib       status
+  ======================================
+  mytopic  in   linkBalanced  active
+  mytopic  out  linkBalanced  active
+  ...
+----
+
+====== Adding Producers and Consumers
+
+When a producer and consumer are connected the following resources are observed on the router:
+
+* A *connection* is created to each consumer/producer.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  4803  172.17.0.1:50266     06254dd3-0093-5c47-a712-5d7c7a6bdc5c  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN                          
+  4805  172.17.0.1:50290     314d27d9-2134-734b-a862-150681b37cfc  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN     
+  ...
+----
+
+* A number of *links* to the topic: two links from the router to the topic and a new link from each producer/consumer to the address are created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+
+  endpoint  in   4664     2081        mobile  mytopic               1    250  0      0       15    0        0       15    0    250  0    enabled  up
+  endpoint  out  4664     2082        mobile  mytopic               0    250  0      0       15    0        0       15    0    0    0    enabled  up
+  endpoint  in   4882     2241        mobile  mytopic               0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  out  4884     2242        mobile  mytopic               1    250  0      0       5     0        0       5     0    0    0    enabled  up
+  ....
+----
+
+===== Sharded Queue
+
+A sharded queue creates a pod for each broker:
+
+[source=bash,options="nowrap"]
+----
+$ oc get pods
+
+myqueue-9445df63-942e-3f0d-80e3-2f6b1c24d5de-0   1/1       Running   1          32m
+...
+----
+
+====== Broker View
+
+A sharded queue creates both an *address* and a *queue* on the broker:
 [source=bash,options="nowrap"]
 ----
 $ ./artemis address show --url tcp://<messaging-address>:<port>
 
-activemq.management.5d980c77-4875-4a50-ba32-d113ca6bd3ba
-activemq.notifications
-f2691084-1b1d-432d-9a58-0861e9047bc9
 myqueue
+...
 
 $ ./artemis queue stat --url tcp://<messaging-address>:<port>
 
 |NAME                     |ADDRESS                  |CONSUMER_COUNT |MESSAGE_COUNT |MESSAGES_ADDED |DELIVERING_COUNT |MESSAGES_ACKED |
-|myqueue                  |myqueue                  |0              |0             |0              |0                |0              |
+|myqueue                  |myqueue                  |1              |0             |0              |0                |0              |
+
 ----
 
-The _routingType_ of the address is ANYCAST:
+The `routingType` of the address is `ANYCAST`:
 [source=bash,options="nowrap"]
 ----
 ./artemis address show --url tcp://<messaging-address>:<port> --name myqueue
@@ -119,29 +429,105 @@ The _routingType_ of the address is ANYCAST:
 Address [name=myqueue, routingTypes={ANYCAST}, autoCreated=true]
 ----
 
-==== Router View
+====== Router View
 
-//TODO more detail
+A sharded queue adds the following resources to the router:
 
-Creates two mobile addresses: One for routing messages from producer to outgoing autolink (Phase 0) and one for routing messages from incoming autolink to subscribers (Phase 1).
+* A *connection* to the broker pod is created.
++
+[source=bash,options="nowrap"]
 ----
-qdstat -a
-----
-
-Creates two AMQP links: one incoming and one outgoing link to the broker.
-----
-qdstat -l
-----
-
-An autolink is created to manage each of the two links above:
-----
-qdstat --autolinks
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  1525  172.17.0.12:40358    myqueue                               route-container  in   TLSv1.2(ECDHE-RSA-AES256-SHA384)      CN=broker,O=io.enmasse(x.509)  
+  ...
 ----
 
-=== Pooled Topic
-==== Broker View
+* Two *addresses* of type `mobile` are created for routing messages from the producer to the outgoing autolink (Phase 0) and for routing messages from the incoming autolink to subscribers (Phase 1).
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -a
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  mobile    myqueue                1    balanced      0        0      0       0      0      0      0     0        0
+  mobile    myqueue                0    balanced      0        1      0       0      0      0      0     0        0
+  ...
+----
 
-Creates an address on the broker
+* Two AMQP *links* are created: one incoming link and one outgoing link to the broker.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+  type      dir  conn id  id   peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  =====================================================================================================================================================
+  endpoint  in   1525     1576        mobile  myqueue               1    250  0      0       0     0        0       0     0    0    0    enabled  up
+  endpoint  out  1525     1577        mobile  myqueue               0    250  0      0       0     0        0       0     0    0    0    enabled  up
+  ...
+----
+
+* Two *autolinks* are created: One to manage each of the above links.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat --autolinks
+AutoLinks
+  addr     dir  phs  extAddr  link  status  lastErr
+  ===================================================
+  myqueue  in   1             1576  active  
+  myqueue  out  0             1577  active  
+----
+
+====== Adding Producers and Consumers
+
+When a producer and consumer are connected the following resources are observed on the router:
+
+* A *connection* is created to each consumer/producer.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  4803  172.17.0.1:50266     06254dd3-0093-5c47-a712-5d7c7a6bdc5c  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN                          
+  4805  172.17.0.1:50290     314d27d9-2134-734b-a862-150681b37cfc  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN     
+  ...
+----
+
+* In addition to the two existing *links* to the queue, a new link from each producer/consumer to the address is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+
+  endpoint  in   4664     2081        mobile  myqueue               1    250  0      0       15    0        0       15    0    250  0    enabled  up
+  endpoint  out  4664     2082        mobile  myqueue               0    250  0      0       15    0        0       15    0    0    0    enabled  up
+  endpoint  in   4882     2241        mobile  myqueue               0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  out  4884     2242        mobile  myqueue               1    250  0      0       5     0        0       5     0    0    0    enabled  up
+  ....
+----
+
+===== Sharded Topic
+A sharded topic creates a pod for each broker:
+
+[source=bash,options="nowrap"]
+----
+$ oc get pods
+
+myqueue-9445df63-942e-3f0d-80e3-2f6b1c24d5de-0   1/1       Running   1          32m
+...
+----
+
+====== Broker View
+
+A sharded topic creates an address on the broker:
 [source=bash,options="nowrap"]
 ----
 $ ./artemis address show --url tcp://<messaging-address>:<port>
@@ -152,23 +538,153 @@ f2691084-1b1d-432d-9a58-0861e9047bc9
 mytopic
 ----
 
-The _routingType_ of the address is Multicast:
+The `routingType` of the address is `MULTICAST`:
 [source=bash,options="nowrap"]
-----
-./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+----378
+$ ./artemis address show --url tcp://<messaging-address>:<port> --name mytopic
+
 Address [name=mytopic, routingTypes={MULTICAST}, autoCreated=false]
 ----
 
-==== Router View
+====== Router View
 
-// TODO more detail
+A sharded topic adds the following resources to the router:
 
-Creates two addresses i.e. in and out. 
+* Two *connections* are created: a _route-container_ connection to the broker and an _inter-router_ connection for the topic.
++
+[source=bash,options="nowrap"]
 ----
-qdstat -a
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  740  172.17.0.12:52264    mytopic-83b9691c-371c-36d0-8476-b2eec2be7914-0         route-container  in   TLSv1.2(ECDHE-RSA-AES256-SHA384)      CN=broker,O=io.enmasse(x.509)  
+  730  172.17.0.12:55672    Router.mytopic-83b9691c-371c-36d0-8476-b2eec2be7914-0  inter-router     out  TLSv1.2(ECDHE-RSA-AES256-GCM-SHA384)  x.509    
+  ...
 ----
 
-As the above are link route addresses they can also be viewed with
+* Four *addresses* are created: `link-route` addresses for the topic and and inter-router addresses for the topic.
++
+[source=bash,options="nowrap"]
 ----
-qdstat --linkroutes
+$ qdstat -a
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  router    Router.mytopic-a3d04726-9e40-3946-840e-4012a5e5a6bf-0        closest       0        0      1       0      50     0      64    0        14
+  link-in   mytopic                                                      linkBalanced  0        0      1       0      0      0      0     0        0
+  link-out  mytopic                                                      linkBalanced  0        0      1       0      0      0      0     0        0
+  link-out  mytopic/mytopic-a3d04726-9e40-3946-840e-4012a5e5a6bf-0       linkBalanced  0        0      1       0      0      0      0     0        0
+  ...
+
+$ qdstat --linkroutes
+Link Routes
+  address  dir  distrib       status
+  ======================================
+  mytopic  in   linkBalanced  active
+  mytopic  out  linkBalanced  active
+  ...
+----
+
+* Four links are created using the above connections for inter-router protocols and management.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+  type      dir  conn id  id   peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  =====================================================================================================================================================
+  router-control  in   730      768                                           250  0      0       330   330      0       0     0    0    0    enabled  up
+  router-control  out  730      769        local   qdhello                    250  0      0       335   335      0       0     0    0    0    enabled  up
+  inter-router    in   730      770                                           250  0      0       155   155      0       0     0    0    0    enabled  up
+  inter-router    out  730      771                                           250  0      0       155   0        0       155   0    0    0    enabled  up
+
+  ...
+----
+
+====== Adding Producers and Consumers
+
+When a producer and consumer are connected the following resources are observed on the router:
+
+* A *connection* is created to each consumer/producer.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -c
+Connections
+  id   host                 container                             role             dir  security                              authentication                 tenant
+  ===================================================================================================================================================================
+  4803  172.17.0.1:50266     06254dd3-0093-5c47-a712-5d7c7a6bdc5c  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN                          
+  4805  172.17.0.1:50290     314d27d9-2134-734b-a862-150681b37cfc  normal           in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  PLAIN     
+  ...
+----
+
+* A number of *links* to the topic: two links from the router to the topic and a new link from each producer/consumer to the address is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+
+  endpoint  in   4664     2081        mobile  mytopic               1    250  0      0       15    0        0       15    0    250  0    enabled  up
+  endpoint  out  4664     2082        mobile  mytopic               0    250  0      0       15    0        0       15    0    0    0    enabled  up
+  endpoint  in   4882     2241        mobile  mytopic               0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  out  4884     2242        mobile  mytopic               1    250  0      0       5     0        0       5     0    0    0    enabled  up
+  ....
+----
+
+==== Anycast
+Resources on the router are only created for anycast addresses after producers and/or consumers connect. After doing so, the following resources are created:
+
+* An *address* of type `mobile` is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -a
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  mobile    myanycast              0    balanced      0        1      0       0      5      5      0     0        0
+  ...
+----
+
+* Two AMQP *links* are created: one incoming one incoming link and one outgoing link to the broker.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+  type      dir  conn id  id   peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  =====================================================================================================================================================
+  endpoint  out  4246     1736        mobile  myanycast             0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  in   4270     1753        mobile  myanycast             0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  ...
+----
+
+==== Multicast
+Resources on the router are only created for multicast addresses after producers and/or consumers connect. After doing so, the following resources are created:
+
+* An *address* of type `mobile` is created.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -a
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  mobile    mymulticast            0    multicast     0        1      0       0      5      5      0     0        0
+  ...
+----
+
+* Two AMQP *links* are created: one incoming link and one outgoing link to the broker.
++
+[source=bash,options="nowrap"]
+----
+$ qdstat -l
+Router Links
+  type      dir  conn id  id   peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  =====================================================================================================================================================
+  endpoint  out  4590     2010        mobile  mymulticast           0    250  0      0       5     5        0       0     0    0    0    enabled  up
+  endpoint  in   4591     2011        mobile  mymulticast           0    250  0      0       5     0        0       5     0    0    0    enabled  up
+  ...
 ----
