@@ -148,3 +148,8 @@ address {
     prefix: ${DOLLAR}temp
     distribution: balanced
 }
+
+log {
+    module: SERVER
+    enable: trace+
+}
