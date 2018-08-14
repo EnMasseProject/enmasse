@@ -23,7 +23,7 @@ package io.enmasse.keycloak.spi;
 
 import org.keycloak.Config;
 import org.keycloak.credential.CredentialModel;
-import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,9 +38,15 @@ class ScramSaslServerMechanism implements SaslServerMechanism {
     private final String mechanism;
     private final String digestName;
     private final Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions;
+    private final int priority;
 
-    ScramSaslServerMechanism(String hmacName, String mechanism, String digestName, String scramCredAlgo, String pbkdf2CredAlgo) {
-        this(hmacName, mechanism, digestName, createKeyRetrievalFunctionMap(scramCredAlgo, pbkdf2CredAlgo, hmacName, digestName));
+    ScramSaslServerMechanism(String hmacName,
+                             String mechanism,
+                             String digestName,
+                             String scramCredAlgo,
+                             String pbkdf2CredAlgo,
+                             int priority) {
+        this(hmacName, mechanism, digestName, createKeyRetrievalFunctionMap(scramCredAlgo, pbkdf2CredAlgo, hmacName, digestName),priority);
     }
 
     private static Map<String, Function<CredentialModel, StoredAndServerKey>> createKeyRetrievalFunctionMap(String scramCredAlgo,
@@ -58,14 +64,22 @@ class ScramSaslServerMechanism implements SaslServerMechanism {
         return functions;
     }
 
-    ScramSaslServerMechanism(String hmacName,
-                             String mechanism,
-                             String digestName,
-                             Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions) {
+    private ScramSaslServerMechanism(String hmacName,
+                                     String mechanism,
+                                     String digestName,
+                                     Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions,
+                                     int priority) {
         this.hmacName = hmacName;
         this.mechanism = mechanism;
         this.digestName = digestName;
         this.keyRetrievalFunctions = new HashMap<>(keyRetrievalFunctions);
+        this.priority = priority;
+    }
+
+    @Override
+    public boolean isSupported(String passwordHashAlgo)
+    {
+        return this.keyRetrievalFunctions.containsKey(passwordHashAlgo);
     }
 
     @Override
@@ -74,8 +88,13 @@ class ScramSaslServerMechanism implements SaslServerMechanism {
     }
 
     @Override
-    public final Instance newInstance(KeycloakSession keycloakSession, String hostname, Config.Scope config) {
-        return new ScramSaslAuthenticator(keycloakSession, hostname, digestName, hmacName, keyRetrievalFunctions);
+    public int priority() {
+        return priority;
+    }
+
+    @Override
+    public final Instance newInstance(KeycloakSessionFactory keycloakSessionFactory, String hostname, Config.Scope config) {
+        return new ScramSaslAuthenticator(keycloakSessionFactory, hostname, digestName, hmacName, keyRetrievalFunctions);
     }
 
 }

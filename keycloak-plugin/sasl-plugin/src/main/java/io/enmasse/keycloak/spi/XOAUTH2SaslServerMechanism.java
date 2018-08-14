@@ -42,7 +42,17 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
     }
 
     @Override
-    public Instance newInstance(final KeycloakSession keycloakSession,
+    public int priority() {
+        return 100;
+    }
+
+    @Override
+    public boolean isSupported(String passwordHashAlgo) {
+        return true;
+    }
+
+    @Override
+    public Instance newInstance(final KeycloakSessionFactory keycloakSessionFactory,
                                 final String hostname,
                                 final Config.Scope config)
     {
@@ -60,6 +70,7 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
                     throw error;
                 }
 
+                KeycloakSession keycloakSession = keycloakSessionFactory.create();
                 keycloakSession.getTransactionManager().begin();
                 try {
 
@@ -116,6 +127,7 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
                     }
                 } finally {
                     keycloakSession.getTransactionManager().commit();
+                    keycloakSession.close();
                 }
 
                 complete = true;

@@ -26,10 +26,13 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     private KeycloakSession keycloakSession;
     private Config.Scope config;
     private boolean verifyToken;
+    private KeycloakSessionFactory keycloakSessionFactory;
 
     @Before
     public void setup() {
         keycloakSession = mock(KeycloakSession.class);
+        keycloakSessionFactory = mock(KeycloakSessionFactory.class);
+        when(keycloakSessionFactory.create()).thenReturn(keycloakSession);
         KeycloakTransactionManager txnManager = mock(KeycloakTransactionManager.class);
         when(keycloakSession.getTransactionManager()).thenReturn(txnManager);
         RealmProvider realms = mock(RealmProvider.class);
@@ -70,7 +73,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     @Test
     public void testUnknownRealm() {
         final SaslServerMechanism.Instance instance =
-                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSession, "unknownRealm", config);
+                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "unknownRealm", config);
         byte[] response = instance.processResponse(createInitialResponse("user", "token"));
         assertTrue(response == null || response.length == 0);
         assertTrue(instance.isComplete());
@@ -83,7 +86,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     @Test
     public void testWrongPassword() {
         final SaslServerMechanism.Instance instance =
-                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSession, "realm", config);
+                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "realm", config);
         this.verifyToken = false;
         byte[] response = instance.processResponse(createInitialResponse("user", "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3N0xUZ3BvbFJmU1NqQkNEeTljU3VEeFpkM2hmMTEyN3R5ZzNweU52LVRBIn0.eyJqdGkiOiJmM2E3ZjFhNS0zZGM2LTQ1YjEtOWIyYi1hZjIzYmYxYTc5NTUiLCJleHAiOjE1MjAwODI2NTMsIm5iZiI6MCwiaWF0IjoxNTIwMDgyMzUzLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvYXV0aC9yZWFsbXMvYW1xcCIsImF1ZCI6ImFtcXAiLCJzdWIiOiI4NjA2NDJiMy0wZmE1LTRiYjctOGI0YS0xZGNiOTdlZjhmZDgiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhbXFwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiY2Y5Njc0YTAtN2FiNy00YmZiLWI4ZTktZjk3MzM5NTY4NzYwIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6W10sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInByZWZlcnJlZF91c2VybmFtZSI6Imd1ZXN0In0.Ul33UaC4EXdxtMqv6fLyOHRvHNkA3U1F2FDKxo4Rs4gIvmrbyjK_RN_AciVZjtphYM4xXDn3E9acchyLcQB690NCneDVwqUUj5c2ZU5LcZsAARtBC8MPk8ekDhfmm3ppsRnnSYzucDC1Qe-iLtmhj-v3NzdkgxIwzbgL2E7QzUuf8KFSj2Ue322r27tPhKLm2ay3lcauKe_u3LziA6S1sgxdABWzTBP8UhSeKtqY0j6JT50LA7mvVgmEZvdzqgt6EVYmU0ALzbdjQuOJhmlTDH68cPqQI1-MLAreHt7BDLTN0YuthzoFKheZBaIpBvdDuSI_iV0iAe_AlT16ka4rUg"));
         assertTrue(response == null || response.length == 0);
@@ -95,7 +98,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     @Test
     public void testValidatedToken() {
         final SaslServerMechanism.Instance instance =
-                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSession, "realm", config);
+                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "realm", config);
         this.verifyToken = true;
         byte[] response = instance.processResponse(createInitialResponse("user", "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3N0xUZ3BvbFJmU1NqQkNEeTljU3VEeFpkM2hmMTEyN3R5ZzNweU52LVRBIn0.eyJqdGkiOiJmM2E3ZjFhNS0zZGM2LTQ1YjEtOWIyYi1hZjIzYmYxYTc5NTUiLCJleHAiOjE1MjAwODI2NTMsIm5iZiI6MCwiaWF0IjoxNTIwMDgyMzUzLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvYXV0aC9yZWFsbXMvYW1xcCIsImF1ZCI6ImFtcXAiLCJzdWIiOiI4NjA2NDJiMy0wZmE1LTRiYjctOGI0YS0xZGNiOTdlZjhmZDgiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhbXFwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiY2Y5Njc0YTAtN2FiNy00YmZiLWI4ZTktZjk3MzM5NTY4NzYwIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6W10sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInByZWZlcnJlZF91c2VybmFtZSI6Imd1ZXN0In0.Ul33UaC4EXdxtMqv6fLyOHRvHNkA3U1F2FDKxo4Rs4gIvmrbyjK_RN_AciVZjtphYM4xXDn3E9acchyLcQB690NCneDVwqUUj5c2ZU5LcZsAARtBC8MPk8ekDhfmm3ppsRnnSYzucDC1Qe-iLtmhj-v3NzdkgxIwzbgL2E7QzUuf8KFSj2Ue322r27tPhKLm2ay3lcauKe_u3LziA6S1sgxdABWzTBP8UhSeKtqY0j6JT50LA7mvVgmEZvdzqgt6EVYmU0ALzbdjQuOJhmlTDH68cPqQI1-MLAreHt7BDLTN0YuthzoFKheZBaIpBvdDuSI_iV0iAe_AlT16ka4rUg"));
         assertTrue(response == null || response.length == 0);
@@ -107,7 +110,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     @Test(expected = IllegalArgumentException.class)
     public void testBadInitialResponse() {
         final SaslServerMechanism.Instance instance =
-                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSession, "realm", config);
+                (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "realm", config);
         instance.processResponse("potato".getBytes(StandardCharsets.UTF_8));
     }
 

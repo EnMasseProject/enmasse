@@ -38,7 +38,7 @@ public class Keycloak implements KeycloakApi {
         newRealm.setRealm(realmName);
         newRealm.setEnabled(true);
         newRealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
-
+        newRealm.setAttributes(Collections.singletonMap("enmasse-realm","true"));
         if (realmAdminUser != null) {
 
             final UserRepresentation newUser = new UserRepresentation();

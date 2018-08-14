@@ -28,6 +28,7 @@ import org.keycloak.credential.PasswordCredentialProvider;
 import org.keycloak.credential.UserCredentialStoreManager;
 import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
@@ -74,12 +75,12 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
         byte[] getServerKey();
     }
 
-    public ScramSaslAuthenticator(final KeycloakSession keycloakSession,
+    public ScramSaslAuthenticator(final KeycloakSessionFactory keycloakSessionFactory,
                                   final String hostname,
                                   String digestName,
                                   String hmacName,
                                   Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions) {
-        this.keycloakSession = keycloakSession;
+        this.keycloakSession = keycloakSessionFactory.create();
         this.hostname = hostname;
         this.randomBytes = new byte[32];
         (new SecureRandom()).nextBytes(this.randomBytes);
