@@ -89,6 +89,7 @@ under the License.
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
             <address-full-policy>FAIL</address-full-policy>
+            <default-address-routing-type>ANYCAST</default-address-routing-type>
          </address-setting>
       </address-settings>
 
