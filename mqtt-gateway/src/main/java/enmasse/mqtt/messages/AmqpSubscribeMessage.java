@@ -24,20 +24,16 @@ public class AmqpSubscribeMessage {
     public static final String AMQP_SUBJECT = "subscribe";
 
     private final String clientId;
-    private final Object messageId;
     private final List<AmqpTopicSubscription> topicSubscriptions;
 
     /**
      * Constructor
-     *
-     * @param clientId  client identifier
-     * @param messageId message identifier
+     *  @param clientId  client identifier
      * @param topicSubscriptions    list with topics and related quality of service levels
      */
-    public AmqpSubscribeMessage(String clientId, Object messageId, List<AmqpTopicSubscription> topicSubscriptions) {
+    public AmqpSubscribeMessage(String clientId, List<AmqpTopicSubscription> topicSubscriptions) {
 
         this.clientId = clientId;
-        this.messageId = messageId;
         this.topicSubscriptions = topicSubscriptions;
     }
 
@@ -66,8 +62,7 @@ public class AmqpSubscribeMessage {
             }
 
             return new AmqpSubscribeMessage(AmqpHelper.getClientIdFromPublishAddress((String) message.getCorrelationId()),
-                    message.getMessageId(),
-                    topicSubscriptions);
+                                            topicSubscriptions);
 
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
@@ -84,8 +79,6 @@ public class AmqpSubscribeMessage {
         Message message = ProtonHelper.message();
 
         message.setSubject(AMQP_SUBJECT);
-
-        message.setMessageId(this.messageId);
 
         message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_PUBLISH_ADDRESS_TEMPLATE, this.clientId));
 
@@ -111,14 +104,6 @@ public class AmqpSubscribeMessage {
     }
 
     /**
-     * Message identifier
-     * @return
-     */
-    public Object messageId() {
-        return messageId;
-    }
-
-    /**
      * List with topics and related quolity of service levels
      * @return
      */
@@ -131,7 +116,6 @@ public class AmqpSubscribeMessage {
 
         return "AmqpSubscribeMessage{" +
                 "clientId=" + this.clientId +
-                ", messageId=" + this.messageId +
                 ", topicSubscriptions=" + this.topicSubscriptions +
                 "}";
     }

@@ -20,20 +20,16 @@ public class AmqpUnsubscribeMessage {
     public static final String AMQP_SUBJECT = "unsubscribe";
 
     private final String clientId;
-    private final Object messageId;
     private final List<String> topics;
 
     /**
      * Constructor
-     *
-     * @param clientId  client identifier
-     * @param messageId message identifier
+     *  @param clientId  client identifier
      * @param topics    topics to subscribe
      */
-    public AmqpUnsubscribeMessage(String clientId, Object messageId, List<String> topics) {
+    public AmqpUnsubscribeMessage(String clientId, List<String> topics) {
 
         this.clientId = clientId;
-        this.messageId = messageId;
         this.topics = topics;
     }
 
@@ -56,8 +52,7 @@ public class AmqpUnsubscribeMessage {
             List<String> topics = (List<String>) ((AmqpValue) section).getValue();
 
             return new AmqpUnsubscribeMessage(AmqpHelper.getClientIdFromPublishAddress((String) message.getCorrelationId()),
-                    message.getMessageId(),
-                    topics);
+                                              topics);
 
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
@@ -75,8 +70,6 @@ public class AmqpUnsubscribeMessage {
 
         message.setSubject(AMQP_SUBJECT);
 
-        message.setMessageId(this.messageId);
-
         message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_PUBLISH_ADDRESS_TEMPLATE, this.clientId));
 
         message.setBody(new AmqpValue(this.topics));
@@ -93,14 +86,6 @@ public class AmqpUnsubscribeMessage {
     }
 
     /**
-     * Message identifier
-     * @return
-     */
-    public Object messageId() {
-        return messageId;
-    }
-
-    /**
      * Topics to subscribe
      * @return
      */
@@ -113,7 +98,6 @@ public class AmqpUnsubscribeMessage {
 
         return "AmqpUnsubscribeMessage{" +
                 "clientId=" + this.clientId +
-                ", messageId=" + this.messageId +
                 ", topics=" + this.topics +
                 "}";
     }
