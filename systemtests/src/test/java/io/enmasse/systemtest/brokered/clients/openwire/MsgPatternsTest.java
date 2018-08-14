@@ -51,7 +51,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
     @Test
     @Disabled("disabled due to issue #660")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
-        doMessageSelectorTopicTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(),
+        doMessageSelectorTopicTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientSender(),
                 new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
     }
 }

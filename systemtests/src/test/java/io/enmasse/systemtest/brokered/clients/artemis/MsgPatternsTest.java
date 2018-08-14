@@ -48,7 +48,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
-        doMessageSelectorTopicTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(),
+        doMessageSelectorTopicTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientSender(),
                 new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver(), true);
     }
 }

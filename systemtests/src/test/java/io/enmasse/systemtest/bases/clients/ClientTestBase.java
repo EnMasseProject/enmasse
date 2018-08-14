@@ -319,10 +319,10 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                         String.format("Expected %d received messages 'a OR b'", expectedMsgCount)));
     }
 
-    protected void doMessageSelectorTopicTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber,
-                                              AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
-        clients.addAll(Arrays.asList(sender, subscriber, subscriber2, subscriber3));
-        int expectedMsgCount = 10;
+    protected void doMessageSelectorTopicTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient sender2,
+                                              AbstractClient subscriber, AbstractClient subscriber2, boolean hasTopicPrefix) throws Exception {
+        clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
+        int expectedMsgCount = 5;
 
         Destination topic = Destination.topic("selector-topic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
@@ -338,46 +338,47 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.TIMEOUT, "100");
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
-        //set up sender
+        //set up senders
         sender.setArguments(arguments);
+
+        arguments.remove(ClientArgument.MSG_PROPERTY);
+        arguments.put(ClientArgument.MSG_PROPERTY, "colour~blue");
+        arguments.put(ClientArgument.MSG_PROPERTY, "number~11.65");
+
+        sender2.setArguments(arguments);
 
         arguments.remove(ClientArgument.MSG_PROPERTY);
         arguments.remove(ClientArgument.MSG_CONTENT);
 
         //set up subscriber1
-        arguments.put(ClientArgument.SELECTOR, "colour = 'red'");
+        arguments.put(ClientArgument.SELECTOR, "colour = 'red' AND a");
         subscriber.setArguments(arguments);
 
         //set up subscriber2
-        arguments.put(ClientArgument.SELECTOR, "number > 12.5");
+        arguments.put(ClientArgument.SELECTOR, "number < 12.5");
         subscriber2.setArguments(arguments);
-
-        //set up subscriber3
-        arguments.put(ClientArgument.SELECTOR, "a AND b");
-        subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();
         Future<Boolean> result2 = subscriber2.runAsync();
-        Future<Boolean> result3 = subscriber3.runAsync();
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, topic.getAddress(), 3);
+            waitForSubscribers(artemisManagement, sharedAddressSpace, topic.getAddress(), 2);
         } else {
-            waitForSubscribersConsole(sharedAddressSpace, topic, 3);
+            waitForSubscribersConsole(sharedAddressSpace, topic, 2);
         }
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");
+        assertTrue(sender2.run(), "Sender2 failed, expected return code 0");
         assertTrue(result1.get(), "Receiver 'colour = red' failed, expected return code 0");
-        assertTrue(result2.get(), "Receiver 'number > 12.5' failed, expected return code 0");
-        assertTrue(result3.get(), "Receiver 'a AND b' failed, expected return code 0");
+        assertTrue(result2.get(), "Receiver 'number < 12.5' failed, expected return code 0");
 
         assertEquals(expectedMsgCount, sender.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
+        assertEquals(expectedMsgCount, sender2.getMessages().size(),
+                String.format("Expected %d sent messages", expectedMsgCount));
         assertEquals(expectedMsgCount, subscriber.getMessages().size(),
-                String.format("Expected %d received messages 'colour = red'", expectedMsgCount));
+                String.format("Expected %d received messages 'colour = red' AND a", expectedMsgCount));
         assertEquals(expectedMsgCount, subscriber2.getMessages().size(),
-                String.format("Expected %d received messages 'number > 12.5'", expectedMsgCount));
-        assertEquals(0, subscriber3.getMessages().size(),
-                String.format("Expected %d received messages 'a AND b'", 0));
+                String.format("Expected %d received messages 'number < 12.5'", expectedMsgCount));
     }
 }

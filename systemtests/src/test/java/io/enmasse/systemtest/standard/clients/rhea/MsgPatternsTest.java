@@ -45,7 +45,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
 
     @Test
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
-        doMessageSelectorTopicTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath),
+        doMessageSelectorTopicTest(artemisManagement, new RheaClientSender(logPath), new RheaClientSender(logPath),
                 new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
     }
 }

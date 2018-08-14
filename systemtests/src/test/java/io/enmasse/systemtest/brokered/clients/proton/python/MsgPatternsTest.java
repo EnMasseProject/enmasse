@@ -48,7 +48,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseBrokered {
 
     @Test
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
-        doMessageSelectorTopicTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath),
+        doMessageSelectorTopicTest(artemisManagement, new PythonClientSender(logPath), new PythonClientSender(logPath),
                 new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
     }
 }
