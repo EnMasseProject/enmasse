@@ -5,4 +5,4 @@ ENV VERSION=${version}
 ADD build/router-metrics-${VERSION}.tgz /
 
 EXPOSE 8080
-CMD ["python", "/router-metrics.py"]
+CMD ["python", "-u", "/router-metrics.py"]
