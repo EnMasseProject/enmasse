@@ -1,3 +1,10 @@
+## 0.21.1 (August 15, 2018)
+* Upgrade to Apache Qpid Dispatch Router 1.3.0
+* Upgrade to Apache ActiveMQ Artemis 2.6.2
+* Enable native OpenSSL support in Artemis
+* Use one connection in each direction between router and broker
+* Split Ansible playbooks into a project admin and cluster admin playbook
+
 ## 0.21.0 (June 19, 2018)
 * Upgrade to dispatch router 1.1.0 + some extra bugfixes
 * Add support for web sockets in standard address space
