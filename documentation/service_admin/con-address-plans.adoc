@@ -7,7 +7,7 @@
 
 Address plans specify the expected resource usage of a given address. The sum of the resource usage for all resource types determines the amount of infrastructure provisioned for an address space. A single router and broker pod has a maximum usage of one. If a new address requires additional resources and the resource consumption is within the address space plan limits, a new pod will be created automatically to handle the increased load.
 
-In the xref:con-address-space-plans-{context}[] section, the address space plan referenced two address plans: `small-queue` and `small-anycast`. These address plans are stored as `ConfigMaps` and are defined as follows:
+In the xref:con-address-space-plans-messaging[] section, the address space plan references two address plans: `small-queue` and `small-anycast`. These address plans are stored as `ConfigMaps` and are defined as follows:
 
 [source,yaml,options="nowrap"]
 .link:service_admin/small-queue-plan.yaml[small-queue-plan.yaml]
@@ -17,15 +17,15 @@ include::small-queue-plan.yaml[]
 
 The following fields are required:
 
-* metadata.name
-* requiredResources
-* addressType
+* `metadata.name`
+* `requiredResources`
+* `addressType`
 
 A single router can support five instances of addresses and broker can support three instances of addresses with this plan. If the number of addresses with this plan increases to four, another broker is created. If it increases further to six, another router is created as well.
 
-Note, however, that although the address space plan allows two routers and two brokers to be deployed, it only allows two pods to be deployed in total. This means that the address space is restricted to three addresses with the 'small-queue' plan.
+Note, however, that although the address space plan allows two routers and two brokers to be deployed, it only allows two pods to be deployed in total. This means that the address space is restricted to three addresses with the `small-queue` plan.
 
-The 'small-anycast' plan does not consume any broker resources, and can provision two routers at the expense of not being able to create any brokers:
+The `small-anycast` plan does not consume any broker resources, and can provision two routers at the expense of not being able to create any brokers:
 
 [source,yaml,options="nowrap"]
 .link:service_admin/small-anycast-plan.yaml[small-anycast-plan.yaml]
@@ -33,5 +33,5 @@ The 'small-anycast' plan does not consume any broker resources, and can provisio
 include::small-anycast-plan.yaml[]
 ----
 
-Up to 10 addresses with this plan can be created.
+With this plan, up to 10 addresses can be created.
 

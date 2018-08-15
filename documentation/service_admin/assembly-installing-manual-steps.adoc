@@ -2,10 +2,8 @@
 //
 // assembly-installing-openshift.adoc
 :parent-context: {context}
-:context: maas
+:context: messaging
 :cmdcli: oc
-
-include::common/attributes.adoc[]
 
 [id='installing-using-manual-steps-{context}']
 = Installing {ProductName} manually
