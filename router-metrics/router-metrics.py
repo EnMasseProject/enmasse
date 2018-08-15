@@ -122,19 +122,17 @@ class RouterCollector(object):
         self.router_host = router_host
         self.router_port = router_port
         self.cert_dir = cert_dir
-        ssl_domain = None
-        allowed_mechs = []
-        sasl_enabled = False
+        self.ssl_domain = None
+        self.allowed_mechs = []
+        self.sasl_enabled = False
 
         if self.cert_dir != None:
-            ssl_domain = SSLDomain(SSLDomain.MODE_CLIENT)
-            ssl_domain.set_trusted_ca_db(str(os.path.join(self.cert_dir, 'ca.crt')))
-            ssl_domain.set_credentials(str(os.path.join(self.cert_dir, "tls.crt")), str(os.path.join(self.cert_dir, "tls.key")), None)
-            ssl_domain.set_peer_authentication(SSLDomain.VERIFY_PEER)
-            allowed_mechs = str("EXTERNAL")
-            sasl_enabled = True
-
-        self.client = SyncRequestResponse(BlockingConnection("amqps://" + self.router_host + ":" + str(self.router_port), 30, None, ssl_domain, allowed_mechs=allowed_mechs, sasl_enabled=sasl_enabled), "$management")
+            self.ssl_domain = SSLDomain(SSLDomain.MODE_CLIENT)
+            self.ssl_domain.set_trusted_ca_db(str(os.path.join(self.cert_dir, 'ca.crt')))
+            self.ssl_domain.set_credentials(str(os.path.join(self.cert_dir, "tls.crt")), str(os.path.join(self.cert_dir, "tls.key")), None)
+            self.ssl_domain.set_peer_authentication(SSLDomain.VERIFY_PEER)
+            self.allowed_mechs = str("EXTERNAL")
+            self.sasl_enabled = True
 
     def create_collector_map(self):
         metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
@@ -168,15 +166,15 @@ class RouterCollector(object):
                                   collector_map['undeliveredCount'], collector_map['capacity'],
                                   collector_map['consumerCount'], collector_map['producerCount']] }
 
-    def get_router(self):
-        return self.collect_metric('org.apache.qpid.dispatch.router')
+    def get_router(self, client):
+        return self.collect_metric('org.apache.qpid.dispatch.router', client)
 
-    def get_links(self):
-        links = self.collect_metric('org.apache.qpid.dispatch.router.link')
+    def get_links(self, client):
+        links = self.collect_metric('org.apache.qpid.dispatch.router.link', client)
         if links == None:
             return links
 
-        connections = self.get_connections()
+        connections = self.get_connections(client)
         if connections == None:
             return connections
 
@@ -186,8 +184,8 @@ class RouterCollector(object):
 
         return links
 
-    def get_connections(self):
-        response = self.collect_metric('org.apache.qpid.dispatch.connection')
+    def get_connections(self, client):
+        response = self.collect_metric('org.apache.qpid.dispatch.connection', client)
         if response == None:
             return response
 
@@ -197,46 +195,53 @@ class RouterCollector(object):
     def collect(self):
         collector_map = self.create_collector_map()
         fetcher_map = self.create_entity_map(collector_map)
+        connection = None
 
-        for fetcher in fetcher_map:
-            response = fetcher()
-            if response != None:
-                for collector in fetcher_map[fetcher]:
-                    for entity in response.get_results():
-                        if response.contains(entity, collector.filter):
-                            labels = []
-                            for l in collector.labels:
-                                label_idx = response.get_index(l)
-                                if label_idx != None and entity[label_idx] != None:
-                                    labels.append(entity[label_idx])
-                                else:
-                                    labels.append("")
-                            value = entity[response.get_index(collector.name)]
-                            collector.add(labels, int(value))
+        try:
+            connection = BlockingConnection("amqps://" + self.router_host + ":" + str(self.router_port), 30, None, self.ssl_domain, allowed_mechs=self.allowed_mechs, sasl_enabled=self.sasl_enabled, container_id="router-metrics")
+            client = SyncRequestResponse(connection, "$management")
+            for fetcher in fetcher_map:
+                response = fetcher(client)
+                if response != None:
+                    for collector in fetcher_map[fetcher]:
+                        for entity in response.get_results():
+                            if response.contains(entity, collector.filter):
+                                labels = []
+                                for l in collector.labels:
+                                    label_idx = response.get_index(l)
+                                    if label_idx != None and entity[label_idx] != None:
+                                        labels.append(entity[label_idx])
+                                    else:
+                                        labels.append("")
+                                value = entity[response.get_index(collector.name)]
+                                collector.add(labels, int(value))
+        finally:
+            if connection != None:
+                connection.close()
 
         for collector in collector_map.itervalues():
             yield collector.metric()
         
 
-    def collect_metric(self, entityType):
+    def collect_metric(self, entityType, client):
+        result = None
         try:
             properties = {}
             properties["entityType"] = entityType
             properties["operation"] = "QUERY"
             properties["name"] = "self"
             message = Message(body=None, properties=properties)
-            response = self.client.call(message)
-            if response == None:
-                return response
-            else:
-                return RouterResponse(response)
+
+            response = client.call(message)
+            if response != None:
+                result = RouterResponse(response)
         except NameError as e:
             print("Error querying router for metrics: %s" % e)
-            return None
+        return result
 
 if __name__ == '__main__':
     # Start up the server to expose the metrics.
     REGISTRY.register(RouterCollector(os.environ['ROUTER_HOST'], int(os.environ['ROUTER_PORT']), os.environ['CERT_DIR']))
     start_http_server(8080)
     while True:
-        time.sleep(5)
+        time.sleep(10)
