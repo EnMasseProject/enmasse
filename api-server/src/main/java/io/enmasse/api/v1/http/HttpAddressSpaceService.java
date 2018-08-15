@@ -49,7 +49,7 @@ public class HttpAddressSpaceService {
     }
 
     private static void verifyAuthorized(SecurityContext securityContext, String namespace, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "addressspaces"))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "addressspaces", "enmasse.io"))) {
             throw Exceptions.notAuthorizedException();
         }
     }

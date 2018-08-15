@@ -51,7 +51,7 @@ public abstract class OSBServiceBase {
     }
 
     protected void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "configmaps"))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "addressspaces", "enmasse.io"))) {
             throw Exceptions.notAuthorizedException();
         }
     }

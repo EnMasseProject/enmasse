@@ -43,7 +43,7 @@ public class HttpAddressServiceBase {
     }
 
     private static void verifyAuthorized(SecurityContext securityContext, String namespace, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "addresses"))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "addresses", "enmasse.io"))) {
             throw Exceptions.notAuthorizedException();
         }
     }

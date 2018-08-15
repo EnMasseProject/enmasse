@@ -59,19 +59,21 @@ public class RbacSecurityContext implements SecurityContext {
             String namespace = data.getString("namespace");
             String verb = data.getString("verb");
             String resource = data.getString("resource");
-            accessReview = authApi.performSubjectAccessReviewResource(tokenReview.getUserName(), namespace, resource, verb);
+            String apiGroup = data.getString("apiGroup");
+            accessReview = authApi.performSubjectAccessReviewResource(tokenReview.getUserName(), namespace, resource, verb, apiGroup);
         } else {
             throw new IllegalArgumentException("Unknown role type " + type);
         }
         return accessReview.isAllowed();
     }
 
-    public static String rbacToRole(String namespace, ResourceVerb verb, String resource) {
+    public static String rbacToRole(String namespace, ResourceVerb verb, String resource, String apiGroup) {
         JsonObject object = new JsonObject();
         object.put("type",  "resource");
         object.put("namespace", namespace);
         object.put("verb", verb);
         object.put("resource", resource);
+        object.put("apiGroup", apiGroup);
         return object.toString();
     }
 
