@@ -165,11 +165,6 @@ Artemis.prototype.createQueue = function (name) {
                                                    -1/*max consumers*/, false/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
 }
 
-Artemis.prototype.deployQueue = function (name, durable) {
-    var is_durable = durable === undefined ? true : durable;
-    return this._request('broker', 'deployQueue', [name, name, null, is_durable]);
-}
-
 Artemis.prototype.destroyQueue = function (name) {
     return this._request('broker', 'destroyQueue', [name, true, true]);
 }
