@@ -32,7 +32,6 @@ public class ConnectionTest extends TestBaseWithShared implements ITestBaseStand
      * disconnect the existing Client [].
      */
     @Test
-    @Disabled("New test for #1499/1503")
     public void newSessionDisconnectsExisting() throws Exception {
         Destination dest = Destination.topic(MQTT_TOPIC, "sharded-topic");
         setAddresses(dest);

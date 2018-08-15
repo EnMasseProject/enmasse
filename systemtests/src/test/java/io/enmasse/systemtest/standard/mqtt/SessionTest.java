@@ -35,11 +35,10 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
 
 
     /**
-     * MQTT-3.1.4-2 If the ClientId represents a Client already connected to the Server then the Server MUST
-     * disconnect the existing Client [].
+     * [MQTT-3.1.2-4] If CleanSession is set to 1, the Client and Server MUST discard any previous Session and start a
+     * new one.
      */
     @Test
-    @Disabled("New test for #1499/1503")
     public void previousPersistentSessionDiscarded() throws Exception {
         Destination dest = Destination.topic(MQTT_TOPIC, "sharded-topic");
         setAddresses(dest);

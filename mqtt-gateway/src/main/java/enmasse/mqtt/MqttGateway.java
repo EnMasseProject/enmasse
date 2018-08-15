@@ -5,9 +5,12 @@
 
 package enmasse.mqtt;
 
+import com.google.common.cache.CacheBuilder;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttServer;
 import io.vertx.mqtt.MqttServerOptions;
@@ -16,8 +19,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 /**
@@ -44,7 +52,11 @@ public class MqttGateway extends AbstractVerticle {
 
     private MqttServer server;
 
-    private Map<String, AmqpBridge> bridges;
+    private final Map<String, AmqpBridge> bridges = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Semaphore> clientIdSemaphores = CacheBuilder.newBuilder()
+                                                                                    .maximumSize(1000)
+                                                                                    .expireAfterAccess(10, TimeUnit.MINUTES)
+                                                                                    .<String, Semaphore>build().asMap();
 
     /**
      * Set the IP address the MQTT gateway will bind to
@@ -152,6 +164,7 @@ public class MqttGateway extends AbstractVerticle {
         MqttServerOptions options = new MqttServerOptions();
         options.setMaxMessageSize(this.maxMessageSize);
         options.setHost(this.bindAddress).setPort(this.listenPort);
+        options.setAutoClientId(true);
 
         if (this.ssl) {
 
@@ -169,11 +182,10 @@ public class MqttGateway extends AbstractVerticle {
 
         this.server
                 .endpointHandler(this::handleMqttEndpointConnection)
+                .exceptionHandler(t -> {LOG.error("Error handling connection ", t);})
                 .listen(done -> {
 
                     if (done.succeeded()) {
-
-                        this.bridges = new HashMap<>();
 
                         LOG.info("MQTT gateway running on {}:{}", this.bindAddress, this.server.actualPort());
                         LOG.info("AMQP messaging service on {}:{}", this.messagingServiceHost, this.messagingServicePort);
@@ -193,26 +205,50 @@ public class MqttGateway extends AbstractVerticle {
      */
     private void handleMqttEndpointConnection(MqttEndpoint mqttEndpoint) {
 
-        LOG.info("CONNECT from MQTT client {}", mqttEndpoint.clientIdentifier());
+        final String clientIdentifier = mqttEndpoint.clientIdentifier();
+        final SocketAddress remoteAddress = mqttEndpoint.remoteAddress();
+        LOG.info("CONNECT from MQTT client {} at {}", clientIdentifier, remoteAddress);
 
-        AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
+        Semaphore clientIdSemaphore = clientIdSemaphores.computeIfAbsent(clientIdentifier,
+                                                                         s -> new Semaphore(1));
 
-        bridge.mqttEndpointCloseHandler(amqpBridge -> {
+        if (clientIdSemaphore.tryAcquire()) {
+            AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
 
-            this.bridges.remove(amqpBridge.id());
-            amqpBridge.close();
-            LOG.info("Closed AMQP bridge for client {}", amqpBridge.id());
+            bridge.mqttEndpointCloseHandler(amqpBridge -> {
 
-        }).open(this.messagingServiceHost, this.messagingServicePort, done -> {
-
-            if (done.succeeded()) {
-
-                LOG.info("Opened AMQP bridge for client {}", done.result().id());
-                this.bridges.put(done.result().id(), done.result());
+                try {
+                    this.bridges.remove(amqpBridge.id());
+                } finally {
+                    clientIdSemaphore.release();
+                }
+            }).open(this.messagingServiceHost, this.messagingServicePort, done -> {
+                if (done.succeeded()) {
+                    this.bridges.put(done.result().id(), done.result());
+                } else {
+                    LOG.info("Error opening the AMQP bridge ...", done.cause());
+                }
+            });
+        } else {
+            AmqpBridge existingBridge = bridges.get(clientIdentifier);
+            if (existingBridge == null) {
+                // The semaphore is held but no bridge is formed, another session must be in the process of forming.
+                LOG.trace("No existing bridge found for {}", clientIdentifier);
+                vertx.setTimer(100, unused -> {
+                    handleMqttEndpointConnection(mqttEndpoint);
+                });
             } else {
-                LOG.info("Error opening the AMQP bridge ...", done.cause());
+                // If the ClientId represents a Client already connected to the Server then the Server MUST
+                // disconnect the existing Client [MQTT-3.1.4-2].
+                LOG.info("MQTT client {} already in-use by {}", clientIdentifier, existingBridge.remoteAddress());
+                existingBridge.close().compose(unused -> {
+                    LOG.trace("MQTT Closing of existing client {} from {} completed (initated by {})",
+                              clientIdentifier, existingBridge.remoteAddress(), remoteAddress);
+                    handleMqttEndpointConnection(mqttEndpoint);
+                    return Future.succeededFuture();
+                });
             }
-        });
+        }
     }
 
     @Override
@@ -239,12 +275,14 @@ public class MqttGateway extends AbstractVerticle {
         });
 
         if (this.server != null) {
+            List<Future> closeFutures = this.bridges.entrySet()
+                                                    .stream()
+                                                    .map(entry -> entry.getValue().close())
+                                                    .collect(Collectors.toList());
 
-            this.bridges.entrySet().stream().forEach(entry -> {
-                entry.getValue().close();
+            CompositeFuture.all(closeFutures).setHandler(done -> {
+                this.server.close(shutdownTracker.completer());
             });
-
-            this.server.close(shutdownTracker.completer());
         } else {
             shutdownTracker.complete();
         }
