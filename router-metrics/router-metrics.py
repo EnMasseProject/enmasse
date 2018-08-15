@@ -196,6 +196,7 @@ class RouterCollector(object):
         collector_map = self.create_collector_map()
         fetcher_map = self.create_entity_map(collector_map)
         connection = None
+        print("Collecting metrics")
 
         try:
             connection = BlockingConnection("amqps://" + self.router_host + ":" + str(self.router_port), 30, None, self.ssl_domain, allowed_mechs=self.allowed_mechs, sasl_enabled=self.sasl_enabled, container_id="router-metrics")
