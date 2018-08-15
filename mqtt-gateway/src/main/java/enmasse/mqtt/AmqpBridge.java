@@ -274,18 +274,35 @@ public class AmqpBridge {
      * Close the bridge with all related attached links and connection to AMQP services
      */
     public void close() {
+        Future<Void> future = Future.future();
+        future.setHandler(unused -> {
+            if (this.lwtEndpoint != null)
+                this.lwtEndpoint.close(false);
 
-        if (this.lwtEndpoint != null)
-            this.lwtEndpoint.close(false);
+            this.ssEndpoint.close();
+            this.rcvEndpoint.close();
+            this.pubEndpoint.close();
 
-        this.ssEndpoint.close();
-        this.rcvEndpoint.close();
-        this.pubEndpoint.close();
+            this.connection.close();
 
-        this.connection.close();
+            if (this.grantedQoSLevels != null)
+                this.grantedQoSLevels.clear();
+        });
 
-        if (this.grantedQoSLevels != null)
-            this.grantedQoSLevels.clear();
+        if (this.mqttEndpoint.isCleanSession()) {
+            AmqpCloseMessage value = new AmqpCloseMessage(this.mqttEndpoint.clientIdentifier());
+            this.ssEndpoint.sendClose(value, event -> {
+                if (event.failed()) {
+                    LOG.warn("Failed to close session for MQTT client : {}", this.mqttEndpoint.clientIdentifier(), event.cause());
+                    future.fail(event.cause());
+                } else {
+                    LOG.info("Closed session for MQTT client : {}", this.mqttEndpoint.clientIdentifier());
+                    future.complete();
+                }
+            });
+        } else {
+            future.complete();
+        }
     }
 
     /**
