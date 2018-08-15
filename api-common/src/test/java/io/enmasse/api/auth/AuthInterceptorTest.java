@@ -95,7 +95,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -109,7 +109,7 @@ public class AuthInterceptorTest {
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("foo"));
         assertThat(RbacSecurityContext.getUserId(rbacSecurityContext.getUserPrincipal()), is("myid"));
-        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "configmaps")));
+        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "configmaps", "")));
     }
 
     @Test
@@ -121,7 +121,7 @@ public class AuthInterceptorTest {
     @Test
     public void testCertAuthorization() {
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("me", true);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("me"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("me"), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
 
         HttpServerRequest request = mock(HttpServerRequest.class);
@@ -140,13 +140,13 @@ public class AuthInterceptorTest {
         assertThat(context.getAuthenticationScheme(), is("RBAC"));
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("me"));
-        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces")));
+        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces", "enmasse.io")));
     }
 
     @Test
     public void testCertAuthorizationFailed() throws SSLPeerUnverifiedException {
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("system:anonymous", false);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("system:anonymous"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("system:anonymous"), any(), any(), eq("create"), eq("enmasse.io"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
 
         HttpServerRequest request = mock(HttpServerRequest.class);
@@ -166,7 +166,7 @@ public class AuthInterceptorTest {
         assertThat(context.getAuthenticationScheme(), is("RBAC"));
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("system:anonymous"));
-        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces")));
+        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces", "enmasse.io")));
     }
 
     @Test
@@ -174,7 +174,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -187,6 +187,6 @@ public class AuthInterceptorTest {
         assertThat(context.getAuthenticationScheme(), is("RBAC"));
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("foo"));
-        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "configmaps")));
+        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "configmaps", "")));
     }
 }
