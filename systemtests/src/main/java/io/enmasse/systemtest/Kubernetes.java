@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -560,5 +561,23 @@ public abstract class Kubernetes {
             }
         }
         return removed;
+    }
+
+    public void createPodFromTemplate(String namespace, String configName) throws Exception {
+        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
+        HasMetadata resource = resources.get(0);
+        Pod creationResults = client.pods().inNamespace(namespace).create((Pod) resource);
+        Pod result = client.pods().inNamespace(namespace)
+                .withName(creationResults.getMetadata().getName()).waitUntilReady(5, TimeUnit.SECONDS);
+        log.info("Pod created {}", result.getMetadata().getName());
+    }
+
+    public void deletePod(String namespace, String podName) throws Exception {
+        client.pods().inNamespace(namespace).withName(podName).delete();
+        log.info("Pod {} removed", podName);
+    }
+
+    public String getPodIp(String namespace, String podName) {
+        return client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPodIP();
     }
 }

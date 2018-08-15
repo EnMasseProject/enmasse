@@ -55,8 +55,7 @@ public class MsgCliApiClient extends ApiClient {
         request.put("command", new JsonArray(clientArguments));
         request.put("count", count);
 
-
-        client.post(endpoint.toString())
+        client.post(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
                 .timeout(10_000)
                 .sendJson(request,
@@ -79,7 +78,7 @@ public class MsgCliApiClient extends ApiClient {
         JsonObject request = new JsonObject();
         request.put("id", uuid);
 
-        client.get(endpoint.toString())
+        client.get(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
                 .timeout(10_000)
                 .sendJson(request,
@@ -102,7 +101,7 @@ public class MsgCliApiClient extends ApiClient {
         JsonObject request = new JsonObject();
         request.put("id", uuid);
 
-        client.delete(endpoint.toString())
+        client.delete(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
                 .timeout(10_000)
                 .sendJson(request,

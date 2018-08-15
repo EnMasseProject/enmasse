@@ -43,7 +43,6 @@ import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
@@ -93,7 +92,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     @BeforeEach
-    public void setup() throws MalformedURLException {
+    public void setup() throws Exception {
         if (addressApiClient == null) {
             addressApiClient = new AddressApiClient(kubernetes);
         }
@@ -105,8 +104,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @AfterEach
     public void teardown() throws Exception {
         try {
-            mqttClientFactory.close();
-            amqpClientFactory.close();
+            if (mqttClientFactory != null) {
+                mqttClientFactory.close();
+            }
+            if (amqpClientFactory != null) {
+                amqpClientFactory.close();
+            }
 
             if (!environment.skipCleanup()) {
                 for (AddressSpace addressSpace : addressSpaceList) {
