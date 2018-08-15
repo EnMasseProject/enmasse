@@ -450,6 +450,8 @@ data:
                       value: ${CLUSTER_ID}
                     - name: CERT_DIR
                       value: /etc/enmasse-certs
+                    - name: PN_TRACE_FRM
+                      value: "1"
                     - name: GLOBAL_MAX_SIZE
                       value: ${GLOBAL_MAX_SIZE}
                     - name: AUTHENTICATION_SERVICE_HOST
@@ -640,6 +642,8 @@ data:
                       value: ${CLUSTER_ID}
                     - name: CERT_DIR
                       value: /etc/enmasse-certs
+                    - name: PN_TRACE_FRM
+                      value: "1"
                     - name: GLOBAL_MAX_SIZE
                       value: ${GLOBAL_MAX_SIZE}
                     - name: AUTHENTICATION_SERVICE_HOST
@@ -1369,6 +1373,8 @@ data:
                       value: ${CLUSTER_ID}
                     - name: CERT_DIR
                       value: /etc/enmasse-certs
+                    - name: PN_TRACE_FRM
+                      value: "1"
                     - name: GLOBAL_MAX_SIZE
                       value: ${GLOBAL_MAX_SIZE}
                     - name: AUTHENTICATION_SERVICE_HOST
@@ -1559,6 +1565,8 @@ data:
                       value: ${CLUSTER_ID}
                     - name: CERT_DIR
                       value: /etc/enmasse-certs
+                    - name: PN_TRACE_FRM
+                      value: "1"
                     - name: GLOBAL_MAX_SIZE
                       value: ${GLOBAL_MAX_SIZE}
                     - name: AUTHENTICATION_SERVICE_HOST
@@ -2070,6 +2078,8 @@ data:
                 value: brokered
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: PN_TRACE_FRM
+                value: "1"
               - name: GLOBAL_MAX_SIZE
                 value: ${GLOBAL_MAX_SIZE}
               - name: AUTHENTICATION_SERVICE_HOST
