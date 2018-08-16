@@ -564,6 +564,12 @@ public abstract class Kubernetes {
         return removed;
     }
 
+    /***
+     * Creates pod from resources
+     * @param namespace
+     * @param configName
+     * @throws Exception
+     */
     public void createPodFromTemplate(String namespace, String configName) throws Exception {
         List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
         HasMetadata resource = resources.get(0);
@@ -573,15 +579,34 @@ public abstract class Kubernetes {
         log.info("Pod created {}", result.getMetadata().getName());
     }
 
+    /***
+     * Delete pod by name
+     * @param namespace
+     * @param podName
+     * @throws Exception
+     */
     public void deletePod(String namespace, String podName) throws Exception {
         client.pods().inNamespace(namespace).withName(podName).delete();
         log.info("Pod {} removed", podName);
     }
 
+    /***
+     * Returns pod ip
+     * @param namespace
+     * @param podName
+     * @return string ip
+     */
     public String getPodIp(String namespace, String podName) {
         return client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPodIP();
     }
 
+    /***
+     * Creates application from resources
+     * @param namespace
+     * @param configName
+     * @return String name of application
+     * @throws Exception
+     */
     public String createDeploymentFromResource(String namespace, String configName) throws Exception {
         List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
         Deployment depRes = client.extensions().deployments().inNamespace(namespace).create((Deployment) resources.get(0));
@@ -591,22 +616,34 @@ public abstract class Kubernetes {
         return result.getMetadata().getName();
     }
 
-    public String createServiceFromResource(String namespace, String configName) {
+    /***
+     * Creates service from resource
+     * @param namespace
+     * @param configName
+     * @return endpoint of service
+     */
+    public Endpoint createServiceFromResource(String namespace, String configName) {
         List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
         Service serRes = client.services().inNamespace(namespace).create((Service) resources.get(0));
         log.info("Service {} created", serRes.getMetadata().getName());
-        return getClusterIp(namespace, serRes.getMetadata().getName());
+        return getEndpoint(namespace, serRes.getMetadata().getName(), "http");
     }
 
-    public String getClusterIp(String namespace, String serviceName) {
-        return client.services().inNamespace(namespace).withName(serviceName).get().getSpec().getClusterIP();
-    }
-
+    /***
+     * Deletes deployment by name
+     * @param namespace
+     * @param appName
+     */
     public void deleteDeployment(String namespace, String appName) {
         client.extensions().deployments().inNamespace(namespace).withName(appName).delete();
         log.info("Deployment {} removed", appName);
     }
 
+    /***
+     * Delete service by name
+     * @param namespace
+     * @param serviceName
+     */
     public void deleteService(String namespace, String serviceName) {
         client.services().inNamespace(namespace).withName(serviceName).delete();
         log.info("Service {} removed", serviceName);

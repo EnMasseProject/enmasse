@@ -201,7 +201,8 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         return kubernetes.listPods(addressSpace.getNamespace()).stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
+                .filter(pod -> pod.getStatus().getPhase().equals("Running")
+                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
                 .collect(Collectors.toList());
     }
 
@@ -1031,6 +1032,7 @@ public class TestUtils {
         addressApiClient.deleteAddressSpaces(200);
         TimeMeasuringSystem.stopOperation(operationID);
     }
+
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents(addressSpace.getNamespace());
@@ -1085,13 +1087,18 @@ public class TestUtils {
     }
 
     public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
-        String ip = kubeClient.createServiceFromResource(namespace, "/messaging-clients-svc.yml");
+        Endpoint endpoint = kubeClient.createServiceFromResource(namespace, "/messaging-clients-svc.yml");
         kubeClient.createDeploymentFromResource(namespace, "/messaging-clients.yml");
-        return new Endpoint(String.format("http://%s:4242", ip));
+        Thread.sleep(5000);
+        return endpoint;
     }
 
     public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
-        kubeClient.deleteDeployment(namespace, "messaging-clients");
-        kubeClient.deleteService(namespace, "messaging-clients");
+        kubeClient.deleteDeployment(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+        kubeClient.deleteService(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+    }
+
+    public static String getTopicPrefix(boolean topicSwitch) {
+        return topicSwitch ? "topic://" : "";
     }
 }

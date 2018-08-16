@@ -6,6 +6,7 @@ package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -13,6 +14,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 
 import java.net.HttpURLConnection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -22,8 +24,8 @@ import java.util.concurrent.TimeoutException;
 public class MsgCliApiClient extends ApiClient {
 
 
-    public MsgCliApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion) {
-        super(kubernetes, endpoint, apiVersion);
+    public MsgCliApiClient(Kubernetes kubernetes, Endpoint endpoint) {
+        super(kubernetes, endpoint, "");
     }
 
     @Override
@@ -80,10 +82,10 @@ public class MsgCliApiClient extends ApiClient {
 
         client.get(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
-                .timeout(10_000)
+                .timeout(120000)
                 .sendJson(request,
                         ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error getting messaging clients info"));
-        return responsePromise.get(20, TimeUnit.SECONDS);
+        return responsePromise.get(150000, TimeUnit.SECONDS);
 
     }
 
@@ -103,9 +105,30 @@ public class MsgCliApiClient extends ApiClient {
 
         client.delete(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
-                .timeout(10_000)
+                .timeout(120000)
                 .sendJson(request,
                         ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error removing messaging clients"));
-        return responsePromise.get(20, TimeUnit.SECONDS);
+        return responsePromise.get(150000, TimeUnit.SECONDS);
+    }
+
+    /***
+     * Send request with one client and receive result
+     * @param client
+     * @return result of client
+     */
+    public JsonObject sendAndGetStatus(AbstractClient client) throws InterruptedException, ExecutionException, TimeoutException {
+        List<String> apiArgument = new LinkedList<>();
+        apiArgument.addAll(client.getExecutable());
+        apiArgument.addAll(client.getArguments());
+
+        JsonObject response = startClients(apiArgument, 1);
+        log.info(response.toString());
+
+        JsonArray ids = response.getJsonArray("clients");
+        String uuid = ids.getString(0);
+
+        response = getClientInfo(uuid);
+        log.info(response.toString());
+        return response;
     }
 }

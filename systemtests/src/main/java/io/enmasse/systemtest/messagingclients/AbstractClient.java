@@ -35,6 +35,7 @@ public abstract class AbstractClient {
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
     private Path logPath;
+    private List<String> executable;
 
     /**
      * Constructor of abstract client
@@ -44,6 +45,7 @@ public abstract class AbstractClient {
     public AbstractClient(ClientType clientType) {
         this.clientType = clientType;
         this.fillAllowedArgs();
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
     /**
@@ -56,6 +58,7 @@ public abstract class AbstractClient {
         this.clientType = clientType;
         this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
         this.fillAllowedArgs();
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
     /**
@@ -83,6 +86,10 @@ public abstract class AbstractClient {
      */
     public ArrayList<String> getArguments() {
         return arguments;
+    }
+
+    public List<String> getExecutable() {
+        return this.executable;
     }
 
     /**
@@ -191,7 +198,7 @@ public abstract class AbstractClient {
     private ArrayList<String> prepareCommand() {
         ArrayList<String> command = new ArrayList<>(arguments);
         ArrayList<String> executableCommand = new ArrayList<>();
-        executableCommand.addAll(transformExecutableCommand(ClientType.getCommand(clientType)));
+        executableCommand.addAll(executable);
         executableCommand.addAll(command);
         return executableCommand;
     }
