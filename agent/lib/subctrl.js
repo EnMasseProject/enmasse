@@ -66,7 +66,7 @@ function ensure_queue (name, pods) {
             if (result.found) {
                 return result.pod;
             } else {
-                return result.pod.broker.deployQueue(name).then(
+                return result.pod.broker.createQueue(name).then(
                     function () {
                         return result.pod;
                     }
