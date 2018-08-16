@@ -6,6 +6,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -566,9 +567,9 @@ public abstract class Kubernetes {
     public void createPodFromTemplate(String namespace, String configName) throws Exception {
         List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
         HasMetadata resource = resources.get(0);
-        Pod creationResults = client.pods().inNamespace(namespace).create((Pod) resource);
+        Pod podRes = client.pods().inNamespace(namespace).create((Pod) resource);
         Pod result = client.pods().inNamespace(namespace)
-                .withName(creationResults.getMetadata().getName()).waitUntilReady(5, TimeUnit.SECONDS);
+                .withName(podRes.getMetadata().getName()).waitUntilReady(5, TimeUnit.SECONDS);
         log.info("Pod created {}", result.getMetadata().getName());
     }
 
@@ -579,5 +580,35 @@ public abstract class Kubernetes {
 
     public String getPodIp(String namespace, String podName) {
         return client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPodIP();
+    }
+
+    public String createDeploymentFromResource(String namespace, String configName) throws Exception {
+        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
+        Deployment depRes = client.extensions().deployments().inNamespace(namespace).create((Deployment) resources.get(0));
+        Deployment result = client.extensions().deployments().inNamespace(namespace)
+                .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
+        log.info("Deployment {} created", result.getMetadata().getName());
+        return result.getMetadata().getName();
+    }
+
+    public String createServiceFromResource(String namespace, String configName) {
+        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
+        Service serRes = client.services().inNamespace(namespace).create((Service) resources.get(0));
+        log.info("Service {} created", serRes.getMetadata().getName());
+        return getClusterIp(namespace, serRes.getMetadata().getName());
+    }
+
+    public String getClusterIp(String namespace, String serviceName) {
+        return client.services().inNamespace(namespace).withName(serviceName).get().getSpec().getClusterIP();
+    }
+
+    public void deleteDeployment(String namespace, String appName) {
+        client.extensions().deployments().inNamespace(namespace).withName(appName).delete();
+        log.info("Deployment {} removed", appName);
+    }
+
+    public void deleteService(String namespace, String serviceName) {
+        client.services().inNamespace(namespace).withName(serviceName).delete();
+        log.info("Service {} removed", serviceName);
     }
 }

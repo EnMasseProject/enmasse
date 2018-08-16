@@ -57,10 +57,10 @@ public class MsgCliApiClient extends ApiClient {
 
         client.post(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
-                .timeout(10_000)
+                .timeout(120_000)
                 .sendJson(request,
                         ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error starting messaging clients"));
-        return responsePromise.get(20, TimeUnit.SECONDS);
+        return responsePromise.get(150_000, TimeUnit.SECONDS);
 
     }
 

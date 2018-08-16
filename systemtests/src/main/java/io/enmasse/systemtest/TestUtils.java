@@ -1083,4 +1083,15 @@ public class TestUtils {
         }
         Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
+
+    public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
+        String ip = kubeClient.createServiceFromResource(namespace, "/messaging-clients-svc.yml");
+        kubeClient.createDeploymentFromResource(namespace, "/messaging-clients.yml");
+        return new Endpoint(String.format("http://%s:4242", ip));
+    }
+
+    public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
+        kubeClient.deleteDeployment(namespace, "messaging-clients");
+        kubeClient.deleteService(namespace, "messaging-clients");
+    }
 }

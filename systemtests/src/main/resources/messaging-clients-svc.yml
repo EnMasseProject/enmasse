@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-clients
+  labels:
+    run: messaging-clients
+spec:
+  ports:
+  - port: 4242
+    protocol: TCP
+  selector:
+    app: messaging-clients

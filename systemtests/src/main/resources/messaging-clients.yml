@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: messaging-clients
+spec:
+  selector:
+    matchLabels:
+      app: messaging-clients
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: messaging-clients
+    spec:
+      containers:
+      - name: messaging-clients
+        image: docker.io/kornysd/docker-clients:latest
+        ports:
+        - containerPort: 4242
+        livenessProbe:
+          tcpSocket:
+            port: 4242
+          initialDelaySeconds: 10
+          periodSeconds: 5
