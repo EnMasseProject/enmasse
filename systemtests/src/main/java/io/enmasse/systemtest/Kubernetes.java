@@ -603,13 +603,12 @@ public abstract class Kubernetes {
     /***
      * Creates application from resources
      * @param namespace
-     * @param configName
+     * @param resources
      * @return String name of application
      * @throws Exception
      */
-    public String createDeploymentFromResource(String namespace, String configName) throws Exception {
-        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
-        Deployment depRes = client.extensions().deployments().inNamespace(namespace).create((Deployment) resources.get(0));
+    public String createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
+        Deployment depRes = client.extensions().deployments().inNamespace(namespace).create(resources);
         Deployment result = client.extensions().deployments().inNamespace(namespace)
                 .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
         log.info("Deployment {} created", result.getMetadata().getName());
@@ -619,12 +618,11 @@ public abstract class Kubernetes {
     /***
      * Creates service from resource
      * @param namespace
-     * @param configName
+     * @param resources
      * @return endpoint of service
      */
-    public Endpoint createServiceFromResource(String namespace, String configName) {
-        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
-        Service serRes = client.services().inNamespace(namespace).create((Service) resources.get(0));
+    public Endpoint createServiceFromResource(String namespace, Service resources) {
+        Service serRes = client.services().inNamespace(namespace).create(resources);
         log.info("Service {} created", serRes.getMetadata().getName());
         return getEndpoint(namespace, serRes.getMetadata().getName(), "http");
     }

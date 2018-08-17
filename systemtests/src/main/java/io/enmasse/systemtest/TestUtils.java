@@ -12,6 +12,10 @@ import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -1087,8 +1091,8 @@ public class TestUtils {
     }
 
     public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
-        Endpoint endpoint = kubeClient.createServiceFromResource(namespace, "/messaging-clients-svc.yml");
-        kubeClient.createDeploymentFromResource(namespace, "/messaging-clients.yml");
+        Endpoint endpoint = kubeClient.createServiceFromResource(namespace, getMessagingClientServiceResource());
+        kubeClient.createDeploymentFromResource(namespace, getMessagingClientDeploymentResource());
         Thread.sleep(5000);
         return endpoint;
     }
@@ -1100,5 +1104,57 @@ public class TestUtils {
 
     public static String getTopicPrefix(boolean topicSwitch) {
         return topicSwitch ? "topic://" : "";
+    }
+
+    private static Deployment getMessagingClientDeploymentResource() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .withImage("docker.io/kornysd/docker-clients:latest")
+                .addNewPort()
+                .withContainerPort(4242)
+                .endPort()
+                .withNewLivenessProbe()
+                .withNewTcpSocket()
+                .withNewPort(4242)
+                .endTcpSocket()
+                .withInitialDelaySeconds(10)
+                .withPeriodSeconds(5)
+                .endLivenessProbe()
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .build();
+    }
+
+    private static Service getMessagingClientServiceResource() {
+        return new ServiceBuilder()
+                .withNewMetadata()
+                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .addToLabels("run", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endMetadata()
+                .withNewSpec()
+                .withSelector(Collections.singletonMap("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                .addNewPort()
+                .withName("http")
+                .withPort(4242)
+                .withProtocol("TCP")
+                .endPort()
+                .endSpec()
+                .build();
     }
 }
