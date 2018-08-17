@@ -1,0 +1,103 @@
+== why
+
+Tenants currently need to create users and assign permissions using the Keycloak console or API when
+using the standard address space.
+
+However, usage of Keycloak is an implementation detail, and also a very crude interface.
+
+This proposal is for creating users and managing user permissions using a custom API part of the api
+server. 
+
+== what/how
+
+A new api group 'auth.enmasse.io' will be created. It will support the following operations:
+
+To create a user (oc create -f user1.yaml):
+```
+POST /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users
+```
+
+To read a user (oc get myspace.user1):
+```
+GET /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users/myspace.user1
+```
+
+To update a user (oc replace -f user1.yaml):
+
+```
+PUT /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users/myspace.user1
+```
+
+To remove a user (oc delete enmasse-user myspace.user1)
+
+```
+DELETE /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users/myspace.user1
+```
+
+In the same way as addresses, users are scoped by namespace _and_ address space and resource names
+must include the address space name and username separated by a dot ('.').
+
+A user may authentication using passwords or a federated identity. In the case of authentication
+using a password, the password is provided upon creation on the user.  Subsequent reads of this
+user will not be able to see the password, and so applications need to 'remember' the password
+using secrets or other mechanisms.
+
+```
+apiVersion: auth.enmasse.io/v1alpha1
+kind: EnMasseUser
+metadata:
+    name: myspace.user1
+spec:
+    authentication:
+      type: password
+      value: mypassword
+    authorization:
+    - addresses: [ "topic1", "topic2", "queue*" ]
+      operations: [ "create, "delete", "send", "receive", "view" ]
+```
+
+Users can also be authenticated using a federated identity where providers such as OpenShift can be
+supported.
+
+```
+apiVersion: auth.enmasse.io/v1alpha1
+kind: EnMasseUser
+metadata:
+    name: myspace.user2
+spec:
+    authentication:
+      type: federated
+      provider: openshift
+      openShiftUserId: openshift user id
+      openShiftUserName: openshift user name
+    authorization:
+    - addresses: [ "*" ]
+      operations: [ "all" ]
+```
+
+The authorization policies describe what operations and on what addresses a particular user may
+perform those operations. Operations can be either 'create', 'delete', 'send', 'receive' or 'view',
+and 'all' to mean all operations. 
+
+Addresses may contain wildcards. '*' will match all addresses.
+
+As a future improvements, the concept of groups can be introduced where the authorization policies
+can apply to multiple users.
+
+=== Tasks
+
+The following tasks are needed to support this proposal:
+
+* Add support for new User type to java model
+* Implement creating, updating, deleting, getting users in keycloak based on User
+* Add support for the new API in api-server
+* Ensure federated identities require no manual interaction in Keycloak (get rid of dialog in UI)
+
+== testing
+
+* Tests that create users and check that they have the correct permissions
+
+== documentation
+
+* Documentation covering how to manage users as well as updating swagger.json with the new API and
+  resources.
