@@ -10,6 +10,8 @@ import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -23,6 +25,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.any;
@@ -50,7 +54,29 @@ public class HTTPServerTest {
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
         when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
         when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, null, authApi, false), context.asyncAssertSuccess());
+
+        UserApi userApi = mock(UserApi.class);
+        UserList users = new UserList();
+        users.add(new User.Builder()
+                .setMetadata(new UserMetadata.Builder()
+                        .setName("myinstance.user1")
+                        .setNamespace("myinstance")
+                        .build())
+                .setSpec(new UserSpec.Builder()
+                        .setUsername("user1")
+                        .setAuthentication(new UserAuthentication.Builder()
+                                .setType(UserAuthenticationType.password)
+                                .setPassword("admin")
+                                .build())
+                        .setAuthorization(Arrays.asList(new UserAuthorization.Builder()
+                                .setAddresses(Arrays.asList("queue1"))
+                                .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                                .build()))
+                        .build())
+                .build());
+        when(userApi.listUsers(any())).thenReturn(users);
+
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, null, authApi, userApi, false), context.asyncAssertSuccess());
     }
 
     @After
@@ -174,6 +200,22 @@ public class HTTPServerTest {
                 rootReq.end();
                 async.awaitSuccess(60_000);
             }
+            {
+                Async async = context.async();
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/user.enmasse.io/v1alpha1", response -> {
+                    context.assertEquals(200, response.statusCode());
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        context.assertTrue(data.containsKey("resources"));
+                        JsonArray resources = data.getJsonArray("resources");
+                        context.assertEquals(1, resources.size());
+                        async.complete();
+                    });
+                });
+                putAuthzToken(rootReq);
+                rootReq.end();
+                async.awaitSuccess(60_000);
+            }
         } finally {
             client.close();
         }
@@ -197,6 +239,30 @@ public class HTTPServerTest {
                 });
                 putAuthzToken(request);
                 request.end();
+                async.awaitSuccess(60_000);
+            }
+        } finally {
+            client.close();
+        }
+    }
+
+    @Test
+    public void testUserApi(TestContext context) {
+        HttpClient client = vertx.createHttpClient();
+        try {
+            {
+                Async async = context.async();
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/user.enmasse.io/v1alpha1/namespaces/ns/messagingusers", response -> {
+                    context.assertEquals(200, response.statusCode());
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        context.assertTrue(data.containsKey("items"));
+                        context.assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                        async.complete();
+                    });
+                });
+                putAuthzToken(r1);
+                r1.end();
                 async.awaitSuccess(60_000);
             }
         } finally {

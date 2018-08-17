@@ -25,7 +25,13 @@ public class HttpApiRootService {
                     new APIGroupVersion("enmasse.io/v1alpha1", "v1alpha1"),
                     null);
 
-    private static final APIGroupList apiGroupList = new APIGroupList(Arrays.asList(apiGroup));
+    private static final APIGroup userApiGroup =
+            new APIGroup("user.enmasse.io", Arrays.asList(
+                    new APIGroupVersion("user.enmasse.io/v1alpha1", "v1alpha1")),
+                    new APIGroupVersion("user.enmasse.io/v1alpha1", "v1alpha1"),
+                    null);
+
+    private static final APIGroupList apiGroupList = new APIGroupList(Arrays.asList(apiGroup, userApiGroup));
 
     private static void verifyAuthorized(SecurityContext securityContext, String method, String path) {
         if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(path, method))) {
@@ -62,5 +68,26 @@ public class HttpApiRootService {
     public APIResourceList getApiGroupV1(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
         verifyAuthorized(securityContext, "get", uriInfo.getPath());
         return apiResourceList;
+    }
+
+    @GET
+    @Path("user.enmasse.io")
+    @Produces({MediaType.APPLICATION_JSON})
+    public APIGroup getUserApiGroup(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
+        verifyAuthorized(securityContext, "get", uriInfo.getPath());
+        return userApiGroup;
+    }
+
+    private static final APIResourceList userApiResourceList = new APIResourceList("user.enmasse.io/v1alpha1",
+            Arrays.asList(
+                    new APIResource("messagingusers", "", true, "MessagingUser",
+                            Arrays.asList("create", "delete", "get", "list"))));
+
+    @GET
+    @Path("user.enmasse.io/v1alpha1")
+    @Produces({MediaType.APPLICATION_JSON})
+    public APIResourceList getUserApiGroupV1(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
+        verifyAuthorized(securityContext, "get", uriInfo.getPath());
+        return userApiResourceList;
     }
 }

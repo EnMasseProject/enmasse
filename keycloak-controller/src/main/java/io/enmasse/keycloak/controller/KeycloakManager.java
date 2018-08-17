@@ -11,14 +11,18 @@ import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.Watcher;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static io.enmasse.user.model.v1.Operation.recv;
+import static io.enmasse.user.model.v1.Operation.send;
+import static io.enmasse.user.model.v1.Operation.view;
 
 
 public class KeycloakManager implements Watcher<AddressSpace>
@@ -26,10 +30,12 @@ public class KeycloakManager implements Watcher<AddressSpace>
     private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
     private final KeycloakApi keycloak;
     private final KubeApi kube;
+    private final UserApi userApi;
 
-    public KeycloakManager(KeycloakApi keycloak, KubeApi kube) {
+    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
         this.keycloak = keycloak;
         this.kube = kube;
+        this.userApi = userApi;
     }
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
@@ -96,7 +102,29 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
-                keycloak.createRealm(realmName, userName, userId, consoleUri);
+                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri);
+                userApi.createUser(realmName, new User.Builder()
+                        .setMetadata(new UserMetadata.Builder()
+                                .setName(addressSpace.getName() + "." + userName)
+                                .setNamespace(addressSpace.getNamespace())
+                                .build())
+                        .setSpec(new UserSpec.Builder()
+                                .setUsername(userName)
+                                .setAuthentication(new UserAuthentication.Builder()
+                                        .setType(UserAuthenticationType.federated)
+                                        .setProvider("openshift")
+                                        .setFederatedUserid(userId)
+                                        .setFederatedUsername(userName)
+                                        .build())
+                                .setAuthorization(Arrays.asList(new UserAuthorization.Builder()
+                                                .setAddresses(Collections.singletonList("*"))
+                                                .setOperations(Arrays.asList(send, recv, view))
+                                                .build(),
+                                        new UserAuthorization.Builder()
+                                                .setOperations(Collections.singletonList(Operation.manage))
+                                                .build()))
+                                .build())
+                        .build());
             }
         }
     }

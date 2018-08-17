@@ -52,6 +52,8 @@
 
     <modules>
         <module>address-model-lib</module>
+        <module>user-api</module>
+        <module>keycloak-user-api</module>
         <module>agent</module>
         <module>k8s-api</module>
         <module>k8s-api-testutil</module>
@@ -88,6 +90,11 @@
             </dependency>
             <dependency>
                 <groupId>io.enmasse</groupId>
+                <artifactId>user-model-lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
                 <artifactId>amqp-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -99,6 +106,16 @@
             <dependency>
                 <groupId>io.enmasse</groupId>
                 <artifactId>k8s-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>user-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>keycloak-user-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

@@ -94,6 +94,46 @@ local images = import "images.jsonnet";
                       "optional": true
                     }
                   }
+                },
+                {
+                  "name": "KEYCLOAK_URI",
+                  "valueFrom": {
+                    "configMapKeyRef": {
+                      "name": "keycloak-config",
+                      "key": "httpUrl",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "KEYCLOAK_ADMIN_USER",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "name": "keycloak-credentials",
+                      "key": "admin.username",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "KEYCLOAK_ADMIN_PASSWORD",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "name": "keycloak-credentials",
+                      "key": "admin.password",
+                      "optional": true
+                    }
+                  }
+                },
+                {
+                  "name": "KEYCLOAK_CERT",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "name": "standard-authservice-cert",
+                      "key": "tls.crt",
+                      "optional": true
+                    }
+                  }
                 }
               ],
               "ports": [
