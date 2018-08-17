@@ -6,6 +6,9 @@ package io.enmasse.keycloak.controller;
 
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -36,16 +39,45 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String realmName, String realmAdminUser, String realmAdminUserId, String consoleRedirectURI) {
+            public void createRealm(String namespace, String realmName, String consoleRedirectURI) {
                 realms.add(realmName);
-                realmAdminUsers.put(realmName, realmAdminUser);
             }
 
             @Override
             public void deleteRealm(String realmName) {
                 realms.remove(realmName);
             }
-        }, mockKubeApi);
+        }, mockKubeApi, new UserApi() {
+            @Override
+            public Optional<User> getUserWithName(String realm, String name) {
+                return Optional.empty();
+            }
+
+            @Override
+            public void createUser(String realm, User user) {
+                realmAdminUsers.put(realm, user.getSpec().getUsername());
+            }
+
+            @Override
+            public void deleteUser(String realm, User user) {
+
+            }
+
+            @Override
+            public UserList listUsers(String realm) {
+                return null;
+            }
+
+            @Override
+            public UserList listUsersWithLabels(String realm, Map<String, String> labels) {
+                return null;
+            }
+
+            @Override
+            public void deleteUsers(String namespace) {
+
+            }
+        });
     }
 
     @Test
@@ -90,6 +122,7 @@ public class KeycloakManagerTest {
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {
         return new AddressSpace.Builder()
                 .setName(name)
+                .setNamespace("myns")
                 .setPlan("myplan")
                 .setType("standard")
                 .putAnnotation(AnnotationKeys.CREATED_BY, "developer")

@@ -9,6 +9,8 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.ResourceChecker;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -23,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.Security;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -66,7 +69,9 @@ public class Main {
             }
         };
 
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(params), kubeApi);
+        UserApi userApi = new KeycloakUserApi(params.getKeycloakUri(), params.getAdminUser(), params.getAdminPassword(), params.getKeyStore(), Clock.systemUTC());
+
+        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(params), kubeApi, userApi);
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))

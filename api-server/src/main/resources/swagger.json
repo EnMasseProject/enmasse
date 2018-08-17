@@ -3,7 +3,7 @@
     "info": {
         "description": "This is the EnMasse API specification.",
         "version": "1.0.0",
-        "title": "EnMasse"
+        "title": "EnMasse REST API"
     },
     "tags": [
         {
@@ -23,8 +23,8 @@
             }
         },
         {
-            "name": "users",
-            "description": "Operating on Users.",
+            "name": "messagingusers",
+            "description": "Operating on MessagingUsers.",
             "externalDocs": {
                 "description": "Find out more",
                 "url": "https://enmasse.io"
@@ -704,15 +704,15 @@
                 }
             ]
         },
-        "/apis/auth.enmasse.io/v1alpha1/namespaces/{namespace}/users": {
+        "/apis/user.enmasse.io/v1alpha1/namespaces/{namespace}/messagingusers": {
           "get": {
             "tags": [
                     "enmasse_v1alpha1",
                     "auth",
                     "user"
                 ],
-                "description": "list objects of kind User",
-                "operationId": "listAuthEnmasseV1alpha1NamespacedUser",
+                "description": "list objects of kind MessagingUser",
+                "operationId": "listAuthEnmasseV1alpha1NamespacedMessagingUser",
                 "produces": [
                     "application/json"
                 ],
@@ -729,7 +729,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.UserList"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUserList"
                         }
                     },
                     "401": {
@@ -743,8 +743,8 @@
                     "auth",
                     "user"
                 ],
-                "description": "create a User",
-                "operationId": "createAuthEnmasseV1alpha1NamespacedUser",
+                "description": "create a MessagingUser",
+                "operationId": "createAuthEnmasseV1alpha1NamespacedMessagingUser",
                 "consumes": [
                     "application/json"
                 ],
@@ -757,7 +757,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     }
                 ],
@@ -765,13 +765,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     },
                     "401": {
@@ -790,15 +790,15 @@
                 }
             ]
         },
-        "/apis/auth.enmasse.io/v1alpha1/namespaces/{namespace}/users/{name}": {
+        "/apis/user.enmasse.io/v1alpha1/namespaces/{namespace}/messagingusers/{name}": {
             "get": {
                 "tags": [
                     "enmasse_v1alpha1",
                     "auth",
                     "user"
                 ],
-                "description": "read the specified User",
-                "operationId": "readAuthEnmasseV1alpha1NamespacedUser",
+                "description": "read the specified MessagingUser",
+                "operationId": "readAuthEnmasseV1alpha1NamespacedMessagingUser",
                 "consumes": [
                     "application/json"
                 ],
@@ -809,7 +809,7 @@
                     {
                         "name": "name",
                         "in": "path",
-                        "description": "Name of User to read. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "description": "Name of MessagingUser to read. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
                         "required": true,
                         "type": "string"
                     }
@@ -818,7 +818,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     },
                     "401": {
@@ -835,8 +835,8 @@
                     "auth",
                     "user"
                 ],
-                "description": "replace the specified User",
-                "operationId": "replaceAuthEnmasseV1alpha1NamespacedUser",
+                "description": "replace the specified MessagingUser",
+                "operationId": "replaceAuthEnmasseV1alpha1NamespacedMessagingUser",
                 "produces": [
                     "application/json"
                 ],
@@ -844,7 +844,7 @@
                     {
                         "name": "name",
                         "in": "path",
-                        "description": "Name of User to replace. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "description": "Name of MessagingUser to replace. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
                         "required": true,
                         "type": "string"
                     },
@@ -853,7 +853,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     }
                 ],
@@ -861,13 +861,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                         }
                     },
                     "401": {
@@ -881,8 +881,8 @@
                     "auth",
                     "user"
                 ],
-                "description": "delete a User",
-                "operationId": "deleteAuthEnmasseV1alpha1NamespacedUser",
+                "description": "delete a MessagingUser",
+                "operationId": "deleteAuthEnmasseV1alpha1NamespacedMessagingUser",
                 "produces": [
                     "application/json"
                 ],
@@ -890,7 +890,7 @@
                     {
                         "name": "name",
                         "in": "path",
-                        "description": "Name of User to delete. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "description": "Name of MessagingUser to delete. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
                         "required": true,
                         "type": "string"
                     }
@@ -1193,7 +1193,7 @@
                 }
             }
         },
-        "io.enmasse.auth.v1alpha1.User": {
+        "io.enmasse.user.v1alpha1.MessagingUser": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1205,24 +1205,24 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "auth.enmasse.io/v1alpha1"
+                        "user.enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
                     "type": "string",
                     "enum": [
-                        "User"
+                        "MessagingUser"
                     ]
                 },
                 "metadata": {
                     "$ref": "#/definitions/ObjectMeta"
                 },
                 "spec": {
-                    "$ref": "#/definitions/io.enmasse.auth.v1alpha1.UserSpec"
+                    "$ref": "#/definitions/io.enmasse.user.v1alpha1.UserSpec"
                 }
             }
         },
-        "io.enmasse.auth.v1alpha1.UserSpec": {
+        "io.enmasse.user.v1alpha1.UserSpec": {
             "type": "object",
             "required": [
                 "authentication",
@@ -1242,24 +1242,21 @@
                                 "federated"
                             ]
                         },
-                        "value": {
+                        "password": {
                             "type": "string",
                             "description": "Base64 encoded value of password when 'password' type is specified."
                         },
                         "provider": {
                             "type": "string",
-                            "description": "Name of provider to use for federated identity when 'federated' type is specified.",
-                            "enum": [
-                                "openshift"
-                            ]
+                            "description": "Name of provider to use for federated identity when 'federated' type is specified."
                         },
-                        "openShiftUserid": {
+                        "federatedUserid": {
                             "type": "string",
-                            "description": "OpenShift user ID of the user to federate when 'federated' type and 'openshift' provider is specified."
+                            "description": "User id of the user to federate when 'federated' type is specified."
                         },
-                        "openShiftUsername": {
+                        "federatedUsername": {
                             "type": "string",
-                            "description": "OpenShift user name of the user to federate when 'federated' type and 'openshift' provider is specified."
+                            "description": "User name of the user to federate when 'federated' type is specified."
                         }
                     }
                 },
@@ -1267,6 +1264,9 @@
                     "type": "array",
                     "items": {
                         "type": "object",
+                        "required": [
+                            "operations"
+                        ],
                         "properties": {
                             "addresses": {
                                 "type": "array",
@@ -1280,12 +1280,10 @@
                                 "items": {
                                     "type": "string",
                                     "enum": [
-                                        "create",
-                                        "delete",
                                         "send",
                                         "receive",
                                         "view",
-                                        "all"
+                                        "manage"
                                     ]
                                 }
                             }
@@ -1294,7 +1292,7 @@
                 }
             }
         },
-        "io.enmasse.auth.v1alpha1.UserList": {
+        "io.enmasse.user.v1alpha1.MessagingUserList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1305,19 +1303,19 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "auth.enmasse.io/v1alpha1"
+                        "user.enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
                     "type": "string",
                     "enum": [
-                        "UserList"
+                        "MessagingUserList"
                     ]
                 },
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
                     }
                 }
             }

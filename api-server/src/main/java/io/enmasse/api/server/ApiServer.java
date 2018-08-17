@@ -12,12 +12,15 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,8 +44,14 @@ public class ApiServer extends AbstractVerticle {
 
         AuthApi authApi = new KubeAuthApi(controllerClient, null, controllerClient.getConfiguration().getOauthToken());
 
+        UserApi userApi = null;
+        if (options.getKeycloakUri() != null) {
+            Clock clock = Clock.systemUTC();
+            userApi = new KeycloakUserApi(options.getKeycloakUri(), options.getKeycloakAdminUser(), options.getKeycloakAdminPassword(), options.getKeycloakTrustStore(), clock);
+        }
+
         deployVerticles(startPromise,
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), options.getRequestHeaderClientCa(), authApi, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), options.getRequestHeaderClientCa(), authApi, userApi, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {

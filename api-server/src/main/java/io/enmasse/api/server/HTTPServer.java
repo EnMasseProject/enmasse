@@ -13,6 +13,7 @@ import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -44,18 +45,20 @@ public class HTTPServer extends AbstractVerticle {
     private final String clientCa;
     private final String requestHeaderClientCa;
     private final AuthApi authApi;
+    private final UserApi userApi;
     private final boolean isRbacEnabled;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, String requestHeaderClientCa, AuthApi authApi, boolean isRbacEnabled) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, String requestHeaderClientCa, AuthApi authApi, UserApi userApi, boolean isRbacEnabled) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
         this.clientCa = clientCa;
         this.requestHeaderClientCa = requestHeaderClientCa;
         this.authApi = authApi;
+        this.userApi = userApi;
         this.isRbacEnabled = isRbacEnabled;
     }
 
@@ -71,7 +74,7 @@ public class HTTPServer extends AbstractVerticle {
             log.info("Enabling RBAC for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
                     path.equals(HttpHealthService.BASE_URI) ||
-                    path.equals("/swagger.json")));
+                            path.equals("/swagger.json")));
         } else {
             log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
@@ -83,6 +86,11 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new HttpSchemaService(schemaProvider));
         deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider));
+        if (userApi != null) {
+            deployment.getRegistry().addSingletonResource(new HttpUserService(userApi));
+        } else {
+            log.info("User API not available, disabling");
+        }
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());

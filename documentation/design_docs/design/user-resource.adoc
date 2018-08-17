@@ -10,28 +10,28 @@ server.
 
 == what/how
 
-A new api group 'auth.enmasse.io' will be created. It will support the following operations:
+A new api group 'user.enmasse.io' will be created. It will support the following operations:
 
 To create a user (oc create -f user1.yaml):
 ```
-POST /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users
+POST /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers
 ```
 
 To read a user (oc get myspace.user1):
 ```
-GET /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users/myspace.user1
+GET /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers/myspace.user1
 ```
 
 To update a user (oc replace -f user1.yaml):
 
 ```
-PUT /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users/myspace.user1
+PUT /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers/myspace.user1
 ```
 
 To remove a user (oc delete enmasse-user myspace.user1)
 
 ```
-DELETE /apis/auth.enmasse.io/v1alpha1/namespaces/myproject/users/myspace.user1
+DELETE /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers/myspace.user1
 ```
 
 In the same way as addresses, users are scoped by namespace _and_ address space and resource names
@@ -43,41 +43,44 @@ user will not be able to see the password, and so applications need to 'remember
 using secrets or other mechanisms.
 
 ```
-apiVersion: auth.enmasse.io/v1alpha1
-kind: EnMasseUser
+apiVersion: user.enmasse.io/v1alpha1
+kind: MessagingUser
 metadata:
     name: myspace.user1
 spec:
     authentication:
       type: password
-      value: mypassword
+      password: mypassword
     authorization:
     - addresses: [ "topic1", "topic2", "queue*" ]
-      operations: [ "create, "delete", "send", "receive", "view" ]
+      operations: [ "send", "recv", "view" ]
 ```
 
 Users can also be authenticated using a federated identity where providers such as OpenShift can be
 supported.
 
 ```
-apiVersion: auth.enmasse.io/v1alpha1
-kind: EnMasseUser
+apiVersion: user.enmasse.io/v1alpha1
+kind: MessagingUser 
 metadata:
     name: myspace.user2
 spec:
     authentication:
       type: federated
       provider: openshift
-      openShiftUserId: openshift user id
-      openShiftUserName: openshift user name
+      openshiftUserid: openshift user id
+      openshiftUsername: openshift user name
     authorization:
     - addresses: [ "*" ]
-      operations: [ "all" ]
+      operations: [ "send", "recv", "view" ]
+    - operations: [ "manage" ]
 ```
 
 The authorization policies describe what operations and on what addresses a particular user may
-perform those operations. Operations can be either 'create', 'delete', 'send', 'receive' or 'view',
-and 'all' to mean all operations. 
+perform those operations. Operations can be either 'send', 'recv' or 'view', which can be applied to
+individual or multiple addresses (using wildcards). The 'manage' operation is a special operation
+that applies to all addresses and can be used for allow console user access (whereas view gives
+read-only console access).
 
 Addresses may contain wildcards. '*' will match all addresses.
 

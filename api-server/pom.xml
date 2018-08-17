@@ -16,6 +16,16 @@
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>
+      <artifactId>user-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>keycloak-user-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
       <artifactId>api-common</artifactId>
       <scope>compile</scope>
     </dependency>
@@ -129,6 +139,16 @@
                   <mainClass>io.enmasse.api.server.ApiServer</mainClass>
                 </transformer>
               </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>
