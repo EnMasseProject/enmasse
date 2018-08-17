@@ -97,6 +97,7 @@ public abstract class AbstractClient {
      */
     public void setClientType(ClientType clientType) {
         this.clientType = clientType;
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
     public String getStdOut() {
@@ -366,11 +367,13 @@ public abstract class AbstractClient {
     protected ClientArgumentMap javaBrokerTransformation(ClientArgumentMap args) {
         if (args.getValues(ClientArgument.CONN_SSL) != null) {
             if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
-                    || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)
+                    || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER) {
                 args.put(ClientArgument.BROKER, "amqps://" + args.getValues(ClientArgument.BROKER).get(0));
+            }
             if (clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER
-                    || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER)
+                    || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER) {
                 args.put(ClientArgument.BROKER, "ssl://" + args.getValues(ClientArgument.BROKER).get(0));
+            }
             args.put(ClientArgument.CONN_SSL_TRUST_ALL, "true");
             args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
             args.put(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN");

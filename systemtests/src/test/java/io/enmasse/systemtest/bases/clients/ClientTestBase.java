@@ -14,7 +14,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.clear();
     }
 
-    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws MalformedURLException, Exception {
+    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) {
         if (addressSpace.getType().equals(AddressSpaceType.STANDARD) && websocket) {
             Endpoint messagingEndpoint = addressSpace.getEndpointByName("amqp-wss");
             if (TestUtils.resolvable(messagingEndpoint)) {
