@@ -13,6 +13,7 @@ import io.enmasse.systemtest.selenium.resources.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -584,8 +585,16 @@ public class ConsoleWebPage implements IWebPage {
         //select address type
         selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getType()))), "Radio button " + destination.getType());
 
-        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
+        //if address type is subscription, fill in the topic dropdown box
+        if (destination.getType().equals(AddressType.SUBSCRIPTION.toString())) {
+            log.info("Selecting topic to attach subscription to");
+            WebElement topicDropDown = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("combobox")));
+            selenium.clickOnItem(topicDropDown);
+            Select combobox = new Select(topicDropDown);
+            combobox.selectByVisibleText(destination.getAddress().replace("-subscriber", ""));
+        }
 
+        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
         selenium.clickOnItem(nextButton);
 
         //select address plan

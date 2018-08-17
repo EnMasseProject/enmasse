@@ -6,7 +6,7 @@ package io.enmasse.systemtest;
 
 
 public enum AddressType {
-    QUEUE, TOPIC, MULTICAST, ANYCAST;
+    QUEUE, TOPIC, MULTICAST, ANYCAST, SUBSCRIPTION;
 
     @Override
     public String toString() {
