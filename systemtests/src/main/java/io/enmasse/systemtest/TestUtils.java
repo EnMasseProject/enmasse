@@ -12,6 +12,10 @@ import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -201,7 +205,8 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         return kubernetes.listPods(addressSpace.getNamespace()).stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
+                .filter(pod -> pod.getStatus().getPhase().equals("Running")
+                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
                 .collect(Collectors.toList());
     }
 
@@ -1031,6 +1036,7 @@ public class TestUtils {
         addressApiClient.deleteAddressSpaces(200);
         TimeMeasuringSystem.stopOperation(operationID);
     }
+
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents(addressSpace.getNamespace());
@@ -1082,5 +1088,73 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
+    }
+
+    public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
+        Endpoint endpoint = kubeClient.createServiceFromResource(namespace, getMessagingClientServiceResource());
+        kubeClient.createDeploymentFromResource(namespace, getMessagingClientDeploymentResource());
+        Thread.sleep(5000);
+        return endpoint;
+    }
+
+    public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
+        kubeClient.deleteDeployment(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+        kubeClient.deleteService(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+    }
+
+    public static String getTopicPrefix(boolean topicSwitch) {
+        return topicSwitch ? "topic://" : "";
+    }
+
+    private static Deployment getMessagingClientDeploymentResource() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .withImage("docker.io/kornysd/docker-clients:latest")
+                .addNewPort()
+                .withContainerPort(4242)
+                .endPort()
+                .withNewLivenessProbe()
+                .withNewTcpSocket()
+                .withNewPort(4242)
+                .endTcpSocket()
+                .withInitialDelaySeconds(10)
+                .withPeriodSeconds(5)
+                .endLivenessProbe()
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .build();
+    }
+
+    private static Service getMessagingClientServiceResource() {
+        return new ServiceBuilder()
+                .withNewMetadata()
+                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .addToLabels("run", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
+                .endMetadata()
+                .withNewSpec()
+                .withSelector(Collections.singletonMap("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                .addNewPort()
+                .withName("http")
+                .withPort(4242)
+                .withProtocol("TCP")
+                .endPort()
+                .endSpec()
+                .build();
     }
 }

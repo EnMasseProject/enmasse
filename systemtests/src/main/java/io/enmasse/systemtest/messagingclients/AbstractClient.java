@@ -35,6 +35,7 @@ public abstract class AbstractClient {
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
     private Path logPath;
+    private List<String> executable;
 
     /**
      * Constructor of abstract client
@@ -44,6 +45,7 @@ public abstract class AbstractClient {
     public AbstractClient(ClientType clientType) {
         this.clientType = clientType;
         this.fillAllowedArgs();
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
     /**
@@ -56,6 +58,7 @@ public abstract class AbstractClient {
         this.clientType = clientType;
         this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
         this.fillAllowedArgs();
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
     /**
@@ -77,10 +80,24 @@ public abstract class AbstractClient {
     }
 
     /**
+     * Get all client arguments
+     *
+     * @return
+     */
+    public ArrayList<String> getArguments() {
+        return arguments;
+    }
+
+    public List<String> getExecutable() {
+        return this.executable;
+    }
+
+    /**
      * @param clientType
      */
     public void setClientType(ClientType clientType) {
         this.clientType = clientType;
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
     public String getStdOut() {
@@ -182,7 +199,7 @@ public abstract class AbstractClient {
     private ArrayList<String> prepareCommand() {
         ArrayList<String> command = new ArrayList<>(arguments);
         ArrayList<String> executableCommand = new ArrayList<>();
-        executableCommand.addAll(transformExecutableCommand(ClientType.getCommand(clientType)));
+        executableCommand.addAll(executable);
         executableCommand.addAll(command);
         return executableCommand;
     }
@@ -218,7 +235,7 @@ public abstract class AbstractClient {
     /**
      * Run client async
      *
-     * @param logToOutput enable logging of stdOut and stdErr on output
+     * @param logToOutput           enable logging of stdOut and stdErr on output
      * @param timeoutInMilliseconds timeout to kill process
      * @return future of exit status of client
      */
@@ -350,11 +367,13 @@ public abstract class AbstractClient {
     protected ClientArgumentMap javaBrokerTransformation(ClientArgumentMap args) {
         if (args.getValues(ClientArgument.CONN_SSL) != null) {
             if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
-                    || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)
+                    || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER) {
                 args.put(ClientArgument.BROKER, "amqps://" + args.getValues(ClientArgument.BROKER).get(0));
+            }
             if (clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER
-                    || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER)
+                    || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER) {
                 args.put(ClientArgument.BROKER, "ssl://" + args.getValues(ClientArgument.BROKER).get(0));
+            }
             args.put(ClientArgument.CONN_SSL_TRUST_ALL, "true");
             args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
             args.put(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN");

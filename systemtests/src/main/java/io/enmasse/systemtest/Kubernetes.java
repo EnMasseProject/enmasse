@@ -6,6 +6,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -18,6 +19,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -560,5 +562,88 @@ public abstract class Kubernetes {
             }
         }
         return removed;
+    }
+
+    /***
+     * Creates pod from resources
+     * @param namespace
+     * @param configName
+     * @throws Exception
+     */
+    public void createPodFromTemplate(String namespace, String configName) throws Exception {
+        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
+        HasMetadata resource = resources.get(0);
+        Pod podRes = client.pods().inNamespace(namespace).create((Pod) resource);
+        Pod result = client.pods().inNamespace(namespace)
+                .withName(podRes.getMetadata().getName()).waitUntilReady(5, TimeUnit.SECONDS);
+        log.info("Pod created {}", result.getMetadata().getName());
+    }
+
+    /***
+     * Delete pod by name
+     * @param namespace
+     * @param podName
+     * @throws Exception
+     */
+    public void deletePod(String namespace, String podName) throws Exception {
+        client.pods().inNamespace(namespace).withName(podName).delete();
+        log.info("Pod {} removed", podName);
+    }
+
+    /***
+     * Returns pod ip
+     * @param namespace
+     * @param podName
+     * @return string ip
+     */
+    public String getPodIp(String namespace, String podName) {
+        return client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPodIP();
+    }
+
+    /***
+     * Creates application from resources
+     * @param namespace
+     * @param resources
+     * @return String name of application
+     * @throws Exception
+     */
+    public String createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
+        Deployment depRes = client.extensions().deployments().inNamespace(namespace).create(resources);
+        Deployment result = client.extensions().deployments().inNamespace(namespace)
+                .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
+        log.info("Deployment {} created", result.getMetadata().getName());
+        return result.getMetadata().getName();
+    }
+
+    /***
+     * Creates service from resource
+     * @param namespace
+     * @param resources
+     * @return endpoint of service
+     */
+    public Endpoint createServiceFromResource(String namespace, Service resources) {
+        Service serRes = client.services().inNamespace(namespace).create(resources);
+        log.info("Service {} created", serRes.getMetadata().getName());
+        return getEndpoint(namespace, serRes.getMetadata().getName(), "http");
+    }
+
+    /***
+     * Deletes deployment by name
+     * @param namespace
+     * @param appName
+     */
+    public void deleteDeployment(String namespace, String appName) {
+        client.extensions().deployments().inNamespace(namespace).withName(appName).delete();
+        log.info("Deployment {} removed", appName);
+    }
+
+    /***
+     * Delete service by name
+     * @param namespace
+     * @param serviceName
+     */
+    public void deleteService(String namespace, String serviceName) {
+        client.services().inNamespace(namespace).withName(serviceName).delete();
+        log.info("Service {} removed", serviceName);
     }
 }

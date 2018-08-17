@@ -6,11 +6,16 @@ package io.enmasse.systemtest.common.catalog;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.apiclients.MsgCliApiClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -182,5 +187,49 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
         consolePage.login(developer, true);
+    }
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    void testSendReceiveInsideCluster() throws Exception {
+        Destination queue = Destination.queue("test-queue", "sharded-queue");
+        AddressSpace addressSpace = new AddressSpace("test-messaging-space", AddressSpaceType.STANDARD);
+        String namespace = getUserProjectName(addressSpace);
+        provisionedServices.put(namespace, addressSpace);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+
+        ocPage.openOpenshiftPage();
+        ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);
+        reloadAddressSpaceEndpoints(addressSpace);
+
+        String bindingID = ocPage.createBinding(namespace, false, true, true, null, null);
+        BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
+
+        ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
+        consolePage.login(credentials.getCredentials());
+        consolePage.createAddressWebConsole(queue, false, true);
+
+        Endpoint endpoint = TestUtils.deployMessagingClientApp(namespace, kubernetes);
+        MsgCliApiClient client = new MsgCliApiClient(kubernetes, endpoint);
+
+        ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
+
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
+        arguments.put(ClientArgument.ADDRESS, queue.getAddress());
+        arguments.put(ClientArgument.COUNT, "10");
+        arguments.put(ClientArgument.CONN_RECONNECT, "false");
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.TIMEOUT, "10");
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        msgClient.setArguments(arguments);
+
+
+        JsonObject response = client.sendAndGetStatus(msgClient);
+
+        assertThat(response.getInteger("ecode"), is(0));
+        TestUtils.deleteMessagingClientApp(namespace, kubernetes);
     }
 }
