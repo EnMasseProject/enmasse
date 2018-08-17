@@ -1,0 +1,88 @@
+== why
+
+Defining a syntax for configuring infrastructure makes the operational life running EnMasse simpler. It also allows us to decouple definition of the infrastructure from the address space(s) that the infrastructure serves.
+
+Today, the infrastructure is configurable via templates and a ResourceDefinition configmap. We should expose a better interface for operators to create and configure the infrastructure easily as if it was a first-class citizen.
+
+A StandardInfraTemplate defines an infrastructure containing an admin component, a router and 0 or more brokers. Settings for these components can be tuned through this resource.
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: StandardInfraTemplate
+metadata:
+  name: standard-infra
+  namespace: somewhere
+spec:
+  router:
+    replicas: 1
+    linkCapacity: 1000
+		allowDurableSubscriptions: false
+		resources:
+			memory: 512Mi
+	broker:
+		addressFullPolicy: FAIL
+		resources:
+			memory: 512Mi
+			disk: 2Gi
+	admin:
+		resources:
+			memory: 512Mi
+```
+
+A BrokeredInfraTemplate defines a cluster containing an admin component, and a single broker (with plans to allow replicas to be specified as well). Settings for these components can be tuned through this resource.
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: BrokeredInfraTemplate
+metadata:
+  name: brokered-infra
+  namespace: somewhere
+spec:
+	broker:
+		addressFullPolicy: PAGE
+		resources:
+			memory: 2Gi
+			disk: 50Gi
+	admin:
+		resources:
+			memory: 512Mi
+  authenticationService:
+    host: example.com
+    port: 5671
+    caBundle: // Base64 encoded CA cert
+```
+
+An Infra resource is used to declare some infrastructure to be created based on a template resource + authentication service settings. An infrastructure controller will watch for resources of this kind and instantiate the necessary components.
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: Infra
+metadata:
+	name: infra
+	namespace: myinfra
+spec:
+	template:
+		kind: StandardInfraTemplate
+		name: standard-infra
+  authenticationService:
+    host: example.com
+    port: 5671
+    caBundle: // Base64 encoded CA cert
+```
+
+
+As a first step, AddressSpacePlans can still contain the 'defined-by' annotation which can refer to a StandardInfraTemplate or a BrokeredInfraTemplate. When an address-space is created, the reference template is used for creating the infrastructure.
+
+
+== what/how
+
+What are the components involved in this change and how will they change?
+Describe any new components introduced by this change
+
+== testing
+
+What is the test plan for the feature/change?
+
+== documentation
+
+What documentation will be created for this feature?
