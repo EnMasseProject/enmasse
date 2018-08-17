@@ -21,6 +21,14 @@
                 "description": "Find out more",
                 "url": "https://enmasse.io"
             }
+        },
+        {
+            "name": "users",
+            "description": "Operating on Users.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            }
         }
     ],
     "schemes": [
@@ -695,6 +703,223 @@
                     "type": "string"
                 }
             ]
+        },
+        "/apis/auth.enmasse.io/v1alpha1/namespaces/{namespace}/users": {
+          "get": {
+            "tags": [
+                    "enmasse_v1alpha1",
+                    "auth",
+                    "user"
+                ],
+                "description": "list objects of kind User",
+                "operationId": "listAuthEnmasseV1alpha1NamespacedUser",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "uniqueItems": true,
+                        "type": "string",
+                        "description": "A selector to restrict the list of returned objects by their labels. Defaults to everything.",
+                        "name": "labelSelector",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.UserList"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "auth",
+                    "user"
+                ],
+                "description": "create a User",
+                "operationId": "createAuthEnmasseV1alpha1NamespacedUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "namespace",
+                    "in": "path",
+                    "description": "object name and auth scope, such as for teams and projects",
+                    "required": true,
+                    "uniqueItems": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/apis/auth.enmasse.io/v1alpha1/namespaces/{namespace}/users/{name}": {
+            "get": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "auth",
+                    "user"
+                ],
+                "description": "read the specified User",
+                "operationId": "readAuthEnmasseV1alpha1NamespacedUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of User to read. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "auth",
+                    "user"
+                ],
+                "description": "replace the specified User",
+                "operationId": "replaceAuthEnmasseV1alpha1NamespacedUser",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of User to replace. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "auth",
+                    "user"
+                ],
+                "description": "delete a User",
+                "operationId": "deleteAuthEnmasseV1alpha1NamespacedUser",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of User to delete. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Status"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "namespace",
+                    "in": "path",
+                    "description": "object name and auth scope, such as for teams and projects",
+                    "required": true,
+                    "uniqueItems": true,
+                    "type": "string"
+                }
+            ]
         }
     },
     "definitions": {
@@ -964,6 +1189,135 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                    }
+                }
+            }
+        },
+        "io.enmasse.auth.v1alpha1.User": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "spec"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "auth.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "User"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/io.enmasse.auth.v1alpha1.UserSpec"
+                }
+            }
+        },
+        "io.enmasse.auth.v1alpha1.UserSpec": {
+            "type": "object",
+            "required": [
+                "authentication",
+                "authorization"
+            ],
+            "properties": {
+                "authentication": {
+                    "type": "object",
+                    "required": [
+                        "type"
+                    ],
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "password",
+                                "federated"
+                            ]
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Base64 encoded value of password when 'password' type is specified."
+                        },
+                        "provider": {
+                            "type": "string",
+                            "description": "Name of provider to use for federated identity when 'federated' type is specified.",
+                            "enum": [
+                                "openshift"
+                            ]
+                        },
+                        "openShiftUserid": {
+                            "type": "string",
+                            "description": "OpenShift user ID of the user to federate when 'federated' type and 'openshift' provider is specified."
+                        },
+                        "openShiftUsername": {
+                            "type": "string",
+                            "description": "OpenShift user name of the user to federate when 'federated' type and 'openshift' provider is specified."
+                        }
+                    }
+                },
+                "authorization": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "addresses": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "description": "Addresses can be specified using exact values (i.e. 'myqueue'), or glob patterns (i.e. '*', or 'queue*')."
+                                }
+                            },
+                            "operations": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "create",
+                                        "delete",
+                                        "send",
+                                        "receive",
+                                        "view",
+                                        "all"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "io.enmasse.auth.v1alpha1.UserList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "auth.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "UserList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/io.enmasse.auth.v1alpha1.User"
                     }
                 }
             }
