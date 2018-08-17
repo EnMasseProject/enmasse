@@ -577,7 +577,7 @@ data:
           - description: Global max size for all addresses in broker. Cannot be larger than
               a quarter of BROKER_MEMORY_LIMIT
             name: GLOBAL_MAX_SIZE
-            value: 128Mb
+            value: -1
         topic-persisted.yaml: |-
           apiVersion: v1
           kind: Template
@@ -793,7 +793,7 @@ data:
           - description: Global max size for all addresses in broker. Cannot be larger than
               a quarter of BROKER_MEMORY_LIMIT
             name: GLOBAL_MAX_SIZE
-            value: 128Mb
+            value: -1
     parameters:
     - description: The link capacity setting for router
       name: ROUTER_LINK_CAPACITY
@@ -1437,7 +1437,7 @@ data:
           - description: Global max size for all addresses in broker. Cannot be larger than
               a quarter of BROKER_MEMORY_LIMIT
             name: GLOBAL_MAX_SIZE
-            value: 128Mb
+            value: -1
         topic-persisted.yaml: |-
           apiVersion: v1
           kind: Template
@@ -1653,7 +1653,7 @@ data:
           - description: Global max size for all addresses in broker. Cannot be larger than
               a quarter of BROKER_MEMORY_LIMIT
             name: GLOBAL_MAX_SIZE
-            value: 128Mb
+            value: -1
     - apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
@@ -2212,4 +2212,4 @@ data:
     - description: Global max size for all addresses in broker. Cannot be larger than
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
-      value: 128Mb
+      value: -1
