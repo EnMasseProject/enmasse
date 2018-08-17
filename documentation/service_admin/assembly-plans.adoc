@@ -3,8 +3,6 @@
 // <List assemblies here, each on a new line>
 :parent-context: {context}
 
-include::common/attributes.adoc[]
-
 [id='plans-{context}']
 = Plans
 
