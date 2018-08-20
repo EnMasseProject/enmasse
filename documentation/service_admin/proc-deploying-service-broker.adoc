@@ -2,14 +2,12 @@
 //
 // assembly-installing-manual-steps.adoc
 
-include::common/attributes.adoc[]
-
-[id='deploying-service-broker_{context}']
+[id='deploying-service-broker-{context}']
 = (Optional) Deploying the service broker
 
 The service broker provides an implementation of the Open Service Broker API that integrates with the Kubernetes Service Catalog. The service broker requires the standard authentication service to be deployed.
 
-NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space[].
+NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space-messaging[].
 
 .Prerequisite
 
@@ -43,7 +41,7 @@ oc adm policy add-cluster-role-to-user enmasse.io:service-broker system:servicea
 oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
 ----
 +
-*Note*: You can log in again as the regular user after this step.
+NOTE: You can log in again as the regular user after this step.
 endif::[]
 
 . Create a certificate to use for the service broker. For testing purposes, you can create a self-signed certificate:

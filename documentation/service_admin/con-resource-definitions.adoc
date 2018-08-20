@@ -1,0 +1,21 @@
+// Module included in the following assemblies:
+//
+// assembly-plans.adoc
+
+[id='con-resource-definitions-{context}']
+= Resource definitions
+
+A resource describes a template along with a set of parameters. The resource definition is referenced from the plans. At present, only three resource definitions are supported:
+
+* `router`
+* `broker`
+* `broker-topic`
+
+Resource definitions with other names will not work with {ProductName}. It is, however, possible to modify these resource definitions to change the template and template parameters used when instantiating the infrastructure. For instance, the following configuration map that increases the memory available for brokers can replace the default one provided by {ProductName}:
+
+[source,yaml,options="nowrap"]
+.link:service_admin/broker-resource.yaml[broker-resource.yaml]
+----
+include::broker-resource.yaml[]
+----
+

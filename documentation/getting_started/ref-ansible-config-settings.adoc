@@ -2,7 +2,7 @@
 //
 // assembly_.adoc
 
-[id='ref_ansible-config-settings_{context}']
+[id='ref-ansible-config-settings-{context}']
 = Ansible configuration settings
 
 The following Ansible configuration settings are supported.
@@ -22,3 +22,4 @@ The following Ansible configuration settings are supported.
 |register_api_server|Specifies whether to register the API server with Kubernetes master.|false |no
 |secure_api_server|Specifies whether to enable mutual TLS for the API server.|false |no
 |===
+

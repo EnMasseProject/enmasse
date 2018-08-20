@@ -22,6 +22,10 @@
 :ClientAmqpJavaScriptName: Rhea JavaScript Client
 :ClientAmqpDotNetName: AMQP.Net Lite
 
+:context: messaging
+
+include::common/attributes.adoc[]
+
 = Documentation for {ProductName}
 
 == Overview
@@ -33,9 +37,9 @@ include::common/overview.adoc[leveloffset=+1]
 include::service_admin/assembly-installing-openshift.adoc[leveloffset=+2]
 include::service_admin/assembly-installing-kubernetes.adoc[leveloffset=+2]
 
-== Configuring address space and address plans 
+== Address space and address plans
 
-include::service_admin/plans.adoc[leveloffset=+1]
+include::service_admin/assembly-plans.adoc[leveloffset=+2]
 
 == Monitoring
 include::service_admin/monitoring.adoc[leveloffset=+1]

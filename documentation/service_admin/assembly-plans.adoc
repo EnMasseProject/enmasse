@@ -1,0 +1,23 @@
+// This assembly is included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+:parent-context: {context}
+
+[id='plans-{context}']
+= Plans
+
+Plans are used to configure quotas and control the resources consumed by a particular deployment. Plans are configured by the {ProductName} service operator and are selected when creating an address space and an address.
+
+Resource definitions are a description of resources referenced by the plans, which can be configured with a template and parameters to be used when instantiating the template.
+
+By default, {ProductName} comes with a set of plans and resource definitions that are
+sufficient for most use cases.
+
+include::con-address-space-plans.adoc[leveloffset=+1]
+
+include::con-address-plans.adoc[leveloffset=+1]
+
+include::con-resource-definitions.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

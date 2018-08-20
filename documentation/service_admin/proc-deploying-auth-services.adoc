@@ -4,7 +4,7 @@
 
 include::common/attributes.adoc[]
 
-[id='deploying-auth-services_{context}']
+[id='deploying-auth-services-{context}']
 = Deploying authentication services
 
 {ProductName} requires at least one authentication service to be deployed. The authentication service

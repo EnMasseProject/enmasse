@@ -4,13 +4,13 @@
 
 include::common/attributes.adoc[]
 
-[id='deploying-api-server_{context}']
+[id='deploying-api-server-{context}']
 = (Optional) Deploying the API server
 
 The API server provides a REST API for creating address spaces and addresses. It can also serve as
 a Kubernetes API server if it is registered as an APIService.
 
-NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space[].
+NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space-messaging[].
 
 .Procedure
 
