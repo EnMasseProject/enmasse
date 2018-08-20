@@ -308,40 +308,40 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         "Client fails"));
     }
 
-    @Test
-    @Tag(nonPR)
-    void testAutoScaleAfterManualScale() throws Exception {
-        //define and create address plans
-        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.4));
-        AddressPlan queuePlan = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueue);
-        plansProvider.createAddressPlanConfig(queuePlan);
-
-        //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 0.0, 9.0),
-                new AddressSpaceResource("router", 1.0, 5.0),
-                new AddressSpaceResource("aggregate", 0.0, 10.0));
-        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
-        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
-
-        //create address space plan with new plan
-        AddressSpace scaleAddressSpace = new AddressSpace("scale-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getName(), AuthService.STANDARD);
-        createAddressSpace(scaleAddressSpace);
-
-        //deploy destinations
-        Destination queue1 = Destination.queue("queue1", queuePlan.getName());
-        Destination queue2 = Destination.queue("queue2", queuePlan.getName());
-        Destination queue3 = Destination.queue("queue3", queuePlan.getName());
-        Destination queue4 = Destination.queue("queue4", queuePlan.getName());
-
-        setAddresses(scaleAddressSpace, new TimeoutBudget(8, TimeUnit.MINUTES), queue1, queue2, queue3, queue4);
-
-        waitForAutoScale(scaleAddressSpace, queue4, 1, 2);
-        waitForAutoScale(scaleAddressSpace, queue4, 3, 2);
-    }
+//    @Test
+//    @Tag(nonPR)
+//    void testAutoScaleAfterManualScale() throws Exception {
+//        //define and create address plans
+//        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.4));
+//        AddressPlan queuePlan = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueue);
+//        plansProvider.createAddressPlanConfig(queuePlan);
+//
+//        //define and create address space plan
+//        List<AddressSpaceResource> resources = Arrays.asList(
+//                new AddressSpaceResource("broker", 0.0, 9.0),
+//                new AddressSpaceResource("router", 1.0, 5.0),
+//                new AddressSpaceResource("aggregate", 0.0, 10.0));
+//        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
+//        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
+//                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+//        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
+//
+//        //create address space plan with new plan
+//        AddressSpace scaleAddressSpace = new AddressSpace("scale-space-standard", AddressSpaceType.STANDARD,
+//                scaleSpacePlan.getName(), AuthService.STANDARD);
+//        createAddressSpace(scaleAddressSpace);
+//
+//        //deploy destinations
+//        Destination queue1 = Destination.queue("queue1", queuePlan.getName());
+//        Destination queue2 = Destination.queue("queue2", queuePlan.getName());
+//        Destination queue3 = Destination.queue("queue3", queuePlan.getName());
+//        Destination queue4 = Destination.queue("queue4", queuePlan.getName());
+//
+//        setAddresses(scaleAddressSpace, new TimeoutBudget(8, TimeUnit.MINUTES), queue1, queue2, queue3, queue4);
+//
+//        waitForAutoScale(scaleAddressSpace, queue4, 1, 2);
+//        waitForAutoScale(scaleAddressSpace, queue4, 3, 2);
+//    }
 
     @Test
     @Disabled("test disabled due to issue: #1134")
