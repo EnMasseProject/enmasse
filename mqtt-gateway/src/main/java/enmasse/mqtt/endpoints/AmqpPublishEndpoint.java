@@ -82,10 +82,12 @@ public class AmqpPublishEndpoint {
 
     /**
      * Send the AMQP_PUBLISH to the attached topic/address
-     *
      * @param amqpPublishMessage    AMQP_PUBLISH message
+     * @param mqttPacketId
      */
-    public void publish(AmqpPublishMessage amqpPublishMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
+
+    public void publish(AmqpPublishMessage amqpPublishMessage,
+                        final int mqttPacketId, Handler<AsyncResult<ProtonDelivery>> handler) {
 
         // send AMQP_PUBLISH message
 
@@ -143,7 +145,7 @@ public class AmqpPublishEndpoint {
 
                     // received disposition not settled, store for future settlement
                     if (!delivery.remotelySettled()) {
-                        this.deliveries.put(amqpPublishMessage.messageId(), delivery);
+                        this.deliveries.put(mqttPacketId, delivery);
                     }
 
                     handler.handle(Future.succeededFuture(delivery));

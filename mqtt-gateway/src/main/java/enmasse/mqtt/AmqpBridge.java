@@ -295,7 +295,8 @@ public class AmqpBridge {
      */
     private void publishHandler(MqttPublishMessage publish) {
 
-        LOG.info("PUBLISH [{}] from MQTT client {}", publish.messageId(), this.mqttEndpoint.clientIdentifier());
+        final int mqttPacketId = publish.messageId();
+        LOG.info("PUBLISH [{}] from MQTT client {}", mqttPacketId, this.mqttEndpoint.clientIdentifier());
 
         // TODO: simple way, without considering wildcards
 
@@ -311,14 +312,14 @@ public class AmqpBridge {
 
         // sending AMQP_PUBLISH
         AmqpPublishMessage amqpPublishMessage =
-                new AmqpPublishMessage(publish.messageId(),
-                        publish.qosLevel(),
-                        publish.isDup(),
-                        publish.isRetain(),
-                        publish.topicName(),
-                        publish.payload());
+                new AmqpPublishMessage(null,
+                                       publish.qosLevel(),
+                                       publish.isDup(),
+                                       publish.isRetain(),
+                                       publish.topicName(),
+                                       publish.payload());
 
-        pubEndpoint.publish(amqpPublishMessage, done -> {
+        pubEndpoint.publish(amqpPublishMessage, mqttPacketId, done -> {
 
             if (done.succeeded()) {
 
@@ -326,13 +327,12 @@ public class AmqpBridge {
                 if (delivery != null) {
 
                     if (publish.qosLevel() == MqttQoS.AT_LEAST_ONCE) {
-
-                        this.mqttEndpoint.publishAcknowledge((int) amqpPublishMessage.messageId());
-                        LOG.info("PUBACK [{}] to MQTT client {}", amqpPublishMessage.messageId(), this.mqttEndpoint.clientIdentifier());
+                        this.mqttEndpoint.publishAcknowledge(mqttPacketId);
+                        LOG.info("PUBACK [{}] to MQTT client {}", mqttPacketId, this.mqttEndpoint.clientIdentifier());
                     } else {
 
-                        this.mqttEndpoint.publishReceived((int) amqpPublishMessage.messageId());
-                        LOG.info("PUBREC [{}] to MQTT client {}", amqpPublishMessage.messageId(), this.mqttEndpoint.clientIdentifier());
+                        this.mqttEndpoint.publishReceived(mqttPacketId);
+                        LOG.info("PUBREC [{}] to MQTT client {}", mqttPacketId, this.mqttEndpoint.clientIdentifier());
                     }
 
                 }
@@ -401,7 +401,8 @@ public class AmqpBridge {
      */
     private void subscribeHandler(MqttSubscribeMessage subscribe) {
 
-        LOG.info("SUBSCRIBE [{}] from MQTT client {}", subscribe.messageId(), this.mqttEndpoint.clientIdentifier());
+        final int messageId = subscribe.messageId();
+        LOG.info("SUBSCRIBE [{}] from MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
 
         // sending AMQP_SUBSCRIBE
 
@@ -412,8 +413,7 @@ public class AmqpBridge {
 
         AmqpSubscribeMessage amqpSubscribeMessage =
                 new AmqpSubscribeMessage(this.mqttEndpoint.clientIdentifier(),
-                        subscribe.messageId(),
-                        topicSubscriptions);
+                                         topicSubscriptions);
 
         this.ssEndpoint.sendSubscribe(amqpSubscribeMessage, done -> {
 
@@ -440,9 +440,9 @@ public class AmqpBridge {
                     grantedQoSLevels = new ArrayList<>(Collections.nCopies(amqpSubscribeMessage.topicSubscriptions().size(), MqttQoS.FAILURE));
                 }
 
-                this.mqttEndpoint.subscribeAcknowledge((int) amqpSubscribeMessage.messageId(), grantedQoSLevels);
+                this.mqttEndpoint.subscribeAcknowledge(messageId, grantedQoSLevels);
 
-                LOG.info("SUBACK [{}] to MQTT client {}", amqpSubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
+                LOG.info("SUBACK [{}] to MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
             }
         });
     }
@@ -454,20 +454,19 @@ public class AmqpBridge {
      */
     private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
 
-        LOG.info("UNSUBSCRIBE [{}] from MQTT client {}", unsubscribe.messageId(), this.mqttEndpoint.clientIdentifier());
+        final int messageId = unsubscribe.messageId();
+        LOG.info("UNSUBSCRIBE [{}] from MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
 
         // sending AMQP_UNSUBSCRIBE
 
         AmqpUnsubscribeMessage amqpUnsubscribeMessage =
-                new AmqpUnsubscribeMessage(this.mqttEndpoint.clientIdentifier(),
-                        unsubscribe.messageId(),
-                        unsubscribe.topics());
+                new AmqpUnsubscribeMessage(this.mqttEndpoint.clientIdentifier(), unsubscribe.topics());
 
         this.ssEndpoint.sendUnsubscribe(amqpUnsubscribeMessage, done -> {
 
             if (done.succeeded()) {
 
-                this.mqttEndpoint.unsubscribeAcknowledge((int) amqpUnsubscribeMessage.messageId());
+                this.mqttEndpoint.unsubscribeAcknowledge(messageId);
 
                 // removing topics from local collection
                 unsubscribe.topics().stream().forEach(topic -> {
@@ -475,7 +474,7 @@ public class AmqpBridge {
                     this.grantedQoSLevels.remove(topic);
                 });
 
-                LOG.info("UNSUBACK [{}] to MQTT client {}", amqpUnsubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
+                LOG.info("UNSUBACK [{}] to MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
             }
         });
     }

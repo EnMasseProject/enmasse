@@ -159,10 +159,10 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                     // the request object is exchanged through the map using messageId in the event bus message
                     this.vertx.sharedData().getLocalMap(MockBroker.EB_SUBSCRIBE)
-                            .put(amqpSubscribeMessage.messageId(), new AmqpSubscribeData(amqpSubscribeMessage.messageId(), amqpSubscribeMessage));
+                            .put(amqpSubscribeMessage.clientId(), new AmqpSubscribeData(amqpSubscribeMessage.clientId(), amqpSubscribeMessage));
 
                     // send SUBSCRIBE request to the broker
-                    this.vertx.eventBus().send(MockBroker.EB_SUBSCRIBE, amqpSubscribeMessage.messageId(), done -> {
+                    this.vertx.eventBus().send(MockBroker.EB_SUBSCRIBE, amqpSubscribeMessage.clientId(), done -> {
 
                         if (done.succeeded()) {
 
@@ -206,10 +206,10 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                     // the request object is exchanged through the map using messageId in the event bus message
                     this.vertx.sharedData().getLocalMap(MockBroker.EB_UNSUBSCRIBE)
-                            .put(amqpUnsubscribeMessage.messageId(), new AmqpUnsubscribeData(amqpUnsubscribeMessage.messageId(), amqpUnsubscribeMessage));
+                            .put(null, new AmqpUnsubscribeData(null, amqpUnsubscribeMessage));
 
                     // send UNSUBSCRIBE request to the broker
-                    this.vertx.eventBus().send(MockBroker.EB_UNSUBSCRIBE, amqpUnsubscribeMessage.messageId(), done -> {
+                    this.vertx.eventBus().send(MockBroker.EB_UNSUBSCRIBE,null, done -> {
 
                         if (done.succeeded()) {
 

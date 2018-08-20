@@ -28,7 +28,6 @@ public class AmqpPublishMessage {
     private static final String AMQP_RETAIN_ANNOTATION = "x-opt-retain-message";
     private static final String AMQP_QOS_ANNOTATION = "x-opt-mqtt-qos";
 
-    private final Object messageId;
     private final MqttQoS qos;
     private final boolean isDup;
     private final boolean isRetain;
@@ -37,17 +36,13 @@ public class AmqpPublishMessage {
 
     /**
      * Constructor
-     *
-     * @param messageId message identifier
-     * @param qos MQTT QoS level
+     *  @param qos MQTT QoS level
      * @param isDup if the message is a duplicate
      * @param isRetain  if the message needs to be retained
      * @param topic topic on which the message is published
      * @param payload   message payload
      */
-    public AmqpPublishMessage(Object messageId, MqttQoS qos, boolean isDup, boolean isRetain, String topic, Buffer payload) {
-
-        this.messageId = messageId;
+    public AmqpPublishMessage(MqttQoS qos, boolean isDup, boolean isRetain, String topic, Buffer payload) {
         this.qos = qos;
         this.isDup = isDup;
         this.isRetain = isRetain;
@@ -113,7 +108,7 @@ public class AmqpPublishMessage {
         if ((section != null) && (section instanceof Data)) {
 
             Buffer payload = Buffer.buffer(((Data) section).getValue().getArray());
-            return new AmqpPublishMessage(message.getMessageId(), qos, isDup, isRetain, topic, payload);
+            return new AmqpPublishMessage(qos, isDup, isRetain, topic, payload);
 
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
@@ -128,8 +123,6 @@ public class AmqpPublishMessage {
     public Message toAmqp() {
 
         Message message = ProtonHelper.message();
-
-        message.setMessageId(this.messageId);
 
         Map<Symbol, Object> map = new HashMap<>();
         map.put(Symbol.valueOf(AMQP_RETAIN_ANNOTATION), this.isRetain);
@@ -150,14 +143,6 @@ public class AmqpPublishMessage {
             message.setBody(new Data(new Binary(this.payload.getBytes())));
 
         return message;
-    }
-
-    /**
-     * Message identifier
-     * @return
-     */
-    public Object messageId() {
-        return messageId;
     }
 
     /**
@@ -204,8 +189,7 @@ public class AmqpPublishMessage {
     public String toString() {
 
         return "AmqpPublishMessage{" +
-                "messageId=" + this.messageId +
-                ", qos=" + this.qos +
+                "qos=" + this.qos +
                 ", isDup=" + this.isDup +
                 ", isRetain=" + this.isRetain +
                 ", topic=" + this.topic +
