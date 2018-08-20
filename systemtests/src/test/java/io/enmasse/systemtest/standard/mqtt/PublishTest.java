@@ -9,20 +9,20 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.mqtt.MqttClient;
+import io.enmasse.systemtest.mqtt.MqttUtils;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
@@ -32,21 +32,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Tests related to publish messages via MQTT
  */
 public class PublishTest extends TestBaseWithShared implements ITestBaseStandard {
+    private static final String MYTOPIC = "mytopic";
     private static Logger log = CustomLogger.getLogger();
-
-    public static void simpleMQTTSendReceive(Destination dest, MqttClient client, int msgCount) throws InterruptedException, ExecutionException, TimeoutException {
-        List<String> messages = new ArrayList<>();
-        for (int i = 0; i < msgCount; i++) {
-            messages.add(String.format("mqtt-simple-send-receive-%s", i));
-        }
-        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), msgCount, 0);
-        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, Collections.nCopies(msgCount, 0));
-
-        assertThat("Incorrect count of messages sent",
-                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat("Incorrect count of messages received",
-                recvResult.get(1, TimeUnit.MINUTES).size(), is(msgCount));
-    }
 
     @Override
     public boolean skipDummyAddress() {
@@ -55,76 +42,87 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testPublishQoS0() throws Exception {
+        List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());
+        messages.forEach(m -> {
+            m.setPayload(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            m.setQos(0);
+        });
 
-        List<String> messages = Arrays.asList("foo", "bar", "baz");
-        List<Integer> publisherQos = Arrays.asList(0, 0, 0);
-
-        this.publish(messages, publisherQos, 0);
+        this.publish(messages, 0);
     }
 
     @Test
     void testPublishQoS1() throws Exception {
+        List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());
+        messages.forEach(m -> {
+            m.setPayload(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            m.setQos(1);
+        });
 
-        List<String> messages = Arrays.asList("foo", "bar", "baz");
-        List<Integer> publisherQos = Arrays.asList(1, 1, 1);
-
-        this.publish(messages, publisherQos, 1);
+        this.publish(messages, 1);
     }
 
     @Test
     @Disabled
     void testPublishQoS2() throws Exception {
 
-        List<String> messages = Arrays.asList("foo", "bar", "baz");
-        List<Integer> publisherQos = Arrays.asList(2, 2, 2);
+        List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());
+        messages.forEach(m -> {
+            m.setPayload(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            m.setQos(2);
+        });
 
-        this.publish(messages, publisherQos, 2);
+        this.publish(messages, 2);
     }
 
     @Test
-    @Disabled("related issue: #?")
+    @Disabled("related issue: #1529")
     void testRetainedMessages() throws Exception {
         Destination topic = Destination.topic("retained-message-topic", "sharded-topic");
         setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
         retainedMessage.setQos(1);
-        retainedMessage.setPayload("retained-message".getBytes());
+        retainedMessage.setPayload("retained-message".getBytes(StandardCharsets.UTF_8));
         retainedMessage.setId(1);
         retainedMessage.setRetained(true);
 
         //send retained message to the topic
-        MqttClient mqttClient = mqttClientFactory.createClient();
-        Future<Integer> sendResultMqtt = mqttClient.sendMessages(topic.getAddress(), retainedMessage);
-        assertThat("Incorrect count of messages sent",
-                sendResultMqtt.get(1, TimeUnit.MINUTES), is(1));
+        IMqttClient publisher = mqttClientFactory.create();
+        publisher.connect();
+        publisher.publish(topic.getAddress(), retainedMessage);
+        publisher.disconnect();
 
         //each client which will subscribe to the topic should receive retained message!
-        int clients = 5;
-        for (int i = 0; i < clients; i++) {
-            mqttClient = mqttClientFactory.createClient();
-            Future<List<MqttMessage>> recvResult = mqttClient.recvMessages(topic.getAddress(), 1, 1);
-            assertThat("Incorrect count of messages received",
-                    recvResult.get(1, TimeUnit.MINUTES).size(), is(1));
-            log.info("id:{}, retained: {}", recvResult.get().get(0).getId(), recvResult.get().get(0).isRetained());
-            assertTrue("Retained message expected", recvResult.get().get(0).isRetained());
-        }
+        IMqttClient subscriber = mqttClientFactory.create();
+        subscriber.connect();
+        CompletableFuture<MqttMessage> messageFuture = new CompletableFuture<>();
+        subscriber.subscribe(topic.getAddress(), (topic1, message) -> messageFuture.complete(message));
+        MqttMessage receivedMessage = messageFuture.get(1, TimeUnit.MINUTES);
+        assertTrue("Retained message expected", receivedMessage.isRetained());
+
+        subscriber.disconnect();
     }
 
-    private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
+    private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic("mytopic", "sharded-topic");
+        Destination dest = Destination.topic(MYTOPIC, "sharded-topic");
         setAddresses(dest);
-        Thread.sleep(60_000);
 
-        MqttClient client = mqttClientFactory.createClient();
+        IMqttClient client = mqttClientFactory.create();
+        client.connect();
 
-        Future<List<MqttMessage>> recvResult = client.recvMessages(dest.getAddress(), messages.size(), subscriberQos);
-        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, publisherQos);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getAddress(), messages.size(), subscriberQos);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getAddress(), messages);
 
-        assertThat("Wrong count of messages sent",
-                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat("Wrong count of messages received",
-                recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages published",
+                publishCount, is(messages.size()));
+
+        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, is(messages.size()));
+
+        client.disconnect();
     }
 }
