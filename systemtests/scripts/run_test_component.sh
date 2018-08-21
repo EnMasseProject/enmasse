@@ -3,9 +3,8 @@ CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
 ENMASSE_DIR=$1
-KUBEADM=$2
-TEST_PROFILE=${3}
-TESTCASE=${4:-"io.enmasse.**"}
+TEST_PROFILE=${2}
+TESTCASE=${3:-"io.enmasse.**"}
 
 failure=0
 
@@ -14,7 +13,7 @@ SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
 SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
 export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
-setup_test ${ENMASSE_DIR} ${KUBEADM}
+setup_test ${ENMASSE_DIR} $(get_kubeconfig_path)
 if [ $? -ne 0 ]; then
     echo "DEPLOYMENT FAILED - tests won't be executed."
     exit 1

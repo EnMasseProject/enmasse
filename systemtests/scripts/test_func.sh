@@ -258,6 +258,7 @@ function clean_docker_images() {
 }
 
 function clean_oc_location() {
+    for i in $(mount | grep openshift | awk '{ print $3}'); do sudo umount "$i"; done && sudo rm -rf /var/lib/origin
     sudo rm -rf /var/lib/origin/openshift.local.pv
     sudo rm -rf /var/log/containers/*
     sudo rm -rf /var/log/pods/*
@@ -268,5 +269,31 @@ function check_if_ansible_ready() {
     if ! sudo rpm -qa | grep -qw ansible; then
         info "Ansible is not installed, running install command"
         sudo yum -y install --enablerepo=epel ansible
+    fi
+}
+
+function get_openshift_version() {
+    echo $(oc version | sed -nre '/^oc/s/^.*v(([0-9]+\.)*[0-9]+).*$/\1/p')
+}
+
+function get_kubeconfig_path() {
+    OC_39='/var/lib/origin/openshift.local.config/master/admin.kubeconfig'
+    OC_310='./openshift.local.clusterup/kube-apiserver/admin.kubeconfig'
+
+    if [[ $(get_openshift_version) == '3.9.0' ]]; then
+        echo $OC_39
+    else
+        echo $OC_310
+    fi
+}
+
+function get_oc_args() {
+    OC_39='--service-catalog'
+    OC_310='--enable=*,automation-service-broker,rhel-imagestreams,service-catalog --insecure-skip-tls-verify=true'
+
+    if [[ $(get_openshift_version) == '3.9.0' ]]; then
+        echo $OC_39
+    else
+        echo $OC_310
     fi
 }
