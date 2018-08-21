@@ -1,0 +1,62 @@
+// Module included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+
+// Base the file name and the ID on the module title. For example:
+// * file name: my-concept-module-a.adoc
+// * ID: [id='my-concept-module-a']
+// * Title: = My concept module A
+
+// The ID is used as an anchor for linking to the module. Avoid changing it after the module has been published to ensure existing links are not broken.
+[id='concept-user-model-{context}']
+// The `context` attribute enables module reuse. Every module's ID includes {context}, which ensures that the module has a unique ID even if it is reused multiple times in a guide.
+= User model
+
+Users define authentication and authorization for messaging clients and console users. Users are
+configured as `MessagingUsers` resources. Users can only be created, deleted, read and listed (not
+modified). Following is an example user:
+
+[source,yaml,options="nowrap"]
+.link:common/user-example1.yaml[user-example1.yaml]
+----
+include::user-example1.yaml[]
+----
+
+The following fields are required:
+
+* `metadata.name`
+* `metadata.namespace`
+* `spec.authentication`
+* `spec.authorization`
+
+The `spec.authentication` object defines how the user is authenticated, whereas
+`spec.authorization` defines the authorization policies for that user.
+
+== Authentication
+
+The supported values for the authentication type are `password` and `federated`. 
+
+NOTE: At present, `password` type users can be used for both applications and console users, whereas
+`federated` type users will only work when using the messaging console.
+
+=== Password authentication type
+
+For the `password` type, an additional field `password` must be set to a base64-encoded value of the
+password for that user. The password will not be printed out when reading the resource.
+
+=== Federated authentication type
+
+For the `federated` type, an additional field `provider` must be specified. The supported values
+depend on the identity providers configured for the address space. The fields `federatedUsername`
+and `federatedUserid` must be set, and should map to the username and userid in the federated
+identity provider.
+
+== Authorization
+
+In addition, authorization policies can be defined using operations and addresses. Valid operations
+are `send`, `recv`, `view`, `manage`. If addresses are omitted, operations will be applied to all
+addresses.
+
+.Additional resources
+
+* xref:_io_enmasse_user_v1alpha1_messaginguser[MessagingUser definition]
