@@ -8,3 +8,6 @@ rules:
   - apiGroups: [ "enmasse.io" ]
     resources: [ "addresses", "addressspaces" ]
     verbs: [ "get", "list" ]
+  - apiGroups: [ "user.enmasse.io" ]
+    resources: [ "messagingusers" ]
+    verbs: [ "get", "list" ]
