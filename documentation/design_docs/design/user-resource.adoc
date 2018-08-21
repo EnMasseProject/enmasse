@@ -3,10 +3,11 @@
 Tenants currently need to create users and assign permissions using the Keycloak console or API when
 using the standard address space.
 
-However, usage of Keycloak is an implementation detail, and also a very crude interface.
+It is desirable to be able to create all EnMasse resources using `kubectl` or `oc` to improve the user experience.
+(i.e. `oc create -f address_space.yaml && oc create -f addresses.yaml && oc create -f users.yaml`)
 
-This proposal is for creating users and managing user permissions using a custom API part of the api
-server. 
+The standard authentication service happens to be implemented using keycloak. Having an API in front
+of that allows us to change that implementation if we wish.
 
 == what/how
 
@@ -40,7 +41,8 @@ must include the address space name and username separated by a dot ('.').
 A user may authentication using passwords or a federated identity. In the case of authentication
 using a password, the password is provided upon creation on the user.  Subsequent reads of this
 user will not be able to see the password, and so applications need to 'remember' the password
-using secrets or other mechanisms.
+using secrets or other mechanisms. To start with, users can not be modified (i.e. have the password
+changed).
 
 ```
 apiVersion: user.enmasse.io/v1alpha1
@@ -57,7 +59,8 @@ spec:
 ```
 
 Users can also be authenticated using a federated identity where providers such as OpenShift can be
-supported.
+supported. In the first instance, federated users can only be used for console access (should be
+reflected in user documentation).
 
 ```
 apiVersion: user.enmasse.io/v1alpha1
@@ -77,12 +80,12 @@ spec:
 ```
 
 The authorization policies describe what operations and on what addresses a particular user may
-perform those operations. Operations can be either 'send', 'recv' or 'view', which can be applied to
-individual or multiple addresses (using wildcards). The 'manage' operation is a special operation
-that applies to all addresses and can be used for allow console user access (whereas view gives
+perform those operations. Operations can be either `send`, `recv` or `view`, which can be applied to
+individual or multiple addresses using wildcards as the _suffix. The `manage` operation is a special operation
+that applies to all addresses and can be used to allow console user access (whereas view gives
 read-only console access).
 
-Addresses may contain wildcards. '*' will match all addresses.
+Addresses may contain wildcards at the end of the pattern. '*' will match all addresses.
 
 As a future improvements, the concept of groups can be introduced where the authorization policies
 can apply to multiple users.

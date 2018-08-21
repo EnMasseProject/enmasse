@@ -51,6 +51,8 @@ include::common/address-space.adoc[leveloffset=+1]
 include::common/configuring-using-cli.adoc[leveloffset=+1]
 include::common/configuring-using-restapi.adoc[leveloffset=+1]
 
+include::tenant/assembly-managing-users.adoc[leveloffset=+1]
+
 == Connecting applications to {ProductName}
 
 include::messaging_app_developer/connecting.adoc[leveloffset=+1]

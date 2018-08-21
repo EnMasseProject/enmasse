@@ -1,0 +1,41 @@
+// Module included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+
+// Base the file name and the ID on the module title. For example:
+// * file name: doing-procedure-a.adoc
+// * ID: [id='doing-procedure-a']
+// * Title: = Doing procedure A
+
+// The ID is used as an anchor for linking to the module. Avoid changing it after the module has been published to ensure existing links are not broken.
+[id='proc-creating-users-cli-{context}']
+// The `context` attribute enables module reuse. Every module's ID includes {context}, which ensures that the module has a unique ID even if it is reused multiple times in a guide.
+= Creating users using the command line
+
+// Start the title of a procedure module with a verb, such as Creating or Create. See also _Wording of headings_ in _The IBM Style Guide_.
+Users can in {ProductName} can be created using standard command line tools.
+
+.Prerequisites
+
+* An address space must have been created.
+
+.Procedure
+
+. Save user definition to file
++
+[source,yaml,options="nowrap"]
+.link:common/user-example1.yaml[user-example1.yaml]
+----
+include::user-example1.yaml[]
+----
+
+. Create user
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f user-example1.yaml
+----
+
+.Additional resources
+
+* xref:_overview[Rest API Reference]
