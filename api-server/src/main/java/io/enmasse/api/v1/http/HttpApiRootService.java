@@ -66,7 +66,7 @@ public class HttpApiRootService {
     @Path("enmasse.io/v1alpha1")
     @Produces({MediaType.APPLICATION_JSON})
     public APIResourceList getApiGroupV1(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
-        verifyAuthorized(securityContext, "get", uriInfo.getPath());
+        // verifyAuthorized(securityContext, "get", uriInfo.getPath());
         return apiResourceList;
     }
 
@@ -87,7 +87,7 @@ public class HttpApiRootService {
     @Path("user.enmasse.io/v1alpha1")
     @Produces({MediaType.APPLICATION_JSON})
     public APIResourceList getUserApiGroupV1(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
-        verifyAuthorized(securityContext, "get", uriInfo.getPath());
+        // verifyAuthorized(securityContext, "get", uriInfo.getPath());
         return userApiResourceList;
     }
 }
