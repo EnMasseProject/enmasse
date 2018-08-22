@@ -27,44 +27,46 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
+import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.credential.hash.Pbkdf2PasswordHashProviderFactory;
 import org.keycloak.credential.hash.Pbkdf2Sha256PasswordHashProviderFactory;
 import org.keycloak.credential.hash.Pbkdf2Sha512PasswordHashProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.models.KeycloakTransactionManager;
+import org.keycloak.models.RealmModel;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 class SaslAuthenticator implements ProtonSaslAuthenticator
 {
 
     static final Object USER_ATTACHMENT = new Object();
+    private static final Logger LOG = Logger.getLogger(SaslAuthenticator.class);
 
-    private static Map<String, SaslServerMechanism> MECHANISMS = new LinkedHashMap<>();
 
     // TODO - load these dynamically
-    static {
-        final SaslServerMechanism plainSaslServerMechanism = new PlainSaslServerMechanism();
-        final SaslServerMechanism scramSHA1SaslServerMechanism = new ScramSaslServerMechanism("HmacSHA1", "SCRAM-SHA-1", "SHA-1", ScramSha1PasswordHashProviderFactory.ID, Pbkdf2PasswordHashProviderFactory.ID);
-        final SaslServerMechanism scramSha256SaslServerMechanism = new ScramSaslServerMechanism("HmacSHA256", "SCRAM-SHA-256", "SHA-256", ScramSha256PasswordHashProviderFactory.ID, Pbkdf2Sha256PasswordHashProviderFactory.ID);
-        final SaslServerMechanism scramSha512SaslServerMechanism = new ScramSaslServerMechanism("HmacSHA512", "SCRAM-SHA-512", "SHA-512", ScramSha512PasswordHashProviderFactory.ID, Pbkdf2Sha512PasswordHashProviderFactory.ID);
-        final SaslServerMechanism xoauth2SHA1SaslServerMechanism = new XOAUTH2SaslServerMechanism();
-
-        MECHANISMS.put(plainSaslServerMechanism.getName(), plainSaslServerMechanism);
-        MECHANISMS.put(scramSHA1SaslServerMechanism.getName(), scramSHA1SaslServerMechanism);
-        MECHANISMS.put(scramSha256SaslServerMechanism.getName(), scramSha256SaslServerMechanism);
-        MECHANISMS.put(scramSha512SaslServerMechanism.getName(), scramSha512SaslServerMechanism);
-        MECHANISMS.put(xoauth2SHA1SaslServerMechanism.getName(), xoauth2SHA1SaslServerMechanism);
-    }
+    private static final List<SaslServerMechanism> ALL_MECHANISMS =
+        Collections.unmodifiableList(Arrays.asList(
+            new PlainSaslServerMechanism(),
+            new ScramSaslServerMechanism("HmacSHA1", "SCRAM-SHA-1", "SHA-1", ScramSha1PasswordHashProviderFactory.ID, Pbkdf2PasswordHashProviderFactory.ID, 50),
+            new ScramSaslServerMechanism("HmacSHA256", "SCRAM-SHA-256", "SHA-256", ScramSha256PasswordHashProviderFactory.ID, Pbkdf2Sha256PasswordHashProviderFactory.ID, 60),
+            new ScramSaslServerMechanism("HmacSHA512", "SCRAM-SHA-512", "SHA-512", ScramSha512PasswordHashProviderFactory.ID, Pbkdf2Sha512PasswordHashProviderFactory.ID, 70),
+            new XOAUTH2SaslServerMechanism()));
 
     private final Config.Scope config;
 
     private KeycloakSessionFactory keycloakSessionFactory;
     private Sasl sasl;
     private boolean succeeded;
-    private KeycloakSession keycloakSession;
     private SaslServerMechanism.Instance saslMechanism;
     private ProtonConnection connection;
 
@@ -82,11 +84,41 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
         this.sasl = transport.sasl();
         sasl.server();
         sasl.allowSkip(false);
-        sasl.setMechanisms(MECHANISMS.keySet().toArray(new String[MECHANISMS.size()]));
-        keycloakSession = keycloakSessionFactory.create();
+        sasl.setMechanisms(getValidMechanisms(getPasswordHashAlgorithms()));
         connection = protonConnection;
     }
 
+    private String[] getValidMechanisms(Set<String> hashAlgos) {
+        TreeSet<SaslServerMechanism> mechanisms = new TreeSet<>(Comparator.comparingInt(SaslServerMechanism::priority));
+        for(SaslServerMechanism mech : ALL_MECHANISMS) {
+            for(String hashAlgo : hashAlgos) {
+                if(mech.isSupported(hashAlgo)) {
+                    mechanisms.add(mech);
+                    break;
+                }
+            }
+        }
+        return mechanisms.stream().map(SaslServerMechanism::getName).toArray(String[]::new);
+    }
+
+    private Set<String> getPasswordHashAlgorithms() {
+        Set<String> hashAlgos = new HashSet<>();
+        KeycloakSession keycloakSession = keycloakSessionFactory.create();
+        KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
+        transactionManager.begin();
+        try {
+            List<RealmModel> realms = keycloakSession.realms().getRealms();
+            for(RealmModel realm : realms) {
+                if(realm.getAttribute("enmasse-realm",Boolean.FALSE)) {
+                    hashAlgos.add(realm.getPasswordPolicy().getHashAlgorithm());
+                }
+            }
+        } finally {
+            transactionManager.commit();
+            keycloakSession.close();
+        }
+        return hashAlgos;
+    }
 
     @Override
     public void process(final Handler<Boolean> completionHandler) {
@@ -96,13 +128,13 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
         if(saslMechanism == null) {
             if (remoteMechanisms.length > 0) {
                 String chosen = remoteMechanisms[0];
-                SaslServerMechanism mechanismImpl = MECHANISMS.get(chosen);
-                if (mechanismImpl != null) {
+                Optional<SaslServerMechanism> mechanismImpl = ALL_MECHANISMS.stream().filter(m -> m.getName().equals(chosen)).findFirst();
+                if (mechanismImpl.isPresent()) {
                     String saslHostname = sasl.getHostname();
                     if(saslHostname == null) {
                         saslHostname = config.get("defaultDomain","");
                     }
-                    saslMechanism = mechanismImpl.newInstance(keycloakSession, saslHostname, config);
+                    saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config);
 
                 } else {
 

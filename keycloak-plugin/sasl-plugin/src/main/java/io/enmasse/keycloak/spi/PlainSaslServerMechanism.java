@@ -25,6 +25,7 @@ import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.KeycloakTransactionManager;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
@@ -43,7 +44,17 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
     }
 
     @Override
-    public Instance newInstance(final KeycloakSession keycloakSession,
+    public int priority() {
+        return 10;
+    }
+
+    @Override
+    public boolean isSupported(String passwordHashAlgo) {
+        return true;
+    }
+
+    @Override
+    public Instance newInstance(final KeycloakSessionFactory keycloakSessionFactory,
                                 final String hostname,
                                 final Config.Scope config)
     {
@@ -78,6 +89,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                 String password = new String(response, authcidNullPosition + 1, passwordLen, StandardCharsets.UTF_8);
 
                 LOG.info("SASL hostname: " + hostname);
+                KeycloakSession keycloakSession = keycloakSessionFactory.create();
                 KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
                 transactionManager.begin();
                 try {
@@ -104,6 +116,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                     }
                 } finally {
                     transactionManager.commit();
+                    keycloakSession.close();
                 }
             }
 

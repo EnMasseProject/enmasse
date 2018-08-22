@@ -22,11 +22,15 @@
 package io.enmasse.keycloak.spi;
 
 import org.keycloak.Config;
-import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
 
 public interface SaslServerMechanism {
+
+    boolean isSupported(String passwordHashAlgo);
+    int priority();
     String getName();
-    Instance newInstance(KeycloakSession session, String hostname, final Config.Scope config);
+
+    Instance newInstance(KeycloakSessionFactory session, String hostname, final Config.Scope config);
     interface Instance {
         byte[] processResponse(byte[] response) throws IllegalArgumentException;
         boolean isComplete();
