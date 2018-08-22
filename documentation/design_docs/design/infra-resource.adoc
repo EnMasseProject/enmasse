@@ -1,15 +1,17 @@
 == why
 
-To change configuration for the standard or brokered address space today involves changing a
-configmap containing the resource definition, which references templates with no schema validation
-and checking. The underlying openshift templates which are stored in a configmap as key-value
-pairs and can only be changed at deploy-time.
+Changing configuration for the standard or brokered address space today involves changing a
+`resource definition` configmap, which in turn references templates (no schema validation and
+checking of values for instance). The underlying openshift templates which are stored in a configmap
+as key-value pairs and can only be changed before deploying an address space or it will have to be
+recreated, unless you happen to know exactly what component to change.
 
-The settings that can be tuned, and that will have an effect when changed is not clear to spot, and
+The settings that can be tuned and will have an effect when changed is not clear to spot, and
 are scattered around in the template.
 
 Finally, there is at present no mechanism for the service admin to upgrade the infrastructure
-between different versions of EnMasse and even for changing configuration run-time.
+between different versions of EnMasse and even for changing configuration run-time and make sure the
+appropriate components are changed.
 
 == what/how
 
@@ -21,18 +23,14 @@ one of the configuration versions.
 Upgrades are handled by updating the version of the instance of the infrastructure, in which case a
 controller will take steps to migrate the infra from one version to the next.
 
-Optionally, address spaces may also be versioned to indicate what version of the infrastructure is
-required to support it, but to begin with it is assumed that an address space can be served by any
-version of the infrastructure.
-
-Defining a syntax for configuring infrastructure makes the operational life running EnMasse simpler.
+Defining a syntax for configuring infrastructure makes the operational life of EnMasse simpler.
 It also allows us to decouple definition of the infrastructure from the address space(s) that the
-infrastructure serves.
+infrastructure serves, which is a feature that is desired for kafka/strimzi support.
 
-A `StandardInfraTemplate` resource defines an infrastructure containing an admin component, a router and 0 or
-more brokers. Settings for these components can be tuned through this resource. More settings that
-is desired to be configurable can be added. The resource is versioned, and different versions may
-coexist to allow seamless upgrades.
+A `StandardInfraTemplate` resource defines an infrastructure definition of admin, router and broker
+components. All supported settings for these components can be tuned through this resource. More
+settings that is desired to be configurable can be added. The resource is versioned in the name, and
+as a property.
 
 
 ```
@@ -59,7 +57,9 @@ spec:
       memory: 512Mi
 ```
 
-A `BrokeredInfraTemplate` resource defines a cluster containing an admin component, and a single broker (with plans to allow replicas to be specified as well). Settings for these components can be tuned through this resource.
+A `BrokeredInfraTemplate` resource defines configuration for an admin component, and a single broker
+(with future settings might be replicas for instance). Settings for these components can be tuned
+through this resource.
 
 ```
 apiVersion: enmasse.io/v1alpha1
@@ -68,7 +68,7 @@ metadata:
   name: brokered-infra-0.21.2
   namespace: somewhere
 spec:
-    version: 0.21.2
+  version: 0.21.2
   broker:
     addressFullPolicy: PAGE
     resources:
@@ -79,9 +79,10 @@ spec:
       memory: 512Mi
 ```
 
-In order to decouple `AddressSpace`, which is a logical resource managed by tenants, an `Infra`
-resource type is used to represent an instance of the above templates. This paves the way later for
-allowing multiple `AddressSpace` resource to be shared by the same `Infra` resource.
+At present `AddressSpace` is a logical resource managed by tenants. To allow the service admin to
+manage the system without changing the `AddressSpace` resource, an `Infra` resource type is used to
+represent an instance of the above templates. This paves the way later for allowing multiple
+`AddressSpace` resource to be shared by the same `Infra` resource.
 
 An `Infra` resource is used to declare some infrastructure to be created based on a template
 resource (+ authentication service settings?). A component `infra-controller` will watch for
@@ -90,10 +91,9 @@ Initially, there might as well be a 1:1 mapping between AddressSpace and Infra, 
 that tenants can see `AddressSpace` resources, where as only service admins can see `Infra`
 resources.
 
-The `Infra` resource contains a `version` field, which indicates which version of the
-`*InfraTemplate` the infrastructure should converge to. If the version changes, the
-`infra-controller` will be responsible for converging the `Infra` instance towards the new version
-based on the new template.
+The `Infra` resource points to a particular `*InfraTemplate` resource, indicating what the
+infrastructure should converge to. If the version changes, the `infra-controller` will be responsible
+for converging the `Infra` instance towards the new version based on the new template.
 
 Here is an example of an `Infra` instance:
 
@@ -104,10 +104,10 @@ metadata:
   name: infra
   namespace: myinfra
 spec:
-  version:  0.21.1
   template:
     kind: StandardInfraTemplate
-    name: standard-infra
+    name: standard-infra-0.21.2
+    version: 0.21.2
   authenticationService:
     host: example.com
     port: 5671
@@ -117,6 +117,10 @@ spec:
 As a first step, AddressSpacePlans can still contain the 'defined-by' annotation which can refer to
 a StandardInfraTemplate or a BrokeredInfraTemplate. When an address-space is created, this can be
 the way to find which template is used for creating the `Infra` resource.
+
+Optionally, address spaces may also be versioned to indicate what version of the infrastructure is
+required to support it, but to begin with it is assumed that an address space can be served by any
+version of the infrastructure.
 
 == testing
 
