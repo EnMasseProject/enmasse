@@ -291,7 +291,7 @@ function get_oc_args() {
     OC_39='--service-catalog'
     OC_310='--enable=*,automation-service-broker,rhel-imagestreams,service-catalog --insecure-skip-tls-verify=true'
 
-    if [[ $(get_openshift_version) == '3.9.0' ]]; then
+    if [[ $(get_openshift_version) == '3.9'* ]]; then
         echo $OC_39
     else
         echo $OC_310
