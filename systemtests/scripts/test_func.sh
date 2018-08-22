@@ -22,7 +22,7 @@ function setup_test() {
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
-    export REGISTER_API_SERVER=${REGISTER_API_SERVER:-false}
+    export REGISTER_API_SERVER=${REGISTER_API_SERVER:-true}
     if [[ $REGISTER_API_SERVER == "true" ]]; then
         export ENABLE_RBAC="false"
     else
