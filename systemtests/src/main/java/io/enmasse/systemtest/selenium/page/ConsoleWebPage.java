@@ -301,6 +301,10 @@ public class ConsoleWebPage implements IWebPage {
         return connectionItems;
     }
 
+    private WebElement getSubscriptionComboBox() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.name("topic")));
+    }
+
     //================================================================================================
     // Operations
     //================================================================================================
@@ -588,7 +592,7 @@ public class ConsoleWebPage implements IWebPage {
         //if address type is subscription, fill in the topic dropdown box
         if (destination.getType().equals(AddressType.SUBSCRIPTION.toString())) {
             log.info("Selecting topic to attach subscription to");
-            WebElement topicDropDown = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("combobox")));
+            WebElement topicDropDown = getSubscriptionComboBox();
             selenium.clickOnItem(topicDropDown);
             Select combobox = new Select(topicDropDown);
             combobox.selectByVisibleText(destination.getAddress().replace("-subscriber", ""));
