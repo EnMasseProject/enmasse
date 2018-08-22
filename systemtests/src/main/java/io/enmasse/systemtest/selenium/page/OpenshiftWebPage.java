@@ -245,7 +245,11 @@ public class OpenshiftWebPage implements IWebPage {
         } else {
             createAddressSpaceStandard(addressSpace.getNamespace(), projectName, "unlimited-standard");
         }
-        selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");
+        try {
+            selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");
+        } catch (org.openqa.selenium.NoSuchElementException ex) {
+            selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s/overview']", projectName))), "Project overview");
+        }
         waitForRedirectToService();
         String serviceId = getProvisionedServiceItem().getId();
         waitUntilServiceIsReady();
