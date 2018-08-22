@@ -82,7 +82,8 @@ spec:
 At present `AddressSpace` is a logical resource managed by tenants. To allow the service admin to
 manage the system without changing the `AddressSpace` resource, an `Infra` resource type is used to
 represent an instance of the above templates. This paves the way later for allowing multiple
-`AddressSpace` resource to be shared by the same `Infra` resource.
+`AddressSpace` resource to be shared by the same `Infra` resource. To start with, the `Infra`
+resource is created automatically by the `address-space-controller` when an `AddressSpace` is created.
 
 An `Infra` resource is used to declare some infrastructure to be created based on a template
 resource (+ authentication service settings?). A component `infra-controller` will watch for
