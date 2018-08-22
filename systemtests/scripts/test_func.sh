@@ -280,7 +280,7 @@ function get_kubeconfig_path() {
     OC_39='/var/lib/origin/openshift.local.config/master/admin.kubeconfig'
     OC_310='./openshift.local.clusterup/kube-apiserver/admin.kubeconfig'
 
-    if [[ $(get_openshift_version) == '3.9.0' ]]; then
+    if [[ $(get_openshift_version) == '3.9'* ]]; then
         echo $OC_39
     else
         echo $OC_310
