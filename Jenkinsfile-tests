@@ -62,7 +62,7 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     sh './systemtests/scripts/setup-openshift.sh "systemtests"'
-                    sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+                    sh 'sudo chmod -R 777 /var/lib/origin/ || true'
                 }
             }
         }
@@ -82,7 +82,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh 'make -C templates || true'
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig '' ${params.TEST_CASE}"
+                    sh "./systemtests/scripts/run_test_component.sh templates/install '' ${params.TEST_CASE}"
                 }
             }
         }

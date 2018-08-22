@@ -56,7 +56,7 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     sh './systemtests/scripts/setup-openshift.sh "systemtests"'
-                    sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+                    sh 'sudo chmod -R 777 /var/lib/origin/ || true'
                 }
             }
         }
@@ -68,7 +68,7 @@ pipeline {
         }
         stage('push docker images') {
             steps {
-                sh 'oc login -u test -p test'
+                sh 'oc login -u test -p test --server localhost:8443 --insecure-skip-tls-verify'
                 sh 'oc new-project enmasseci'
                 sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
                 sh 'make docker_push'
@@ -84,7 +84,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig 'systemtests-pr' ${params.TEST_CASE}"
+                    sh "./systemtests/scripts/run_test_component.sh templates/install 'systemtests-pr' ${params.TEST_CASE}"
                 }
             }
         }

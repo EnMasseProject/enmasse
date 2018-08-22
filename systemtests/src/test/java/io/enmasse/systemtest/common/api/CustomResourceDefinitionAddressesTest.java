@@ -14,6 +14,7 @@ import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +39,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @BeforeEach
     void setUpSelenium() throws Exception {
-        if(brokered == null){
+        if (brokered == null) {
             brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.NONE);
             createAddressSpace(brokered);
         }
@@ -112,13 +113,22 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
         ExecutionResultData result = CRDCmdClient.createCR(address1.toString());
         String output = result.getStdOut().trim();
-        assertEquals(String.format("address \"%s.%s\" created", brokered.getName(), dest1.getName()), output,
+
+        String addressString = "%s \"%s.%s\" created";
+        List<String> dest1Expected = Arrays.asList(
+                String.format(addressString, "address", brokered.getName(), dest1.getName()),
+                String.format(addressString, "address.enmasse.io", brokered.getName(), dest1.getName()));
+        assertTrue(dest1Expected.contains(output),
                 String.format("Unexpected response on create custom resource '%s'", address1.toString()));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address1.toString()));
 
         result = CRDCmdClient.createCR(address2);
         output = result.getStdOut().trim();
-        assertEquals(String.format("address \"%s.%s\" created", brokered.getName(), dest2.getName()), output,
+
+        List<String> dest2Expected = Arrays.asList(
+                String.format(addressString, "address", brokered.getName(), dest2.getName()),
+                String.format(addressString, "address.enmasse.io", brokered.getName(), dest2.getName()));
+        assertTrue(dest2Expected.contains(output),
                 String.format("Unexpected response on create custom resource '%s'", address2));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address2));
 
