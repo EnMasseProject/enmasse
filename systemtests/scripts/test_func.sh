@@ -36,7 +36,7 @@ function setup_test() {
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
     ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars '{"namespace": "${OPENSHIFT_PROJECT}", "admin_user": "${OPENSHIFT_USER}", "register_api_server": ${REGISTER_API_SERVER}, "enable_rbac": ${ENABLE_RBAC}}'
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"register_api_server\": ${REGISTER_API_SERVER}, \"enable_rbac\": ${ENABLE_RBAC}}"
 }
 
 function wait_until_up(){
