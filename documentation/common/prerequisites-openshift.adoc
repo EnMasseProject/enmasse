@@ -10,11 +10,13 @@ been tested to work with the latest stable release of the OpenShift Origin Clien
 link:https://github.com/minishift/minishift[Minishift^] for an example of how to run a local instance of OpenShift
 on your machine.
 
-* If you want to install {ProductName} on Minishift and want to use Service Catalog, you need to explicitly enable it during the start-up, like
+ifdef::Minishift[]
+* If you want to install {ProductName} on Minishift and want to use Service Catalog, you must explicitly enable it during the start-up, like
 
 [options="nowrap"]
 ----
 MINISHIFT_ENABLE_EXPERIMENTAL="y" minishift start --extra-clusterup-flags "--service-catalog"
 ----
+endif::Minishift[]
 
 * A method to generate certificates is required. This guide uses link:https://www.openssl.org/[OpenSSL^].
