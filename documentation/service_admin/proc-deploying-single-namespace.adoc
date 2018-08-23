@@ -4,15 +4,15 @@
 
 include::common/attributes.adoc[]
 
-[id='deploying-single-address-space-{context}']
+[id='deploying-single-namespace-{context}']
 = (Optional) Deploying {ProductName} to a single namespace
 
-Although {ProductName} designed to manage multiple namespaces, there are cases where deploying to a
+Although {ProductName} is designed to manage multiple namespaces, there are cases where deploying to a
 single namespace is useful when evaluating {ProductName} without the required privileges.
 
 .Prerequisite
 
-* At least one authentication service must be installed, see xref:deploying-auth-services-{context}[].
+* At least one authentication service must be installed. For more information see xref:deploying-auth-services-{context}[].
 
 .Procedure
 

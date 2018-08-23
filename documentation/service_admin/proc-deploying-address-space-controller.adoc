@@ -9,7 +9,7 @@ include::common/attributes.adoc[]
 
 The address space controller is responsible for creating the infrastructure used by address spaces.
 
-NOTE: To install {ProductName} on OpenShift, you must have `cluster-admin` access to set up the required roles for creating namespaces and managing resources in those namespaces; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-address-space-{context}[].
+NOTE: To install {ProductName} on {KubePlatform} , you must have `cluster-admin` access to set up the required roles for creating namespaces and managing resources in those namespaces; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-namespace-{context}[].
 
 .Procedure
 
