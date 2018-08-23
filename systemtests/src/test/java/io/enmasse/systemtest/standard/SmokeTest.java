@@ -9,18 +9,18 @@ import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.mqtt.MqttClient;
+import io.enmasse.systemtest.mqtt.MqttUtils;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
@@ -96,18 +96,23 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     private void testMqtt() throws Exception {
-        List<String> messages = Arrays.asList("foo", "bar", "baz");
-        List<Integer> publisherQos = Arrays.asList(1, 1, 1);
+        List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());
+        messages.forEach(m -> m.setPayload(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)));
 
-        MqttClient client = mqttClientFactory.createClient();
+        IMqttClient client = mqttClientFactory.create();
+        client.connect();
 
-        Future<List<MqttMessage>> recvResult = client.recvMessages(mqttTopic.getAddress(), messages.size(), 1);
-        Future<Integer> sendResult = client.sendMessages(mqttTopic.getAddress(), messages, publisherQos);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, mqttTopic.getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, mqttTopic.getAddress(), messages);
 
-        assertThat("Wrong count of messages sent",
-                sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
-        assertThat("Wrong count of messages received",
-                recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
+        int numberSent = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Wrong count of messages sent", numberSent, is(messages.size()));
+
+        int numberReceived = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Wrong count of messages received", numberReceived, is(messages.size()));
+
+        client.disconnect();
+        client.close();
     }
 
     private void testAnycast() throws Exception {

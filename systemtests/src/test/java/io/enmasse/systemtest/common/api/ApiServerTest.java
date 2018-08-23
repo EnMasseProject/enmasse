@@ -7,15 +7,16 @@ package io.enmasse.systemtest.common.api;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
-import io.enmasse.systemtest.standard.mqtt.PublishTest;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -23,11 +24,14 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
@@ -118,9 +122,11 @@ class ApiServerTest extends TestBase {
         appendAddresses(addressSpace, topic);
         Thread.sleep(10_000);
         MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace, luckyUser);
-        MqttClient mqttClient = mqttFactory.createClient();
+        IMqttClient mqttClient = mqttFactory.create();
         try {
-            PublishTest.simpleMQTTSendReceive(topic, mqttClient, 3);
+            mqttClient.connect();
+            simpleMQTTSendReceive(topic, mqttClient, 3);
+            mqttClient.disconnect();
         } finally {
             mqttFactory.close();
         }
@@ -146,6 +152,26 @@ class ApiServerTest extends TestBase {
             }
             SeleniumContainers.stopAndRemoveFirefoxContainer();
         }
+    }
+
+    private static void simpleMQTTSendReceive(Destination dest, IMqttClient client, int msgCount) throws Exception {
+        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
+            MqttMessage m = new MqttMessage();
+            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
+            m.setQos(1);
+            return m;
+        }).collect(Collectors.toList());
+
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getAddress(), messages);
+
+        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages published",
+                publishCount, is(messages.size()));
+
+        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, is(messages.size()));
     }
 
     @Test

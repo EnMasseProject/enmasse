@@ -10,15 +10,19 @@ import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.mqtt.MqttClient;
+import io.enmasse.systemtest.mqtt.MqttUtils;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.jupiter.api.Disabled;
+import org.eclipse.paho.client.mqttv3.*;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +34,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Tests related to interoperability mqtt with amqp
  */
 class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
+    private static final String MQTT_AMQP_TOPIC = "mqtt-amqp-topic";
+    private static final String AMQP_MQTT_TOPIC = "amqp-mqtt-topic";
     private static Logger log = CustomLogger.getLogger();
 
     @Override
@@ -39,74 +45,90 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendMqttReceiveAmqp() throws Exception {
-        Destination mqttTopic = Destination.topic("mqtt-amqp-topic", "sharded-topic");
+        Destination mqttTopic = Destination.topic(MQTT_AMQP_TOPIC, "sharded-topic");
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
-        MqttMessage[] messages = mqttMessageGenerator(20, 0, payloadPrefix);
+        List<MqttMessage> messages = mqttMessageGenerator(20, 0, payloadPrefix);
 
-        MqttClient mqttClient = mqttClientFactory.createClient();
+        IMqttClient mqttClient = mqttClientFactory.create();
+        mqttClient.connect();
+
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
-        Future<List<Message>> recvResultAmqp = amqpClient.recvMessages(mqttTopic.getAddress(), messages.length);
-        Future<Integer> sendResultMqtt = mqttClient.sendMessages(mqttTopic.getAddress(), messages);
+        Future<List<Message>> recvResultAmqp = amqpClient.recvMessages(mqttTopic.getAddress(), messages.size());
 
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(mqttClient, mqttTopic.getAddress(), messages);;
+
+        int sentCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
         assertThat("Incorrect count of messages sent",
-                sendResultMqtt.get(1, TimeUnit.MINUTES), is(messages.length));
+                sentCount, is(messages.size()));
         assertThat("Incorrect count of messages received",
-                recvResultAmqp.get(1, TimeUnit.MINUTES).size(), is(messages.length));
+                recvResultAmqp.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
 
         for (Message m : recvResultAmqp.get()) {
             assertThat("Incorrect message body received!", m.getBody().toString(), containsString(payloadPrefix));
         }
+
+        mqttClient.disconnect();
+        mqttClient.close();
     }
 
     @Test
-    @Disabled("disabled due to problems with mqtt in standard address space")
     void testSendAmqpReceiveMqtt() throws Exception {
-        Destination mqttTopic = Destination.topic("amqp-mqtt-topic", "sharded-topic");
+        Destination mqttTopic = Destination.topic(AMQP_MQTT_TOPIC, "sharded-topic");
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";
-        Message[] messages = amqpMessageGenerator(mqttTopic.getAddress(), 20, payloadPrefix);
+        List<Message> messages = amqpMessageGenerator(mqttTopic.getAddress(), 20, payloadPrefix);
 
-        MqttClient mqttClient = mqttClientFactory.createClient();
+        IMqttClient mqttClient = mqttClientFactory.create();
+        mqttClient.connect();
+
+        List<CompletableFuture<MqttMessage>> receivedFutures = MqttUtils.subscribeAndReceiveMessages(mqttClient, mqttTopic.getAddress(), messages.size(), 1);
+
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
-        Future<List<MqttMessage>> recvResultMqtt = mqttClient.recvMessages(mqttTopic.getAddress(), messages.length, 0);
-        Future<Integer> sendResultAmqp = amqpClient.sendMessages(mqttTopic.getAddress(), messages);
+        Future<Integer> sendResultAmqp = amqpClient.sendMessages(mqttTopic.getAddress(), messages.toArray(new Message[messages.size()]));
 
         assertThat("Incorrect count of messages sent",
-                sendResultAmqp.get(1, TimeUnit.MINUTES), is(messages.length));
-        assertThat("Incorrect count of messages received",
-                recvResultMqtt.get(1, TimeUnit.MINUTES).size(), is(messages.length));
+                sendResultAmqp.get(1, TimeUnit.MINUTES), is(messages.size()));
 
-        for (MqttMessage m : recvResultMqtt.get()) {
-            assertThat("Incorrect message body received!", new String(m.getPayload(), "UTF-8"),
+        int receivedCount = MqttUtils.awaitAndReturnCode(receivedFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, is(messages.size()));
+
+        for (CompletableFuture<MqttMessage> future : receivedFutures) {
+            MqttMessage message = future.get();
+            assertThat("Incorrect message body received!", new String(message.getPayload(), StandardCharsets.UTF_8),
                     containsString(payloadPrefix));
         }
+
+        mqttClient.disconnect();
     }
 
-    private MqttMessage[] mqttMessageGenerator(int count, int qos, String payloadPrefix) {
-        MqttMessage[] mqttMessages = new MqttMessage[count];
+    private List<MqttMessage> mqttMessageGenerator(int count, int qos, String payloadPrefix) {
+        List<MqttMessage> mqttMessages = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             MqttMessage message = new MqttMessage();
             message.setId(i);
             message.setPayload((String.format("%s-%s", payloadPrefix, i).getBytes()));
             message.setQos(qos);
-            mqttMessages[i] = message;
+            mqttMessages.add(message);
         }
         return mqttMessages;
     }
 
-    private Message[] amqpMessageGenerator(String address, int count, String payloadPrefix) {
-        Message[] mqttMessages = new Message[count];
+    private List<Message> amqpMessageGenerator(String address, int count, String payloadPrefix) {
+        List<Message> mqttMessages = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             Message message = Message.Factory.create();
             message.setMessageId(new AmqpValue(i));
             message.setAddress(address);
-            message.setSubject("mysubject");
-            message.setBody(new AmqpValue(String.format("%s-%d", payloadPrefix, i)));
-            mqttMessages[i] = message;
+            //message.setSubject("mysubject");  // subject mishandled - see issue #1528
+            String body = String.format("%s-%d", payloadPrefix, i);
+            // Body currently must be a binary - see issue #64
+            message.setBody(new Data(new Binary(body.getBytes(StandardCharsets.UTF_8))));
+            mqttMessages.add(message);
         }
         return mqttMessages;
     }

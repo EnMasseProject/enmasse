@@ -18,7 +18,6 @@ import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumContainers;
@@ -29,7 +28,6 @@ import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -464,17 +462,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         }
         return true;
-    }
-
-    private boolean canConnectWithMqtt(String name, KeycloakCredentials credentials) throws Exception {
-        AddressSpace addressSpace = new AddressSpace(name);
-        MqttClient client = mqttClientFactory.createClient(addressSpace);
-        client.setCredentials(credentials);
-
-        Future<List<MqttMessage>> received = client.recvMessages("t1", 1);
-        Future<Integer> sent = client.sendMessages("t1", Collections.singletonList("msgt1"));
-
-        return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
     private boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, KeycloakCredentials credentials, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
