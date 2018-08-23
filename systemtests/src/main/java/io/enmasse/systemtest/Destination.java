@@ -104,10 +104,6 @@ public class Destination {
         return new Destination(address, SUBSCRIPTION, plan, Optional.of(topic));
     }
 
-    public static Destination subscription(String address) {
-        return new Destination(address, SUBSCRIPTION, "standard-subscription") ;
-    }
-
     public static boolean isQueue(Destination d) {
         return QUEUE.equals(d.type);
     }
@@ -126,6 +122,10 @@ public class Destination {
 
     public String getAddress() {
         return address;
+    }
+
+    public String getTopic() {
+        return topic;
     }
 
     public String getQualifiedSubscriptionAddress() {

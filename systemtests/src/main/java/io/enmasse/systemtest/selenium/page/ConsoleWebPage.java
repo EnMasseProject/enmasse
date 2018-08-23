@@ -595,7 +595,7 @@ public class ConsoleWebPage implements IWebPage {
             WebElement topicDropDown = getSubscriptionComboBox();
             selenium.clickOnItem(topicDropDown);
             Select combobox = new Select(topicDropDown);
-            combobox.selectByVisibleText(destination.getAddress().replace("-subscriber", ""));
+            combobox.selectByVisibleText(destination.getTopic());
         }
 
         WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
