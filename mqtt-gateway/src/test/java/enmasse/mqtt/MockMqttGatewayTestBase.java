@@ -5,10 +5,16 @@
 
 package enmasse.mqtt;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import enmasse.mqtt.mocks.MockBroker;
 import enmasse.mqtt.mocks.MockSubscriptionService;
 import enmasse.mqtt.mocks.MockLwtService;
 import io.enmasse.amqp.DispatchRouterJ;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
@@ -37,6 +43,8 @@ public abstract class MockMqttGatewayTestBase {
 
     private static final String SERVER_KEY = "./src/test/resources/tls/server-key.pem";
     private static final String SERVER_CERT = "./src/test/resources/tls/server-cert.pem";
+
+    private final LinkedList<String> deploymentIds = new LinkedList<>();
 
     protected Vertx vertx;
     protected MockLwtService lwtService;
@@ -99,21 +107,25 @@ public abstract class MockMqttGatewayTestBase {
                 .setInternalServicePort(router.getRouteContainerPort());
 
         // start and deploy components
-        deployVerticle(this.broker, context);
-        deployVerticle(this.lwtService, context);
-        deployVerticle(this.subscriptionService, context);
-        deployVerticle(this.mqttGateway, context);
+        deploymentIds.add(deployVerticle(this.broker, context));
+        deploymentIds.add(deployVerticle(this.lwtService, context));
+        deploymentIds.add(deployVerticle(this.subscriptionService, context));
+        deploymentIds.add(deployVerticle(this.mqttGateway, context));
     }
 
-    protected void deployVerticle(Verticle verticle, TestContext context) {
+    protected String deployVerticle(Verticle verticle, TestContext context) {
 
+        Future<String> f = Future.future();
         Async async = context.async();
 
         // start and deploy components
-        this.vertx.deployVerticle(verticle,
-                context.asyncAssertSuccess(v -> async.complete()));
+        this.vertx.deployVerticle(verticle, context.asyncAssertSuccess(v -> {
+            f.complete(v);
+            async.complete();
+        }));
 
         async.awaitSuccess();
+        return f.result();
     }
 
     /**
@@ -122,7 +134,21 @@ public abstract class MockMqttGatewayTestBase {
      * @param context   test context
      */
     protected void tearDown(TestContext context) {
+        Async async = context.async();
+        List<Future> undeployFutures = new ArrayList<>();
 
-        this.vertx.close(context.asyncAssertSuccess());
+        // Shutdown in reverse order so that MQTT gateway is undeployed first
+        deploymentIds.descendingIterator().forEachRemaining(deploymentId -> {
+            Future<Void> undeployFuture = Future.future();
+            undeployFutures.add(undeployFuture);
+            this.vertx.undeploy(deploymentId, undeployFuture);
+        });
+
+        CompositeFuture.all(undeployFutures).setHandler(done -> {
+            this.deploymentIds.clear();
+            this.vertx.close(context.asyncAssertSuccess());
+            async.complete();
+        });
+        async.awaitSuccess();
     }
 }

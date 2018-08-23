@@ -18,6 +18,6 @@
   <logger name="io.vertx.proton.impl" level="INFO" />
   <logger name="io.vertx.core.net.impl" level="INFO" />
 
-  <logger name="enmasse.mqtt" level="DEBUG" />
+  <logger name="enmasse.mqtt" level="${LOG_LEVEL:-DEBUG}" />
 
 </configuration>

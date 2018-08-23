@@ -5,6 +5,10 @@
 
 package enmasse.mqtt;
 
+import static io.netty.handler.codec.mqtt.MqttConnectReturnCode.CONNECTION_ACCEPTED;
+import static io.netty.handler.codec.mqtt.MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED;
+import static io.netty.handler.codec.mqtt.MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
+
 import enmasse.mqtt.endpoints.AmqpPublishData;
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpPublisher;
@@ -28,6 +32,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttWill;
 import io.vertx.mqtt.messages.MqttPublishMessage;
@@ -49,6 +54,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -60,13 +66,24 @@ public class AmqpBridge {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpBridge.class);
 
-    private Vertx vertx;
+    // Completed once a bridge is opened, or fails to open
+    private final Future<Void> openedFuture = Future.future();
+
+    // Future that completes when the bridge closes.
+    private final Future<Void> closedFuture = Future.future();
+
+    // local endpoint for handling remote connected MQTT client
+    private final MqttEndpoint mqttEndpoint;
+
+    private final SocketAddress remoteAddress;
+
+    private final Vertx vertx;
+
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     private ProtonClient client;
     private ProtonConnection connection;
 
-    // local endpoint for handling remote connected MQTT client
-    private MqttEndpoint mqttEndpoint;
 
     // endpoint for handling communication with Last Will and Testament Service (LWTS)
     private AmqpLwtServiceEndpoint lwtEndpoint;
@@ -83,6 +100,8 @@ public class AmqpBridge {
     // topic subscriptions with granted QoS levels
     private Map<String, MqttQoS> grantedQoSLevels;
 
+    private boolean detachForced = true;
+
     /**
      * Constructor
      *
@@ -92,6 +111,7 @@ public class AmqpBridge {
     public AmqpBridge(Vertx vertx, MqttEndpoint mqttEndpoint) {
         this.vertx = vertx;
         this.mqttEndpoint = mqttEndpoint;
+        this.remoteAddress = mqttEndpoint.remoteAddress();
     }
 
     /**
@@ -115,6 +135,7 @@ public class AmqpBridge {
         //        otherwise it provides PLAIN with username/password provided here
         this.client.connect(clientOptions, address, port, userName, password, done -> {
 
+            String clientIdentifier = this.mqttEndpoint.clientIdentifier();
             if (done.succeeded()) {
 
                 this.connection = done.result();
@@ -132,40 +153,47 @@ public class AmqpBridge {
                 Future<AmqpSubscriptionsMessage> connectionFuture = Future.future();
                 connectionFuture.setHandler(ar -> {
 
-                    if (ar.succeeded()) {
+                    try {
+                        if (ar.succeeded()) {
 
-                        this.rcvEndpoint.publishHandler(this::publishHandler);
-                        this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
+                            this.rcvEndpoint.publishHandler(this::publishHandler);
+                            this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
 
-                        AmqpSubscriptionsMessage amqpSubscriptionsMessage = ar.result();
+                            AmqpSubscriptionsMessage amqpSubscriptionsMessage = ar.result();
 
-                        if (amqpSubscriptionsMessage != null) {
-                            this.mqttEndpoint.accept(!amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
-                            // added topic subscriptions of a previous session in the local collection
-                            this.grantedQoSLevels = amqpSubscriptionsMessage.topicSubscriptions()
-                                    .stream()
-                                    .collect(Collectors.toMap(amqpTopicSubscription -> amqpTopicSubscription.topic(),
-                                            amqpTopicSubscription -> amqpTopicSubscription.qos()));
+                            if (amqpSubscriptionsMessage != null) {
+                                this.mqttEndpoint.accept(!amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
+                                // added topic subscriptions of a previous session in the local collection
+                                this.grantedQoSLevels = amqpSubscriptionsMessage.topicSubscriptions()
+                                        .stream()
+                                        .collect(Collectors.toMap(amqpTopicSubscription -> amqpTopicSubscription.topic(),
+                                                amqpTopicSubscription -> amqpTopicSubscription.qos()));
+
+                            } else {
+                                this.mqttEndpoint.accept(false);
+                                this.grantedQoSLevels = new HashMap<>();
+                            }
+                            LOG.info("CONNACK [{}] to MQTT client {} at {}", CONNECTION_ACCEPTED.ordinal(),
+                                     clientIdentifier, this.remoteAddress);
+
+                            // open unique client publish address receiver
+                            this.rcvEndpoint.openPublish();
+
+                            openHandler.handle(Future.succeededFuture(AmqpBridge.this));
 
                         } else {
-                            this.mqttEndpoint.accept(false);
-                            this.grantedQoSLevels = new HashMap<>();
+
+                            this.mqttEndpoint.reject(CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+                            LOG.error("CONNACK [{}] to MQTT client {} at {}", CONNECTION_REFUSED_SERVER_UNAVAILABLE.ordinal(),
+                                      clientIdentifier, this.remoteAddress);
+
+                            openHandler.handle(Future.failedFuture(ar.cause()));
                         }
-                        LOG.info("CONNACK to MQTT client {} [accepted]", this.mqttEndpoint.clientIdentifier());
-
-                        // open unique client publish address receiver
-                        this.rcvEndpoint.openPublish();
-
-                        openHandler.handle(Future.succeededFuture(AmqpBridge.this));
-
-                    } else {
-
-                        this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
-                        LOG.error("CONNACK to MQTT client {} [rejected]", this.mqttEndpoint.clientIdentifier());
-
-                        openHandler.handle(Future.failedFuture(ar.cause()));
                     }
-
+                    finally
+                    {
+                        openedFuture.complete();
+                    }
                 });
 
                 // step 1 : send AMQP_WILL to Last Will and Testament Service
@@ -184,7 +212,7 @@ public class AmqpBridge {
 
                     // specified link name for the Last Will and Testament Service as MQTT clientid
                     ProtonLinkOptions linkOptions = new ProtonLinkOptions();
-                    linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
+                    linkOptions.setLinkName(clientIdentifier);
 
                     // setup and open AMQP endpoints to Last Will and Testament Service
                     ProtonSender wsSender = this.connection.createSender(AmqpLwtServiceEndpoint.LWT_SERVICE_ENDPOINT, linkOptions);
@@ -217,7 +245,7 @@ public class AmqpBridge {
 
                         // sending AMQP_CLOSE
                         AmqpCloseMessage amqpCloseMessage =
-                                new AmqpCloseMessage(this.mqttEndpoint.clientIdentifier());
+                                new AmqpCloseMessage(clientIdentifier);
 
                         this.ssEndpoint.sendClose(amqpCloseMessage, closeAsyncResult -> {
 
@@ -225,6 +253,8 @@ public class AmqpBridge {
                             // no other AMQP message will be delivered by Subscription Service (i.e. AMQP_SUBSCRIPTIONS)
                             if (closeAsyncResult.succeeded()) {
                                 connectionFuture.complete();
+                            } else {
+                                connectionFuture.fail(closeAsyncResult.cause());
                             }
                         });
 
@@ -232,7 +262,7 @@ public class AmqpBridge {
 
                         // sending AMQP_LIST
                         AmqpListMessage amqpListMessage =
-                                new AmqpListMessage(this.mqttEndpoint.clientIdentifier());
+                                new AmqpListMessage(clientIdentifier);
 
                         this.ssEndpoint.sendList(amqpListMessage, sessionFuture.completer());
                     }
@@ -253,17 +283,20 @@ public class AmqpBridge {
             } else {
 
                 LOG.error("Error connecting to AMQP services ...", done.cause());
+                final MqttConnectReturnCode code;
                 if (done.cause() instanceof SecurityException) {
                     // error on the SASL mechanism side
-                    this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED);
+                    code = CONNECTION_REFUSED_NOT_AUTHORIZED;
                 } else {
-                    // no connection with the AMQP side
-                    this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+                    code = CONNECTION_REFUSED_SERVER_UNAVAILABLE;
+
                 }
+                this.mqttEndpoint.reject(code);
 
                 openHandler.handle(Future.failedFuture(done.cause()));
 
-                LOG.info("CONNACK to MQTT client {}", this.mqttEndpoint.clientIdentifier());
+                LOG.info("CONNACK [{}] to MQTT client {} at {}", code.ordinal(),
+                         clientIdentifier, this.remoteAddress);
             }
 
         });
@@ -273,19 +306,66 @@ public class AmqpBridge {
     /**
      * Close the bridge with all related attached links and connection to AMQP services
      */
-    public void close() {
+    public Future<Void> close() {
+        if (this.closed.compareAndSet(false, true)) {
+            openedFuture.setHandler(unused -> {
+                LOG.info("Closing session for MQTT client : {} at {}", this.mqttEndpoint.clientIdentifier(), this.remoteAddress);
+                Future<Void> cleanSessionFuture = Future.future();
+                cleanSessionFuture.setHandler(unused1 -> {
+                    AsyncResult<Void> result = Future.failedFuture((Throwable) null);
+                    try {
+                        if (this.lwtEndpoint != null) {
+                            this.lwtEndpoint.close(this.detachForced);
+                        }
+                        if (this.ssEndpoint != null) {
+                            this.ssEndpoint.close();
+                        }
+                        if (this.rcvEndpoint != null) {
+                            this.rcvEndpoint.close();
+                        }
+                        if (this.pubEndpoint != null) {
+                            this.pubEndpoint.close();
+                        }
+                        if (this.connection != null) {
+                            this.connection.close();
+                        }
+                        if (this.grantedQoSLevels != null) {
+                            this.grantedQoSLevels.clear();
+                        }
 
-        if (this.lwtEndpoint != null)
-            this.lwtEndpoint.close(false);
+                        try {
+                            this.mqttEndpoint.close();
+                        } catch (IllegalStateException e) {
+                        }
+                        result = Future.succeededFuture();
+                    } catch (Throwable e) {
+                        result = Future.failedFuture(e);
+                    } finally {
+                        this.handleMqttEndpointClose();
+                        this.closedFuture.handle(result);
+                    }
+                });
 
-        this.ssEndpoint.close();
-        this.rcvEndpoint.close();
-        this.pubEndpoint.close();
-
-        this.connection.close();
-
-        if (this.grantedQoSLevels != null)
-            this.grantedQoSLevels.clear();
+                if (this.mqttEndpoint.isCleanSession()) {
+                    AmqpCloseMessage value = new AmqpCloseMessage(this.mqttEndpoint.clientIdentifier());
+                    this.ssEndpoint.sendClose(value, event -> {
+                        if (event.failed()) {
+                            LOG.warn("Failed to close session for MQTT client : {}",
+                                     this.mqttEndpoint.clientIdentifier(),
+                                     event.cause());
+                            cleanSessionFuture.fail(event.cause());
+                        } else {
+                            LOG.trace("Closed session for MQTT client : {} at {}", this.mqttEndpoint.clientIdentifier(), this.remoteAddress);
+                            cleanSessionFuture.complete();
+                        }
+                    });
+                } else {
+                    LOG.trace("Closed session for MQTT client : {} at {}", this.mqttEndpoint.clientIdentifier(), this.remoteAddress);
+                    cleanSessionFuture.complete();
+                }
+            });
+        }
+        return this.closedFuture;
     }
 
     /**
@@ -487,10 +567,7 @@ public class AmqpBridge {
     private void disconnectHandler(Void v) {
 
         LOG.info("DISCONNECT from MQTT client {}", this.mqttEndpoint.clientIdentifier());
-
-        if (this.lwtEndpoint != null) {
-            this.lwtEndpoint.close(false);
-        }
+        this.detachForced = false;
     }
 
     /**
@@ -499,13 +576,8 @@ public class AmqpBridge {
      * @param v
      */
     private void closeHandler(Void v) {
-
-        LOG.info("Close from MQTT client {}", this.mqttEndpoint.clientIdentifier());
-
-        if (this.lwtEndpoint != null)
-            this.lwtEndpoint.close(true);
-
-        this.handleMqttEndpointClose(this);
+        LOG.info("Close from MQTT client {} at {}", this.mqttEndpoint.clientIdentifier(), this.remoteAddress);
+        close();
     }
 
     /**
@@ -634,12 +706,11 @@ public class AmqpBridge {
     /**
      * Used for calling the close handler when MQTT client closes connection
      *
-     * @param amqpBridge    AMQP bridge instance
      */
-    private void handleMqttEndpointClose(AmqpBridge amqpBridge) {
+    private void handleMqttEndpointClose() {
 
         if (this.mqttEndpointCloseHandler != null) {
-            this.mqttEndpointCloseHandler.handle(amqpBridge);
+            this.mqttEndpointCloseHandler.handle(this);
         }
     }
 
@@ -692,5 +763,10 @@ public class AmqpBridge {
     public String id() {
         // just the MQTT client identifier
         return this.mqttEndpoint.clientIdentifier();
+    }
+
+    public SocketAddress remoteAddress()
+    {
+        return remoteAddress;
     }
 }

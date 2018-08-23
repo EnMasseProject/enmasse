@@ -55,6 +55,10 @@ public class Application {
                             Runtime.getRuntime().availableProcessors();
 
 
+            if (instanceCount > 1) {
+                // See https://github.com/EnMasseProject/enmasse/issues/1508
+                throw new IllegalStateException("MQTT Gateway cannot currently be scaled above 1");
+            }
             try {
 
                 CountDownLatch latch = new CountDownLatch(1);
