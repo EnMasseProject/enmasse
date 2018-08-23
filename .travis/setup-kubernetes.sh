@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #script for deploy and setup kubernetes
 #parameters:
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
@@ -11,7 +11,7 @@ OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download
 MINIKUBE_RELEASE_URL=${3:-"https://storage.googleapis.com/minikube/releases/v0.25.2/minikube-linux-amd64"}
 KUBECTL_RELEASE_URL=${4:-"https://storage.googleapis.com/kubernetes-release/release/v1.8.7/bin/linux/amd64/kubectl"}
 ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
-    --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL} minikube_url=${MINIKUBE_RELEASE_URL} kubectl_url=${KUBECTL_RELEASE_URL}" \
+    --extra-vars "{\"openshift_client_url\": \"${OPENSHIFT_CLIENT_URL}\", \"minikube_url\": \"${MINIKUBE_RELEASE_URL}\", \"kubectl_url\": \"${KUBECTL_RELEASE_URL}\"}" \
     -t openshift,kubectl,minikube
 
 export MINIKUBE_WANTUPDATENOTIFICATION=false

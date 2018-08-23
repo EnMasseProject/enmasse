@@ -17,7 +17,7 @@ stop_and_check_openshift
 check_if_ansible_ready
 
 ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
-    --extra-vars "openshift_client_url=${OPENSHIFT_CLIENT_URL}" -t openshift,kubectl
+    --extra-vars "{\"openshift_client_url\": \"${OPENSHIFT_CLIENT_URL}\"}" -t openshift,kubectl
 
 clean_docker_images
 clean_oc_location
