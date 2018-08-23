@@ -12,6 +12,7 @@ function download_enmasse() {
 function setup_test() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
+    REG_API_SERVER=${3:-True}
 
     export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
@@ -22,7 +23,7 @@ function setup_test() {
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
-    export REGISTER_API_SERVER=${REGISTER_API_SERVER:-true}
+    export REGISTER_API_SERVER=${REG_API_SERVER}
     if [[ $REGISTER_API_SERVER == "true" ]]; then
         export ENABLE_RBAC="false"
     else
