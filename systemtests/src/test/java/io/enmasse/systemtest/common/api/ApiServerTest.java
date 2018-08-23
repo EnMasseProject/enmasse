@@ -122,10 +122,11 @@ class ApiServerTest extends TestBase {
         appendAddresses(addressSpace, topic);
         Thread.sleep(10_000);
         MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace, luckyUser);
-        IMqttClient mqttClient = mqttClientFactory.create();
+        IMqttClient mqttClient = mqttFactory.create();
         try {
-
+            mqttClient.connect();
             simpleMQTTSendReceive(topic, mqttClient, 3);
+            mqttClient.disconnect();
         } finally {
             mqttFactory.close();
         }
