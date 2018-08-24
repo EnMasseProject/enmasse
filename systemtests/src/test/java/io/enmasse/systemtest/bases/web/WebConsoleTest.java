@@ -74,6 +74,28 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
     }
 
+    protected void doTestCreateDeleteDurableSubscription(Destination... destinations) throws Exception {
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        for (Destination dest : destinations) {
+            //create topic
+            consoleWebPage.createAddressWebConsole(dest);
+
+            //create subscription
+            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), "standard-subscription");
+            consoleWebPage.createAddressWebConsole(subscription);
+            assertWaitForValue(2, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(120, TimeUnit.SECONDS));
+
+            //delete topic and sub
+            consoleWebPage.deleteAddressWebConsole(subscription);
+            consoleWebPage.deleteAddressWebConsole(dest);
+        }
+        assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
+    }
+
     protected void doTestAddressStatus(Destination destination) throws Exception {
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);

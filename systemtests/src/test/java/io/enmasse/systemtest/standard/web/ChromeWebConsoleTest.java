@@ -34,6 +34,13 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     }
 
     @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testCreateDeleteDurableSubscription() throws Exception {
+        doTestCreateDeleteDurableSubscription(Destination.topic("test-topic1", "pooled-topic"),
+                Destination.topic("test-topic2", "sharded-topic"));
+    }
+
+    @Test
     void testCreateDeleteAnycast() throws Exception {
         doTestCreateDeleteAddress(Destination.anycast("test-anycast-chrome"));
     }

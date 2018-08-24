@@ -24,6 +24,12 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    void testCreateDeleteDurableSubscription() throws Exception {
+        doTestCreateDeleteDurableSubscription(Destination.topic("test-topic1", "pooled-topic"),
+                Destination.topic("test-topic2", "sharded-topic"));
+    }
+
+    @Test
     void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic1", "pooled-topic"),
                 Destination.topic("test-topic2", "sharded-topic"));

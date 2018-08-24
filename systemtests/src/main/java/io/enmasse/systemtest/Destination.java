@@ -124,6 +124,10 @@ public class Destination {
         return address;
     }
 
+    public String getTopic() {
+        return topic;
+    }
+
     public String getQualifiedSubscriptionAddress() {
         return topic == null ? address : topic + "::" + address;
     }
