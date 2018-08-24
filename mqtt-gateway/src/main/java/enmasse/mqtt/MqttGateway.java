@@ -5,7 +5,6 @@
 
 package enmasse.mqtt;
 
-import com.google.common.cache.CacheBuilder;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -53,10 +51,7 @@ public class MqttGateway extends AbstractVerticle {
     private MqttServer server;
 
     private final Map<String, AmqpBridge> bridges = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Semaphore> clientIdSemaphores = CacheBuilder.newBuilder()
-                                                                                    .maximumSize(1000)
-                                                                                    .expireAfterAccess(10, TimeUnit.MINUTES)
-                                                                                    .<String, Semaphore>build().asMap();
+    private final ConcurrentMap<String, Semaphore> clientIdSemaphores = new ConcurrentHashMap<>();
 
     /**
      * Set the IP address the MQTT gateway will bind to
@@ -220,19 +215,22 @@ public class MqttGateway extends AbstractVerticle {
                 try {
                     this.bridges.remove(amqpBridge.id());
                 } finally {
-                    clientIdSemaphore.release();
+                    clientIdSemaphores.remove(clientIdentifier, clientIdSemaphore);
                 }
             }).open(this.messagingServiceHost, this.messagingServicePort, done -> {
                 if (done.succeeded()) {
-                    this.bridges.put(done.result().id(), done.result());
+                    AmqpBridge newBridge = done.result();
+                    this.bridges.put(newBridge.id(), newBridge);
                 } else {
                     LOG.info("Error opening the AMQP bridge ...", done.cause());
+                    clientIdSemaphores.remove(clientIdentifier, clientIdSemaphore);
                 }
             });
         } else {
             AmqpBridge existingBridge = bridges.get(clientIdentifier);
             if (existingBridge == null) {
-                // The semaphore is held but no bridge is formed, another session must be in the process of forming.
+                // The semaphore is held but no bridge is present; another session must either be in the process of
+                // forming a bridge or removing one that is closing.
                 LOG.trace("No existing bridge found for {}", clientIdentifier);
                 vertx.setTimer(100, unused -> {
                     handleMqttEndpointConnection(mqttEndpoint);
@@ -242,7 +240,7 @@ public class MqttGateway extends AbstractVerticle {
                 // disconnect the existing Client [MQTT-3.1.4-2].
                 LOG.info("MQTT client {} already in-use by {}", clientIdentifier, existingBridge.remoteAddress());
                 existingBridge.close().compose(unused -> {
-                    LOG.trace("MQTT Closing of existing client {} from {} completed (initated by {})",
+                    LOG.trace("MQTT Closing of existing client {} from {} completed (initiated by {})",
                               clientIdentifier, existingBridge.remoteAddress(), remoteAddress);
                     handleMqttEndpointConnection(mqttEndpoint);
                     return Future.succeededFuture();
