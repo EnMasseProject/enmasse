@@ -47,7 +47,7 @@ kubectl get events --all-namespaces
 #stop docker logging
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill ${LOGS_PID}
-categorize_dockerlogs "${DOCKER_LOG_DIR}"
+categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
