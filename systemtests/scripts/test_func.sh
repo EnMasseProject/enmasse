@@ -12,7 +12,7 @@ function download_enmasse() {
 function setup_test() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
-    REG_API_SERVER=${3:-True}
+    REG_API_SERVER=${3:-true}
 
     export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
