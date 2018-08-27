@@ -103,7 +103,9 @@ public class AddressApiHelper {
         AddressSpace addressSpace = getAddressSpace(address.getNamespace(), addressSpaceId);
         validateAddress(addressSpace, address);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
-        addressApi.replaceAddress(address);
+        if (!addressApi.replaceAddress(address)) {
+            throw new NotFoundException("Address " + address.getName() + " not found");
+        }
         return address;
     }
 

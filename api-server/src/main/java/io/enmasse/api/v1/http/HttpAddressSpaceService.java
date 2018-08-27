@@ -147,7 +147,9 @@ public class HttpAddressSpaceService {
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
-            addressSpaceApi.replaceAddressSpace(addressSpace);
+            if (!addressSpaceApi.replaceAddressSpace(addressSpace)) {
+                throw new NotFoundException("Address space " + addressSpace.getName() + " not found");
+            }
             AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
             return Response.ok().entity(replaced).build();
         });

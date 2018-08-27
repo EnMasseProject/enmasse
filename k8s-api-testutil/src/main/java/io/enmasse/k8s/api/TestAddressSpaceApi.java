@@ -4,14 +4,11 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
-import io.enmasse.address.model.Status;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class TestAddressSpaceApi implements AddressSpaceApi {
     Map<String, AddressSpace> addressSpaces = new HashMap<>();
@@ -35,8 +32,12 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public void replaceAddressSpace(AddressSpace addressSpace) {
+    public boolean replaceAddressSpace(AddressSpace addressSpace) {
+        if (!addressSpaces.containsKey(addressSpace.getName())) {
+            return false;
+        }
         createAddressSpace(addressSpace);
+        return true;
     }
 
     @Override
