@@ -12,6 +12,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
@@ -58,6 +59,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     @AfterEach
     void tearDownWebConsoleTests() {
+        selenium.tearDownDrivers();
+        SeleniumContainers.restartFirefoxContainer();
         if (!environment.skipCleanup()) {
             provisionedServices.forEach((project, addressSpace) -> {
                 try {
