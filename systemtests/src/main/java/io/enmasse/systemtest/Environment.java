@@ -5,20 +5,48 @@
 
 package io.enmasse.systemtest;
 
-public class Environment {
-    public static final String useMinikubeEnv = "USE_MINIKUBE";
+import org.slf4j.Logger;
 
-    private final String user = System.getenv("OPENSHIFT_USER");
-    private final String token = System.getenv("OPENSHIFT_TOKEN");
-    private final String url = System.getenv("OPENSHIFT_URL");
-    private final String namespace = System.getenv("OPENSHIFT_PROJECT");
-    private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
-    private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
-    private final String testLogDir = System.getenv().getOrDefault("OPENSHIFT_TEST_LOGDIR", "/tmp/testlogs");
-    private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
-    private final String keycloakAdminPassword = System.getenv("KEYCLOAK_ADMIN_PASSWORD");
-    private final boolean registerApiServer = Boolean.parseBoolean(System.getenv("REGISTER_API_SERVER"));
+public class Environment {
+    private static Logger log = CustomLogger.getLogger();
+    public static final String useMinikubeEnv = "USE_MINIKUBE";
+    public static final String registerApiServerEnv = "REGISTER_API_SERVER";
+    public static final String keycloakAdminPasswordEnv = "KEYCLOAK_ADMIN_PASSWORD";
+    public static final String keycloakAdminUserEnv = "KEYCLOAK_ADMIN_USER";
+    public static final String testLogDirEnv = "OPENSHIFT_TEST_LOGDIR";
+    public static final String messagingCertEnv = "OPENSHIFT_SERVER_CERT";
+    public static final String useTlsEnv = "OPENSHIFT_USE_TLS";
+    public static final String namespaceEnv = "OPENSHIFT_PROJECT";
+    public static final String urlEnv = "OPENSHIFT_URL";
+    public static final String tokenEnv = "OPENSHIFT_TOKEN";
+    public static final String userEnv = "OPENSHIFT_USER";
+
+    private final String user = System.getenv(userEnv);
+    private final String token = System.getenv(tokenEnv);
+    private final String url = System.getenv(urlEnv);
+    private final String namespace = System.getenv(namespaceEnv);
+    private final String useTls = System.getenv(useTlsEnv);
+    private final String messagingCert = System.getenv(messagingCertEnv);
+    private final String testLogDir = System.getenv().getOrDefault(testLogDirEnv, "/tmp/testlogs");
+    private final String keycloakAdminUser = System.getenv().getOrDefault(keycloakAdminUserEnv, "admin");
+    private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
+    private final boolean registerApiServer = Boolean.parseBoolean(System.getenv(registerApiServerEnv));
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
+
+    public Environment() {
+        String debugFormat = "{}:{}";
+        log.debug(debugFormat, useMinikubeEnv, useMinikube);
+        log.debug(debugFormat, registerApiServerEnv, registerApiServer);
+        log.debug(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
+        log.debug(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
+        log.debug(debugFormat, testLogDirEnv, testLogDir);
+        log.debug(debugFormat, messagingCertEnv, messagingCert);
+        log.debug(debugFormat, useTlsEnv, useTls);
+        log.debug(debugFormat, namespaceEnv, namespace);
+        log.debug(debugFormat, urlEnv, url);
+        log.debug(debugFormat, tokenEnv, token);
+        log.debug(debugFormat, userEnv, user);
+    }
 
     /**
      * Create dummy address in shared address-spaces due to faster deploy of next addresses
