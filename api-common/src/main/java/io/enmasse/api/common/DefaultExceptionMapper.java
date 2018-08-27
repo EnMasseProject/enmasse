@@ -12,7 +12,6 @@ import javax.ws.rs.ext.Provider;
 import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.address.model.UnresolvedAddressSpaceException;
 import io.enmasse.address.model.v1.DeserializeException;
-import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,39 +22,36 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception exception) {
-        Response.StatusType status;
-        Response response;
+        final int statusCode;
         if (exception instanceof WebApplicationException) {
-            WebApplicationException webApplicationException = (WebApplicationException) exception;
-            status = Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
-            response = Response.status(status)
-                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
-                    .build();
-        } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException) {
-            status = Response.Status.BAD_REQUEST;
-            response = Response.status(status)
-                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
-                    .build();
+            statusCode = ((WebApplicationException) exception).getResponse().getStatus();
         } else if (exception instanceof KubernetesClientException) {
-            Status kubeStatus = ((KubernetesClientException) exception).getStatus();
-            status = Response.Status.fromStatusCode(kubeStatus.getCode());
-            response = Response.status(kubeStatus.getCode())
-                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
-                    .build();
+            statusCode = ((KubernetesClientException) exception).getStatus().getCode();
+        } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException) {
+            statusCode = Response.Status.BAD_REQUEST.getStatusCode();
         } else {
-            status = Response.Status.INTERNAL_SERVER_ERROR;
-            response = Response.status(status)
-                    .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), exception.getMessage()))
-                    .build();
+            statusCode = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
         }
+        Response response = Response.status(statusCode)
+                .entity(new ErrorResponse(statusCode, getReasonPhrase(statusCode), exception.getMessage()))
+                .build();
 
-        if (status.getFamily() == Response.Status.Family.CLIENT_ERROR) {
-            log.info("Returning client error HTTP status {}: {}", status.getStatusCode(), exception.getMessage());
+        if (Response.Status.Family.familyOf(statusCode) == Response.Status.Family.CLIENT_ERROR) {
+            log.info("Returning client error HTTP status {}: {}", statusCode, exception.getMessage());
         } else {
-            log.warn("Returning server error HTTP status " + status.getStatusCode(), exception);
+            log.warn("Returning server error HTTP status " + statusCode, exception);
         }
 
         return response;
+    }
+
+    private static String getReasonPhrase(int statusCode) {
+        // 422 is not defined in javax.ws.rs.core.Response.Status but may be returned by K8s API
+        if (statusCode == 422) {
+            return "Unprocessable Entity";
+        }
+        Response.StatusType status = Response.Status.fromStatusCode(statusCode);
+        return status != null ? status.getReasonPhrase() : "Unknown code";
     }
 
 }
