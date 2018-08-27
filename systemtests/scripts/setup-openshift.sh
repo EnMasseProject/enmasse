@@ -22,7 +22,7 @@ ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
 clean_docker_images
 clean_oc_location
 
-remove_docker_log_driver "${DOCKER}"
+replace_docker_log_driver "${DOCKER}"
 DOCKER_STATUS=$(sudo systemctl show --property ActiveState ${DOCKER} | sed -n -e 's/^ActiveState=//p')
 if [[ "${DOCKER_STATUS}" != "active" ]]; then
     info "Docker service is not running"

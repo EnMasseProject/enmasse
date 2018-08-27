@@ -191,6 +191,21 @@ function get_all_events() {
     kubectl get events --all-namespaces > ${LOG_DIR}/all_events.log
 }
 
+function replace_docker_log_driver() {
+    if [[ "$(jq '."log-driver" == "json-file"' daemon.json)" == "true" ]]; then
+        return
+    fi
+    local docker="${1}"
+    local docker_config_dir="/etc/${docker}"
+    local docker_config_path="${docker_config_dir}/daemon.json"
+    local tmpf="$(mktemp --tmpdir="${docker_config_dir}")"
+
+    sudo systemctl stop "${docker}"
+    jq '."log-driver"="json-file"' "${docker_config_path}" >"${tmpf}"
+    cat "${tmpf}" >"${docker_config_path}"
+    rm -f "${tmpf}"
+}
+
 function get_docker_info() {
     ARTIFACTS_DIR=${1}
     CONTAINER=${2}
@@ -254,21 +269,6 @@ function clean_docker_images() {
         ${DOCKER} rmi "${images}" -f
     else
         info "No images to remove"
-    fi
-}
-
-function remove_docker_log_driver() {
-    DOCKER=${1}
-    if [[ -f /etc/${DOCKER}/daemon.json ]]; then
-        if [[ $(grep "log-driver" /etc/${DOCKER}/daemon.json) ]]; then
-            info "Stop ${DOCKER} and remove log-driver rule from \"/etc/${DOCKER}/daemon.json\""
-            sudo systemctl stop ${DOCKER}
-            sed -i '/log-driver/d' /etc/${DOCKER}/daemon.json
-        else
-            info "log-driver rule doesn't exist in \"/etc/${DOCKER}/daemon.json\""
-        fi
-    else
-        info "\"/etc/${DOCKER}/daemon.json\" doesn't exist"
     fi
 }
 
