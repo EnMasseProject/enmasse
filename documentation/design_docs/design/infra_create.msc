@@ -1,0 +1,30 @@
+msc {
+    width = "1024";
+    Tenant,ApiServer,AddressSpaceController,InfraController,OpenShift;
+
+    Tenant => ApiServer [ label = "Create AddressSpace" ];
+
+    ApiServer => OpenShift [ label = "Create configmap for address space" ];
+
+    ApiServer << OpenShift [ label = "Created" ];
+
+    Tenant << ApiServer [ label = "Created" ];
+
+    --- ;
+
+    AddressSpaceController << OpenShift [ label = "Watch trigger AddressSpace check loop" ];
+    AddressSpaceController => AddressSpaceController [ label = "Read AddressSpace definition" ];
+    AddressSpaceController => AddressSpaceController [ label = "Read AddressSpacePlan 'a'"];
+    AddressSpaceController => OpenShift [ label = "Get InfraTemplate 'foo' from 'defined-by' annotation on 'a'"];
+    AddressSpaceController << OpenShift [ label = "Return" ];
+
+    AddressSpaceController => OpenShift [ label = "Create Infra instance 'foo1' based on InfraTemplate 'foo'"];
+    AddressSpaceController << OpenShift [ label = "Created" ];
+
+    --- ;
+
+    InfraController << OpenShift [ label = "Watch trigger Infra check loop" ];
+    InfraController => InfraController [ label = "Read Infra definition" ];
+    InfraController => OpenShift [ label = "Create resources based on Infra template for 'foo1' instance" ];
+    InfraController << OpenShift [ label = "Created" ];
+}

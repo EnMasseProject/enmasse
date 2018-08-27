@@ -123,6 +123,12 @@ Optionally, address spaces may also be versioned to indicate what version of the
 required to support it, but to begin with it is assumed that an address space can be served by any
 version of the infrastructure.
 
+== Sequence diagrams
+
+=== Address space creation
+
+![Infra Create](infra_create.png)
+
 == testing
 
 Tests would have to include defining multiple versions of templates with different settings, update
