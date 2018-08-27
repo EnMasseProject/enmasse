@@ -22,8 +22,7 @@ ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
 clean_docker_images
 clean_oc_location
 
-OC_CLUSTER_ARGS=$(get_oc_args)
-
+remove_docker_log_driver "${DOCKER}"
 DOCKER_STATUS=$(sudo systemctl show --property ActiveState ${DOCKER} | sed -n -e 's/^ActiveState=//p')
 if [[ "${DOCKER_STATUS}" != "active" ]]; then
     info "Docker service is not running"
@@ -31,6 +30,7 @@ if [[ "${DOCKER_STATUS}" != "active" ]]; then
     sudo systemctl restart ${DOCKER}
 fi
 
+OC_CLUSTER_ARGS=$(get_oc_args)
 if ! oc cluster up ${OC_CLUSTER_ARGS} ; then
     warn "OpenShift cluster didn't start properly, wait for 30s and try to restart..."
     sleep 30

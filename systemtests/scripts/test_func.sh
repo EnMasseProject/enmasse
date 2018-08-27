@@ -257,6 +257,21 @@ function clean_docker_images() {
     fi
 }
 
+function remove_docker_log_driver() {
+    DOCKER=${1}
+    if [[ -f /etc/${DOCKER}/daemon.json ]]; then
+        if [[ $(grep "log-driver" /etc/${DOCKER}/daemon.json) ]]; then
+            info "Stop ${DOCKER} and remove log-driver rule from \"/etc/${DOCKER}/daemon.json\""
+            sudo systemctl stop ${DOCKER}
+            sed -i '/log-driver/d' /etc/${DOCKER}/daemon.json
+        else
+            info "log-driver rule doesn't exist in \"/etc/${DOCKER}/daemon.json\""
+        fi
+    else
+        info "\"/etc/${DOCKER}/daemon.json\" doesn't exist"
+    fi
+}
+
 function clean_oc_location() {
     for i in $(mount | grep openshift | awk '{ print $3}'); do sudo umount "$i"; done && sudo rm -rf /var/lib/origin
     sudo rm -rf /var/lib/origin/openshift.local.pv
