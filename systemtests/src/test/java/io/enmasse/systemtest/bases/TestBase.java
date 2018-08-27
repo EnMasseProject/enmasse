@@ -864,8 +864,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * stop all clients from list of Abstract clients
      */
     protected void stopClients(List<AbstractClient> clients) {
-        log.info("Stopping clients...");
-        clients.forEach(AbstractClient::stop);
+        if(clients != null) {
+            log.info("Stopping clients...");
+            clients.forEach(AbstractClient::stop);
+        }
     }
 
     /**
