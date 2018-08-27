@@ -127,7 +127,7 @@ version of the infrastructure.
 
 === Address space creation
 
-![Infra Create](infra_create.png)
+image::infra_create.png[]
 
 == testing
 
