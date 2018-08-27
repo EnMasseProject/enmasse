@@ -62,11 +62,11 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
+    public boolean replaceAddressSpace(AddressSpace addressSpace) throws Exception {
         ConfigMap previous = client.configMaps().withName(getConfigMapName(addressSpace.getNamespace(), addressSpace.getName())).get();
         if (previous == null) {
             log.warn("Cannot replace addressSpace {}: No previous configMap found", addressSpace.getName());
-            return;
+            return false;
         }
         try {
             create(client.configMaps().createOrReplaceWithNew(), addressSpace);
@@ -74,6 +74,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
             log.error("Error replacing {}", addressSpace.getName());
             throw e;
         }
+        return true;
     }
 
     private void create(DoneableConfigMap config, AddressSpace addressSpace) throws Exception {

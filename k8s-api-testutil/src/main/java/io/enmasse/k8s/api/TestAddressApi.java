@@ -7,11 +7,8 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.Status;
-import io.enmasse.k8s.api.cache.Store;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -31,9 +28,13 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
-    public void replaceAddress(Address destination) {
+    public boolean replaceAddress(Address destination) {
+        if (addresses.stream().noneMatch(d -> d.getName().equals(destination.getName()))) {
+            return false;
+        }
         deleteAddress(destination); // necessary, because a simple set.add() doesn't replace the element
         createAddress(destination);
+        return true;
     }
 
     @Override

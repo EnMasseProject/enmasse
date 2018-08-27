@@ -151,7 +151,13 @@ public class HttpAddressSpaceServiceTest {
         Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, "xxxxxx", a1));
         assertThat(response.getStatus(), is(400));
     }
-    
+
+    @Test
+    public void testPutNonExistingAddressSpace() {
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1.getName(), a1));
+        assertThat(response.getStatus(), is(404));
+    }
+
     @Test
     public void testDelete() {
         addressSpaceApi.createAddressSpace(a1);

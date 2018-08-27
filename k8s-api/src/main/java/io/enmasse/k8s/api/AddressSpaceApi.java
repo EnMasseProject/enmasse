@@ -5,7 +5,6 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.k8s.api.cache.Store;
 
 import java.util.Map;
 import java.time.Duration;
@@ -19,7 +18,7 @@ public interface AddressSpaceApi {
     Optional<AddressSpace> getAddressSpaceWithName(String namespace, String id);
     void createAddressSpace(AddressSpace addressSpace) throws Exception;
 
-    void replaceAddressSpace(AddressSpace addressSpace) throws Exception;
+    boolean replaceAddressSpace(AddressSpace addressSpace) throws Exception;
     void deleteAddressSpace(AddressSpace addressSpace);
     Set<AddressSpace> listAddressSpaces(String namespace);
     Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels);

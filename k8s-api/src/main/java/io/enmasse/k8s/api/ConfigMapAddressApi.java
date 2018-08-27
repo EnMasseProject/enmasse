@@ -120,17 +120,18 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public void replaceAddress(Address address) {
+    public boolean replaceAddress(Address address) {
         String name = getConfigMapName(address.getName());
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
             log.warn("Cannot replace address {}: No previous configMap found", address.getName());
-            return;
+            return false;
         }
         ConfigMap newMap = create(address);
         if (newMap != null) {
             client.configMaps().inNamespace(namespace).withName(name).replace(newMap);
         }
+        return true;
     }
 
     private static String getConfigMapName(String name) {

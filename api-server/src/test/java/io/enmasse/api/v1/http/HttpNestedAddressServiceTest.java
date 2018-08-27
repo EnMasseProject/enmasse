@@ -193,6 +193,19 @@ public class HttpNestedAddressServiceTest {
     }
 
     @Test
+    public void testPutNonExistingAddress() {
+        Address a2 = new Address.Builder()
+                .setName("a2")
+                .setAddress("a2")
+                .setType("anycast")
+                .setPlan("plan1")
+                .setAddressSpace("myspace")
+                .build();
+        Response response = invoke(() -> addressService.replaceAddress(securityContext, "ns", "myspace", a2.getName(), a2));
+        assertThat(response.getStatus(), is(404));
+    }
+
+    @Test
     public void testDelete() {
         Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
         assertThat(response.getStatus(), is(200));

@@ -11,13 +11,14 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
@@ -26,13 +27,19 @@ import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.internal.util.collections.Sets;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
 
 public class AddressApiHelperTest {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private AddressApiHelper helper;
     private AddressApi addressApi;
@@ -53,11 +60,44 @@ public class AddressApiHelperTest {
     }
 
     @Test
-    public void testPutAddresses() throws Exception {
-        when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("q1")));
+    public void testCreateAddressWithInvalidAddress() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("q1", "q1")));
+        expectedException.expect(BadRequestException.class);
+        expectedException.expectMessage("Address 'q1' already exists with resource name 'q1'");
+
+        Address invalidAddress = createAddress("someOtherName", "q1");
+        helper.createAddress("test", invalidAddress);
+    }
+
+    @Test
+    public void testReplaceAddress() throws Exception {
+        when(addressApi.replaceAddress(any())).thenReturn(true);
+
         helper.replaceAddress("test", createAddress("q1"));
-        verify(addressApi, never()).deleteAddress(any());
         verify(addressApi).replaceAddress(eq(createAddress("q1")));
+    }
+
+    @Test
+    public void testReplaceAddressNotFound() throws Exception {
+        when(addressApi.replaceAddress(any())).thenReturn(false);
+        expectedException.expect(NotFoundException.class);
+        expectedException.expectMessage("Address q1 not found");
+
+        helper.replaceAddress("test", createAddress("q1"));
+    }
+
+    @Test
+    public void testReplaceAddressWithInvalidAddress() throws Exception {
+        Set<Address> addresses = new HashSet<>();
+        addresses.add(createAddress("q1", "q1"));
+        addresses.add(createAddress("q2", "q2"));
+        when(addressApi.listAddresses(any())).thenReturn(addresses);
+        when(addressApi.replaceAddress(any())).thenReturn(true);
+        expectedException.expect(BadRequestException.class);
+        expectedException.expectMessage("Address 'q2' already exists with resource name 'q2'");
+
+        Address invalidAddress = createAddress("q1", "q2");
+        helper.replaceAddress("test", invalidAddress);
     }
 
     @Test
