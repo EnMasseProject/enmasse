@@ -192,13 +192,14 @@ function get_all_events() {
 }
 
 function replace_docker_log_driver() {
-    if [[ "$(jq '."log-driver" == "json-file"' daemon.json)" == "true" ]]; then
-        return
-    fi
     local docker="${1}"
     local docker_config_dir="/etc/${docker}"
     local docker_config_path="${docker_config_dir}/daemon.json"
     local tmpf="$(mktemp --tmpdir="${docker_config_dir}")"
+
+    if [[ "$(jq '."log-driver" == "json-file"' "${docker_config_path}")" == "true" ]]; then
+        return
+    fi
 
     sudo systemctl stop "${docker}"
     jq '."log-driver"="json-file"' "${docker_config_path}" >"${tmpf}"
