@@ -131,9 +131,12 @@ public class CRDCmdClient extends CmdClient {
         return cmd;
     }
 
-    public static void loginUser(String username, String password) {
+    public static String loginUser(String username, String password) {
         List<String> cmd = Arrays.asList(CMD, "login", "-u", username, "-p", password);
         execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+        cmd = Arrays.asList(CMD, "whoami", "-t");
+        return execute(cmd, DEFAULT_SYNC_TIMEOUT, true)
+                .getStdOut().replace(System.getProperty("line.separator"), "");
     }
 
     public static void createNamespace(String namespace) {

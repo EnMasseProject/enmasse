@@ -58,12 +58,13 @@ public class CustomResourceDefinitionAddressesSpacesTest extends TestBase {
     @Test
     void testCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
         String namespace = "pepik";
+        KeycloakCredentials user = new KeycloakCredentials("pepik", "pepik");
         try {
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
             AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.NONE);
             JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
-            CRDCmdClient.loginUser("pepik-user", "pepik-pass");
+            CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
             CRDCmdClient.createNamespace(namespace);
             CRDCmdClient.createCR(namespace, addressSpacePayloadJson.toString());
             waitForAddressSpaceReady(brokered, apiClient);

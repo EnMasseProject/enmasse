@@ -6,7 +6,9 @@ package io.enmasse.systemtest.common.api;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.cmdclients.CRDCmdClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.resources.*;
@@ -276,4 +278,26 @@ class ApiServerTest extends TestBase {
         TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 
+    @Test
+    void testCreateAddressSpaceViaApiNonAdmin() throws Exception {
+        String namespace = "pepinator";
+        KeycloakCredentials user = new KeycloakCredentials("jarda", "jarda");
+
+        try {
+            String token = CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
+            CRDCmdClient.createNamespace(namespace);
+
+            AddressSpace addrSpace = new AddressSpace("non-admin-addr-space", AddressSpaceType.BROKERED, AuthService.NONE);
+            AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace, token);
+
+            createAddressSpace(addrSpace, apiClient, false);
+            waitForAddressSpaceReady(addrSpace, apiClient);
+
+            deleteAddressSpace(addrSpace, apiClient);
+        } finally {
+            CRDCmdClient.loginUser("developer", "developer");
+            CRDCmdClient.switchProject(environment.namespace());
+            kubernetes.deleteNamespace(namespace);
+        }
+    }
 }
