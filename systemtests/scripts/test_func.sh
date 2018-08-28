@@ -193,9 +193,8 @@ function get_all_events() {
 
 function replace_docker_log_driver() {
     local docker="${1}"
-    local docker_config_dir="/etc/${docker}"
-    local docker_config_path="${docker_config_dir}/daemon.json"
-    local tmpf="$(mktemp --tmpdir="${docker_config_dir}")"
+    local docker_config_path="/etc/${docker}/daemon.json"
+    local tmpf="$(mktemp)"
 
     if [[ "$(jq '."log-driver" == "json-file"' "${docker_config_path}")" == "true" ]]; then
         info "docker config already contains log-driver set to json-file"
