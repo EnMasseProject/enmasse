@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SeleniumContainers {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final String FIREFOX_IMAGE = "selenium/standalone-firefox-debug";
-    private static final String CHROME_IMAGE = "selenium/standalone-chrome-debug";
+    private static final String FIREFOX_IMAGE = "selenium/standalone-firefox";
+    private static final String CHROME_IMAGE = "selenium/standalone-chrome";
     private static final String FIREFOX_CONTAINER_NAME = "selenium-firefox";
     private static final String CHROME_CONTAINER_NAME = "selenium-chrome";
     private static final String RUNNING_CONTAINER_MESSAGE = "'%s' is not in running state!";
@@ -31,7 +31,7 @@ public class SeleniumContainers {
     public static void deployFirefoxContainer() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox container");
-        DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
+        DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "3.13");
         try {
             TestUtils.doRequestNTimes(RETRY, () -> {
                 stopAndRemoveFirefoxContainer();
@@ -53,7 +53,7 @@ public class SeleniumContainers {
     public static void deployChromeContainer() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome container");
-        DockerCmdClient.pull("docker.io", CHROME_IMAGE, "latest");
+        DockerCmdClient.pull("docker.io", CHROME_IMAGE, "3.13");
         try {
             TestUtils.doRequestNTimes(RETRY, () -> {
                 stopAndRemoveChromeContainer();

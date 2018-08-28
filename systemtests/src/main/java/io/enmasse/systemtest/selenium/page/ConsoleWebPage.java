@@ -55,7 +55,7 @@ public class ConsoleWebPage implements IWebPage {
     //================================================================================================
 
     private WebElement getNavigateMenu() throws Exception {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
         return selenium.getDriver().findElement(By.className("nav-pf-vertical"));
     }
 
