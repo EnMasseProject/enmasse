@@ -198,10 +198,13 @@ function replace_docker_log_driver() {
     local tmpf="$(mktemp --tmpdir="${docker_config_dir}")"
 
     if [[ "$(jq '."log-driver" == "json-file"' "${docker_config_path}")" == "true" ]]; then
+        info "docker config already contains log-driver set to json-file"
         return
     fi
 
+    info "stop docker..."
     sudo systemctl stop "${docker}"
+    info "create or replace log-driver=json-file in ${docker_config_path}"
     jq '."log-driver"="json-file"' "${docker_config_path}" >"${tmpf}"
     cat "${tmpf}" >"${docker_config_path}"
     rm -f "${tmpf}"
