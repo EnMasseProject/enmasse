@@ -2,9 +2,9 @@
 //
 // <List assemblies here, each on a new line>
 :parent-context: {context}
-:context: maas
 :cmdcli: oc
 :KubePlatform: OpenShift
+:manual-install-context: okd
 
 include::common/attributes.adoc[]
 
@@ -22,7 +22,6 @@ include::common/proc-download-procedure.adoc[leveloffset=+1]
 
 include::proc-installing-using-ansible.adoc[leveloffset=+1]
 
-//:context: maas
 //include::proc-installing-deploy-script.adoc[leveloffset=+1]
 
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
