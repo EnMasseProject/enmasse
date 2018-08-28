@@ -40,20 +40,7 @@ fi
 oc login -u system:admin
 
 TIMEOUT=300
-NOW=$(date +%s)
-END=$(($NOW + $TIMEOUT))
-info "Now: $(date -d@${NOW} -u +%F:%H:%M:%S)"
-info "Waiting ${TIMEOUT} seconds until: $(date -d@${END} -u +%F:%H:%M:%S)"
+wait_until_cluster_up "${TIMEOUT}"
 
-oc cluster status
-while [ $? -gt 0 ]
-do
-    NOW=$(date +%s)
-    if [ ${NOW} -gt ${END} ]; then
-        err_and_exit "ERROR: Timed out waiting for openshift cluster to come up!"
-    fi
-    sleep 5
-    oc cluster status
-done
 sleep 30
 oc get pv
