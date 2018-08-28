@@ -12,6 +12,7 @@ function download_enmasse() {
 function setup_test() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
+    REG_API_SERVER=${3:-true}
 
     export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
@@ -22,7 +23,7 @@ function setup_test() {
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
-    export REGISTER_API_SERVER=${REGISTER_API_SERVER:-true}
+    export REGISTER_API_SERVER=${REG_API_SERVER}
     if [[ $REGISTER_API_SERVER == "true" ]]; then
         export ENABLE_RBAC="false"
     else
@@ -36,7 +37,7 @@ function setup_test() {
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
     ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "namespace=${OPENSHIFT_PROJECT} admin_user=${OPENSHIFT_USER} register_api_server=${REGISTER_API_SERVER} enable_rbac=${ENABLE_RBAC}"
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"register_api_server\": ${REGISTER_API_SERVER}, \"enable_rbac\": ${ENABLE_RBAC}}"
 }
 
 function wait_until_up(){
@@ -77,7 +78,12 @@ function create_address_space() {
     ADDRESS_SPACE_NAME=$2
     ADDRESS_SPACE_DEF=$3
     TOKEN=$(oc whoami -t)
-    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addressspaces
+    if [[ ${REGISTER_API_SERVER} == "true" ]]; then
+        URL="${OPENSHIFT_URL}"
+    else
+        URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
+    fi
+    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addressspaces
     wait_until_up 2 ${NAMESPACE}-${ADDRESS_SPACE_NAME} || return 1
 }
 
@@ -89,9 +95,15 @@ function create_address() {
     TYPE=$5
     PLAN=$6
 
+    if [[ ${REGISTER_API_SERVER} == "true" ]]; then
+        URL="${OPENSHIFT_URL}"
+    else
+        URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
+    fi
+
     PAYLOAD="{\"apiVersion\": \"enmasse.io/v1alpha1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
     TOKEN=$(oc whoami -t)
-    curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addresses
+    curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addresses
 }
 
 function create_user() {
