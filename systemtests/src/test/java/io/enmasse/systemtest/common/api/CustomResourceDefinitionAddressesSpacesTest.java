@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.common.api;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CRDCmdClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -54,4 +55,29 @@ public class CustomResourceDefinitionAddressesSpacesTest extends TestBase {
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
+    @Test
+    void testCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
+        String namespace = "pepik";
+        try {
+            AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
+            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.NONE);
+            JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
+
+            CRDCmdClient.loginUser("pepik-user", "pepik-pass");
+            CRDCmdClient.createNamespace(namespace);
+            CRDCmdClient.createCR(namespace, addressSpacePayloadJson.toString());
+            waitForAddressSpaceReady(brokered, apiClient);
+
+            deleteAddressSpace(brokered, apiClient);
+            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getName());
+            TestUtils.waitUntilCondition(() -> {
+                ExecutionResultData allAddresses = CRDCmdClient.getAddressSpace(namespace, "-a");
+                return allAddresses.getStdOut() + allAddresses.getStdErr();
+            }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        } finally {
+            CRDCmdClient.loginUser("developer", "developer");
+            CRDCmdClient.switchProject(environment.namespace());
+            kubernetes.deleteNamespace(namespace);
+        }
+    }
 }

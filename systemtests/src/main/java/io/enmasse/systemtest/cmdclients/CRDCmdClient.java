@@ -131,5 +131,18 @@ public class CRDCmdClient extends CmdClient {
         return cmd;
     }
 
+    public static void loginUser(String username, String password) {
+        List<String> cmd = Arrays.asList(CMD, "login", "-u", username, "-p", password);
+        execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
 
+    public static void createNamespace(String namespace) {
+        List<String> cmd = Arrays.asList(CMD, "new-project", namespace);
+        execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static void switchProject(String namespace) {
+        List<String> cmd = Arrays.asList(CMD, "project", namespace);
+        execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
 }

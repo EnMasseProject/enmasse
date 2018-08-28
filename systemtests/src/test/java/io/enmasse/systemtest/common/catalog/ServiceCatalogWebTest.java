@@ -43,6 +43,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     private static Logger log = CustomLogger.getLogger();
     private Map<String, AddressSpace> provisionedServices = new HashMap<>();
     private KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
+    private KeycloakCredentials ocTestUser = new KeycloakCredentials("pepik", "pepik");
 
     private String getUserProjectName(AddressSpace addressSpace) {
         return String.format("%s-%s", "service", addressSpace.getNamespace());
@@ -79,7 +80,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         AddressSpace brokered = new AddressSpace("addr-space-brokered", AddressSpaceType.BROKERED);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, namespace);
         ocPage.deprovisionAddressSpace(namespace);
@@ -91,7 +92,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         AddressSpace standard = new AddressSpace("addr-space-standard", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(standard);
         provisionedServices.put(namespace, standard);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(standard, namespace);
         ocPage.deprovisionAddressSpace(namespace);
@@ -103,7 +104,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         AddressSpace brokered = new AddressSpace("test-binding-space", AddressSpaceType.BROKERED);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, namespace);
         String external = ocPage.createBinding(namespace, false, false, true, null, null);
@@ -122,7 +123,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         AddressSpace brokered = new AddressSpace("test-messaging-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
 
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, namespace);
@@ -150,7 +151,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         AddressSpace addressSpace = new AddressSpace("test-cert-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
 
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);
@@ -180,7 +181,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         //provision via oc web ui and wait until ready
         provisionedServices.put(namespace, brokeredSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokeredSpace, namespace);
         reloadAddressSpaceEndpoints(brokeredSpace);

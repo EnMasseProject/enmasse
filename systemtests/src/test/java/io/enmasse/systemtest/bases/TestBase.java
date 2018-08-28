@@ -70,8 +70,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private KeycloakClient keycloakApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            TestUtils.deleteAddressSpace(addressApiClient, addressSpace, logCollector);
+        deleteAddressSpace(addressSpace, addressApiClient);
+    }
+
+    protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
+        if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
+            TestUtils.deleteAddressSpace(apiClient, addressSpace, logCollector);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
@@ -210,7 +214,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
-        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+        waitForAddressSpaceReady(addressSpace, addressApiClient);
+    }
+
+    protected void waitForAddressSpaceReady(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
+        TestUtils.waitForAddressSpaceReady(apiClient, addressSpace.getName());
     }
 
     protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
