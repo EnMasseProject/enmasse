@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 EXPECTED_PODS=$1
 ADDRESS_SPACE=$2
-
+CURDIR="$(readlink -f $(dirname $0))"
 source "${CURDIR}/../../scripts/logger.sh"
 
 
