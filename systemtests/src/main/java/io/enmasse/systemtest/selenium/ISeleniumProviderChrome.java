@@ -6,6 +6,7 @@ package io.enmasse.systemtest.selenium;
 
 import io.enmasse.systemtest.TestUtils;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.WebDriver;
 
@@ -18,6 +19,11 @@ public interface ISeleniumProviderChrome extends ISeleniumProvider {
     @BeforeAll
     default void deployContainer() throws Exception {
         SeleniumContainers.deployChromeContainer();
+    }
+
+    @AfterEach
+    default void restartContainer() throws Exception {
+        SeleniumContainers.restartChromeContainer();
     }
 
     @AfterAll
