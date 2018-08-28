@@ -2,9 +2,9 @@
 //
 // master.adoc
 :parent-context: {context}
-:context: kube
 :cmdcli: kubectl
 :KubePlatform: Kubernetes
+:manual-install-context: kube
 
 include::common/attributes.adoc[]
 
