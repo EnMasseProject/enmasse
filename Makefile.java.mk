@@ -24,8 +24,13 @@ package_java:
 package: package_java
 endif
 
+ifneq ($(FULL_BUILD),true)
 clean_java: 
 	mvn clean $(MAVEN_ARGS)
 	rm -rf build target
+else
+clean_java:
+	rm -rf build target
+endif
 
 clean: clean_java
