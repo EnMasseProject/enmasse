@@ -56,7 +56,7 @@ function ResourceServer (kind, read_only, externalize, internalize) {
     this.internalize = internalize;
     this.list_kind = kind + 'List';
     this.resources = [];
-    this.watch_timeout = 1000;
+    this.watch_timeout = 250;
     Object.defineProperty(this, 'externalized', { get: function () { return this.resources.map(this.externalize); } });
     this.debug = false;
     if (this.debug) {

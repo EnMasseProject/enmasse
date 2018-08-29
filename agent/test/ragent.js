@@ -339,10 +339,12 @@ describe('basic router configuration', function() {
             }
             if (initial_config) initial_config(routers);
             ragent.sync_addresses(address_list);
-            setTimeout(function () {
+            ragent.wait_for_stable(address_list.length, routers.length).then(function () {
                 verification ? verification(routers, address_list) : verify_addresses(address_list, routers);
                 done();
-            }, propagation_wait || 1000);//TODO: add ability to be notified of propagation in some way
+            }).catch(function (error) {
+                console.error('Failed: %s', error);
+            });
         };
     }
 
@@ -394,7 +396,7 @@ describe('basic router configuration', function() {
         for (var i = 0; i < 2; i++) {
             routers.push(new_router());
         }
-        setTimeout(function () {
+        ragent.wait_for_stable(2, routers.length).then(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
             //update addresses
@@ -403,12 +405,12 @@ describe('basic router configuration', function() {
             for (var i = 0; i < 2; i++) {
                 routers.push(new_router());
             }
-            setTimeout(function () {
+            ragent.wait_for_stable(3, routers.length).then(function () {
                 verify_addresses([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}], routers);
                 verify_full_mesh(routers);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        }, 500);
+            }).catch(done);
+        }).catch(done);
     });
     it('handles health-check requests', function(done) {
         var routers = [];
@@ -421,11 +423,11 @@ describe('basic router configuration', function() {
             checker.check([{name:'x'}, {name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
                 assert.equal(result, false);
                 ragent.sync_addresses([{address:'a',type:'topic'}]);
-                setTimeout(function () {
+                ragent.wait_for_stable(1, routers.length).then(function () {
                     checker.check([{name:'x'}, {name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
                         assert.equal(result, false);
                         ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
-                        setTimeout(function () {
+                        ragent.wait_for_stable(2, routers.length).then(function () {
                             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
                             verify_full_mesh(routers);
                             checker.check([{name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
@@ -433,9 +435,9 @@ describe('basic router configuration', function() {
                                 client.close();
                                 client.on('connection_close', function () { done(); } );
                             }).catch(done);
-                        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+                        }).catch(done);
                     }).catch(done);
-                }, 200);
+                }).catch(done);
             }).catch(done);
         });
     });
@@ -445,7 +447,7 @@ describe('basic router configuration', function() {
             routers.push(new_router());
         }
         ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
-        setTimeout(function () {
+        ragent.wait_for_stable(2, routers.length).then(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
             //make sure we close a router which some remaining router still has a connector to
@@ -459,13 +461,13 @@ describe('basic router configuration', function() {
             }
             r.close_with_error({name:'amqp:internal-error', description:'just a test'}).then(function () {
                 routers.push(new_router());
-                setTimeout(function () {
+                ragent.wait_for_stable(2, routers.length).then(function () {
                     verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
                     verify_full_mesh(routers);
                     done();
                 }, 500);
             });
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
     it('handles invalid messages', function(done) {
         var routers = [];
@@ -481,11 +483,11 @@ describe('basic router configuration', function() {
         sender.send({subject:'health-check'});
         sender.send({subject:'random-nonsense'});
         ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
-        setTimeout(function () {
+        ragent.wait_for_stable(2, routers.length).then(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
             done();
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
     it('handles address query error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
@@ -533,11 +535,11 @@ describe('basic router configuration', function() {
         }
         var address_list = [{address:'a',type:'topic'}, {address:'b',type:'queue'}];
         ragent.sync_addresses(address_list);
-        setTimeout(function () {
+        ragent.wait_for_stable(address_list.length, routers.length).then(function () {
             verify_full_mesh_n(routers, 2);
             delete process.env.ROUTER_NUM_CONNECTORS;
             done();
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
     it('ignores link route override', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
        function (routers, address_list) {
@@ -623,36 +625,36 @@ describe('configuration from configmaps', function() {
         var router = routers.new_router();
         var addresses = [{address:'a', type:'topic'}, {address:'b', type:'queue'}];
         address_source.add_address_definitions(addresses);
-        setTimeout(function () {
+        ragent.wait_for_stable(2).then(function () {
             verify_addresses(addresses, router);
             done();
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
     it('watches for new addresses', function (done) {
         var router = routers.new_router();
         address_source.add_address_definitions([{address:'a', type:'topic'}, {address:'b', type:'queue'}]);
-        setTimeout(function () {
+        ragent.wait_for_stable(2).then(function () {
             address_source.add_address_definition({address:'c', type:'anycast'});
             address_source.add_address_definition({address:'d', type:'queue'});
             //address_source.remove_resource_by_name('b');
-            setTimeout(function () {
+            ragent.wait_for_stable(4).then(function () {
                 verify_addresses([{address:'a', type:'topic'}, {address:'b', type:'queue'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        }, 100/*delay before changes*/);
+            }).catch(done);
+        }).catch(done);
     });
     it('watches for deleted addresses', function (done) {
         var router = routers.new_router();
         address_source.add_address_definitions([{address:'a', type:'topic'}, {address:'b', type:'queue'}]);
-        setTimeout(function () {
+        ragent.wait_for_stable(2).then(function () {
             address_source.add_address_definition({address:'c', type:'anycast'});
             address_source.add_address_definition({address:'d', type:'queue'});
             address_source.remove_resource_by_name('b');
-            setTimeout(function () {
+            ragent.wait_for_stable(3).then(function () {
                 verify_addresses([{address:'a', type:'topic'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        }, 100/*delay before changes*/);
+            }).catch(done);
+        }).catch(done);
     });
     it('ignores pending and terminating addresses', function (done) {
         var router = routers.new_router();
@@ -660,10 +662,10 @@ describe('configuration from configmaps', function() {
         address_source.add_address_definition({address:'b', type:'queue'}, undefined, undefined, {phase:'Pending'});
         address_source.add_address_definition({address:'c', type:'topic'}, undefined, undefined, {phase:'Terminating'});
         address_source.add_address_definition({address:'d', type:'topic'});
-        setTimeout(function () {
+        ragent.wait_for_stable(2).then(function () {
             verify_addresses([{address:'a', type:'queue'}, {address:'d', type:'topic'}], router);
             done();
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
 });
 
@@ -922,12 +924,12 @@ describe('run method', function() {
 
     it('subscribes to configuration service', function (done) {
         var router = routers.new_router();
-        setTimeout(function () {
+        ragent.wait_for_stable(2).then(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], router);
             router.close().then(function () {
                 done();
             });
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }).catch(done);
     });
 });
 
@@ -973,15 +975,15 @@ describe('changing router configuration', function() {
         ragent.sync_addresses([{address:'mytopic',type:'topic'}]);
         delay(function () {
             ragent.sync_addresses([]);
-        }, 500).then(function () {
+        }, 200).then(function () {
             delay(function () {
                 verify_addresses([], router);
                 ragent.sync_addresses([{address:'mytopic',type:'topic'}]);
-            }, 500).then(function () {
-                setTimeout(function () {
+            }, 200).then(function () {
+                ragent.wait_for_stable(1).then(function () {
                     verify_addresses([{address:'mytopic',type:'topic'}], router);
                     client.close();
-                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+                }).catch(done);
             });
         });
     });
@@ -1037,13 +1039,13 @@ describe('broker configuration', function() {
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
             address_source.add_address_definition({address:'a', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker_a'});
             address_source.add_address_definition({address:'b', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker_b'});
-            setTimeout(function () {
+            ragent.wait_for_stable(2, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}], router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }).catch(done);
         }).catch(done);
     });
 
@@ -1055,20 +1057,20 @@ describe('broker configuration', function() {
             address_source.add_address_definition({address:'a', type:'queue'}, 'address-config-a', {'enmasse.io/broker-id':'broker_a'});
             address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', {'enmasse.io/broker-id':'broker_b'});
             address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', {'enmasse.io/broker-id':'broker_a'});
-            setTimeout(function () {
+            ragent.wait_for_stable(3, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 //delete configmap
                 address_source.remove_resource_by_name('address-config-a');
-                setTimeout(function () {
+                ragent.wait_for_stable(2, 1, 2).then(function () {
                     verify_addresses([{address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
                     broker_a.verify_addresses([{address:'c', type:'queue'}]);
                     broker_b.verify_addresses([{address:'b', type:'queue'}]);
                     done();
-                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-            }, 500);
+                }).catch(done);
+            }).catch(done);
         });
     });
 
@@ -1081,7 +1083,7 @@ describe('broker configuration', function() {
             address_source.add_address_definition({address:'b', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_b'});
             address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'a'}, undefined, {'enmasse.io/broker-id':'broker_a'});
             address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'b'}, undefined, {'enmasse.io/broker-id':'broker_b'});
-            setTimeout(function () {
+            ragent.wait_for_stable(4, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'topic', allocated_to:'broker_a'}, {address:'b', type:'topic', allocated_to:'broker_b'},
                                   {address:'sub-a', type:'subscription', topic:'a', allocated_to:'broker_a'},
                                   {address:'sub-b', type:'subscription', topic:'b', allocated_to:'broker_b'}], router);
@@ -1089,7 +1091,7 @@ describe('broker configuration', function() {
                 broker_a.verify_addresses([{address:'a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'a'}]);
                 broker_b.verify_addresses([{address:'b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'b'}]);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }).catch(done);
         }).catch(done);
     });
 
@@ -1102,7 +1104,7 @@ describe('broker configuration', function() {
             address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'topic-b'}, undefined, {'enmasse.io/broker-id':'broker_b'});
             address_source.add_address_definition({address:'topic-a', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_a'});
             address_source.add_address_definition({address:'topic-b', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_b'});
-            setTimeout(function () {
+            ragent.wait_for_stable(4, 1, 2).then(function () {
                 verify_addresses([{address:'topic-a', type:'topic', allocated_to:'broker_a'}, {address:'topic-b', type:'topic', allocated_to:'broker_b'},
                                   {address:'sub-a', type:'subscription', topic:'topic-a', allocated_to:'broker_a'},
                                   {address:'sub-b', type:'subscription', topic:'topic-b', allocated_to:'broker_b'}], router);
@@ -1110,7 +1112,7 @@ describe('broker configuration', function() {
                 broker_a.verify_addresses([{address:'topic-a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'topic-a'}]);
                 broker_b.verify_addresses([{address:'topic-b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'topic-b'}]);
                 done();
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }).catch(done);
         }).catch(done);
     });
 
@@ -1121,14 +1123,14 @@ describe('broker configuration', function() {
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
             assert(ragent.connected_brokers['broker_a'] !== undefined);
             assert(ragent.connected_brokers['broker_b'] !== undefined);
-            setTimeout(function () {
+            ragent.wait_for_stable(0, 1, 2).then(function () {
                 connections[1].close();
-                setTimeout(function () {
+                ragent.wait_for_stable(0, 1, 1).then(function () {
                     assert(ragent.connected_brokers['broker_a'] !== undefined, 'broker-a SHOULD be in connected_broker map');
                     assert(ragent.connected_brokers['broker_b'] === undefined, 'broker-b should NOT be in connected_broker map');
                     done();
-                }, 500);
-            }, 200);
+                }).catch(done);
+            }).catch(done);
         });
     });
 
@@ -1143,13 +1145,13 @@ describe('broker configuration', function() {
                 a.allocated_to = i % 2 ? 'broker_a' : 'broker_b';
                 address_source.add_address_definition(a, undefined, {'enmasse.io/broker-id': a.allocated_to});
             });
-            setTimeout(function () {
+            ragent.wait_for_stable(2000, 1, 2).then(function () {
                 verify_addresses(desired, router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_a'; }));
                 broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_b'; }));
                 done();
-            }, 40000/*40 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }).catch(done);
         }).catch(done);
     });
 });

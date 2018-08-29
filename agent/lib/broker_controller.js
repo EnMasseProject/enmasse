@@ -464,13 +464,17 @@ BrokerController.prototype._sync_addresses = function (addresses) {
 BrokerController.prototype._set_sync_status = function (stale, missing) {
     var b = (stale === 0 && missing === 0);
     if (this.addresses_synchronized !== b) {
-        if (b) log.info('[%s] addresses are synchronized', this.id);
-        else log.info('[%s] addresses synchronizing (%d to delete, %d to create)', this.id, stale, missing);
+        if (b) {
+            log.info('[%s] addresses are synchronized', this.id);
+            this.emit('synchronized');
+        } else {
+            log.info('[%s] addresses synchronizing (%d to delete, %d to create)', this.id, stale, missing);
+        }
     }
     this.addresses_synchronized = b;
 }
 
-BrokerController.prototype._sync_broker_addresses = function () {
+BrokerController.prototype._sync_broker_addresses = function (retry) {
     var self = this;
     return this.broker.listAddresses().then(function (results) {
         var actual = translate(results, excluded_addresses, self.excluded_types);
@@ -482,7 +486,9 @@ BrokerController.prototype._sync_broker_addresses = function () {
         return self.delete_addresses(stale).then(
             function () {
                 return self.create_addresses(missing.filter(function (o) { return o.type !== 'subscription' })).then(function () {
-                    return self.create_addresses(missing.filter(function (o) { return o.type === 'subscription' }));
+                    return self.create_addresses(missing.filter(function (o) { return o.type === 'subscription' })).then(function () {
+                        return retry ? true : self._sync_broker_addresses(true);
+                    });
                 });
             });
     }).catch(function (e) {

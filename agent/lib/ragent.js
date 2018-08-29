@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var events = require('events');
 var http = require('http');
 var util = require('util');
 var amqp = require('rhea');
@@ -60,6 +61,7 @@ function Ragent() {
     this.container = amqp.create_container();
     this.container.sasl_server_mechanisms.enable_anonymous();
     this.configure_handlers();
+    this.status = new events.EventEmitter();
 }
 
 Ragent.prototype.subscribe = function (context) {
@@ -136,7 +138,9 @@ Ragent.prototype.router_disconnected = function (context) {
 }
 
 Ragent.prototype.addresses_updated = function () {
-    this.sync_brokers();
+    for (var b in this.connected_brokers) {
+        this.sync_broker(this.connected_brokers[b]);
+    }
     for (var r in this.connected_routers) {
         this.sync_router_addresses(this.connected_routers[r]);
     }
@@ -178,17 +182,83 @@ Ragent.prototype.on_broker_disconnect = function (context) {
     }
 }
 
+Ragent.prototype.are_brokers_synchronized = function () {
+    for (var b in this.connected_brokers) {
+        if (!this.connected_brokers[b].addresses_synchronized) {
+            return false;
+        }
+    }
+    return true;
+};
+
+Ragent.prototype.are_routers_synchronized = function () {
+    for (var r in this.connected_routers) {
+        if (!this.connected_routers[r].is_synchronized()) {
+            return false;
+        }
+    }
+    return true;
+};
+
+Ragent.prototype.are_routers_connected = function () {
+    if (Object.keys(this.connected_routers).length === 1) {
+        return true;
+    } else {
+        for (var r in this.connected_routers) {
+            if (!this.connected_routers[r].fully_connected) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+Ragent.prototype.is_synchronized = function () {
+    return this.are_routers_synchronized() && this.are_brokers_synchronized() && this.are_routers_connected();
+};
+
+Ragent.prototype.on_synchronized = function () {
+    this.status.emit('synchronized');
+};
+
+Ragent.prototype._check_stable = function (addresses, routers, brokers, all_known_routers) {
+    try {
+        var result = (addresses === undefined || addresses === Object.keys(this.addresses).length)
+            && (routers === undefined || routers === Object.keys(this.connected_routers).length)
+            && (brokers === undefined || brokers === Object.keys(this.connected_brokers).length)
+            && this.is_synchronized();
+        return result;
+    } catch (e) {
+        console.error(e.stack);
+        return false;
+    }
+}
+
+
+Ragent.prototype.wait_for_stable = function (addresses, routers, brokers) {
+    var self = this;
+    if (this._check_stable(addresses, routers, brokers)) {
+        return true;
+    } else {
+        return new Promise(function (resolve, reject) {
+            function do_test() {
+                if (self._check_stable(addresses, routers, brokers)) {
+                    resolve();
+                } else {
+                    self.status.once('synchronized', do_test);
+                }
+            }
+            self.status.once('synchronized', do_test);
+        });
+    }
+};
+
+
 function if_allocated_to (id) {
     return function (a) { return a.allocated_to === id; };
 }
 
 function get_address (a) { return a.address; }
-
-Ragent.prototype.sync_brokers = function () {
-    for (var id in this.connected_brokers) {
-        this.sync_broker(this.connected_brokers[id]);
-    }
-}
 
 Ragent.prototype.sync_broker = function (broker) {
     var allocated = this.addresses.filter(if_allocated_to(broker.id));
@@ -258,6 +328,7 @@ Ragent.prototype.configure_handlers = function () {
             r.on('ready', function (router) {
                 router.retrieve_listeners();
                 router.retrieve_connectors();
+                router.on('synchronized', self.on_synchronized.bind(self));
                 router.sync_addresses(self.addresses);
                 router.on('listeners_updated', self.connected_routers_updated.bind(self));//advertise only once have listeners
                 router.on('connectors_updated', self.check_router_connectors.bind(self));
@@ -268,6 +339,7 @@ Ragent.prototype.configure_handlers = function () {
             self.connected_brokers[broker.id] = broker;
             log.info('broker %s connected', broker.id);
             self.sync_broker(broker);
+            broker.on('synchronized', self.on_synchronized.bind(self));
             context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
             context.connection.on('connection_close', self.on_broker_disconnect.bind(self));
         } else {

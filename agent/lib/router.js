@@ -54,6 +54,7 @@ var ConnectedRouter = function (connection) {
     this.container_id = connection.container_id;
     this.listeners = undefined;
     this.connectors = undefined;
+    this.fully_connected = false;
     this.addresses = {};
     this.initial_provisioning_completed = false;
     this.addresses_synchronized = false;
@@ -116,6 +117,7 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
     var work = missing.map(do_create).concat(stale.filter(matches_qualifier).map(do_delete));
     var self = this;
     if (work.length) {
+        this.fully_connected = false;
         log.info('[%s] checking connectors on router, missing=%j, stale=%j', this.container_id, missing, stale);
         //if made changes, requery when they are complete
         Promise.all(work).then(function () {
@@ -129,6 +131,8 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
         this.connectors = undefined;
     } else {
         log.info('[%s] fully connected', this.container_id);
+        this.fully_connected = true;
+        this.emit('synchronized');
     }
 };
 
@@ -140,7 +144,7 @@ ConnectedRouter.prototype.verify_addresses = function (expected) {
     for (var i = 0; i < expected.length; i++) {
         var address = expected[i];
         if (address["store_and_forward"] && !address["multicast"]) {
-            if (!this.actual.addresses.some(function (a) { return a.prefix === address.name; })) {
+            if (this.actual[address.name] === undefined) {
                 return false;
             }
         }
@@ -219,10 +223,32 @@ ConnectedRouter.prototype._realise_address_definitions = function () {
             self.initial_provisioning_completed = true;
             self.emit('provisioned', self);
         }
+        self.emit('synchronized', self);
     }).catch(function (error) {
+        console.error('[%s] error while synchronizing addresses: %s', self.container_id, error);
         log.error('[%s] error while synchronizing addresses: %s', self.container_id, error);
     });
 };
+
+ConnectedRouter.prototype.is_synchronized = function () {
+    if (this.actual === undefined) return false;
+    for (var k in this.desired) {
+        var desired = this.desired[k];
+        var actual = this.actual[desired.address];
+        if (actual === undefined) {
+            log.info('[%s] not synchronized, missing %s %s', this.container_id, desired.type, desired.address);
+            return false;
+        } else if (actual.type !== desired.type) {
+            log.info('[%s] not synchronized,  %s of wrong type expected %s got %s', this.container_id, desired.address, desired.type, actual.type);
+            return false;
+        }
+    }
+    if (Object.keys(this.actual).length !== this.desired.length) {
+        log.info('[%s] not synchronized, have extra addresses', this.container_id);
+        return false;
+    }
+    return true;
+}
 
 module.exports = {
     connected: function (conn) { return new ConnectedRouter(conn); },
