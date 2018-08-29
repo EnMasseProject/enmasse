@@ -326,8 +326,52 @@ function desired_address_config(high_level_address_definitions) {
     return config;
 }
 
+function deduce_type(address_config) {
+    if (address_config.distribution === 'balanced') {
+        if (address_config.waypoint) return 'queue';
+        else return 'anycast';
+    } else if (address_config.distribution === 'multicast') {
+        return 'multicast';
+    } else {
+        return undefined;
+    }
+}
+
+function deduce_definition(actual_config) {
+    var definition = {};
+    var linkroutes = {};
+    for (var i in actual_config.addresses) {
+        var a = actual_config.addresses[i];
+        definition[a.prefix] = {address:a.prefix, type:deduce_type(a)};
+    };
+    for (var i in actual_config.linkroutes) {
+        var l = actual_config.linkroutes[i];
+        var e = linkroutes[l.prefix];
+        if (e === undefined) {
+            e = {};
+            linkroutes[l.prefix] = e;
+        }
+        e[l.direction] = true;
+    };
+    for (var i in linkroutes) {
+        var l = linkroutes[i];
+        if (l['in'] && l['out']) {
+            definition[i] = {address:i, type:'topic'};
+        } else if (l['out']) {
+            var s = i.indexOf('::');
+            if (s > 0) {
+                var name = i.substr(s+2);
+                definition[name] = {address:name, type:'subscription'};
+            }
+        }
+    }
+    return definition;
+}
+
 module.exports = {
     realise_address_definitions: function (high_level_address_definitions, router) {
-        return apply_config(desired_address_config(high_level_address_definitions), router);
+        return apply_config(desired_address_config(high_level_address_definitions), router).then(function (actual) {
+            return deduce_definition(actual);
+        });
     }
 };

@@ -366,11 +366,10 @@ function queues_to_addresses(addresses, queues, include_topic_stats, include_rev
             }
             if (q.durable && !q.purgeOnNoConsumers) {
                 //treat as subscription
-                index[q.name] = {
+                index[q.name] = myutils.merge(q, {
                     name: q.name,
                     type: 'subscription'
-                };
-                myutils.merge(index[q.name], q);
+                });
             }
             if (include_topic_stats) {
                 update_topic_stats(a, q);

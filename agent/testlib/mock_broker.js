@@ -116,7 +116,7 @@ function MockBroker (name) {
         getQueueNames : function () {
             return self.list_queues().map(function (a) { return a.name; });
         },
-        createQueue : function (address, routingTypes, name, filter, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
+        createQueue : function (address, routingType, name, filter, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
             if (self.objects.some(function (o) { return o.type === 'queue' && o.name === name})) {
                 throw new Error('queue ' + name + ' already exists!');
             } else {
@@ -129,7 +129,7 @@ function MockBroker (name) {
                         throw new Error('No such address ' + address + ' for queue ' + name);
                     }
                 }
-                self.add_queue(name, {'durable':durable, 'maxConsumers':maxConsumers, 'address':address, 'filter':filter, 'purgeOnNoConsumers':purgeOnNoConsumers});
+                self.add_queue(name, {'durable':durable, 'routingType':routingType, 'maxConsumers':maxConsumers, 'address':address, 'filter':filter, 'purgeOnNoConsumers':purgeOnNoConsumers});
             }
         },
         createAddress : function (name, routingTypes) {
