@@ -175,9 +175,24 @@ function getLabelSelectorFn(request) {
     var parsed = url.parse(request.url, true);
     var selector = parsed.query.labelSelector;
     if (selector) {
-        var parts = selector.split('=');
+        var labelentries = selector.split(',');
+        var labels = {};
+        for (var i = 0; i < labelentries.length; i++) {
+            var labelentry = labelentries[i];
+            var parts = labelentry.split('=');
+            labels[parts[0]] = parts[1];
+        }
         return function (object) {
-            return object.metadata.labels && object.metadata.labels[parts[0]] === parts[1];
+            var equal = false;
+            if (object.metadata.labels) {
+                for (var label in labels) {
+                    if (object.metadata.labels[label] == undefined || object.metadata.labels[label] !== labels[label]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
         }
     } else {
         return function () {
@@ -322,36 +337,38 @@ function ConfigMapServer () {
 
 util.inherits(ConfigMapServer, ResourceServer);
 
-function get_empty_config_map(name, type) {
+function get_empty_config_map(name, labels) {
     return {
         kind:'ConfigMap',
         metadata: {
             name: name,
-            labels: {
-                type: type
-            }
+            labels: labels
         },
         data:{}
     };
 }
 
-function get_config_map(name, type, key, content) {
-    var cm = get_empty_config_map(name, type);
+function get_config_map(name, labels, key, content) {
+    var cm = get_empty_config_map(name, labels);
     cm.data[key] = JSON.stringify(content);
     return cm;
 }
 
-ConfigMapServer.prototype.add_address_definition = function (def, name, annotations, status) {
+ConfigMapServer.prototype.add_address_definition = function (def, name, infra_uuid, annotations, status) {
     var address = {kind: 'Address', metadata: {name: name || def.address}, spec:def};
     if (annotations) {
         address.metadata.annotations = annotations;
     }
+    var labels = {type: 'address-config'};
+    if (infra_uuid) {
+        labels.infraUuid = infra_uuid;
+    }
     address.status = status || { phase: 'Active' };
-    this.add_resource(get_config_map(name || def.address, 'address-config', 'config.json', address));
+    this.add_resource(get_config_map(name || def.address, labels, 'config.json', address));
 };
 
-ConfigMapServer.prototype.add_config_map = function (name, type, data) {
-    var cm = get_empty_config_map(name, type);
+ConfigMapServer.prototype.add_config_map = function (name, labels, data) {
+    var cm = get_empty_config_map(name, labels);
     cm.data = data;
     this.add_resource(cm);
 };
@@ -361,6 +378,23 @@ ConfigMapServer.prototype.add_address_definitions = function (defs) {
         this.add_address_definition(defs[i]);
     }
 };
+
+ConfigMapServer.prototype.add_address_space_plan = function (params) {
+    var plan = {
+        kind: 'AddressSpacePlan',
+        metadata: {name: params.plan_name},
+        displayName: params.display_name,
+        shortDescription: params.shortDescription,
+        longDescription: params.longDescription,
+        displayOrder: params.displayOrder,
+        addressSpaceType: params.address_space_type,
+        addressPlans: params.address_plans
+    };
+    if (params.required_resources) {
+        plan.requiredResources = params.required_resources;
+    }
+    this.add_resource(get_config_map(plan.metadata.name, {type:'address-space-plan'}, 'definition', plan));
+}
 
 ConfigMapServer.prototype.add_address_plan = function (params) {
     var plan = {
@@ -375,7 +409,7 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
     if (params.required_resources) {
         plan.requiredResources = params.required_resources;
     }
-    this.add_resource(get_config_map(plan.metadata.name, 'address-plan', 'definition', plan));
+    this.add_resource(get_config_map(plan.metadata.name, {type: 'address-plan'}, 'definition', plan));
 };
 
 ConfigMapServer.prototype.resource_initialiser = function (resource) {

@@ -4,10 +4,7 @@
  */
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AuthService;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseWithoutMqtt;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -42,7 +39,7 @@ class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
 
     @Test
     void testNoMqttDeployed() throws Exception {
-        assertThat(kubernetes.listPods(addressSpace.getNamespace()).size(), is(2));
+        assertThat(TestUtils.listRunningPods(kubernetes, addressSpace).size(), is(2));
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(defaultCredentials);

@@ -4,15 +4,6 @@
   register: is_admin
   failed_when: is_admin.stdout == "no"
 
-- name: Create address-space-controller cluster role used by enmasse admin service account {{ playbook_dir }}
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/openshift/address-space-controller.yaml
-
-- name: Create clusterrole binding for address-space-controller
-  include_role:
-    name: create_clusterrole_binding
-  vars:
-    clusterrole_name: enmasse.io:address-space-controller
-
 - name: Create api-server cluster role used by enmasse admin service account
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/cluster-roles/api-server.yaml
 

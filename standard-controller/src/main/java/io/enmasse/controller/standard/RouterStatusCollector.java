@@ -4,13 +4,11 @@
  */
 package io.enmasse.controller.standard;
 
-import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 import io.enmasse.amqp.ProtonRequestClient;
 import io.enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;

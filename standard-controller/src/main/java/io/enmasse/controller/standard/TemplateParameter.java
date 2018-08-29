@@ -11,10 +11,9 @@ package io.enmasse.controller.standard;
 public interface TemplateParameter {
     String NAME = "NAME";
     String ADDRESS = "ADDRESS";
+    String INFRA_UUID = "INFRA_UUID";
     String ADDRESS_SPACE = "ADDRESS_SPACE";
     String CLUSTER_ID = "CLUSTER_ID";
-
-    String COLOCATED_ROUTER_SECRET = "COLOCATED_ROUTER_SECRET";
 
     String AUTHENTICATION_SERVICE_HOST = "AUTHENTICATION_SERVICE_HOST";
     String AUTHENTICATION_SERVICE_PORT = "AUTHENTICATION_SERVICE_PORT";

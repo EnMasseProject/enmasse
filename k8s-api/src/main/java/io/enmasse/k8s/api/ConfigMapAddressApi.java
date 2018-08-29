@@ -32,17 +32,19 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
     private final NamespacedOpenShiftClient client;
     private final String namespace;
+    private final String infraUuid;
 
     private final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String namespace) {
+    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String namespace, String infraUuid) {
         this.client = client;
         this.namespace = namespace;
+        this.infraUuid = infraUuid;
     }
 
     @Override
     public Optional<Address> getAddressWithName(String namespace, String name) {
-        ConfigMap map = client.configMaps().inNamespace(this.namespace).withName(getConfigMapName(name)).get();
+        ConfigMap map = client.configMaps().inNamespace(this.namespace).withName(getConfigMapName(namespace, name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -89,6 +91,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labelSelector) {
         Map<String, String> labels = new LinkedHashMap<>(labelSelector);
         labels.put(LabelKeys.TYPE, "address-config");
+        labels.put(LabelKeys.INFRA_UUID, infraUuid);
 
         Set<Address> addresses = new LinkedHashSet<>();
         ConfigMapList list = client.configMaps().inNamespace(this.namespace).withLabels(labels).list();
@@ -105,6 +108,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     public void deleteAddresses(String namespace) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-config");
+        labels.put(LabelKeys.INFRA_UUID, infraUuid);
         labels.put(LabelKeys.NAMESPACE, namespace);
 
         client.configMaps().inNamespace(this.namespace).withLabels(labels).delete();
@@ -112,7 +116,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public void createAddress(Address address) {
-        String name = getConfigMapName(address.getName());
+        String name = getConfigMapName(address.getNamespace(), address.getName());
         ConfigMap map = create(address);
         if (map != null) {
             client.configMaps().inNamespace(namespace).withName(name).create(map);
@@ -121,7 +125,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean replaceAddress(Address address) {
-        String name = getConfigMapName(address.getName());
+        String name = getConfigMapName(address.getNamespace(), address.getName());
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
             log.warn("Cannot replace address {}: No previous configMap found", address.getName());
@@ -134,16 +138,18 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         return true;
     }
 
-    private static String getConfigMapName(String name) {
-        return name;
+    private String getConfigMapName(String namespace, String name) {
+        return namespace + "." + name;
     }
 
     private ConfigMap create(Address address) {
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .editOrNewMetadata()
-                .withName(getConfigMapName(address.getName()))
+                .withName(getConfigMapName(address.getNamespace(), address.getName()))
                 .addToLabels(address.getLabels())
                 .addToLabels(LabelKeys.TYPE, "address-config")
+                .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
+                .addToLabels(LabelKeys.INFRA_TYPE, "any")
                 .addToAnnotations(address.getAnnotations())
                 // TODO: Support other ways of doing this
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
@@ -165,7 +171,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean deleteAddress(Address address) {
-        Boolean deleted = client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getName())).delete();
+        Boolean deleted = client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getNamespace(), address.getName())).delete();
         return deleted != null && deleted.booleanValue();
     }
 
@@ -199,6 +205,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         return client.configMaps()
                         .inNamespace(namespace)
                         .withLabel(LabelKeys.TYPE, "address-config")
+                        .withLabel(LabelKeys.INFRA_UUID, infraUuid)
                         .list();
     }
 
@@ -211,6 +218,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 c.configMaps()
                         .inNamespace(namespace)
                         .withLabel(LabelKeys.TYPE, "address-config")
+                        .withLabel(LabelKeys.INFRA_UUID, infraUuid)
                         .withResourceVersion(listOptions.getResourceVersion())
                         .watch(watcher));
     }

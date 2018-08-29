@@ -16,35 +16,26 @@ public final class ControllerOptions {
     private final File templateDir;
     private final NoneAuthServiceInfo noneAuthService;
     private final StandardAuthServiceInfo standardAuthService;
-    private final boolean enableRbac;
     private final boolean enableEventLogger;
     private final boolean exposeEndpointsByDefault;
 
     private final String environment;
-    private final String addressControllerSa;
-    private final String addressSpaceAdminSa;
 
     private final String wildcardCertSecret;
 
     private final Duration resyncInterval;
     private final Duration recheckInterval;
 
-    private final String impersonateUser;
-
-    private ControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableRbac, boolean enableEventLogger, boolean exposeEndpointsByDefault, String environment, String addressControllerSa, String addressSpaceAdminSa, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String impersonateUser) {
+    private ControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableEventLogger, boolean exposeEndpointsByDefault, String environment, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval) {
         this.templateDir = templateDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
-        this.enableRbac = enableRbac;
         this.enableEventLogger = enableEventLogger;
         this.exposeEndpointsByDefault = exposeEndpointsByDefault;
         this.environment = environment;
-        this.addressControllerSa = addressControllerSa;
-        this.addressSpaceAdminSa = addressSpaceAdminSa;
         this.wildcardCertSecret = wildcardCertSecret;
         this.resyncInterval = resyncInterval;
         this.recheckInterval = recheckInterval;
-        this.impersonateUser = impersonateUser;
     }
 
     public File getTemplateDir() {
@@ -59,24 +50,12 @@ public final class ControllerOptions {
         return Optional.ofNullable(standardAuthService);
     }
 
-    public boolean isEnableRbac() {
-        return enableRbac;
-    }
-
     public boolean isEnableEventLogger() {
         return enableEventLogger;
     }
 
     public String getEnvironment() {
         return environment;
-    }
-
-    public String getAddressControllerSa() {
-        return addressControllerSa;
-    }
-
-    public String getAddressSpaceAdminSa() {
-        return addressSpaceAdminSa;
     }
 
     public String getWildcardCertSecret() {
@@ -91,11 +70,6 @@ public final class ControllerOptions {
         return recheckInterval;
     }
 
-    public String getImpersonateUser() {
-        return impersonateUser;
-    }
-
-
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
@@ -107,17 +81,11 @@ public final class ControllerOptions {
         NoneAuthServiceInfo noneAuthService = getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
         StandardAuthServiceInfo standardAuthService = getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG").orElse(null);
 
-        boolean enableRbac = getEnv(env, "ENABLE_RBAC").map(Boolean::parseBoolean).orElse(false);
-
         boolean enableEventLogger = getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false);
 
         boolean exposeEndpointsByDefault = getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true);
 
         String environment = getEnv(env, "ENVIRONMENT").orElse("development");
-
-        String addressControllerSa = getEnv(env, "ADDRESS_CONTROLLER_SA").orElse("enmasse-admin");
-
-        String addressSpaceAdminSa = getEnv(env, "ADDRESS_SPACE_ADMIN_SA").orElse("address-space-admin");
 
         String wildcardCertSecret = getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null);
 
@@ -129,25 +97,16 @@ public final class ControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30));
 
-        String impersonateUser = getEnv(env, "IMPERSONATE_USER").orElse("");
-        if (impersonateUser.isEmpty()) {
-            impersonateUser = null;
-        }
-
         return new ControllerOptions(
                 templateDir,
                 noneAuthService,
                 standardAuthService,
-                enableRbac,
                 enableEventLogger,
                 exposeEndpointsByDefault,
                 environment,
-                addressControllerSa,
-                addressSpaceAdminSa,
                 wildcardCertSecret,
                 resyncInterval,
-                recheckInterval,
-                impersonateUser);
+                recheckInterval);
     }
 
 

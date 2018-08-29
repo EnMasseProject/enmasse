@@ -51,11 +51,11 @@ public class ServiceBroker extends AbstractVerticle {
     @Override
     public void start(Future<Void> startPromise) throws Exception {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, controllerClient.getNamespace());
-        CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
+        CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-        AuthApi authApi = new KubeAuthApi(controllerClient, options.getImpersonateUser(), controllerClient.getConfiguration().getOauthToken());
+        AuthApi authApi = new KubeAuthApi(controllerClient, controllerClient.getConfiguration().getOauthToken());
         KeycloakApi keycloakApi = createKeycloakApi(options);
 
         vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), keycloakApi, options.getListenPort(), options.getConsolePrefix()),

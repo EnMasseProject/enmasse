@@ -3,7 +3,6 @@ localhost ansible_connection=local
 
 [enmasse:vars]
 namespace=enmasseci
-multitenant=True
 enable_rbac=True
 api_server=True
 register_api_server=False

@@ -7,11 +7,15 @@
 
 The service broker provides an implementation of the Open Service Broker API that integrates with the Kubernetes Service Catalog. The service broker requires the standard authentication service to be deployed.
 
-NOTE: To install {ProductName} on {PlatformName}, you must have `cluster-admin` access to set up the required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-namespace-{context}[].
-
-.Prerequisite
+ifeval::["{PlatformName}" == "OpenShift"]
+.Prerequisites
 
 * The service broker requires the standard authentication service to be deployed.
+* To install the {ProductName} Service Broker on {PlatformName}, you must have `cluster-admin` access to set up the
+required roles for delegating authentication to the {PlatformName} master; otherwise, you are restricted
+to using templates for creating address spaces. For more information about how to deploy without `cluster-admin` access,
+which restricts {ProductName} to using templates, see xref:installing-without-cluster-admin-privileges-{context}[].
+endif::[]
 
 .Procedure
 

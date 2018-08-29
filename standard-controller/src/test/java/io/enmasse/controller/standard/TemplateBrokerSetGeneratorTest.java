@@ -33,7 +33,7 @@ public class TemplateBrokerSetGeneratorTest {
                 .setName("res1")
                 .setTemplateName("mytemplate")
                 .build();
-        generator = new TemplateBrokerSetGenerator(kubernetes, new TemplateOptions(env), "myspace");
+        generator = new TemplateBrokerSetGenerator(kubernetes, new TemplateOptions(env), "myspace", "myid");
     }
 
     @Test

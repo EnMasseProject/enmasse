@@ -43,7 +43,7 @@ public class TestUtils {
      * scale up/down specific Destination (type: StatefulSet) in address space
      */
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
+        kubernetes.setStatefulSetReplicas(destination.getDeployment(), numReplicas);
         waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, true, destination, budget, checkInterval);
     }
 
@@ -51,7 +51,7 @@ public class TestUtils {
      * scale up/down specific Destination (type: StatefulSet) in address space WITHOUT WAIT
      */
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas) throws InterruptedException {
-        kubernetes.setStatefulSetReplicas(addressSpace.getNamespace(), destination.getDeployment(), numReplicas);
+        kubernetes.setStatefulSetReplicas(destination.getDeployment(), numReplicas);
     }
 
     public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
@@ -61,37 +61,43 @@ public class TestUtils {
     /**
      * scale up/down specific pod (type: Deployment) in address space
      */
-    public static void setReplicas(Kubernetes kubernetes, String addressSpace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setDeploymentReplicas(addressSpace, deployment, numReplicas);
+    public static void setReplicas(Kubernetes kubernetes, String infraUuid, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        kubernetes.setDeploymentReplicas(deployment, numReplicas);
+        Map<String, String> labels = new HashMap<>();
+        labels.put("name", deployment);
+        if (infraUuid != null) {
+            labels.put("infraUuid", infraUuid);
+        }
         waitForNReplicas(
                 kubernetes,
-                addressSpace,
                 numReplicas,
-                Collections.singletonMap("name", deployment),
+                labels,
                 budget);
     }
 
-    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
+    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(kubernetes, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
     /**
      * wait for expected count of Destination replicas in address space
      */
-    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, boolean readyRequired,
+    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String infraUuid, int expectedReplicas, boolean readyRequired,
                                               Destination destination, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("role", "broker");
+        labels.put("infraUuid", infraUuid);
         waitForNReplicas(kubernetes,
-                tenantNamespace,
                 expectedReplicas,
                 readyRequired,
-                Collections.singletonMap("role", "broker"),
+                labels,
                 Collections.singletonMap("cluster_id", destination.getDeployment()),
                 budget,
                 checkInterval);
     }
 
-    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
-        waitForNBrokerReplicas(kubernetes, tenantNamespace, expectedReplicas, true, destination, budget, 5000);
+    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String infraUuid, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
+        waitForNBrokerReplicas(kubernetes, infraUuid, expectedReplicas, true, destination, budget, 5000);
     }
 
 
@@ -99,23 +105,22 @@ public class TestUtils {
      * Wait for expected count of replicas
      *
      * @param kubernetes         client for manipulation with kubernetes cluster
-     * @param tenantNamespace    name of AddressSpace
      * @param expectedReplicas   count of expected replicas
      * @param labelSelector      labels on scaled pod
      * @param annotationSelector annotations on sclaed pod
      * @param budget             timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, boolean readyRequired,
+    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, boolean readyRequired,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         List<Pod> pods;
         do {
             if (annotationSelector.isEmpty()) {
-                pods = kubernetes.listPods(tenantNamespace, labelSelector);
+                pods = kubernetes.listPods(labelSelector);
             } else {
-                pods = kubernetes.listPods(tenantNamespace, labelSelector, annotationSelector);
+                pods = kubernetes.listPods(labelSelector, annotationSelector);
             }
             if (!readyRequired) {
                 actualReplicas = pods.size();
@@ -138,12 +143,12 @@ public class TestUtils {
         }
     }
 
-    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
+    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        waitForNReplicas(kubernetes, expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
     }
 
-    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, annotationSelector, budget, 5000);
+    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(kubernetes, expectedReplicas, labelSelector, annotationSelector, budget, 5000);
     }
 
     /**
@@ -204,7 +209,7 @@ public class TestUtils {
      * @return
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
-        return kubernetes.listPods(addressSpace.getNamespace()).stream()
+        return kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running")
                         && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
                 .collect(Collectors.toList());
@@ -583,7 +588,8 @@ public class TestUtils {
      */
     private static AddressSpace convertJsonToAddressSpace(JsonObject addressSpaceJson) {
         String name = addressSpaceJson.getJsonObject("metadata").getString("name");
-        String namespace = addressSpaceJson.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/namespace");
+        String namespace = addressSpaceJson.getJsonObject("metadata").getString("namespace");
+        String infraUuid = addressSpaceJson.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/infra-uuid");
         AddressSpaceType type = AddressSpaceType.valueOf(
                 addressSpaceJson.getJsonObject("spec")
                         .getString("type").toUpperCase());
@@ -632,6 +638,7 @@ public class TestUtils {
         }
         AddressSpace addrSpace = new AddressSpace(name, namespace, type, plan, authService);
         addrSpace.setEndpoints(endpoints);
+        addrSpace.setInfraUuid(infraUuid);
         return addrSpace;
     }
 
@@ -814,11 +821,17 @@ public class TestUtils {
      * @param addressSpace AddressSpace that should be removed
      */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
-        waitForNamespaceDeleted(kubernetes, addressSpace.getNamespace());
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        while (budget.timeLeft() >= 0 && kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size() > 0) {
+            Thread.sleep(1000);
+        }
+        if (kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size() > 0) {
+            throw new TimeoutException("Timed out waiting for namespace " + addressSpace.getName() + " to disappear");
+        }
     }
 
     /**
-     * Wait until AddressSpace will be removed
+     * Wait until Namespace will be removed
      *
      * @param kubernetes client for manipulation with kubernetes cluster
      * @param namespace  project/namespace to remove

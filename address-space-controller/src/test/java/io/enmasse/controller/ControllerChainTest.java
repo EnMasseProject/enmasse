@@ -36,9 +36,7 @@ public class ControllerChainTest {
         kubernetes = mock(Kubernetes.class);
         testApi = new TestAddressSpaceApi();
 
-        when(kubernetes.withNamespace(anyString())).thenReturn(kubernetes);
         when(kubernetes.getNamespace()).thenReturn("myspace");
-        when(kubernetes.existsNamespace(anyString())).thenReturn(true);
     }
 
     @After

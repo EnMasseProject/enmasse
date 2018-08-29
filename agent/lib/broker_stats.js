@@ -52,7 +52,7 @@ function merge() {
 function BrokerStats (env) {
     this.queues = {};
     this.brokers = create_podgroup();
-    this.watcher = pod_watcher.watch('role=broker', env);
+    this.watcher = pod_watcher.watch("role=broker", env);
     this.watcher.on('updated', this.on_updated.bind(this));
 }
 

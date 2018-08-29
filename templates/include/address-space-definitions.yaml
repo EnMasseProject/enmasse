@@ -23,7 +23,9 @@ data:
           enmasse.io/service-port.amqp-wss: 443
         labels:
           app: enmasse
-        name: messaging
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: messaging-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -52,21 +54,15 @@ data:
           targetPort: 8443
         selector:
           capability: router
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
-      data:
-        config.yaml: '{"hostPort": "127.0.0.1:1099", "rules": [{"labels": {"address":
-          "$2", "broker": "$1"}, "name": "artemis_message_count", "pattern": "org.apache.activemq.artemis<broker=\"(.+)\",
-          component=addresses, address=\"(.+)\".*><>MessageCount", "type": "GAUGE"}],
-          "ssl": true}'
       kind: ConfigMap
       metadata:
+        name: qdrouterd-config.${INFRA_UUID}
         labels:
           app: enmasse
-        name: broker-prometheus-config
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: qdrouterd-config
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
       data:
         qdrouterd.conf: |-
           router {
@@ -157,7 +153,7 @@ data:
           }
 
           connector {
-            host: ragent
+            host: ragent-${INFRA_UUID}
             port: 5671
             sslProfile: inter_router_tls
             verifyHostName: no
@@ -199,17 +195,19 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-cn: router
-          enmasse.io/cert-secret: router-internal-cert
+          enmasse.io/cert-cn: router.${INFRA_UUID}
+          enmasse.io/cert-secret: router-internal-cert.${INFRA_UUID}
           prometheus.io/path: /metrics
           prometheus.io/port: '8080'
           prometheus.io/scrape: 'true'
         labels:
           app: enmasse
           name: qdrouterd
-        name: qdrouterd
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: qdrouterd-${INFRA_UUID}
       spec:
-        serviceName: qdrouterd-headless
+        serviceName: qdrouterd-headless-${INFRA_UUID}
         replicas: 1
         template:
           metadata:
@@ -219,6 +217,8 @@ data:
               app: enmasse
               capability: router
               name: qdrouterd
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
@@ -227,7 +227,7 @@ data:
               - name: QDROUTERD_AUTO_MESH_DISCOVERY
                 value: "INFER"
               - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
-                value: "qdrouterd-headless"
+                value: "qdrouterd-headless-${INFRA_UUID}"
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -294,29 +294,35 @@ data:
                 secretName: ${MESSAGING_SECRET}
             - name: authservice-ca
               secret:
-                secretName: authservice-ca
+                secretName: authservice-ca.${INFRA_UUID}
             - name: router-internal-cert
               secret:
-                secretName: router-internal-cert
+                secretName: router-internal-cert.${INFRA_UUID}
             - name: qdrouterd-config
               configMap:
-                name: qdrouterd-config
+                name: qdrouterd-config.${INFRA_UUID}
     - apiVersion: v1
       data:
         tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
       kind: Secret
       metadata:
-        name: authservice-ca
+        name: authservice-ca.${INFRA_UUID}
+        labels:
+          app: enmasse
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
     - apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: admin-internal-cert
+          enmasse.io/cert-secret: admin-internal-cert.${INFRA_UUID}
         labels:
           app: enmasse
           name: admin
-        name: admin
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: admin.${INFRA_UUID}
       spec:
         replicas: 1
         strategy:
@@ -328,15 +334,27 @@ data:
             labels:
               app: enmasse
               name: admin
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               - name: TEMPLATE_DIR
                 value: /broker-templates
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
+              - name: ADDRESS_SPACE_PLAN
+                value: ${ADDRESS_SPACE_PLAN}
               - name: RESYNC_INTERVAL
                 value: ${CONTROLLER_RESYNC_INTERVAL}
               - name: CHECK_INTERVAL
@@ -389,6 +407,16 @@ data:
                 name: broker-templates
                 readOnly: true
             - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
+              - name: ADDRESS_SPACE_PLAN
+                value: ${ADDRESS_SPACE_PLAN}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               - name: AUTHENTICATION_SERVICE_HOST
@@ -457,16 +485,16 @@ data:
                 secretName: ${CONSOLE_SECRET}
             - name: authservice-ca
               secret:
-                secretName: authservice-ca
+                secretName: authservice-ca.${INFRA_UUID}
             - name: admin-internal-cert
               secret:
-                secretName: admin-internal-cert
+                secretName: admin-internal-cert.${INFRA_UUID}
             - name: messaging-cert
               secret:
                 secretName: ${MESSAGING_SECRET}
             - name: broker-templates
               configMap:
-                name: broker-templates
+                name: standard-broker-definitions
     - apiVersion: v1
       kind: Service
       metadata:
@@ -474,7 +502,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: qdrouterd-headless
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: qdrouterd-headless-${INFRA_UUID}
       spec:
         clusterIP: None
         ports:
@@ -483,6 +513,7 @@ data:
           targetPort: 55672
         selector:
           capability: router
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -490,7 +521,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: ragent
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: ragent-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -498,6 +531,7 @@ data:
           targetPort: 55671
         selector:
           name: admin
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -505,7 +539,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: queue-scheduler
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: queue-scheduler-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -513,6 +549,7 @@ data:
           targetPort: 55671
         selector:
           name: admin
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -520,7 +557,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: console
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: console-${INFRA_UUID}
       spec:
         ports:
         - name: https
@@ -528,475 +567,14 @@ data:
           targetPort: 8080
         selector:
           name: admin
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        labels:
-          app: enmasse
-        name: broker-templates
-      data:
-        queue-persisted.yaml: |-
-          apiVersion: v1
-          kind: Template
-          metadata:
-            labels:
-              app: enmasse
-            name: queue-persisted
-          objects:
-          - apiVersion: v1
-            kind: Service
-            metadata:
-              annotations:
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              clusterIP: None
-              selector:
-                name: ${NAME}
-                role: broker
-          - apiVersion: apps/v1beta1
-            kind: StatefulSet
-            metadata:
-              annotations:
-                address: ${ADDRESS}
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-                enmasse.io/cert-cn: broker
-                enmasse.io/cert-secret: broker-internal-cert
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              replicas: 1
-              serviceName: ${NAME}
-              template:
-                metadata:
-                  annotations:
-                    address: ${ADDRESS}
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                    prometheus.io/path: /metrics
-                    prometheus.io/port: '8080'
-                    prometheus.io/scrape: 'true'
-                  labels:
-                    addresstype: queue
-                    app: enmasse
-                    name: ${NAME}
-                    role: broker
-                spec:
-                  containers:
-                  - env:
-                    - name: QUEUE_NAME
-                      value: ${ADDRESS}
-                    - name: CLUSTER_ID
-                      value: ${CLUSTER_ID}
-                    - name: CERT_DIR
-                      value: /etc/enmasse-certs
-                    - name: GLOBAL_MAX_SIZE
-                      value: ${GLOBAL_MAX_SIZE}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-                    image: ${BROKER_IMAGE}
-                    lifecycle:
-                      preStop:
-                        exec:
-                          command:
-                          - /shutdown-hook/shutdown-hook.sh
-                    livenessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 120
-                    name: broker
-                    ports:
-                    - containerPort: 5673
-                      name: amqp
-                    - containerPort: 8161
-                      name: jolokia
-                    - containerPort: 8080
-                      name: artemismetrics
-                    readinessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 10
-                    resources:
-                      limits:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                      requests:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                    volumeMounts:
-                    - mountPath: /var/run/artemis
-                      name: data
-                      readOnly: false
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                    - mountPath: /etc/authservice-ca
-                      name: authservice-ca
-                      readOnly: true
-                    - mountPath: /etc/prometheus-config
-                      name: broker-prometheus-config
-                      readOnly: true
-                  volumes:
-                  - name: ssl-certs
-                    secret:
-                      secretName: ${COLOCATED_ROUTER_SECRET}
-                  - name: authservice-ca
-                    secret:
-                      secretName: authservice-ca
-                  - name: broker-internal-cert
-                    secret:
-                      secretName: broker-internal-cert
-                  - configMap:
-                      name: broker-prometheus-config
-                    name: broker-prometheus-config
-              volumeClaimTemplates:
-              - apiVersion: v1
-                kind: PersistentVolumeClaim
-                metadata:
-                  annotations:
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                  labels:
-                    app: enmasse
-                  name: data
-                spec:
-                  accessModes:
-                  - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: ${STORAGE_CAPACITY}
-          parameters:
-          - description: Storage capacity required for volume claims
-            name: STORAGE_CAPACITY
-            value: 2Gi
-          - description: The link capacity setting for router
-            name: ROUTER_LINK_CAPACITY
-            value: '250'
-          - description: A valid addressSpace name for the address Space
-            name: ADDRESS_SPACE
-            required: true
-          - description: A valid name for the deployment
-            name: NAME
-            required: true
-          - description: A valid group id for the deployment
-            name: CLUSTER_ID
-            required: true
-          - description: The address to use for the queue
-            name: ADDRESS
-            value: ''
-          - description: Name of secret containing router key and certificate
-            name: COLOCATED_ROUTER_SECRET
-            required: true
-          - description: The hostname of the authentication service used by this address
-              space
-            name: AUTHENTICATION_SERVICE_HOST
-            required: true
-          - description: The port of the authentication service used by this address space
-            name: AUTHENTICATION_SERVICE_PORT
-            required: true
-          - description: The secret to use for validating authentication service cert
-            name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
-          - description: The client cert to use as identity against authentication service
-            name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-          - description: The hostname to use in sasl init
-            name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-          - description: Memory limits for container
-            name: BROKER_MEMORY_LIMIT
-            value: 512Mi
-          - description: Global max size for all addresses in broker. Cannot be larger than
-              a quarter of BROKER_MEMORY_LIMIT
-            name: GLOBAL_MAX_SIZE
-            value: -1
-        topic-persisted.yaml: |-
-          apiVersion: v1
-          kind: Template
-          metadata:
-            labels:
-              app: enmasse
-            name: topic-persisted
-          objects:
-          - apiVersion: v1
-            kind: Service
-            metadata:
-              annotations:
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              clusterIP: None
-              selector:
-                name: ${NAME}
-                role: broker
-          - apiVersion: v1
-            kind: ConfigMap
-            metadata:
-              annotations:
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-              labels:
-                app: enmasse
-              name: ${NAME}-config
-            data:
-              colocated-topic.conf: |-
-                connector {
-                  host: 127.0.0.1
-                  port: 5673
-                  name: localbroker
-                  role: route-container
-                  sslProfile: inter_router_tls
-                  verifyHostName: no
-                }
-
-                linkRoute {
-                  name: override.main_in
-                  prefix: ${ADDRESS}
-                  direction: in
-                  connection: localbroker
-                }
-
-                linkRoute {
-                  name: override.main_out
-                  prefix: ${ADDRESS}
-                  direction: out
-                  connection: localbroker
-                }
-
-                linkRoute {
-                  name: override.qualified_out
-                  prefix: ${ADDRESS}/${HOSTNAME}
-                  direction: out
-                  connection: localbroker
-                }
-                # yuck, yuck, but colocated router hopefully soon to disappear
-                connector {
-                  name: qdrouterd-0
-                  host: qdrouterd-0.qdrouterd-headless.${NAMESPACE}.svc.cluster.local
-                  port: 55672
-                  role: inter-router
-                  sslProfile: inter_router_tls
-                  verifyHostName: false
-                }
-          - apiVersion: apps/v1beta1
-            kind: StatefulSet
-            metadata:
-              annotations:
-                address: ${ADDRESS}
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-                enmasse.io/cert-cn: broker
-                enmasse.io/cert-secret: broker-internal-cert
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              replicas: 1
-              serviceName: ${NAME}
-              template:
-                metadata:
-                  annotations:
-                    address: ${ADDRESS}
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                    prometheus.io/path: /metrics
-                    prometheus.io/port: '8080'
-                    prometheus.io/scrape: 'true'
-                  labels:
-                    addresstype: topic
-                    app: enmasse
-                    name: ${NAME}
-                    role: broker
-                spec:
-                  containers:
-                  - env:
-                    - name: TOPIC_NAME
-                      value: ${ADDRESS}
-                    - name: CLUSTER_ID
-                      value: ${CLUSTER_ID}
-                    - name: CERT_DIR
-                      value: /etc/enmasse-certs
-                    - name: GLOBAL_MAX_SIZE
-                      value: ${GLOBAL_MAX_SIZE}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-                    image: ${BROKER_IMAGE}
-                    lifecycle:
-                      preStop:
-                        exec:
-                          command:
-                          - /shutdown-hook/shutdown-hook.sh
-                    livenessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 120
-                    name: broker
-                    ports:
-                    - containerPort: 5673
-                      name: amqp
-                    - containerPort: 8161
-                      name: jolokia
-                    - containerPort: 8080
-                      name: artemismetrics
-                    readinessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 10
-                    resources:
-                      limits:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                      requests:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                    volumeMounts:
-                    - mountPath: /var/run/artemis
-                      name: data
-                      readOnly: false
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                    - mountPath: /etc/authservice-ca
-                      name: authservice-ca
-                      readOnly: true
-                    - mountPath: /etc/prometheus-config
-                      name: broker-prometheus-config
-                      readOnly: true
-                  - env:
-                    - name: TOPIC_NAME
-                      value: ${ADDRESS}
-                    - name: CLUSTER_ID
-                      value: ${NAME}
-                    - name: CERT_DIR
-                      value: /etc/enmasse-certs
-                    image: ${TOPIC_FORWARDER_IMAGE}
-                    livenessProbe:
-                      httpGet:
-                        path: /health
-                        port: health
-                      initialDelaySeconds: 60
-                    name: forwarder
-                    ports:
-                    - containerPort: 8088
-                      name: health
-                    resources:
-                      limits:
-                        memory: 128Mi
-                      requests:
-                        memory: 128Mi
-                    volumeMounts:
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                  volumes:
-                  - name: ssl-certs
-                    secret:
-                      secretName: ${COLOCATED_ROUTER_SECRET}
-                  - name: authservice-ca
-                    secret:
-                      secretName: authservice-ca
-                  - name: broker-internal-cert
-                    secret:
-                      secretName: broker-internal-cert
-                  - configMap:
-                      name: broker-prometheus-config
-                    name: broker-prometheus-config
-                  - name: qdrouterd-config
-                    configMap:
-                      name: qdrouterd-config
-                  - name: colocated-config
-                    configMap:
-                      name: ${NAME}-config
-              volumeClaimTemplates:
-              - apiVersion: v1
-                kind: PersistentVolumeClaim
-                metadata:
-                  annotations:
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                  labels:
-                    app: enmasse
-                  name: data
-                spec:
-                  accessModes:
-                  - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: ${STORAGE_CAPACITY}
-          parameters:
-          - description: Storage capacity required for volume claims
-            name: STORAGE_CAPACITY
-            value: 2Gi
-          - description: The link capacity setting for router
-            name: ROUTER_LINK_CAPACITY
-            value: '250'
-          - description: A valid addressSpace name for the address Space
-            name: ADDRESS_SPACE
-            required: true
-          - description: A valid name for the deployment
-            name: NAME
-            required: true
-          - description: A valid group id for the deployment
-            name: CLUSTER_ID
-            required: true
-          - description: The address to use for the topic
-            name: ADDRESS
-            value: ''
-          - description: Name of secret containing router key and certificate
-            name: COLOCATED_ROUTER_SECRET
-            required: true
-          - description: The hostname of the authentication service used by this address
-              space
-            name: AUTHENTICATION_SERVICE_HOST
-            required: true
-          - description: The port of the authentication service used by this address space
-            name: AUTHENTICATION_SERVICE_PORT
-            required: true
-          - description: The secret to use for validating authentication service cert
-            name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
-          - description: The client cert to use as identity against authentication service
-            name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-          - description: The hostname to use in sasl init
-            name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-          - description: Memory limits for container
-            name: BROKER_MEMORY_LIMIT
-            value: 512Mi
-          - description: Global max size for all addresses in broker. Cannot be larger than
-              a quarter of BROKER_MEMORY_LIMIT
-            name: GLOBAL_MAX_SIZE
-            value: -1
+          infraUuid: ${INFRA_UUID}
     parameters:
+    - name: INFRA_UUID
+      description: UUID to use for infrastructure
+      required: true
+    - name: ADDRESS_SPACE_PLAN
+      description: Name of address space plan followed
+      required: true
     - description: The link capacity setting for router
       name: ROUTER_LINK_CAPACITY
       value: '250'
@@ -1050,7 +628,7 @@ data:
       value: '10000'
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
-      value: address-space-admin
+      required: true
   standard-space-infra.yaml: |-
     apiVersion: v1
     kind: Template
@@ -1069,7 +647,9 @@ data:
           enmasse.io/service-port.amqp-wss: 443
         labels:
           app: enmasse
-        name: messaging
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: messaging-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -1098,6 +678,7 @@ data:
           targetPort: 55672
         selector:
           capability: router
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -1105,7 +686,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: subscription
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: subscription-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -1114,21 +697,15 @@ data:
           targetPort: 5672
         selector:
           name: subserv
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
-      data:
-        config.yaml: '{"hostPort": "127.0.0.1:1099", "rules": [{"labels": {"address":
-          "$2", "broker": "$1"}, "name": "artemis_message_count", "pattern": "org.apache.activemq.artemis<broker=\"(.+)\",
-          component=addresses, address=\"(.+)\".*><>MessageCount", "type": "GAUGE"}],
-          "ssl": true}'
       kind: ConfigMap
       metadata:
+        name: qdrouterd-config.${INFRA_UUID}
         labels:
           app: enmasse
-        name: broker-prometheus-config
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: qdrouterd-config
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
       data:
         qdrouterd.conf: |-
           router {
@@ -1219,7 +796,7 @@ data:
           }
 
           connector {
-            host: ragent
+            host: ragent-${INFRA_UUID}
             port: 5671
             sslProfile: inter_router_tls
             verifyHostName: no
@@ -1261,17 +838,19 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-cn: router
-          enmasse.io/cert-secret: router-internal-cert
+          enmasse.io/cert-cn: router.${INFRA_UUID}
+          enmasse.io/cert-secret: router-internal-cert.${INFRA_UUID}
           prometheus.io/path: /metrics
           prometheus.io/port: '8080'
           prometheus.io/scrape: 'true'
         labels:
           app: enmasse
           name: qdrouterd
-        name: qdrouterd
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: qdrouterd-${INFRA_UUID}
       spec:
-        serviceName: qdrouterd-headless
+        serviceName: qdrouterd-headless-${INFRA_UUID}
         replicas: 1
         template:
           metadata:
@@ -1281,6 +860,8 @@ data:
               app: enmasse
               capability: router
               name: qdrouterd
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
@@ -1289,7 +870,7 @@ data:
               - name: QDROUTERD_AUTO_MESH_DISCOVERY
                 value: "INFER"
               - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
-                value: "qdrouterd-headless"
+                value: "qdrouterd-headless-${INFRA_UUID}"
               image: ${ROUTER_IMAGE}
               livenessProbe:
                 initialDelaySeconds: 60
@@ -1356,29 +937,35 @@ data:
                 secretName: ${MESSAGING_SECRET}
             - name: authservice-ca
               secret:
-                secretName: authservice-ca
+                secretName: authservice-ca.${INFRA_UUID}
             - name: router-internal-cert
               secret:
-                secretName: router-internal-cert
+                secretName: router-internal-cert.${INFRA_UUID}
             - name: qdrouterd-config
               configMap:
-                name: qdrouterd-config
+                name: qdrouterd-config.${INFRA_UUID}
     - apiVersion: v1
       data:
         tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
       kind: Secret
       metadata:
-        name: authservice-ca
+        name: authservice-ca.${INFRA_UUID}
+        labels:
+          app: enmasse
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
     - apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: admin-internal-cert
+          enmasse.io/cert-secret: admin-internal-cert.${INFRA_UUID}
         labels:
           app: enmasse
           name: admin
-        name: admin
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: admin.${INFRA_UUID}
       spec:
         replicas: 1
         strategy:
@@ -1390,9 +977,21 @@ data:
             labels:
               app: enmasse
               name: admin
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
+              - name: ADDRESS_SPACE_PLAN
+                value: ${ADDRESS_SPACE_PLAN}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               - name: TEMPLATE_DIR
@@ -1451,6 +1050,16 @@ data:
                 name: broker-templates
                 readOnly: true
             - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
+              - name: ADDRESS_SPACE_PLAN
+                value: ${ADDRESS_SPACE_PLAN}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               - name: AUTHENTICATION_SERVICE_HOST
@@ -1519,16 +1128,16 @@ data:
                 secretName: ${CONSOLE_SECRET}
             - name: authservice-ca
               secret:
-                secretName: authservice-ca
+                secretName: authservice-ca.${INFRA_UUID}
             - name: admin-internal-cert
               secret:
-                secretName: admin-internal-cert
+                secretName: admin-internal-cert.${INFRA_UUID}
             - name: messaging-cert
               secret:
                 secretName: ${MESSAGING_SECRET}
             - name: broker-templates
               configMap:
-                name: broker-templates
+                name: standard-broker-definitions
     - apiVersion: v1
       kind: Service
       metadata:
@@ -1536,7 +1145,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: qdrouterd-headless
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: qdrouterd-headless-${INFRA_UUID}
       spec:
         clusterIP: None
         ports:
@@ -1545,6 +1156,7 @@ data:
           targetPort: 55672
         selector:
           capability: router
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -1552,7 +1164,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: ragent
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: ragent-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -1560,6 +1174,7 @@ data:
           targetPort: 55671
         selector:
           name: admin
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -1567,7 +1182,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: queue-scheduler
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: queue-scheduler-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -1575,6 +1192,7 @@ data:
           targetPort: 55671
         selector:
           name: admin
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -1582,7 +1200,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: console
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: console-${INFRA_UUID}
       spec:
         ports:
         - name: https
@@ -1590,484 +1210,19 @@ data:
           targetPort: 8080
         selector:
           name: admin
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        labels:
-          app: enmasse
-        name: broker-templates
-      data:
-        queue-persisted.yaml: |-
-          apiVersion: v1
-          kind: Template
-          metadata:
-            labels:
-              app: enmasse
-            name: queue-persisted
-          objects:
-          - apiVersion: v1
-            kind: Service
-            metadata:
-              annotations:
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              clusterIP: None
-              selector:
-                name: ${NAME}
-                role: broker
-          - apiVersion: apps/v1beta1
-            kind: StatefulSet
-            metadata:
-              annotations:
-                address: ${ADDRESS}
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-                enmasse.io/cert-cn: broker
-                enmasse.io/cert-secret: broker-internal-cert
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              replicas: 1
-              serviceName: ${NAME}
-              template:
-                metadata:
-                  annotations:
-                    address: ${ADDRESS}
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                    prometheus.io/path: /metrics
-                    prometheus.io/port: '8080'
-                    prometheus.io/scrape: 'true'
-                  labels:
-                    addresstype: queue
-                    app: enmasse
-                    name: ${NAME}
-                    role: broker
-                spec:
-                  containers:
-                  - env:
-                    - name: QUEUE_NAME
-                      value: ${ADDRESS}
-                    - name: CLUSTER_ID
-                      value: ${CLUSTER_ID}
-                    - name: CERT_DIR
-                      value: /etc/enmasse-certs
-                    - name: GLOBAL_MAX_SIZE
-                      value: ${GLOBAL_MAX_SIZE}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-                    image: ${BROKER_IMAGE}
-                    lifecycle:
-                      preStop:
-                        exec:
-                          command:
-                          - /shutdown-hook/shutdown-hook.sh
-                    livenessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 120
-                    name: broker
-                    ports:
-                    - containerPort: 5673
-                      name: amqp
-                    - containerPort: 8161
-                      name: jolokia
-                    - containerPort: 8080
-                      name: artemismetrics
-                    readinessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 10
-                    resources:
-                      limits:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                      requests:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                    volumeMounts:
-                    - mountPath: /var/run/artemis
-                      name: data
-                      readOnly: false
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                    - mountPath: /etc/authservice-ca
-                      name: authservice-ca
-                      readOnly: true
-                    - mountPath: /etc/prometheus-config
-                      name: broker-prometheus-config
-                      readOnly: true
-                  volumes:
-                  - name: ssl-certs
-                    secret:
-                      secretName: ${COLOCATED_ROUTER_SECRET}
-                  - name: authservice-ca
-                    secret:
-                      secretName: authservice-ca
-                  - name: broker-internal-cert
-                    secret:
-                      secretName: broker-internal-cert
-                  - configMap:
-                      name: broker-prometheus-config
-                    name: broker-prometheus-config
-              volumeClaimTemplates:
-              - apiVersion: v1
-                kind: PersistentVolumeClaim
-                metadata:
-                  annotations:
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                  labels:
-                    app: enmasse
-                  name: data
-                spec:
-                  accessModes:
-                  - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: ${STORAGE_CAPACITY}
-          parameters:
-          - description: Storage capacity required for volume claims
-            name: STORAGE_CAPACITY
-            value: 2Gi
-          - description: The link capacity setting for router
-            name: ROUTER_LINK_CAPACITY
-            value: '50'
-          - description: A valid addressSpace name for the address Space
-            name: ADDRESS_SPACE
-            required: true
-          - description: A valid name for the deployment
-            name: NAME
-            required: true
-          - description: A valid group id for the deployment
-            name: CLUSTER_ID
-            required: true
-          - description: The address to use for the queue
-            name: ADDRESS
-            value: ''
-          - description: Name of secret containing router key and certificate
-            name: COLOCATED_ROUTER_SECRET
-            required: true
-          - description: The hostname of the authentication service used by this address
-              space
-            name: AUTHENTICATION_SERVICE_HOST
-            required: true
-          - description: The port of the authentication service used by this address space
-            name: AUTHENTICATION_SERVICE_PORT
-            required: true
-          - description: The secret to use for validating authentication service cert
-            name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
-          - description: The client cert to use as identity against authentication service
-            name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-          - description: The hostname to use in sasl init
-            name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-          - description: Memory limits for container
-            name: BROKER_MEMORY_LIMIT
-            value: 512Mi
-          - description: Global max size for all addresses in broker. Cannot be larger than
-              a quarter of BROKER_MEMORY_LIMIT
-            name: GLOBAL_MAX_SIZE
-            value: -1
-        topic-persisted.yaml: |-
-          apiVersion: v1
-          kind: Template
-          metadata:
-            labels:
-              app: enmasse
-            name: topic-persisted
-          objects:
-          - apiVersion: v1
-            kind: Service
-            metadata:
-              annotations:
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              clusterIP: None
-              selector:
-                name: ${NAME}
-                role: broker
-          - apiVersion: v1
-            kind: ConfigMap
-            metadata:
-              annotations:
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-              labels:
-                app: enmasse
-              name: ${NAME}-config
-            data:
-              colocated-topic.conf: |-
-                connector {
-                  host: 127.0.0.1
-                  port: 5673
-                  name: localbroker
-                  role: route-container
-                  sslProfile: inter_router_tls
-                  verifyHostName: no
-                }
-
-                linkRoute {
-                  name: override.main_in
-                  prefix: ${ADDRESS}
-                  direction: in
-                  connection: localbroker
-                }
-
-                linkRoute {
-                  name: override.main_out
-                  prefix: ${ADDRESS}
-                  direction: out
-                  connection: localbroker
-                }
-
-                linkRoute {
-                  name: override.qualified_out
-                  prefix: ${ADDRESS}/${HOSTNAME}
-                  direction: out
-                  connection: localbroker
-                }
-                # yuck, yuck, but colocated router hopefully soon to disappear
-                connector {
-                  name: qdrouterd-0
-                  host: qdrouterd-0.qdrouterd-headless.${NAMESPACE}.svc.cluster.local
-                  port: 55672
-                  role: inter-router
-                  sslProfile: inter_router_tls
-                  verifyHostName: false
-                }
-          - apiVersion: apps/v1beta1
-            kind: StatefulSet
-            metadata:
-              annotations:
-                address: ${ADDRESS}
-                addressSpace: ${ADDRESS_SPACE}
-                cluster_id: ${CLUSTER_ID}
-                enmasse.io/cert-cn: broker
-                enmasse.io/cert-secret: broker-internal-cert
-              labels:
-                app: enmasse
-              name: ${NAME}
-            spec:
-              replicas: 1
-              serviceName: ${NAME}
-              template:
-                metadata:
-                  annotations:
-                    address: ${ADDRESS}
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                    prometheus.io/path: /metrics
-                    prometheus.io/port: '8080'
-                    prometheus.io/scrape: 'true'
-                  labels:
-                    addresstype: topic
-                    app: enmasse
-                    name: ${NAME}
-                    role: broker
-                spec:
-                  containers:
-                  - env:
-                    - name: TOPIC_NAME
-                      value: ${ADDRESS}
-                    - name: CLUSTER_ID
-                      value: ${CLUSTER_ID}
-                    - name: CERT_DIR
-                      value: /etc/enmasse-certs
-                    - name: GLOBAL_MAX_SIZE
-                      value: ${GLOBAL_MAX_SIZE}
-                    - name: AUTHENTICATION_SERVICE_HOST
-                      value: ${AUTHENTICATION_SERVICE_HOST}
-                    - name: AUTHENTICATION_SERVICE_PORT
-                      value: ${AUTHENTICATION_SERVICE_PORT}
-                    - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                      value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-                    - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                      value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-                    - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                      value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-                    image: ${BROKER_IMAGE}
-                    lifecycle:
-                      preStop:
-                        exec:
-                          command:
-                          - /shutdown-hook/shutdown-hook.sh
-                    livenessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 120
-                    name: broker
-                    ports:
-                    - containerPort: 5673
-                      name: amqp
-                    - containerPort: 8161
-                      name: jolokia
-                    - containerPort: 8080
-                      name: artemismetrics
-                    readinessProbe:
-                      exec:
-                        command:
-                        - sh
-                        - -c
-                        - $ARTEMIS_HOME/bin/probe.sh
-                      initialDelaySeconds: 10
-                    resources:
-                      limits:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                      requests:
-                        memory: ${BROKER_MEMORY_LIMIT}
-                    volumeMounts:
-                    - mountPath: /var/run/artemis
-                      name: data
-                      readOnly: false
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                    - mountPath: /etc/authservice-ca
-                      name: authservice-ca
-                      readOnly: true
-                    - mountPath: /etc/prometheus-config
-                      name: broker-prometheus-config
-                      readOnly: true
-                  - env:
-                    - name: TOPIC_NAME
-                      value: ${ADDRESS}
-                    - name: CLUSTER_ID
-                      value: ${NAME}
-                    - name: CERT_DIR
-                      value: /etc/enmasse-certs
-                    image: ${TOPIC_FORWARDER_IMAGE}
-                    livenessProbe:
-                      httpGet:
-                        path: /health
-                        port: health
-                      initialDelaySeconds: 60
-                    name: forwarder
-                    ports:
-                    - containerPort: 8088
-                      name: health
-                    resources:
-                      limits:
-                        memory: 128Mi
-                      requests:
-                        memory: 128Mi
-                    volumeMounts:
-                    - mountPath: /etc/enmasse-certs
-                      name: broker-internal-cert
-                      readOnly: true
-                  volumes:
-                  - name: ssl-certs
-                    secret:
-                      secretName: ${COLOCATED_ROUTER_SECRET}
-                  - name: authservice-ca
-                    secret:
-                      secretName: authservice-ca
-                  - name: broker-internal-cert
-                    secret:
-                      secretName: broker-internal-cert
-                  - configMap:
-                      name: broker-prometheus-config
-                    name: broker-prometheus-config
-                  - name: qdrouterd-config
-                    configMap:
-                      name: qdrouterd-config
-                  - name: colocated-config
-                    configMap:
-                      name: ${NAME}-config
-              volumeClaimTemplates:
-              - apiVersion: v1
-                kind: PersistentVolumeClaim
-                metadata:
-                  annotations:
-                    addressSpace: ${ADDRESS_SPACE}
-                    cluster_id: ${CLUSTER_ID}
-                  labels:
-                    app: enmasse
-                  name: data
-                spec:
-                  accessModes:
-                  - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: ${STORAGE_CAPACITY}
-          parameters:
-          - description: Storage capacity required for volume claims
-            name: STORAGE_CAPACITY
-            value: 2Gi
-          - description: The link capacity setting for router
-            name: ROUTER_LINK_CAPACITY
-            value: '50'
-          - description: A valid addressSpace name for the address Space
-            name: ADDRESS_SPACE
-            required: true
-          - description: A valid name for the deployment
-            name: NAME
-            required: true
-          - description: A valid group id for the deployment
-            name: CLUSTER_ID
-            required: true
-          - description: The address to use for the topic
-            name: ADDRESS
-            value: ''
-          - description: Name of secret containing router key and certificate
-            name: COLOCATED_ROUTER_SECRET
-            required: true
-          - description: The hostname of the authentication service used by this address
-              space
-            name: AUTHENTICATION_SERVICE_HOST
-            required: true
-          - description: The port of the authentication service used by this address space
-            name: AUTHENTICATION_SERVICE_PORT
-            required: true
-          - description: The secret to use for validating authentication service cert
-            name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
-          - description: The client cert to use as identity against authentication service
-            name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-          - description: The hostname to use in sasl init
-            name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-          - description: Memory limits for container
-            name: BROKER_MEMORY_LIMIT
-            value: 512Mi
-          - description: Global max size for all addresses in broker. Cannot be larger than
-              a quarter of BROKER_MEMORY_LIMIT
-            name: GLOBAL_MAX_SIZE
-            value: -1
+          infraUuid: ${INFRA_UUID}
     - apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: subserv-internal-cert
+          enmasse.io/cert-secret: subserv-internal-cert.${INFRA_UUID}
         labels:
           app: enmasse
           name: subserv
-        name: subserv
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: subserv.${INFRA_UUID}
       spec:
         replicas: 1
         template:
@@ -2077,9 +1232,18 @@ data:
             labels:
               app: enmasse
               name: subserv
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
-            - command:
+            - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
+              command:
               - /opt/app-root/src/bin/launch_node.sh
               - /opt/app-root/src/bin/subserv.js
               image: ${AGENT_IMAGE}
@@ -2104,7 +1268,7 @@ data:
             volumes:
             - name: subserv-internal-cert
               secret:
-                secretName: subserv-internal-cert
+                secretName: subserv-internal-cert.${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -2114,7 +1278,9 @@ data:
           enmasse.io/service-port.mqtts: 8883
         labels:
           app: enmasse
-        name: mqtt
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: mqtt-${INFRA_UUID}
       spec:
         ports:
         - name: mqtt
@@ -2127,6 +1293,7 @@ data:
           targetPort: 8883
         selector:
           name: mqtt-gateway
+          infraUuid: ${INFRA_UUID}
         type: ClusterIP
     - apiVersion: extensions/v1beta1
       kind: Deployment
@@ -2136,7 +1303,9 @@ data:
         labels:
           app: enmasse
           name: mqtt-gateway
-        name: mqtt-gateway
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: mqtt-gateway.${INFRA_UUID}
       spec:
         replicas: 1
         template:
@@ -2146,9 +1315,15 @@ data:
             labels:
               app: enmasse
               name: mqtt-gateway
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT
+                value: 5672
               - name: ENMASSE_MQTT_SSL
                 value: 'true'
               - name: ENMASSE_MQTT_KEYFILE
@@ -2174,6 +1349,11 @@ data:
                 name: ssl-certs
                 readOnly: true
             - image: ${MQTT_GATEWAY_IMAGE}
+              env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT
+                value: 5672
               livenessProbe:
                 initialDelaySeconds: 60
                 tcpSocket:
@@ -2192,11 +1372,13 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: mqtt-lwt-internal-cert
+          enmasse.io/cert-secret: mqtt-lwt-internal-cert.${INFRA_UUID}
         labels:
           app: enmasse
           name: mqtt-lwt
-        name: mqtt-lwt
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: mqtt-lwt.${INFRA_UUID}
       spec:
         replicas: 1
         template:
@@ -2206,15 +1388,19 @@ data:
             labels:
               app: enmasse
               name: mqtt-lwt
+              infraType: standard
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
               - name: MESSAGING_SERVICE_NORMAL_PORT
-                value: $(MESSAGING_SERVICE_PORT_AMQPS_NORMAL)
+                value: 55671
               - name: MESSAGING_SERVICE_ROUTE_CONTAINER_PORT
-                value: $(MESSAGING_SERVICE_PORT_AMQPS_BROKER)
+                value: 56671
               image: ${MQTT_LWT_IMAGE}
               name: mqtt-lwt
               volumeMounts:
@@ -2224,11 +1410,17 @@ data:
             volumes:
             - name: mqtt-lwt-internal-cert
               secret:
-                secretName: mqtt-lwt-internal-cert
+                secretName: mqtt-lwt-internal-cert.${INFRA_UUID}
     parameters:
+    - name: INFRA_UUID
+      description: UUID to use for infrastructure
+      required: true
+    - name: ADDRESS_SPACE_PLAN
+      description: Name of address space plan followed
+      required: true
     - description: The link capacity setting for router
       name: ROUTER_LINK_CAPACITY
-      value: '50'
+      value: '250'
     - description: The hostname to use for the exposed route for messaging
       name: MESSAGING_HOSTNAME
     - description: The hostname to use for the exposed route for MQTT
@@ -2279,7 +1471,7 @@ data:
       value: '10000'
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
-      value: address-space-admin
+      required: true
     - description: Maximum message size allowed by the MQTT Gateway
       name: MQTT_MAXMESSAGESIZE
       value: '131072'
@@ -2296,22 +1488,7 @@ data:
         tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
       kind: Secret
       metadata:
-        name: authservice-ca
-    - apiVersion: v1
-      data:
-        config.yaml: '{"hostPort": "127.0.0.1:1099", "rules": [{"labels": {"broker":
-          "$1"}, "name": "artemis_connection_count", "pattern": "org.apache.activemq.artemis<broker=\"(.+)\"><>ConnectionCount",
-          "type": "GAUGE"}, {"labels": {"address": "$2", "broker": "$1"}, "name": "artemis_consumer_count",
-          "pattern": "org.apache.activemq.artemis<broker=\"(.+)\", component=addresses,
-          address=\"(.+)\".*><>ConsumerCount", "type": "GAUGE"}, {"labels": {"address":
-          "$2", "broker": "$1"}, "name": "artemis_message_count", "pattern": "org.apache.activemq.artemis<broker=\"(.+)\",
-          component=addresses, address=\"(.+)\".*><>MessageCount", "type": "GAUGE"}],
-          "ssl": true}'
-      kind: ConfigMap
-      metadata:
-        labels:
-          app: enmasse
-        name: broker-prometheus-config
+        name: authservice-ca.${INFRA_UUID}
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
@@ -2319,7 +1496,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: broker-data
+          infraType: brokered
+          infraUuid: ${INFRA_UUID}
+        name: broker-data.${INFRA_UUID}
       spec:
         accessModes:
         - ReadWriteOnce
@@ -2331,11 +1510,13 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: broker-internal-cert
+          enmasse.io/cert-secret: broker-internal-cert.${INFRA_UUID}
         labels:
           app: enmasse
           role: broker
-        name: broker
+          infraType: brokered
+          infraUuid: ${INFRA_UUID}
+        name: broker.${INFRA_UUID}
       spec:
         replicas: 1
         template:
@@ -2349,9 +1530,12 @@ data:
               app: enmasse
               name: broker
               role: broker
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
               - name: ADDRESS_SPACE_TYPE
                 value: brokered
               - name: CERT_DIR
@@ -2419,16 +1603,16 @@ data:
             volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: broker-data
-            - configMap:
+                claimName: broker-data.${INFRA_UUID}
+            - name: broker-prometheus-config
+              configMap:
                 name: broker-prometheus-config
-              name: broker-prometheus-config
             - name: broker-internal-cert
               secret:
-                secretName: broker-internal-cert
+                secretName: broker-internal-cert.${INFRA_UUID}
             - name: authservice-ca
               secret:
-                secretName: authservice-ca
+                secretName: authservice-ca.${INFRA_UUID}
             - name: external-cert
               secret:
                 secretName: ${MESSAGING_SECRET}
@@ -2437,7 +1621,9 @@ data:
       metadata:
         labels:
           app: enmasse
-        name: broker
+          infraType: brokered
+          infraUuid: ${INFRA_UUID}
+        name: broker-${INFRA_UUID}
       spec:
         ports:
         - name: amqps-normal
@@ -2445,6 +1631,7 @@ data:
           targetPort: amqps-normal
         selector:
           role: broker
+          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -2452,7 +1639,9 @@ data:
           addressSpace: ${ADDRESS_SPACE}
         labels:
           app: enmasse
-        name: messaging
+          infraType: brokered
+          infraUuid: ${INFRA_UUID}
+        name: messaging-${INFRA_UUID}
       spec:
         ports:
         - name: amqp
@@ -2463,16 +1652,19 @@ data:
           targetPort: amqps
         selector:
           role: broker
+          infraUuid: ${INFRA_UUID}
     - apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: agent-internal-cert
+          enmasse.io/cert-secret: agent-internal-cert.${INFRA_UUID}
         labels:
           app: enmasse
           role: agent
-        name: agent
+          infraType: brokered
+          infraUuid: ${INFRA_UUID}
+        name: agent.${INFRA_UUID}
       spec:
         replicas: 1
         strategy:
@@ -2481,17 +1673,27 @@ data:
           metadata:
             annotations:
               addressSpace: ${ADDRESS_SPACE}
+              namespace: ${ADDRESS_SPACE_NAMESPACE}
             labels:
               app: enmasse
               name: agent
               role: agent
+              infraUuid: ${INFRA_UUID}
           spec:
             containers:
             - env:
+              - name: BROKER_SERVICE_HOST
+                value: broker-${INFRA_UUID}
+              - name: BROKER_SERVICE_PORT
+                value: 55671
+              - name: ADDRESS_SPACE_PLAN
+                value: ${ADDRESS_SPACE_PLAN}
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
               - name: ADDRESS_SPACE_NAMESPACE
                 value: ${ADDRESS_SPACE_NAMESPACE}
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
               - name: ENABLE_EVENT_LOGGER
                 value: ${ENABLE_EVENT_LOGGER}
               - name: ADDRESS_SPACE_TYPE
@@ -2548,24 +1750,27 @@ data:
             volumes:
             - name: authservice-ca
               secret:
-                secretName: authservice-ca
+                secretName: authservice-ca.${INFRA_UUID}
             - name: console-external-cert
               secret:
                 secretName: ${CONSOLE_SECRET}
             - name: agent-internal-cert
               secret:
-                secretName: agent-internal-cert
+                secretName: agent-internal-cert.${INFRA_UUID}
             - name: messaging-cert
               secret:
-                secretName: external-certs-messaging
+                secretName: ${MESSAGING_SECRET}
     - apiVersion: v1
       kind: Service
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
+          namespace: ${ADDRESS_SPACE_NAMESPACE}
         labels:
           app: enmasse
-        name: console
+          infraType: brokered
+          infraUuid: ${INFRA_UUID}
+        name: console-${INFRA_UUID}
       spec:
         ports:
         - name: https
@@ -2573,7 +1778,12 @@ data:
           targetPort: 8080
         selector:
           role: agent
+          infraUuid: ${INFRA_UUID}
+
     parameters:
+    - name: INFRA_UUID
+      description: UUID to use for infrastructure
+      required: true
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
       value: 2Gi
@@ -2582,6 +1792,9 @@ data:
       required: true
     - description: The namespace of our address space
       name: ADDRESS_SPACE_NAMESPACE
+      required: true
+    - name: ADDRESS_SPACE_PLAN
+      description: Name of address space plan followed
       required: true
     - description: Certificate to be used for public messaging service
       name: MESSAGING_SECRET
@@ -2609,7 +1822,7 @@ data:
       value: 'false'
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
-      value: address-space-admin
+      required: true
     - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi

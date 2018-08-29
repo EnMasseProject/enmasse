@@ -5,10 +5,7 @@
 package io.enmasse.systemtest.selenium.page;
 
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
@@ -265,6 +262,7 @@ public class OpenshiftWebPage implements IWebPage {
         waitForRedirectToService();
         String serviceId = getProvisionedServiceItem().getId();
         waitUntilServiceIsReady();
+        addressSpace.setInfraUuid(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()).getInfraUuid());
         return serviceId;
     }
 

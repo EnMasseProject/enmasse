@@ -6,14 +6,17 @@ package io.enmasse.systemtest;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AddressSpace {
+    private static Logger log = CustomLogger.getLogger();
     private String name;
     private String namespace;
     private String plan;
+    private String infraUuid;
     private AddressSpaceType type;
     private AuthService authService;
     private List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
@@ -90,6 +93,8 @@ public class AddressSpace {
 
     public Endpoint getEndpointByName(String endpoint) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
+            log.info("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
+                    addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
             if (addrSpaceEndpoint.getName().equals(endpoint)) {
                 if (addrSpaceEndpoint.getHost() == null) {
                     return null;
@@ -98,13 +103,15 @@ public class AddressSpace {
                 }
             }
         }
-        throw new IllegalStateException(String.format("Endpoint wih name '%s' doesn't exist in address space '%s'",
-                endpoint, name));
+        throw new IllegalStateException(String.format("Endpoint wih name '%s-%s' doesn't exist in address space '%s'",
+                endpoint, infraUuid, name));
     }
 
     public Endpoint getEndpointByServiceName(String endpointService) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
-            if (addrSpaceEndpoint.getService().equals(endpointService)) {
+            log.info("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
+                    addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
+            if (addrSpaceEndpoint.getService().equals(String.format("%s-%s", endpointService, infraUuid))) {
                 if (addrSpaceEndpoint.getHost() == null) {
                     return null;
                 } else {
@@ -112,8 +119,8 @@ public class AddressSpace {
                 }
             }
         }
-        throw new IllegalStateException(String.format("Endpoint wih service name '%s' doesn't exist in address space '%s'",
-                endpointService, name));
+        throw new IllegalStateException(String.format("Endpoint with service name '%s-%s' doesn't exist in address space '%s'",
+                endpointService, infraUuid, name));
     }
 
     public List<AddressSpaceEndpoint> getEndpoints() {
@@ -175,11 +182,16 @@ public class AddressSpace {
         this.authService = authService;
     }
 
+    public void setInfraUuid(String infraUuid) {
+        this.infraUuid = infraUuid;
+    }
+
     @Override
     public String toString() {
         StringBuilder addressSpaceString = new StringBuilder()
                 .append("{name=").append(name).append(",")
                 .append("namespace=").append(namespace).append(",")
+                .append("infraUuid=").append(infraUuid).append(",")
                 .append("type=").append(type.toString().toLowerCase()).append(",")
                 .append("plan=").append(plan);
         for (AddressSpaceEndpoint endpoint : endpoints) {
@@ -202,12 +214,6 @@ public class AddressSpace {
     public JsonObject jsonMetadata() {
         JsonObject metadata = new JsonObject();
         metadata.put("name", this.getName());
-        if (this.getNamespace() != null) {
-            JsonObject annotations = new JsonObject();
-            annotations.put("enmasse.io/namespace", this.getNamespace());
-            annotations.put("enmasse.io/realm-name", this.getNamespace());
-            metadata.put("annotations", annotations);
-        }
         return metadata;
     }
 
@@ -234,5 +240,9 @@ public class AddressSpace {
             endpointsJson.add(endpointJson);
         }
         return endpointsJson;
+    }
+
+    public String getInfraUuid() {
+        return infraUuid;
     }
 }

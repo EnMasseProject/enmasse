@@ -623,19 +623,20 @@ describe('configuration from configmaps', function() {
 
     it('retrieves initial list of addresses', function (done) {
         var router = routers.new_router();
-        var addresses = [{address:'a', type:'topic'}, {address:'b', type:'queue'}];
-        address_source.add_address_definitions(addresses);
+        address_source.add_address_definition({address:'a', type:'topic'}, undefined, '1234');
+        address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234');
         ragent.wait_for_stable(2).then(function () {
-            verify_addresses(addresses, router);
+            verify_addresses([{address: 'a', type: 'topic'}, {address: 'b', type: 'queue'}], router);
             done();
         }).catch(done);
     });
     it('watches for new addresses', function (done) {
         var router = routers.new_router();
-        address_source.add_address_definitions([{address:'a', type:'topic'}, {address:'b', type:'queue'}]);
+        address_source.add_address_definition({address:'a', type:'topic'}, undefined, '1234');
+        address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234');
         ragent.wait_for_stable(2).then(function () {
-            address_source.add_address_definition({address:'c', type:'anycast'});
-            address_source.add_address_definition({address:'d', type:'queue'});
+            address_source.add_address_definition({address:'c', type:'anycast'}, undefined, '1234');
+            address_source.add_address_definition({address:'d', type:'queue'}, undefined, '1234');
             //address_source.remove_resource_by_name('b');
             ragent.wait_for_stable(4).then(function () {
                 verify_addresses([{address:'a', type:'topic'}, {address:'b', type:'queue'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
@@ -645,10 +646,11 @@ describe('configuration from configmaps', function() {
     });
     it('watches for deleted addresses', function (done) {
         var router = routers.new_router();
-        address_source.add_address_definitions([{address:'a', type:'topic'}, {address:'b', type:'queue'}]);
+        address_source.add_address_definition({address:'a', type:'topic'}, undefined, '1234');
+        address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234');
         ragent.wait_for_stable(2).then(function () {
-            address_source.add_address_definition({address:'c', type:'anycast'});
-            address_source.add_address_definition({address:'d', type:'queue'});
+            address_source.add_address_definition({address:'c', type:'anycast'}, undefined, '1234');
+            address_source.add_address_definition({address:'d', type:'queue'}, undefined, '1234');
             address_source.remove_resource_by_name('b');
             ragent.wait_for_stable(3).then(function () {
                 verify_addresses([{address:'a', type:'topic'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
@@ -658,10 +660,10 @@ describe('configuration from configmaps', function() {
     });
     it('ignores pending and terminating addresses', function (done) {
         var router = routers.new_router();
-        address_source.add_address_definition({address:'a', type:'queue'});
-        address_source.add_address_definition({address:'b', type:'queue'}, undefined, undefined, {phase:'Pending'});
-        address_source.add_address_definition({address:'c', type:'topic'}, undefined, undefined, {phase:'Terminating'});
-        address_source.add_address_definition({address:'d', type:'topic'});
+        address_source.add_address_definition({address:'a', type:'queue'}, undefined, '1234');
+        address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234', undefined, {phase:'Pending'});
+        address_source.add_address_definition({address:'c', type:'topic'}, undefined, '1234', undefined, {phase:'Terminating'});
+        address_source.add_address_definition({address:'d', type:'topic'}, undefined, '1234');
         ragent.wait_for_stable(2).then(function () {
             verify_addresses([{address:'a', type:'queue'}, {address:'d', type:'topic'}], router);
             done();
@@ -854,7 +856,9 @@ function merge(a, b) {
 
 function mock_address_source(addresses) {
     var server = new ConfigMapServer();
-    server.add_address_definitions(addresses);
+    for (var i = 0; i < addresses.length; i++) {
+        server.add_address_definition(addresses[i], undefined, '1234');
+    }
     return server;
 }
 
@@ -866,7 +870,7 @@ describe('forked process', function() {
 
     beforeEach(function(done) {
         address_source.listen(0).on('listening', function () {
-            var env =  merge(process.env, {'LOGLEVEL':'info', 'DEBUG':'ragent*', 'AMQP_PORT':0, token:'foo', host: 'localhost', 'port':address_source.port, namespace:'default'});
+            var env =  merge(process.env, {'LOGLEVEL':'info', 'DEBUG':'ragent*', 'AMQP_PORT':0, 'INFRA_UUID': '1234', token:'foo', host: 'localhost', 'port':address_source.port, namespace:'default'});
             ragent = child_process.fork(path.resolve(__dirname, '../lib/ragent.js'), [], {silent:true, 'env':env});
             ragent.stderr.on('data', function (data) {
                 if (data.toString().match('Router agent listening on')) {
@@ -1047,8 +1051,8 @@ describe('broker configuration', function() {
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'a', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'a', type:'queue'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
             ragent.wait_for_stable(2, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}], router);
                 //verify queues on respective brokers:
@@ -1064,9 +1068,9 @@ describe('broker configuration', function() {
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'a', type:'queue'}, 'address-config-a', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', {'enmasse.io/broker-id':'broker_b'});
-            address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'a', type:'queue'}, 'address-config-a', '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', '1234', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', '1234', {'enmasse.io/broker-id':'broker_a'});
             ragent.wait_for_stable(3, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
                 //verify queues on respective brokers:
@@ -1089,10 +1093,10 @@ describe('broker configuration', function() {
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'a', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_b'});
-            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'a'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'b'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'a', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'b', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'a'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'b'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
             ragent.wait_for_stable(4, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'topic', allocated_to:'broker_a'}, {address:'b', type:'topic', allocated_to:'broker_b'},
                                   {address:'sub-a', type:'subscription', topic:'a', allocated_to:'broker_a'},
@@ -1110,10 +1114,10 @@ describe('broker configuration', function() {
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'topic-a'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'topic-b'}, undefined, {'enmasse.io/broker-id':'broker_b'});
-            address_source.add_address_definition({address:'topic-a', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'topic-b', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'topic-a'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'topic-b'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'topic-a', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'topic-b', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
             ragent.wait_for_stable(4, 1, 2).then(function () {
                 verify_addresses([{address:'topic-a', type:'topic', allocated_to:'broker_a'}, {address:'topic-b', type:'topic', allocated_to:'broker_b'},
                                   {address:'sub-a', type:'subscription', topic:'topic-a', allocated_to:'broker_a'},
@@ -1153,7 +1157,7 @@ describe('broker configuration', function() {
             var desired = generate_address_list(2000, ['queue']);
             desired.forEach(function (a, i) {
                 a.allocated_to = i % 2 ? 'broker_a' : 'broker_b';
-                address_source.add_address_definition(a, undefined, {'enmasse.io/broker-id': a.allocated_to});
+                address_source.add_address_definition(a, undefined, '1234', {'enmasse.io/broker-id': a.allocated_to});
             });
             ragent.wait_for_stable(2000, 1, 2).then(function () {
                 verify_addresses(desired, router);

@@ -6,12 +6,12 @@ package io.enmasse.controller.auth;
 
 public class CertComponent {
     private final String name;
-    private final String namespace;
+    private final String uuid;
     private final String secretName;
 
-    CertComponent(String name, String namespace, String secretName) {
+    CertComponent(String name, String uuid, String secretName) {
         this.name = name;
-        this.namespace = namespace;
+        this.uuid = uuid;
         this.secretName = secretName;
     }
 
@@ -19,18 +19,18 @@ public class CertComponent {
         return name;
     }
 
-    public String getSecretName() {
-        return secretName;
+    public String getUuid() {
+        return uuid;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public String getSecretName() {
+        return secretName;
     }
 
     @Override
     public String toString() {
         return "{name=" + name + "," +
-                "secretName=" + secretName + "," +
-                "namespace=" + namespace + "}";
+                "uuid=" + uuid + "," +
+                "secretName=" + secretName + "}";
     }
 }

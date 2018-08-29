@@ -1,0 +1,41 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+[id='installing-without-cluster-admin-privileges-{context}']
+= Installing {ProductName} without cluster-admin privileges
+
+.Prerequisites
+
+* At least one authentication service must be installed. For more information see xref:deploying-auth-services-{context}[].
+* The Address Space Controller must be installed. For more information see xref:deploying-address-space-controller-{context}[]
+
+.Procedure
+
+. Deploy the template for creating address spaces:
++
+[options="nowrap"]
+----
+oc create -f ./resources/templates/address-space.yaml -n enmasse
+----
+
+. Create an address space:
++
+[options="nowrap"]
+----
+oc process -f ./resources/templates/address-space.yaml NAME=myspace INFRA_UUID=abcd TYPE=standard PLAN=unlimited-standard | oc create -f -
+----
+
+. Deploy the template for creating addresses:
++
+[options="nowrap"]
+----
+oc create -f ./resources/templates/address.yaml -n enmasse
+----
+
+. Create an address:
++
+[options="nowrap"]
+----
+oc process address ADDRESS_SPACE=myspace ADDRESS=queue1 INFRA_UUID=abcd | oc create -f -
+----

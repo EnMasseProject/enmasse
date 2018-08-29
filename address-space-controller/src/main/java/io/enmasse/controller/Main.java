@@ -38,9 +38,9 @@ public class Main extends AbstractVerticle {
     @Override
     public void start(Future<Void> startPromise) throws Exception {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, controllerClient.getNamespace());
-        CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
+        CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
-        Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac(), options.getImpersonateUser());
+        Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")

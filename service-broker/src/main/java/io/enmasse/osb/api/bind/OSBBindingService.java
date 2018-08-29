@@ -87,13 +87,13 @@ public class OSBBindingService extends OSBServiceBase {
             credentials.put("password", password);
             if ((parameters.containsKey("consoleAccess") && Boolean.valueOf(parameters.get("consoleAccess"))) ||
                (parameters.containsKey("consoleAdmin") && Boolean.valueOf(parameters.get("consoleAdmin")))) {
-                addressSpace.getEndpoints().stream().filter(e -> e.getName().equals("console")).findFirst().ifPresent(e -> {
+                addressSpace.getEndpoints().stream().filter(e -> e.getName().startsWith("console")).findFirst().ifPresent(e -> {
                     e.getHost().ifPresent(h-> credentials.put("console", "https://" + h));
                 });
             }
 
             for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
-                if ("console".equals(endpointSpec.getService())) {
+                if (endpointSpec.getService().startsWith("console")) {
                     continue;
                 }
                 String prefix = endpointSpec.getName();
@@ -120,7 +120,7 @@ public class OSBBindingService extends OSBServiceBase {
                     credentials.put(prefix + portName + "Port", String.format("%d", servicePort.getValue()));
                 }
                 endpointSpec.getCertSpec().ifPresent(certSpec -> {
-                    String cert = getAuthApi().getCert(certSpec.getSecretName(), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
+                    String cert = getAuthApi().getCert(certSpec.getSecretName());
                     credentials.put(prefix + "Cert.pem", cert);
                 });
             }

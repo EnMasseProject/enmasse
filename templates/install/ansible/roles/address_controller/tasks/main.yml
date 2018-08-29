@@ -5,9 +5,13 @@
   failed_when: config_exists.stderr != '' and 'already exists' not in config_exists.stderr
 - name: Create the address space definitions
   shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/address-space-definitions.yaml
+- name: Create the broker prometheus config
+  shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/broker-prometheus-config.yaml
+- name: Create the standard broker definitions
+  shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/standard-broker-definitions.yaml
 - name: Create the address space controller deployment
   shell: oc apply -f {{ playbook_dir }}/resources/address-space-controller/deployment.yaml
 - name: Grant view policy to default SA
-  shell: oc policy add-role-to-user view system:serviceaccoount:{{ namespace  }}:default -n {{ namespace }}
+  shell: oc policy add-role-to-user view system:serviceaccount:{{ namespace  }}:default -n {{ namespace }}
 - name: Grant admin policy to enmasse-admin
   shell: oc policy add-role-to-user admin system:serviceaccount:{{ namespace }}:enmasse-admin -n {{ namespace }}

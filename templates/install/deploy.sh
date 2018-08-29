@@ -262,6 +262,8 @@ else
 fi
 runcmd "$CMD label -n ${NAMESPACE} configmap address-space-controller-config app=enmasse"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/address-space-definitions.yaml" "Create address space definitions"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/broker-prometheus-config.yaml" "Create broker prometheus config"
+runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/standard-broker-definitions.yaml" "Create standard address space broker definitions"
 runcmd "$CMD create -n ${NAMESPACE} -f ${RESOURCE_DIR}/address-space-controller/deployment.yaml" "Create address space controller deployment"
 
 if [ "$CERT_PROVIDED" == "true" ]; then
@@ -283,23 +285,16 @@ if [ $MODE == "multitenant" ]; then
     if [ -n "$OS_ALLINONE" ] && [ -n "$USE_OPENSHIFT" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
-        runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/openshift/address-space-controller.yaml -n $NAMESPACE" "Create cluster roles needed for address-space-controller"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/api-server.yaml -n $NAMESPACE" "Create cluster roles needed for multitenant api server"
         runcmd "oc create -f ${RESOURCE_DIR}/cluster-roles/openshift/keycloak-controller.yaml -n $NAMESPACE" "Create cluster roles needed for keycloak controller"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting api-server rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting keycloak-controller rights to enmasse-admin"
         runcmd "oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting auth-delegator rights to enmasse-admin"
         runcmd "oc login -u $KUBE_USER $OC_ARGS $MASTER_URI" "Login as $KUBE_USER"
     elif [ -n "$USE_OPENSHIFT" ]; then
         echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f ${RESOURCE_DIR}/cluster-roles/' and 'oc create -f ${RESOURCE_DIR}/cluster-roles/openshift/'"
-        echo "Please add enmasse.io:address-space-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add enmasse.io:api-server to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add enmasse.io:keycloak-controller to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse.io:keycloak-controller system:serviceaccount:${NAMESPACE}:enmasse-admin'"
         echo "Please add system:auth-delegator to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:${NAMESPACE}:enmasse-admin'"
-    else
-        runcmd "$CMD create -f ${RESOURCE_DIR}/cluster-roles/kubernetes/address-space-controller.yaml" "Create cluster roles needed for address-space-controller"
-        runcmd "$CMD create clusterrolebinding enmasse.io:address-space-controller-enmasse-admin-${NAMESPACE} --clusterrole=enmasse.io:address-space-controller --serviceaccount=${NAMESPACE}:enmasse-admin" "Granting address-space-controller rights to enmasse-admin"
-        runcmd "$CMD label -n ${NAMESPACE} clusterrolebinding enmasse.io:address-space-controller-enmasse-admin-${NAMESPACE} app=enmasse"
     fi
 fi

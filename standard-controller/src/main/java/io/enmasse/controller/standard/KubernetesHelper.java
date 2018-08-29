@@ -16,6 +16,7 @@ import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,10 +29,12 @@ public class KubernetesHelper implements Kubernetes {
     private final File templateDir;
     private static final String TEMPLATE_SUFFIX = ".yaml";
     private final OpenShiftClient client;
+    private final String infraUuid;
 
-    public KubernetesHelper(OpenShiftClient client, File templateDir) {
+    public KubernetesHelper(OpenShiftClient client, File templateDir, String infraUuid) {
         this.client = client;
         this.templateDir = templateDir;
+        this.infraUuid = infraUuid;
     }
 
     @Override
@@ -40,11 +43,11 @@ public class KubernetesHelper implements Kubernetes {
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
-        objects.addAll(client.extensions().deployments().list().getItems());
-        objects.addAll(client.apps().statefulSets().list().getItems());
-        objects.addAll(client.persistentVolumeClaims().list().getItems());
-        objects.addAll(client.configMaps().withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
-        objects.addAll(client.services().list().getItems());
+        objects.addAll(client.extensions().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
+        objects.addAll(client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
+        objects.addAll(client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
+        objects.addAll(client.configMaps().withLabel(LabelKeys.INFRA_UUID).withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
+        objects.addAll(client.services().withLabel(LabelKeys.INFRA_UUID).list().getItems());
 
         for (HasMetadata config : objects) {
             Map<String, String> annotations = config.getMetadata().getAnnotations();
@@ -73,7 +76,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public RouterCluster getRouterCluster() {
-        StatefulSet d = client.apps().statefulSets().withName("qdrouterd").get();
+        StatefulSet d = client.apps().statefulSets().withName("qdrouterd-" + infraUuid).get();
         return new RouterCluster(d.getMetadata().getName(), d.getSpec().getReplicas());
     }
 
@@ -94,7 +97,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public List<Pod> listRouters() {
-        return client.pods().withLabel(LabelKeys.CAPABILITY, "router").list().getItems();
+        return client.pods().withLabel(LabelKeys.CAPABILITY, "router").withLabel(LabelKeys.INFRA_UUID).list().getItems();
     }
 
     @Override
@@ -105,12 +108,6 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void delete(KubernetesList resources) {
         client.lists().delete(resources);
-    }
-
-    @Override
-    public void scaleDeployment(String name, int numReplicas) {
-        log.info("Scaling deployment with id {} and {} replicas", name, numReplicas);
-        client.extensions().deployments().withName(name).scale(numReplicas);
     }
 
     @Override

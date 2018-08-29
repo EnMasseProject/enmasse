@@ -50,6 +50,5 @@ public interface Kubernetes {
 
     RouterCluster getRouterCluster();
 
-    void scaleDeployment(String name, int numReplicas);
     void scaleStatefulSet(String name, int numReplicas);
 }

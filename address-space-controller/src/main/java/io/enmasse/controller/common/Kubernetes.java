@@ -18,30 +18,18 @@ import java.util.*;
 public interface Kubernetes {
 
     String getNamespace();
-    Kubernetes withNamespace(String namespace);
 
-    void create(KubernetesList resources, String namespace);
-    void delete(KubernetesList resources);
+    void create(KubernetesList resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
-    Set<NamespaceInfo> listAddressSpaces();
-    void deleteNamespace(NamespaceInfo namespaceInfo);
-    void createNamespace(AddressSpace addressSpace);
-
-    boolean existsNamespace(String namespace);
-
     boolean hasService(String service);
+    boolean hasService(String infraUuid, String service);
+
+    void deleteResourcesNotIn(String[] addressSpaces);
 
     Set<Deployment> getReadyDeployments();
 
     Optional<Secret> getSecret(String secretName);
 
-    void addAddressSpaceRoleBindings(AddressSpace namespace);
-    void addSystemImagePullerPolicy(String namespace, AddressSpace tenantNamespace);
-
-    void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace);
-
-    String getAddressSpaceAdminSa();
-
-    void createServiceAccount(String namespace, String addressSpaceAdminSa);
+    void createServiceAccount(String saName, Map<String, String> labels);
 }

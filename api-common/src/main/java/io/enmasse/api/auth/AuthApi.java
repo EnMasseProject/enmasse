@@ -8,6 +8,6 @@ public interface AuthApi {
     TokenReview performTokenReview(String token);
     SubjectAccessReview performSubjectAccessReviewResource(String user, String namespace, String resource, String verb, String apiGroup);
     SubjectAccessReview performSubjectAccessReviewPath(String user, String path, String verb);
-    String getCert(String secretName, String namespace);
+    String getCert(String secretName);
     String getNamespace();
 }

@@ -62,15 +62,15 @@ public class Minikube extends Kubernetes {
 
     @Override
     public Endpoint getKeycloakEndpoint() {
-        return getExternalEndpoint(globalNamespace, "standard-authservice");
+        return getExternalEndpoint("standard-authservice");
     }
 
     @Override
-    public Endpoint getExternalEndpoint(String namespace, String name) {
+    public Endpoint getExternalEndpoint(String name) {
         String externalName = name;
         if (!name.endsWith("-external")) {
             externalName += "-external";
         }
-        return new Endpoint(getIp(namespace, externalName), Integer.parseInt(getPort(namespace, externalName)));
+        return new Endpoint(getIp(globalNamespace, externalName), Integer.parseInt(getPort(globalNamespace, externalName)));
     }
 }

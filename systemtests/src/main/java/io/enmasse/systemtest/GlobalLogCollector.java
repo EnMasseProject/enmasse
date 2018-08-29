@@ -26,9 +26,9 @@ public class GlobalLogCollector {
     }
 
 
-    public synchronized void startCollecting(String namespace) {
-        log.info("Start collecting logs for pods in namespace {}", namespace);
-        collectorMap.put(namespace, new LogCollector(kubernetes, new File(logDir, namespace), namespace));
+    public synchronized void startCollecting(AddressSpace addressSpace) {
+        log.info("Start collecting logs for address space {}", addressSpace);
+        collectorMap.put(addressSpace.getInfraUuid(), new LogCollector(kubernetes, new File(logDir, addressSpace.getInfraUuid()), addressSpace.getInfraUuid()));
     }
 
     public synchronized void stopCollecting(String namespace) throws Exception {

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.CertProviderFactory;
 import io.enmasse.controller.Controller;
 import io.enmasse.controller.common.ControllerKind;
@@ -76,8 +77,7 @@ public class AuthController implements Controller {
                     if (!hosts.isEmpty()) {
                         cn = hosts.iterator().next();
                     }
-                    Secret secret = certProvider.provideCert(addressSpace, cn, hosts);
-                    certManager.grantServiceAccountAccess(secret, "default", addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
+                    certProvider.provideCert(addressSpace, cn, hosts);
                 } catch (Exception e) {
                     log.warn("Error providing certificate for service {} hosts {}: {}", info.getServiceName(), info.getHosts(), e.getMessage(), e);
                 }
@@ -89,9 +89,13 @@ public class AuthController implements Controller {
     public Secret issueAddressSpaceCert(final AddressSpace addressSpace) {
         try {
             final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
-            Secret secret = certManager.getCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
+            Secret secret = certManager.getCertSecret(addressSpaceCaSecretName);
             if (secret == null) {
-                secret = certManager.createSelfSignedCertSecret(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), addressSpaceCaSecretName);
+                String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+                Map<String, String> labels = new HashMap<>();
+                labels.put(LabelKeys.INFRA_UUID, infraUuid);
+                labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+                secret = certManager.createSelfSignedCertSecret(addressSpaceCaSecretName, labels);
                 //put crt into address space
                 eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             }
@@ -105,12 +109,16 @@ public class AuthController implements Controller {
 
     public void issueComponentCertificates(AddressSpace addressSpace, Secret addressSpaceCaSecret) {
         try {
-            List<Cert> certs = certManager.listComponents(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).stream()
+            Map<String, String> labels = new HashMap<>();
+            String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+            labels.put(LabelKeys.INFRA_UUID, infraUuid);
+            labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+            List<Cert> certs = certManager.listComponents(infraUuid).stream()
                     .filter(component -> !certManager.certExists(component))
                     .map(certManager::createCsr)
                     .map(request -> certManager.signCsr(request, addressSpaceCaSecret, Collections.emptySet()))
                     .map(cert -> {
-                        certManager.createSecret(cert, addressSpaceCaSecret);
+                        certManager.createSecret(cert, addressSpaceCaSecret, labels);
                         return cert; })
                     .collect(Collectors.toList());
 

@@ -7,9 +7,10 @@ objects:
   - apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: ${NAME}
+      name: ${ADDRESS_SPACE}.${ADDRESS}
       labels:
         type: address-config
+        infraUuid: ${INFRA_UUID}
         app: enmasse
     data:
       config.json: |-
@@ -17,7 +18,7 @@ objects:
           "apiVersion": "enmasse.io/v1",
           "kind": "Address",
           "metadata": {
-            "addressSpace": "${ADDRESS_SPACE}"
+            "name": "${ADDRESS_SPACE}.${ADDRESS}"
           },
           "spec": {
             "address": "${ADDRESS}",
@@ -26,11 +27,11 @@ objects:
           }
         }
 parameters:
-  - name: NAME
-    description: Name of configmap
-    required: true
   - name: ADDRESS
     description: Address
+    required: true
+  - name: INFRA_UUID
+    description: Infrastructure uuid
     required: true
   - name: ADDRESS_SPACE
     description: Address space of address

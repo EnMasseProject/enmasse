@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class ServiceBrokerOptions {
     private Duration resyncInterval = Duration.ofMinutes(10);
-    private String impersonateUser = null;
     private String certDir = null;
     private boolean enableRbac = false;
     private String keycloakUrl = null;
@@ -26,10 +25,6 @@ public class ServiceBrokerOptions {
     public ServiceBrokerOptions setResyncInterval(Duration resyncInterval) {
         this.resyncInterval = resyncInterval;
         return this;
-    }
-
-    public String getImpersonateUser() {
-        return impersonateUser;
     }
 
     public String getCertDir() {
@@ -58,11 +53,6 @@ public class ServiceBrokerOptions {
 
     public int getListenPort() {
         return listenPort;
-    }
-
-    private ServiceBrokerOptions setImpersonateUser(String impersonateUser) {
-        this.impersonateUser = impersonateUser;
-        return this;
     }
 
     private ServiceBrokerOptions setCertDir(String certDir) {
@@ -122,11 +112,6 @@ public class ServiceBrokerOptions {
         String enableRbac = env.get("ENABLE_RBAC");
         if (enableRbac != null) {
             options.setEnableRbac(Boolean.parseBoolean(enableRbac));
-        }
-
-        String impersonateUser = env.get("IMPERSONATE_USER");
-        if (impersonateUser != null) {
-            options.setImpersonateUser(impersonateUser);
         }
 
         String certDir = env.get("CERT_DIR");
