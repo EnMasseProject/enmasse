@@ -17,16 +17,19 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
+import static io.enmasse.systemtest.cmdclients.CRDCmdClient.createCR;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
 
 @Tag(isolated)
-public class CustomResourceDefinitionAddressesSpacesTest extends TestBase {
+public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testAddressSpaceCreateViaCmdRemoveViaApi() throws Exception {
         AddressSpace brokered = new AddressSpace("crd-addressspaces-test-foo", AddressSpaceType.BROKERED, AuthService.NONE);
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
-        CRDCmdClient.createCR(addressSpacePayloadJson.toString());
+        createCR(addressSpacePayloadJson.toString());
         waitForAddressSpaceReady(brokered);
 
         deleteAddressSpace(brokered);
@@ -66,7 +69,7 @@ public class CustomResourceDefinitionAddressesSpacesTest extends TestBase {
 
             CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
             CRDCmdClient.createNamespace(namespace);
-            CRDCmdClient.createCR(namespace, addressSpacePayloadJson.toString());
+            createCR(namespace, addressSpacePayloadJson.toString());
             waitForAddressSpaceReady(brokered, apiClient);
 
             deleteAddressSpace(brokered, apiClient);
@@ -79,6 +82,21 @@ public class CustomResourceDefinitionAddressesSpacesTest extends TestBase {
             CRDCmdClient.loginUser("developer", "developer");
             CRDCmdClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
+        }
+    }
+
+    @Test
+    void testCannotCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
+        KeycloakCredentials user = new KeycloakCredentials("pepik", "pepik");
+        try {
+            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthService.NONE);
+            JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
+
+            CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
+            assertThat(CRDCmdClient.createCR(addressSpacePayloadJson.toString()).getRetCode(), is(false));
+        } finally {
+            CRDCmdClient.loginUser("developer", "developer");
+            CRDCmdClient.switchProject(environment.namespace());
         }
     }
 }
