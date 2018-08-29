@@ -36,7 +36,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
     @BeforeEach
     public void setUpClientBase() throws Exception {
         if (cliApiClient == null) {
-            Endpoint cliEndpoint = TestUtils.deployMessagingClientApp(sharedAddressSpace.getName(), kubernetes);
+            Endpoint cliEndpoint = TestUtils.deployMessagingClientApp(environment.namespace(), kubernetes);
             cliApiClient = new MsgCliApiClient(kubernetes, cliEndpoint);
         }
 
@@ -48,12 +48,12 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
     @AfterAll
     public void tearDownAll() {
-        TestUtils.deleteMessagingClientApp(sharedAddressSpace.getNamespace(), kubernetes);
+        TestUtils.deleteMessagingClientApp(environment.namespace(), kubernetes);
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) {
-        return new Endpoint(String.format("messaging.%s.svc",
-                addressSpace.getNamespace()), websocket && addressSpace.getType().equals(AddressSpaceType.STANDARD) ? 443 : 5671);
+        return new Endpoint(String.format("messaging-%s.%s.svc",
+                addressSpace.getInfraUuid(), environment.namespace()), websocket && addressSpace.getType().equals(AddressSpaceType.STANDARD) ? 443 : 5671);
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {

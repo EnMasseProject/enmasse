@@ -38,9 +38,10 @@ describe('configmap backed address source', function() {
     });
 
     it('retrieves all addresses', function(done) {
-        configmaps.add_address_definition({address:'foo', type:'queue'});
-        configmaps.add_address_definition({address:'bar', type:'topic'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, '1234');
+        configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, '1234');
+        configmaps.add_address_definition({address:'baz', type:'queue'}, undefined, "4321");
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
             assert.equal(addresses.length, 2);
@@ -53,10 +54,10 @@ describe('configmap backed address source', function() {
         });
     });
     it('indicates allocation to broker', function(done) {
-        configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, {'enmasse.io/broker-id':'broker-1'});
-        configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, {'enmasse.io/broker-id':'broker-2'});
-        configmaps.add_address_definition({address:'baz', type:'anycast'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, '1234', {'enmasse.io/broker-id':'broker-1'});
+        configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker-2'});
+        configmaps.add_address_definition({address:'baz', type:'anycast'}, undefined, '1234');
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
             assert.equal(addresses.length, 3);
@@ -74,11 +75,11 @@ describe('configmap backed address source', function() {
         });
     });
     it('watches for changes', function(done) {
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
         source.once('addresses_defined', function () {
             setTimeout(function () {
-                configmaps.add_address_definition({address:'foo', type:'queue'});
-                configmaps.add_address_definition({address:'bar', type:'topic'});
+                configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, '1234');
+                configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, '1234');
                 var addresses;
                 source.on('addresses_defined', function (latest) {
                     addresses = latest;
@@ -107,11 +108,11 @@ describe('configmap backed address source', function() {
                 return 500;
             }
         };
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
         source.once('addresses_defined', function () {
             setTimeout(function () {
-                configmaps.add_address_definition({address:'foo', type:'queue'});
-                configmaps.add_address_definition({address:'bar', type:'topic'});
+                configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, '1234');
+                configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, '1234');
                 var addresses;
                 source.on('addresses_defined', function (latest) {
                     addresses = latest;
@@ -131,9 +132,9 @@ describe('configmap backed address source', function() {
         });
     });
     it('updates readiness', function(done) {
-        configmaps.add_address_definition({address:'foo', type:'queue'});
-        configmaps.add_address_definition({address:'bar', type:'topic'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        configmaps.add_address_definition({address:'foo', type:'queue'}, undefined, '1234');
+        configmaps.add_address_definition({address:'bar', type:'topic'}, undefined, '1234');
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
         source.watcher.close();
         source.on('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
@@ -146,7 +147,7 @@ describe('configmap backed address source', function() {
     it('updates readiness after recreation', function(done) {
         configmaps.add_address_definition({address:'foo', type:'queue'});
         configmaps.add_address_definition({address:'bar', type:'topic'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.once('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
                 configmaps.remove_resource_by_name('foo');
@@ -177,13 +178,14 @@ describe('configmap backed address source', function() {
         return o.name;
     }
     it('retrieves address types from plans', function(done) {
+        configmaps.add_address_space_plan({plan_name:'space', address_plans:['small', 'medium', 'large', 'foo', 'bar', 'standard']});
         configmaps.add_address_plan({plan_name:'small', address_type:'queue'});
         configmaps.add_address_plan({plan_name:'medium', address_type:'queue'});
         configmaps.add_address_plan({plan_name:'large', address_type:'queue'});
         configmaps.add_address_plan({plan_name:'foo', address_type:'topic'});
         configmaps.add_address_plan({plan_name:'bar', address_type:'topic'});
         configmaps.add_address_plan({plan_name:'standard', address_type:'anycast', display_name:'display me', shortDescription:'abcdefg', longDescription:'hijklmn'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
         source.watcher.close();
         source.get_address_types().then(function (types) {
             var queue = remove_by_name(types, 'queue');
@@ -208,6 +210,7 @@ describe('configmap backed address source', function() {
         });
     });
     it('retrieves address types in order', function(done) {
+        configmaps.add_address_space_plan({plan_name:'space', address_plans:['bar', 'medium', 'foo', 'standard', 'non-standard', 'large', 'small']});
         configmaps.add_address_plan({plan_name:'bar', address_type:'topic'});
         configmaps.add_address_plan({plan_name:'medium', address_type:'queue', displayOrder:11});
         configmaps.add_address_plan({plan_name:'foo', address_type:'topic', displayOrder:20});
@@ -215,7 +218,7 @@ describe('configmap backed address source', function() {
         configmaps.add_address_plan({plan_name:'non-standard', address_type:'anycast', displayOrder:30});
         configmaps.add_address_plan({plan_name:'large', address_type:'queue', displayOrder:12});
         configmaps.add_address_plan({plan_name:'small', address_type:'queue', displayOrder:10});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
         source.watcher.close();
         source.get_address_types().then(function (types) {
             assert.equal(types[0].name, 'queue');
@@ -234,6 +237,7 @@ describe('configmap backed address source', function() {
         });
     });
     it('treats 0 correctly as value for displayOrder', function(done) {
+        configmaps.add_address_space_plan({plan_name:'space', address_plans:['bar', 'medium', 'foo', 'standard', 'non-standard', 'large', 'small']});
         configmaps.add_address_plan({plan_name:'bar', address_type:'topic'});
         configmaps.add_address_plan({plan_name:'medium', address_type:'queue', displayOrder:11});
         configmaps.add_address_plan({plan_name:'foo', address_type:'topic', displayOrder:20});
@@ -241,7 +245,7 @@ describe('configmap backed address source', function() {
         configmaps.add_address_plan({plan_name:'non-standard', address_type:'anycast', displayOrder:30});
         configmaps.add_address_plan({plan_name:'large', address_type:'queue', displayOrder:12});
         configmaps.add_address_plan({plan_name:'small', address_type:'queue', displayOrder:0});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
         source.watcher.close();
         source.get_address_types().then(function (types) {
             assert.equal(types[0].name, 'queue');
@@ -260,7 +264,7 @@ describe('configmap backed address source', function() {
         });
     });
     it('creates an address', function(done) {
-        var source = new AddressSource({name: 'foo'}, {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE: 'foo'});
         source.once('addresses_defined', function () {
             source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
                 function () {
@@ -281,7 +285,7 @@ describe('configmap backed address source', function() {
     it('deletes an address', function(done) {
         configmaps.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
         configmaps.add_address_definition({address:'bar', type:'topic'}, 'address-config-bar');
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.on('addresses_defined', function () {
             source.delete_address({address:'foo', type:'queue', name:'address-config-foo'}).then(
                 function () {
@@ -299,9 +303,9 @@ describe('configmap backed address source', function() {
     });
     it('handles invalid address syntax', function(done) {
         configmaps.add_address_definition({address:'foo', type:'queue'});
-        configmaps.add_config_map('baz', 'address-config', {'config.json': '{bad:x[!'});
+        configmaps.add_config_map('baz', {type:'address-config'}, {'config.json': '{bad:x[!'});
         configmaps.add_address_definition({address:'bar', type:'topic'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
             assert.equal(addresses.length, 2);
@@ -314,13 +318,14 @@ describe('configmap backed address source', function() {
     });
     it('retrieves plans concurrently with addresses', function(done) {
         this.timeout(5000);
+        configmaps.add_address_space_plan({plan_name:'space', address_plans:['small', 'medium', 'large', 'foo', 'bar', 'standard']});
         configmaps.add_address_plan({plan_name:'small', address_type:'queue'});
         configmaps.add_address_plan({plan_name:'medium', address_type:'queue'});
         configmaps.add_address_plan({plan_name:'large', address_type:'queue'});
         configmaps.add_address_plan({plan_name:'foo', address_type:'topic'});
         configmaps.add_address_plan({plan_name:'bar', address_type:'topic'});
         configmaps.add_address_plan({plan_name:'standard', address_type:'anycast', display_name:'display me', shortDescription:'abcdefg', longDescription:'hijklmn'});
-        var source = new AddressSource('foo', {port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
         var plans = source.get_address_types();
         source.once('addresses_defined', function (addresses) {
             configmaps.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');

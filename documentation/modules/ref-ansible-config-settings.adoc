@@ -11,7 +11,6 @@ The following Ansible configuration settings are supported.
 |===
 |Name |Description |Default value| Required
 |namespace|Specifies the namespace where {ProductName} is installed.|Not applicable |yes
-|multitenant|Specifies whether to install {ProductName} in multitenant mode. Single-tenant mode is recommended for evaluation purposes only. | true| no
 |enable_rbac|Specifies whether to enable RBAC authentication of REST APIs.|true |no
 |service_catalog|Specifies whether to enable integration with the Service Catalog.|false |no
 |osb_console_prefix|Specifies the HTTP URL of the Console prefix for the Service Catalog dashboard.| service broker service IP address| no

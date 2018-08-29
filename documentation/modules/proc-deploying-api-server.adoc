@@ -3,15 +3,18 @@
 // assembly-installing-manual-steps.adoc
 
 [id='deploying-api-server-{context}']
-= (Optional) Deploying the API server
+= Deploying the API server
 
-The API server provides a REST API for creating address spaces and addresses. It can also serve as
-a Kubernetes API server if it is registered as an APIService.
+The API server provides a REST API for creating address spaces and addresses. It can also serve as an aggregated API server if it is registered as an API service.
 
-NOTE: To install {ProductName} on {PlatformName}, you must have `cluster-admin` access to set up the
-required roles for delegating authentication to the Kubernetes master; otherwise, you are restricted
-to a single address space. For more information about how to deploy without `cluster-admin` access,
-which restricts {ProductName} to a single address space, see xref:deploying-single-namespace-{context}[].
+ifeval::["{PlatformName}" == "OpenShift"]
+.Prerequisites
+
+* To install the {ProductName} API Server on {PlatformName}, you must have `cluster-admin` access to set up the
+required roles for delegating authentication to the {PlatformName} master; otherwise, you are restricted
+to using templates for creating address spaces. For more information about how to deploy without `cluster-admin` access,
+which restricts {ProductName} to using templates, see xref:installing-without-cluster-admin-privileges-{context}[].
+endif::[]
 
 .Procedure
 

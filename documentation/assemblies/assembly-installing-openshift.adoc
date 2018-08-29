@@ -26,5 +26,7 @@ include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
 
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
 
+include::../modules/proc-installing-without-cluster-admin-privileges.adoc[leveloffset=+1]
+
 :context: {parent-context}
 

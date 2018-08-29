@@ -299,7 +299,7 @@ module.exports.post_event = function (event) {
 
 module.exports.get_messaging_route_hostname = function (options) {
     if (options.MESSAGING_ROUTE_HOSTNAME === undefined && options.KUBERNETES_SERVICE_HOST !== undefined) {
-        var messaging_route_name = options.MESSAGING_ROUTE_NAME || 'messaging';
+        var messaging_route_name = options.MESSAGING_ROUTE_NAME || 'messaging-' + options.INFRA_UUID;
         var opts = get_options(options, get_path('/oapi/v1/namespaces/', 'routes/' + messaging_route_name, options));
         return do_get_with_options(opts).then(function (definition) {
             return definition.spec.host;

@@ -4,6 +4,8 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.config.AnnotationKeys;
+
 /**
  * Various static utilities that don't belong in a specific place
  */
@@ -40,11 +42,11 @@ public class KubeUtil {
     }
 
     public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {
-        return sanitizeName("ca-" + addressSpace.getName());
+        return sanitizeName("ca-" + addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
     public static String getAddressSpaceExternalCaSecretName(AddressSpace addressSpace) {
-        return sanitizeName("route-ca-" + addressSpace.getName());
+        return sanitizeName("route-ca-" + addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
     public static void validateName(String name) {

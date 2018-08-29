@@ -48,7 +48,6 @@ public abstract class AuthenticationTestBase extends TestBase {
             setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
             //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         }
-
     }
 
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {

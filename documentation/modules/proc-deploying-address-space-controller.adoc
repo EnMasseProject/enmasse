@@ -3,11 +3,9 @@
 // assembly-installing-manual-steps.adoc
 
 [id='deploying-address-space-controller-{context}']
-= Deploying the address space controller
+= Deploying the Address Space Controller
 
-The address space controller is responsible for creating the infrastructure used by address spaces.
-
-NOTE: To install {ProductName} on {PlatformName} , you must have `cluster-admin` access to set up the required roles for creating namespaces and managing resources in those namespaces; otherwise, you are restricted to a single address space. For more information about how to deploy without `cluster-admin` access, which restricts {ProductName} to a single address space, see xref:deploying-single-namespace-{context}[].
+The Address Space Controller is responsible for creating the infrastructure used by address spaces.
 
 .Procedure
 
@@ -18,26 +16,12 @@ NOTE: To install {ProductName} on {PlatformName} , you must have `cluster-admin`
 {cmdcli} create sa enmasse-admin
 ----
 
-ifeval::["{cmdcli}" == "oc"]
-. Create cluster-wide roles used by the `enmasse-admin` service account:
+. Grant privileges required for viewing and managing resources:
 +
-[options="nowrap"]
+[options="nowrap",subs="attributes"]
 ----
-oc login -u system:admin
-oc create -f ./resources/cluster-roles/openshift/address-space-controller.yaml
+{cmdcli} create rolebinding enmasse-admin-admin-binding --clusterrole=admin --serviceaccount=enmasse:enmasse-admin -n enmasse
 ----
-
-. Grant privileges to the service account:
-+
-[options="nowrap"]
-----
-oc login -u system:admin
-oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user enmasse.io:address-space-controller system:serviceaccount:enmasse:enmasse-admin
-----
-+
-*Note*: You can log in again as the regular user after this step.
-endif::[]
 
 . Install the default plan and resource configuration:
 +
@@ -53,6 +37,8 @@ endif::[]
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} create -f ./resources/address-space-controller/address-space-definitions.yaml
+{cmdcli} create -f ./resources/address-space-controller/standard-broker-definitions.yaml
+{cmdcli} create -f ./resources/address-space-controller/broker-prometheus-config.yaml
 {cmdcli} create -f ./resources/address-space-controller/deployment.yaml
 ----
 

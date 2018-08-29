@@ -21,16 +21,16 @@ import java.util.Map;
 public class KubeAuthApi implements AuthApi {
     private static final Logger log = LoggerFactory.getLogger(KubeAuthApi.class);
     private final NamespacedOpenShiftClient client;
-    private final String impersonateUser;
+    private final String namespace;
     private final String apiToken;
 
-    public KubeAuthApi(NamespacedOpenShiftClient client, String impersonateUser, String apiToken) {
+    public KubeAuthApi(NamespacedOpenShiftClient client, String apiToken) {
         this.client = client;
-        this.impersonateUser = impersonateUser;
+        this.namespace = client.getNamespace();
         this.apiToken = apiToken;
     }
 
-    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk, String impersonateUser) {
+    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
         HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
@@ -39,10 +39,6 @@ public class KubeAuthApi implements AuthApi {
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Bearer " + apiToken)
                 .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
-
-        if (impersonateUser != null && !impersonateUser.isEmpty()) {
-            requestBuilder.addHeader("Impersonate-User", impersonateUser);
-        }
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             try (ResponseBody responseBody = response.body()) {
@@ -77,7 +73,7 @@ public class KubeAuthApi implements AuthApi {
             body.put("spec", spec);
 
             log.debug("Token review request: {}", body);
-            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false, null);
+            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false);
             log.debug("Token review response: {}", responseBody);
             JsonObject status = responseBody.getJsonObject("status");
             boolean authenticated = false;
@@ -117,7 +113,7 @@ public class KubeAuthApi implements AuthApi {
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false, impersonateUser);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false);
 
             log.debug("Subject access review response: {}", responseBody);
             JsonObject status = responseBody.getJsonObject("status");
@@ -153,7 +149,7 @@ public class KubeAuthApi implements AuthApi {
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false, impersonateUser);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false);
             log.debug("Subject access review response: {}", responseBody);
 
             JsonObject status = responseBody.getJsonObject("status");
@@ -169,7 +165,7 @@ public class KubeAuthApi implements AuthApi {
     }
 
     @Override
-    public String getCert(String secretName, String namespace) {
+    public String getCert(String secretName) {
         Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
         if (secret == null) {
             throw new InternalServerErrorException("Cannot get secret " + secretName);

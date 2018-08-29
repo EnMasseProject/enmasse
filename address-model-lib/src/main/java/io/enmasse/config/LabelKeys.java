@@ -21,4 +21,6 @@ public interface LabelKeys {
     String ADDRESS_TYPE = "addressType";
     String ADDRESS_SPACE_TYPE = "addressSpaceType";
     String ADDRESS_SPACE = "addressSpace";
+    String INFRA_UUID = "infraUuid";
+    String INFRA_TYPE = "infraType";
 }

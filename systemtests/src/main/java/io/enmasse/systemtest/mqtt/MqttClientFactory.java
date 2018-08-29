@@ -18,6 +18,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slf4j.Logger;
 
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -36,6 +37,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public class MqttClientFactory {
+
+    private static final Logger log = CustomLogger.getLogger();
 
     private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
     private final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
@@ -112,7 +115,7 @@ public class MqttClientFactory {
             mqttEndpoint = addressSpace.getEndpointByServiceName("mqtt");
             if (mqttEndpoint == null) {
                 String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
-                mqttEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+                mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
             }
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
@@ -125,8 +128,10 @@ public class MqttClientFactory {
                 mqttEndpoint = new Endpoint("localhost", 443);
             }
 
+            log.info("Using mqtt endpoint {}", mqttEndpoint);
+
         } else {
-            mqttEndpoint = this.kubernetes.getEndpoint(addressSpace.getNamespace(), "mqtt", "mqtt");
+            mqttEndpoint = this.kubernetes.getEndpoint("mqtt", "mqtt");
         }
 
         if (username != null && password != null) {

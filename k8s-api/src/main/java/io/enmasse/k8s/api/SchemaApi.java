@@ -15,11 +15,6 @@ import java.time.Duration;
  */
 public interface SchemaApi {
     /**
-     * Copy address space plan and referenced address plans and resource definitions into namespace;
-     */
-    void copyIntoNamespace(AddressSpacePlan addressSpacePlan, String otherNamespace);
-
-    /**
      * List schema
      */
     Schema getSchema() throws Exception;

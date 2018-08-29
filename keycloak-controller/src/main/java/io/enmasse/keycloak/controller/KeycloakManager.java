@@ -40,7 +40,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
         for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-            if (endpoint.getService().equals("console")) {
+            if (endpoint.getService().startsWith("console")) {
                 return endpoint;
             }
         }

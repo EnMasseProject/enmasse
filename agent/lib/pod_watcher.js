@@ -67,7 +67,17 @@ PodWatcher.prototype.close = function () {
 module.exports.watch = function (selector, env) {
     var options = env || {};
     if (selector) {
-        options.selector = selector;
+        options.selector = selector
     }
+
+    if (process.env.INFRA_UUID) {
+        var infraSelector = "infraUuid=" + process.env.INFRA_UUID;
+        if (options.selector) {
+            options.selector += "," + infraSelector;
+        } else {
+            options.selector = infraSelector;
+        }
+    }
+
     return new PodWatcher(options);
 };

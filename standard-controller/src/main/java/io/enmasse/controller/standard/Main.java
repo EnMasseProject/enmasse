@@ -37,6 +37,8 @@ public class Main {
 
         String certDir = getEnvOrThrow(env, "CERT_DIR");
         String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
+        String addressSpacePlanName = getEnvOrThrow(env, "ADDRESS_SPACE_PLAN");
+        String infraUuid = getEnvOrThrow(env, "INFRA_UUID");
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofMinutes(5));
@@ -50,8 +52,8 @@ public class Main {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, resyncInterval);
 
-        Kubernetes kubernetes = new KubernetesHelper(openShiftClient, templateDir);
-        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace);
+        Kubernetes kubernetes = new KubernetesHelper(openShiftClient, templateDir, infraUuid);
+        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace, infraUuid);
 
         boolean enableEventLogger = Boolean.parseBoolean(getEnv(env, "ENABLE_EVENT_LOGGER").orElse("false"));
         EventLogger eventLogger = enableEventLogger ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
@@ -60,7 +62,9 @@ public class Main {
 
         AddressController addressController = new AddressController(
                 addressSpace,
-                new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace()),
+                addressSpacePlanName,
+                infraUuid,
+                new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace(), infraUuid),
                 kubernetes,
                 clusterGenerator,
                 certDir,
