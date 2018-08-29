@@ -1,5 +1,5 @@
 msc {
-    width = "1024";
+    hscale="2.5";
     Tenant,AddressSpaceController,OpenShift;
 
     Tenant => OpenShift[ label = "Create AddressSpace with plan 'a'" ];
@@ -9,7 +9,7 @@ msc {
 
     AddressSpaceController << OpenShift [ label = "Watch trigger AddressSpace check loop" ];
     AddressSpaceController => AddressSpaceController [ label = "Process AddressSpace" ];
-    AddressSpaceController => AddressSpaceController [ label = "Process AddressSpacePlan 'a', specifying 'defined-by: standard-cfg1'"];
+    AddressSpaceController => AddressSpaceController [ label = "Process referenced AddressSpacePlan 'a', with annotation 'defined-by: standard-cfg1'"];
 
     AddressSpaceController => OpenShift [ label = "Get ResourceDefinition configmap 'standard-cfg1'"];
     AddressSpaceController << OpenShift [ label = "Return" ];

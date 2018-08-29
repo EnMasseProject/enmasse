@@ -1,5 +1,5 @@
 msc {
-    width = "1024";
+    hscale="2.5";
     Tenant,AddressSpaceController,InfraController,OpenShift;
 
     Tenant => OpenShift[ label = "Create AddressSpace with plan 'a'" ];
@@ -9,18 +9,18 @@ msc {
 
     AddressSpaceController << OpenShift [ label = "Watch trigger AddressSpace check loop" ];
     AddressSpaceController => AddressSpaceController [ label = "Process AddressSpace" ];
-    AddressSpaceController => AddressSpaceController [ label = "Process AddressSpacePlan 'a', specifying 'defined-by: standard-cfg1-0.21.2'"];
+    AddressSpaceController => AddressSpaceController [ label = "Process AddressSpacePlan 'a', specifying 'defined-by: standard-cfg1'"];
 
-    AddressSpaceController => OpenShift [ label = "Create Infra instance 'infra1' referencing StandardInfraTemplate 'standard-cfg1-0.21.2'"];
+    AddressSpaceController => OpenShift [ label = "Create Infra instance 'infra1' referencing StandardInfraTemplate 'standard-cfg1'"];
     AddressSpaceController << OpenShift [ label = "Created" ];
 
     --- ;
 
     InfraController << OpenShift [ label = "Watch trigger Infra check loop" ];
     InfraController => InfraController [ label = "Process Infra" ];
-    InfraController => OpenShift [ label = "Get StandardInfraTemplate 'standard-cfg1-0.21.2'"];
+    InfraController => OpenShift [ label = "Get StandardInfraTemplate 'standard-cfg1'"];
     InfraController << OpenShift [ label = "Return" ];
-    InfraController => OpenShift [ label = "Create deployments and services based on StandardInfraTemplate 'standard-cfg1-0.21.2' for instance 'infra1'" ];
+    InfraController => OpenShift [ label = "Create deployments and services based on StandardInfraTemplate 'standard-cfg1' for instance 'infra1'" ];
     InfraController << OpenShift [ label = "Created" ];
     InfraController => OpenShift [ label = "Annotate 'infra1' with the current template and version in use" ];
     InfraController << OpenShift [ label = "Updated" ];

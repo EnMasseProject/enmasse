@@ -21,10 +21,15 @@ image::infra_create_current.png[]
 
 == what/how
 
-This proposal attempts to address these issues by defining a format for infrastructure configuration
-that clearly states the configuration settings that are available for tuning. Multiple versions of
-the configuration may exist in the system, and a particluar instance of a configuration is mapped to
-one of the configuration instances.
+This proposal attempts to address these issues by:
+
+* Defining a resource for infrastructure configuration that clearly states the configuration settings that can be changed.
+* Permit multiple configurations and versions of configurations to exist in the system to allow
+  upgrades between configurations and versions.
+* Defining a resource for an _instance_ of the infrastructure configuration capturing the desired
+  configuration the infrastructure should have .
+* Introducing another controller component responsible for creating/upgrading infrastructure based
+  on resource settings (at the logical level. It doesn't have to be another process).
 
 The process of creating an AddressSpace with the proposed model:
 
@@ -37,24 +42,31 @@ The process of upgrading the infrastructure with the proposed model:
 
 image::infra_upgrade_proposed.png[]
 
-Defining a syntax for configuring infrastructure makes the operational life of EnMasse simpler.
-It also allows us to decouple definition of the infrastructure from the address space(s) that the
-infrastructure serves, which is a feature that is desired for kafka/strimzi support.
-
-A `StandardInfraTemplate` resource defines an infrastructure definition of admin, router and broker
-components. All supported settings for these components can be tuned through this resource. More
-settings that is desired to be configurable can be added. The resource is versioned in the name, and
-as a property.
-
 === Examples
 
+The are 3 resource types introduced:
+
+* StandardInfraTemplate (replaces resource-definition configmap)
+* BrokeredInfraTemplate (replaces resource-definition configmap)
+* InfraInstance
+
+==== StandardInfraTemplate
+
+A `StandardInfraTemplate` resource defines an infrastructure configuration of a `standard address
+space` (the term should really be `standard infrastructure` in the new world). All supported
+settings for these components can be tuned through this resource. More settings that is desired to
+be configurable can be added. The resource is versioned in order for the controller logic to do
+version-specific upgrade logic if required.
+
+*NOTE* For upgrades (i.e. from 0.21.2 to 0.22.0), the name of the resource would have to include the
+version as well to avoid name clashes.
 
 ```
 apiVersion: enmasse.io/v1alpha1
 kind: StandardInfraTemplate
 metadata:
-  name: standard-cfg1-0.21.2
-  namespace: somewhere
+  name: standard-cfg1
+  namespace: enmasse-infra
 spec:
   version: 0.21.2
   router:
@@ -78,7 +90,7 @@ Another template that could be bundled with EnMasse, or provided by the service 
 apiVersion: enmasse.io/v1alpha1
 kind: StandardInfraTemplate
 metadata:
-  name: standard-cfg2-0.21.2
+  name: standard-cfg2
   namespace: enmasse-infra
 spec:
   version: 0.21.2
@@ -97,17 +109,18 @@ spec:
       memory: 512Mi
 ```
 
-A `BrokeredInfraTemplate` resource defines configuration for an admin component, and a single broker
-(with future settings might be replicas for instance). The reason for having separate `StandardInfraTemplate` and
-`BrokeredInfraTemplate` is because they will have different schema. If we define these as Custom
-Resource Definitions, adding automatic validation of the schema is easier than if we mix both into
-the same schema.
+==== BrokeredInfraTemplate
+
+A `BrokeredInfraTemplate` resource defines configuration a `brokered address space`. The reason for
+having separate `StandardInfraTemplate` and `BrokeredInfraTemplate` is because they will have
+different schema. If we define these as Custom Resource Definitions, adding automatic validation of
+the schema is easier than if we mix both into the same schema.
 
 ```
 apiVersion: enmasse.io/v1alpha1
 kind: BrokeredInfraTemplate
 metadata:
-  name: brokered-cfg1-0.21.2
+  name: brokered-cfg1
   namespace: enmasse-infra
 spec:
   version: 0.21.2
@@ -121,23 +134,23 @@ spec:
       memory: 512Mi
 ```
 
-=== Defining an instance of infrastructure
+=== InfraInstance
 
-At present `AddressSpace` is a logical resource managed by tenants. This proposal introduces another
-resource `InfraInstance` which is a resource automatically created by EnMasse (i.e. the
-`address-space-controller`). Once created, the `InfraInstance` can be explicitly upgraded by the
-service admin or a higher-level operator by changing the template referenced.
+At present `AddressSpace` is a logical resource managed by tenants. `InfraInstance` is a resource
+automatically created by EnMasse (i.e. the `address-space-controller`) but managed by service
+admins. Once created, the `InfraInstance` can be explicitly upgraded by the service admin or a
+higher-level operator by changing the template referenced.
 
 An `InfraInstance` resource declares that some infrastructure based on a template
 resource (+ authentication service settings?) should exist.
 
-A component `infra-controller` will watch for `InfraInstance` resources create/update the necessary
+A component `infra-instance-controller` will watch for `InfraInstance` resources create/update the necessary
 components (routers, brokers, admin etc.). At first, there is a 1:1 mapping between `AddressSpace`
 and `InfraInstance`, with the distinction that tenants can see `AddressSpace` resources, where as
 only service admins can see `InfraInstance` resources.
 
 The `InfraInstance` resource points to a particular `*InfraTemplate` resource, indicating what the
-infrastructure and what settings should exist. If the version changes, the `infra-controller` will be responsible
+infrastructure and what settings should exist. If the version changes, the `infra-instance-controller` will be responsible
 for converging the `InfraInstance` instance towards the new version based on the new template.
 
 Here is an example of an `InfraInstance` resource:
@@ -152,7 +165,7 @@ spec:
   version: 0.21.2
   template:
     kind: StandardInfraTemplate
-    name: standard-cfg1-0.21.2
+    name: standard-cfg1
   authenticationService:
     host: example.com
     port: 5671
@@ -161,13 +174,13 @@ spec:
 
 === Other considerations
 
-As a first step, AddressSpacePlans can still contain the 'defined-by' annotation which can refer to
+AddressSpacePlans stay unchanged, and can still contain the 'defined-by' annotation which can refer to
 a StandardInfraTemplate or a BrokeredInfraTemplate. When an address-space is created, this can be
 the way to find which template is used for creating the `InfraInstance` resource.
 
-Optionally, address spaces may also be versioned to indicate what version of the infrastructure is
-required to support it, but to begin with it is assumed that an address space can be served by any
-version of the infrastructure.
+One alternative is to avoid `InfraInstance` resources, and instead version the `AddressSpace`
+resource. However, with the desire to support shared infrastructure in the future, it can become too
+limiting. An `AddressSpace` conceptually stays unchanged during an upgrade from a tenant POV.
 
 == testing
 

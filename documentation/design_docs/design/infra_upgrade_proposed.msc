@@ -1,19 +1,19 @@
 msc {
-    width = "1024";
+    hscale="2.5";
     EnMasseAdmin,InfraController,OpenShift;
 
-    EnMasseAdmin => OpenShift[ label = "Create StandardInfraTemplate 'standard-cfg1-0.22.0'" ];
+    EnMasseAdmin => OpenShift[ label = "Create StandardInfraTemplate 'standard-cfg2'" ];
     EnMasseAdmin << OpenShift [ label = "Created" ];
 
-    EnMasseAdmin => OpenShift[ label = "Update Infra 'infra1' .spec.template.name to 'standard-cfg1-0.22.0' (and .spec.version to 0.22.0)" ];
+    EnMasseAdmin => OpenShift[ label = "Update Infra 'infra1' .spec.template.name to 'standard-cfg2' (and .spec.version to 0.22.0 for instance)" ];
     EnMasseAdmin << OpenShift [ label = "Updated" ];
     --- ;
 
     InfraController << OpenShift [ label = "Watch trigger Infra check loop" ];
     InfraController => InfraController [ label = "Process Infra. Check annotation for current active version vs. version declared in .spec.template and .spec.version" ];
-    InfraController => OpenShift [ label = "Get StandardInfraTemplate 'standard-cfg1-0.22.0'"];
-    InfraController => OpenShift [ label = "Patch deployments with settings based on StandardInfraTemplate 'standard-cfg1-0.22.0' for instance 'infra1'" ];
+    InfraController => OpenShift [ label = "Get StandardInfraTemplate 'standard-cfg2'"];
+    InfraController => OpenShift [ label = "Patch deployments with settings based on StandardInfraTemplate 'standard-cfg2' for instance 'infra1'" ];
     InfraController << OpenShift [ label = "Updated" ];
-    InfraController => OpenShift [ label = "Annotate 'infra1' with the current template and version in use (standard-cfg1-0.22.0" ];
+    InfraController => OpenShift [ label = "Annotate 'infra1' with the current template and version in use (standard-cfg2)" ];
     InfraController << OpenShift [ label = "Updated" ];
 }
