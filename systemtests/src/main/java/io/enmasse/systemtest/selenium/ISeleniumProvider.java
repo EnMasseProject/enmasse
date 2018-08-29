@@ -22,5 +22,6 @@ public interface ISeleniumProvider {
         if (context.getExecutionException().isPresent() || env.storeScreenshots()) {
             selenium.onFailed(context);
         }
+        selenium.tearDownDrivers();
     }
 }

@@ -59,8 +59,6 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     @AfterEach
     void tearDownWebConsoleTests() {
-        selenium.tearDownDrivers();
-        SeleniumContainers.restartFirefoxContainer();
         if (!environment.skipCleanup()) {
             provisionedServices.forEach((project, addressSpace) -> {
                 try {
