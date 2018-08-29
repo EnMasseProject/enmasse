@@ -2,26 +2,40 @@
 
 Changing configuration for the standard or brokered address space today involves changing a
 `resource definition` configmap, which in turn references templates (no schema validation and
-checking of values for instance). The underlying openshift templates which are stored in a configmap
-as key-value pairs and can only be changed before deploying an address space or it will have to be
+checking of values for instance). 
+
+The underlying openshift templates which are stored in a configmap
+as key-value pairs and can only be changed _before_ deploying an address space or it will have to be
 recreated, unless you happen to know exactly what component to change.
 
 The settings that can be tuned and will have an effect when changed is not clear to spot, and
 are scattered around in the template.
 
-Finally, there is at present no mechanism for the service admin to upgrade the infrastructure
+There is at present no mechanism for the service admin to upgrade the infrastructure
 between different versions of EnMasse and even for changing configuration run-time and make sure the
 appropriate components are changed.
+
+The following sequence diagram illustrates what the process is today:
+
+image::infra_create_current.png[]
 
 == what/how
 
 This proposal attempts to address these issues by defining a format for infrastructure configuration
 that clearly states the configuration settings that are available for tuning. Multiple versions of
 the configuration may exist in the system, and a particluar instance of a configuration is mapped to
-one of the configuration versions.
+one of the configuration instances.
+
+The process of creating an AddressSpace with the proposed model:
+
+image::infra_create_proposed.png[]
 
 Upgrades are handled by updating the version of the instance of the infrastructure, in which case a
 controller will take steps to migrate the infra from one version to the next.
+
+The process of upgrading the infrastructure with the proposed model:
+
+image::infra_upgrade_proposed.png[]
 
 Defining a syntax for configuring infrastructure makes the operational life of EnMasse simpler.
 It also allows us to decouple definition of the infrastructure from the address space(s) that the
@@ -32,17 +46,18 @@ components. All supported settings for these components can be tuned through thi
 settings that is desired to be configurable can be added. The resource is versioned in the name, and
 as a property.
 
+=== Examples
+
 
 ```
 apiVersion: enmasse.io/v1alpha1
 kind: StandardInfraTemplate
 metadata:
-  name: standard-infra-0.21.2
+  name: standard-cfg1-0.21.2
   namespace: somewhere
 spec:
   version: 0.21.2
   router:
-    replicas: 1
     linkCapacity: 1000
     allowDurableSubscriptions: false
     resources:
@@ -57,16 +72,43 @@ spec:
       memory: 512Mi
 ```
 
+Another template that could be bundled with EnMasse, or provided by the service operator:
+
+```
+apiVersion: enmasse.io/v1alpha1
+kind: StandardInfraTemplate
+metadata:
+  name: standard-cfg2-0.21.2
+  namespace: enmasse-infra
+spec:
+  version: 0.21.2
+  router:
+    linkCapacity: 1000
+    allowDurableSubscriptions: false
+    resources:
+      memory: 1Gi
+  broker:
+    addressFullPolicy: PAGE
+    resources:
+      memory: 512Mi
+      disk: 5Gi
+  admin:
+    resources:
+      memory: 512Mi
+```
+
 A `BrokeredInfraTemplate` resource defines configuration for an admin component, and a single broker
-(with future settings might be replicas for instance). Settings for these components can be tuned
-through this resource.
+(with future settings might be replicas for instance). The reason for having separate `StandardInfraTemplate` and
+`BrokeredInfraTemplate` is because they will have different schema. If we define these as Custom
+Resource Definitions, adding automatic validation of the schema is easier than if we mix both into
+the same schema.
 
 ```
 apiVersion: enmasse.io/v1alpha1
 kind: BrokeredInfraTemplate
 metadata:
-  name: brokered-infra-0.21.2
-  namespace: somewhere
+  name: brokered-cfg1-0.21.2
+  namespace: enmasse-infra
 spec:
   version: 0.21.2
   broker:
@@ -79,60 +121,58 @@ spec:
       memory: 512Mi
 ```
 
-At present `AddressSpace` is a logical resource managed by tenants. To allow the service admin to
-manage the system without changing the `AddressSpace` resource, an `Infra` resource type is used to
-represent an instance of the above templates. This paves the way later for allowing multiple
-`AddressSpace` resource to be shared by the same `Infra` resource. To start with, the `Infra`
-resource is created automatically by the `address-space-controller` when an `AddressSpace` is created.
+=== Defining an instance of infrastructure
 
-An `Infra` resource is used to declare some infrastructure to be created based on a template
-resource (+ authentication service settings?). A component `infra-controller` will watch for
-resources of this kind and instantiate the necessary components as these resources are created.
-Initially, there might as well be a 1:1 mapping between AddressSpace and Infra, with the distinction
-that tenants can see `AddressSpace` resources, where as only service admins can see `Infra`
-resources.
+At present `AddressSpace` is a logical resource managed by tenants. This proposal introduces another
+resource `InfraInstance` which is a resource automatically created by EnMasse (i.e. the
+`address-space-controller`). Once created, the `InfraInstance` can be explicitly upgraded by the
+service admin or a higher-level operator by changing the template referenced.
 
-The `Infra` resource points to a particular `*InfraTemplate` resource, indicating what the
-infrastructure should converge to. If the version changes, the `infra-controller` will be responsible
-for converging the `Infra` instance towards the new version based on the new template.
+An `InfraInstance` resource declares that some infrastructure based on a template
+resource (+ authentication service settings?) should exist.
 
-Here is an example of an `Infra` instance:
+A component `infra-controller` will watch for `InfraInstance` resources create/update the necessary
+components (routers, brokers, admin etc.). At first, there is a 1:1 mapping between `AddressSpace`
+and `InfraInstance`, with the distinction that tenants can see `AddressSpace` resources, where as
+only service admins can see `InfraInstance` resources.
+
+The `InfraInstance` resource points to a particular `*InfraTemplate` resource, indicating what the
+infrastructure and what settings should exist. If the version changes, the `infra-controller` will be responsible
+for converging the `InfraInstance` instance towards the new version based on the new template.
+
+Here is an example of an `InfraInstance` resource:
 
 ```
 apiVersion: enmasse.io/v1alpha1
-kind: Infra
+kind: InfraInstance
 metadata:
   name: infra
-  namespace: myinfra
+  namespace: enmasse-infra
 spec:
+  version: 0.21.2
   template:
     kind: StandardInfraTemplate
-    name: standard-infra-0.21.2
-    version: 0.21.2
+    name: standard-cfg1-0.21.2
   authenticationService:
     host: example.com
     port: 5671
     caBundle: // Base64 encoded CA cert
 ```
 
+=== Other considerations
+
 As a first step, AddressSpacePlans can still contain the 'defined-by' annotation which can refer to
 a StandardInfraTemplate or a BrokeredInfraTemplate. When an address-space is created, this can be
-the way to find which template is used for creating the `Infra` resource.
+the way to find which template is used for creating the `InfraInstance` resource.
 
 Optionally, address spaces may also be versioned to indicate what version of the infrastructure is
 required to support it, but to begin with it is assumed that an address space can be served by any
 version of the infrastructure.
 
-== Sequence diagrams
-
-=== Address space creation
-
-image::infra_create.png[]
-
 == testing
 
 Tests would have to include defining multiple versions of templates with different settings, update
-the `Infra` instance version, and verify that all components have been upgraded.
+the `InfraInstance` version, and verify that all components have been upgraded.
 
 == documentation
 
