@@ -40,10 +40,30 @@ function setup_test() {
     ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"register_api_server\": ${REGISTER_API_SERVER}, \"enable_rbac\": ${ENABLE_RBAC}}"
 }
 
-function wait_until_up(){
+function wait_until_up() {
     POD_COUNT=$1
     ADDR_SPACE=$2
     ${CURDIR}/wait_until_up.sh ${POD_COUNT} ${ADDR_SPACE} || return 1
+}
+
+function wait_until_cluster_up() {
+    local timeout=${1}
+
+    NOW=$(date +%s)
+    END=$(($NOW + timeout))
+    info "Now: $(date -d@${NOW} -u +%F:%H:%M:%S)"
+    info "Waiting ${timeout} seconds until: $(date -d@${END} -u +%F:%H:%M:%S)"
+
+    oc cluster status
+    while [ $? -gt 0 ]
+    do
+        NOW=$(date +%s)
+        if [ ${NOW} -gt ${END} ]; then
+            err_and_exit "ERROR: Timed out waiting for openshift cluster to come up!"
+        fi
+        sleep 5
+        oc cluster status
+    done
 }
 
 function run_test() {
