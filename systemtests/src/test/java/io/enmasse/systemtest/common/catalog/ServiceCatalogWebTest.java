@@ -42,7 +42,6 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     private static Logger log = CustomLogger.getLogger();
     private Map<String, AddressSpace> provisionedServices = new HashMap<>();
-    private KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
     private KeycloakCredentials ocTestUser = new KeycloakCredentials("pepik", "pepik");
 
     private String getUserProjectName(AddressSpace addressSpace) {
@@ -188,7 +187,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
-        consolePage.login(developer, true);
+        consolePage.login(ocTestUser, true);
     }
 
     @Test
@@ -198,7 +197,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         AddressSpace addressSpace = new AddressSpace("test-messaging-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), developer);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
 
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);

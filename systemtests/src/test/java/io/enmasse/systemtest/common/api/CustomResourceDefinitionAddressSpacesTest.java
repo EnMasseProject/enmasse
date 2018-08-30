@@ -79,7 +79,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
             }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
-            CRDCmdClient.loginUser("developer", "developer");
+            CRDCmdClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
             CRDCmdClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
@@ -95,7 +95,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
             assertThat(CRDCmdClient.createCR(addressSpacePayloadJson.toString()).getRetCode(), is(false));
         } finally {
-            CRDCmdClient.loginUser("developer", "developer");
+            CRDCmdClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
             CRDCmdClient.switchProject(environment.namespace());
         }
     }
