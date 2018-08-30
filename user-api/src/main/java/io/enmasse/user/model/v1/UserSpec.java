@@ -38,6 +38,19 @@ public class UserSpec {
         return authorization;
     }
 
+    public void validate() {
+        Objects.requireNonNull(username, "'username' must be set");
+        if (authentication != null) {
+            authentication.validate();
+        }
+
+        if (authorization != null) {
+            for (UserAuthorization authz : authorization) {
+                authz.validate();
+            }
+        }
+    }
+
     public static class Builder {
         private String username;
         private UserAuthentication authentication;

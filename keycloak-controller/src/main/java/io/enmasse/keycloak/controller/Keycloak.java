@@ -33,10 +33,11 @@ public class Keycloak implements KeycloakApi {
     public void createRealm(String namespace, String realmName, String consoleRedirectURI) {
         final RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setRealm(realmName);
-        newRealm.setAttributes(Collections.singletonMap("namespace", namespace));
         newRealm.setEnabled(true);
         newRealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
-        newRealm.setAttributes(Collections.singletonMap("enmasse-realm","true"));
+        newRealm.setAttributes(new HashMap<>());
+        newRealm.getAttributes().put("namespace", namespace);
+        newRealm.getAttributes().put("enmasse-realm", "true");
 
         if (params.getIdentityProviderUrl() != null && params.getIdentityProviderClientId() != null && params.getIdentityProviderClientSecret() != null) {
             IdentityProviderRepresentation openshiftIdProvider = new IdentityProviderRepresentation();

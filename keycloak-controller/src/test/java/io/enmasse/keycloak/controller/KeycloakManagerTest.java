@@ -59,6 +59,11 @@ public class KeycloakManagerTest {
             }
 
             @Override
+            public boolean replaceUser(String realm, User user) {
+                return false;
+            }
+
+            @Override
             public void deleteUser(String realm, User user) {
 
             }

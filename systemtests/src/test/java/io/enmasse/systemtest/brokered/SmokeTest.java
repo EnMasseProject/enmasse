@@ -78,7 +78,7 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
         Destination queueB = Destination.queue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
-        KeycloakCredentials user = new KeycloakCredentials("test", "test");
+        UserCredentials user = new UserCredentials("test", "test");
         createUser(addressSpaceA, user);
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);

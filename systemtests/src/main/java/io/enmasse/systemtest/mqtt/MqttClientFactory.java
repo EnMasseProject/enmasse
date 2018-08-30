@@ -48,7 +48,7 @@ public class MqttClientFactory {
     private final String username;
     private final String password;
 
-    public MqttClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
+    public MqttClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this.kubernetes = kubernetes;
         this.environment = environment;
         this.defaultAddressSpace = defaultAddressSpace;

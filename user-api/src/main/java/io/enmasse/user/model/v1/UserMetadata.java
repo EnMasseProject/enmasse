@@ -44,11 +44,39 @@ public class UserMetadata {
         return selfLink;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserMetadata that = (UserMetadata) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(namespace, that.namespace);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, namespace);
+    }
+
+    public void validate() {
+        Objects.requireNonNull(name, "'name' must be set");
+        Objects.requireNonNull(namespace, "'namespace' must be set");
+    }
+
     public static class Builder {
         private String name;
         private String namespace;
         private String creationTimestamp;
         private String selfLink;
+
+        public Builder() { }
+
+        public Builder(UserMetadata userMetadata) {
+            this.name = userMetadata.getName();
+            this.namespace = userMetadata.getNamespace();
+            this.creationTimestamp = userMetadata.getCreationTimestamp();
+            this.selfLink = userMetadata.getSelfLink();
+        }
 
         public Builder setName(String name) {
             this.name = name;

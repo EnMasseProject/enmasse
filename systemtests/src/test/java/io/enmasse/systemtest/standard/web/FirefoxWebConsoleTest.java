@@ -6,7 +6,7 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
@@ -146,7 +146,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
-                () -> doTestCanOpenConsolePage(new KeycloakCredentials("pepa", "pepaPa555")));
+                () -> doTestCanOpenConsolePage(new UserCredentials("pepa", "pepaPa555")));
     }
 
     @Test

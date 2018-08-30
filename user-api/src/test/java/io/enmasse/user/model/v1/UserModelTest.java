@@ -135,6 +135,36 @@ public class UserModelTest {
         assertAuthorization(deserialized, Arrays.asList("queue1", "topic1"), Arrays.asList(Operation.send, Operation.recv));
     }
 
+    @Test
+    public void testValidation() {
+        User u1 = new User.Builder()
+                .setMetadata(new UserMetadata.Builder()
+                        .setName("myspace.user1")
+                        .setNamespace("ns1")
+                        .build())
+                .setSpec(new UserSpec.Builder()
+                        .setUsername("user1")
+                        .setAuthentication(new UserAuthentication.Builder()
+                                .setType(UserAuthenticationType.federated)
+                                .setProvider("openshift")
+                                .setFederatedUserid("uuid")
+                                .setFederatedUsername("user1")
+                                .build())
+                        .setAuthorization(Arrays.asList(
+                                new UserAuthorization.Builder()
+                                        .setAddresses(Arrays.asList("queue1", "topic1"))
+                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                                        .build(),
+                                new UserAuthorization.Builder()
+                                        .setAddresses(Arrays.asList("direct*"))
+                                        .setOperations(Arrays.asList(Operation.view))
+                                        .build()))
+                        .build())
+                .build();
+
+        u1.validate();
+    }
+
     private void assertAuthorization(User deserialized, List<String> addresses, List<Operation> operations) {
         for (UserAuthorization authorization : deserialized.getSpec().getAuthorization()) {
             if (authorization.getOperations().equals(operations) && authorization.getAddresses().equals(addresses)) {

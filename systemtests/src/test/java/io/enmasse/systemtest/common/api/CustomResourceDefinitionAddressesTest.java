@@ -62,7 +62,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         Destination dest1 = Destination.topic("mytopic-agent", "brokered-topic");
         Destination dest2 = Destination.topic("mytopic-api", "brokered-topic");
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new KeycloakCredentials(null, null));
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new UserCredentials(null, null));
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
@@ -144,7 +144,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         dest2.getAddressName(brokered.getName()), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new KeycloakCredentials(null, null));
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new UserCredentials(null, null));
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.deleteAddressWebConsole(dest1, false);
