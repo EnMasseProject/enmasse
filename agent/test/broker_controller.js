@@ -75,8 +75,8 @@ describe('broker controller', function() {
                 assert.equal(addresses.length, 0, util.format('extra addresses: %j', addresses));
                 assert.equal(queues.length, 0, util.format('extra queues: %j', queues));
                 done();
-            }).catch(console.error);
-        }).catch(console.error);
+            }).catch(done);
+        }).catch(done);
     });
     it('deletes a topic', function(done) {
         controller.addresses_defined([{address:'foo',type:'queue'}, {address:'bar',type:'topic'}]).then(function () {
@@ -93,8 +93,8 @@ describe('broker controller', function() {
                 assert.equal(addresses.length, 0);
                 assert.equal(queues.length, 0);
                 done();
-            });
-        });
+            }).catch(done);
+        }).catch(done);
     });
     it('retrieves topic stats', function(done) {
         broker.add_topic_address('foo', {

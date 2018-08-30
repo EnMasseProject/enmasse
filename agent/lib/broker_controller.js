@@ -32,7 +32,7 @@ function BrokerController(event_sink) {
     this.busy_count = 0;
     this.retrieve_count = 0;
     this.last_retrieval = undefined;
-    this.ignore_subscriptions = false;
+    this.excluded_types = undefined;
 };
 
 util.inherits(BrokerController, events.EventEmitter);
@@ -41,8 +41,14 @@ BrokerController.prototype.start_polling = function (poll_frequency) {
     this.polling = setInterval(this.check_broker_addresses.bind(this), poll_frequency || 5000);//poll broker stats every 5 secs by default
 };
 
+function type_filter(ignored) {
+    return function (type) {
+        return ignored.indexOf(type) >= 0;
+    }
+}
+
 BrokerController.prototype.connect = function (options) {
-    this.ignore_subscriptions = true;
+    this.excluded_types = type_filter(['subscription']);
     var container = rhea.create_container();
     container.on('connection_open', this.on_connection_open.bind(this));
     return container.connect(options);
@@ -467,7 +473,7 @@ BrokerController.prototype._set_sync_status = function (stale, missing) {
 BrokerController.prototype._sync_broker_addresses = function () {
     var self = this;
     return this.broker.listAddresses().then(function (results) {
-        var actual = translate(results, excluded_addresses, self.ignore_subscriptions ? exclude_subscriptions : undefined);
+        var actual = translate(results, excluded_addresses, self.excluded_types);
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
         log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
@@ -543,7 +549,13 @@ BrokerController.prototype._sync_addresses_and_connectors = function () {
 }
 
 module.exports.create_controller = function (connection, event_sink) {
+    var rcg = connection.properties['qd.route-container-group'];
     var bc = new BrokerController(event_sink);
+    if (rcg === 'sharded-topic') {
+        //only control subscriptions
+        bc.excluded_types = type_filter(['queue', 'topic']);
+        log.info('excluding types %j controller for %s (%s)', bc.excluded_types, connection.container_id, rcg);
+    }
     bc.set_connection(connection);
     return bc;
 };

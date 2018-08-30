@@ -129,7 +129,7 @@ under the License.
           <param key="host" value="$QUEUE_SCHEDULER_SERVICE_HOST" />
           <param key="port" value="$QUEUE_SCHEDULER_SERVICE_PORT" />
           <param key="containerId" value="$CONTAINER_ID" />
-          <param key="clusterId" value="$CONTAINER_ID" />
+          <param key="clusterId" value="sharded-topic" />
         </connector-service>
         <connector-service name="address-connector-in">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
