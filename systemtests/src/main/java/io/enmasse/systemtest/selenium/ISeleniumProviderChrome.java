@@ -16,14 +16,14 @@ public interface ISeleniumProviderChrome extends ISeleniumProvider {
         return TestUtils.getChromeDriver();
     }
 
+    @Override
+    default void restartSeleniumContainer() throws Exception {
+        SeleniumContainers.restartChromeContainer();
+    }
+
     @BeforeAll
     default void deployContainer() throws Exception {
         SeleniumContainers.deployChromeContainer();
-    }
-
-    @AfterEach
-    default void restartContainer() throws Exception {
-        SeleniumContainers.restartChromeContainer();
     }
 
     @AfterAll

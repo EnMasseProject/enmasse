@@ -16,12 +16,14 @@ public interface ISeleniumProvider {
     SeleniumProvider selenium = new SeleniumProvider();
 
     WebDriver buildDriver() throws Exception;
+    void restartSeleniumContainer() throws Exception;
 
     @AfterEach
-    default void tearDownWebConsoleTests(ExtensionContext context, Environment env) {
+    default void tearDownWebConsoleTests(ExtensionContext context, Environment env) throws Exception {
         if (context.getExecutionException().isPresent() || env.storeScreenshots()) {
             selenium.onFailed(context);
         }
         selenium.tearDownDrivers();
+        restartSeleniumContainer();
     }
 }
