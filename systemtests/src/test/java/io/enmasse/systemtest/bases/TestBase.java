@@ -70,8 +70,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private KeycloakClient keycloakApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            TestUtils.deleteAddressSpace(addressApiClient, addressSpace, logCollector);
+        deleteAddressSpace(addressSpace, addressApiClient);
+    }
+
+    protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
+        if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
+            TestUtils.deleteAddressSpace(apiClient, addressSpace, logCollector);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
@@ -171,13 +175,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
+    protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient, boolean extraWait) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
         AddressSpace addrSpaceResponse;
-        if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+        if (!TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
             log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
-            addressApiClient.createAddressSpace(addressSpace);
-            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+            apiClient.createAddressSpace(addressSpace);
+            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(apiClient, addressSpace.getName());
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
@@ -188,7 +192,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 Thread.sleep(120_000);
             }
         } else {
-            addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
+            addrSpaceResponse = TestUtils.getAddressSpaceObject(apiClient, addressSpace.getName());
             log.info("Address space '" + addressSpace + "' already exists.");
         }
         if (addressSpace.getEndpoints().isEmpty()) {
@@ -197,6 +201,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
         log.info("Address-space successfully created: '{}'", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
+        createAddressSpace(addressSpace, addressApiClient, extraWait);
     }
 
     //!TODO: protected void appendAddressSpace(...)
@@ -210,7 +218,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
-        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
+        waitForAddressSpaceReady(addressSpace, addressApiClient);
+    }
+
+    protected void waitForAddressSpaceReady(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
+        TestUtils.waitForAddressSpaceReady(apiClient, addressSpace.getName());
     }
 
     protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {

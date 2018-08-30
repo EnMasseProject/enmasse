@@ -41,6 +41,20 @@ public class AddressApiClient extends ApiClient {
         this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
     }
 
+    public AddressApiClient(Kubernetes kubernetes, String namespace) throws MalformedURLException {
+        super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1");
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
+        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
+    }
+
+    public AddressApiClient(Kubernetes kubernetes, String namespace, String token) throws MalformedURLException {
+        super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1", token);
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
+        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
+    }
+
     public void close() {
         client.close();
         vertx.close();

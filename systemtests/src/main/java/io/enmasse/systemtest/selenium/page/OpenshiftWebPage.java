@@ -167,6 +167,11 @@ public class OpenshiftWebPage implements IWebPage {
         if (waitUntilLoginPage()) {
             selenium.getAngularDriver().waitForAngularRequestsToFinish();
             selenium.takeScreenShot();
+            try {
+                logout();
+            } catch (Exception ex) {
+                log.info("User is not logged");
+            }
             if (!login())
                 throw new IllegalAccessException(loginPage.getAlertMessage());
         }
@@ -178,6 +183,13 @@ public class OpenshiftWebPage implements IWebPage {
 
     private boolean login() throws Exception {
         return loginPage.login(credentials.getUsername(), credentials.getPassword());
+    }
+
+    private void logout() throws Exception {
+        WebElement userDropdown = selenium.getDriver().findElement(By.className("navbar-right")).findElement(By.id("user-dropdown"));
+        selenium.clickOnItem(userDropdown, "User dropdown navigation");
+        WebElement logout = selenium.getDriver().findElement(By.className("navbar-right")).findElement(By.cssSelector("a[ng-href='logout']"));
+        selenium.clickOnItem(logout, "Log out");
     }
 
     private boolean waitUntilLoginPage() {
@@ -298,14 +310,23 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     private void selectProjectInWizard(String projectName) throws Exception {
-        clickOnAddToProjectDropdown();
-        WebElement project = getItemFromAddToProjectDropDown(projectName);
+        WebElement project = null;
+        boolean noProjectAvailable = false;
+        try {
+            clickOnAddToProjectDropdown();
+            project = getItemFromAddToProjectDropDown(projectName);
+        } catch (Exception ex) {
+            log.info("No project is available, creating new");
+            noProjectAvailable = true;
+        }
         if (project != null) {
             log.info("Project is present address space will be added into it: {}", projectName);
             selenium.clickOnItem(project);
         } else {
             log.info("Project is not present address space will be added into new");
-            selenium.clickOnItem(getItemFromAddToProjectDropDown("Create Project"));
+            if (!noProjectAvailable) {
+                selenium.clickOnItem(getItemFromAddToProjectDropDown("Create Project"));
+            }
             selenium.fillInputItem(getModalWindow().findElement(By.tagName("select-project")).findElement(By.id("name")),
                     projectName);
             selenium.fillInputItem(getModalWindow().findElement(By.tagName("select-project")).findElement(By.id("displayName")),

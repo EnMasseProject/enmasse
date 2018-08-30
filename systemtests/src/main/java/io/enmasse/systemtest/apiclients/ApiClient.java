@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.*;
+import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.HttpResponse;
@@ -27,10 +28,18 @@ public abstract class ApiClient {
     protected String apiVersion;
 
     protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion) {
+        initializeAddressClient(kubernetes, endpoint, apiVersion, "");
+    }
+
+    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion, String authzString) {
+        initializeAddressClient(kubernetes, endpoint, apiVersion, authzString);
+    }
+
+    private void initializeAddressClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion, String token) {
         this.vertx = VertxFactory.create();
         this.kubernetes = kubernetes;
         this.connect();
-        this.authzString = String.format("Bearer %s", kubernetes.getApiToken());
+        this.authzString = String.format("Bearer %s", Strings.isNullOrEmpty(token) ? kubernetes.getApiToken() : token);
         this.endpoint = endpoint;
         this.apiVersion = apiVersion;
     }
