@@ -39,6 +39,7 @@
       <artifactId>vertx-proton</artifactId>
       <scope>compile</scope>
     </dependency>
+    <!-- Work around for: https://github.com/mockito/mockito/issues/366 https://bugs.openjdk.java.net/browse/JDK-8152174 -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codegen</artifactId>
