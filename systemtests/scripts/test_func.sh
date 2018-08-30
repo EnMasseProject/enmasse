@@ -287,21 +287,21 @@ function clean_docker_images() {
 
     containers_run=$(docker ps -q)
     if [[ -n ${containers_run} ]];then
-        ${DOCKER} stop "${containers_run}"
+        ${DOCKER} stop $(docker ps -q)
     else
         info "No running containers"
     fi
 
     containers_all=$(docker ps -a -q)
     if [[ -n ${containers_all} ]];then
-        ${DOCKER} rm "${containers_all}" -f
+        ${DOCKER} rm $(docker ps -a -q) -f
     else
         info "No containers to remove"
     fi
 
     images=$(docker images -q)
     if [[ -n ${images} ]];then
-        ${DOCKER} rmi "${images}" -f
+        ${DOCKER} rmi $(docker images -q) -f
     else
         info "No images to remove"
     fi
@@ -339,7 +339,7 @@ function get_kubeconfig_path() {
 
 function get_oc_args() {
     OC_39='--service-catalog'
-    OC_310='--enable=*,automation-service-broker,rhel-imagestreams,service-catalog --insecure-skip-tls-verify=true'
+    OC_310='--enable=*,service-catalog,web-console --insecure-skip-tls-verify=true'
 
     if [[ $(get_openshift_version) == '3.9'* ]]; then
         echo $OC_39
