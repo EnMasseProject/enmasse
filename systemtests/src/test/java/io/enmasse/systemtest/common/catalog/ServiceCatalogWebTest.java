@@ -12,7 +12,6 @@ import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
@@ -42,7 +41,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     private static Logger log = CustomLogger.getLogger();
     private Map<String, AddressSpace> provisionedServices = new HashMap<>();
-    private KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
+    private UserCredentials developer = new UserCredentials("developer", "developer");
 
     private String getUserProjectName(AddressSpace addressSpace) {
         return String.format("%s-%s", "service", addressSpace.getNamespace());

@@ -12,6 +12,7 @@ import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
@@ -64,10 +65,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private static Logger log = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
-    protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
-    protected KeycloakCredentials defaultCredentials = new KeycloakCredentials(null, null);
+    protected UserCredentials managementCredentials = new UserCredentials(null, null);
+    protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
-    private KeycloakClient keycloakApiClient;
+    private UserApiClient userApiClient;
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
@@ -220,15 +221,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-    private KeycloakClient getKeycloakClient() throws Exception {
-        if (keycloakApiClient == null) {
-            KeycloakCredentials creds = environment.keycloakCredentials();
-            if (creds == null) {
-                creds = kubernetes.getKeycloakCredentials();
-            }
-            keycloakApiClient = new KeycloakClient(kubernetes.getKeycloakEndpoint(), creds, kubernetes.getKeycloakCA());
+    private UserApiClient getKeycloakClient() throws Exception {
+        if (userApiClient == null) {
+            userApiClient = new UserApiClient(kubernetes);
         }
-        return keycloakApiClient;
+        return userApiClient;
     }
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -368,40 +365,24 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     }
 
-    protected void createGroup(AddressSpace addressSpace, String groupName) throws Exception {
-        getKeycloakClient().createGroup(getRealmName(addressSpace), groupName);
-    }
-
-    protected void joinGroup(AddressSpace addressSpace, String groupName, String username) throws Exception {
-        getKeycloakClient().joinGroup(getRealmName(addressSpace), groupName, username);
-    }
-
-    protected void leaveGroup(AddressSpace addressSpace, String groupName, String username) throws Exception {
-        getKeycloakClient().leaveGroup(getRealmName(addressSpace), groupName, username);
-    }
-
-
-    protected void createUser(AddressSpace addressSpace, KeycloakCredentials credentials, String... groups) throws Exception {
+    protected void createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
         log.info("User {} will be created", credentials);
-        if (groups != null && groups.length > 0) {
-            getKeycloakClient().createUser(getRealmName(addressSpace), credentials, groups);
-        } else {
-            getKeycloakClient().createUser(getRealmName(addressSpace), credentials);
-        }
+        getKeycloakClient().createUser(addressSpace.getName(), addressSpace.getNamespace(), credentials);
+    }
+
+    protected void createUser(AddressSpace addressSpace, User user) throws Exception {
+        log.info("User {} will be created", user);
+        getKeycloakClient().createUser(addressSpace.getName(), addressSpace.getNamespace(), user);
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
-        getKeycloakClient().deleteUser(getRealmName(addressSpace), username);
-    }
-
-    private static String getRealmName(AddressSpace addressSpace) {
-        return addressSpace.getName();
+        getKeycloakClient().deleteUser(addressSpace.getName(), addressSpace.getNamespace(), username);
     }
 
     protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
             throws Exception {
         for (int i = from; i < to; i++) {
-            createUser(addressSpace, new KeycloakCredentials(prefixName + i, prefixPswd + i));
+            createUser(addressSpace, new UserCredentials(prefixName + i, prefixPswd + i));
         }
     }
 
@@ -421,14 +402,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
-    protected void assertCanConnect(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
+    protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         assertTrue(canConnectWithAmqp(addressSpace, credentials, destinations),
                 "Client failed, cannot connect under user " + credentials);
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
-    protected void assertCannotConnect(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
+    protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         try {
             assertFalse(canConnectWithAmqp(addressSpace, credentials, destinations),
                     "Client failed, can connect under user " + credentials);
@@ -441,7 +422,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-    private boolean canConnectWithAmqp(AddressSpace addressSpace, KeycloakCredentials credentials, List<Destination> destinations) throws Exception {
+    private boolean canConnectWithAmqp(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
             String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
             switch (destination.getType()) {
@@ -464,7 +445,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return true;
     }
 
-    private boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, KeycloakCredentials credentials, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, UserCredentials credentials, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
 
@@ -474,7 +455,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    private boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, KeycloakCredentials credentials, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, UserCredentials credentials, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
 
@@ -484,7 +465,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    private boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, KeycloakCredentials credentials, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, UserCredentials credentials, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
 
@@ -494,7 +475,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
     }
 
-    private boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, KeycloakCredentials credentials, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, UserCredentials credentials, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
 
@@ -721,7 +702,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addresses;
     }
 
-    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, KeycloakCredentials
+    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, UserCredentials
             credentials, String address, String content, int count, boolean logToOutput) {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
@@ -748,7 +729,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * attach N receivers into one address with own username/password
      */
     List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination,
-                                         int receiverCount, KeycloakCredentials credentials) throws Exception {
+                                         int receiverCount, UserCredentials credentials) throws Exception {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(ClientArgument.TIMEOUT, "120");
@@ -838,7 +819,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination,
                                              int connectionCount,
-                                             int senderCount, int receiverCount, KeycloakCredentials credentials) {
+                                             int senderCount, int receiverCount, UserCredentials credentials) {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(ClientArgument.TIMEOUT, "120");
@@ -873,29 +854,46 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * create users and groups for wildcard authz tests
      */
-    protected List<KeycloakCredentials> createUsersWildcard(AddressSpace addressSpace, String groupPrefix) throws
+    protected List<User> createUsersWildcard(AddressSpace addressSpace, String operation) throws
             Exception {
-        List<KeycloakCredentials> users = new ArrayList<>();
-        if (addressSpace.getType() == AddressSpaceType.BROKERED) {
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_#", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.#", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.#", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queueA*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topicA*", "password"));
-        } else {
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_queue.A*", "password"));
-            users.add(new KeycloakCredentials("user_" + groupPrefix + "_topic.A*", "password"));
-        }
+        List<User> users = new ArrayList<>();
+        users.add(new User()
+                .setUsername("user1")
+                .setPassword("password")
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(operation)
+                        .addAddress("*")));
 
-        for (KeycloakCredentials cred : users) {
-            createUser(addressSpace, cred, cred.getUsername().replace("user_", ""));
+        users.add(new User()
+                .setUsername("user2")
+                .setPassword("password")
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(operation)
+                        .addAddress("queue.*")));
+
+        users.add(new User()
+                .setUsername("user3")
+                .setPassword("password")
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(operation)
+                        .addAddress("topic.*")));
+
+        users.add(new User()
+                .setUsername("user4")
+                .setPassword("password")
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(operation)
+                        .addAddress("queueA*")));
+
+        users.add(new User()
+                .setUsername("user5")
+                .setPassword("password")
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(operation)
+                        .addAddress("topicA*")));
+
+        for (User user : users) {
+            createUser(addressSpace, user);
         }
         return users;
     }

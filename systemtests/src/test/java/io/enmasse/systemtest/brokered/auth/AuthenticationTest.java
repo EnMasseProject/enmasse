@@ -25,7 +25,7 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
         AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(addressSpace);
 
-        KeycloakCredentials credentials = new KeycloakCredentials("Pavel", "Novak");
+        UserCredentials credentials = new UserCredentials("Pavel", "Novak");
         createUser(addressSpace, credentials);
 
         assertCanConnect(addressSpace, credentials, amqpAddressList);

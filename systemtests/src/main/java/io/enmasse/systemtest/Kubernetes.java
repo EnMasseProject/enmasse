@@ -77,12 +77,12 @@ public abstract class Kubernetes {
 
     public abstract Endpoint getExternalEndpoint(String namespace, String name);
 
-    public KeycloakCredentials getKeycloakCredentials() {
+    public UserCredentials getKeycloakCredentials() {
         Secret creds = client.secrets().inNamespace(globalNamespace).withName("keycloak-credentials").get();
         if (creds != null) {
             String username = new String(Base64.getDecoder().decode(creds.getData().get("admin.username")));
             String password = new String(Base64.getDecoder().decode(creds.getData().get("admin.password")));
-            return new KeycloakCredentials(username, password);
+            return new UserCredentials(username, password);
         } else {
             return null;
         }
