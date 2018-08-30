@@ -58,7 +58,7 @@ public abstract class TestBaseWithShared extends TestBase {
         defaultCredentials.setPassword("test");
         createUser(sharedAddressSpace, defaultCredentials);
 
-        this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
+        this.managementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
         createUser(sharedAddressSpace,
                 managementCredentials,
                 Group.ADMIN.toString(),
@@ -207,7 +207,7 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, KeycloakCredentials credentials) throws Exception {
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, UserCredentials credentials) throws Exception {
         return attachReceivers(sharedAddressSpace, destination, receiverCount, credentials);
     }
 
@@ -244,7 +244,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * @param messageCount   count of messages that will be send into destinations
      * @throws Exception
      */
-    protected void doMessaging(List<Destination> dest, List<KeycloakCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
+    protected void doMessaging(List<Destination> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
         ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
         String sufix = isBrokered(sharedAddressSpace) ? "#" : "*";
         users.forEach((user) -> {

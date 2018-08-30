@@ -321,7 +321,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
-        KeycloakCredentials pavel = new KeycloakCredentials("pavel", "enmasse");
+        UserCredentials pavel = new UserCredentials("pavel", "enmasse");
         createUser(sharedAddressSpace, pavel);
         List<AbstractClient> receiversPavel = null;
         List<AbstractClient> receiversTest = null;
@@ -508,7 +508,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotCreateAddresses() throws Exception {
-        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user" + UUID.randomUUID(), "monitorPa55");
+        UserCredentials monitorUser = new UserCredentials("monitor_user" + UUID.randomUUID(), "monitorPa55");
 
         createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
 
@@ -524,7 +524,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestCannotDeleteAddresses() throws Exception {
         Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
-        KeycloakCredentials monitorUser = new KeycloakCredentials("monitor_user_test_2", "monitorPa55");
+        UserCredentials monitorUser = new UserCredentials("monitor_user_test_2", "monitorPa55");
 
         createUser(sharedAddressSpace, monitorUser, Group.MONITOR.toString());
         setAddresses(destination);
@@ -542,7 +542,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestViewAddresses() throws Exception {
         Destination allowedDestination = Destination.queue("test-view-queue", getDefaultPlan(AddressType.QUEUE));
         Destination notAllowedDestination = Destination.queue("test-not-view-queue", getDefaultPlan(AddressType.QUEUE));
-        KeycloakCredentials viewUser = new KeycloakCredentials("view_user_addresses", "viewPa55");
+        UserCredentials viewUser = new UserCredentials("view_user_addresses", "viewPa55");
 
         prepareViewItemTest(viewUser, allowedDestination, notAllowedDestination);
 
@@ -561,7 +561,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestViewConnections() throws Exception {
         Destination destination = Destination.queue("test-queue-view-connections", getDefaultPlan(AddressType.QUEUE));
-        KeycloakCredentials viewUser = new KeycloakCredentials("view_user_connections", "viewPa55");
+        UserCredentials viewUser = new UserCredentials("view_user_connections", "viewPa55");
         prepareViewItemTest(viewUser, destination, null);
 
         consoleWebPage.openWebConsolePage();
@@ -591,9 +591,9 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         List<Destination> addresses = getAddressesWildcard();
         setAddresses(addresses.toArray(new Destination[0]));
 
-        List<KeycloakCredentials> users = createUsersWildcard(sharedAddressSpace, "view");
+        List<UserCredentials> users = createUsersWildcard(sharedAddressSpace, "view");
 
-        for (KeycloakCredentials user : users) {
+        for (UserCredentials user : users) {
             consoleWebPage = new ConsoleWebPage(selenium,
                     getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace, user);
             consoleWebPage.openWebConsolePage();
@@ -604,7 +604,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
-    protected void doTestCanOpenConsolePage(KeycloakCredentials credentials) throws Exception {
+    protected void doTestCanOpenConsolePage(UserCredentials credentials) throws Exception {
         try {
             consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                     sharedAddressSpace, credentials);
@@ -702,7 +702,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
-    private void prepareViewItemTest(KeycloakCredentials monitorUser, Destination allowedAddress,
+    private void prepareViewItemTest(UserCredentials monitorUser, Destination allowedAddress,
                                      Destination noAllowedAddress) throws Exception {
         prepareAddress(allowedAddress, noAllowedAddress);
 

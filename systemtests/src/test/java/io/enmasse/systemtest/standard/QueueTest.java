@@ -217,7 +217,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     public void testConcurrentOperations() throws Exception {
-        HashMap<CompletableFuture<Void>, List<KeycloakCredentials>> company = new HashMap<>();
+        HashMap<CompletableFuture<Void>, List<UserCredentials>> company = new HashMap<>();
         int customersCount = 10;
         int usersCount = 5;
         int destinationCount = 10;
@@ -225,9 +225,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         for (int i = 0; i < customersCount; i++) {
             //define users
-            ArrayList<KeycloakCredentials> users = new ArrayList<>(usersCount);
+            ArrayList<UserCredentials> users = new ArrayList<>(usersCount);
             for (int j = 0; j < usersCount; j++) {
-                users.add(new KeycloakCredentials(
+                users.add(new UserCredentials(
                         String.format("uname.%s.%s", i, j),
                         String.format("p$$wd.%s.%s", i, j)));
             }
@@ -254,9 +254,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         }
 
         //once one of the doMessaging method is finished  then remove appropriate users
-        for (Map.Entry<CompletableFuture<Void>, List<KeycloakCredentials>> customer : company.entrySet()) {
+        for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
-            removeUsers(sharedAddressSpace, customer.getValue().stream().map(KeycloakCredentials::getUsername).collect(Collectors.toList()));
+            removeUsers(sharedAddressSpace, customer.getValue().stream().map(UserCredentials::getUsername).collect(Collectors.toList()));
         }
     }
 

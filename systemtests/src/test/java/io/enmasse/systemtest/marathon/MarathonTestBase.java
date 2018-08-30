@@ -9,7 +9,6 @@ import io.enmasse.systemtest.SysytemTestsErrorCollector;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
@@ -113,7 +112,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         log.info("test testCreateDeleteAddressesWithAuthLong");
         createAddressSpace(addressSpace);
 
-        KeycloakCredentials user = new KeycloakCredentials("test-user", "test-user");
+        UserCredentials user = new UserCredentials("test-user", "test-user");
         createUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
@@ -141,7 +140,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
-        KeycloakCredentials credentials = new KeycloakCredentials("test", "test");
+        UserCredentials credentials = new UserCredentials("test", "test");
         runTestInLoop(30, () -> {
             //create client
             AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
@@ -191,7 +190,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
             createUsers(addressSpace, prefixUser, prefixPswd, from.get(), to.get());
             log.info("Users <{};{}> successfully created", from.get(), to.get());
             for (int i = from.get(); i < to.get(); i += step) {
-                doBasicAuthQueueTopicTest(addressSpace, queue, topic, new KeycloakCredentials(prefixUser + i, prefixPswd + i));
+                doBasicAuthQueueTopicTest(addressSpace, queue, topic, new UserCredentials(prefixUser + i, prefixPswd + i));
             }
             removeUsers(addressSpace, prefixUser, from.get(), to.get() - step);
             log.info("Users <{};{}> successfully removed", from.get(), to.get() - step);
@@ -212,13 +211,13 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
-        KeycloakCredentials user = new KeycloakCredentials("test-user", "test-user");
+        UserCredentials user = new UserCredentials("test-user", "test-user");
         createUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, user);
-            assertCannotConnect(addressSpace, new KeycloakCredentials("nobody", "nobody"), Arrays.asList(queue, topic));
+            assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic));
             Thread.sleep(5000);
         });
         log.info("testAuthSendReceiveLong finished");
@@ -234,7 +233,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
-        KeycloakCredentials user = new KeycloakCredentials("test-user", "test-user");
+        UserCredentials user = new UserCredentials("test-user", "test-user");
 
 
         runTestInLoop(30, () -> {
@@ -267,7 +266,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
-        KeycloakCredentials credentials = new KeycloakCredentials("test", "test");
+        UserCredentials credentials = new UserCredentials("test", "test");
         runTestInLoop(30, () -> {
             AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
@@ -299,7 +298,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         log.info("Address space '{}'created", addressSpace);
 
 
-        KeycloakCredentials user = new KeycloakCredentials("test", "test");
+        UserCredentials user = new UserCredentials("test", "test");
         createUser(addressSpace, user);
 
         selenium.setupDriver(environment, kubernetes, buildDriver());
@@ -323,7 +322,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
     //========================================================================================================
 
     private void doAddressTest(AddressSpace addressSpace, String topicPattern,
-                               String queuePattern, KeycloakCredentials credentials) throws Exception {
+                               String queuePattern, UserCredentials credentials) throws Exception {
         List<Destination> queueList = new ArrayList<>();
         List<Destination> topicList = new ArrayList<>();
 
@@ -362,11 +361,11 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
     }
 
     private void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception {
-        doAddressTest(addressSpace, topicPattern, queuePattern, new KeycloakCredentials("test", "test"));
+        doAddressTest(addressSpace, topicPattern, queuePattern, new UserCredentials("test", "test"));
     }
 
     private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
-                                           KeycloakCredentials credentials) throws Exception {
+                                           UserCredentials credentials) throws Exception {
         int messageCount = 100;
         AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setCredentials(credentials);

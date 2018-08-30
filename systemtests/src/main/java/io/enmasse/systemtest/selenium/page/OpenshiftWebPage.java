@@ -8,7 +8,7 @@ package io.enmasse.systemtest.selenium.page;
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
@@ -29,11 +29,11 @@ public class OpenshiftWebPage implements IWebPage {
 
     SeleniumProvider selenium;
     String ocRoute;
-    KeycloakCredentials credentials;
+    UserCredentials credentials;
     OpenshiftLoginWebPage loginPage;
     AddressApiClient addressApiClient;
 
-    public OpenshiftWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, String ocRoute, KeycloakCredentials credentials) {
+    public OpenshiftWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, String ocRoute, UserCredentials credentials) {
         this.selenium = selenium;
         this.ocRoute = ocRoute;
         this.credentials = credentials;

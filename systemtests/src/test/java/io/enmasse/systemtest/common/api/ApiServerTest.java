@@ -100,7 +100,7 @@ class ApiServerTest extends TestBase {
                 new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")));
         createAddressSpace(addressSpace);
 
-        KeycloakCredentials luckyUser = new KeycloakCredentials("Lucky", "luckyPswd");
+        UserCredentials luckyUser = new UserCredentials("Lucky", "luckyPswd");
         createUser(addressSpace, luckyUser);
 
         //try to get all external endpoints

@@ -33,7 +33,7 @@ public class ConsoleWebPage implements IWebPage {
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
     private ConsoleLoginWebPage consoleLoginWebPage;
-    private KeycloakCredentials credentials;
+    private UserCredentials credentials;
 
 
     public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
@@ -43,7 +43,7 @@ public class ConsoleWebPage implements IWebPage {
         this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
     }
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this(selenium, addressApiClient, defaultAddressSpace);
         this.consoleRoute = consoleRoute;
         this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
@@ -317,11 +317,11 @@ public class ConsoleWebPage implements IWebPage {
         openWebConsolePage(credentials, viaOpenShift);
     }
 
-    public void openWebConsolePage(KeycloakCredentials credentials) throws Exception {
+    public void openWebConsolePage(UserCredentials credentials) throws Exception {
         openWebConsolePage(credentials, false);
     }
 
-    public void openWebConsolePage(KeycloakCredentials credentials, boolean viaOpenShift) throws Exception {
+    public void openWebConsolePage(UserCredentials credentials, boolean viaOpenShift) throws Exception {
         log.info("Opening console web page");
         logout();
         selenium.getDriver().get(consoleRoute);
@@ -659,11 +659,11 @@ public class ConsoleWebPage implements IWebPage {
         return login(credentials, false);
     }
 
-    public boolean login(KeycloakCredentials credentials) throws Exception {
+    public boolean login(UserCredentials credentials) throws Exception {
         return login(credentials, false);
     }
 
-    public boolean login(KeycloakCredentials credentials, boolean viaOpenShift) throws Exception {
+    public boolean login(UserCredentials credentials, boolean viaOpenShift) throws Exception {
         return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift);
     }
 

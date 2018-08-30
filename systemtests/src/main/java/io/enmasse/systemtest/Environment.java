@@ -95,11 +95,11 @@ public class Environment {
         return testLogDir;
     }
 
-    public KeycloakCredentials keycloakCredentials() {
+    public UserCredentials keycloakCredentials() {
         if (keycloakAdminUser == null || keycloakAdminPassword == null) {
             return null;
         } else {
-            return new KeycloakCredentials(keycloakAdminUser, keycloakAdminPassword);
+            return new UserCredentials(keycloakAdminUser, keycloakAdminPassword);
         }
     }
 
