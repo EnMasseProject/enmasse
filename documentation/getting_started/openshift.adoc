@@ -1,5 +1,5 @@
 [[enmasse-on-openshift]]
-== {ProductName} on OpenShift
+= {ProductName} on OpenShift
 
 :OcGetRoute: oc get route -o jsonpath='{.spec.host}'
 :OcRoutePort: 443
@@ -7,6 +7,8 @@
 :occli: oc
 :DeployHost: localhost
 :DeployOptions: 
+:parent-context: {context}
+:context: quickstartopenshift
 
 This guide will walk through the process of setting up {ProductName} on
 OpenShift with clients for sending and receiving messages. The guide will deploy EnMasse in a single
@@ -15,9 +17,9 @@ tenant mode and with the `none` authentication service.
 include::common/prerequisites-openshift.adoc[leveloffset=+1]
 
 [[installing-openshift]]
-=== Installing {ProductName}
+== Installing {ProductName}
 
-include::common/install-procedure.adoc[leveloffset+=1] 
+include::install-procedure.adoc[leveloffset+=1] 
 
 This guide uses a shell script for deploying {ProductName}. Windows users are advised to look at
 <<installing-openshift>>.
@@ -25,18 +27,19 @@ This guide uses a shell script for deploying {ProductName}. Windows users are ad
 include::deploy-procedure.adoc[leveloffset+=1] 
 
 [[configuring-addresses-openshift]]
-=== Configuring addresses
+== Configuring addresses
 
 include::configuring-addresses.adoc[leveloffset=+1]
 
 [[sending-and-receiving-messages-openshift]]
-=== Sending and receiving messages
+== Sending and receiving messages
 
 include::amqp-client-openshift.adoc[leveloffset=+1]
 
 include::mqtt-client-openshift.adoc[leveloffset=+1]
 
 [[conclusion-openshift]]
-=== Conclusion
+== Conclusion
 
 We have seen how to setup {ProductName} on OpenShift, and how to communicate with it using AMQP and MQTT clients.
+:context: {parent-context}

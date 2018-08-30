@@ -13,12 +13,12 @@ Kubernetes cluster together with clients for sending and receiving
 messages. The guide will deploy EnMasse in a single tenant mode and with the `none` authentication
 service.
 
-include::common/prerequisites-kubernetes.adoc[leveloffset=+1]
+include::prerequisites-kubernetes.adoc[leveloffset=+1]
 
 [[installing-kubernetes]]
 === Installing
 
-include::common/install-procedure.adoc[leveloffset+=1] 
+include::install-procedure.adoc[leveloffset+=1] 
 
 This guide uses a shell script for deploying {ProductName}. Windows users are advised to look at
 <<installing-kubernetes>>.

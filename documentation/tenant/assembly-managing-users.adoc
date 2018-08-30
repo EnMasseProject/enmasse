@@ -22,6 +22,6 @@ include::common/proc-deleting-users-cli.adoc[leveloffset=+1]
 
 == Additional resources
 
-* xref:restapi-reference[]
+* xref:enmasse_rest_api[]
 
 :context: {parent-context}

@@ -1,4 +1,4 @@
-==== Connecting with AMQP
+== Connecting with AMQP
 
 For sending and receiving messages, have a look at an example python
 http://qpid.apache.org/releases/qpid-proton-0.18.0/proton/python/examples/simple_send.py.html[sender]

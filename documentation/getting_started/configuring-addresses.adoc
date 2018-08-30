@@ -1,4 +1,4 @@
-==== Address types
+== Address types
 
 {ProductName} is configured with a set of addresses that you can use for
 messages. Currently, {ProductName} supports 4 different address types:

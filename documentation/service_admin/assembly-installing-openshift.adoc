@@ -20,6 +20,8 @@ include::common/snip-prerequisites-openshift.adoc[]
 
 include::common/proc-download-procedure.adoc[leveloffset=+1]
 
+include::ref-ansible-config-settings.adoc[leveloffset=+1]
+
 include::proc-installing-using-ansible.adoc[leveloffset=+1]
 
 //include::proc-installing-deploy-script.adoc[leveloffset=+1]
