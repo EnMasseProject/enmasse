@@ -223,6 +223,24 @@ function get_all_events() {
     kubectl get events --all-namespaces > ${LOG_DIR}/all_events.log
 }
 
+function replace_docker_log_driver() {
+    local docker="${1}"
+    local docker_config_path="/etc/${docker}/daemon.json"
+    local tmpf="$(mktemp)"
+
+    if [[ "$(jq '."log-driver" == "json-file"' "${docker_config_path}")" == "true" ]]; then
+        info "docker config already contains log-driver set to json-file"
+        return
+    fi
+
+    info "stop docker..."
+    sudo systemctl stop "${docker}"
+    info "create or replace log-driver=json-file in ${docker_config_path}"
+    jq '."log-driver"="json-file"' "${docker_config_path}" >"${tmpf}"
+    cat "${tmpf}" >"${docker_config_path}"
+    rm -f "${tmpf}"
+}
+
 function get_docker_info() {
     ARTIFACTS_DIR=${1}
     CONTAINER=${2}
