@@ -76,7 +76,7 @@ NOTE: If you need to take a screenshot of the entire window, use a tool such as 
 
 [[screenshot-asciidoc]]
 == AsciiDoc Syntax
-* Insert a block-level image, which uses a double colon (::). Good for screenshots, diagrams, etc.
+* Insert a block-level image, which uses a double colon (::). Good for screenshots, diagrams, and so on.
 
 ** Example 1: Include an image title in title case (which automatically appends a Figure #).
 +

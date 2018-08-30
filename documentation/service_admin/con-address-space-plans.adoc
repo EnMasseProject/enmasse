@@ -2,7 +2,7 @@
 //
 // assembly-plans.adoc
 
-[id='con-address-space-plans-{context}']
+[id='con-address-space-plans-messaging']
 = Address space plans
 
 Address space plans specify the quota available to a given address space. By default, {ProductName} includes an unlimited quota plan for both the standard and brokered address spaces.

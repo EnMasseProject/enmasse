@@ -5,7 +5,7 @@ EnMasse is an open source project for managed, self-service messaging on [Kubern
 
 The service admin can deploy and manage messaging infrastructure, while tenants can request messaging resources, both using cloud-native APIs and tools.
 
-=== Features
+== Features
 
 * Built-in authentication and authorization of clients and identity management
 * Runs on Kubernetes: deploy on-premise or in the cloud
@@ -18,13 +18,15 @@ EnMasse can provision different types of messaging depending on your use case. A
 
 EnMasse currently supports a `standard` and a `brokered` address space type, each with different semantics. 
 
-== Standard address space
+[[standard_address_space_overview]]
+=== Standard address space
 
 The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols, with more to come in the future. This address space type is based on other open source projects such as [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/) and [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and provides elastic scaling of these components.  This image illustrates the high-level architecture of the standard address space:
 
 image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/overview/enmasse_overall_view.png[Standard Address Space]
 
-== Brokered address space
+[[brokered_address_space_overview]]
+=== Brokered address space
 
 The brokered address space type is the "classic" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on. These features are useful for building complex messaging patterns. This address space is also more lightweight as it features only a single broker and a management console.  This image illustrates the high-level architecture of the brokered address space: 
 

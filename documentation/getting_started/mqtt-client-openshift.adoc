@@ -1,5 +1,5 @@
-[[mqtt]]
-==== Connecting using MQTT
+[[mqtt-{context}]]
+== Connecting using MQTT
 
 For sending and receiving messages route, you can use the paho-mqtt client library. To connect,
 fetch the server certificate:
@@ -10,7 +10,7 @@ mkdir -p certs
 {occli} get secret external-certs-mqtt  -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
 ....
 
-===== Subscriber client
+=== Subscriber client
 
 Save the following to `tls_mqtt_recv.py` or https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/examples/tls_mqtt_recv.py[download]:
 
@@ -83,14 +83,14 @@ client.connect(opts.connectHost, opts.portHost, 60)
 client.loop_forever()
 ----
 
-In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the
+In order to subscribe to a topic (that is, `mytopic` from the previous addresses configuration), the
 subscriber client can be used in the following way:
 
 ....
 ./tls_mqtt_recv.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./certs/tls.crt
 ....
 
-===== Publisher client
+==== Publisher client
 
 Save the following to `tls_mqtt_send.py` or https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/examples/tls_mqtt_send.py[download]:
 

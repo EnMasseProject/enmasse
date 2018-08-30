@@ -809,7 +809,7 @@
                     {
                         "name": "name",
                         "in": "path",
-                        "description": "Name of MessagingUser to read. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "description": "Name of MessagingUser to read. Must include addressSpace and dot separator in the name (that is, 'myspace.user1').",
                         "required": true,
                         "type": "string"
                     }
@@ -844,7 +844,7 @@
                     {
                         "name": "name",
                         "in": "path",
-                        "description": "Name of MessagingUser to replace. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "description": "Name of MessagingUser to replace. Must include addressSpace and dot separator in the name (that is, 'myspace.user1').",
                         "required": true,
                         "type": "string"
                     },
@@ -890,7 +890,7 @@
                     {
                         "name": "name",
                         "in": "path",
-                        "description": "Name of MessagingUser to delete. Must include addressSpace and dot separator in the name (i.e. 'myspace.user1').",
+                        "description": "Name of MessagingUser to delete. Must include addressSpace and dot separator in the name (that is, 'myspace.user1').",
                         "required": true,
                         "type": "string"
                     }
@@ -1274,7 +1274,7 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "description": "Addresses can be specified using exact values (i.e. 'myqueue'), or glob patterns (i.e. '*', or 'queue*')."
+                                    "description": "Addresses can be specified using exact values (that is, 'myqueue'), or glob patterns (that is, '*', or 'queue*')."
                                 }
                             },
                             "operations": {
@@ -1323,7 +1323,7 @@
             }
         },
         "Status": {
-            "description": "Status is a return value for calls that don't return other objects.",
+            "description": "Status is a return value for calls that do not return other objects.",
             "properties": {
                 "code": {
                     "description": "Suggested HTTP return code for this status, 0 if not set.",

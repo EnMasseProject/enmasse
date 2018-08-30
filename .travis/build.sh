@@ -22,6 +22,8 @@ make clean
 
 make
 
+make docu_html
+
 echo "Tagging Docker Images"
 make TAG=$COMMIT docker_tag
 #

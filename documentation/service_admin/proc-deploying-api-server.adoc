@@ -78,6 +78,7 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ifeval::["{cmdcli}" == "oc"]
 [[{cmdcli}-register-apiservice]]
 
+[id='register-api-service-{context}']
 . (Optional) Register the API server to support custom resources:
 +
 [options="nowrap"]

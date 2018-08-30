@@ -7,13 +7,15 @@
 :occli: oc
 :DeployHost: openshift.yourdomain
 :DeployOptions: -u myuser
+:parent-context: {context}
+:context: gettinstarted-aws
 
 This guide walks you through setting up EnMasse on an AWS EC2 instance.
 This is not even very specific to AWS, so you can probably modify the
 configuration to fit Microsoft Azure or even Google GCE.
 
 The end result from this guide is an instance of EnMasse suitable for
-development and/or experimentation, and should not be considered a
+development and experimentation, and should not be considered a
 production ready setup. For instance, no persistence is configured, so
 neither messages in brokers nor state in other components like hawkular
 are persisted.
@@ -42,7 +44,7 @@ parameter is set to `-H -S` (remove the `-n`).
 
 Once Ansible is setup, installing OpenShift is easy. First, an inventory
 file with the configuration and the hosts must be created. Save the
-following configuration to a file, i.e. `ansible-inventory.txt`:
+following configuration to a file, that is, `ansible-inventory.txt`:
 
 [options="nowrap",subs=attributes+]
 ....
@@ -71,7 +73,7 @@ openshift_hosted_metrics_deploy=true
 This will configure OpenShift so that it can only be accessed by users
 defined in `/etc/origin/master/htpasswd`.
 
-If you don't have a domain with wildcard support, you can replace with
+If you do not have a domain with wildcard support, you can replace with
 .nip.io, and you will have a working setup without having a specialized
 domain.
 
@@ -109,7 +111,7 @@ EnMasse.
 
 === Installing {ProductName}
 
-include::common/install-procedure.adoc[leveloffset+=1] 
+include::install-procedure.adoc[leveloffset+=1] 
 
 include::deploy-procedure.adoc[leveloffset+=1] 
 followed the above guide, you should have EnMasse deployed. The endpoints will be:
@@ -136,7 +138,7 @@ The process for setting up grafana is a bit more involved, but it gives
 you a nice overview of whats going on over time. First of all, I like to
 setup everything metric-related in the `openshift-infra` project. To do
 that, you must first give your user permission sufficient privileges. In
-this setup, since it's not a production setup, I grant cluster-admin
+this setup, since it is not a production setup, I grant cluster-admin
 privileges for simplicity (requires logging into the ec2 instance):
 
 ....
@@ -171,3 +173,5 @@ In this post, you've seen how to:
 * Deploy OpenShift on an AWS EC2 instance
 * Deploy EnMasse cloud messaging
 * Deploy Grafana for monitoring
+
+:context: {parent-context}

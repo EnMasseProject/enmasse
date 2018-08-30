@@ -2,7 +2,7 @@
 //
 // assembly_.adoc
 
-[id='ref-ansible-config-settings-{context}']
+[id='ref-ansible-config-settings-messaging']
 = Ansible configuration settings
 
 The following Ansible configuration settings are supported.

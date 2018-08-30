@@ -10,6 +10,8 @@ To build EnMasse, you need
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
    * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
+   * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7 (to build documentation)
+   * [Coderay](https://rubygems.org/gems/coderay/versions/1.1.1) >= 1.1.1 (to build documentation)
 
 The EnMasse java and node modules are built using maven. All docker images are built using make.
 

@@ -31,7 +31,7 @@ build_java:
 clean_java:
 	mvn -B clean
 
-clean: clean_java
+clean: clean_java docu_htmlclean
 
 docker_build: build_java
 
@@ -65,4 +65,24 @@ systemtests:
 client_install:
 	./systemtests/scripts/client_install.sh
 
-.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java
+
+scripts/swagger2markup.jar:
+	curl -o scripts/swagger2markup.jar https://repo.maven.apache.org/maven2/io/github/swagger2markup/swagger2markup-cli/1.3.3/swagger2markup-cli-1.3.3.jar
+
+docu_swagger: scripts/swagger2markup.jar
+	java -jar scripts/swagger2markup.jar convert -i api-server/src/main/resources/swagger.json -f documentation/common/restapi-reference
+
+docu_html: docu_htmlclean docu_swagger docu_check
+	mkdir -p documentation/html
+	cp -vrL documentation/images documentation/html/images
+	asciidoctor -v --failure-level WARN -t -dbook documentation/master.adoc -o documentation/html/index.html
+	asciidoctor -v --failure-level WARN -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
+
+docu_htmlclean:
+	rm -rf documentation/html
+
+docu_check:
+	./scripts/check_docs.sh
+
+
+.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
