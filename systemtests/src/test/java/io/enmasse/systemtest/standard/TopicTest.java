@@ -302,7 +302,43 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         AmqpClient client2 = amqpClientFactory.createTopicClient();
         recvResults = client2.recvMessages(subscription2.getQualifiedSubscriptionAddress(), allmessages.size());
         assertThat("Wrong messages received for second subscription", extractBodyAsString(recvResults), is(allmessages));
-}
+    }
+
+    @Test
+    void testDurableSubscriptionOnShardedTopic2() throws Exception {
+        Destination topic = Destination.topic("mytopic", "sharded-topic");
+        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-subscription");
+        setAddresses(topic, subscription1);
+
+        AmqpClient client = amqpClientFactory.createTopicClient();
+        List<String> batch1 = Arrays.asList("one", "two", "three");
+
+        log.info("Sending first batch");
+        assertThat("Wrong count of messages sent: batch1",
+                client.sendMessages(topic.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
+
+        log.info("Receiving first batch");
+        Future<List<Message>> recvResults = client.recvMessages(subscription1.getQualifiedSubscriptionAddress(), batch1.size());
+        assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
+
+        log.info("Creating second subscription");
+        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-subscription");
+        appendAddresses(subscription2);
+
+        log.info("Sending second batch");
+        List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
+
+        assertThat("Wrong count of messages sent: batch2",
+                client.sendMessages(topic.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
+        log.info("Receiving second batch");
+        recvResults = client.recvMessages(subscription1.getQualifiedSubscriptionAddress(), batch2.size());
+        assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
+
+        log.info("Receiving messages from second subscription");
+        AmqpClient client2 = amqpClientFactory.createTopicClient();
+        recvResults = client2.recvMessages(subscription2.getQualifiedSubscriptionAddress(), batch2.size());
+        assertThat("Wrong messages received for second subscription", extractBodyAsString(recvResults), is(batch2));
+    }
 
     @Test
     @Disabled("topic wildcards are not supported")
