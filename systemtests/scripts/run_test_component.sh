@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+#required environment variables
+#ARTIFACTS_DIR
+
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
@@ -54,7 +58,7 @@ kill ${STATS_PID}
 #stop docker logging
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill ${LOGS_PID}
-categorize_dockerlogs "${DOCKER_LOG_DIR}"
+categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
 if [ $failure -gt 0 ]
 then
