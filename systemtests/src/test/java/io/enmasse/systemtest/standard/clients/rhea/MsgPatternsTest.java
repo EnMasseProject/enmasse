@@ -28,11 +28,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestBaseStandard {
     }
 
     @Test
-    void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
-        doRoundRobinReceiverTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
-    }
-
-    @Test
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
     }
