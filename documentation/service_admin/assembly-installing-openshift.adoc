@@ -3,8 +3,8 @@
 // <List assemblies here, each on a new line>
 :parent-context: {context}
 :cmdcli: oc
-:KubePlatform: OpenShift
-:manual-install-context: okd
+:PlatformName: OpenShift
+:context: okd
 
 include::common/attributes.adoc[]
 

@@ -4,11 +4,11 @@
 // assembly-installing-kubernetes.adoc
 :parent-context: {context}
 
-[id='installing-using-manual-steps-{manual-install-context}-{context}']
+[id='installing-using-manual-steps-{context}']
 = Installing {ProductName} manually
 
 The manual deployment procedure can be performed on any platform
-supporting the {KubePlatform} client.
+supporting the {PlatformName} client.
 
 include::proc-creating-project.adoc[leveloffset=+1]
 
