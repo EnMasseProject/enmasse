@@ -277,7 +277,7 @@ RouterStats.prototype._retrieve = function () {
                 return Promise.all(routers.map(function (router) { return router.get_addresses(); })).then(function (results) {
                     results.forEach(function (configured) {
                         configured.forEach(function (address) {
-                            var s = get_stats_for_address(address_stats, address.name);
+                            var s = get_stats_for_address(address_stats, address.prefix);
                             s.propagated++;
                             if (address.waypoint) s.waypoint = true;
                         });
