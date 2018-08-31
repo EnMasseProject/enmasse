@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.3.0-rc1-PROTON-1886
+FROM enmasseproject/qdrouterd-base:1.3.0-rc1-PROTON-1886-DISPATCH-1111
 ARG version=latest
 ENV VERSION=${version}
 
