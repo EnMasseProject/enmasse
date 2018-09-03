@@ -7,7 +7,7 @@ package io.enmasse.osb;
 
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
-import io.enmasse.api.common.CachingSchemaProvider;
+import io.enmasse.k8s.api.CachingSchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapSchemaApi;

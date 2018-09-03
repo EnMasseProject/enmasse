@@ -5,15 +5,12 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NamespaceInfo;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +29,7 @@ import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 /**
  * The main controller loop that monitors k8s address spaces
  */
-public class ControllerChain extends AbstractVerticle implements Watcher<AddressSpace> {
+public class ControllerChain implements Watcher<AddressSpace> {
     private static final Logger log = LoggerFactory.getLogger(ControllerChain.class.getName());
 
     private final Kubernetes kubernetes;
@@ -45,6 +42,7 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     private final EventLogger eventLogger;
     private final Duration recheckInterval;
     private final Duration resyncInterval;
+    private final ResourceChecker<AddressSpace> checker;
 
     public ControllerChain(Kubernetes kubernetes,
                            AddressSpaceApi addressSpaceApi,
@@ -58,50 +56,24 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
         this.eventLogger = eventLogger;
         this.recheckInterval = recheckInterval;
         this.resyncInterval = resyncInterval;
+        this.checker = new ResourceChecker<>(this, recheckInterval);
     }
 
     public void addController(Controller controller) {
         chain.add(controller);
     }
 
-    @Override
-    public void start(Future<Void> startPromise) {
-        vertx.executeBlocking((Future<Watch> promise) -> {
-            try {
-                ResourceChecker<AddressSpace> checker = new ResourceChecker<>(this, recheckInterval);
-                checker.start();
-                promise.complete(addressSpaceApi.watchAddressSpaces(checker, resyncInterval));
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, result -> {
-            if (result.succeeded()) {
-                this.watch = result.result();
-                startPromise.complete();
-            } else {
-                startPromise.fail(result.cause());
-            }
-        });
+    public void start() throws Exception {
+        ResourceChecker<AddressSpace> checker = new ResourceChecker<>(this, recheckInterval);
+        checker.start();
+        watch = addressSpaceApi.watchAddressSpaces(checker, resyncInterval);
     }
 
-    @Override
-    public void stop(Future<Void> stopFuture) {
-        vertx.executeBlocking(promise -> {
-            try {
-                if (watch != null) {
-                    watch.close();
-                }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, result -> {
-            if (result.succeeded()) {
-                stopFuture.complete();
-            } else {
-                stopFuture.fail(result.cause());
-            }
-        });
+    public void stop() throws Exception {
+        checker.stop();
+        if (watch != null) {
+            watch.close();
+        }
     }
 
     @Override

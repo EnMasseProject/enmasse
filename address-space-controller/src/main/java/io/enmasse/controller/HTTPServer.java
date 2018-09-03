@@ -4,44 +4,30 @@
  */
 package io.enmasse.controller;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.http.HttpServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 
-public class HTTPServer extends AbstractVerticle {
-    private static final Logger log = LoggerFactory.getLogger(HTTPServer.class);
+import java.io.IOException;
+import java.net.InetSocketAddress;
 
-    private HttpServer server;
+class HTTPServer {
     private final int port;
 
-    public HTTPServer(int port) {
+    HTTPServer(int port) {
         this.port = port;
     }
 
-    @Override
-    public void start(Future<Void> startPromise) {
-        server = vertx.createHttpServer();
-        server.requestHandler(request -> request.response().setStatusCode(HttpResponseStatus.OK.code()).end());
-        server.listen(port, result -> {
-            if (result.succeeded()) {
-                log.info("Started HTTP server listening on {}", port);
-                startPromise.complete();
-            } else {
-                log.info("Failed starting HTTP server: {}", result.cause().getMessage());
-                startPromise.fail(result.cause());
+    void start() throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/healthz", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange httpExchange) throws IOException {
+                httpExchange.sendResponseHeaders(200, 0);
+                httpExchange.getResponseBody().close();
             }
         });
-    }
-
-    @Override
-    public void stop(Future<Void> stopPromise) {
-        if (server != null) {
-            server.close(stopPromise);
-        } else {
-            stopPromise.complete();
-        }
+        server.setExecutor(null);
+        server.start();
     }
 }
