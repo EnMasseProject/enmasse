@@ -148,4 +148,14 @@ public class CRDCmdClient extends CmdClient {
         List<String> cmd = Arrays.asList(CMD, "project", namespace);
         execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
     }
+
+    public static ExecutionResultData getUser(String namespace, String addressSpace, String username) {
+        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
+        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData deleteUser(String namespace, String addressSpace, String username) {
+        List<String> deleteCmd = getRessourcesCmd("delete", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
+        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
 }

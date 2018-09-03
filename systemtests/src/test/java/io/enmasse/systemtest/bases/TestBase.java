@@ -71,6 +71,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private UserApiClient userApiClient;
 
+    protected void addToAddressSpacess(AddressSpace addressSpace) {
+        this.addressSpaceList.add(addressSpace);
+    }
+
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         deleteAddressSpace(addressSpace, addressApiClient);
     }
@@ -234,7 +238,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-    private UserApiClient getUserApiClient() throws Exception {
+    protected UserApiClient getUserApiClient() throws Exception {
         if (userApiClient == null) {
             userApiClient = new UserApiClient(kubernetes);
         }
@@ -378,18 +382,20 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     }
 
-    protected void createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+    protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
         log.info("User {} will be created", credentials);
         if (!userExist(addressSpace, credentials.getUsername())) {
-            getUserApiClient().createUser(addressSpace.getName(), credentials);
+            return getUserApiClient().createUser(addressSpace.getName(), credentials);
         }
+        return new JsonObject();
     }
 
-    protected void createUser(AddressSpace addressSpace, User user) throws Exception {
+    protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
         log.info("User {} will be created", user);
         if (!userExist(addressSpace, user.getUsername())) {
-            getUserApiClient().createUser(addressSpace.getName(), user);
+            return getUserApiClient().createUser(addressSpace.getName(), user);
         }
+        return new JsonObject();
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
