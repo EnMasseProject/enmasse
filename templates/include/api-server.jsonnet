@@ -62,6 +62,10 @@ local images = import "images.jsonnet";
               ],
               "env": [
                 {
+                  "name": "JAVA_OPTS",
+                  "value": "-verbose:gc"
+                },
+                {
                   "name": "CLIENT_CA",
                   "valueFrom": {
                     "secretKeyRef": {
