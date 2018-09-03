@@ -33,7 +33,7 @@ local images = import "images.jsonnet";
               "env": [
                 {
                   "name": "JAVA_OPTS",
-                  "value": "-verbose:gc"
+                  "value": "-verbose:gc -XX:+UseSerialGC -Xss228k"
                 },
                 {
                   "name": "ENABLE_RBAC",
@@ -164,7 +164,7 @@ local images = import "images.jsonnet";
                   "memory": "128Mi"
                 },
                 "limits": {
-                  "memory": "256Mi"
+                  "memory": "128Mi"
                 }
               }
             }
