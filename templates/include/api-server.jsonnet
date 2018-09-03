@@ -167,10 +167,10 @@ local images = import "images.jsonnet";
               },
               "resources": {
                 "requests": {
-                  "memory": "128Mi"
+                  "memory": "512Mi"
                 },
                 "limits": {
-                  "memory": "256Mi"
+                  "memory": "512Mi"
                 }
               }
             }
