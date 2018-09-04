@@ -4,7 +4,7 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.SchemaProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

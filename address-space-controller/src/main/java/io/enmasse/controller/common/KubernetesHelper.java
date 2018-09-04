@@ -5,19 +5,17 @@
 
 package io.enmasse.controller.common;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.utils.ImpersonatorInterceptor;
-import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +32,7 @@ import java.util.stream.Collectors;
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".yaml";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final NamespacedOpenShiftClient client;
     private final String namespace;
@@ -220,15 +219,20 @@ public class KubernetesHelper implements Kubernetes {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
     }
 
-    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk, String impersonateUser) {
+    private void doRawHttpRequest(String path, String method, Object body, String impersonateUser) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
         HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + controllerToken)
-                .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
+        Request.Builder requestBuilder = null;
+        try {
+            requestBuilder = new Request.Builder()
+                    .url(url)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", "Bearer " + controllerToken)
+                    .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsBytes(body)) : null);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
 
         if (impersonateUser != null && !impersonateUser.isEmpty()) {
             requestBuilder.addHeader("Impersonate-User", impersonateUser);
@@ -237,16 +241,10 @@ public class KubernetesHelper implements Kubernetes {
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             try (ResponseBody responseBody = response.body()) {
                 String responseString = responseBody != null ? responseBody.string() : "{}";
-                if (response.isSuccessful()) {
-                    return new JsonObject(responseString);
-                } else {
-                    if (errorOk) {
-                        return null;
-                    } else {
-                        String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), responseString);
-                        log.warn(errorMessage);
-                        throw new RuntimeException(errorMessage);
-                    }
+                if (!response.isSuccessful()) {
+                    String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), responseString);
+                    log.warn(errorMessage);
+                    throw new RuntimeException(errorMessage);
                 }
             }
         } catch (IOException e) {
@@ -266,26 +264,26 @@ public class KubernetesHelper implements Kubernetes {
         String apiVersion = isOpenShift ? "v1" : "rbac.authorization.k8s.io/v1";
         String apiPath = isOpenShift ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1";
 
-        JsonObject body = new JsonObject();
+        Map<String, Object> body = new HashMap<>();
 
         body.put("kind", "RoleBinding");
         body.put("apiVersion", apiVersion);
 
-        JsonObject metadata = new JsonObject();
+        Map<String, String> metadata = new HashMap<>();
         metadata.put("name", name);
         metadata.put("namespace", namespace);
         body.put("metadata", metadata);
 
-        JsonObject roleRef = new JsonObject();
+        Map<String, String> roleRef = new HashMap<>();
         roleRef.put("apiGroup", "rbac.authorization.k8s.io");
         roleRef.put("kind", refKind);
         roleRef.put("name", refName);
         body.put("roleRef", roleRef);
 
-        JsonArray subjects = new JsonArray();
+        List<Map<String, String>> subjects = new ArrayList<>();
 
         for (Subject subjectEntry : subjectList) {
-            JsonObject subject = new JsonObject();
+            Map<String, String> subject = new HashMap<>();
             if (isOpenShift) {
                 subject.put("apiGroup", "rbac.authorization.k8s.io");
             }
@@ -299,8 +297,7 @@ public class KubernetesHelper implements Kubernetes {
 
         body.put("subjects", subjects);
 
-
-        doRawHttpRequest(apiPath + "/namespaces/" + namespace + "/rolebindings", "POST", body, false, impersonateUser);
+        doRawHttpRequest(apiPath + "/namespaces/" + namespace + "/rolebindings", "POST", body, impersonateUser);
     }
 
     @Override
@@ -344,11 +341,6 @@ public class KubernetesHelper implements Kubernetes {
         } else {
             log.info("No support for RBAC, won't add to address-admin role");
         }
-    }
-
-    private boolean hasClusterRole(String roleName) {
-        String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1";
-        return doRawHttpRequest(apiPath + "/clusterroles/" + roleName, "GET", null, true, null) != null;
     }
 
     private static boolean isReady(Deployment deployment) {

@@ -10,7 +10,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 import io.enmasse.address.model.*;
-import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 

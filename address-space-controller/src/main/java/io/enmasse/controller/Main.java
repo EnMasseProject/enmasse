@@ -9,34 +9,19 @@ import java.time.Clock;
 import java.util.*;
 
 import io.enmasse.address.model.*;
-import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Verticle;
-import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Main extends AbstractVerticle {
+public class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class.getName());
-    private final NamespacedOpenShiftClient controllerClient;
-    private final ControllerOptions options;
 
-    private Main(ControllerOptions options) {
-        this.controllerClient = new DefaultOpenShiftClient();
-        this.options = options;
-    }
-
-    @Override
-    public void start(Future<Void> startPromise) throws Exception {
+    public static void run(ControllerOptions options, NamespacedOpenShiftClient controllerClient) throws Exception {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, controllerClient.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
@@ -47,8 +32,8 @@ public class Main extends AbstractVerticle {
                 : new LogEventLogger();
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
-        AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
-        CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
+        AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options, controllerClient);
+        CertProviderFactory certProviderFactory = createCertProviderFactory(options, controllerClient, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaProvider, resolverFactory);
@@ -59,12 +44,13 @@ public class Main extends AbstractVerticle {
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
 
-        HTTPServer httpServer = new HTTPServer(8080);
+        controllerChain.start();
 
-        deployVerticles(startPromise, new Deployment(controllerChain), new Deployment(httpServer));
+        HTTPServer httpServer = new HTTPServer(8080);
+        httpServer.start();
     }
 
-    private CertProviderFactory createCertProviderFactory(ControllerOptions options, CertManager certManager) {
+    private static CertProviderFactory createCertProviderFactory(ControllerOptions options, NamespacedOpenShiftClient controllerClient, CertManager certManager) {
         return new CertProviderFactory() {
             @Override
             public CertProvider createProvider(CertSpec certSpec) {
@@ -87,7 +73,7 @@ public class Main extends AbstractVerticle {
         };
     }
 
-    private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {
+    private static AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options, NamespacedOpenShiftClient controllerClient) {
         Map<AuthenticationServiceType, AuthenticationServiceResolver> resolverMap = new HashMap<>();
         options.getNoneAuthService().ifPresent(authService -> {
             resolverMap.put(AuthenticationServiceType.NONE, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
@@ -118,47 +104,13 @@ public class Main extends AbstractVerticle {
         };
     }
 
-    private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {
-        List<Future> futures = new ArrayList<>();
-        for (Deployment deployment : deployments) {
-            Future<Void> promise = Future.future();
-            futures.add(promise);
-            vertx.deployVerticle(deployment.verticle, deployment.options, result -> {
-                if (result.succeeded()) {
-                    promise.complete();
-                } else {
-                    promise.fail(result.cause());
-                }
-            });
-        }
-
-        CompositeFuture.all(futures).setHandler(result -> {
-            if (result.succeeded()) {
-                startPromise.complete();
-            } else {
-                startPromise.fail(result.cause());
-            }
-        });
-    }
-
-    private static class Deployment {
-        final Verticle verticle;
-        final DeploymentOptions options;
-
-        private Deployment(Verticle verticle) {
-            this(verticle, new DeploymentOptions());
-        }
-
-        private Deployment(Verticle verticle, DeploymentOptions options) {
-            this.verticle = verticle;
-            this.options = options;
-        }
-    }
-
     public static void main(String args[]) {
         try {
-            Vertx vertx = Vertx.vertx();
-            vertx.deployVerticle(new Main(ControllerOptions.fromEnv(System.getenv())));
+            ControllerOptions options = ControllerOptions.fromEnv(System.getenv());
+            NamespacedOpenShiftClient client = new DefaultOpenShiftClient();
+
+            run(options, client);
+
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);

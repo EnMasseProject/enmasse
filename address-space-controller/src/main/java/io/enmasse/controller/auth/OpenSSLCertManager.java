@@ -5,6 +5,7 @@
 package io.enmasse.controller.auth;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -12,7 +13,6 @@ import java.util.stream.Collectors;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +54,8 @@ public class OpenSSLCertManager implements CertManager {
             throws IOException {
         Map<String, String> data = new LinkedHashMap<>();
         Base64.Encoder encoder = Base64.getEncoder();
-        data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
-        data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
+        data.put(keyKey, encoder.encodeToString(Files.readAllBytes(keyFile.toPath())));
+        data.put(certKey, encoder.encodeToString(Files.readAllBytes(certFile.toPath())));
         return client.secrets().inNamespace(namespace).withName(secretName).createOrReplaceWithNew()
                 .editOrNewMetadata()
                 .withName(secretName)
@@ -186,8 +186,8 @@ public class OpenSSLCertManager implements CertManager {
         try {
             Map<String, String> data = new LinkedHashMap<>();
             Base64.Encoder encoder = Base64.getEncoder();
-            data.put("tls.key", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getKeyFile())));
-            data.put("tls.crt", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getCertFile())));
+            data.put("tls.key", encoder.encodeToString(Files.readAllBytes(cert.getKeyFile().toPath())));
+            data.put("tls.crt", encoder.encodeToString(Files.readAllBytes(cert.getCertFile().toPath())));
             data.put("ca.crt", caSecret.getData().get("tls.crt"));
 
             return client.secrets().inNamespace(cert.getComponent().getNamespace()).createNew()

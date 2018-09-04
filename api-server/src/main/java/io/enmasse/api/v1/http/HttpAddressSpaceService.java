@@ -11,7 +11,7 @@ import io.enmasse.address.model.KubeUtil;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
-import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;

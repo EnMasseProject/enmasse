@@ -5,10 +5,10 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
-import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;

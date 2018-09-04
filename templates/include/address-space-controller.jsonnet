@@ -32,6 +32,10 @@ local images = import "images.jsonnet";
               "name": "address-space-controller",
               "env": [
                 {
+                  "name": "JAVA_OPTS",
+                  "value": "-verbose:gc -XX:+UseSerialGC -Xss228k"
+                },
+                {
                   "name": "ENABLE_RBAC",
                   "valueFrom": {
                     "configMapKeyRef": {
@@ -160,7 +164,7 @@ local images = import "images.jsonnet";
                   "memory": "128Mi"
                 },
                 "limits": {
-                  "memory": "256Mi"
+                  "memory": "128Mi"
                 }
               }
             }
