@@ -145,6 +145,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             for (Destination destination : addresses) {
                 assertSendWildcard(user, destination);
             }
+            removeUser(sharedAddressSpace, user.getUsername());
         }
     }
 
@@ -158,6 +159,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             for (Destination destination : addresses) {
                 assertReceiveWildcard(user, destination);
             }
+            removeUser(sharedAddressSpace, user.getUsername());
         }
     }
 
@@ -172,7 +174,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .collect(Collectors.toList());
 
         UserCredentials credentials = new UserCredentials(user.getUsername(), user.getPassword());
-        if (addresses.contains(destination.getAddress())) {
+        if (addresses.stream().filter(address -> destination.getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
             assertTrue(canSend(destination, credentials),
                     String.format("Authz failed, user %s cannot send message to destination %s", credentials,
                             destination.getAddress()));
@@ -188,8 +190,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .map(authz -> authz.getAddresses().stream())
                 .flatMap(Stream::distinct)
                 .collect(Collectors.toList());
+
         UserCredentials credentials = new UserCredentials(user.getUsername(), user.getPassword());
-        if (addresses.contains(destination.getAddress())) {
+        if (addresses.stream().filter(address -> destination.getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
             assertTrue(canReceive(destination, credentials),
                     String.format("Authz failed, user %s cannot receive message from destination %s", credentials,
                             destination.getAddress()));
@@ -273,9 +276,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination) throws Exception {
         try {
-            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
-            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-            return received.get(10, TimeUnit.SECONDS).size() == sent.get(10, TimeUnit.SECONDS);
+            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 2, TimeUnit.SECONDS);
+            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 2, TimeUnit.SECONDS);
+            return received.get(3, TimeUnit.SECONDS).size() == sent.get(3, TimeUnit.SECONDS);
         } catch (Exception ex) {
             sender.close();
             receiver.close();
