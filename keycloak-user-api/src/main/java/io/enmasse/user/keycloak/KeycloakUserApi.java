@@ -7,6 +7,7 @@ package io.enmasse.user.keycloak;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UserResource;
@@ -14,7 +15,6 @@ import org.keycloak.representations.idm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.nio.charset.Charset;
@@ -52,7 +52,7 @@ public class KeycloakUserApi implements UserApi  {
         T handle(Keycloak keycloak);
     }
 
-    private <T> T withKeycloak(Handler<T> consumer) {
+    private synchronized <T> T withKeycloak(Handler<T> consumer) {
         Keycloak keycloak = null;
         try {
             keycloak = KeycloakBuilder.builder()
@@ -63,20 +63,23 @@ public class KeycloakUserApi implements UserApi  {
                     .clientId("admin-cli")
                     .resteasyClient(new ResteasyClientBuilder()
                             .establishConnectionTimeout(30, TimeUnit.SECONDS)
+                            .connectionPoolSize(1)
                             .trustStore(keyStore)
                             .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
                             .build())
                     .build();
             return consumer.handle(keycloak);
+        } catch (Exception e) {
+            log.warn("ExceptioN", e);
+            throw new RuntimeException(e);
         } finally {
-            if (keycloak != null) {
-                keycloak.close();
-            }
+            keycloak.close();
         }
     }
 
     @Override
     public Optional<User> getUserWithName(String realm, String name) {
+        log.debug("Retrieving user {} in realm {}", name, realm);
         return withKeycloak(keycloak -> keycloak.realm(realm).users().search(name).stream()
                 .findFirst()
                 .map(userRep -> {
@@ -105,6 +108,7 @@ public class KeycloakUserApi implements UserApi  {
 
     @Override
     public void createUser(String realm, User user) {
+        log.debug("Creating user {} in realm {}", user.getSpec().getUsername(), realm);
         user.validate();
 
         UserRepresentation userRep = createUserRepresentation(user);
@@ -121,20 +125,18 @@ public class KeycloakUserApi implements UserApi  {
                 throw new WebApplicationException(response);
             }
 
-            UserRepresentation createdUser = keycloak.realm(realm).users().search(userRep.getUsername()).stream()
-                    .findFirst()
-                    .orElse(null);
+            String userId = CreatedResponseUtil.getCreatedId(response);
 
             switch (user.getSpec().getAuthentication().getType()) {
                 case password:
-                    setUserPassword(keycloak.realm(realm).users().get(createdUser.getId()), user.getSpec().getAuthentication());
+                    setUserPassword(keycloak.realm(realm).users().get(userId), user.getSpec().getAuthentication());
                     break;
                 case federated:
-                    setFederatedIdentity(keycloak.realm(realm).users().get(createdUser.getId()), user.getSpec().getAuthentication());
+                    setFederatedIdentity(keycloak.realm(realm).users().get(userId), user.getSpec().getAuthentication());
                     break;
             }
 
-            applyAuthorizationRules(keycloak, realm, user, keycloak.realm(realm).users().get(createdUser.getId()));
+            applyAuthorizationRules(keycloak, realm, user, keycloak.realm(realm).users().get(userId));
 
             return user;
         });
@@ -164,14 +166,14 @@ public class KeycloakUserApi implements UserApi  {
                 }
             }
         }
-        log.debug("Setting desired groups {} for user {}", desiredGroups, user.getMetadata().getName());
-
         List<GroupRepresentation> groups = keycloak.realm(realm).groups().groups();
 
         Set<String> existingGroups = userResource.groups()
                 .stream()
                 .map(GroupRepresentation::getName)
                 .collect(Collectors.toSet());
+
+        log.debug("Changing for user {} from {} to {}", user.getMetadata().getName(), existingGroups, desiredGroups);
 
         // Remove membership of groups no longer specified
         Set<String> membershipsToRemove = new HashSet<>(existingGroups);
@@ -191,24 +193,26 @@ public class KeycloakUserApi implements UserApi  {
         }
     }
 
+    private Optional<UserRepresentation> getUser(String realm, String username) {
+        return withKeycloak(keycloak -> keycloak.realm(realm).users().search(username).stream().findFirst());
+    }
+
     @Override
     public boolean replaceUser(String realm, User user) {
+        log.debug("Replacing user {} in realm {}", user.getSpec().getUsername(), realm);
         user.validate();
-        return withKeycloak(keycloak -> {
+        UserRepresentation userRep = getUser(realm, user.getSpec().getUsername()).orElse(null);
 
-            UserRepresentation userRep = keycloak.realm(realm).users().search(user.getSpec().getUsername()).stream()
-                    .findFirst()
-                    .orElse(null);
+        if (userRep == null) {
+            return false;
+        }
 
-            if (userRep == null) {
-                return false;
-            }
+        String existingAuthType = userRep.getAttributes().get("authenticationType").get(0);
+        if (!user.getSpec().getAuthentication().getType().name().equals(existingAuthType)) {
+            throw new IllegalArgumentException("Changing authentication type of a user is not allowed (existing is " + existingAuthType + ")");
+        }
 
-            String existingAuthType = userRep.getAttributes().get("authenticationType").get(0);
-            if (!user.getSpec().getAuthentication().getType().name().equals(existingAuthType)) {
-                throw new IllegalArgumentException("Changing authentication type of a user is not allowed (existing is " + existingAuthType + ")");
-            }
-
+        withKeycloak(keycloak -> {
             switch (user.getSpec().getAuthentication().getType()) {
                 case password:
                     setUserPassword(keycloak.realm(realm).users().get(userRep.getId()), user.getSpec().getAuthentication());
@@ -217,7 +221,6 @@ public class KeycloakUserApi implements UserApi  {
                     setFederatedIdentity(keycloak.realm(realm).users().get(userRep.getId()), user.getSpec().getAuthentication());
                     break;
             }
-
             applyAuthorizationRules(keycloak, realm, user, keycloak.realm(realm).users().get(userRep.getId()));
             return true;
         });
@@ -241,13 +244,12 @@ public class KeycloakUserApi implements UserApi  {
 
         GroupRepresentation groupRep = new GroupRepresentation();
         groupRep.setName(groupName);
-        keycloak.realm(realm).groups().add(groupRep);
-        for (GroupRepresentation group : keycloak.realm(realm).groups().groups()) {
-            if (group.getName().equals(groupName)) {
-                return group.getId();
-            }
+        Response response = keycloak.realm(realm).groups().add(groupRep);
+        if (response.getStatus() < 200 || response.getStatus() >= 300) {
+            log.warn("Error creating group ({}): {}", response.getStatus(), response.getStatusInfo().getReasonPhrase());
+            throw new WebApplicationException(response);
         }
-        return null;
+        return CreatedResponseUtil.getCreatedId(response);
     }
 
     private void setFederatedIdentity(UserResource userResource, UserAuthentication authentication) {
