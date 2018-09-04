@@ -314,11 +314,12 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
                 consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
                 consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
                 Thread.sleep(5000);
+                selenium.saveScreenShots("testClass", "testName");
+                selenium.tearDownDrivers();
             } catch (Exception ex) {
                 selenium.setupDriver(environment, kubernetes, buildDriver());
                 consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
                 consoleWebPage.openWebConsolePage(user);
-                throw new Exception(ex);
             }
         });
         log.info("testCreateDeleteAddressesViaAgentLong finished");
