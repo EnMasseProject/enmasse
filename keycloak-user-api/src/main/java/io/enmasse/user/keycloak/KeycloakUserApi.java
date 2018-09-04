@@ -212,7 +212,7 @@ public class KeycloakUserApi implements UserApi  {
             throw new IllegalArgumentException("Changing authentication type of a user is not allowed (existing is " + existingAuthType + ")");
         }
 
-        withKeycloak(keycloak -> {
+        return withKeycloak(keycloak -> {
             switch (user.getSpec().getAuthentication().getType()) {
                 case password:
                     setUserPassword(keycloak.realm(realm).users().get(userRep.getId()), user.getSpec().getAuthentication());
