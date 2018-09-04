@@ -310,9 +310,16 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         runTestInLoop(30, () -> {
-            consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
-            consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
-            Thread.sleep(5000);
+            try {
+                consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+                consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
+                Thread.sleep(5000);
+            } catch (Exception ex) {
+                selenium.setupDriver(environment, kubernetes, buildDriver());
+                consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
+                consoleWebPage.openWebConsolePage(user);
+                throw new Exception(ex);
+            }
         });
         log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
