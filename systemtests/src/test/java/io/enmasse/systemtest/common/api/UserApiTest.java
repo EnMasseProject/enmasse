@@ -83,12 +83,12 @@ class UserApiTest extends TestBase {
                         .addOperation(User.Operation.SEND)
                         .addOperation(User.Operation.RECEIVE));
 
-        JsonObject userDefinitionPayload2 = testUser.toCRDJson("");
+        JsonObject userDefinitionPayload2 = testUser2.toCRDJson("");
 
         //create user
         ExecutionResultData createUserResponse2 = CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload2.toString());
         assertThat(createUserResponse2.getRetCode(), is(false));
-        assertTrue(createUserResponse2.getStdErr().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
+        assertTrue(createUserResponse2.getStdErr().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
         assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
     }
 
@@ -120,7 +120,7 @@ class UserApiTest extends TestBase {
         try {
             getUserApiClient().createUser("", testUser2, HTTP_INTERNAL_ERROR);
         } catch (Exception ex) {
-            assertTrue(ex.getMessage().contains("AddressSpace  not found"));
+            assertTrue(ex.getMessage().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
         }
     }
 }
