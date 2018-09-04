@@ -398,6 +398,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return new JsonObject();
     }
 
+    protected JsonObject updateUser(AddressSpace addressSpace, User user) throws Exception {
+        log.info("User {} will be updated", user);
+        return getUserApiClient().updateUser(addressSpace.getName(), user);
+    }
+
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
         getUserApiClient().deleteUser(addressSpace.getName(), username);
     }

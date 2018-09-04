@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.common.api;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CRDCmdClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -13,8 +14,12 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+
 import static io.enmasse.systemtest.TestTag.isolated;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,7 +30,7 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateDeleteUserUsingCRD() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace brokered = new AddressSpace("user-api-space-create-delete-crd", AddressSpaceType.BROKERED, AuthService.STANDARD);
         addToAddressSpacess(brokered);
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
@@ -53,7 +58,7 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateUserWithWrongPayloadCRD() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace brokered = new AddressSpace("user-api-space-wrong-payload-crd", AddressSpaceType.BROKERED, AuthService.STANDARD);
         addToAddressSpacess(brokered);
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
@@ -94,7 +99,7 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateUserWrongPayloadUserAPI() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace brokered = new AddressSpace("user-api-space-wrong-payload-api", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
         UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
@@ -121,6 +126,54 @@ class UserApiTest extends TestBase {
             getUserApiClient().createUser("", testUser2, HTTP_INTERNAL_ERROR);
         } catch (Exception ex) {
             assertTrue(ex.getMessage().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
+        }
+    }
+
+    @Test
+    void testUpdateUserPermissions() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-update-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        Destination queue = Destination.queue("myqueue", "brokered-queue");
+        setAddresses(brokered, queue);
+
+        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress(queue.getAddress())
+                        .addOperation(User.Operation.SEND));
+
+        createUser(brokered, testUser);
+
+        AmqpClient client = amqpClientFactory.createQueueClient(brokered);
+        client.getConnectOptions().setCredentials(cred);
+        assertThat(client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
+
+        testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress(queue.getAddress())
+                        .addOperation(User.Operation.RECEIVE));
+
+        updateUser(brokered, testUser);
+        assertThat(client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
+        assertThat(client.recvMessages(queue.getAddress(), 2).get(1, TimeUnit.MINUTES).size(), is(2));
+    }
+
+    @Test
+    void testUpdateNoExistsUser() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-update-noexists-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("unknown")
+                        .addOperation(User.Operation.RECEIVE));
+
+        try {
+            getUserApiClient().updateUser(brokered.getName(), testUser, HTTP_NOT_FOUND);
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains(String.format("User %s.%s not found", brokered.getName(), cred.getUsername())));
         }
     }
 }

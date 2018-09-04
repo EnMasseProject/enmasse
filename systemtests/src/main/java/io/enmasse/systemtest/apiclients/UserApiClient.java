@@ -156,6 +156,36 @@ public class UserApiClient extends ApiClient {
         }
     }
 
+    public JsonObject updateUser(String addressSpace, User user) throws Exception {
+        return updateUser(addressSpace, user, HTTP_OK);
+    }
+
+    public JsonObject updateUser(String addressSpace, User user, int expectedCode) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_USER);
+        try {
+            String path = userPath + "/" + String.format("%s.%s", addressSpace, user.getUsername());
+            JsonObject payload = user.toJson(addressSpace);
+            log.info("PUT-user: path '{}', data: {}", path, payload.toString());
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            return doRequestNTimes(initRetry, () -> {
+                        client.put(endpoint.getPort(), endpoint.getHost(), path)
+                                .as(BodyCodec.jsonObject())
+                                .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                                .timeout(20_000)
+                                .as(BodyCodec.jsonObject())
+                                .sendJsonObject(payload, ar -> responseHandler(ar,
+                                        responsePromise,
+                                        expectedCode,
+                                        String.format("Error: update user '%s'", user.getUsername())));
+                        return responsePromise.get(2, TimeUnit.MINUTES);
+                    },
+                    Optional.of(() -> kubernetes.getRestEndpoint()),
+                    Optional.empty());
+        } finally {
+            TimeMeasuringSystem.stopOperation(operationID);
+        }
+    }
+
     @Override
     protected String apiClientName() {
         return "user-api";
