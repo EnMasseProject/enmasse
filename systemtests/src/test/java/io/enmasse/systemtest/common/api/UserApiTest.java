@@ -9,6 +9,9 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CRDCmdClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -155,7 +158,21 @@ class UserApiTest extends TestBase {
                         .addOperation(User.Operation.RECEIVE));
 
         updateUser(brokered, testUser);
-        assertThat(client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
+
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        RheaClientSender sender = new RheaClientSender();
+        arguments.put(ClientArgument.USERNAME, cred.getUsername());
+        arguments.put(ClientArgument.PASSWORD, cred.getPassword());
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.CONN_RECONNECT, "false");
+        arguments.put(ClientArgument.LOG_LIB, "TRANSPORT_FRM");
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(brokered).toString());
+        arguments.put(ClientArgument.ADDRESS, queue.getAddress());
+
+        sender.setArguments(arguments);
+        assertThat(sender.run(true), is(false));
+
         assertThat(client.recvMessages(queue.getAddress(), 2).get(1, TimeUnit.MINUTES).size(), is(2));
     }
 
