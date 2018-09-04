@@ -6,18 +6,19 @@ package io.enmasse.systemtest.common.api;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CRDCmdClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -26,6 +27,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
 class UserApiTest extends TestBase {
@@ -133,22 +135,50 @@ class UserApiTest extends TestBase {
     }
 
     @Test
-    void testUpdateUserPermissions() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-update-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
+    void testCreateDeleteUsers() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-loop", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
         Destination queue = Destination.queue("myqueue", "brokered-queue");
         setAddresses(brokered, queue);
 
-        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        UserCredentials cred = new UserCredentials("user1", "user1");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress(queue.getAddress())
                         .addOperation(User.Operation.SEND));
 
-        createUser(brokered, testUser);
 
-        AmqpClient client = amqpClientFactory.createQueueClient(brokered);
+        Instant now = Instant.now();
+        Instant end = now.plus(Duration.ofHours(1));
+        while (now.isBefore(end)) {
+            createUser(brokered, testUser);
+            Thread.sleep(500);
+
+            removeUser(brokered, testUser.getUsername());
+            Thread.sleep(500);
+        }
+    }
+
+    @Test
+    void testUpdateUserPermissions() throws Exception {
+        AddressSpace standard = new AddressSpace("user-api-space-update-user", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        standard.setPlan("unlimited-standard-without-mqtt");
+
+        createAddressSpace(standard);
+
+        Destination queue = Destination.queue("myqueue", "pooled-queue");
+        setAddresses(standard, queue);
+
+        UserCredentials cred = new UserCredentials("pepa", "pepapw");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress(queue.getAddress())
+                        .addOperation(User.Operation.SEND));
+
+        createUser(standard, testUser);
+
+        AmqpClient client = amqpClientFactory.createQueueClient(standard);
         client.getConnectOptions().setCredentials(cred);
         assertThat(client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
 
@@ -157,22 +187,13 @@ class UserApiTest extends TestBase {
                         .addAddress(queue.getAddress())
                         .addOperation(User.Operation.RECEIVE));
 
-        updateUser(brokered, testUser);
-
-        ClientArgumentMap arguments = new ClientArgumentMap();
-        RheaClientSender sender = new RheaClientSender();
-        arguments.put(ClientArgument.USERNAME, cred.getUsername());
-        arguments.put(ClientArgument.PASSWORD, cred.getPassword());
-        arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.CONN_RECONNECT, "false");
-        arguments.put(ClientArgument.LOG_LIB, "TRANSPORT_FRM");
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(brokered).toString());
-        arguments.put(ClientArgument.ADDRESS, queue.getAddress());
-
-        sender.setArguments(arguments);
-        assertThat(sender.run(true), is(false));
-
+        updateUser(standard, testUser);
+        try {
+            client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(10, TimeUnit.SECONDS);
+            fail("Expected UnauthorizedAccessException to be thrown");
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause() instanceof UnauthorizedAccessException);
+        }
         assertThat(client.recvMessages(queue.getAddress(), 2).get(1, TimeUnit.MINUTES).size(), is(2));
     }
 

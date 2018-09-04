@@ -139,7 +139,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        createAddressSpace(addressSpace, !isBrokered(addressSpace));
+        createAddressSpace(addressSpace, !requiresWait(addressSpace));
     }
 
 
@@ -437,6 +437,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         }
         return false;
+    }
+
+    protected boolean requiresWait(AddressSpace addressSpace) {
+        return addressSpace.getType().equals(AddressSpaceType.STANDARD) && addressSpace.getPlan().equals("unlimited-standard-without-mqtt");
     }
 
     protected boolean isBrokered(AddressSpace addressSpace) {
