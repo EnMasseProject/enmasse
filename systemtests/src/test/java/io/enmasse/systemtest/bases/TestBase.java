@@ -139,7 +139,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        createAddressSpace(addressSpace, !requiresWait(addressSpace));
+        createAddressSpace(addressSpace, requiresWait(addressSpace));
     }
 
 
