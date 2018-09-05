@@ -69,9 +69,6 @@ public class KeycloakUserApi implements UserApi  {
                             .build())
                     .build();
             return consumer.handle(keycloak);
-        } catch (Exception e) {
-            log.warn("ExceptioN", e);
-            throw new RuntimeException(e);
         } finally {
             keycloak.close();
         }
