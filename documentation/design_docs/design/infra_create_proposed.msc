@@ -16,10 +16,8 @@ msc {
 
     --- ;
 
-    InfraController << OpenShift [ label = "Watch trigger Infra check loop" ];
+    InfraController << OpenShift [ label = "Watch trigger check loop" ];
     InfraController => InfraController [ label = "Process Infra" ];
-    InfraController => OpenShift [ label = "Get StandardInfraTemplate 'standard-cfg1'"];
-    InfraController << OpenShift [ label = "Return" ];
     InfraController => OpenShift [ label = "Create deployments and services based on StandardInfraTemplate 'standard-cfg1' for instance 'infra1'" ];
     InfraController << OpenShift [ label = "Created" ];
     InfraController => OpenShift [ label = "Annotate 'infra1' with the current template and version in use" ];
