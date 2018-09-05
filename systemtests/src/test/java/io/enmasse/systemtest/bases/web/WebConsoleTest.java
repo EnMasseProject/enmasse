@@ -601,6 +601,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
             assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", user),
                     user.getUsername().replace("user_", ""), consoleWebPage.getAddressItems());
+            removeUser(sharedAddressSpace, user.getUsername());
         }
     }
 

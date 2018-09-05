@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.cmdclients;
 
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.vertx.core.json.JsonObject;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -40,14 +41,14 @@ public class CRDCmdClient extends CmdClient {
      * @param definition in yaml or json format
      * @return result of execution
      */
-    public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
+    public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
         File defInFile = null;
         try {
             defInFile = new File("crdefinition.file");
             FileWriter wr = new FileWriter(defInFile.getName());
             wr.write(definition);
             wr.flush();
-            return execute(Arrays.asList(CMD, "create", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+            return execute(Arrays.asList(CMD, replace ? "replace" : "create", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -59,7 +60,19 @@ public class CRDCmdClient extends CmdClient {
     }
 
     public static ExecutionResultData createCR(String definition) throws IOException {
-        return createCR(env.namespace(), definition);
+        return createOrUpdateCR(env.namespace(), definition, false);
+    }
+
+    public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
+        return createOrUpdateCR(namespace, definition, false);
+    }
+
+    public static ExecutionResultData updateCR(String definition) throws IOException {
+        return createOrUpdateCR(env.namespace(), definition, true);
+    }
+
+    public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
+        return createOrUpdateCR(namespace, definition, true);
     }
 
     /**

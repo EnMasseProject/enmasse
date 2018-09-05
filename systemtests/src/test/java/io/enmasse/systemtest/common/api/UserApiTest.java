@@ -133,7 +133,48 @@ class UserApiTest extends TestBase {
     }
 
     @Test
-    void testUpdateUserPermissions() throws Exception {
+    void testUpdateUserPermissionsCRD() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-update-crd", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        addToAddressSpacess(brokered);
+        JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
+
+        //create addressspace
+        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
+        waitForAddressSpaceReady(brokered);
+
+        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("jenda")
+                        .addOperation(User.Operation.SEND));
+
+        JsonObject userDefinitionPayload = testUser.toCRDJson(brokered.getName());
+
+        //create user
+        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
+        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+
+        testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("jenda")
+                        .addOperation(User.Operation.RECEIVE));
+
+        userDefinitionPayload = testUser.toCRDJson(brokered.getName());
+
+        //update user
+        assertThat(CRDCmdClient.updateCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
+        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertTrue(getUserApiClient().getUser(brokered.getName(), testUser.getUsername()).toString().contains(User.Operation.RECEIVE));
+
+
+        //delete user
+        assertThat(CRDCmdClient.deleteUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
+    }
+
+
+    @Test
+    void testUpdateUserPermissionsUserAPI() throws Exception {
         AddressSpace standard = new AddressSpace("user-api-space-update-user", AddressSpaceType.STANDARD, AuthService.STANDARD);
         standard.setPlan("unlimited-standard-without-mqtt");
 
