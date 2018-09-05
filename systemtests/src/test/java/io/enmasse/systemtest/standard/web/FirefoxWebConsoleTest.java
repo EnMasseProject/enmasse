@@ -162,6 +162,30 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
         doTestAddressStatus(Destination.multicast("test-multicast"));
     }
 
+    @Test
+        //@Disabled("disabled due to #1547")
+    void testAddressNameWithHyphens() throws Exception {
+        doTestWithStrangeAddressNames(true, false,
+                AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
+        );
+    }
+
+    @Test
+        //@Disabled("disabled due to #1547")
+    void testVerylongAddressName() throws Exception {
+        doTestWithStrangeAddressNames(false, true,
+                AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
+        );
+    }
+
+    @Test
+        //@Disabled("disabled due to #1547")
+    void testCreateAddressWithSpecialChars() throws Exception {
+        doTestCreateAddressWithSpecialChars(
+                AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
+        );
+    }
+
     @Override
     public boolean skipDummyAddress() {
         return true;

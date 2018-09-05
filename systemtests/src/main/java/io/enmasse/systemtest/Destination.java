@@ -104,6 +104,23 @@ public class Destination {
         return new Destination(address, SUBSCRIPTION, plan, Optional.of(topic));
     }
 
+    public static Destination destination(AddressType type, String address, String plan, Optional<String> topic) {
+        switch (type) {
+            case QUEUE:
+                return Destination.queue(address, plan);
+            case TOPIC:
+                return Destination.topic(address, plan);
+            case ANYCAST:
+                return Destination.anycast(address, plan);
+            case MULTICAST:
+                return Destination.multicast(address, plan);
+            case SUBSCRIPTION:
+                return Destination.subscription(address, topic.get(), plan);
+            default:
+                throw new IllegalStateException(String.format("Address type %s does not exists", type.toString()));
+        }
+    }
+
     public static boolean isQueue(Destination d) {
         return QUEUE.equals(d.type);
     }
