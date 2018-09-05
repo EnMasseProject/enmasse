@@ -30,13 +30,11 @@ class AuthorizationTest extends AuthorizationTestBase implements ITestBaseBroker
     }
 
     @Test
-    @Tag(nonPR)
     void testSendAuthzWithWIldcards() throws Exception {
         doTestSendAuthzWithWIldcards();
     }
 
     @Test
-    @Tag(nonPR)
     void testReceiveAuthzWithWIldcards() throws Exception {
         doTestReceiveAuthzWithWIldcards();
     }
