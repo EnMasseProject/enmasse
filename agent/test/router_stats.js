@@ -300,7 +300,7 @@ describe('router stats', function() {
             assert.equal(results.addresses.foo.outcomes.egress.links[0].backlog, 11);
 
             done();
-        });
+        }).catch(done);
     });
     it('retrieves stats for a queue from a single router', function(done) {
         //populate router:
@@ -319,7 +319,7 @@ describe('router stats', function() {
             assert.equal(results.addresses.foo.messages_in, 64);
             assert.equal(results.addresses.foo.messages_out, 46);
             done();
-        });
+        }).catch(done);
     });
     it('retrieves stats for an anycast address from multiple routers', function(done) {
         add_router_nodes(2);
@@ -406,7 +406,7 @@ describe('router stats', function() {
         router_stats._retrieve().then(function(results) {
             assert.equal(results.addresses.bar.propagated, 100);
             done();
-        });
+        }).catch(done);
     });
     it('retrieves sender and receiver stats for a topic from a single router', function(done) {
         //populate router:
@@ -449,7 +449,7 @@ describe('router stats', function() {
             assert.equal(addresses.get('foo').messages_in, 64);
             assert.equal(addresses.get('foo').messages_out, 46);
             done();
-        });
+        }).catch(done);
     });
     it('retrieves stats for a queue from a changing set of routers', function(done) {
         //populate router:
@@ -486,7 +486,7 @@ describe('router stats', function() {
                 assert.equal(results.addresses.foo.messages_in, 90);
                 assert.equal(results.addresses.foo.messages_out, 55);
                 done();
-            });
-        });
+            }).catch(done);
+        }).catch(done);
     });
 });
