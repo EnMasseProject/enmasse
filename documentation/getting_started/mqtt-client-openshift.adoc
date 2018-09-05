@@ -1,4 +1,3 @@
-[[mqtt-{context}]]
 == Connecting using MQTT
 
 For sending and receiving messages route, you can use the paho-mqtt client library. To connect,

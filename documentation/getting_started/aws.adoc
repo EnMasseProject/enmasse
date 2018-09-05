@@ -8,7 +8,7 @@
 :DeployHost: openshift.yourdomain
 :DeployOptions: -u myuser
 :parent-context: {context}
-:context: gettinstarted-aws
+:context: gettingstarted-aws
 
 This guide walks you through setting up EnMasse on an AWS EC2 instance.
 This is not even very specific to AWS, so you can probably modify the

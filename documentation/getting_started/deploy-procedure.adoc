@@ -9,7 +9,7 @@ Invoke the deployment script to deploy {ProductName}
 ./deploy.sh -m "https://{DeployHost}:8443" -n enmasse {DeployOptions} -t {ClusterManager}
 ....
 
-==== Using ansible
+==== Using Ansible
 [options="nowrap",subs=attributes+]
 ....
 ansible-playbook -i ansible/inventory/singletenant-standard.example ansible/playbooks/openshift/deploy_all.yml

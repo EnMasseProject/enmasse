@@ -7,7 +7,7 @@
 
 Address plans specify the expected resource usage of a given address. The sum of the resource usage for all resource types determines the amount of infrastructure provisioned for an address space. A single router and broker pod has a maximum usage of one. If a new address requires additional resources and the resource consumption is within the address space plan limits, a new pod will be created automatically to handle the increased load.
 
-In the xref:con-address-space-plans-messaging[] section, the address space plan references two address plans: `small-queue` and `small-anycast`. These address plans are stored as `ConfigMaps` and are defined as follows:
+In the xref:con-address-space-plans-{context}[] section, the address space plan references two address plans: `small-queue` and `small-anycast`. These address plans are stored as `ConfigMaps` and are defined as follows:
 
 [source,yaml,options="nowrap"]
 .link:service_admin/small-queue-plan.yaml[small-queue-plan.yaml]
