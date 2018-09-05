@@ -1,4 +1,4 @@
-[[monitoring-{context}]]
+[id=monitoring-{context}]
 
 == Monitoring {ProductName}
 
