@@ -15,8 +15,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -131,32 +129,6 @@ class UserApiTest extends TestBase {
             getUserApiClient().createUser("", testUser2, HTTP_INTERNAL_ERROR);
         } catch (Exception ex) {
             assertTrue(ex.getMessage().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
-        }
-    }
-
-    @Test
-    void testCreateDeleteUsers() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-loop", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
-        Destination queue = Destination.queue("myqueue", "brokered-queue");
-        setAddresses(brokered, queue);
-
-        UserCredentials cred = new UserCredentials("user1", "user1");
-        User testUser = new User().setUserCredentials(cred).addAuthorization(
-                new User.AuthorizationRule()
-                        .addAddress(queue.getAddress())
-                        .addOperation(User.Operation.SEND));
-
-
-        Instant now = Instant.now();
-        Instant end = now.plus(Duration.ofHours(1));
-        while (now.isBefore(end)) {
-            createUser(brokered, testUser);
-            Thread.sleep(500);
-
-            removeUser(brokered, testUser.getUsername());
-            Thread.sleep(500);
         }
     }
 

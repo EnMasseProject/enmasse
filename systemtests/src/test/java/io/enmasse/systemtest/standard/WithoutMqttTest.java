@@ -33,7 +33,7 @@ class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
     void setupSpace() throws Exception {
         addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
                 AuthService.STANDARD);
-        createAddressSpace(addressSpace, false);
+        createAddressSpace(addressSpace);
         defaultCredentials.setUsername("test");
         defaultCredentials.setPassword("test");
         createUser(addressSpace, defaultCredentials);

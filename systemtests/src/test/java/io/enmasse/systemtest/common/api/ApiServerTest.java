@@ -257,7 +257,7 @@ class ApiServerTest extends TestBase {
     @Test
     void testCreateAddressResource() throws Exception {
         AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
-        createAddressSpace(addrSpace, false);
+        createAddressSpace(addrSpace);
 
         Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), "standard-anycast");
         addressApiClient.createAddress(anycast);
@@ -290,7 +290,7 @@ class ApiServerTest extends TestBase {
             AddressSpace addrSpace = new AddressSpace("non-admin-addr-space", AddressSpaceType.BROKERED, AuthService.NONE);
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace, token);
 
-            createAddressSpace(addrSpace, apiClient, false);
+            createAddressSpace(addrSpace, apiClient);
             waitForAddressSpaceReady(addrSpace, apiClient);
 
             deleteAddressSpace(addrSpace, apiClient);

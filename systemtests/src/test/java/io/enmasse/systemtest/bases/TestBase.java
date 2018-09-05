@@ -139,9 +139,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        createAddressSpace(addressSpace, requiresWait(addressSpace));
+        createAddressSpace(addressSpace, addressApiClient);
     }
-
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
@@ -157,18 +156,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         }
         addressApiClient.createAddressSpaceList(spaces.toArray(new AddressSpace[0]));
-        boolean extraWait = false;
         for (AddressSpace addressSpace : spaces) {
             logCollector.startCollecting(addressSpace.getNamespace());
             addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName()));
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
-            extraWait = extraWait || !isBrokered(addressSpace);
-        }
-        if (extraWait) {
-            log.info("One of requested address-spaces is 'standard' type - Waiting for 2 minutes before starting tests");
-            Thread.sleep(120_000);
         }
         Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
             if (originalAddrSpace.getEndpoints().isEmpty()) {
@@ -181,7 +174,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient, boolean extraWait) throws Exception {
+    protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
         AddressSpace addrSpaceResponse;
         if (!TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
@@ -191,11 +184,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
-            }
-
-            if (extraWait) {
-                log.info("Waiting for 30s before starting tests");
-                Thread.sleep(30_000);
             }
         } else {
             addrSpaceResponse = TestUtils.getAddressSpaceObject(apiClient, addressSpace.getName());
@@ -207,10 +195,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
         log.info("Address-space successfully created: '{}'", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
-        createAddressSpace(addressSpace, addressApiClient, extraWait);
     }
 
     //!TODO: protected void appendAddressSpace(...)
