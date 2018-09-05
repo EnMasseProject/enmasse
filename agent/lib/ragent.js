@@ -179,6 +179,7 @@ Ragent.prototype.on_broker_disconnect = function (context) {
     if (this.connected_brokers[context.connection.container_id]) {
         this.connected_brokers[context.connection.container_id].close();
         delete this.connected_brokers[context.connection.container_id];
+        this.on_synchronized();
     }
 }
 
