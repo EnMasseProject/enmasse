@@ -76,7 +76,7 @@ public class KeycloakUserApi implements UserApi  {
 
     @Override
     public Optional<User> getUserWithName(String realm, String name) {
-        log.debug("Retrieving user {} in realm {}", name, realm);
+        log.info("Retrieving user {} in realm {}", name, realm);
         return withKeycloak(keycloak -> keycloak.realm(realm).users().search(name).stream()
                 .findFirst()
                 .map(userRep -> {
@@ -105,7 +105,7 @@ public class KeycloakUserApi implements UserApi  {
 
     @Override
     public void createUser(String realm, User user) {
-        log.debug("Creating user {} in realm {}", user.getSpec().getUsername(), realm);
+        log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realm);
         user.validate();
 
         UserRepresentation userRep = createUserRepresentation(user);
@@ -170,12 +170,12 @@ public class KeycloakUserApi implements UserApi  {
                 .map(GroupRepresentation::getName)
                 .collect(Collectors.toSet());
 
-        log.debug("Changing for user {} from {} to {}", user.getMetadata().getName(), existingGroups, desiredGroups);
+        log.info("Changing for user {} from {} to {}", user.getMetadata().getName(), existingGroups, desiredGroups);
 
         // Remove membership of groups no longer specified
         Set<String> membershipsToRemove = new HashSet<>(existingGroups);
         membershipsToRemove.removeAll(desiredGroups);
-        log.debug("Removing groups {} from user {}", membershipsToRemove, user.getMetadata().getName());
+        log.info("Removing groups {} from user {}", membershipsToRemove, user.getMetadata().getName());
         for (String group : membershipsToRemove) {
             getGroupId(groups, group).ifPresent(userResource::leaveGroup);
         }
@@ -183,7 +183,7 @@ public class KeycloakUserApi implements UserApi  {
         // Add membership of new groups
         Set<String> membershipsToAdd = new HashSet<>(desiredGroups);
         membershipsToAdd.removeAll(existingGroups);
-        log.debug("Adding groups {} to user {}", membershipsToRemove, user.getMetadata().getName());
+        log.info("Adding groups {} to user {}", membershipsToRemove, user.getMetadata().getName());
         for (String group : membershipsToAdd) {
             String groupId = createGroupIfNotExists(keycloak, realm, group);
             userResource.joinGroup(groupId);
@@ -196,7 +196,7 @@ public class KeycloakUserApi implements UserApi  {
 
     @Override
     public boolean replaceUser(String realm, User user) {
-        log.debug("Replacing user {} in realm {}", user.getSpec().getUsername(), realm);
+        log.info("Replacing user {} in realm {}", user.getSpec().getUsername(), realm);
         user.validate();
         UserRepresentation userRep = getUser(realm, user.getSpec().getUsername()).orElse(null);
 
@@ -315,11 +315,11 @@ public class KeycloakUserApi implements UserApi  {
     }
 
     static User buildUser(UserRepresentation userRep, List<GroupRepresentation> groupReps) {
-        log.debug("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
+        log.info("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
         Map<String, Set<Operation>> operationsByAddress = new HashMap<>();
         Set<Operation> globalOperations = new HashSet<>();
         for (GroupRepresentation groupRep : groupReps) {
-            log.debug("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
+            log.info("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
             if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
