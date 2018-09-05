@@ -14,6 +14,9 @@
 # Further it will use the user `developer` and project `enmasse`, asking
 # for a login when appropriate.
 # for further parameters please see the help text.
+
+set -e
+
 SCRIPTDIR=`dirname $0`
 source $SCRIPTDIR/common.sh
 TEMPDIR=`tempdir`
