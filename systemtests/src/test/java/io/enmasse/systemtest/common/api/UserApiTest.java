@@ -26,8 +26,8 @@ import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
 class UserApiTest extends TestBase {
@@ -188,12 +188,9 @@ class UserApiTest extends TestBase {
                         .addOperation(User.Operation.RECEIVE));
 
         updateUser(standard, testUser);
-        try {
-            client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(10, TimeUnit.SECONDS);
-            fail("Expected UnauthorizedAccessException to be thrown");
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof UnauthorizedAccessException);
-        }
+        Throwable exception = assertThrows(ExecutionException.class,
+                () -> client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(10, TimeUnit.SECONDS));
+        assertTrue(exception.getCause() instanceof UnauthorizedAccessException);
         assertThat(client.recvMessages(queue.getAddress(), 2).get(1, TimeUnit.MINUTES).size(), is(2));
     }
 
