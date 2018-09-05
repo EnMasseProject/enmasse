@@ -194,8 +194,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
 
             if (extraWait) {
-                log.info("Waiting for 2 minutes before starting tests");
-                Thread.sleep(120_000);
+                log.info("Waiting for 30s before starting tests");
+                Thread.sleep(30_000);
             }
         } else {
             addrSpaceResponse = TestUtils.getAddressSpaceObject(apiClient, addressSpace.getName());
