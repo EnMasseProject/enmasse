@@ -1,0 +1,16 @@
+msc {
+    hscale="2.5";
+    EnMasseAdmin,InfraController,OpenShift;
+
+    EnMasseAdmin => OpenShift[ label = "Replace StandardInfraTemplate 'standard-cfg1' with updated version (0.22.0)" ];
+    EnMasseAdmin << OpenShift [ label = "Replaced" ];
+
+    --- ;
+
+    InfraController << OpenShift [ label = "Watch trigger check loop" ];
+    InfraController => InfraController [ label = "Process Infra. Read annotation for current template + version and compare to .spec.template + version" ];
+    InfraController => OpenShift [ label = "Patch deployments with settings based on StandardInfraTemplate 'standard-cfg1' updated version 0.22.0 for instance 'infra1'" ];
+    InfraController << OpenShift [ label = "Updated" ];
+    InfraController => OpenShift [ label = "Annotate 'infra1' with the current template and version in use (standard-cfg1:0.22.0)" ];
+    InfraController << OpenShift [ label = "Updated" ];
+}
