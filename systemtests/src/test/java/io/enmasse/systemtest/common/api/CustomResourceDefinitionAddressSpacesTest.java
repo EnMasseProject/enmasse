@@ -61,7 +61,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     @Test
     void testCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
         String namespace = "pepik";
-        KeycloakCredentials user = new KeycloakCredentials("pepik", "pepik");
+        UserCredentials user = new UserCredentials("pepik", "pepik");
         try {
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
             AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.NONE);
@@ -87,7 +87,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testCannotCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
-        KeycloakCredentials user = new KeycloakCredentials("pepik", "pepik");
+        UserCredentials user = new UserCredentials("pepik", "pepik");
         try {
             AddressSpace brokered = new AddressSpace("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthService.NONE);
             JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());

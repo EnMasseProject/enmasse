@@ -1225,10 +1225,12 @@
         "io.enmasse.user.v1alpha1.UserSpec": {
             "type": "object",
             "required": [
-                "authentication",
-                "authorization"
+                "username"
             ],
             "properties": {
+                "username": {
+                    "type": "string"
+                },
                 "authentication": {
                     "type": "object",
                     "required": [

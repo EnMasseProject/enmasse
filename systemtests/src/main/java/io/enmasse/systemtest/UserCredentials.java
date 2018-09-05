@@ -4,11 +4,11 @@
  */
 package io.enmasse.systemtest;
 
-public class KeycloakCredentials {
+public class UserCredentials {
     private String username;
     private String password;
 
-    public KeycloakCredentials(String username, String password) {
+    public UserCredentials(String username, String password) {
         this.username = username;
         this.password = password;
     }
@@ -21,12 +21,14 @@ public class KeycloakCredentials {
         return password;
     }
 
-    public void setUsername(String username) {
+    public UserCredentials setUsername(String username) {
         this.username = username;
+        return this;
     }
 
-    public void setPassword(String password) {
+    public UserCredentials setPassword(String password) {
         this.password = password;
+        return this;
     }
 
     @Override

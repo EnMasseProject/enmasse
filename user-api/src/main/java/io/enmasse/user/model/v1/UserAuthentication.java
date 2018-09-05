@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
+import static io.enmasse.user.model.v1.UserAuthenticationType.federated;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAuthentication {
     private final UserAuthenticationType type;
@@ -53,6 +55,20 @@ public class UserAuthentication {
 
     public String getFederatedUsername() {
         return federatedUsername;
+    }
+
+    public void validate() {
+        Objects.requireNonNull(type, "'type' must be set");
+        switch (type) {
+            case password:
+                Objects.requireNonNull(password, "'password' must be set for 'password' type");
+                break;
+            case federated:
+                Objects.requireNonNull(provider, "'provider' must be set for 'federated' type");
+                Objects.requireNonNull(federatedUserid, "'federatedUserid' must be set for 'federated' type");
+                Objects.requireNonNull(federatedUsername, "'federatedUsername' must be set for 'federated' type");
+                break;
+        }
     }
 
     public static class Builder {

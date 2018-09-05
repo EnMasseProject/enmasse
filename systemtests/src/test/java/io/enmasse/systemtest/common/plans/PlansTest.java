@@ -93,7 +93,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         weakTopicPlan.getName(), assertMessage));
 
         //simple send/receive
-        KeycloakCredentials user = new KeycloakCredentials("test_newplan_name", "test_newplan_password");
+        UserCredentials user = new UserCredentials("test_newplan_name", "test_newplan_password");
         createUser(weakAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(weakAddressSpace);
@@ -145,7 +145,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        KeycloakCredentials user = new KeycloakCredentials("quota_user", "quotaPa55");
+        UserCredentials user = new UserCredentials("quota_user", "quotaPa55");
         createUser(addressSpace, user);
 
         //check router limits
@@ -224,7 +224,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        KeycloakCredentials user = new KeycloakCredentials("quota_user", "quotaPa55");
+        UserCredentials user = new UserCredentials("quota_user", "quotaPa55");
         createUser(addressSpace, user);
 
         //check broker limits
@@ -252,7 +252,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Tag(nonPR)
     @Disabled("test disabled as per-address limit enforcement has been removed")
     void testGlobalSizeLimitations() throws Exception {
-        KeycloakCredentials user = new KeycloakCredentials("test", "test");
+        UserCredentials user = new UserCredentials("test", "test");
         String messageContent = String.join("", Collections.nCopies(1024, "F"));
 
         //redefine global max size for queue
@@ -381,7 +381,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         appendAddresses(messagePersistAddressSpace, queue3, queue4);
 
         //send 1000 messages to each queue
-        KeycloakCredentials user = new KeycloakCredentials("test_scale_user_name", "test_scale_user_pswd");
+        UserCredentials user = new UserCredentials("test_scale_user_name", "test_scale_user_pswd");
         createUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
@@ -451,7 +451,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //send 100000 messages to queue
-        KeycloakCredentials user = new KeycloakCredentials("test_change_plan_user", "test_change_plan_pswd");
+        UserCredentials user = new UserCredentials("test_change_plan_user", "test_change_plan_pswd");
         createUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
@@ -485,7 +485,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     // Help methods
     //------------------------------------------------------------------------------------------------
 
-    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, KeycloakCredentials credentials)
+    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, UserCredentials credentials)
             throws Exception {
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",

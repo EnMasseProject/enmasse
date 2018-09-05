@@ -102,7 +102,7 @@ class ApiServerTest extends TestBase {
                 new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")));
         createAddressSpace(addressSpace);
 
-        KeycloakCredentials luckyUser = new KeycloakCredentials("Lucky", "luckyPswd");
+        UserCredentials luckyUser = new UserCredentials("Lucky", "luckyPswd");
         createUser(addressSpace, luckyUser);
 
         //try to get all external endpoints
@@ -281,7 +281,7 @@ class ApiServerTest extends TestBase {
     @Test
     void testCreateAddressSpaceViaApiNonAdmin() throws Exception {
         String namespace = "pepinator";
-        KeycloakCredentials user = new KeycloakCredentials("jarda", "jarda");
+        UserCredentials user = new UserCredentials("jarda", "jarda");
 
         try {
             String token = CRDCmdClient.loginUser(user.getUsername(), user.getPassword());

@@ -81,7 +81,7 @@ public class HttpApiRootService {
     private static final APIResourceList userApiResourceList = new APIResourceList("user.enmasse.io/v1alpha1",
             Arrays.asList(
                     new APIResource("messagingusers", "", true, "MessagingUser",
-                            Arrays.asList("create", "delete", "get", "list"))));
+                            Arrays.asList("create", "delete", "get", "list", "update"))));
 
     @GET
     @Path("user.enmasse.io/v1alpha1")

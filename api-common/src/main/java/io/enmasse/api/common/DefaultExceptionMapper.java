@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.address.model.UnresolvedAddressSpaceException;
 import io.enmasse.address.model.v1.DeserializeException;
@@ -25,6 +26,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         final int statusCode;
         if (exception instanceof WebApplicationException) {
             statusCode = ((WebApplicationException) exception).getResponse().getStatus();
+        } else if (exception instanceof JsonProcessingException) {
+            statusCode = Response.Status.BAD_REQUEST.getStatusCode();
         } else if (exception instanceof KubernetesClientException) {
             statusCode = ((KubernetesClientException) exception).getStatus().getCode();
         } else if (exception instanceof UnresolvedAddressException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException) {

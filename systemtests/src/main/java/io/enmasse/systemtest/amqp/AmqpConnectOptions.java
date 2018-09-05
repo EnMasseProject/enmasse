@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.UserCredentials;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
@@ -67,7 +67,7 @@ public class AmqpConnectOptions {
         return this;
     }
 
-    public AmqpConnectOptions setCredentials(KeycloakCredentials credentials) {
+    public AmqpConnectOptions setCredentials(UserCredentials credentials) {
         this.username = credentials.getUsername();
         this.password = credentials.getPassword();
         return this;

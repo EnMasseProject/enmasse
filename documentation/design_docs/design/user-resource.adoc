@@ -50,6 +50,7 @@ kind: MessagingUser
 metadata:
     name: myspace.user1
 spec:
+    username: user1
     authentication:
       type: password
       password: mypassword
@@ -68,6 +69,7 @@ kind: MessagingUser
 metadata:
     name: myspace.user2
 spec:
+    username: user2
     authentication:
       type: federated
       provider: openshift

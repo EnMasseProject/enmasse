@@ -32,6 +32,10 @@ local images = import "images.jsonnet";
               "name": "address-space-controller",
               "env": [
                 {
+                  "name": "JAVA_OPTS",
+                  "value": "-verbose:gc"
+                },
+                {
                   "name": "ENABLE_RBAC",
                   "valueFrom": {
                     "configMapKeyRef": {

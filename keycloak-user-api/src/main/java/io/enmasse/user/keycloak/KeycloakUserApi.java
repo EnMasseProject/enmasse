@@ -14,6 +14,9 @@ import org.keycloak.representations.idm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.time.Clock;
@@ -82,9 +85,7 @@ public class KeycloakUserApi implements UserApi  {
                 }));
     }
 
-    @Override
-    public void createUser(String realm, User user) {
-
+    private UserRepresentation createUserRepresentation(User user) {
         UserRepresentation userRep = new UserRepresentation();
         userRep.setUsername(user.getSpec().getUsername());
         userRep.setEnabled(true);
@@ -99,41 +100,136 @@ public class KeycloakUserApi implements UserApi  {
 
         userRep.setAttributes(attributes);
 
+        return userRep;
+    }
+
+    @Override
+    public void createUser(String realm, User user) {
+        user.validate();
+
+        UserRepresentation userRep = createUserRepresentation(user);
+
         withKeycloak(keycloak -> {
 
-            keycloak.realm(realm).users().create(userRep);
+            if (keycloak.realm(realm).users().search(user.getSpec().getUsername()).stream().findAny().isPresent()) {
+                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists", 409);
+            }
 
-            String userId = keycloak.realm(realm).users().search(userRep.getUsername()).stream()
+            Response response = keycloak.realm(realm).users().create(userRep);
+            if (response.getStatus() < 200 || response.getStatus() >= 300) {
+                log.warn("Error creating user ({}): {}", response.getStatus(), response.getStatusInfo().getReasonPhrase());
+                throw new WebApplicationException(response);
+            }
+
+            UserRepresentation createdUser = keycloak.realm(realm).users().search(userRep.getUsername()).stream()
                     .findFirst()
-                    .map(UserRepresentation::getId)
                     .orElse(null);
 
             switch (user.getSpec().getAuthentication().getType()) {
                 case password:
-                    setUserPassword(keycloak.realm(realm).users().get(userId), user.getSpec().getAuthentication());
+                    setUserPassword(keycloak.realm(realm).users().get(createdUser.getId()), user.getSpec().getAuthentication());
                     break;
                 case federated:
-                    setFederatedIdentity(keycloak.realm(realm).users().get(userId), user.getSpec().getAuthentication());
+                    setFederatedIdentity(keycloak.realm(realm).users().get(createdUser.getId()), user.getSpec().getAuthentication());
                     break;
             }
 
-            for (UserAuthorization userAuthorization : user.getSpec().getAuthorization()) {
-                for (Operation operation : userAuthorization.getOperations()) {
-                    if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
-                        String groupName = operation.name();
-                        String groupId = createGroupIfNotExists(keycloak, realm, groupName);
-                        keycloak.realm(realm).users().get(userId).joinGroup(groupId);
-                    } else {
-                        for (String address : userAuthorization.getAddresses()) {
-                            String groupName = operation.name() + "_" + address;
-                            String groupId = createGroupIfNotExists(keycloak, realm, groupName);
-                            keycloak.realm(realm).users().get(userId).joinGroup(groupId);
+            applyAuthorizationRules(keycloak, realm, user, keycloak.realm(realm).users().get(createdUser.getId()));
+
+            return user;
+        });
+    }
+
+    private void applyAuthorizationRules(Keycloak keycloak, String realm, User user, UserResource userResource) {
+
+        Set<String> desiredGroups = new HashSet<>();
+        for (UserAuthorization userAuthorization : user.getSpec().getAuthorization()) {
+            for (Operation operation : userAuthorization.getOperations()) {
+                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
+                    String groupName = operation.name();
+                    desiredGroups.add(groupName);
+                    if (groupName.equals("manage")) {
+                        desiredGroups.add("manage_#");
+                    }
+                } else {
+                    for (String address : userAuthorization.getAddresses()) {
+                        String groupName = operation.name() + "_" + address;
+                        desiredGroups.add(groupName);
+
+                        String brokeredGroupName = groupName.replace("*", "#");
+                        if (!groupName.equals(brokeredGroupName)) {
+                            desiredGroups.add(brokeredGroupName);
                         }
                     }
                 }
             }
-            return user;
+        }
+        log.debug("Setting desired groups {} for user {}", desiredGroups, user.getMetadata().getName());
+
+        List<GroupRepresentation> groups = keycloak.realm(realm).groups().groups();
+
+        Set<String> existingGroups = userResource.groups()
+                .stream()
+                .map(GroupRepresentation::getName)
+                .collect(Collectors.toSet());
+
+        // Remove membership of groups no longer specified
+        Set<String> membershipsToRemove = new HashSet<>(existingGroups);
+        membershipsToRemove.removeAll(desiredGroups);
+        log.debug("Removing groups {} from user {}", membershipsToRemove, user.getMetadata().getName());
+        for (String group : membershipsToRemove) {
+            getGroupId(groups, group).ifPresent(userResource::leaveGroup);
+        }
+
+        // Add membership of new groups
+        Set<String> membershipsToAdd = new HashSet<>(desiredGroups);
+        membershipsToAdd.removeAll(existingGroups);
+        log.debug("Adding groups {} to user {}", membershipsToRemove, user.getMetadata().getName());
+        for (String group : membershipsToAdd) {
+            String groupId = createGroupIfNotExists(keycloak, realm, group);
+            userResource.joinGroup(groupId);
+        }
+    }
+
+    @Override
+    public boolean replaceUser(String realm, User user) {
+        user.validate();
+        return withKeycloak(keycloak -> {
+
+            UserRepresentation userRep = keycloak.realm(realm).users().search(user.getSpec().getUsername()).stream()
+                    .findFirst()
+                    .orElse(null);
+
+            if (userRep == null) {
+                return false;
+            }
+
+            String existingAuthType = userRep.getAttributes().get("authenticationType").get(0);
+            if (!user.getSpec().getAuthentication().getType().name().equals(existingAuthType)) {
+                throw new IllegalArgumentException("Changing authentication type of a user is not allowed (existing is " + existingAuthType + ")");
+            }
+
+            switch (user.getSpec().getAuthentication().getType()) {
+                case password:
+                    setUserPassword(keycloak.realm(realm).users().get(userRep.getId()), user.getSpec().getAuthentication());
+                    break;
+                case federated:
+                    setFederatedIdentity(keycloak.realm(realm).users().get(userRep.getId()), user.getSpec().getAuthentication());
+                    break;
+            }
+
+            applyAuthorizationRules(keycloak, realm, user, keycloak.realm(realm).users().get(userRep.getId()));
+            return true;
         });
+    }
+
+    private Optional<String> getGroupId(List<GroupRepresentation> groupRepresentations, String groupName) {
+        for (GroupRepresentation groupRepresentation : groupRepresentations) {
+            if (groupName.equals(groupRepresentation.getName())) {
+                return Optional.of(groupRepresentation.getId());
+            }
+        }
+        return Optional.empty();
     }
 
     private String createGroupIfNotExists(Keycloak keycloak, String realm, String groupName) {
@@ -159,6 +255,15 @@ public class KeycloakUserApi implements UserApi  {
         if ("openshift".equals(provider)) {
             provider = "openshift-v3";
         }
+
+        // Remove existing instance of provider
+        for (FederatedIdentityRepresentation existing : userResource.getFederatedIdentity()) {
+            if (existing.getIdentityProvider().equals(provider)) {
+                userResource.removeFederatedIdentity(provider);
+                break;
+            }
+        }
+
         FederatedIdentityRepresentation federatedIdentity = new FederatedIdentityRepresentation();
 
         federatedIdentity.setUserName(authentication.getFederatedUsername());
@@ -168,12 +273,15 @@ public class KeycloakUserApi implements UserApi  {
     }
 
     private void setUserPassword(UserResource userResource, UserAuthentication authentication) {
-        byte[] decoded = java.util.Base64.getDecoder().decode(authentication.getPassword());
-        CredentialRepresentation creds = new CredentialRepresentation();
-        creds.setType("password");
-        creds.setValue(new String(decoded, Charset.forName("UTF-8")));
-        creds.setTemporary(false);
-        userResource.resetPassword(creds);
+        // Only set password if specified
+        if (authentication.getPassword() != null) {
+            byte[] decoded = java.util.Base64.getDecoder().decode(authentication.getPassword());
+            CredentialRepresentation creds = new CredentialRepresentation();
+            creds.setType("password");
+            creds.setValue(new String(decoded, Charset.forName("UTF-8")));
+            creds.setTemporary(false);
+            userResource.resetPassword(creds);
+        }
     }
 
     @Override

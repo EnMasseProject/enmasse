@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAuthorization {
@@ -28,6 +29,13 @@ public class UserAuthorization {
 
     public List<Operation> getOperations() {
         return operations;
+    }
+
+    public void validate() {
+        Objects.requireNonNull(operations, "'operations' field must be set");
+        if (operations.contains(Operation.send) || operations.contains(Operation.view) || operations.contains(Operation.recv)) {
+            Objects.requireNonNull(addresses, "'addresses' field must be set for operations '" + operations + "'");
+        }
     }
 
     public static class Builder {

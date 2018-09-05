@@ -54,18 +54,11 @@ public abstract class TestBaseWithShared extends TestBase {
                 super.setAddresses(sharedAddressSpace, dummyAddress);
             }
         }
-        defaultCredentials.setUsername("test");
-        defaultCredentials.setPassword("test");
+        defaultCredentials.setUsername("test").setPassword("test");
         createUser(sharedAddressSpace, defaultCredentials);
 
-        this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
-        createUser(sharedAddressSpace,
-                managementCredentials,
-                Group.ADMIN.toString(),
-                Group.SEND_ALL_BROKERED.toString(),
-                Group.RECV_ALL_BROKERED.toString(),
-                Group.VIEW_ALL_BROKERED.toString(),
-                Group.MANAGE_ALL_BROKERED.toString());
+        this.managementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
+        createUser(sharedAddressSpace, this.managementCredentials);
 
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials);
@@ -207,7 +200,7 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * attach N receivers into one address with own username/password
      */
-    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, KeycloakCredentials credentials) throws Exception {
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, UserCredentials credentials) throws Exception {
         return attachReceivers(sharedAddressSpace, destination, receiverCount, credentials);
     }
 
@@ -244,14 +237,18 @@ public abstract class TestBaseWithShared extends TestBase {
      * @param messageCount   count of messages that will be send into destinations
      * @throws Exception
      */
-    protected void doMessaging(List<Destination> dest, List<KeycloakCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
+    protected void doMessaging(List<Destination> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
         ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
         String sufix = isBrokered(sharedAddressSpace) ? "#" : "*";
         users.forEach((user) -> {
             try {
-                createUser(sharedAddressSpace, user,
-                        String.format("send_%s.%s.%s", destNamePrefix, customerIndex, sufix),
-                        String.format("recv_%s.%s.%s", destNamePrefix, customerIndex, sufix));
+                createUser(sharedAddressSpace,
+                        new User().setUserCredentials(user)
+                                .addAuthorization(
+                                        new User.AuthorizationRule()
+                                                .addAddress(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
+                                                .addOperation(User.Operation.SEND)
+                                                .addOperation(User.Operation.RECEIVE)));
                 AmqpClient queueClient = amqpClientFactory.createQueueClient();
                 queueClient.getConnectOptions().setCredentials(user);
                 clients.add(queueClient);

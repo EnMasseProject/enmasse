@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,83 +44,122 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     protected void doTestSendAuthz() throws Exception {
         initAddresses();
-        KeycloakCredentials allowedUser = new KeycloakCredentials("sender", "senderPa55");
-        KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedSender", "nobodyPa55");
+        UserCredentials allowedUser = new UserCredentials("sender", "senderPa55");
+        UserCredentials noAllowedUser = new UserCredentials("notAllowedSender", "nobodyPa55");
 
-        createUser(sharedAddressSpace, allowedUser, Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, new User()
+                .setUsername(allowedUser.getUsername())
+                .setPassword(allowedUser.getPassword())
+                .addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.SEND)));
         assertSend(allowedUser);
         removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        createUser(sharedAddressSpace, allowedUser,
-                addresses.stream().map(s -> "send_" + s.getAddress()).toArray(String[]::new));
+        createUser(sharedAddressSpace, new User()
+                .setUsername(allowedUser.getUsername())
+                .setPassword(allowedUser.getPassword())
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(User.Operation.SEND)
+                        .addAddresses(addresses.stream().map(Destination::getAddress).collect(Collectors.toList()))));
+
         assertSend(allowedUser);
         removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        createUser(sharedAddressSpace, noAllowedUser, "null");
+        createUser(sharedAddressSpace, new User()
+                .setUsername(noAllowedUser.getUsername())
+                .setPassword(noAllowedUser.getPassword()));
         assertCannotSend(noAllowedUser);
         removeUser(sharedAddressSpace, noAllowedUser.getUsername());
 
-        createUser(sharedAddressSpace, noAllowedUser, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, new User()
+                .setUsername(noAllowedUser.getUsername())
+                .setPassword(noAllowedUser.getPassword())
+                .addAuthorization(new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE)));
         assertCannotSend(noAllowedUser);
         removeUser(sharedAddressSpace, noAllowedUser.getUsername());
     }
 
     protected void doTestReceiveAuthz() throws Exception {
         initAddresses();
-        KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
-        KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedReceiver", "nobodyPa55");
+        UserCredentials allowedUser = new UserCredentials("receiver", "receiverPa55");
+        UserCredentials noAllowedUser = new UserCredentials("notAllowedReceiver", "nobodyPa55");
 
-        createUser(sharedAddressSpace, allowedUser, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, new User()
+                .setUsername(allowedUser.getUsername())
+                .setPassword(allowedUser.getPassword())
+                .addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.RECEIVE)));
         assertReceive(allowedUser);
         removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        createUser(sharedAddressSpace, allowedUser,
-                addresses.stream().map(s -> "recv_" + s.getAddress()).toArray(String[]::new));
+        createUser(sharedAddressSpace, new User()
+                .setUsername(allowedUser.getUsername())
+                .setPassword(allowedUser.getPassword())
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(User.Operation.RECEIVE)
+                        .addAddresses(addresses.stream().map(Destination::getAddress).collect(Collectors.toList()))));
         assertReceive(allowedUser);
         removeUser(sharedAddressSpace, allowedUser.getUsername());
 
-        createUser(sharedAddressSpace, noAllowedUser, Group.SEND_ALL_BROKERED.toString(), Group.SEND_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, new User()
+                .setUsername(noAllowedUser.getUsername())
+                .setPassword(noAllowedUser.getPassword())
+                .addAuthorization(new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.SEND)));
         assertCannotReceive(noAllowedUser);
         removeUser(sharedAddressSpace, noAllowedUser.getUsername());
     }
 
     protected void doTestUserPermissionAfterRemoveAuthz() throws Exception {
         initAddresses();
-        KeycloakCredentials user = new KeycloakCredentials("pepa", "pepaPa55");
+        UserCredentials user = new UserCredentials("pepa", "pepaPa55");
 
-        createUser(sharedAddressSpace, user, Group.RECV_ALL_BROKERED.toString(), Group.RECV_ALL_STANDARD.toString());
+        createUser(sharedAddressSpace, new User()
+                .setUsername(user.getUsername())
+                .setPassword(user.getPassword())
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(User.Operation.RECEIVE)
+                        .addAddress("*")));
         assertReceive(user);
         removeUser(sharedAddressSpace, user.getUsername());
         Thread.sleep(5000);
 
-        createUser(sharedAddressSpace, user, "pepa_group");
+        createUser(sharedAddressSpace, new User()
+                .setUsername(user.getUsername())
+                .setPassword(user.getPassword())
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(User.Operation.RECEIVE)
+                        .addAddress("pepa_address")));
         assertCannotReceive(user);
         removeUser(sharedAddressSpace, user.getUsername());
     }
 
     protected void doTestSendAuthzWithWIldcards() throws Exception {
         List<Destination> addresses = getAddressesWildcard();
-        List<KeycloakCredentials> users = createUsersWildcard(sharedAddressSpace, "send");
+        List<User> users = createUsersWildcard(sharedAddressSpace, User.Operation.SEND);
 
         setAddresses(addresses.toArray(new Destination[0]));
 
-        for (KeycloakCredentials user : users) {
+        for (User user : users) {
             for (Destination destination : addresses) {
                 assertSendWildcard(user, destination);
             }
+            removeUser(sharedAddressSpace, user.getUsername());
         }
     }
 
     protected void doTestReceiveAuthzWithWIldcards() throws Exception {
         List<Destination> addresses = getAddressesWildcard();
-        List<KeycloakCredentials> users = createUsersWildcard(sharedAddressSpace, "recv");
+        List<User> users = createUsersWildcard(sharedAddressSpace, User.Operation.RECEIVE);
 
         setAddresses(addresses.toArray(new Destination[0]));
 
-        for (KeycloakCredentials user : users) {
+        for (User user : users) {
             for (Destination destination : addresses) {
                 assertReceiveWildcard(user, destination);
             }
+            removeUser(sharedAddressSpace, user.getUsername());
         }
     }
 
@@ -126,11 +167,14 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     // Help methods
     //===========================================================================================================
 
-    private void assertSendWildcard(KeycloakCredentials credentials, Destination destination) throws Exception {
-        String rights = credentials.getUsername().replace("user_send_", "")
-                .replace("*", "")
-                .replace("#", "");
-        if (rights.equals("") || destination.getAddress().contains(rights)) {
+    private void assertSendWildcard(User user, Destination destination) throws Exception {
+        List<String> addresses = user.getAuthorization().stream()
+                .map(authz -> authz.getAddresses().stream())
+                .flatMap(Stream::distinct)
+                .collect(Collectors.toList());
+
+        UserCredentials credentials = new UserCredentials(user.getUsername(), user.getPassword());
+        if (addresses.stream().filter(address -> destination.getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
             assertTrue(canSend(destination, credentials),
                     String.format("Authz failed, user %s cannot send message to destination %s", credentials,
                             destination.getAddress()));
@@ -141,11 +185,14 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private void assertReceiveWildcard(KeycloakCredentials credentials, Destination destination) throws Exception {
-        String rights = credentials.getUsername().replace("user_recv_", "")
-                .replace("*", "")
-                .replace("#", "");
-        if (rights.equals("") || destination.getAddress().contains(rights)) {
+    private void assertReceiveWildcard(User user, Destination destination) throws Exception {
+        List<String> addresses = user.getAuthorization().stream()
+                .map(authz -> authz.getAddresses().stream())
+                .flatMap(Stream::distinct)
+                .collect(Collectors.toList());
+
+        UserCredentials credentials = new UserCredentials(user.getUsername(), user.getPassword());
+        if (addresses.stream().filter(address -> destination.getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
             assertTrue(canReceive(destination, credentials),
                     String.format("Authz failed, user %s cannot receive message from destination %s", credentials,
                             destination.getAddress()));
@@ -156,7 +203,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private void assertSend(KeycloakCredentials credentials) throws Exception {
+    private void assertSend(UserCredentials credentials) throws Exception {
         log.info("Testing if client is authorized to send messages");
         String message = String.format("Authz failed, user %s cannot send message", credentials);
         assertTrue(canSend(queue, credentials), message);
@@ -168,7 +215,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private void assertCannotSend(KeycloakCredentials credentials) throws Exception {
+    private void assertCannotSend(UserCredentials credentials) throws Exception {
         log.info("Testing if client is NOT authorized to send messages");
         String message = String.format("Authz failed, user %s can send message", credentials);
         assertFalse(canSend(queue, credentials), message);
@@ -180,7 +227,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private void assertReceive(KeycloakCredentials credentials) throws Exception {
+    private void assertReceive(UserCredentials credentials) throws Exception {
         log.info("Testing if client is authorized to receive messages");
         String message = String.format("Authz failed, user %s cannot receive message", credentials);
         assertTrue(canReceive(queue, credentials), message);
@@ -192,7 +239,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private void assertCannotReceive(KeycloakCredentials credentials) throws Exception {
+    private void assertCannotReceive(UserCredentials credentials) throws Exception {
         log.info("Testing if client is NOT authorized to receive messages");
         String message = String.format("Authz failed, user %s can receive message", credentials);
         assertFalse(canReceive(queue, credentials), message);
@@ -204,7 +251,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private boolean canSend(Destination destination, KeycloakCredentials credentials) throws Exception {
+    private boolean canSend(Destination destination, UserCredentials credentials) throws Exception {
         logWithSeparator(log,
                 String.format("Try send message under user %s from %s %s", credentials, destination.getType(), destination.getAddress()),
                 String.format("***** Try to open sender client under user %s", credentials),
@@ -215,7 +262,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         return canAuth(sender, receiver, destination);
     }
 
-    private boolean canReceive(Destination destination, KeycloakCredentials credentials) throws Exception {
+    private boolean canReceive(Destination destination, UserCredentials credentials) throws Exception {
         logWithSeparator(log,
                 String.format("Try receive message under user %s from %s %s", credentials, destination.getType(), destination.getAddress()),
                 String.format("***** Try to open sender client under user %s", defaultCredentials),
@@ -229,9 +276,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination) throws Exception {
         try {
-            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
-            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-            return received.get(10, TimeUnit.SECONDS).size() == sent.get(10, TimeUnit.SECONDS);
+            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 2, TimeUnit.SECONDS);
+            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 2, TimeUnit.SECONDS);
+            return received.get(3, TimeUnit.SECONDS).size() == sent.get(3, TimeUnit.SECONDS);
         } catch (Exception ex) {
             sender.close();
             receiver.close();
@@ -239,7 +286,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private AmqpClient createClient(Destination dest, KeycloakCredentials credentials) throws Exception {
+    private AmqpClient createClient(Destination dest, UserCredentials credentials) throws Exception {
         AmqpClient client = null;
 
         switch (dest.getType()) {

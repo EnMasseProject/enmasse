@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
-import io.enmasse.systemtest.KeycloakCredentials;
+import io.enmasse.systemtest.UserCredentials;
 import io.vertx.core.json.JsonObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -81,8 +81,8 @@ public class BindingSecretData {
         return password;
     }
 
-    public KeycloakCredentials getCredentials() {
-        return new KeycloakCredentials(username, password);
+    public UserCredentials getCredentials() {
+        return new UserCredentials(username, password);
     }
 
     public String getConsole() {

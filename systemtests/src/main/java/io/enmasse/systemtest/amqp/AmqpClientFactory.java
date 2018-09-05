@@ -24,7 +24,7 @@ public class AmqpClientFactory {
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, KeycloakCredentials credentials) {
+    public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this.kubernetes = kubernetes;
         this.environment = environment;
         this.defaultAddressSpace = defaultAddressSpace;

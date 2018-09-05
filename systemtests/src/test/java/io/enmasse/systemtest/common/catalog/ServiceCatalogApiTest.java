@@ -28,7 +28,7 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
     private OSBApiClient osbApiClient;
     private static Logger log = CustomLogger.getLogger();
     private HashMap<AddressSpace, String> instances = new HashMap<>();
-    private static KeycloakCredentials developer = new KeycloakCredentials("developer", "developer");
+    private static UserCredentials developer = new UserCredentials("developer", "developer");
 
     @BeforeAll
     void initializeTestBase() {
