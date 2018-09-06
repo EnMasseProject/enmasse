@@ -413,6 +413,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected boolean userExist(AddressSpace addressSpace, String username) throws Exception {
         String id = String.format("%s.%s", addressSpace.getName(), username);
         JsonObject response = getUserApiClient().getUserList(addressSpace.getName());
+        log.info("User list for {}: {}", addressSpace.getName(), response.toString());
         JsonArray users = response.getJsonArray("items");
         for (Object user : users) {
             if (((JsonObject) user).getJsonObject("metadata").getString("name").equals(id)) {
