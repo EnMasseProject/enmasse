@@ -4,8 +4,10 @@
  */
 package io.enmasse.systemtest.cmdclients;
 
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -22,6 +24,7 @@ import java.util.Optional;
 public class CRDCmdClient extends CmdClient {
     protected static int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static String CMD = setUpKubernetesCmd();
+    private static Logger log = CustomLogger.getLogger();
 
     private static String setUpKubernetesCmd() {
         String cmd = CMD;
@@ -48,13 +51,14 @@ public class CRDCmdClient extends CmdClient {
             FileWriter wr = new FileWriter(defInFile.getName());
             wr.write(definition);
             wr.flush();
+            log.info("User '{}' created", defInFile.getAbsolutePath());
             return execute(Arrays.asList(CMD, replace ? "replace" : "create", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         } finally {
             if (defInFile != null) {
-                Files.delete(Paths.get(defInFile.getPath()));
+                Files.delete(Paths.get(defInFile.getAbsolutePath()));
             }
         }
     }

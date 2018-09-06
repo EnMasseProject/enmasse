@@ -20,8 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -113,11 +112,8 @@ class UserApiTest extends TestBase {
                         .addOperation(User.Operation.RECEIVE)
                         .addOperation("posilani"));
 
-        try {
-            getUserApiClient().createUser(brokered.getName(), testUser, HTTP_INTERNAL_ERROR);
-        } catch (Exception ex) {
-            assertTrue(ex.getMessage().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
-        }
+        Throwable exception = assertThrows(ExecutionException.class, () -> getUserApiClient().createUser(brokered.getName(), testUser, HTTP_INTERNAL_ERROR));
+        assertTrue(exception.getMessage().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
 
         User testUser2 = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -125,11 +121,9 @@ class UserApiTest extends TestBase {
                         .addOperation(User.Operation.SEND)
                         .addOperation(User.Operation.RECEIVE));
 
-        try {
-            getUserApiClient().createUser("", testUser2, HTTP_INTERNAL_ERROR);
-        } catch (Exception ex) {
-            assertTrue(ex.getMessage().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
-        }
+
+        exception = assertThrows(ExecutionException.class, () -> getUserApiClient().createUser("", testUser2, HTTP_INTERNAL_ERROR));
+        assertTrue(exception.getMessage().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
     }
 
     @Test
@@ -218,15 +212,12 @@ class UserApiTest extends TestBase {
                         .addAddress("unknown")
                         .addOperation(User.Operation.RECEIVE));
 
-        try {
-            getUserApiClient().updateUser(brokered.getName(), testUser, HTTP_NOT_FOUND);
-        } catch (Exception ex) {
-            assertTrue(ex.getMessage().contains(String.format("User %s.%s not found", brokered.getName(), cred.getUsername())));
-        }
+        Throwable exception = assertThrows(ExecutionException.class, () -> getUserApiClient().updateUser(brokered.getName(), testUser, HTTP_NOT_FOUND));
+        assertTrue(exception.getMessage().contains(String.format("User %s.%s not found", brokered.getName(), cred.getUsername())));
     }
 
     @Test
-    void testUserWithSimilarNames() throws Exception {
+    void testUserWithSimilarNamesAndAlreadyExistingUser() throws Exception {
         AddressSpace brokered = new AddressSpace("user-api-space-similar-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
@@ -244,5 +235,8 @@ class UserApiTest extends TestBase {
 
         createUser(brokered, testUser);
         createUser(brokered, testUser2);
+
+        Throwable exception = assertThrows(ExecutionException.class, () -> getUserApiClient().createUser(brokered.getName(), testUser, HTTP_CONFLICT));
+        assertTrue(exception.getMessage().contains(String.format("User '%s' already exists", cred.getUsername())));
     }
 }
