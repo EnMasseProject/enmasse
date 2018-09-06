@@ -5,7 +5,7 @@
 To build EnMasse, you need
 
    * [JDK](http://openjdk.java.net/) >= 1.8
-   * [Apache Maven](https://maven.apache.org/) >= 3.0
+   * [Apache Maven](https://maven.apache.org/) >= 3.3.1
    * [Python](https://www.python.org/)
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
