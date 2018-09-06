@@ -202,6 +202,30 @@ class UserApiTest extends TestBase {
     }
 
     @Test
+    void testUpdateUserWrongPayload() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-update-user-wrong-payload", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("pepa", "pepapw");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.SEND));
+
+        createUser(brokered, testUser);
+
+        testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation("admin"));
+
+        User finalTestUser = testUser;
+        Throwable exception = assertThrows(ExecutionException.class,
+                () -> getUserApiClient().updateUser(brokered.getName(), finalTestUser, HTTP_BAD_REQUEST));
+        assertTrue(exception.getMessage().contains("Bad Request"));
+    }
+
+    @Test
     void testUpdateNoExistsUser() throws Exception {
         AddressSpace brokered = new AddressSpace("user-api-space-update-noexists-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
