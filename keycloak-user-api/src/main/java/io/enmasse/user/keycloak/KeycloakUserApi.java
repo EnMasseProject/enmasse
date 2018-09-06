@@ -112,8 +112,14 @@ public class KeycloakUserApi implements UserApi  {
 
         withKeycloak(keycloak -> {
 
-            if (keycloak.realm(realm).users().search(user.getSpec().getUsername(), null, null, null, null, null).stream().findAny().isPresent()) {
-                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists", 409);
+            UserRepresentation rep = keycloak.realm(realm).users().search(user.getSpec().getUsername(), null, null, null, null, null).stream().findAny().orElse(null);
+
+            if (rep != null) {
+                Map<String, List<String>> attributes = userRep.getAttributes();
+                String rName = attributes.get("resourceName").get(0);
+                String rNamespace= attributes.get("resourceNamespace").get(0);
+
+                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists: " + userRep.getId() + ", name: " + userRep.getUsername() + ", rname: " + rName + ", rns: " + rNamespace, 409);
             }
 
             Response response = keycloak.realm(realm).users().create(userRep);
