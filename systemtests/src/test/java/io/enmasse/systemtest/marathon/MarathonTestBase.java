@@ -292,8 +292,8 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         });
     }
 
-    void doTestCreateDeleteAddressesViaAgentLong(AddressSpace addressSpace) throws Exception {
-        log.info("testCreateDeleteUsersLong start");
+    void doTestCreateDeleteAddressesViaAgentLong(AddressSpace addressSpace, String className, String testName) throws Exception {
+        log.info("testCreateDeleteAddressesViaAgentLong start");
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
@@ -309,9 +309,18 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         runTestInLoop(30, () -> {
-            consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
-            consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
-            Thread.sleep(5000);
+            try {
+                consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+                consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
+                Thread.sleep(5000);
+                selenium.saveScreenShots(className, testName);
+                selenium.tearDownDrivers();
+            } catch (Exception ex) {
+                selenium.setupDriver(environment, kubernetes, buildDriver());
+                consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
+                consoleWebPage.openWebConsolePage(user);
+                throw new Exception(ex);
+            }
         });
         log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
