@@ -9,9 +9,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.enmasse</groupId>
   <artifactId>agent</artifactId>
-  <properties>
-    <application.display.name>EnMasse</application.display.name>
-  </properties>
   <build>
     <resources>
       <resource>
