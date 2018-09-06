@@ -1,0 +1,1 @@
+The .mvn directory allows Maven to find the root of a multi-module Maven project. Exposed to the POM as maven.multiModuleProjectDirectory.
