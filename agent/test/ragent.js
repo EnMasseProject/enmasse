@@ -1014,12 +1014,22 @@ describe('broker configuration', function() {
 
     afterEach(function(done) {
         watcher.close();
-        connections.forEach(function (c) { c.close(); });
-        routers.close().then(function () {
-            ragent.server.close();
-            address_source.close();
-            done();
+        connections.forEach(function (c) {
+            try {
+                c.close();
+            } catch (error) {
+                console.error(error);
+            }
         });
+        routers.close().then(function () {
+            try {
+                ragent.server.close();
+                address_source.close();
+            } catch (error) {
+                console.error(error);
+            }
+            done();
+        }).catch(done);
     });
 
     function connect_broker(broker) {
