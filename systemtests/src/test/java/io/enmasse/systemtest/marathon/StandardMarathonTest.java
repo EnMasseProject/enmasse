@@ -9,6 +9,7 @@ import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AuthService;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard {
 
@@ -65,9 +66,9 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
     }
 
     @Test
-    void testCreateDeleteAddressesViaAgentLong() throws Exception {
+    void testCreateDeleteAddressesViaAgentLong(TestInfo info) throws Exception {
         doTestCreateDeleteAddressesViaAgentLong(
                 new AddressSpace("standard-marathon-web-console",
-                        AddressSpaceType.STANDARD, AuthService.STANDARD));
+                        AddressSpaceType.STANDARD, AuthService.STANDARD), info.getTestClass().get().getName(), info.getTestMethod().get().getName());
     }
 }

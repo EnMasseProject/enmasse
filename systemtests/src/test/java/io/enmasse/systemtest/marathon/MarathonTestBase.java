@@ -293,7 +293,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         });
     }
 
-    void doTestCreateDeleteAddressesViaAgentLong(AddressSpace addressSpace) throws Exception {
+    void doTestCreateDeleteAddressesViaAgentLong(AddressSpace addressSpace, String className, String testName) throws Exception {
         log.info("testCreateDeleteAddressesViaAgentLong start");
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
@@ -314,7 +314,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
                 consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
                 consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
                 Thread.sleep(5000);
-                selenium.saveScreenShots("MarathonTestBase", "testCreateDeleteAddressesViaAgentLong");
+                selenium.saveScreenShots(className, testName);
                 selenium.tearDownDrivers();
             } catch (Exception ex) {
                 selenium.setupDriver(environment, kubernetes, buildDriver());
