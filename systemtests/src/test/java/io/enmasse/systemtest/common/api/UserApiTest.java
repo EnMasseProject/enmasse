@@ -224,4 +224,25 @@ class UserApiTest extends TestBase {
             assertTrue(ex.getMessage().contains(String.format("User %s.%s not found", brokered.getName(), cred.getUsername())));
         }
     }
+
+    @Test
+    void testUserWithSimilarNames() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-similar-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("user2", "user2");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        UserCredentials cred2 = new UserCredentials("user23", "test_user23");
+        User testUser2 = new User().setUserCredentials(cred2).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        createUser(brokered, testUser);
+        createUser(brokered, testUser2);
+    }
 }

@@ -112,7 +112,7 @@ public class KeycloakUserApi implements UserApi  {
 
         withKeycloak(keycloak -> {
 
-            if (keycloak.realm(realm).users().search(user.getSpec().getUsername()).stream().findAny().isPresent()) {
+            if (keycloak.realm(realm).users().search(user.getSpec().getUsername(), null, null, null, null, null).stream().findAny().isPresent()) {
                 throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists", 409);
             }
 
