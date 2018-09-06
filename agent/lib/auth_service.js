@@ -64,7 +64,12 @@ function default_options(env) {
     };
     var ca_path = env.AUTH_SERVICE_CA || path.resolve('/opt/agent/authservice-ca', 'tls.crt');
     try {
-        options.ca = [fs.readFileSync(ca_path)];
+        var ca = fs.readFileSync(ca_path);
+        if (ca.length > 0) {
+            options.ca = [fs.readFileSync(ca_path)];
+        } else {
+            log.warn("skipping loading empty CA");
+        }
         options.transport = 'tls';
         options.rejectUnauthorized = false;
     } catch (error) {
