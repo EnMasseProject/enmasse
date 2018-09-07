@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,8 +44,8 @@ public class UserAuthorization {
         private List<String> addresses;
         private List<Operation> operations;
 
-        public Builder setAddresses(List<String> addresses) {
-            this.addresses = addresses;
+        public Builder setAddresses(Collection<String> addresses) {
+            this.addresses = new ArrayList<>(addresses);
             return this;
         }
 

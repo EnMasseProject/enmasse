@@ -12,15 +12,13 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
-import io.enmasse.osb.keycloak.KeycloakApi;
-import io.enmasse.osb.keycloak.KeycloakInstance;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +32,11 @@ import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
@@ -56,9 +56,9 @@ public class ServiceBroker extends AbstractVerticle {
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         AuthApi authApi = new KubeAuthApi(controllerClient, controllerClient.getConfiguration().getOauthToken());
-        KeycloakApi keycloakApi = createKeycloakApi(options);
+        UserApi userApi = createUserApi(options);
 
-        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), keycloakApi, options.getListenPort(), options.getConsolePrefix()),
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), options.getConsolePrefix()),
                 result -> {
                     if (result.succeeded()) {
                         log.info("EnMasse Service Broker started");
@@ -69,21 +69,10 @@ public class ServiceBroker extends AbstractVerticle {
                 });
     }
 
-    private KeycloakApi createKeycloakApi(ServiceBrokerOptions options) throws IOException, GeneralSecurityException {
+    private UserApi createUserApi(ServiceBrokerOptions options) throws IOException, GeneralSecurityException {
         KeyStore keyStore = convertCertToKeyStore(options.getKeycloakCa());
-        return () -> new KeycloakInstance(KeycloakBuilder.builder()
-                .serverUrl(options.getKeycloakUrl())
-                .realm("master")
-                .username(options.getKeycloakAdminUser())
-                .password(options.getKeycloakAdminPassword())
-                .clientId("admin-cli")
-                .resteasyClient(new ResteasyClientBuilder()
-                        .establishConnectionTimeout(30, TimeUnit.SECONDS)
-                        .trustStore(keyStore)
-                        .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
-                        .build())
-                .build());
-
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        return new KeycloakUserApi(options.getKeycloakUrl(), options.getKeycloakAdminUser(), options.getKeycloakAdminPassword(), keyStore, Clock.systemUTC(), executorService);
     }
 
     private static KeyStore convertCertToKeyStore(String cert) throws IOException, GeneralSecurityException {
