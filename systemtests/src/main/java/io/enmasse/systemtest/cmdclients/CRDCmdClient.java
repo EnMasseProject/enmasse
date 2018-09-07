@@ -4,7 +4,10 @@
  */
 package io.enmasse.systemtest.cmdclients;
 
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,6 +24,7 @@ import java.util.Optional;
 public class CRDCmdClient extends CmdClient {
     protected static int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static String CMD = setUpKubernetesCmd();
+    private static Logger log = CustomLogger.getLogger();
 
     private static String setUpKubernetesCmd() {
         String cmd = CMD;
@@ -40,26 +44,39 @@ public class CRDCmdClient extends CmdClient {
      * @param definition in yaml or json format
      * @return result of execution
      */
-    public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
+    public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
         File defInFile = null;
         try {
             defInFile = new File("crdefinition.file");
             FileWriter wr = new FileWriter(defInFile.getName());
             wr.write(definition);
             wr.flush();
-            return execute(Arrays.asList(CMD, "create", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+            log.info("User '{}' created", defInFile.getAbsolutePath());
+            return execute(Arrays.asList(CMD, replace ? "replace" : "create", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         } finally {
             if (defInFile != null) {
-                Files.delete(Paths.get(defInFile.getPath()));
+                Files.delete(Paths.get(defInFile.getAbsolutePath()));
             }
         }
     }
 
     public static ExecutionResultData createCR(String definition) throws IOException {
-        return createCR(env.namespace(), definition);
+        return createOrUpdateCR(env.namespace(), definition, false);
+    }
+
+    public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
+        return createOrUpdateCR(namespace, definition, false);
+    }
+
+    public static ExecutionResultData updateCR(String definition) throws IOException {
+        return createOrUpdateCR(env.namespace(), definition, true);
+    }
+
+    public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
+        return createOrUpdateCR(namespace, definition, true);
     }
 
     /**
@@ -147,5 +164,15 @@ public class CRDCmdClient extends CmdClient {
     public static void switchProject(String namespace) {
         List<String> cmd = Arrays.asList(CMD, "project", namespace);
         execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData getUser(String namespace, String addressSpace, String username) {
+        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
+        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData deleteUser(String namespace, String addressSpace, String username) {
+        List<String> deleteCmd = getRessourcesCmd("delete", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
+        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 }

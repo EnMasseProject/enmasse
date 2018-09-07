@@ -146,8 +146,8 @@ public class HttpUserService {
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{userName}")
     public Response replaceUser(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("userName") String userNameWithAddressSpace, @NotNull User input) throws Exception {
-        return doRequest("Error creating user " + input.getMetadata().getName(), () -> {
-            verifyAuthorized(securityContext, namespace, ResourceVerb.create);
+        return doRequest("Error replacing user " + input.getMetadata().getName(), () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.update);
             User user = setUserDefaults(input, namespace);
 
             String addressSpaceName = parseAddressSpace(user.getMetadata().getName());

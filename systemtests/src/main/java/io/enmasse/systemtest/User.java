@@ -86,6 +86,13 @@ public class User {
         return config;
     }
 
+    public JsonObject toCRDJson(String addressSpace) throws UnsupportedEncodingException {
+        JsonObject config = this.toJson(addressSpace);
+        config.put("apiVersion", "user.enmasse.io/v1alpha1");
+        config.put("kind", "MessagingUser");
+        return config;
+    }
+
     public UserCredentials getUserCredentials() {
         return new UserCredentials(this.username, this.password);
     }

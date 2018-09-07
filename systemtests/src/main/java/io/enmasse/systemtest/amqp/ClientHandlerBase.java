@@ -9,6 +9,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.slf4j.Logger;
 
@@ -20,6 +21,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
     protected final CompletableFuture<T> promise;
+    private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
 
     public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise) {
         this.clientOptions = clientOptions;
@@ -72,7 +74,11 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
         } else {
             log.info("Link closed with " + error);
             connection.close();
-            promise.completeExceptionally(new RuntimeException(error.getDescription()));
+            if (unauthorizedAccess.equals(error.getCondition())) {
+                promise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
+            } else {
+                promise.completeExceptionally(new RuntimeException(error.getDescription()));
+            }
         }
     }
 }

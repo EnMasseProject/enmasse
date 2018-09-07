@@ -71,6 +71,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private UserApiClient userApiClient;
 
+    protected void addToAddressSpacess(AddressSpace addressSpace) {
+        this.addressSpaceList.add(addressSpace);
+    }
+
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         deleteAddressSpace(addressSpace, addressApiClient);
     }
@@ -135,9 +139,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        createAddressSpace(addressSpace, !isBrokered(addressSpace));
+        createAddressSpace(addressSpace, addressApiClient);
     }
-
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
@@ -153,18 +156,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         }
         addressApiClient.createAddressSpaceList(spaces.toArray(new AddressSpace[0]));
-        boolean extraWait = false;
         for (AddressSpace addressSpace : spaces) {
             logCollector.startCollecting(addressSpace.getNamespace());
             addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName()));
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
-            extraWait = extraWait || !isBrokered(addressSpace);
-        }
-        if (extraWait) {
-            log.info("One of requested address-spaces is 'standard' type - Waiting for 2 minutes before starting tests");
-            Thread.sleep(120_000);
         }
         Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
             if (originalAddrSpace.getEndpoints().isEmpty()) {
@@ -177,7 +174,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient, boolean extraWait) throws Exception {
+    protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
         AddressSpace addrSpaceResponse;
         if (!TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
@@ -187,11 +184,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
-            }
-
-            if (extraWait) {
-                log.info("Waiting for 2 minutes before starting tests");
-                Thread.sleep(120_000);
             }
         } else {
             addrSpaceResponse = TestUtils.getAddressSpaceObject(apiClient, addressSpace.getName());
@@ -203,10 +195,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
         log.info("Address-space successfully created: '{}'", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    protected void createAddressSpace(AddressSpace addressSpace, boolean extraWait) throws Exception {
-        createAddressSpace(addressSpace, addressApiClient, extraWait);
     }
 
     //!TODO: protected void appendAddressSpace(...)
@@ -234,7 +222,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
 
-    private UserApiClient getUserApiClient() throws Exception {
+    protected UserApiClient getUserApiClient() throws Exception {
         if (userApiClient == null) {
             userApiClient = new UserApiClient(kubernetes);
         }
@@ -378,18 +366,25 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     }
 
-    protected void createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+    protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
         log.info("User {} will be created", credentials);
         if (!userExist(addressSpace, credentials.getUsername())) {
-            getUserApiClient().createUser(addressSpace.getName(), credentials);
+            return getUserApiClient().createUser(addressSpace.getName(), credentials);
         }
+        return new JsonObject();
     }
 
-    protected void createUser(AddressSpace addressSpace, User user) throws Exception {
+    protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
         log.info("User {} will be created", user);
         if (!userExist(addressSpace, user.getUsername())) {
-            getUserApiClient().createUser(addressSpace.getName(), user);
+            return getUserApiClient().createUser(addressSpace.getName(), user);
         }
+        return new JsonObject();
+    }
+
+    protected JsonObject updateUser(AddressSpace addressSpace, User user) throws Exception {
+        log.info("User {} will be updated", user);
+        return getUserApiClient().updateUser(addressSpace.getName(), user);
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
@@ -418,6 +413,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected boolean userExist(AddressSpace addressSpace, String username) throws Exception {
         String id = String.format("%s.%s", addressSpace.getName(), username);
         JsonObject response = getUserApiClient().getUserList(addressSpace.getName());
+        log.info("User list for {}: {}", addressSpace.getName(), response.toString());
         JsonArray users = response.getJsonArray("items");
         for (Object user : users) {
             if (((JsonObject) user).getJsonObject("metadata").getString("name").equals(id)) {
@@ -426,6 +422,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         }
         return false;
+    }
+
+    protected boolean requiresWait(AddressSpace addressSpace) {
+        return addressSpace.getType().equals(AddressSpaceType.STANDARD) && addressSpace.getPlan().equals("unlimited-standard-without-mqtt");
     }
 
     protected boolean isBrokered(AddressSpace addressSpace) {

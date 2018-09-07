@@ -16,16 +16,19 @@ public class UserMetadata {
     private final String namespace;
     private final String creationTimestamp;
     private final String selfLink;
+    private final String resourceVersion;
 
     @JsonCreator
     public UserMetadata(@JsonProperty("name") String name,
                         @JsonProperty("namespace") String namespace,
                         @JsonProperty("creationTimestamp") String creationTimestamp,
-                        @JsonProperty("selfLink") String selfLink) {
+                        @JsonProperty("selfLink") String selfLink,
+                        @JsonProperty("resourceVersion") String resourceVersion) {
         this.name = name;
         this.namespace = namespace;
         this.creationTimestamp = creationTimestamp;
         this.selfLink = selfLink;
+        this.resourceVersion = resourceVersion;
     }
 
     public String getName() {
@@ -63,11 +66,16 @@ public class UserMetadata {
         Objects.requireNonNull(namespace, "'namespace' must be set");
     }
 
+    public String getResourceVersion() {
+        return resourceVersion;
+    }
+
     public static class Builder {
         private String name;
         private String namespace;
         private String creationTimestamp;
         private String selfLink;
+        private String resourceVersion;
 
         public Builder() { }
 
@@ -76,6 +84,7 @@ public class UserMetadata {
             this.namespace = userMetadata.getNamespace();
             this.creationTimestamp = userMetadata.getCreationTimestamp();
             this.selfLink = userMetadata.getSelfLink();
+            this.resourceVersion = userMetadata.getResourceVersion();
         }
 
         public Builder setName(String name) {
@@ -98,10 +107,15 @@ public class UserMetadata {
             return this;
         }
 
+        public Builder setResourceVersion(String resourceVersion) {
+            this.resourceVersion = resourceVersion;
+            return this;
+        }
+
         public UserMetadata build() {
             Objects.requireNonNull(name);
             Objects.requireNonNull(namespace);
-            return new UserMetadata(name, namespace, creationTimestamp, selfLink);
+            return new UserMetadata(name, namespace, creationTimestamp, selfLink, resourceVersion);
         }
     }
 }

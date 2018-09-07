@@ -85,7 +85,7 @@ public class UserApiClient extends ApiClient {
                 Optional.empty());
     }
 
-    public void createUser(String addressSpace, UserCredentials credentials) throws Exception {
+    public JsonObject createUser(String addressSpace, UserCredentials credentials) throws Exception {
         User user = new User()
                 .setUserCredentials(credentials)
                 .addAuthorization(new User.AuthorizationRule()
@@ -95,14 +95,14 @@ public class UserApiClient extends ApiClient {
                         .addOperation(User.Operation.VIEW))
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(User.Operation.MANAGE));
-        createUser(addressSpace, user, HTTP_CREATED);
+        return createUser(addressSpace, user, HTTP_CREATED);
     }
 
-    public void createUser(String addressSpace, User user) throws Exception {
-        createUser(addressSpace, user, HTTP_CREATED);
+    public JsonObject createUser(String addressSpace, User user) throws Exception {
+        return createUser(addressSpace, user, HTTP_CREATED);
     }
 
-    public void createUser(String addressSpace, User user, int expectedCode) throws Exception {
+    public JsonObject createUser(String addressSpace, User user, int expectedCode) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_USER);
         try {
             JsonObject config = user.toJson(addressSpace);
@@ -110,7 +110,7 @@ public class UserApiClient extends ApiClient {
             log.info("POST-user: path {}; body {}", userPath, config.toString());
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
-            doRequestNTimes(initRetry, () -> {
+            return doRequestNTimes(initRetry, () -> {
                         client.post(endpoint.getPort(), endpoint.getHost(), userPath)
                                 .timeout(20_000)
                                 .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
@@ -147,6 +147,36 @@ public class UserApiClient extends ApiClient {
                                         responsePromise,
                                         expectedCode,
                                         String.format("Error: delete user '%s'", userName)));
+                        return responsePromise.get(2, TimeUnit.MINUTES);
+                    },
+                    Optional.of(() -> kubernetes.getRestEndpoint()),
+                    Optional.empty());
+        } finally {
+            TimeMeasuringSystem.stopOperation(operationID);
+        }
+    }
+
+    public JsonObject updateUser(String addressSpace, User user) throws Exception {
+        return updateUser(addressSpace, user, HTTP_OK);
+    }
+
+    public JsonObject updateUser(String addressSpace, User user, int expectedCode) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_USER);
+        try {
+            String path = userPath + "/" + String.format("%s.%s", addressSpace, user.getUsername());
+            JsonObject payload = user.toJson(addressSpace);
+            log.info("PUT-user: path '{}', data: {}", path, payload.toString());
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            return doRequestNTimes(initRetry, () -> {
+                        client.put(endpoint.getPort(), endpoint.getHost(), path)
+                                .as(BodyCodec.jsonObject())
+                                .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                                .timeout(20_000)
+                                .as(BodyCodec.jsonObject())
+                                .sendJsonObject(payload, ar -> responseHandler(ar,
+                                        responsePromise,
+                                        expectedCode,
+                                        String.format("Error: update user '%s'", user.getUsername())));
                         return responsePromise.get(2, TimeUnit.MINUTES);
                     },
                     Optional.of(() -> kubernetes.getRestEndpoint()),
