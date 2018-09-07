@@ -18,7 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.time.Clock;
 import java.time.Instant;
@@ -164,12 +167,16 @@ public class KeycloakUserApi implements UserApi  {
                     }
                 } else {
                     for (String address : userAuthorization.getAddresses()) {
-                        String groupName = operation.name() + "_" + address;
-                        desiredGroups.add(groupName);
+                        try {
+                            String groupName = operation.name() + "_" + URLEncoder.encode(address, StandardCharsets.UTF_8.name());
+                            desiredGroups.add(groupName);
 
-                        String brokeredGroupName = groupName.replace("*", "#");
-                        if (!groupName.equals(brokeredGroupName)) {
-                            desiredGroups.add(brokeredGroupName);
+                            String brokeredGroupName = groupName.replace("*", "#");
+                            if (!groupName.equals(brokeredGroupName)) {
+                                desiredGroups.add(brokeredGroupName);
+                            }
+                        } catch (UnsupportedEncodingException e) {
+                            // UTF-8 must always be supported
                         }
                     }
                 }

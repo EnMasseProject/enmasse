@@ -16,12 +16,17 @@
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>api-common</artifactId>
+      <artifactId>user-api</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-admin-client</artifactId>
+      <groupId>io.enmasse</groupId>
+      <artifactId>keycloak-user-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>api-common</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
