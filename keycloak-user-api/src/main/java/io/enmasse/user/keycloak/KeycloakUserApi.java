@@ -108,19 +108,28 @@ public class KeycloakUserApi implements UserApi  {
         log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realm);
         user.validate();
 
-        UserRepresentation userRep = createUserRepresentation(user);
-
         withKeycloak(keycloak -> {
 
             UserRepresentation rep = keycloak.realm(realm).users().search(user.getSpec().getUsername(), null, null, null, null, null).stream().findAny().orElse(null);
 
             if (rep != null) {
-                Map<String, List<String>> attributes = userRep.getAttributes();
-                String rName = attributes.get("resourceName").get(0);
-                String rNamespace= attributes.get("resourceNamespace").get(0);
+                Map<String, List<String>> attributes = rep.getAttributes();
+                String rName = null;attributes.get("resourceName").get(0);
+                List<String> rNameAttrs = attributes.get("resourceName");
+                if (rNameAttrs.size() > 0) {
+                    rName = rNameAttrs.get(0);
+                }
 
-                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists: " + userRep.getId() + ", name: " + userRep.getUsername() + ", rname: " + rName + ", rns: " + rNamespace, 409);
+                String rNamespace = null;
+                List<String> rNamespaceAttrs = attributes.get("resourceNamespace");
+                if (rNamespaceAttrs.size() > 0) {
+                    rNamespace = rNamespaceAttrs.get(0);
+                }
+
+                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists: " + rep.getId() + ", name: " + rep.getUsername() + ", rname: " + rName + ", rns: " + rNamespace, 409);
             }
+
+            UserRepresentation userRep = createUserRepresentation(user);
 
             Response response = keycloak.realm(realm).users().create(userRep);
             if (response.getStatus() < 200 || response.getStatus() >= 300) {
