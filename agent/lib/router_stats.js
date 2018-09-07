@@ -261,6 +261,8 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
                 addresses.update_stats(a, results.addresses[a]);
             }
         }
+    }).catch(function (error) {
+        console.error('Failed to retrieve router stats: %s', error);
     });
 };
 

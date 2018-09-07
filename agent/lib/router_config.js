@@ -246,7 +246,11 @@ function ensure_elements(entity, desired, router, collected) {
                                 report(entity, missing, creations, actual, 'created')
                                 return false;//recheck when changed
                             }
-                        );
+                        ).catch(function (error) {
+                            log.error('Failed to create required %s: %s', entity.name, error);
+                        });
+                    }).catch(function (error) {
+                        log.error('Failed to delete stale %s: %s', entity.name, error);
                     });
             } else {
                 log.info('%s up to date on %s (ignoring %d elements)', entity.name, router_id, delta.removed.length);
@@ -284,9 +288,11 @@ function apply_config(desired, router, count) {
             log.info('configuration of %s is up to date', router_id);
             return actual;
         } else {
+            log.error('configuration update for %s not up to date (attempt %d of %d)', router_id, iteration, MAX_RETRIES);
             if (iteration < MAX_RETRIES) {
                 return apply_config(desired, router, iteration + 1);
             } else {
+                log.error('Unable to apply desired configuration; gave up after %d attempts', iteration);
                 throw new Error(util.format('Unable to apply desired configuration; gave up after %d attempts', iteration));
             }
         }
@@ -295,6 +301,7 @@ function apply_config(desired, router, count) {
         if (iteration < MAX_RETRIES) {
             return apply_config(desired, router, iteration + 1);
         } else {
+            log.error('Unable to apply desired configuration; gave up after %d attempts (%s)', iteration, error);
             throw new Error(util.format('Unable to apply desired configuration; gave up after %d attempts (%s)', iteration, error));
         }
     });
