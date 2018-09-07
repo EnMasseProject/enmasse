@@ -21,7 +21,6 @@ EnMasse is made of different components needed for the deployment and for handli
 * [agent](https://github.com/EnMasseProject/enmasse/tree/master/agent): Messaging-centric console, managing and monitoring addresses on routers and brokers
 * [mqtt-gateway](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
 * [mqtt-lwt](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
-* [amqp-kafa-bridge](https://github.com/EnMasseProject/amqp-kafka-bridge): A bridge between AMQP and Apache Kafka
 
 # Documentation
 
@@ -29,14 +28,14 @@ See the our [documentation](http://enmasse.io/documentation) for up to date docu
 
 # Getting help
 
-See [contributing](http://enmasse.io/contributing) for more info on how to get help from the community.
+See [contributing](http://enmasse.io#contributing) for more info on how to get help from the community.
 
 If you encounter some issues during deployment, please check the following [page](documentation/design_docs/issues/issues.adoc) with
 well known issues and related fixes/workaround.
 
 # Developing
 
-See [HACKING](HACKING.md) for details on how to build EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See [contributing](http://enmasse.io/contributing) for more info.
+See [HACKING](HACKING.md) for details on how to build EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See [contributing](http://enmasse.io#contributing) for more info.
 
 # License
 
