@@ -618,6 +618,106 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
+    protected void doTestWithStrangeAddressNames(boolean hyphen, boolean longName, AddressType... types) throws Exception {
+        int assert_value = 1;
+        String testString = null;
+        Destination dest;
+        Destination dest_topic = null;
+        if (hyphen) {
+            testString = String.join("-", Collections.nCopies(9, "10charHere"));
+        }
+        if (longName) {
+            testString = String.join("", Collections.nCopies(24, "10charHere"));
+        }
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        for (AddressType type : types) {
+            switch (type) {
+                case SUBSCRIPTION:
+                    dest_topic = Destination.topic("topic" + testString, getDefaultPlan(AddressType.TOPIC));
+                    log.info("Creating topic for subscription");
+                    consoleWebPage.createAddressWebConsole(dest_topic);
+                    dest = Destination.subscription(testString, dest_topic.getAddress(), "standard-subscription");
+                    assert_value = 2;
+                    break;
+                default:
+                    dest = Destination.destination(type, testString, getDefaultPlan(type), Optional.empty());
+            }
+
+            consoleWebPage.createAddressWebConsole(dest);
+            assertWaitForValue(assert_value, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(120, TimeUnit.SECONDS));
+
+            if (type.equals(AddressType.SUBSCRIPTION)) {
+                consoleWebPage.deleteAddressWebConsole(dest_topic);
+            }
+            consoleWebPage.deleteAddressWebConsole(dest);
+            assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
+        }
+    }
+
+    protected void doTestCreateAddressWithSpecialChars(AddressType... types) throws Exception {
+        int assert_value = 3;
+        Destination destStart = null;
+        Destination destMiddle = null;
+        Destination destEnd = null;
+        Destination dest_topic = null;
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+        for (AddressType type : types) {
+            String testString = "address" + type.toString();
+            if (type.equals(AddressType.SUBSCRIPTION)) {
+                dest_topic = Destination.topic(type + "-topic", getDefaultPlan(AddressType.TOPIC));
+                log.info("Creating topic for subscription");
+                consoleWebPage.createAddressWebConsole(dest_topic);
+            }
+            for (char special_char : "$#*".toCharArray()) { //   <!@>&% not needed to be tested   . waiting for #1588
+                switch (type) {
+                    case SUBSCRIPTION:
+                        destStart = Destination.subscription(
+                                special_char + testString,
+                                dest_topic.getAddress(),
+                                "standard-subscription");
+
+                        destMiddle = Destination.subscription(
+                                testString + special_char + testString,
+                                dest_topic.getAddress(),
+                                "standard-subscription");
+
+                        destEnd = Destination.subscription(
+                                testString + special_char,
+                                dest_topic.getAddress(),
+                                "standard-subscription");
+                        assert_value = 4;
+                        break;
+                    default:
+                        destStart = Destination.destination(type, special_char + testString, getDefaultPlan(type), Optional.empty());
+                        destMiddle = Destination.destination(type, testString + special_char + testString, getDefaultPlan(type), Optional.empty());
+                        destEnd = Destination.destination(type, testString + special_char, getDefaultPlan(type), Optional.empty());
+
+                }
+                consoleWebPage.createAddressWebConsole(destStart);
+                consoleWebPage.createAddressWebConsole(destMiddle);
+                consoleWebPage.createAddressWebConsole(destEnd);
+                assertWaitForValue(assert_value, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(200, TimeUnit.SECONDS));
+
+                consoleWebPage.deleteAddressWebConsole(destStart);
+                consoleWebPage.deleteAddressWebConsole(destMiddle);
+                consoleWebPage.deleteAddressWebConsole(destEnd);
+            }
+            if (type.equals(AddressType.SUBSCRIPTION)) {
+                consoleWebPage.deleteAddressWebConsole(dest_topic);
+                assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
+            }
+        }
+    }
+
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================
