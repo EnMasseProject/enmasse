@@ -1,3 +1,9 @@
+## 0.22.0 (September 10, 2018)
+* New address type ‘subscription’ available in standard address space. This can be used to create durable subscription queues.
+* New API for managing users in standard authentication service using custom resources (kubectl/oc).
+* Routers static config from configmap
+* Several bugfixes to mqtt components
+
 ## 0.21.1 (August 15, 2018)
 * Upgrade to Apache Qpid Dispatch Router 1.3.0
 * Upgrade to Apache ActiveMQ Artemis 2.6.2
