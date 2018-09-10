@@ -164,8 +164,9 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public void deleteAddress(Address address) {
-        client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getName())).delete();
+    public boolean deleteAddress(Address address) {
+        Boolean deleted = client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getName())).delete();
+        return deleted != null && deleted.booleanValue();
     }
 
     @Override

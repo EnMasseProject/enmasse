@@ -38,11 +38,11 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
-    public void deleteAddress(Address destination) {
+    public boolean deleteAddress(Address destination) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        addresses.remove(destination);
+        return addresses.remove(destination);
     }
 
     @Override

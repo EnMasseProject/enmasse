@@ -19,7 +19,7 @@ public interface AddressSpaceApi {
     void createAddressSpace(AddressSpace addressSpace) throws Exception;
 
     boolean replaceAddressSpace(AddressSpace addressSpace) throws Exception;
-    void deleteAddressSpace(AddressSpace addressSpace);
+    boolean deleteAddressSpace(AddressSpace addressSpace);
     Set<AddressSpace> listAddressSpaces(String namespace);
     Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels);
     void deleteAddressSpaces(String namespace);

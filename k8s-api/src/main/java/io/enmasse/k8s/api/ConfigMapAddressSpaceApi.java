@@ -93,9 +93,10 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public void deleteAddressSpace(AddressSpace addressSpace) {
+    public boolean deleteAddressSpace(AddressSpace addressSpace) {
         String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
-        client.configMaps().withName(name).delete();
+        Boolean deleted = client.configMaps().withName(name).delete();
+        return deleted != null && deleted.booleanValue();
     }
 
     @Override

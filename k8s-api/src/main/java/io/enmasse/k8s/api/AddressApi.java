@@ -22,7 +22,7 @@ public interface AddressApi {
 
     void createAddress(Address address);
     boolean replaceAddress(Address address);
-    void deleteAddress(Address address);
+    boolean deleteAddress(Address address);
 
     Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) throws Exception;
 }
