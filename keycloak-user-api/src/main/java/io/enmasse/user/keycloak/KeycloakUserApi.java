@@ -75,6 +75,7 @@ public class KeycloakUserApi implements UserApi  {
     public Optional<User> getUserWithName(String realm, String name) {
         log.info("Retrieving user {} in realm {}", name, realm);
         return withKeycloak(keycloak -> keycloak.realm(realm).users().search(name).stream()
+                .filter(userRep -> name.equals(userRep.getUsername()))
                 .findFirst()
                 .map(userRep -> {
                     List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
@@ -100,6 +101,15 @@ public class KeycloakUserApi implements UserApi  {
         return userRep;
     }
 
+    private boolean userExists(String username, List<UserRepresentation> userRepresentations) {
+        for (UserRepresentation userRepresentation : userRepresentations) {
+            if (userRepresentation.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void createUser(String realm, User user) {
         log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realm);
@@ -107,23 +117,13 @@ public class KeycloakUserApi implements UserApi  {
 
         withKeycloak(keycloak -> {
 
-            UserRepresentation rep = keycloak.realm(realm).users().search(user.getSpec().getUsername(), null, null, null, null, null).stream().findAny().orElse(null);
+            List<UserRepresentation> reps = keycloak.realm(realm).users().search(user.getSpec().getUsername());
 
-            if (rep != null) {
-                Map<String, List<String>> attributes = rep.getAttributes();
-                String rName = null;attributes.get("resourceName").get(0);
-                List<String> rNameAttrs = attributes.get("resourceName");
-                if (rNameAttrs.size() > 0) {
-                    rName = rNameAttrs.get(0);
-                }
-
-                String rNamespace = null;
-                List<String> rNamespaceAttrs = attributes.get("resourceNamespace");
-                if (rNamespaceAttrs.size() > 0) {
-                    rNamespace = rNamespaceAttrs.get(0);
-                }
-
-                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists: " + rep.getId() + ", name: " + rep.getUsername() + ", rname: " + rName + ", rns: " + rNamespace, 409);
+            if (userExists(user.getSpec().getUsername(), reps)) {
+                List<String> usernames = reps.stream()
+                        .map(UserRepresentation::getUsername)
+                        .collect(Collectors.toList());
+                throw new WebApplicationException("User '" + user.getSpec().getUsername() + "' already exists in [" + usernames + "]", 409);
             }
 
             UserRepresentation userRep = createUserRepresentation(user);
@@ -203,7 +203,9 @@ public class KeycloakUserApi implements UserApi  {
     }
 
     private Optional<UserRepresentation> getUser(String realm, String username) {
-        return withKeycloak(keycloak -> keycloak.realm(realm).users().search(username).stream().findFirst());
+        return withKeycloak(keycloak -> keycloak.realm(realm).users().search(username).stream()
+                .filter(userRep -> username.equals(userRep.getUsername()))
+                .findFirst());
     }
 
     @Override
@@ -300,7 +302,9 @@ public class KeycloakUserApi implements UserApi  {
         withKeycloak(keycloak -> {
             List<UserRepresentation> users = keycloak.realm(realm).users().search(user.getSpec().getUsername());
             for (UserRepresentation userRep : users) {
-                keycloak.realm(realm).users().delete(userRep.getId());
+                if (user.getSpec().getUsername().equals(userRep.getUsername())) {
+                    keycloak.realm(realm).users().delete(userRep.getId());
+                }
             }
             return users;
         });
