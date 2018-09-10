@@ -330,11 +330,11 @@ public class KeycloakUserApi implements UserApi  {
     }
 
     static User buildUser(UserRepresentation userRep, List<GroupRepresentation> groupReps) {
-        log.info("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
+        log.debug("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
         Map<String, Set<Operation>> operationsByAddress = new HashMap<>();
         Set<Operation> globalOperations = new HashSet<>();
         for (GroupRepresentation groupRep : groupReps) {
-            log.info("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
+            log.debug("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
             if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
