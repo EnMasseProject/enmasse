@@ -29,6 +29,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -69,7 +71,9 @@ public class Main {
             }
         };
 
-        UserApi userApi = new KeycloakUserApi(params.getKeycloakUri(), params.getAdminUser(), params.getAdminPassword(), params.getKeyStore(), Clock.systemUTC());
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        UserApi userApi = new KeycloakUserApi(params.getKeycloakUri(), params.getAdminUser(), params.getAdminPassword(), params.getKeyStore(), Clock.systemUTC(), executorService);
 
         KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(params), kubeApi, userApi);
 

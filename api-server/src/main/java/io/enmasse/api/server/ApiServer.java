@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ApiServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class.getName());
@@ -47,7 +49,8 @@ public class ApiServer extends AbstractVerticle {
         UserApi userApi = null;
         if (options.getKeycloakUri() != null) {
             Clock clock = Clock.systemUTC();
-            userApi = new KeycloakUserApi(options.getKeycloakUri(), options.getKeycloakAdminUser(), options.getKeycloakAdminPassword(), options.getKeycloakTrustStore(), clock);
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            userApi = new KeycloakUserApi(options.getKeycloakUri(), options.getKeycloakAdminUser(), options.getKeycloakAdminPassword(), options.getKeycloakTrustStore(), clock, executorService);
         }
 
         deployVerticles(startPromise,
