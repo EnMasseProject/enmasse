@@ -677,7 +677,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 log.info("Creating topic for subscription");
                 consoleWebPage.createAddressWebConsole(dest_topic);
             }
-            for (char special_char : "$#*".toCharArray()) { //   <!@>&% not needed to be tested   . waiting for #1588
+            for (char special_char : "$*".toCharArray()) { //   <!@>&% not needed to be tested   .# waiting for #1588
                 switch (type) {
                     case SUBSCRIPTION:
                         destStart = Destination.subscription(

@@ -163,7 +163,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-        //@Disabled("disabled due to #1547")
+    @Disabled("disabled due to #1601")
     void testAddressNameWithHyphens() throws Exception {
         doTestWithStrangeAddressNames(true, false,
                 AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
@@ -171,7 +171,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-        //@Disabled("disabled due to #1547")
     void testVerylongAddressName() throws Exception {
         doTestWithStrangeAddressNames(false, true,
                 AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
@@ -179,7 +178,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-        //@Disabled("disabled due to #1547")
+    @Disabled("disabled due to #1601")
     void testCreateAddressWithSpecialChars() throws Exception {
         doTestCreateAddressWithSpecialChars(
                 AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
