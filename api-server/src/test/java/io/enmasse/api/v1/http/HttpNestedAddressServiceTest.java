@@ -222,6 +222,12 @@ public class HttpNestedAddressServiceTest {
     }
 
     @Test
+    public void testDeleteNotFound() {
+        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "notFound"));
+        assertThat(response.getStatus(), is(404));
+    }
+
+    @Test
     public void deleteAllAddresses() {
         Response response = invoke(() -> addressService.deleteAddresses(securityContext, "unknown"));
         assertThat(response.getStatus(), is(200));

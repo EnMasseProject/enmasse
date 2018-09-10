@@ -41,11 +41,11 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public void deleteAddressSpace(AddressSpace addressSpace) {
+    public boolean deleteAddressSpace(AddressSpace addressSpace) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        addressSpaces.remove(addressSpace.getName());
+        return addressSpaces.remove(addressSpace.getName()) != null;
     }
 
     @Override

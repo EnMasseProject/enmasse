@@ -162,7 +162,9 @@ public class HttpAddressServiceBase {
     Response deleteAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressName) throws Exception {
         return doRequest("Error deleting address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
-            apiHelper.deleteAddress(namespace, addressSpace, addressName);
+            if (!apiHelper.deleteAddress(namespace, addressSpace, addressName)) {
+                throw new NotFoundException("Address " + addressName + " not found");
+            }
             return Response.ok().build();
         });
     }

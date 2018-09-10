@@ -80,15 +80,12 @@ public class AddressApiHelper {
         return addressSpaceApi.withAddressSpace(addressSpace).getAddressWithName(namespace, address);
     }
 
-    public void deleteAddress(String namespace, String addressSpaceId, String name) throws Exception {
+    public boolean deleteAddress(String namespace, String addressSpaceId, String name) throws Exception {
         AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
-        for (Address address : addressApi.listAddresses(namespace)) {
-            if (address.getNamespace().equals(namespace) && address.getName().equals(name)) {
-                addressApi.deleteAddress(address);
-                return;
-            }
-        }
+
+        Optional<Address> addressOptional = addressApi.getAddressWithName(namespace, name);
+        return addressOptional.filter(addressApi::deleteAddress).isPresent();
     }
 
     public Address createAddress(String addressSpaceId, Address address) throws Exception {
