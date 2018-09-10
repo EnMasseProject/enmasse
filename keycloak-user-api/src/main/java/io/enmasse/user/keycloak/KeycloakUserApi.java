@@ -424,9 +424,12 @@ public class KeycloakUserApi implements UserApi  {
                 String realmNs = realmRep.getAttributes().get("namespace");
                 if (realmNs != null && realmNs.equals(namespace)) {
                     String realm = realmRep.getRealm();
-                    List<UserRepresentation> userReps = keycloak.realm(realm).users().list();
-                    for (UserRepresentation userRep : userReps) {
-                        keycloak.realm(realm).users().delete(userRep.getId());
+                    List<UserRepresentation> userReps = keycloak.realm(realm).users().list(0, 100);
+                    while (!userReps.isEmpty()) {
+                        for (UserRepresentation userRep : userReps) {
+                            keycloak.realm(realm).users().delete(userRep.getId());
+                        }
+                        userReps = keycloak.realm(realm).users().list(0, 100);
                     }
                 }
             }
