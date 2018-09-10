@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:8-7-debug
+FROM enmasseproject/java-base:8-7
 
 ARG version=latest
 ENV VERSION ${version}
