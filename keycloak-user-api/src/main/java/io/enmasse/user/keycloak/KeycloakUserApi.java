@@ -432,6 +432,20 @@ public class KeycloakUserApi implements UserApi  {
 
     @Override
     public void deleteUsers(String namespace) {
+        withKeycloak(keycloak -> {
+            List<RealmRepresentation> realmReps = keycloak.realms().findAll();
+            for (RealmRepresentation realmRep : realmReps) {
+                String realmNs = realmRep.getAttributes().get("namespace");
+                if (realmNs != null && realmNs.equals(namespace)) {
+                    String realm = realmRep.getRealm();
+                    List<UserRepresentation> userReps = keycloak.realm(realm).users().list();
+                    for (UserRepresentation userRep : userReps) {
+                        keycloak.realm(realm).users().delete(userRep.getId());
+                    }
+                }
+            }
+            return null;
+        });
 
     }
 }
