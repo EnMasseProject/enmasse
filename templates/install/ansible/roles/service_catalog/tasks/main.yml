@@ -11,12 +11,9 @@
 - set_fact:
     keycloak_ca_cert: "{{ secret_result.stdout }}"
   when: (keycloak_ca_cert is not defined)
-- name: Check if broker secret exists
-  shell: oc get secret -n {{ namespace }} service-broker-secret
-  register: broker_secret_exists
-  ignore_errors: True
 - name: Create service-broker-secret for secure info
-  when: broker_secret_exists.failed
+  register: broker_secret_exists
+  failed_when: broker_secret_exists.stderr != '' and 'already exists' not in broker_secret_exists.stderr
   shell:
     cmd: |
       cat <<EOF | oc create -n {{ namespace }} -f -
@@ -38,7 +35,7 @@
 - name: Check if console route exists
   shell: oc get route console -n {{ namespace }} -o yaml -o jsonpath={.spec.host}
   register: console_route
-  ignore_errors: True
+  failed_when: console_route.stderr != '' and 'NotFound' in console_route.stderr
 - set_fact:
     osb_console_prefix: "https://{{ console_route.stdout }}/console"
   when: (osb_console_prefix is not defined) and (not (console_route.stdout | search("127.0.0.1")))
@@ -50,22 +47,16 @@
     osb_console_prefix: "https://{{ osbservice_clusterip.stdout }}:8443/console"
   when: (osb_console_prefix is not defined)
 
-- name: Check if service-broker-config exists
-  shell: oc get configmap -n {{ namespace }} service-broker-config
-  register: config_exists
-  ignore_errors: True
 - name: Create service-broker-config for configuration data
-  when: config_exists.failed
   shell: oc create configmap service-broker-config -n {{ namespace }} --from-literal=keycloakUrl={{ keycloak_http_url }} --from-literal=enableRbac={{ enable_rbac }} --from-literal=consolePrefix={{ osb_console_prefix }}
+  register: config_exists
+  failed_when: config_exists.stderr != '' and 'already exists' not in config_exists.stderr
 
 - shell: oc sa get-token -n {{ namespace }} enmasse-admin
   register: token_result
 - set_fact:
     enmasse_admin_token: "{{ token_result.stdout }}"
-- name: Check if secret exists
-  shell: oc get secret -n {{ namespace }} service-catalog-credentials
-  register: catalog_secret_exists
-  ignore_errors: True
 - name: Create secret for catalog credentials
   shell: oc create secret generic -n {{ namespace }} service-catalog-credentials --from-literal=token={{ enmasse_admin_token }}
-  when: catalog_secret_exists.failed
+  register: catalog_secret_exists
+  failed_when: catalog_secret_exists.stderr != '' and 'already exists' not in catalog_secret_exists.stderr

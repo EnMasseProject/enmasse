@@ -3,28 +3,29 @@
   when: secure_api_server
   shell: oc get secret -n {{ namespace }} api-server-client-ca
   register: secret_exists
-  ignore_errors: True
+  failed_when: secret_exists.stderr != '' and 'NotFound' not in secret_exists.stderr
+  changed_when: secret_exists.rc == 1
 
 - name: Extract API Client CA
-  when: secure_api_server and secret_exists.failed
+  when: secure_api_server and secret_exists.changed
   shell: oc get configmap extension-apiserver-authentication -n kube-system -o jsonpath={.data.client-ca-file}
   register: clientca_result 
 - set_fact:
 
     client_ca: "{{ clientca_result.stdout }}"
-  when: secure_api_server and secret_exists.failed
+  when: secure_api_server and secret_exists.changed
 
 - name: Extract API Request Header Client CA
-  when: secure_api_server and secret_exists.failed
+  when: secure_api_server and secret_exists.changed
   shell: oc get configmap extension-apiserver-authentication -n kube-system -o jsonpath={.data.requestheader-client-ca-file}
   register: requestheaderclientca_result
 
 - set_fact:
     request_header_client_ca: "{{ requestheaderclientca_result.stdout }}"
-  when: secure_api_server and secret_exists.failed
+  when: secure_api_server and secret_exists.changed
 
 - name: Store API Client CA in secret
-  when: secure_api_server and secret_exists.failed
+  when: secure_api_server and secret_exists.changed
   shell:
     cmd: |
       cat <<EOF | oc apply -n {{ namespace }} -f -
