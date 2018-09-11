@@ -212,12 +212,27 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           }
         };
 
+        function is_valid_filter(filter) {
+            if (filter.title === 'Name') {
+                try {
+                    var dummy = new RegExp(filter.value);
+                    return true;
+                } catch (error) {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+
         var filterChange = function (filters) {
             $scope.filtersText = "";
-            filters.forEach(function (filter) {
+            var valid = filters.filter(is_valid_filter);
+            valid.forEach(function (filter) {
                 $scope.filtersText += filter.title + " : " + filter.value + "\n";
             });
-            applyFilters(filters);
+            applyFilters(valid);
+            $scope.filterConfig.appliedFilters = valid;
             $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
         };
 
