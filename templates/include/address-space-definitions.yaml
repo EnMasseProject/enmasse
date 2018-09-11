@@ -220,6 +220,18 @@ data:
               capability: router
               name: qdrouterd
           spec:
+            strategy:
+              type: Recreate
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: QDROUTERD_CONF
@@ -329,6 +341,16 @@ data:
               app: enmasse
               name: admin
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: CERT_DIR
@@ -587,6 +609,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: QUEUE_NAME
@@ -679,6 +711,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -701,6 +734,9 @@ data:
           - description: The address to use for the queue
             name: ADDRESS
             value: ''
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: Name of secret containing router key and certificate
             name: COLOCATED_ROUTER_SECRET
             required: true
@@ -826,6 +862,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: TOPIC_NAME
@@ -950,6 +996,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -957,6 +1004,9 @@ data:
           - description: Storage capacity required for volume claims
             name: STORAGE_CAPACITY
             value: 2Gi
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: The link capacity setting for router
             name: ROUTER_LINK_CAPACITY
             value: '250'
@@ -1282,6 +1332,16 @@ data:
               capability: router
               name: qdrouterd
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: QDROUTERD_CONF
@@ -1391,6 +1451,16 @@ data:
               app: enmasse
               name: admin
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: CERT_DIR
@@ -1649,6 +1719,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: QUEUE_NAME
@@ -1741,6 +1821,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -1748,6 +1829,9 @@ data:
           - description: Storage capacity required for volume claims
             name: STORAGE_CAPACITY
             value: 2Gi
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: The link capacity setting for router
             name: ROUTER_LINK_CAPACITY
             value: '50'
@@ -1888,6 +1972,16 @@ data:
                     name: ${NAME}
                     role: broker
                 spec:
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                            matchExpressions:
+                              - key: nodetype
+                                operator: In
+                                values:
+                                  - enmasse
                   containers:
                   - env:
                     - name: TOPIC_NAME
@@ -2012,6 +2106,7 @@ data:
                 spec:
                   accessModes:
                   - ReadWriteOnce
+                  storageClassName: ${STORAGE_CLASS}
                   resources:
                     requests:
                       storage: ${STORAGE_CAPACITY}
@@ -2019,6 +2114,9 @@ data:
           - description: Storage capacity required for volume claims
             name: STORAGE_CAPACITY
             value: 2Gi
+          - description: Storage class used for persistent volumes
+            name: STORAGE_CLASS
+            value: null
           - description: The link capacity setting for router
             name: ROUTER_LINK_CAPACITY
             value: '50'
@@ -2078,6 +2176,16 @@ data:
               app: enmasse
               name: subserv
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - command:
               - /opt/app-root/src/bin/launch_node.sh
@@ -2147,6 +2255,16 @@ data:
               app: enmasse
               name: mqtt-gateway
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: ENMASSE_MQTT_SSL
@@ -2207,6 +2325,16 @@ data:
               app: enmasse
               name: mqtt-lwt
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: CERT_DIR
@@ -2323,6 +2451,7 @@ data:
       spec:
         accessModes:
         - ReadWriteOnce
+        storageClassName: ${STORAGE_CLASS}
         resources:
           requests:
             storage: ${STORAGE_CAPACITY}
@@ -2350,6 +2479,16 @@ data:
               name: broker
               role: broker
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: ADDRESS_SPACE_TYPE
@@ -2486,6 +2625,16 @@ data:
               name: agent
               role: agent
           spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: nodetype
+                          operator: In
+                          values:
+                            - enmasse
             containers:
             - env:
               - name: ADDRESS_SPACE
@@ -2577,6 +2726,9 @@ data:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
       value: 2Gi
+    - description: Storage class used for persistent volumes
+      name: STORAGE_CLASS
+      value: null
     - description: The name of our address space
       name: ADDRESS_SPACE
       required: true
