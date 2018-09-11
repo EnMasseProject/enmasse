@@ -36,13 +36,22 @@ function RouterStats(connection) {
     });
 }
 
+function strip_topic_prefix(clean) {
+    var i = clean.indexOf('::');
+    if (i > 0) {
+        return clean.substring(0, i);
+    } else {
+        return clean;
+    }
+}
+
 function clean_address(address) {
     if (!address) {
         return address;
     } else if (address.charAt(0) === 'M') {
-        return address.substring(2);
+        return strip_topic_prefix(address.substring(2));
     } else {
-        return address.substring(1);
+        return strip_topic_prefix(address.substring(1));
     }
 }
 
