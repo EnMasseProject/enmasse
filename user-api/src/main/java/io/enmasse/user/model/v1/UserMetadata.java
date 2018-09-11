@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserMetadata {
@@ -17,6 +18,8 @@ public class UserMetadata {
     private final String creationTimestamp;
     private final String selfLink;
     private final String resourceVersion;
+
+    private final Pattern namePattern = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     @JsonCreator
     public UserMetadata(@JsonProperty("name") String name,
@@ -63,6 +66,9 @@ public class UserMetadata {
 
     public void validate() {
         Objects.requireNonNull(name, "'name' must be set");
+        if (!namePattern.matcher(name).matches()) {
+            throw new UserValidationFailedException("Invalid resource name '" + name + "', must match " + namePattern);
+        }
         Objects.requireNonNull(namespace, "'namespace' must be set");
     }
 

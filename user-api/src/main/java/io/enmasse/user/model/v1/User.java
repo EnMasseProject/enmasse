@@ -51,11 +51,15 @@ public class User {
     }
 
     public void validate() {
-        Objects.requireNonNull(metadata, "'metadata' must be set");
-        Objects.requireNonNull(spec, "'spec' must be set");
+        try {
+            Objects.requireNonNull(metadata, "'metadata' must be set");
+            Objects.requireNonNull(spec, "'spec' must be set");
 
-        metadata.validate();
-        spec.validate();
+            metadata.validate();
+            spec.validate();
+        } catch (Exception e) {
+            throw new UserValidationFailedException(e);
+        }
     }
 
     public static class Builder {

@@ -10,12 +10,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserSpec {
     private final String username;
     private final UserAuthentication authentication;
     private final List<UserAuthorization> authorization;
+    private final Pattern usernamePattern = Pattern.compile("^[a-z0-9]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     @JsonCreator
     public UserSpec(@JsonProperty("username") String username,
@@ -40,6 +42,10 @@ public class UserSpec {
 
     public void validate() {
         Objects.requireNonNull(username, "'username' must be set");
+        if (!usernamePattern.matcher(username).matches()) {
+            throw new UserValidationFailedException("Invalid username '" + username + "', must match " + usernamePattern.toString());
+        }
+
         if (authentication != null) {
             authentication.validate();
         }
