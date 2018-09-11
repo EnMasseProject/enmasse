@@ -5,15 +5,27 @@
 package io.enmasse.api.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
+    @JsonProperty("apiVersion")
     private final String apiVersion = "v1";
+
+    @JsonProperty("kind")
     private final String kind = "Status";
+
+    @JsonProperty("status")
     private final String status = "Failure";
+
+    @JsonProperty("code")
     private final int code;
+
+    @JsonProperty("reason")
     private final String reason;
+
+    @JsonProperty("message")
     private final String message;
 
     public ErrorResponse(int statusCode, String reason, String message) {
