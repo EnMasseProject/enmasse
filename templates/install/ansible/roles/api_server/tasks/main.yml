@@ -1,11 +1,8 @@
 ---
-- name: Check if api-server-config exists
-  shell: oc get configmap -n {{ namespace }} api-server-config
-  register: config_exists
-  ignore_errors: True
 - name: Create API Server Config
-  when: config_exists.failed
   shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }}
+  register: config_exists
+  failed_when: sa_exists.stderr != '' and 'already exists' not in sa_exists.stderr
 - name: Create EnMasse API Server Deployment
   shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/resources/api-server/deployment.yaml"
 - name: Create EnMasse API Server Service
