@@ -117,6 +117,10 @@ public class KeycloakUserApi implements UserApi  {
 
         withKeycloak(keycloak -> {
 
+            if (!user.getSpec().getUsername().equals(user.getSpec().getUsername().toLowerCase())) {
+                throw new WebApplicationException(String.format("Username %s contains capital letters", user.getSpec().getUsername()), 400);
+            }
+
             List<UserRepresentation> reps = keycloak.realm(realm).users().search(user.getSpec().getUsername());
 
             if (userExists(user.getSpec().getUsername(), reps)) {

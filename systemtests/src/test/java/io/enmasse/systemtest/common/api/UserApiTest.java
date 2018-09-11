@@ -40,7 +40,7 @@ class UserApiTest extends TestBase {
         assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
         waitForAddressSpaceReady(brokered);
 
-        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("jenda")
@@ -68,7 +68,7 @@ class UserApiTest extends TestBase {
         assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
         waitForAddressSpaceReady(brokered);
 
-        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("jenda")
@@ -104,7 +104,7 @@ class UserApiTest extends TestBase {
         AddressSpace brokered = new AddressSpace("user-api-space-wrong-payload-api", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
-        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("jenda")
@@ -136,7 +136,7 @@ class UserApiTest extends TestBase {
         assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
         waitForAddressSpaceReady(brokered);
 
-        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("jenda")
@@ -230,7 +230,7 @@ class UserApiTest extends TestBase {
         AddressSpace brokered = new AddressSpace("user-api-space-update-noexists-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
-        UserCredentials cred = new UserCredentials("pepaNaTestovani", "pepaNaTestovani");
+        UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("unknown")
@@ -262,5 +262,19 @@ class UserApiTest extends TestBase {
 
         Throwable exception = assertThrows(ExecutionException.class, () -> getUserApiClient().createUser(brokered.getName(), testUser, HTTP_CONFLICT));
         assertTrue(exception.getMessage().contains(String.format("User '%s' already exists", cred.getUsername())));
+    }
+
+    @Test
+    void testCreateUserUppercaseUsername() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-uppercase-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("UserPepinator", "ff^%fh16");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        assertThrows(ExecutionException.class, () -> getUserApiClient().createUser(brokered.getName(), testUser, HTTP_BAD_REQUEST));
     }
 }

@@ -45,7 +45,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     protected void doTestSendAuthz() throws Exception {
         initAddresses();
         UserCredentials allowedUser = new UserCredentials("sender", "senderPa55");
-        UserCredentials noAllowedUser = new UserCredentials("notAllowedSender", "nobodyPa55");
+        UserCredentials noAllowedUser = new UserCredentials("notallowedsender", "nobodyPa55");
 
         createUser(sharedAddressSpace, new User()
                 .setUsername(allowedUser.getUsername())
@@ -83,7 +83,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     protected void doTestReceiveAuthz() throws Exception {
         initAddresses();
         UserCredentials allowedUser = new UserCredentials("receiver", "receiverPa55");
-        UserCredentials noAllowedUser = new UserCredentials("notAllowedReceiver", "nobodyPa55");
+        UserCredentials noAllowedUser = new UserCredentials("notallowedreceiver", "nobodyPa55");
 
         createUser(sharedAddressSpace, new User()
                 .setUsername(allowedUser.getUsername())
