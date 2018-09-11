@@ -88,7 +88,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         createAddressSpace(consoleAddrSpace);
 
         //create new user
-        UserCredentials user = new UserCredentials("test_newplan_name", "test_newplan_password");
+        UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
         createUser(consoleAddrSpace, user);
 
         //create addresses
