@@ -10,17 +10,17 @@
 The manual deployment procedure can be performed on any platform
 supporting the {PlatformName} client.
 
-include::proc-creating-project.adoc[leveloffset=+1]
+include::modules/proc-creating-project.adoc[leveloffset=+1]
 
-include::proc-deploying-auth-services.adoc[leveloffset=+1]
+include::modules/proc-deploying-auth-services.adoc[leveloffset=+1]
 
-include::proc-deploying-address-space-controller.adoc[leveloffset=+1]
+include::modules/proc-deploying-address-space-controller.adoc[leveloffset=+1]
 
-include::proc-deploying-api-server.adoc[leveloffset=+1]
+include::modules/proc-deploying-api-server.adoc[leveloffset=+1]
 
-include::proc-deploying-service-broker.adoc[leveloffset=+1]
+include::modules/proc-deploying-service-broker.adoc[leveloffset=+1]
 
-include::proc-deploying-single-namespace.adoc[leveloffset=+1]
+include::modules/proc-deploying-single-namespace.adoc[leveloffset=+1]
 
 :context: {parent-context}
 
