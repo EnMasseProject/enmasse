@@ -1,0 +1,27 @@
+apiVersion: enmasse.io/v1alpha1
+kind: AddressList
+items:
+- metadata:
+    name: myspace.anycast1
+  spec:
+    address: anycast1
+    type: anycast
+    plan: standard-anycast
+- metadata:
+    name: myspace.multicast1
+  spec:
+    address: multicast1
+    type: multicast
+    plan: standard-multicast
+- metadata:
+    name: myspace.queue1
+  spec:
+    address: queue1
+    type: queue
+    plan: pooled-queue
+- metadata:
+    name: myspace.topic1
+  spec:
+    address: topic1
+    type: topic
+    plan: pooled-topic

@@ -7,46 +7,31 @@
 
 The API server provides a REST API for creating address spaces and addresses. It can also serve as an aggregated API server if it is registered as an API service.
 
-ifeval::["{PlatformName}" == "OpenShift"]
 .Prerequisites
-
+ifeval::["{PlatformName}" == "OpenShift"]
 * To install the {ProductName} API Server on {PlatformName}, you must have `cluster-admin` access to set up the
 required roles for delegating authentication to the {PlatformName} master; otherwise, you are restricted
 to using templates for creating address spaces. For more information about how to deploy without `cluster-admin` access,
 which restricts {ProductName} to using templates, see xref:installing-without-cluster-admin-privileges-{context}[].
 endif::[]
+* Modify the installation files according to the namespace the API Server is going to be installed in
++
+[source, subs="+quotes"]
+----
+sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/api-service/*.yaml
+sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/api-server/*RoleBinding*.yaml
+----
 
 .Procedure
 
-. Create a service account for the {ProductName} API server:
+. Register API service
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create sa enmasse-admin
+{cmdcli} apply -f examples/install/api-service
 ----
 
-ifeval::["{cmdcli}" == "oc"]
-. Create cluster-wide roles used by the `enmasse-admin` service account:
-+
-[options="nowrap"]
-----
-oc login -u system:admin
-oc create -f ./resources/cluster-roles/api-server.yaml
-----
-
-. Grant privileges to the service account:
-+
-[options="nowrap"]
-----
-oc login -u system:admin
-oc policy add-role-to-user admin system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user enmasse.io:api-server system:serviceaccount:enmasse:enmasse-admin
-oc adm policy add-cluster-role-to-user system:auth-delegator system:serviceaccount:enmasse:enmasse-admin
-----
-+
-*Note*: You can log in again as the regular user after this step.
-endif::[]
-
+ifeval::["{cmdcli}" == "kubectl"]
 . Create a certificate to use with the API server. For testing purposes, you can create a self-signed certificate:
 +
 [options="nowrap"]
@@ -61,37 +46,11 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 {cmdcli} create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 ----
-
-. Create the API server configuration:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create configmap api-server-config --from-literal=enableRbac=false
-----
-
-. Deploy the API server:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create -f ./resources/api-server/deployment.yaml
-{cmdcli} create -f ./resources/api-server/service.yaml
-----
-ifeval::["{cmdcli}" == "oc"]
-[[{cmdcli}-register-apiservice]]
-
-[id='register-api-service-{context}']
-. (Optional) Register the API server to support custom resources:
-+
-[options="nowrap"]
-----
-oc process -f ./resources/templates/api-service.yaml ENMASSE_NAMESPACE=enmasse | oc create -f -
-----
-
-. (Optional) Create routes exposing the API server:
-+
-[options="nowrap"]
-----
-oc create route passthrough restapi --service=api-server -n enmasse
-----
 endif::[]
 
+. Deploy the API Server
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f examples/install/api-server/
+----

@@ -13,84 +13,147 @@ import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
+import io.enmasse.user.keycloak.KubeKeycloakFactory;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.vertx.core.*;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ApiServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class.getName());
-    private final NamespacedOpenShiftClient controllerClient;
+    private final NamespacedOpenShiftClient client;
     private final ApiServerOptions options;
 
     private ApiServer(ApiServerOptions options) {
-        this.controllerClient = new DefaultOpenShiftClient();
+        this.client = new DefaultOpenShiftClient();
         this.options = options;
     }
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
+        SchemaApi schemaApi = new ConfigMapSchemaApi(client, options.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-
-        AuthApi authApi = new KubeAuthApi(controllerClient, controllerClient.getConfiguration().getOauthToken());
-
-        UserApi userApi = null;
-        if (options.getKeycloakUri() != null) {
-            Clock clock = Clock.systemUTC();
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            userApi = new KeycloakUserApi(options.getKeycloakUri(), options.getKeycloakAdminUser(), options.getKeycloakAdminPassword(), options.getKeycloakTrustStore(), clock, executorService);
+        if (options.getRestapiRouteName() != null) {
+            ensureRouteExists(client, options);
         }
 
-        deployVerticles(startPromise,
-                new Deployment(new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), options.getClientCa(), options.getRequestHeaderClientCa(), authApi, userApi, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
-    }
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
 
-    private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {
-        List<Future> futures = new ArrayList<>();
-        for (Deployment deployment : deployments) {
-            Future<Void> promise = Future.future();
-            futures.add(promise);
-            vertx.deployVerticle(deployment.verticle, deployment.options, result -> {
-                if (result.succeeded()) {
-                    promise.complete();
-                } else {
-                    promise.fail(result.cause());
-                }
-            });
+        AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
+
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
+                options.getStandardAuthserviceConfigName(),
+                options.getStandardAuthserviceCredentialsSecretName(),
+                options.getStandardAuthserviceCertSecretName());
+        Clock clock = Clock.systemUTC();
+        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock);
+
+        String clientCa = null;
+        String requestHeaderClientCa = null;
+        try {
+            ConfigMap extensionApiserverAuthentication = client.configMaps().inNamespace(options.getApiserverClientCaConfigNamespace()).withName(options.getApiserverClientCaConfigName()).get();
+            clientCa = extensionApiserverAuthentication.getData().get("client-ca.file");
+            requestHeaderClientCa = extensionApiserverAuthentication.getData().get("requestheader-client-ca-file");
+        } catch (KubernetesClientException e) {
+            log.info("Unable to retrieve config for client CA. Skipping", e);
         }
 
-        CompositeFuture.all(futures).setHandler(result -> {
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), clientCa, requestHeaderClientCa, authApi, userApi, options.isEnableRbac());
+
+        vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
-                startPromise.complete();
+                log.info("API Server started successfully");
             } else {
-                startPromise.fail(result.cause());
+                log.error("API Server failed to start", result.cause());
             }
         });
     }
 
-    private static class Deployment {
-        final Verticle verticle;
-        final DeploymentOptions options;
-
-        private Deployment(Verticle verticle) {
-            this(verticle, new DeploymentOptions());
+    private void ensureRouteExists(NamespacedOpenShiftClient client, ApiServerOptions options) throws IOException {
+        if (isOpenShift(client)) {
+            Route restapiRoute= client.routes().withName(options.getRestapiRouteName()).get();
+            if (restapiRoute == null) {
+                log.info("Creating REST API external route {}", options.getRestapiRouteName());
+                String caCertificate = new String(Files.readAllBytes(new File(options.getCertDir(), "tls.crt").toPath()), StandardCharsets.UTF_8);
+                client.routes().createNew()
+                        .editOrNewMetadata()
+                        .withName(options.getRestapiRouteName())
+                        .addToLabels("app", "enmasse")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .editOrNewPort()
+                        .withNewTargetPort("https")
+                        .endPort()
+                        .editOrNewTo()
+                        .withKind("Service")
+                        .withName("api-server")
+                        .endTo()
+                        .editOrNewTls()
+                        .withTermination("reencrypt")
+                        .withCaCertificate(caCertificate)
+                        .endTls()
+                        .endSpec()
+                        .done();
+            }
+        } else {
+            Service restapiService = client.services().withName(options.getRestapiRouteName()).get();
+            if (restapiService == null) {
+                log.info("Creating REST API external service {}", options.getRestapiRouteName());
+                client.services().createNew()
+                        .editOrNewMetadata()
+                        .withName(options.getRestapiRouteName())
+                        .addToLabels("app", "enmasse")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .addNewPort()
+                        .withName("https")
+                        .withPort(443)
+                        .withTargetPort(new IntOrString("https"))
+                        .endPort()
+                        .addToSelector("component", "api-server")
+                        .withType("LoadBalancer")
+                        .endSpec()
+                        .done();
+            }
         }
+    }
 
-        private Deployment(Verticle verticle, DeploymentOptions options) {
-            this.verticle = verticle;
-            this.options = options;
+    private static boolean isOpenShift(NamespacedOpenShiftClient client) {
+        // Need to query the full API path because Kubernetes does not allow GET on /
+        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
+        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/route.openshift.io");
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .get();
+
+        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+            return response.code() >= 200 && response.code() < 300;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

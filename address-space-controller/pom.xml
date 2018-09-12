@@ -126,7 +126,7 @@
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>io.enmasse.controller.Main</mainClass>
+                  <mainClass>io.enmasse.controller.AddressSpaceController</mainClass>
                 </transformer>
               </transformers>
             </configuration>

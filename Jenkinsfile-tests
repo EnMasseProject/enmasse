@@ -82,7 +82,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh 'make -C templates || true'
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh templates/install '' ${params.TEST_CASE}"
+                    sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${env.TAG} '' ${params.TEST_CASE}"
                 }
             }
         }

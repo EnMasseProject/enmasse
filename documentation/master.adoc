@@ -81,7 +81,6 @@ include::messaging_app_developer/connecting.adoc[leveloffset=+1]
 
 include::getting_started/openshift.adoc[leveloffset=+2]
 include::getting_started/kubernetes.adoc[leveloffset=+2]
-include::getting_started/aws.adoc[leveloffset=+2]
 
 [appendix]
 

@@ -6,7 +6,6 @@ package io.enmasse.user.keycloak;
 
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
@@ -40,30 +39,12 @@ public class KeycloakUserApi implements UserApi  {
     private static final DateTimeFormatter formatter = DateTimeFormatter
             .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             .withZone(ZoneId.of("UTC"));
-    private volatile ResteasyClient resteasyClient;
+    private final KeycloakFactory keycloakFactory;
     private volatile Keycloak keycloak;
 
-    public KeycloakUserApi(String keycloakUri, String adminUser, String adminPassword, KeyStore keyStore, Clock clock, ExecutorService executorService) {
+    public KeycloakUserApi(KeycloakFactory keycloakFactory, Clock clock) {
+        this.keycloakFactory = keycloakFactory;
         this.clock = clock;
-        initClient(keycloakUri, adminUser, adminPassword, keyStore, executorService);
-    }
-
-    private void initClient(String keycloakUri, String adminUser, String adminPassword, KeyStore keyStore, ExecutorService executorService) {
-        resteasyClient = new ResteasyClientBuilder()
-                .establishConnectionTimeout(30, TimeUnit.SECONDS)
-                .connectionPoolSize(1)
-                .asyncExecutor(executorService)
-                .trustStore(keyStore)
-                .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
-                .build();
-        keycloak = KeycloakBuilder.builder()
-                .serverUrl(keycloakUri)
-                .realm("master")
-                .username(adminUser)
-                .password(adminPassword)
-                .clientId("admin-cli")
-                .resteasyClient(resteasyClient)
-                .build();
     }
 
     interface Handler<T> {
@@ -71,6 +52,9 @@ public class KeycloakUserApi implements UserApi  {
     }
 
     private synchronized <T> T withKeycloak(Handler<T> consumer) {
+        if (keycloak == null) {
+            keycloak = keycloakFactory.createInstance();
+        }
         return consumer.handle(keycloak);
     }
 

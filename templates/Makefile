@@ -1,113 +1,140 @@
 include ../Makefile.common
 
-ADDRESS_SPACE_CONTROLLER_IMAGE ?= "address-space-controller"
-API_SERVER_IMAGE ?= "api-server"
-STANDARD_CONTROLLER_IMAGE ?= "standard-controller"
-ROUTER_IMAGE ?= "router"
-ARTEMIS_IMAGE ?= "artemis"
-TOPIC_FORWARDER_IMAGE ?= "topic-forwarder"
-ROUTER_METRICS_IMAGE ?= "router-metrics"
-AGENT_IMAGE ?= "agent"
-MQTT_GATEWAY_IMAGE ?= "mqtt-gateway"
-MQTT_LWT_IMAGE ?= "mqtt-lwt"
-NONE_AUTHSERVICE_IMAGE ?= "none-authservice"
+DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
+
+ADDRESS_SPACE_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/address-space-controller:$(COMMIT)"
+API_SERVER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/api-server:$(COMMIT)"
+STANDARD_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/standard-controller:$(COMMIT)"
+ROUTER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/router:$(COMMIT)"
+ARTEMIS_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/artemis:$(COMMIT)"
+TOPIC_FORWARDER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/topic-forwarder:$(COMMIT)"
+ROUTER_METRICS_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/router-metrics:$(COMMIT)"
+AGENT_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/agent:$(COMMIT)"
+MQTT_GATEWAY_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/mqtt-gateway:$(COMMIT)"
+MQTT_LWT_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/mqtt-lwt:$(COMMIT)"
+NONE_AUTHSERVICE_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/none-authservice:$(COMMIT)"
 KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.4.3.Final"
-KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
-KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
-SERVICE_BROKER_IMAGE ?= "service-broker"
+KEYCLOAK_PLUGIN_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-plugin:$(COMMIT)"
+KEYCLOAK_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-controller:$(COMMIT)"
+SERVICE_BROKER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/service-broker:$(COMMIT)"
 
-SRCS=$(wildcard *.jsonnet)
-OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
-INSTALLDIR=enmasse-$(TAG)
-
-%.json: %.jsonnet
-	jsonnet/jsonnet -V VERSION=$(COMMIT) \
-		-V REGISTRY=$(DOCKER_REGISTRY) \
-		-V PROJECT=$(DOCKER_ORG) \
-		-V ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
-		-V API_SERVER_IMAGE=$(API_SERVER_IMAGE) \
-		-V STANDARD_CONTROLLER_IMAGE=$(STANDARD_CONTROLLER_IMAGE) \
-		-V ROUTER_IMAGE=$(ROUTER_IMAGE) \
-		-V ARTEMIS_IMAGE=$(ARTEMIS_IMAGE) \
-		-V TOPIC_FORWARDER_IMAGE=$(TOPIC_FORWARDER_IMAGE) \
-		-V ROUTER_METRICS_IMAGE=$(ROUTER_METRICS_IMAGE) \
-		-V SERVICE_BROKER_IMAGE=$(SERVICE_BROKER_IMAGE) \
-		-V AGENT_IMAGE=$(AGENT_IMAGE) \
-		-V MQTT_GATEWAY_IMAGE=$(MQTT_GATEWAY_IMAGE) \
-		-V MQTT_LWT_IMAGE=$(MQTT_LWT_IMAGE) \
-		-V NONE_AUTHSERVICE_IMAGE=$(NONE_AUTHSERVICE_IMAGE) \
-		-V KEYCLOAK_IMAGE=$(KEYCLOAK_IMAGE) \
-		-V KEYCLOAK_PLUGIN_IMAGE=$(KEYCLOAK_PLUGIN_IMAGE) \
-		-V KEYCLOAK_CONTROLLER_IMAGE=$(KEYCLOAK_CONTROLLER_IMAGE) \
-		-m build $<
-
-yaml:
-	for i in `find build/ -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done
+DOCSDIR=$(TOPDIR)/documentation/html
+ANSIBLEDIR=$(TOPDIR)/ansible
+BUILDDIR=build
+INSTALLNAME=enmasse-$(TAG)
+INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
+EXAMPLESDIR=$(INSTALLDIR)/examples
+MODULES=address-space-controller extra api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice tenant
 
 prepare:
-	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
-	mkdir -p build/resources/address-space-controller
-	mkdir -p build/resources/api-server
-	mkdir -p build/resources/service-broker
-	mkdir -p build/resources/prometheus
-	mkdir -p build/resources/grafana
-	mkdir -p build/resources/standard-authservice
-	mkdir -p build/resources/none-authservice
-	mkdir -p build/resources/external-lb
-	mkdir -p build/resources/plans
-	mkdir -p build/resources/resource-definitions
-	mkdir -p build/resources/templates
-	cp -r include/persistent-volume.json build/resources/templates
+	mkdir -p $(EXAMPLESDIR)
+	mkdir -p $(EXAMPLESDIR)/templates
+	mkdir -p $(EXAMPLESDIR)/bundles
+	mkdir -p $(EXAMPLESDIR)/install
 
-	mkdir -p install/resources/templates
-	mkdir -p install/resources/address-space-controller
-	mkdir -p install/resources/api-server
-	mkdir -p install/resources/service-broker
-	mkdir -p install/resources/resource-definitions
-	mkdir -p install/resources/cluster-roles/kubernetes
-	mkdir -p install/resources/cluster-roles/openshift
-	mkdir -p install/resources/plans
+replace_images: prepare
+	mkdir -p $(BUILDDIR)/replaced
+	cp -r $(MODULES) $(BUILDDIR)/replaced
+	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
+		cat $$i | ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
+			API_SERVER_IMAGE=$(API_SERVER_IMAGE) \
+			STANDARD_CONTROLLER_IMAGE=$(STANDARD_CONTROLLER_IMAGE) \
+			ROUTER_IMAGE=$(ROUTER_IMAGE) \
+			ARTEMIS_IMAGE=$(ARTEMIS_IMAGE) \
+			TOPIC_FORWARDER_IMAGE=$(TOPIC_FORWARDER_IMAGE) \
+			ROUTER_METRICS_IMAGE=$(ROUTER_METRICS_IMAGE) \
+			SUBSERV_IMAGE=$(SUBSERV_IMAGE) \
+			SERVICE_BROKER_IMAGE=$(SERVICE_BROKER_IMAGE) \
+			NONE_AUTHSERVICE_IMAGE=$(NONE_AUTHSERVICE_IMAGE) \
+			AGENT_IMAGE=$(AGENT_IMAGE) \
+			KEYCLOAK_IMAGE=$(KEYCLOAK_IMAGE) \
+			KEYCLOAK_PLUGIN_IMAGE=$(KEYCLOAK_PLUGIN_IMAGE) \
+			KEYCLOAK_CONTROLLER_IMAGE=$(KEYCLOAK_CONTROLLER_IMAGE) \
+			MQTT_GATEWAY_IMAGE=$(MQTT_GATEWAY_IMAGE) \
+			MQTT_LWT_IMAGE=$(MQTT_LWT_IMAGE) \
+			envsubst '$${ADDRESS_SPACE_CONTROLLER_IMAGE},$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${NONE_AUTHSERVICE_IMAGE},$${KEYCLOAK_IMAGE},$${KEYCLOAK_CONTROLLER_IMAGE},$${KEYCLOAK_PLUGIN_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${ARTEMIS_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${API_SERVER_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
 
-install: prepare $(OBJS) yaml
-	cat include/address-space-definitions.yaml | \
-		STANDARD_CONTROLLER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(STANDARD_CONTROLLER_IMAGE):$(COMMIT) \
-		ROUTER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_IMAGE):$(COMMIT) \
-		BROKER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ARTEMIS_IMAGE):$(COMMIT) \
-		TOPIC_FORWARDER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(TOPIC_FORWARDER_IMAGE):$(COMMIT) \
-		ROUTER_METRICS_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_METRICS_IMAGE):$(COMMIT) \
-		SUBSERV_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SUBSERV_IMAGE):$(COMMIT) \
-		SERVICE_BROKER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SERVICE_BROKER_IMAGE):$(COMMIT) \
-		AGENT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(AGENT_IMAGE):$(COMMIT) \
-		MQTT_GATEWAY_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_GATEWAY_IMAGE):$(COMMIT) \
-		MQTT_LWT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_LWT_IMAGE):$(COMMIT) \
-		envsubst '$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${BROKER_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > install/resources/address-space-controller/address-space-definitions.yaml
-	cat include/standard-broker-definitions.yaml | \
-		STANDARD_CONTROLLER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(STANDARD_CONTROLLER_IMAGE):$(COMMIT) \
-		ROUTER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_IMAGE):$(COMMIT) \
-		BROKER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ARTEMIS_IMAGE):$(COMMIT) \
-		TOPIC_FORWARDER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(TOPIC_FORWARDER_IMAGE):$(COMMIT) \
-		ROUTER_METRICS_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(ROUTER_METRICS_IMAGE):$(COMMIT) \
-		SUBSERV_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SUBSERV_IMAGE):$(COMMIT) \
-		SERVICE_BROKER_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(SERVICE_BROKER_IMAGE):$(COMMIT) \
-		AGENT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(AGENT_IMAGE):$(COMMIT) \
-		MQTT_GATEWAY_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_GATEWAY_IMAGE):$(COMMIT) \
-		MQTT_LWT_IMAGE=$(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(MQTT_LWT_IMAGE):$(COMMIT) \
-		envsubst '$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${BROKER_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > install/resources/address-space-controller/standard-broker-definitions.yaml
-	cp -f include/broker-prometheus-config.yaml install/resources/address-space-controller
-	cp -f include/resource-definitions.yaml install/resources/resource-definitions
-	cp -f include/cluster-roles/*.yaml install/resources/cluster-roles
-	cp -f include/cluster-roles/kubernetes/*.yaml install/resources/cluster-roles/kubernetes
-	cp -f include/cluster-roles/openshift/*.yaml install/resources/cluster-roles/openshift
-	cp -f include/*-plans.yaml install/resources/plans/
-	cp -f include/address.yaml include/address-space.yaml include/service-broker.yaml install/resources/templates
-	cp -f include/api-server/*.yaml install/resources/api-server
-	cp -f include/service-broker/*.yaml install/resources/service-broker
+component_install: replace_images
+	cp -r $(BUILDDIR)/replaced/* $(EXAMPLESDIR)/install/
+	for i in `find $(EXAMPLESDIR)/install -name "*.yaml"`; do \
+		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
 
-package: prepare $(OBJS) yaml install
-	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
-	cp -r install/* build/$(INSTALLDIR)                                                                                                                                        
-	tar -czf build/$(INSTALLDIR).tgz -C build $(INSTALLDIR)
+ansible_install: replace_images
+	cp -r $(ANSIBLEDIR) $(INSTALLDIR)/
+	mkdir -p $(INSTALLDIR)/ansible/playbooks/openshift/install/
+	cp -r $(BUILDDIR)/replaced/* $(INSTALLDIR)/ansible/playbooks/openshift/install/
+	for i in `find $(INSTALLDIR)/ansible/playbooks/openshift/ -name "*.yaml"`; do \
+		cat $$i | NAMESPACE=ANSIBLE_NAMESPACE envsubst '$${NAMESPACE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
+
+ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE=$(EXAMPLESDIR)/templates/enmasse-with-standard-authservice.yaml
+$(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
+	echo 'apiVersion: v1' > $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo 'kind: Template' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo 'metadata:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo '  name: enmasse-with-standard-authservice' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo 'parameters:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo '- name: NAMESPACE' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo '  description: Namespace where EnMasse should be deployed' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo '  required: true' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	echo 'objects:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
+	for mod in address-space-controller api-server api-service standard-authservice tenant; do \
+		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml"`; do \
+			echo "Mod $${mod} file $${i}"; \
+			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE); \
+		done; \
+	done
+
+ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE=$(EXAMPLESDIR)/templates/enmasse-with-none-authservice.yaml
+$(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE): replace_images
+	echo 'apiVersion: v1' > $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo 'kind: Template' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo 'metadata:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo '  name: enmasse-with-none-authservice' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo 'parameters:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo '- name: NAMESPACE' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo '  description: Namespace where EnMasse should be deployed' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo '  required: true' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	echo 'objects:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	for mod in address-space-controller api-server api-service none-authservice tenant; do \
+		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml"`; do \
+			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE); \
+		done; \
+	done
+
+ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE=$(EXAMPLESDIR)/bundles/enmasse-with-none-authservice
+$(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE): replace_images
+	mkdir -p $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE)
+	for i in address-space-controller extra api-server api-service none-authservice tenant; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE)/; \
+	done
+	for i in `find $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) -name "*.yaml"`; do \
+		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
+
+ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE=$(EXAMPLESDIR)/bundles/enmasse-with-standard-authservice
+$(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE): replace_images
+	mkdir -p $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE)
+	for i in address-space-controller extra api-server api-service standard-authservice tenant; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE)/; \
+	done
+	for i in `find $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) -name "*.yaml"`; do \
+		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
+
+install: ansible_install component_install $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
+	cp -r $(DOCSDIR) $(INSTALLDIR)/docs
+
+package: prepare install
+	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
 
 coverage:
 
-.PHONY: yaml prepare package clean
+.PHONY: prepare package clean $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)

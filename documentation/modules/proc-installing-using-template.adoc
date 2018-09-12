@@ -1,0 +1,33 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-openshift.adoc
+
+[id='installing-using-template-{context}']
+= Installing {ProductName} using OpenShift Template
+
+Installing {ProductName} using the OpenShift Template is useful for evaluating {ProductName}. For a production setup, it is recommended to follow xref:installing-using-ansible-{context}[] or xref:installing-using-manual-steps-{context}[].
+
+.Procedure 
+
+. Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
+
+. Login as as a user with cluster-admin 
++
+[options="nowrap",subs="attributes"]
+----
+oc login -u system:admin
+----
+
+. Create the project where you want to deploy {ProductName}
++
+[options="nowrap",subs="attributes"]
+----
+oc new-project enmasse
+----
+
+. Deploy using `enmasse-with-standard-authservice` template
++
+[options="nowrap",subs="attributes"]
+----
+oc process -f examples/templates/enmasse-with-standard-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+----

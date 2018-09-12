@@ -1,0 +1,39 @@
+[id='getting-started-configuring-address-spaces-{context}']
+= Configuring address spaces
+
+{ProductName} support the `brokered` and `standard` address spaces. This guide will use the
+`standard` address space.  For more information about the differences, see
+xref:con-address-space-messaging[].
+
+.Procedure
+
+. Create an address space definition:
++
+[source,yaml,options="nowrap"]
+.link:standard-address-space.yaml[standard-address-space.yaml]
+----
+include::standard-address-space.yaml[]
+----
+
+. Create the address space:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f standard-address-space.yaml
+----
++
+The address space is ready for use when the field `.status.isReady` is set to `true`.
+
+. Check status of address space:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
+----
+
+. Retrieve console URL:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name=='console')].host}
+----

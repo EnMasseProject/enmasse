@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+    component: service-broker
+  name: service-broker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        component: service-broker
+    spec:
+      containers:
+      - env:
+        - name: ENABLE_RBAC
+          value: "false"
+        - name: STANDARD_AUTHSERVICE_CONFIG_NAME
+          value: keycloak-config
+        - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
+          value: keycloak-credentials
+        - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
+          value: standard-authservice-cert
+        - name: SERVICE_CATALOG_CREDENTIALS_SECRET_NAME
+          value: service-catalog-credentials
+        - name: CONSOLE_PROXY_ROUTE_NAME
+          value: console-proxy
+        - name: CERT_DIR
+          value: /service-broker-cert
+        - name: LISTEN_PORT
+          value: '8443'
+        image: ${SERVICE_BROKER_IMAGE}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: https
+            scheme: HTTPS
+        name: service-broker
+        ports:
+        - containerPort: 8443
+          name: https
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /service-broker-cert
+          name: service-broker-cert
+          readOnly: true
+      serviceAccount: service-broker
+      volumes:
+      - name: service-broker-cert
+        secret:
+          secretName: service-broker-cert

@@ -4,36 +4,34 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EndpointController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(EndpointController.class.getName());
-    private final KubernetesClient client;
+    private final OpenShiftClient client;
     private final boolean exposeServicesByDefault;
+    private final boolean isOpenShift;
     private final String namespace;
 
-    public EndpointController(KubernetesClient client, boolean exposeServicesByDefault) {
+    public EndpointController(OpenShiftClient client, boolean exposeServicesByDefault, boolean isOpenShift) {
         this.client = client;
         this.exposeServicesByDefault = exposeServicesByDefault;
+        this.isOpenShift = isOpenShift;
         namespace = client.getNamespace();
     }
 
@@ -119,10 +117,12 @@ public class EndpointController implements Controller {
         for (EndpointInfo endpoint : endpoints) {
             EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpoint.endpointStatus);
 
-            if (client.isAdaptable(OpenShiftClient.class)) {
+            if (isOpenShift) {
                 Route route = ensureRouteExists(addressSpace, endpoint.endpointSpec);
-                statusBuilder.setPort(443);
-                statusBuilder.setHost(route.getSpec().getHost());
+                if (route != null) {
+                    statusBuilder.setPort(443);
+                    statusBuilder.setHost(route.getSpec().getHost());
+                }
             } else {
                 Service service = ensureExternalServiceExists(addressSpace, endpoint.endpointSpec);
                 if (service != null && service.getSpec().getPorts().size() > 0) {
@@ -144,16 +144,17 @@ public class EndpointController implements Controller {
     }
 
     private Route ensureRouteExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {
-        OpenShiftClient openShiftClient = client.adapt(OpenShiftClient.class);
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        Route existingRoute = openShiftClient.routes().inNamespace(namespace).withName(endpointSpec.getName() + "-" + infraUuid).get();
+        Route existingRoute = client.routes().inNamespace(namespace).withName(endpointSpec.getName() + "-" + infraUuid).get();
         if (existingRoute != null) {
             return existingRoute;
         }
 
+        String routeName = endpointSpec.getName() + "-" + infraUuid;
+
         RouteBuilder route = new RouteBuilder()
                 .editOrNewMetadata()
-                .withName(endpointSpec.getName() + "-" + infraUuid)
+                .withName(routeName)
                 .withNamespace(namespace)
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, endpointSpec.getService())
@@ -174,14 +175,31 @@ public class EndpointController implements Controller {
                 .endSpec();
 
         if (endpointSpec.getCertSpec().isPresent()) {
-            route.editOrNewSpec()
+            CertSpec certSpec = endpointSpec.getCertSpec().get();
+            if ("https".equals(endpointSpec.getServicePort()) && "selfsigned".equals(certSpec.getProvider())) {
+                Secret secret = client.secrets().withName(KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace)).get();
+                if (secret != null) {
+                    String consoleCa = new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
+                    route.editOrNewSpec()
+                            .withNewTls()
+                            .withTermination("reencrypt")
+                            .withDestinationCACertificate(consoleCa)
+                            .endTls()
+                            .endSpec();
+                } else {
+                    log.info("Secret for endpoint {} does not yet exist, skipping route creation for now");
+                    return null; // Skip this route until secret is available
+                }
+            } else {
+                route.editOrNewSpec()
                     .withNewTls()
                     .withTermination("passthrough")
                     .endTls()
                     .endSpec();
+            }
         }
-
-        return openShiftClient.routes().inNamespace(namespace).create(route.build());
+        log.info("Creating route {} for endpoint {}", routeName, endpointSpec.getName());
+        return client.routes().inNamespace(namespace).create(route.build());
     }
 
     private Service ensureExternalServiceExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {

@@ -1,5 +1,5 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-BUILD_DIRS     = none-authservice templates
+BUILD_DIRS     = none-authservice
 DOCKER_DIRS	   = agent topic-forwarder artemis api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io
@@ -23,15 +23,21 @@ ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 endif
 
 
-all: init build_java docker_build
+all: init build_java docker_build templates
+
+templates: docu_html
+	make -C templates
 
 build_java:
-	mvn package -B $(MAVEN_ARGS)
+	mvn package -q -B $(MAVEN_ARGS)
 
 clean_java:
-	mvn -B clean
+	mvn -B -q clean
 
-clean: clean_java docu_htmlclean
+template_clean:
+	make -C templates clean
+
+clean: clean_java docu_htmlclean template_clean
 
 docker_build: build_java
 

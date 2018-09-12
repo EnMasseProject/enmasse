@@ -1,51 +1,47 @@
-[[enmasse-on-kubernetes]]
-== {ProductName} on Kubernetes
+[id='quickstart-on-kubernetes']
+= {ProductName} on Kubernetes
 
-:OcGetRoute: kubectl get ingress -o jsonpath='{.spec.host}'
-:OcRoutePort: 443
-:ClusterManager: kubernetes
-:occli: kubectl
-:DeployHost: localhost
-:DeployOptions: 
+:cmdcli: kubectl
+:context: quickstartkube
 
 This guide will walk through the process of setting up {ProductName} on a
 Kubernetes cluster together with clients for sending and receiving
-messages. The guide will deploy EnMasse in a single tenant mode and with the `none` authentication
-service.
+messages.
 
 include::prerequisites-kubernetes.adoc[leveloffset=+1]
 
-[[installing-kubernetes]]
-=== Installing
+== Installing {ProductName}
 
-include::install-procedure.adoc[leveloffset+=1] 
+.Procedure 
 
-This guide uses a shell script for deploying {ProductName}. Windows users are advised to look at
-<<installing-kubernetes>>.
+. Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
 
-include::deploy-procedure.adoc[leveloffset+=1] 
+. Create the namespace where you want to deploy {ProductName}
++
+[options="nowrap",subs="attributes"]
+----
+kubectl create namespace enmasse
+kubectl config set-context $(kubectl config current-context) --namespace=enmasse
+----
 
-[[role-based-access-control]]
-==== Role Based Access Control (RBAC)
+. Replace namespace references in bundle
++
+[options="nowrap",subs="attributes"]
+----
+sed -i "s/namespace: .*/namespace: enmasse/" examples/bundles/enmasse-with-none-authservice/*.yaml
+----
 
-The Kubernetes deployment script and YAML files currently do not support Role
-Based Access Control (RBAC). In Kubernetes clusters which have RBAC enabled, it is
-required to additionally create a role binding for the `default` service account
-to the `edit` role and for the `enmasse-admin` to the `cluster-admin` and `admin` roles:
+. Deploy using `enmasse-with-none-authservice` template
++
+[options="nowrap",subs="attributes"]
+----
+kubectl create -f examples/bundles/enmasse-with-none-authservice
+----
 
-[options="nowrap"]
-....
-kubectl create clusterrolebinding enmasse-admin-cluster-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-admin
-kubectl create rolebinding default-edit-binding --clusterrole=edit --serviceaccount=enmasse:default -n enmasse
-kubectl create rolebinding enmasse-admin-admin-binding --clusterrole=admin --serviceaccount=enmasse:enmasse-admin -n enmasse
-....
-
-_Note: The `cluster-admin` role gives the `enmasse-admin` service account unlimited access to the Kubernetes cluster._
-
-[[configuring-addresses-kubernetes]]
-=== Configuring addresses
+include::configuring-address-spaces.adoc[leveloffset=+1]
 
 include::configuring-addresses.adoc[leveloffset=+1]
+
 
 [[sending-and-receiving-messages-kubernetes]]
 === Sending and receiving messages

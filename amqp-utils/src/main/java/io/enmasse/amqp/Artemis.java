@@ -22,20 +22,18 @@ import java.util.concurrent.TimeoutException;
  */
 public class Artemis implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(Artemis.class.getName());
-    private final String brokerContainerId;
     private long requestTimeoutMillis = 10_000;
     private final SyncRequestClient syncRequestClient;
 
     public Artemis(SyncRequestClient syncRequestClient) {
         this.syncRequestClient = syncRequestClient;
-        this.brokerContainerId = syncRequestClient.getRemoteContainer();
     }
 
     private Message doOperation(String resource, String operation, Object ... parameters) throws TimeoutException {
         Message message = createOperationMessage(resource, operation);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + operation + " with parameters: " + Arrays.toString(parameters));
+            throw new TimeoutException("Timed out getting response from broker " + syncRequestClient.getRemoteContainer() + " on " + resource + "." + operation + " with parameters: " + Arrays.toString(parameters));
         }
         return response;
     }
@@ -44,7 +42,7 @@ public class Artemis implements AutoCloseable {
         Message message = createAttributeMessage(resource, attribute);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + attribute + " with parameters: " + Arrays.toString(parameters));
+            throw new TimeoutException("Timed out getting response from broker " + syncRequestClient.getRemoteContainer() + " on " + resource + "." + attribute + " with parameters: " + Arrays.toString(parameters));
         }
         return response;
     }
@@ -86,29 +84,29 @@ public class Artemis implements AutoCloseable {
     }
 
     public void deployQueue(String name, String address) throws TimeoutException {
-        log.info("Deploying queue {} with address {} on broker {}", name, address, brokerContainerId);
+        log.info("Deploying queue {} with address {} on broker {}", name, address, syncRequestClient.getRemoteContainer());
         doOperation("broker", "deployQueue", address, name, null, false);
     }
 
     public void createQueue(String name, String address) throws TimeoutException {
-        log.info("Creating queue {} with address {} on broker {}", name, address, brokerContainerId);
+        log.info("Creating queue {} with address {} on broker {}", name, address, syncRequestClient.getRemoteContainer());
         doOperation("broker", "createQueue", address, "ANYCAST", name, null, true, -1, false, true);
     }
 
     public void createConnectorService(String name, Map<String, String> connParams) throws TimeoutException {
-        log.info("Creating connector service {} on broker {}", name, brokerContainerId);
+        log.info("Creating connector service {} on broker {}", name, syncRequestClient.getRemoteContainer());
         String factoryName = "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory";
         doOperation("broker", "createConnectorService", name, factoryName, connParams);
     }
 
     public void destroyQueue(String name) throws TimeoutException {
-        log.info("Destroying queue {} on broker {}", name, brokerContainerId);
+        log.info("Destroying queue {} on broker {}", name, syncRequestClient.getRemoteContainer());
         doOperation("broker", "destroyQueue", name, true);
     }
 
     public void destroyConnectorService(String address) throws TimeoutException {
         doOperation("broker", "destroyConnectorService", address);
-        log.info("Destroyed connector service {} on broker {}", address, brokerContainerId);
+        log.info("Destroyed connector service {} on broker {}", address, syncRequestClient.getRemoteContainer());
     }
 
     public long getNumQueues() throws TimeoutException {
@@ -116,7 +114,7 @@ public class Artemis implements AutoCloseable {
     }
 
     public long getQueueMessageCount(String queueName) throws TimeoutException {
-        log.info("Checking message count for queue {} on broker {}", queueName, brokerContainerId);
+        log.info("Checking message count for queue {} on broker {}", queueName, syncRequestClient.getRemoteContainer());
         Message response = doAttribute("queue." + queueName, "messageCount");
         String payload = (String) ((AmqpValue)response.getBody()).getValue();
         JsonArray json = new JsonArray(payload);
@@ -125,7 +123,7 @@ public class Artemis implements AutoCloseable {
 
 
     public String getQueueAddress(String queueName) throws TimeoutException {
-        log.info("Checking queue address for queue {} on broker {}", queueName, brokerContainerId);
+        log.info("Checking queue address for queue {} on broker {}", queueName, syncRequestClient.getRemoteContainer());
         Message response = doOperation("queue." + queueName, "getAddress");
         String payload = (String) ((AmqpValue)response.getBody()).getValue();
         JsonArray json = new JsonArray(payload);
@@ -133,13 +131,13 @@ public class Artemis implements AutoCloseable {
     }
 
     public void forceShutdown() throws TimeoutException {
-        log.info("Sending forceShutdown to broker {}", brokerContainerId);
+        log.info("Sending forceShutdown to broker {}", syncRequestClient.getRemoteContainer());
         Message request = createOperationMessage("broker", "forceFailover");
         doRequestResponse(10, TimeUnit.SECONDS, request);
     }
 
     public Set<String> getQueueNames() throws TimeoutException {
-        log.info("Retrieving queue names for broker {}", brokerContainerId);
+        log.info("Retrieving queue names for broker {}", syncRequestClient.getRemoteContainer());
         Message response = doOperation("broker", "getQueueNames");
 
         Set<String> queues = new LinkedHashSet<>();
@@ -219,7 +217,7 @@ public class Artemis implements AutoCloseable {
     }
 
     public Set<String> getConnectorNames() throws TimeoutException {
-        log.info("Retrieving conector names for broker {}", brokerContainerId);
+        log.info("Retrieving conector names for broker {}", syncRequestClient.getRemoteContainer());
         Message response = doOperation("broker", "getConnectorServices");
 
         Set<String> connectors = new LinkedHashSet<>();

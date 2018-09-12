@@ -1,0 +1,14 @@
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ClusterServiceBroker
+metadata:
+  name: enmasse
+  labels:
+    app: enmasse
+spec:
+  url: "https://service-broker.${NAMESPACE}.svc:8443/osbapi/"
+  authInfo:
+    bearer:
+      secretRef:
+        name: service-catalog-credentials
+        namespace: ${NAMESPACE}
+  insecureSkipTLSVerify: true

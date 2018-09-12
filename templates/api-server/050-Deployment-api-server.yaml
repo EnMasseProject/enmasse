@@ -1,0 +1,71 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+    component: api-server
+  name: api-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        component: api-server
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -verbose:gc
+        - name: CERT_DIR
+          value: /api-server-cert
+        - name: ENABLE_RBAC
+          valueFrom:
+            configMapKeyRef:
+              key: enableRbac
+              name: api-server-config
+              optional: true
+        - name: APISERVER_CLIENT_CA_CONFIG_NAME
+          value: extension-apiserver-authentication
+        - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
+          value: kube-system
+        - name: APISERVER_ROUTE_NAME
+          value: restapi
+        - name: STANDARD_AUTHSERVICE_CONFIG_NAME
+          value: keycloak-config
+        - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
+          value: keycloak-credentials
+        - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
+          value: standard-authservice-cert
+        image: ${API_SERVER_IMAGE}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+        name: api-server
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8443
+          name: https
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /api-server-cert
+          name: api-server-cert
+          readOnly: true
+      serviceAccount: api-server
+      volumes:
+      - name: api-server-cert
+        secret:
+          secretName: api-server-cert

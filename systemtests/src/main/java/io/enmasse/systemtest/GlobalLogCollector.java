@@ -19,10 +19,12 @@ public class GlobalLogCollector {
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
     private final Kubernetes kubernetes;
     private final File logDir;
+    private final String namespace;
 
     public GlobalLogCollector(Kubernetes kubernetes, File logDir) {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
+        this.namespace = kubernetes.getNamespace();
     }
 
 
@@ -40,7 +42,7 @@ public class GlobalLogCollector {
         collectorMap.remove(namespace);
     }
 
-    public void collectConfigMaps(String namespace) {
+    public void collectConfigMaps() {
         log.info("Collecting configmaps for namespace {}", namespace);
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
@@ -62,7 +64,7 @@ public class GlobalLogCollector {
     /**
      * Collect logs from terminated pods in namespace
      */
-    public void collectLogsTerminatedPods(String namespace) {
+    public void collectLogsTerminatedPods() {
         log.info("Store logs from all terminated pods in namespace '{}'", namespace);
         kubernetes.getLogsOfTerminatedPods(namespace).forEach((podName, podLogTerminated) -> {
             try {
@@ -82,7 +84,7 @@ public class GlobalLogCollector {
         });
     }
 
-    public void collectEvents(String namespace) {
+    public void collectEvents() {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("kubectl", "get", "events", "-n", namespace);
         processBuilder.redirectErrorStream(true);

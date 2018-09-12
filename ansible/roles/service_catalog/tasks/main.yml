@@ -1,0 +1,3 @@
+---
+- name: Apply the Service Broker configuration
+  shell: oc apply -n {{ namespace }} -f "{{ playbook_dir }}/install/service-broker"

@@ -1,6 +1,0 @@
----
-- name: Grant clusterrole {{ clusterrole_name}} privileges to service account
-  shell: oc create clusterrolebinding {{ clusterrole_name }}-{{ namespace }}-{{ enmasse_serviceaccount }} --clusterrole={{ clusterrole_name }} --serviceaccount={{ namespace }}:{{ enmasse_serviceaccount }}
-  register: rolebinding_exists
-  failed_when: rolebinding_exists.stderr != '' and 'already exists' not in rolebinding_exists.stderr
-

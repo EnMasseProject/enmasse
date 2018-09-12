@@ -9,22 +9,23 @@ To send and receive messages, you should connect to the exposed route. To start 
 
 [options="nowrap",subs=attributes+]
 ....
-./simple_recv.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/myanycast" -m 10
+./simple_recv.py -a "amqps://$({cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name=='messaging')].host):443/myanycast" -m 10
 ....
 
 This will block until it has received 10 messages. To start the sender, run:
 
 [options="nowrap",subs=attributes+]
 ....
-./simple_send.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/myanycast" -m 10
+./simple_send.py -a "amqps://$({cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name=='messaging')].host):443/myanycast" -m 10
 ....
 
-The server certificates is not verified in the above examples. To fetch the certificate, run:
+The server certificates is not verified in the above examples as we have deployed {ProductName} with
+self-signed certificates. To fetch the certificate, run:
 
 [options="nowrap",subs=attributes+]
 ....
 mkdir -p certs
-{occli} get secret external-certs-messaging -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
+{cmdcli} get secret $({cmdcli} get addressspace myspace -o jsonpath={.spec.endpoints[?(@.name=='messaging')].cert.secretName}) -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
 ....
 
 You can modify the client code to use this cert to verify the server connection.

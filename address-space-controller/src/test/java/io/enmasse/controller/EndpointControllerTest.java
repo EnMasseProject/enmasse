@@ -15,10 +15,8 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.dsl.internal.NamespaceOperationsImpl;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -30,11 +28,11 @@ import static org.mockito.Mockito.when;
 
 public class EndpointControllerTest {
 
-    private KubernetesClient client;
+    private OpenShiftClient client;
 
     @Before
     public void setup() {
-        client = mock(KubernetesClient.class);
+        client = mock(OpenShiftClient.class);
     }
 
     @Test
@@ -78,7 +76,7 @@ public class EndpointControllerTest {
 
         when(r.list()).thenReturn(new ServiceListBuilder().addNewItemLike(service).endItem().build());
 
-        EndpointController controller = new EndpointController(client, false);
+        EndpointController controller = new EndpointController(client, false, true);
 
         AddressSpace newspace = controller.handle(addressSpace);
 
@@ -137,7 +135,7 @@ public class EndpointControllerTest {
         when(op.withName(eq("messaging"))).thenReturn(rinternal);
         when(rinternal.get()).thenReturn(service);
 
-        EndpointController controller = new EndpointController(client, true);
+        EndpointController controller = new EndpointController(client, true, false);
 
         AddressSpace newspace = controller.handle(addressSpace);
 

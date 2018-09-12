@@ -1,3 +1,0 @@
----
-dependencies:
-  - { role: address_controller_sa }

@@ -9,24 +9,18 @@
 [id='installing-on-openshift-{context}']
 = Installing {ProductName} on OpenShift
 
-{ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the
-`deploy.sh` script, or the manual steps.
-
-NOTE: You can invoke the deployment script with `-h` to view a list of options.
+{ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the OpenShift template, or the manual steps.
 
 include::../common/snip-prerequisites-openshift.adoc[]
 
 include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
-include::../modules/ref-ansible-config-settings.adoc[leveloffset=+1]
+include::../modules/proc-installing-using-template.adoc[leveloffset=+1]
 
 include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
-
-//include::../modules/proc-installing-deploy-script.adoc[leveloffset=+1]
 
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
 
 include::../modules/proc-installing-without-cluster-admin-privileges.adoc[leveloffset=+1]
 
 :context: {parent-context}
-

@@ -6,22 +6,12 @@ To build EnMasse, you need
 
    * [JDK](http://openjdk.java.net/) >= 1.8
    * [Apache Maven](https://maven.apache.org/) >= 3.3.1
-   * [Python](https://www.python.org/)
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
-   * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
-   * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7 (to build documentation)
-   * [Coderay](https://rubygems.org/gems/coderay/versions/1.1.1) >= 1.1.1 (to build documentation)
+   * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7
 
 The EnMasse java and node modules are built using maven. All docker images are built using make.
 
-## Check out submodules
-
-[jsonnet](http://jsonnet.org) is required to build templates. It is configured as a submodule that
-can be initialized:
-    
-    git submodule update --init
-    
 ## Building
 
 ### Pre-installation

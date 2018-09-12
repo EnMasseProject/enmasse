@@ -11,8 +11,6 @@
 
 These steps follow the manual deployment procedure and work on any platform supporting the `kubectl` command-line client.
 
-To simplify deployment, see the `deploy.sh` script, which works on Linux and Mac. You can invoke the deployment script with `-h` to view a list of options.
-
 include::../common/snip-prerequisites-kubernetes.adoc[]
 
 include::../common/proc-download-procedure.adoc[leveloffset=+1]

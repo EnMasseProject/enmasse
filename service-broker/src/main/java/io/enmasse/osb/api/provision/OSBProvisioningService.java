@@ -31,11 +31,11 @@ import io.vertx.core.json.JsonObject;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    private final String consolePrefix;
+    private final ConsoleProxy consoleProxy;
 
-    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, String consolePrefix) {
+    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, ConsoleProxy consoleProxy) {
         super(addressSpaceApi, authApi, schemaProvider);
-        this.consolePrefix = consolePrefix;
+        this.consoleProxy = consoleProxy;
     }
 
     @PUT
@@ -79,7 +79,7 @@ public class OSBProvisioningService extends OSBServiceBase {
             if (desiredService.isPresent() && desiredService.get().equals(service)) {
                 Optional<Plan> plan = service.getPlan(request.getPlanId());
                 if (plan.isPresent() && plan.get().getName().equals(existingAddressSpace.get().getPlan())) {
-                    String dashboardUrl = getConsoleURL(existingAddressSpace.get());
+                    String dashboardUrl = consoleProxy.getConsoleUrl(existingAddressSpace.get());
                     return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
                 }
             }
@@ -92,16 +92,12 @@ public class OSBProvisioningService extends OSBServiceBase {
         AddressSpaceType addressSpaceType = serviceMapping.getAddressSpaceTypeForService(service);
         AddressSpace addressSpace = createAddressSpace(instanceId, name, addressSpaceType.getName(), service.getPlan(request.getPlanId()).get().getName(), userId, userName);
 
-        String dashboardUrl = getConsoleURL(addressSpace);
+        String dashboardUrl = consoleProxy.getConsoleUrl(addressSpace);
 
         log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
         return Response.status(Response.Status.ACCEPTED)
                 .entity(new ProvisionResponse(dashboardUrl, "provision"))
                 .build();
-    }
-
-    private String getConsoleURL(AddressSpace addressSpace) {
-        return consolePrefix + "/" + addressSpace.getName();
     }
 
     private boolean isValidPlan(Service service, UUID planId) {

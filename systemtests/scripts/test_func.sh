@@ -24,8 +24,14 @@ function setup_test() {
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
     export REGISTER_API_SERVER=${REG_API_SERVER}
+
+
     if [[ $REGISTER_API_SERVER == "true" ]]; then
+    #    if [[ $(get_openshift_version) == '3.9'* ]]; then
         export ENABLE_RBAC="false"
+    #    else
+    #        export ENABLE_RBAC="true"
+    #    fi
     else
         export ENABLE_RBAC="true"
     fi

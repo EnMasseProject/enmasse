@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: address-plan-brokered-topic
+  labels:
+    type: address-plan
+    app: enmasse
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "AddressPlan",
+      "metadata": {
+        "name": "brokered-topic"
+      },
+      "displayName": "Brokered Topic",
+      "displayOrder": 0,
+      "shortDescription": "Creates a topic on a broker.",
+      "longDescription": "Creates a topic on a broker.",
+      "uuid": "a991e6fc-0501-11e8-8230-507b9def37d9",
+      "addressType": "topic",
+      "requiredResources": [
+        {
+          "name": "broker",
+          "credit": 0.0
+        }
+      ]
+    }

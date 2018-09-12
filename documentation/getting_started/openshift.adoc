@@ -1,33 +1,44 @@
-[[enmasse-on-openshift]]
+[id='quickstart-on-openshift']
 = {ProductName} on OpenShift
 
-:OcGetRoute: oc get route -o jsonpath='{.spec.host}'
-:OcRoutePort: 443
-:ClusterManager: openshift
-:occli: oc
-:DeployHost: localhost
-:DeployOptions: 
+:cmdcli: oc
 :parent-context: {context}
 :context: quickstartopenshift
 
 This guide will walk through the process of setting up {ProductName} on
-OpenShift with clients for sending and receiving messages. The guide will deploy EnMasse in a single
-tenant mode and with the `none` authentication service.
+OpenShift with clients for sending and receiving messages.
 
 include::common/prerequisites-openshift.adoc[leveloffset=+1]
 
 [[installing-openshift]]
 == Installing {ProductName}
 
-include::install-procedure.adoc[leveloffset+=1] 
+.Procedure 
 
-This guide uses a shell script for deploying {ProductName}. Windows users are advised to look at
-<<installing-openshift>>.
+. Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
 
-include::deploy-procedure.adoc[leveloffset+=1] 
+. Login as as a user with cluster-admin 
++
+[options="nowrap",subs="attributes"]
+----
+oc login -u system:admin
+----
 
-[[configuring-addresses-openshift]]
-== Configuring addresses
+. Create the project where you want to deploy {ProductName}
++
+[options="nowrap",subs="attributes"]
+----
+oc new-project enmasse
+----
+
+. Deploy using `enmasse-with-none-authservice` template
++
+[options="nowrap",subs="attributes"]
+----
+oc process -f examples/templates/enmasse-with-none-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+----
+
+include::configuring-address-spaces.adoc[leveloffset=+1]
 
 include::configuring-addresses.adoc[leveloffset=+1]
 

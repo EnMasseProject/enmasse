@@ -12,7 +12,6 @@
 :toc: left
 :linkattrs:
 :toclevels: 4
-:source-highlighter: coderay
 
 // Product attributes
 

@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "enmasse.io:keycloak-controller-${NAMESPACE}"
+  labels:
+    app: enmasse
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: enmasse.io:keycloak-controller
+subjects:
+- kind: ServiceAccount
+  name: keycloak-controller
+  namespace: ${NAMESPACE}

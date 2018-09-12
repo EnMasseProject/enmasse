@@ -22,10 +22,27 @@ SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
 SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
 export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
+kubectl exec -ti busybox -- nslookup kubernetes.default
+
 kubectl create namespace $OPENSHIFT_PROJECT
 kubectl config set-context $(kubectl config current-context) --namespace=$OPENSHIFT_PROJECT
 
-${ENMASSE_DIR}/deploy.sh -n $OPENSHIFT_PROJECT -o multitenant -a "none standard" -t kubernetes
+
+mkdir -p api-server-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${OPENSHIFT_PROJET}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
+
+mkdir -p none-authservice-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.${OPENSHIFT_PROJET}.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+kubectl create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
+
+mkdir -p standard-authservice-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${OPENSHIFT_PROJET}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
+
+cp -r ${ENMASSE_DIR}/examples/install/none-authservice/*.yaml ${ENMASSE_DIR}/examples/bundles/enmasse-with-standard-authservice
+sed -i "s/namespace: .*/namespace: ${OPENSHIFT_PROJECT}/" ${ENMASSE_DIR}/examples/bundles/enmasse-with-standard-authservice/*.yaml
+kubectl create -f ${ENMASSE_DIR}/examples/bundles/enmasse-with-standard-authservice
 
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"

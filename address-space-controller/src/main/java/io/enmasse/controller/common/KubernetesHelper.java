@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -36,12 +35,14 @@ public class KubernetesHelper implements Kubernetes {
     private final String namespace;
     private final String controllerToken;
     private final File templateDir;
+    private final boolean isOpenShift;
 
-    public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, File templateDir) {
+    public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, File templateDir, boolean isOpenShift) {
         this.client = client;
         this.namespace = namespace;
         this.controllerToken = token;
         this.templateDir = templateDir;
+        this.isOpenShift = isOpenShift;
     }
 
     @Override
@@ -85,12 +86,13 @@ public class KubernetesHelper implements Kubernetes {
         client.apps().statefulSets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.deploymentConfigs().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.extensions().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.serviceAccounts().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        if (client.isAdaptable(OpenShiftClient.class)) {
+        if (isOpenShift) {
+            client.roleBindings().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
+            client.deploymentConfigs().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
             client.routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         }
     }
@@ -130,9 +132,8 @@ public class KubernetesHelper implements Kubernetes {
         }
     }
 
-    private void createRoleBinding(String name, String namespace, String refKind, String refName, List<Subject> subjectList) {
+    private void createRoleBinding(String name, String namespace, Map<String, String> labelMap, String refKind, String refName, List<Subject> subjectList) {
 
-        Boolean isOpenShift = client.isAdaptable(OpenShiftClient.class);
         String apiVersion = isOpenShift ? "v1" : "rbac.authorization.k8s.io/v1";
         String apiPath = isOpenShift ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1";
 
@@ -144,6 +145,11 @@ public class KubernetesHelper implements Kubernetes {
         JsonObject metadata = new JsonObject();
         metadata.put("name", name);
         metadata.put("namespace", namespace);
+        JsonObject labels = new JsonObject();
+        for (Map.Entry<String, String> labelEntry : labelMap.entrySet()) {
+            labels.put(labelEntry.getKey(), labelEntry.getValue());
+        }
+        metadata.put("labels", labels);
         body.put("metadata", metadata);
 
         JsonObject roleRef = new JsonObject();
@@ -182,7 +188,7 @@ public class KubernetesHelper implements Kubernetes {
                     .withLabels(labels)
                     .endMetadata()
                     .done();
-            createRoleBinding(saName + "-admin", namespace, "ClusterRole", "admin", Arrays.asList(new Subject("ServiceAccount", saName, namespace)));
+            createRoleBinding(saName + "-admin", namespace, labels, "ClusterRole", "admin", Arrays.asList(new Subject("ServiceAccount", saName, namespace)));
         }
     }
 

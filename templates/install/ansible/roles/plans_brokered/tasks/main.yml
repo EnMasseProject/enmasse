@@ -1,3 +1,0 @@
----
-- name: Deploy brokered address space plans
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/plans/brokered-plans.yaml
