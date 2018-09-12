@@ -93,7 +93,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         weakTopicPlan.getName(), assertMessage));
 
         //simple send/receive
-        UserCredentials user = new UserCredentials("test_newplan_name", "test_newplan_password");
+        UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
         createUser(weakAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(weakAddressSpace);
@@ -145,7 +145,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        UserCredentials user = new UserCredentials("quota_user", "quotaPa55");
+        UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
         //check router limits
@@ -224,7 +224,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
                 addressSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(addressSpace);
-        UserCredentials user = new UserCredentials("quota_user", "quotaPa55");
+        UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
         //check broker limits
@@ -381,7 +381,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         appendAddresses(messagePersistAddressSpace, queue3, queue4);
 
         //send 1000 messages to each queue
-        UserCredentials user = new UserCredentials("test_scale_user_name", "test_scale_user_pswd");
+        UserCredentials user = new UserCredentials("test-scale-user-name", "test_scale_user_pswd");
         createUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
@@ -451,7 +451,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //send 100000 messages to queue
-        UserCredentials user = new UserCredentials("test_change_plan_user", "test_change_plan_pswd");
+        UserCredentials user = new UserCredentials("test-change-plan-user", "test_change_plan_pswd");
         createUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);

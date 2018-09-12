@@ -299,9 +299,11 @@ public class KeycloakUserApi implements UserApi  {
 
     @Override
     public void deleteUser(String realm, User user) {
+        log.info("Deleting user {} in realm {}", user.getSpec().getUsername(), realm);
         withKeycloak(keycloak -> {
             List<UserRepresentation> users = keycloak.realm(realm).users().search(user.getSpec().getUsername());
             for (UserRepresentation userRep : users) {
+                log.info("Found user with name {}, want {}", userRep.getUsername(), user.getSpec().getUsername());
                 if (user.getSpec().getUsername().equals(userRep.getUsername())) {
                     keycloak.realm(realm).users().delete(userRep.getId());
                 }

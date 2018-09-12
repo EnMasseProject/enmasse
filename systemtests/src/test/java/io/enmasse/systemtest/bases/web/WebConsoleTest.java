@@ -508,7 +508,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCannotCreateAddresses() throws Exception {
-        UserCredentials monitorUser = new UserCredentials("monitor_user" + UUID.randomUUID(), "monitorPa55");
+        UserCredentials monitorUser = new UserCredentials("monitor-user" + UUID.randomUUID(), "monitorPa55");
 
         createUser(sharedAddressSpace, new User().setUserCredentials(monitorUser).addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.VIEW)));
 
@@ -524,7 +524,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestCannotDeleteAddresses() throws Exception {
         Destination destination = Destination.queue("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
-        UserCredentials monitorUser = new UserCredentials("monitor_user_test_2", "monitorPa55");
+        UserCredentials monitorUser = new UserCredentials("monitor-user-test-2", "monitorPa55");
 
         createUser(sharedAddressSpace, new User().setUserCredentials(monitorUser).addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.VIEW)));
         setAddresses(destination);
@@ -542,7 +542,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestViewAddresses() throws Exception {
         Destination allowedDestination = Destination.queue("test-view-queue", getDefaultPlan(AddressType.QUEUE));
         Destination notAllowedDestination = Destination.queue("test-not-view-queue", getDefaultPlan(AddressType.QUEUE));
-        UserCredentials viewUser = new UserCredentials("view_user_addresses", "viewPa55");
+        UserCredentials viewUser = new UserCredentials("view-user-addresses", "viewPa55");
 
         prepareViewItemTest(viewUser, allowedDestination, notAllowedDestination);
 
@@ -561,7 +561,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestViewConnections() throws Exception {
         Destination destination = Destination.queue("test-queue-view-connections", getDefaultPlan(AddressType.QUEUE));
-        UserCredentials viewUser = new UserCredentials("view_user_connections", "viewPa55");
+        UserCredentials viewUser = new UserCredentials("view-user-connections", "viewPa55");
         prepareViewItemTest(viewUser, destination, null);
 
         consoleWebPage.openWebConsolePage();
@@ -581,7 +581,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         assertEquals(connections, consoleWebPage.getConnectionItems().size(),
                 String.format("Console failed, does not contain %d connections", connections));
         assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", viewUser),
-                "view_user_connections", consoleWebPage.getConnectionItems());
+                "view-user-connections", consoleWebPage.getConnectionItems());
 
         noUsersConnections.stop();
         usersConnections.stop();
@@ -600,7 +600,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.openAddressesPageWebConsole();
 
             assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", user),
-                    user.getUsername().replace("user_", ""), consoleWebPage.getAddressItems());
+                    user.getUsername().replace("user-", ""), consoleWebPage.getAddressItems());
             removeUser(sharedAddressSpace, user.getUsername());
         }
     }
@@ -784,7 +784,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             fail("No address items in console for group " + group);
         for (AddressWebItem item : addresses) {
             if (group.contains("*")) {
-                String rights = defaultCredentials.getUsername().replace("user_view_", "")
+                String rights = defaultCredentials.getUsername().replace("user-view-", "")
                         .replace("*", "")
                         .replace("#", "");
                 assertTrue(rights.equals("") || item.getName().contains(rights), message);

@@ -167,6 +167,7 @@ public class HttpUserService {
 
     @DELETE
     @Path("{userName}")
+    @Produces({MediaType.APPLICATION_JSON})
     public Response deleteUser(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("userName") String userNameWithAddressSpace) throws Exception {
         return doRequest("Error deleting user " + userNameWithAddressSpace, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
@@ -187,6 +188,7 @@ public class HttpUserService {
     }
 
     @DELETE
+    @Produces({MediaType.APPLICATION_JSON})
     public Response deleteUsers(@Context SecurityContext securityContext, @PathParam("namespace") String namespace) throws Exception {
         return doRequest("Error deleting address space s", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);

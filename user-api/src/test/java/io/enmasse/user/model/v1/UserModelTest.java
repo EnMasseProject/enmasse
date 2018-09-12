@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserModelTest {
     @Test
@@ -137,13 +139,33 @@ public class UserModelTest {
 
     @Test
     public void testValidation() {
+        createAndValidate("myspace.user1", "user1", true);
+        createAndValidate("myspace.usEr1", "user1", false);
+        createAndValidate("myspace.user1", "usEr1", false);
+        createAndValidate("myspace.user1", "usEr1", false);
+        createAndValidate("myspaceuser1", "user1", false);
+        createAndValidate("myspace.user1-", "user1", false);
+        createAndValidate("myspace-.user1", "user1", false);
+        createAndValidate("-myspace.user1", "user1", false);
+        createAndValidate("myspace.-user1", "user1", false);
+        createAndValidate("myspace.user1", "user1-", false);
+        createAndValidate("myspace.user1", "-user1-", false);
+        createAndValidate("myspace.user1-foo-bar", "user1-foo-bar", true);
+        UUID uuid = UUID.randomUUID();
+        createAndValidate("myspace." + uuid.toString(), uuid.toString(), true);
+        createAndValidate("a.ab", "ab", true);
+        createAndValidate("aa.b", "b", true);
+        createAndValidate("a.b", "b", true);
+    }
+
+    private void createAndValidate(String name, String username, boolean shouldValidate) {
         User u1 = new User.Builder()
                 .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user1")
+                        .setName(name)
                         .setNamespace("ns1")
                         .build())
                 .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
+                        .setUsername(username)
                         .setAuthentication(new UserAuthentication.Builder()
                                 .setType(UserAuthenticationType.federated)
                                 .setProvider("openshift")
@@ -162,7 +184,13 @@ public class UserModelTest {
                         .build())
                 .build();
 
-        u1.validate();
+        try {
+            u1.validate();
+            assertTrue(shouldValidate);
+        } catch (UserValidationFailedException e) {
+            // e.printStackTrace();
+            assertFalse(shouldValidate);
+        }
     }
 
     private void assertAuthorization(User deserialized, List<String> addresses, List<Operation> operations) {
