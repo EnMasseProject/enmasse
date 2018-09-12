@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: address-plan-pooled-topic
+  labels:
+    type: address-plan
+    app: enmasse
+data:
+  definition: |-
+    {
+      "apiVersion": "enmasse.io/v1",
+      "kind": "AddressPlan",
+      "metadata": {
+        "name": "pooled-topic"
+      },
+      "displayName": "Pooled Topic",
+      "displayOrder": 0,
+      "shortDescription": "Creates a topic on a shared broker.",
+      "longDescription": "Creates a topic on a shared broker with other topics.",
+      "uuid": "45e0bc24-155e-11e8-8962-507b9def37d9",
+      "addressType": "topic",
+      "requiredResources": [
+        {
+          "name": "router",
+          "credit": 0.01
+        },
+        {
+          "name": "broker",
+          "credit": 0.01
+        }
+      ]
+    }

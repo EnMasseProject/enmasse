@@ -24,13 +24,13 @@ public class ApiServerOptions {
     private String namespace;
     private String certDir;
     private Duration resyncInterval;
-    private String clientCa;
-    private String requestHeaderClientCa;
     private boolean enableRbac;
-    private String keycloakUri;
-    private String keycloakAdminUser;
-    private String keycloakAdminPassword;
-    private KeyStore keycloakTrustStore;
+    private String standardAuthserviceConfigName;
+    private String standardAuthserviceCredentialsSecretName;
+    private String standardAuthserviceCertSecretName;
+    private String apiserverClientCaConfigName;
+    private String apiserverClientCaConfigNamespace;
+    private String restapiRouteName;
 
     public static ApiServerOptions fromEnv(Map<String, String> env) {
 
@@ -41,42 +41,32 @@ public class ApiServerOptions {
 
         options.setCertDir(getEnv(env, "CERT_DIR").orElse("/api-server-cert"));
 
-        options.setClientCa(getEnv(env, "CLIENT_CA").orElse(null));
-        options.setRequestHeaderClientCa(getEnv(env, "REQUEST_HEADER_CLIENT_CA").orElse(null));
-
         options.setResyncInterval(getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofMinutes(5)));
 
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
 
-        getEnv(env, "KEYCLOAK_URI").ifPresent(options::setKeycloakUri);
-        getEnv(env, "KEYCLOAK_ADMIN_USER").ifPresent(options::setKeycloakAdminUser);
-        getEnv(env, "KEYCLOAK_ADMIN_PASSWORD").ifPresent(options::setKeycloakAdminPassword);
-        getEnv(env, "KEYCLOAK_URI").ifPresent(options::setKeycloakUri);
-        getEnv(env, "KEYCLOAK_CERT").ifPresent(ca -> options.setKeycloakTrustStore(createKeyStore(ca)));
+        options.setStandardAuthserviceConfigName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CONFIG_NAME"));
+        options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
+        options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
+
+        options.setApiserverClientCaConfigName(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAME").orElse(null));
+        options.setApiserverClientCaConfigNamespace(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAMESPACE").orElse(null));
+
+        options.setRestapiRouteName(getEnv(env, "APISERVER_ROUTE_NAME").orElse(null));
 
         return options;
     }
 
-    private static KeyStore createKeyStore(String authServiceCa) {
 
-        try {
-            KeyStore keyStore = KeyStore.getInstance("JKS");
-            keyStore.load(null);
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            keyStore.setCertificateEntry("keycloak",
-                    cf.generateCertificate(new ByteArrayInputStream(authServiceCa.getBytes("UTF-8"))));
-
-            return keyStore;
-        } catch (Exception ignored) {
-            log.warn("Error creating keystore for keycloak CA. Ignoring", ignored);
-            return null;
-        }
-    }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
         return Optional.ofNullable(env.get(envVar));
+    }
+
+    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
+        return getEnv(env, envVar).orElseThrow(() -> new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar)));
     }
 
     private static String readFile(File file) {
@@ -111,19 +101,6 @@ public class ApiServerOptions {
         this.resyncInterval = resyncInterval;
     }
 
-    private void setKeycloakUri(String keycloakUri) {
-        this.keycloakUri = keycloakUri;
-    }
-
-
-    public void setClientCa(String clientCa) {
-        this.clientCa = clientCa;
-    }
-
-    public String getClientCa() {
-        return clientCa;
-    }
-
     public boolean isEnableRbac() {
         return enableRbac;
     }
@@ -132,39 +109,51 @@ public class ApiServerOptions {
         this.enableRbac = enableRbac;
     }
 
-    public void setRequestHeaderClientCa(String clientCa) {
-        this.requestHeaderClientCa = clientCa;
+    public String getStandardAuthserviceConfigName() {
+        return standardAuthserviceConfigName;
     }
 
-    public String getRequestHeaderClientCa() {
-        return requestHeaderClientCa;
+    public void setStandardAuthserviceConfigName(String standardAuthserviceConfigName) {
+        this.standardAuthserviceConfigName = standardAuthserviceConfigName;
     }
 
-    public void setKeycloakAdminUser(String keycloakAdminUser) {
-        this.keycloakAdminUser = keycloakAdminUser;
+    public String getStandardAuthserviceCredentialsSecretName() {
+        return standardAuthserviceCredentialsSecretName;
     }
 
-    public String getKeycloakUri() {
-        return keycloakUri;
+    public void setStandardAuthserviceCredentialsSecretName(String standardAuthserviceCredentialsSecretName) {
+        this.standardAuthserviceCredentialsSecretName = standardAuthserviceCredentialsSecretName;
     }
 
-    public String getKeycloakAdminUser() {
-        return keycloakAdminUser;
+    public String getStandardAuthserviceCertSecretName() {
+        return standardAuthserviceCertSecretName;
     }
 
-    public String getKeycloakAdminPassword() {
-        return keycloakAdminPassword;
+    public void setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
+        this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
     }
 
-    public void setKeycloakAdminPassword(String keycloakAdminPassword) {
-        this.keycloakAdminPassword = keycloakAdminPassword;
+    public String getApiserverClientCaConfigName() {
+        return apiserverClientCaConfigName;
     }
 
-    public KeyStore getKeycloakTrustStore() {
-        return keycloakTrustStore;
+    public void setApiserverClientCaConfigName(String apiserverClientCaConfigName) {
+        this.apiserverClientCaConfigName = apiserverClientCaConfigName;
     }
 
-    public void setKeycloakTrustStore(KeyStore keycloakTrustStore) {
-        this.keycloakTrustStore = keycloakTrustStore;
+    public String getApiserverClientCaConfigNamespace() {
+        return apiserverClientCaConfigNamespace;
+    }
+
+    public void setApiserverClientCaConfigNamespace(String apiserverClientCaConfigNamespace) {
+        this.apiserverClientCaConfigNamespace = apiserverClientCaConfigNamespace;
+    }
+
+    public String getRestapiRouteName() {
+        return restapiRouteName;
+    }
+
+    public void setRestapiRouteName(String restapiRouteName) {
+        this.restapiRouteName = restapiRouteName;
     }
 }

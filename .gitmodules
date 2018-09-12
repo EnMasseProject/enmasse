@@ -1,3 +1,0 @@
-[submodule "templates/jsonnet"]
-	path = templates/jsonnet
-	url = https://github.com/google/jsonnet.git

@@ -20,3 +20,4 @@ MINISHIFT_ENABLE_EXPERIMENTAL="y" minishift start --extra-clusterup-flags "--ser
 endif::Minishift[]
 
 * A method to generate certificates is required. This guide uses link:https://www.openssl.org/[OpenSSL^].
+* A user with `cluster-admin` permissions is needed

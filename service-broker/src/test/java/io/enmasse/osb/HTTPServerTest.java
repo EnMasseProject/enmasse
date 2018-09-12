@@ -12,6 +12,7 @@ import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -52,7 +53,12 @@ public class HTTPServerTest {
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
         when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
         when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
-        httpServer = new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, null, false, null, 0, "http://localhost/console");
+        httpServer = new HTTPServer(instanceApi, new TestSchemaProvider(), authApi, null, false, null, 0, new ConsoleProxy() {
+            @Override
+            public String getConsoleUrl(AddressSpace addressSpace) {
+                return "http://localhost/console/" + addressSpaceName;
+            }
+        });
         vertx.deployVerticle(httpServer, context.asyncAssertSuccess());
     }
 

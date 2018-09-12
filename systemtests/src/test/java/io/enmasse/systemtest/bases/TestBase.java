@@ -234,7 +234,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        logCollector.collectConfigMaps();
         TestUtils.delete(addressApiClient, addressSpace, destinations);
     }
 
@@ -254,13 +254,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Destination... destinations) throws Exception {
         TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, destinations);
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        logCollector.collectConfigMaps();
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
         TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        logCollector.collectConfigMaps();
     }
 
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
@@ -279,7 +279,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
         TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
-        logCollector.collectConfigMaps(addressSpace.getNamespace());
+        logCollector.collectConfigMaps();
     }
 
     protected JsonObject sendRestApiRequest(HttpMethod method, URL url, int expectedCode, Optional<JsonObject> payload) throws Exception {

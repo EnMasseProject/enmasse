@@ -5,8 +5,8 @@
 [id='installing-using-ansible-{context}']
 = Installing {ProductName} using Ansible
 
-Installing {ProductName} using Ansible requires creating an inventory file with the variables for configuring the system. Example inventory files can be found in the `ansible/inventory` folder. For more information about the supported Ansible configuration settings see xref:ref-ansible-config-settings-{context}[].
-
+Installing {ProductName} using Ansible requires creating an inventory file with the variables for
+configuring the system. Example inventory files can be found in the `ansible/inventory` folder.
 
 An example inventory file that enables both the API server and service broker integration:
 
@@ -15,6 +15,22 @@ An example inventory file that enables both the API server and service broker in
 ----
 include::../service_admin/example.inventory[]
 ----
+
+The following Ansible configuration settings are supported:
+
+.Ansible Configuration Settings
+|===
+|Name |Description |Default value| Required
+|namespace|Specifies the namespace where {ProductName} is installed.|Not applicable |yes
+|enable_rbac|Specifies whether to enable RBAC authentication of REST APIs.|True |no
+|service_catalog|Specifies whether to enable integration with the Service Catalog.|False |no
+|authentication_services|Specifies the list of authentication services to deploy. `none` and `standard` are supported. |`none` |no
+|keycloak_admin_password|Specifies the admin password to use for the standard authentication service Keycloak instance. |Not applicable |yes (if `standard` authentication service is enabled)
+|api_server|Specifies whether to enable the REST API server.|True |no
+|register_api_server|Specifies whether to register the API server with Kubernetes master.|False |no
+|secure_api_server|Specifies whether to enable mutual TLS for the API server.|False |no
+|===
+
 
 .Procedure
 
@@ -26,4 +42,3 @@ include::../service_admin/example.inventory[]
 ----
 ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
 ----
-

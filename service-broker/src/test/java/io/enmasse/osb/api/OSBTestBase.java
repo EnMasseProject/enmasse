@@ -4,8 +4,10 @@
  */
 package io.enmasse.osb.api;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
+import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
 import io.enmasse.osb.api.provision.ProvisionRequest;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -46,7 +48,12 @@ public class OSBTestBase {
     public void setup() throws Exception {
         addressSpaceApi = new TestAddressSpaceApi();
         String brokerId = "myspace";
-        provisioningService = new OSBProvisioningService(addressSpaceApi, null, null, "http://localhost/console");
+        provisioningService = new OSBProvisioningService(addressSpaceApi, null, null, new ConsoleProxy() {
+            @Override
+            public String getConsoleUrl(AddressSpace addressSpace) {
+                return "http://localhost/console/" + addressSpace.getName();
+            }
+        });
         bindingService = new OSBBindingService(addressSpaceApi, null, null, null);
         lastOperationService = new OSBLastOperationService(addressSpaceApi, null, null);
     }

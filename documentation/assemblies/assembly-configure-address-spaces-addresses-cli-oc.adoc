@@ -9,9 +9,8 @@
 [id='configure-address-spaces-addresses-cli-oc-{context}']
 = Configuring address spaces and addresses from the command line on OpenShift
 
-You can configure {ProductName} to support manipulating address spaces and addresses by using the
-ifdef::Kubernetes[Kubernetes and]
- OpenShift command-line tools. For information about how to set up the API server to support this feature, see xref:register-api-service-okd[].
+{ProductName} is configured to support manipulating address spaces and addresses by using the
+ifdef::Kubernetes[Kubernetes and] OpenShift command-line tools.
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 

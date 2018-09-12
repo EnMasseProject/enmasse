@@ -16,6 +16,7 @@ import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.catalog.OSBCatalogService;
 import io.enmasse.osb.api.console.HttpConsoleService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
+import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
 import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
@@ -39,13 +40,13 @@ public class HTTPServer extends AbstractVerticle {
     private final SchemaProvider schemaProvider;
     private final UserApi userApi;
     private final int listenPort;
-    private final String consolePrefix;
+    private final ConsoleProxy consoleProxy;
 
     private HttpServer httpServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider,
                       AuthApi authApi, String certDir, boolean enableRbac,
-                      UserApi userApi, int listenPort, String consolePrefix) {
+                      UserApi userApi, int listenPort, ConsoleProxy consoleProxy) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
@@ -53,7 +54,7 @@ public class HTTPServer extends AbstractVerticle {
         this.enableRbac = enableRbac;
         this.userApi = userApi;
         this.listenPort = listenPort;
-        this.consolePrefix = consolePrefix;
+        this.consoleProxy = consoleProxy;
     }
 
     @Override
@@ -77,7 +78,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
         deployment.getRegistry().addSingletonResource(new HttpConsoleService(authApi.getNamespace(), addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consolePrefix));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consoleProxy));
         deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, userApi));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi, authApi, schemaProvider));
 

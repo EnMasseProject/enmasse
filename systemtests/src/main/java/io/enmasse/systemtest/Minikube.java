@@ -15,9 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Minikube extends Kubernetes {
     protected Minikube(Environment environment, String globalNamespace) {
-        super(environment, new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
-                .withOauthToken(environment.openShiftToken())
-                .withUsername(environment.openShiftUser()).build()), globalNamespace);
+        super(environment, new DefaultKubernetesClient(), globalNamespace);
     }
 
     private static String runCommand(String... cmd) {

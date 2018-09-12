@@ -1,67 +1,39 @@
-== Address types
+[id='getting-started-configuring-addresses-{context}']
+= Configuring addresses
 
-{ProductName} is configured with a set of addresses that you can use for
-messages. Currently, {ProductName} supports four different address types:
+{ProductName} is configured with a set of addresses that you can use for messages. Currently, {ProductName} supports four different address types for the `standard` address space:
 
 * Brokered queues
 * Brokered topics (pub/sub)
 * Direct anycast addresses
 * Direct broadcast addresses
 
-For more details, see xref:con-address-space-messaging[address space].
-{ProductName} also comes with a console that you can use for managing
-addresses. You can get the console URL by running the following command:
+For more details, see xref:con-address-space-messaging[address space]. {ProductName} also comes with a console that you can use for managing addresses.
 
-[subs=attributes+,options="nowrap"]
-....
-echo "https://$({OcGetRoute} console)"
-....
+{ProductName} supports managing addresses natively in {PlatformName}.
 
-You can also deploy the addressing config using the REST API. For details on the resources consumed by the API, see xref:configure-address-spaces-addresses-restapi-messaging[]. Here is an example config with all four variants that you can save to `addresses.json`:
+.Procedure
 
-[subs=attributes+,options="nowrap"]
-....
-{
-  "apiVersion": "enmasse.io/v1",
-  "kind": "AddressList",
-  "items": [
-    {
-      "spec": {
-        "address": "myqueue",
-        "type": "queue",
-        "plan": "sharded-queue"
-      }
-    },
-    {
-      "spec": {
-        "address": "mytopic",
-        "type": "topic",
-        "plan": "sharded-topic"
-      }
-    },
-    {
-      "spec": {
-        "address": "myanycast",
-        "type": "anycast",
-        "plan": "standard-anycast"
-      }
-    },
-    {
-      "spec": {
-        "address": "mymulticast",
-        "type": "multicast",
-        "plan": "standard-multicast"
-      }
-    }
-  ]
-}
-....
+. Create an address list definition
++
+[source,yaml,options="nowrap"]
+.link:standard-addresses.yaml[standard-addresses.yaml]
+----
+include::standard-addresses.yaml[]
+----
 
-To deploy this configuration, you must currently use a http client like curl:
+. Create the addressses
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f standard-addresses.yaml
+----
++
+The addresses are ready when the field `.status.isReady` is set to true.
 
-[subs=attributes+,options="nowrap"]
-....
-curl -X POST -H "content-type: application/json" --data-binary @addresses.json -k https://$({OcGetRoute} restapi)/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/default/addresses
-....
-
-This will connect to the address controller REST API and deploy the address config in the 'default' address space.
+. Check status of addressses
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addresses -o jsonpath={.items[*].status.isReady}
+----

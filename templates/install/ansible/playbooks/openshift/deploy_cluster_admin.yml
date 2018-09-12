@@ -1,4 +1,0 @@
-- name: "Deploy EnMasse cluster admin resources"
-  hosts: enmasse
-  roles:
-    - cluster_admin

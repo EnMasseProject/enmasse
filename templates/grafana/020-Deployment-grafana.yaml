@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+  name: grafana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: grafana
+    spec:
+      containers:
+      - image: enmasseproject/grafana:latest
+        name: grafana
+        ports:
+        - containerPort: 3000
+          name: grafana
+        volumeMounts:
+        - mountPath: /usr/share/grafana/data
+          name: grafana-data
+          readOnly: false
+      volumes:
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-data

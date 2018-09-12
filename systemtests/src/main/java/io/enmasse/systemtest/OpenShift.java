@@ -26,19 +26,25 @@ public class OpenShift extends Kubernetes {
 
     public Endpoint getRestEndpoint() throws MalformedURLException {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        Endpoint endpoint;
+        Endpoint endpoint = null;
         if (environment.registerApiServer()) {
             endpoint = new Endpoint(environment.openShiftUrl());
         } else {
             Route route = openShift.routes().inNamespace(globalNamespace).withName("restapi").get();
-            endpoint = new Endpoint(route.getSpec().getHost(), 443);
+            if (route != null) {
+                endpoint = new Endpoint(route.getSpec().getHost(), 443);
+            }
+        }
+
+        if (endpoint == null) {
+            return getEndpoint("api-server", "https");
         }
 
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
-            log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("address-space-controller", "https");
+            log.info("Route endpoint didn't resolve, falling back to service endpoint");
+            return getEndpoint("api-server", "https");
         }
     }
 

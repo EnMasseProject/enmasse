@@ -1,8 +1,0 @@
-- name: Create the standard authentication service service
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/service.yaml
-- name: Create the standard authentication service deployment
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/keycloak-deployment.yaml
-- name: Create the standard authentication service persistent volume claim
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/pvc.yaml
-- name: Create the standard authentication service route
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/standard-authservice/route.yaml

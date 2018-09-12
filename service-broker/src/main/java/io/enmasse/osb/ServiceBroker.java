@@ -14,6 +14,11 @@ import io.enmasse.k8s.api.ConfigMapSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakUserApi;
+import io.enmasse.osb.api.provision.ConsoleProxy;
+import io.enmasse.user.keycloak.KeycloakFactory;
+import io.enmasse.user.keycloak.KubeKeycloakFactory;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
@@ -22,43 +27,46 @@ import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.InternalServerErrorException;
-import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.nio.file.Files;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Base64;
 
 public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
-    private final NamespacedOpenShiftClient controllerClient;
+    private final NamespacedOpenShiftClient client;
     private final ServiceBrokerOptions options;
 
     private ServiceBroker(ServiceBrokerOptions options) {
-        this.controllerClient = new DefaultOpenShiftClient();
+        this.client = new DefaultOpenShiftClient();
         this.options = options;
     }
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, controllerClient.getNamespace());
+        SchemaApi schemaApi = new ConfigMapSchemaApi(client, client.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-        AuthApi authApi = new KubeAuthApi(controllerClient, controllerClient.getConfiguration().getOauthToken());
+        ensureRouteExists(client, options);
+        ensureCredentialsExist(client, options);
+
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
+        AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
+
         UserApi userApi = createUserApi(options);
 
-        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), options.getConsolePrefix()),
+        ConsoleProxy consoleProxy = addressSpace -> {
+            Route route = client.routes().withName(options.getConsoleProxyRouteName()).get();
+            if (route == null) {
+                return null;
+            }
+            return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getName());
+        };
+
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy),
                 result -> {
                     if (result.succeeded()) {
                         log.info("EnMasse Service Broker started");
@@ -69,37 +77,52 @@ public class ServiceBroker extends AbstractVerticle {
                 });
     }
 
-    private UserApi createUserApi(ServiceBrokerOptions options) throws IOException, GeneralSecurityException {
-        KeyStore keyStore = convertCertToKeyStore(options.getKeycloakCa());
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        return new KeycloakUserApi(options.getKeycloakUrl(), options.getKeycloakAdminUser(), options.getKeycloakAdminPassword(), keyStore, Clock.systemUTC(), executorService);
+    private void ensureCredentialsExist(NamespacedOpenShiftClient client, ServiceBrokerOptions options) {
+        Secret secret = client.secrets().withName(options.getServiceCatalogCredentialsSecretName()).get();
+        if (secret == null) {
+            client.secrets().createNew()
+                    .editOrNewMetadata()
+                    .withName(options.getServiceCatalogCredentialsSecretName())
+                    .addToLabels("app", "enmasse")
+                    .endMetadata()
+                    .addToData("token", Base64.getEncoder().encodeToString(client.getConfiguration().getOauthToken().getBytes(StandardCharsets.UTF_8)))
+                    .done();
+        }
     }
 
-    private static KeyStore convertCertToKeyStore(String cert) throws IOException, GeneralSecurityException {
-        List<X509Certificate> certs = new ArrayList<>();
-        try (InputStream is = new ByteArrayInputStream(cert.getBytes(StandardCharsets.UTF_8))) {
-            try {
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                do {
-                    certs.add((X509Certificate)cf.generateCertificate(is));
-                } while(is.available() != 0);
-            } catch (CertificateException e) {
-                if(certs.isEmpty()) {
-                    throw new InternalServerErrorException("No auth service certificate found in secret", e);
-                }
-            }
-        }
-
-        KeyStore inMemoryKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        inMemoryKeyStore.load(null, null);
-        int i = 1;
-        for(X509Certificate crt : certs) {
-            inMemoryKeyStore.setCertificateEntry(String.valueOf(i++), crt);
-        }
-        return inMemoryKeyStore;
+    private UserApi createUserApi(ServiceBrokerOptions options) {
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
+            options.getStandardAuthserviceConfigName(),
+            options.getStandardAuthserviceCredentialsSecretName(),
+            options.getStandardAuthserviceCertSecretName());
+        return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
     }
 
-
+    private static void ensureRouteExists(NamespacedOpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {
+        Route proxyRoute = client.routes().withName(serviceBrokerOptions.getConsoleProxyRouteName()).get();
+        if (proxyRoute == null) {
+            String caCertificate = new String(Files.readAllBytes(new File(serviceBrokerOptions.getCertDir(), "tls.crt").toPath()), StandardCharsets.UTF_8);
+            client.routes().createNew()
+                    .editOrNewMetadata()
+                    .withName(serviceBrokerOptions.getConsoleProxyRouteName())
+                    .addToLabels("app", "enmasse")
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .editOrNewPort()
+                    .withNewTargetPort("https")
+                    .endPort()
+                    .editOrNewTo()
+                    .withKind("Service")
+                    .withName("service-broker")
+                    .endTo()
+                    .editOrNewTls()
+                    .withTermination("reencrypt")
+                    .withCaCertificate(caCertificate)
+                    .endTls()
+                    .endSpec()
+                    .done();
+        }
+    }
 
     public static void main(String args[]) {
         try {

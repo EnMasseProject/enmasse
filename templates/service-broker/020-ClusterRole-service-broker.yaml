@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:service-broker
+rules:
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addresses", "addressspaces" ]
+    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]

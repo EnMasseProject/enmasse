@@ -4,29 +4,39 @@
  */
 package io.enmasse.keycloak.controller;
 
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.keycloak.admin.client.KeycloakBuilder;
+import io.enmasse.user.keycloak.KeycloakFactory;
 import org.keycloak.representations.idm.*;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Keycloak implements KeycloakApi {
 
-    private final KeycloakParams params;
+    private final IdentityProviderParams params;
+    private final KeycloakFactory keycloakFactory;
+    private volatile org.keycloak.admin.client.Keycloak keycloak;
 
-    public Keycloak(KeycloakParams params) {
+    public Keycloak(KeycloakFactory keycloakFactory, IdentityProviderParams params) {
+        this.keycloakFactory = keycloakFactory;
         this.params = params;
+    }
+
+    interface Handler<T> {
+        T handle(org.keycloak.admin.client.Keycloak keycloak);
+    }
+
+    private synchronized <T> T withKeycloak(Handler<T> consumer) {
+        if (keycloak == null) {
+            keycloak = keycloakFactory.createInstance();
+        }
+        return consumer.handle(keycloak);
     }
 
     @Override
     public Set<String> getRealmNames() {
-        try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
-            return wrapper.get().realms().findAll().stream()
-                    .map(RealmRepresentation::getRealm)
-                    .collect(Collectors.toSet());
-        }
+        return withKeycloak(kc -> kc.realms().findAll().stream()
+                .map(RealmRepresentation::getRealm)
+                .collect(Collectors.toSet()));
     }
 
     @Override
@@ -67,44 +77,17 @@ public class Keycloak implements KeycloakApi {
             newRealm.setClients(Collections.singletonList(console));
         }
 
-        try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
-            wrapper.get().realms().create(newRealm);
-        }
+        withKeycloak(kc -> {
+            kc.realms().create(newRealm);
+            return true;
+        });
     }
 
     @Override
     public void deleteRealm(String realmName) {
-        try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
-            wrapper.get().realm(realmName).remove();
-        }
-    }
-
-    public static class CloseableKeycloak implements AutoCloseable {
-
-        private final org.keycloak.admin.client.Keycloak keycloak;
-
-        CloseableKeycloak(KeycloakParams params) {
-            this.keycloak = KeycloakBuilder.builder()
-                .serverUrl(params.getKeycloakUri())
-                .realm("master")
-                .username(params.getAdminUser())
-                .password(params.getAdminPassword())
-                .clientId("admin-cli")
-                .resteasyClient(new ResteasyClientBuilder()
-                        .establishConnectionTimeout(30, TimeUnit.SECONDS)
-                        .trustStore(params.getKeyStore())
-                        .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
-                        .build())
-                .build();
-        }
-
-        org.keycloak.admin.client.Keycloak get() {
-            return keycloak;
-        }
-
-        @Override
-        public void close() {
-            keycloak.close();
-        }
+        withKeycloak(kc -> {
+            kc.realm(realmName).remove();
+            return true;
+        });
     }
 }

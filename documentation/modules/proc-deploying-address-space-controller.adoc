@@ -7,38 +7,20 @@
 
 The Address Space Controller is responsible for creating the infrastructure used by address spaces.
 
+.Prerequisites
+
+* Modify the installation files according to the namespace the Address Space Controller is going to be installed in
++
+[source, subs="+quotes"]
+----
+sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/address-space-controller/*RoleBinding*.yaml
+----
+
 .Procedure
 
-. Create a service account for the {ProductName} address space controller:
+. Deploy the Address Space Controller
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create sa enmasse-admin
+{cmdcli} apply -f examples/install/address-space-controller
 ----
-
-. Grant privileges required for viewing and managing resources:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create rolebinding enmasse-admin-admin-binding --clusterrole=admin --serviceaccount=enmasse:enmasse-admin -n enmasse
-----
-
-. Install the default plan and resource configuration:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create -f ./resources/resource-definitions/resource-definitions.yaml
-{cmdcli} create -f ./resources/plans/standard-plans.yaml
-{cmdcli} create -f ./resources/plans/brokered-plans.yaml
-----
-
-. Deploy the address space controller:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create -f ./resources/address-space-controller/address-space-definitions.yaml
-{cmdcli} create -f ./resources/address-space-controller/standard-broker-definitions.yaml
-{cmdcli} create -f ./resources/address-space-controller/broker-prometheus-config.yaml
-{cmdcli} create -f ./resources/address-space-controller/deployment.yaml
-----
-

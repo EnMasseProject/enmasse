@@ -84,7 +84,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh templates/install 'systemtests-pr' ${params.TEST_CASE}"
+                    sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${env.TAG} 'systemtests-pr' ${params.TEST_CASE}"
                 }
             }
         }

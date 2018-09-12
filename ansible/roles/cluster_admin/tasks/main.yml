@@ -1,0 +1,36 @@
+---
+- name: Find all yaml files
+  find:
+    paths: "{{ playbook_dir }}/install/"
+    patterns: "*.yaml"
+    recurse: yes
+  register: yamls
+- name: Replace namespace in configuration
+  replace:
+    dest: "{{item.path}}"
+    regexp: "ANSIBLE_NAMESPACE"
+    replace: "{{ namespace }}"
+  with_items: "{{ yamls.files }}"
+- import_role:
+    name: none_authservice
+  when: '"none" in authentication_services'
+- import_role:
+    name: standard_authservice
+  when: '"standard" in authentication_services'
+- import_role:
+    name: address_space_controller
+- import_role:
+    name: service_catalog
+  when: service_catalog
+- import_role:
+    name: cluster_service_broker
+  when: service_catalog
+- import_role:
+    name: api_server
+  when: api_server
+- import_role:
+    name: api_service
+  when: register_api_server
+- import_role:
+    name: tenant_clusterroles
+  when: install_tenant_clusterroles

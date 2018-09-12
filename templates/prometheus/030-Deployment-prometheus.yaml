@@ -1,0 +1,34 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+  name: prometheus
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: prometheus
+    spec:
+      containers:
+      - image: prom/prometheus:v2.0.0
+        name: prometheus
+        ports:
+        - containerPort: 9090
+          name: prometheus
+        volumeMounts:
+        - mountPath: /etc/prometheus
+          name: prometheus-config
+          readOnly: true
+        - mountPath: /prometheus
+          name: prometheus-data
+          readOnly: false
+      serviceAccount: prometheus-server
+      volumes:
+      - configMap:
+          name: prometheus-config
+        name: prometheus-config
+      - name: prometheus-data
+        persistentVolumeClaim:
+          claimName: prometheus-data

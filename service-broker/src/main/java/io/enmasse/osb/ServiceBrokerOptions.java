@@ -6,16 +6,17 @@ package io.enmasse.osb;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
 public class ServiceBrokerOptions {
     private Duration resyncInterval = Duration.ofMinutes(10);
     private String certDir = null;
     private boolean enableRbac = false;
-    private String keycloakUrl = null;
-    private String keycloakAdminUser = null;
-    private String keycloakAdminPassword = null;
-    private String keycloakCa = null;
-    private String consolePrefix = null;
+    private String standardAuthserviceConfigName;
+    private String standardAuthserviceCredentialsSecretName;
+    private String standardAuthserviceCertSecretName;
+    private String serviceCatalogCredentialsSecretName;
+    private String consoleProxyRouteName;
     private int listenPort = 8080;
 
     public Duration getResyncInterval() {
@@ -35,22 +36,6 @@ public class ServiceBrokerOptions {
         return enableRbac;
     }
 
-    public String getKeycloakUrl() {
-        return keycloakUrl;
-    }
-
-    public String getKeycloakAdminUser() {
-        return keycloakAdminUser;
-    }
-
-    public String getKeycloakAdminPassword() {
-        return keycloakAdminPassword;
-    }
-
-    public String getKeycloakCa() {
-        return keycloakCa;
-    }
-
     public int getListenPort() {
         return listenPort;
     }
@@ -65,44 +50,46 @@ public class ServiceBrokerOptions {
         return this;
     }
 
-    private ServiceBrokerOptions setKeycloakUrl(String keycloakUrl) {
-        this.keycloakUrl = keycloakUrl;
-        return this;
-    }
-
-    private ServiceBrokerOptions setKeycloakAdminUser(String keycloakAdminUser) {
-        this.keycloakAdminUser = keycloakAdminUser;
-        return this;
-    }
-
-    private ServiceBrokerOptions setKeycloakAdminPassword(String keycloakAdminPassword) {
-        this.keycloakAdminPassword = keycloakAdminPassword;
-        return this;
-    }
-
-    private ServiceBrokerOptions setConsolePrefix(String consolePrefix) {
-        this.consolePrefix = consolePrefix;
-        return this;
-    }
-
-    private ServiceBrokerOptions setKeycloakCa(String keycloakCa) {
-        this.keycloakCa = keycloakCa;
-        return this;
-    }
-
     private ServiceBrokerOptions setListenPort(int listenPort) {
         this.listenPort = listenPort;
+        return this;
+    }
+
+    public String getStandardAuthserviceConfigName() {
+        return standardAuthserviceConfigName;
+    }
+
+    public ServiceBrokerOptions setStandardAuthserviceConfigName(String standardAuthserviceConfigName) {
+        this.standardAuthserviceConfigName = standardAuthserviceConfigName;
+        return this;
+    }
+
+    public String getStandardAuthserviceCredentialsSecretName() {
+        return standardAuthserviceCredentialsSecretName;
+    }
+
+    public ServiceBrokerOptions setStandardAuthserviceCredentialsSecretName(String standardAuthserviceCredentialsSecretName) {
+        this.standardAuthserviceCredentialsSecretName = standardAuthserviceCredentialsSecretName;
+        return this;
+    }
+
+    public String getStandardAuthserviceCertSecretName() {
+        return standardAuthserviceCertSecretName;
+    }
+
+    public ServiceBrokerOptions setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
+        this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
         return this;
     }
 
     public static ServiceBrokerOptions fromEnv(Map<String, String> env) {
         ServiceBrokerOptions options = new ServiceBrokerOptions();
 
-        options.setKeycloakUrl(getEnvOrThrow(env, "KEYCLOAK_URL"));
-        options.setKeycloakAdminUser(getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER"));
-        options.setKeycloakAdminPassword(getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD"));
-        options.setKeycloakCa(getEnvOrThrow(env, "KEYCLOAK_CA"));
-        options.setConsolePrefix(getEnvOrThrow(env, "CONSOLE_PREFIX"));
+        options.setStandardAuthserviceConfigName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CONFIG_NAME"));
+        options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
+        options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
+        options.setConsoleProxyRouteName(getEnv(env, "CONSOLE_PROXY_ROUTE_NAME").orElse("console-proxy"));
+        options.setServiceCatalogCredentialsSecretName(getEnvOrThrow(env, "SERVICE_CATALOG_CREDENTIALS_SECRET_NAME"));
 
         String resyncInterval = env.get("RESYNC_INTERVAL");
         if (resyncInterval != null) {
@@ -127,16 +114,28 @@ public class ServiceBrokerOptions {
         return options;
     }
 
-
-    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
-        String var = env.get(envVar);
-        if (var == null) {
-            throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
-        }
-        return var;
+    private static Optional<String> getEnv(Map<String, String> env, String envVar) {
+        return Optional.ofNullable(env.get(envVar));
     }
 
-    public String getConsolePrefix() {
-        return consolePrefix;
+    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
+        return getEnv(env, envVar).orElseThrow(() -> new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar)));
+    }
+
+    public String getConsoleProxyRouteName() {
+        return consoleProxyRouteName;
+    }
+
+    public void setConsoleProxyRouteName(String consoleProxyRouteName) {
+        this.consoleProxyRouteName = consoleProxyRouteName;
+    }
+
+    public String getServiceCatalogCredentialsSecretName() {
+        return serviceCatalogCredentialsSecretName;
+    }
+
+    public ServiceBrokerOptions setServiceCatalogCredentialsSecretName(String serviceCatalogCredentialsSecretName) {
+        this.serviceCatalogCredentialsSecretName = serviceCatalogCredentialsSecretName;
+        return this;
     }
 }

@@ -1,3 +1,0 @@
----
-- name: Deploy resource definitions
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/resources/resource-definitions/resource-definitions.yaml
