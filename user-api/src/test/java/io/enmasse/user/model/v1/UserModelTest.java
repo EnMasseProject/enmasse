@@ -144,6 +144,15 @@ public class UserModelTest {
         createAndValidate("myspace.user1", "usEr1", false);
         createAndValidate("myspace.user1", "usEr1", false);
         createAndValidate("myspaceuser1", "user1", false);
+
+        createAndValidate("myspace.user1_", "user1", false);
+        createAndValidate("myspace_.user1", "user1", false);
+        createAndValidate("_myspace.user1", "user1", false);
+        createAndValidate("myspace._user1", "user1", false);
+        createAndValidate("myspace.user1", "user1_", false);
+        createAndValidate("myspace.user_1", "user1", false);
+        createAndValidate("myspace.user1", "user_1", true);
+
         createAndValidate("myspace.user1-", "user1", false);
         createAndValidate("myspace-.user1", "user1", false);
         createAndValidate("-myspace.user1", "user1", false);
