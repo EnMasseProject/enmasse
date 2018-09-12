@@ -34,12 +34,12 @@ include::common/overview.adoc[leveloffset=+1]
 
 == Installation
 
-include::service_admin/assembly-installing-openshift.adoc[leveloffset=+2]
-include::service_admin/assembly-installing-kubernetes.adoc[leveloffset=+2]
+include::assemblies/assembly-installing-openshift.adoc[leveloffset=+2]
+include::assemblies/assembly-installing-kubernetes.adoc[leveloffset=+2]
 
 == Address space and address plans
 
-include::service_admin/assembly-plans.adoc[leveloffset=+2]
+include::assemblies/assembly-plans.adoc[leveloffset=+2]
 
 == Monitoring
 include::service_admin/monitoring.adoc[leveloffset=+1]
@@ -51,7 +51,7 @@ include::common/address-space.adoc[leveloffset=+1]
 include::common/configuring-using-cli.adoc[leveloffset=+1]
 include::common/configuring-using-restapi.adoc[leveloffset=+1]
 
-include::tenant/assembly-managing-users.adoc[leveloffset=+1]
+include::assemblies/assembly-managing-users.adoc[leveloffset=+1]
 
 == Connecting applications to {ProductName}
 
