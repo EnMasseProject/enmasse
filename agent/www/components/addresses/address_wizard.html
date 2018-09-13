@@ -17,7 +17,7 @@
           <input id="new-name"  class="form-control" name="address" ng-model="data.address" type="text" maxlength=256 ng-change="updateName()" pf-validation="unique_address_name(input)" required/>
           <span class="help-block">The name you typed is not unique.</span>
           <span title="" tooltip-append-to-body="true" tooltip-class="enmasse-tooltip" class="tip-block pull-left" uib-tooltip-html="getTooltip('name')">
-              {{tooltip.address.name.label}} <span ng-if="hasExternal('name')"><a class="learn-more" target="_new" ng-href="{{getExternal('name')}}">Learn more <i class="fa fa-external-link small" aria-hidden="true"></i></a></span>
+              {{tooltip.address.name.label}}
           </span>
         </div>
         <div pf-form-group pf-label="Type" pf-label-class="col-sm-2" pf-input-class="col-sm-10">
