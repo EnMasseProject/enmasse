@@ -78,7 +78,7 @@ data:
 
           sslProfile {
             name: auth_service_ssl
-            certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+            ${AUTHENTICATION_SERVICE_CERT_DB}
           }
 
           authServicePlugin {
@@ -713,7 +713,6 @@ data:
             required: true
           - description: The secret to use for validating authentication service cert
             name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
           - description: The client cert to use as identity against authentication service
             name: AUTHENTICATION_SERVICE_CLIENT_SECRET
           - description: The hostname to use in sasl init
@@ -984,7 +983,6 @@ data:
             required: true
           - description: The secret to use for validating authentication service cert
             name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
           - description: The client cert to use as identity against authentication service
             name: AUTHENTICATION_SERVICE_CLIENT_SECRET
           - description: The hostname to use in sasl init
@@ -1029,7 +1027,6 @@ data:
       required: true
     - description: The CA cert to use for validating authentication service cert
       name: AUTHENTICATION_SERVICE_CA_CERT
-      required: true
     - description: The client cert to use as identity against authentication service
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
@@ -1140,7 +1137,7 @@ data:
 
           sslProfile {
             name: auth_service_ssl
-            certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+            ${AUTHENTICATION_SERVICE_CERT_DB}
           }
 
           authServicePlugin {
@@ -1775,7 +1772,6 @@ data:
             required: true
           - description: The secret to use for validating authentication service cert
             name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
           - description: The client cert to use as identity against authentication service
             name: AUTHENTICATION_SERVICE_CLIENT_SECRET
           - description: The hostname to use in sasl init
@@ -2046,7 +2042,6 @@ data:
             required: true
           - description: The secret to use for validating authentication service cert
             name: AUTHENTICATION_SERVICE_CA_SECRET
-            required: true
           - description: The client cert to use as identity against authentication service
             name: AUTHENTICATION_SERVICE_CLIENT_SECRET
           - description: The hostname to use in sasl init
@@ -2258,7 +2253,6 @@ data:
       required: true
     - description: The CA cert to use for validating authentication service cert
       name: AUTHENTICATION_SERVICE_CA_CERT
-      required: true
     - description: The client cert to use as identity against authentication service
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
@@ -2597,7 +2591,6 @@ data:
       required: true
     - description: The CA cert to use for validating authentication service cert
       name: AUTHENTICATION_SERVICE_CA_CERT
-      required: true
     - description: The client cert to use as identity against authentication service
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init

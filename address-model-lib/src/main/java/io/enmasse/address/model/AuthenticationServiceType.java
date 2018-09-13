@@ -14,8 +14,8 @@ public enum AuthenticationServiceType {
     STANDARD,
     EXTERNAL(new AuthenticationServiceDetail("host", String.class, true),
         new AuthenticationServiceDetail("port", Integer.class, true),
-            new AuthenticationServiceDetail("caCertSecretName", String.class, true),
-            new AuthenticationServiceDetail("clientCertSecretName", String.class, true),
+            new AuthenticationServiceDetail("caCertSecretName", String.class, false),
+            new AuthenticationServiceDetail("clientCertSecretName", String.class, false),
             new AuthenticationServiceDetail("saslInitHost", String.class, true));
 
     private final Map<String, Class> detailsFields = new HashMap<>();
