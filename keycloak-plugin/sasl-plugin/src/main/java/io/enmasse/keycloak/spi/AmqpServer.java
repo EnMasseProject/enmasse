@@ -84,6 +84,7 @@ public class AmqpServer extends AbstractVerticle {
         connection.openHandler(conn -> {
             UserData userData = connection.attachments().get(SaslAuthenticator.USER_ATTACHMENT, UserData.class);
             if(userData != null) {
+                LOG.debug("Responding with user data " + userData);
                 Map<Symbol, Object> props = new HashMap<>();
                 Map<String, Object> authUserMap = new HashMap<>();
                 authUserMap.put("sub", userData.getId());
