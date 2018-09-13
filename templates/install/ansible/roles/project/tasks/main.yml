@@ -4,3 +4,5 @@
   register: namespace_exists
   failed_when: namespace_exists.stderr != '' and 'already exists' not in namespace_exists.stderr
   changed_when: namespace_exists.rc == 0
+- name: Select project namespace
+  shell: oc project {{ namespace }}
