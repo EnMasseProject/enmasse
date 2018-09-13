@@ -6,8 +6,6 @@
 :PlatformName: OpenShift
 :context: okd
 
-include::common/attributes.adoc[]
-
 [id='installing-on-openshift-{context}']
 = Installing {ProductName} on OpenShift
 
@@ -16,15 +14,15 @@ include::common/attributes.adoc[]
 
 NOTE: You can invoke the deployment script with `-h` to view a list of options.
 
-include::common/snip-prerequisites-openshift.adoc[]
+include::../common/snip-prerequisites-openshift.adoc[]
 
-include::common/proc-download-procedure.adoc[leveloffset=+1]
+include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
-include::modules/ref-ansible-config-settings.adoc[leveloffset=+1]
+include::../modules/ref-ansible-config-settings.adoc[leveloffset=+1]
 
-include::modules/proc-installing-using-ansible.adoc[leveloffset=+1]
+include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
 
-//include::modules/proc-installing-deploy-script.adoc[leveloffset=+1]
+//include::../modules/proc-installing-deploy-script.adoc[leveloffset=+1]
 
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
 

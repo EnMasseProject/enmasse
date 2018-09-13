@@ -2,8 +2,6 @@
 //
 // assembly-installing-manual-steps.adoc
 
-include::common/attributes.adoc[]
-
 [id='deploying-address-space-controller-{context}']
 = Deploying the address space controller
 

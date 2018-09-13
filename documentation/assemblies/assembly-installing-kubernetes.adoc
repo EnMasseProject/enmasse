@@ -6,8 +6,6 @@
 :PlatformName: Kubernetes
 :context: kube
 
-include::common/attributes.adoc[]
-
 [id='installing-on-kubernetes-{context}']
 = Installing {ProductName} on Kubernetes
 
@@ -15,9 +13,9 @@ These steps follow the manual deployment procedure and work on any platform supp
 
 To simplify deployment, see the `deploy.sh` script, which works on Linux and Mac. You can invoke the deployment script with `-h` to view a list of options.
 
-include::common/snip-prerequisites-kubernetes.adoc[]
+include::../common/snip-prerequisites-kubernetes.adoc[]
 
-include::common/proc-download-procedure.adoc[leveloffset=+1]
+include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
 
