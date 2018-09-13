@@ -15,5 +15,5 @@ This roadmap describes the features we expect to be available in the next releas
 0.24.0
 * Support address space upgrades
 * Monitoring
-* Dynamic logging
+* Improved logging
 * ...
