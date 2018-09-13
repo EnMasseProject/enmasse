@@ -117,10 +117,10 @@ function get_stats_for_address(stats, address) {
     return s;
 }
 
-function collect_by_address(links, stats, router, connections) {
+function collect_by_address(links, stats, router, connections, index) {
     for (var l in links) {
         var link = links[l];
-        if (link.linkType === 'endpoint' && link.owningAddr && connections[link.connectionId]) {
+        if (link.linkType === 'endpoint' && link.owningAddr && connections[link.connectionId + '-' + index]) {
             var address = clean_address(link.owningAddr);
             var counts = get_stats_for_address(stats, address);
             if (link.name.indexOf('qdlink.') !== 0) {
@@ -234,9 +234,13 @@ function is_application_connection (c) {
 
 function get_normal_connections (results) {
     var connections = {};
-    results.forEach(function (stats) {
+    results.forEach(function (stats, i) {
         stats.filter(is_application_connection).forEach(function (c) {
-            connections[c.identity] = {
+            var qualified_id = c.identity + '-' + i;
+            if (connections[qualified_id]) {
+                log.warn('overwriting connection details for %s', qualified_id);
+            }
+            connections[qualified_id] = {
                 id: c.identity,
                 host: c.host,
                 container: c.container,
@@ -275,6 +279,10 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
     });
 };
 
+function aggregate_delivery_count(link_details) {
+    return link_details.map(function (l) { return l.deliveryCount; }).reduce(function (a, b) { return a + b}, 0);
+}
+
 RouterStats.prototype._retrieve = function () {
     return this.update_routers().then(function (routers) {
         return Promise.all(routers.map(function (router) { return router.get_connections(); })).then(function (connection_results) {
@@ -282,7 +290,7 @@ RouterStats.prototype._retrieve = function () {
             return Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
                 var address_stats = {};
                 results.forEach(function (links, i) {
-                    collect_by_address(links, address_stats, routers[i], connections);
+                    collect_by_address(links, address_stats, routers[i], connections, i);
                     collect_by_connection(links, connections, routers[i]);
                 });
                 return Promise.all(routers.map(function (router) { return router.get_addresses(); })).then(function (results) {
@@ -297,7 +305,10 @@ RouterStats.prototype._retrieve = function () {
                     return Promise.all(routers.map(function (router) { return router.get_link_routes(); } )).then(function (results) {
                         results.forEach(function (lrs) {
                             check_link_routes(lrs).forEach(function (a) {
-                                get_stats_for_address(address_stats, a).propagated++;
+                                var s = get_stats_for_address(address_stats, a);
+                                s.messages_in += aggregate_delivery_count(s.outcomes.ingress.links);
+                                s.messages_out += aggregate_delivery_count(s.outcomes.egress.links);
+                                s.propagated++;
                             });
                         });
                         //convert propagated to a percentage of all routers
