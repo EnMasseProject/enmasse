@@ -15,5 +15,6 @@ keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeysto
 echo "Keystore ${KEYSTORE_PATH} created"
 
 rm -rf ${TRUSTSTORE_PATH}
-keytool -import -noprompt -file ${OPENSHIFT_CA} -alias firstCA -deststorepass enmasse -keystore $TRUSTSTORE_PATH
+cp /etc/pki/java/cacerts ${TRUSTSTORE_PATH}
+keytool -import -noprompt -file ${OPENSHIFT_CA} -alias firstCA -deststorepass changeit -keystore $TRUSTSTORE_PATH
 echo "Truststore ${TRUSTSTORE_PATH} created"
