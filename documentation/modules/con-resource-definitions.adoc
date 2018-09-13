@@ -16,6 +16,6 @@ Resource definitions with other names will not work with {ProductName}. It is, h
 [source,yaml,options="nowrap"]
 .link:service_admin/broker-resource.yaml[broker-resource.yaml]
 ----
-include::broker-resource.yaml[]
+include::../service_admin/broker-resource.yaml[]
 ----
 
