@@ -252,6 +252,7 @@ local images = import "images.jsonnet";
                     }
                 },
                 "env": [
+                  common.env("PN_TRACE_FRM", "1"),
                   common.env("JAVA_OPTS", "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Xms512m -Xmx1024m"),
                   {
                     "name": "KEYCLOAK_USER",
