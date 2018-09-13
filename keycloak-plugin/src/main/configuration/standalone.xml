@@ -500,7 +500,7 @@
               <provider name="file" enabled="true">
                 <properties>
                   <property name="file" value="${jboss.server.config.dir}/truststore.jks" />
-                  <property name="password" value="enmasse"/>
+                  <property name="password" value="changeit"/>
                   <property name="hostname-verification-policy" value="ANY"/>
                 </properties>
               </provider>
