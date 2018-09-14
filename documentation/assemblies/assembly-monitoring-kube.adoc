@@ -6,9 +6,9 @@
 
 You can use Prometheus and Grafana for monitoring the {ProductName} service.
 
-include::proc-deploy-prometheus.adoc[]
+include::../modules/proc-deploy-prometheus.adoc[]
 
-include::proc-deploy-grafana.adoc[]
+include::../modules/proc-deploy-grafana.adoc[]
 
 :context: {parent-context}
 
