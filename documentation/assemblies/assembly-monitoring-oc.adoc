@@ -1,0 +1,14 @@
+[id='monitoring-oc-{context}']
+:parent-context: {context}
+:cmdcli: oc
+
+= Monitoring {ProductName} on OpenShift
+
+You can use Prometheus and Grafana for monitoring the {ProductName} service.
+
+include::proc-deploy-prometheus.adoc[]
+
+include::proc-deploy-grafana.adoc[]
+
+:context: {parent-context}
+

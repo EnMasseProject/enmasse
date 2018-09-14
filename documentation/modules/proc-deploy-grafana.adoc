@@ -1,0 +1,21 @@
+[id='deploy-grafana-{context}']
+= Deploying Grafana
+
+.Procedure
+
+. Create the Grafana deployment:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/grafana/grafana.yaml -n enmasse
+----
+
+. Expose the Grafana service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} expose service grafana
+----
+
+Grafana accepts the username `admin` and password `admin` by default. For more information about how to connect Grafana to Prometheus, see the link:https://prometheus.io/docs/visualization/grafana/#creating-a-prometheus-data-source[Prometheus documentation]. Use `prometheus.enmasse.svc.cluster.local` as the Prometheus host name.
+

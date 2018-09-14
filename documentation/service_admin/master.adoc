@@ -1,12 +1,14 @@
-include::common/attributes.adoc[]
+include::../common/attributes.adoc[]
 
 = {Title}
 
-include::installing-openshift.adoc[leveloffset=+1]
-include::installing-kubernetes.adoc[leveloffset=+1]
-include::monitoring.adoc[leveloffset=+1]
+include::../assemblies/installing-openshift.adoc[leveloffset=+1]
 
-//include::<filename>.adoc[leveloffset=+1]
+include::../assemblies/installing-kubernetes.adoc[leveloffset=+1]
+
+include::../assemblies/monitoring-openshift.adoc[leveloffset=+1]
+
+include::../assemblies/monitoring-kube.adoc[leveloffset=+1]
 
 //include::<filename>.adoc[leveloffset=+1]
 

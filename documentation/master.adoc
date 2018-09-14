@@ -35,6 +35,7 @@ include::common/overview.adoc[leveloffset=+1]
 == Installation
 
 include::assemblies/assembly-installing-openshift.adoc[leveloffset=+2]
+
 include::assemblies/assembly-installing-kubernetes.adoc[leveloffset=+2]
 
 == Address space and address plans
@@ -42,7 +43,10 @@ include::assemblies/assembly-installing-kubernetes.adoc[leveloffset=+2]
 include::assemblies/assembly-plans.adoc[leveloffset=+2]
 
 == Monitoring
-include::service_admin/monitoring.adoc[leveloffset=+1]
+
+include::assemblies/monitoring-openshift.adoc[leveloffset=+2]
+
+include::assemblies/monitoring-kube.adoc[leveloffset=+2]
 
 == Managing address spaces and addresses
 

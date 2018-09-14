@@ -1,0 +1,14 @@
+[id='monitoring-kube-{context}']
+:parent-context: {context}
+:cmdcli: kube
+
+= Monitoring {ProductName} on Kubernetes
+
+You can use Prometheus and Grafana for monitoring the {ProductName} service.
+
+include::proc-deploy-prometheus.adoc[]
+
+include::proc-deploy-grafana.adoc[]
+
+:context: {parent-context}
+
