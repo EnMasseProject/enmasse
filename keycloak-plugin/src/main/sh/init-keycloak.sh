@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 KEYCLOAK_CONFIG=${KEYCLOAK_DIR}/standalone/configuration/
 OPENSHIFT_CA=${OPENSHIFT_CA:-/var/run/secrets/kubernetes.io/serviceaccount/ca.crt}
 
