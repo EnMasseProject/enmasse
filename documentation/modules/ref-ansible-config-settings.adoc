@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly_.adoc
+// assembly-installing-openshift.adoc
 
 [id='ref-ansible-config-settings-{context}']
 = Ansible configuration settings

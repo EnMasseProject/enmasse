@@ -12,7 +12,7 @@ In the xref:con-address-space-plans-{context}[] section, the address space plan 
 [source,yaml,options="nowrap"]
 .link:service_admin/small-queue-plan.yaml[small-queue-plan.yaml]
 ----
-include::small-queue-plan.yaml[]
+include::../service_admin/small-queue-plan.yaml[]
 ----
 
 The following fields are required:
@@ -30,7 +30,7 @@ The `small-anycast` plan does not consume any broker resources, and can provisio
 [source,yaml,options="nowrap"]
 .link:service_admin/small-anycast-plan.yaml[small-anycast-plan.yaml]
 ----
-include::small-anycast-plan.yaml[]
+include::../service_admin/small-anycast-plan.yaml[]
 ----
 
 With this plan, up to 10 addresses can be created.

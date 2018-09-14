@@ -2,8 +2,6 @@
 //
 // assembly-installing-manual-steps.adoc
 
-include::common/attributes.adoc[]
-
 [id='deploying-single-namespace-{context}']
 = (Optional) Deploying {ProductName} to a single namespace
 

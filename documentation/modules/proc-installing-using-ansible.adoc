@@ -13,7 +13,7 @@ An example inventory file that enables both the API server and service broker in
 [source,options="nowrap"]
 .link:service_admin/multitenant-all.inventory[multitenant-all.inventory]
 ----
-include::multitenant-all.inventory[]
+include::../service_admin/multitenant-all.inventory[]
 ----
 
 .Procedure

@@ -2,8 +2,6 @@
 //
 // assembly-installing-manual-steps.adoc
 
-include::common/attributes.adoc[]
-
 [id='deploying-auth-services-{context}']
 = Deploying authentication services
 

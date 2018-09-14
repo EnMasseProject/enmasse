@@ -1,0 +1,26 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-installing-openshift.adoc
+// assembly-installing-kubernetes.adoc
+:parent-context: {context}
+
+[id='installing-using-manual-steps-{context}']
+= Installing {ProductName} manually
+
+The manual deployment procedure can be performed on any platform
+supporting the {PlatformName} client.
+
+include::../modules/proc-creating-project.adoc[leveloffset=+1]
+
+include::../modules/proc-deploying-auth-services.adoc[leveloffset=+1]
+
+include::../modules/proc-deploying-address-space-controller.adoc[leveloffset=+1]
+
+include::../modules/proc-deploying-api-server.adoc[leveloffset=+1]
+
+include::../modules/proc-deploying-service-broker.adoc[leveloffset=+1]
+
+include::../modules/proc-deploying-single-namespace.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

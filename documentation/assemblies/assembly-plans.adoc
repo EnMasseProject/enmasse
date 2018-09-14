@@ -13,11 +13,11 @@ Resource definitions are a description of resources referenced by the plans, whi
 By default, {ProductName} comes with a set of plans and resource definitions that are
 sufficient for most use cases.
 
-include::con-address-space-plans.adoc[leveloffset=+1]
+include::../modules/con-address-space-plans.adoc[leveloffset=+1]
 
-include::con-address-plans.adoc[leveloffset=+1]
+include::../modules/con-address-plans.adoc[leveloffset=+1]
 
-include::con-resource-definitions.adoc[leveloffset=+1]
+include::../modules/con-resource-definitions.adoc[leveloffset=+1]
 
 :context: {parent-context}
 

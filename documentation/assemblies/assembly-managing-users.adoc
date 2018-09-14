@@ -14,13 +14,13 @@ be managed using a Kubernetes native REST API and custom resources using the com
 .Prerequisites
 
 * {ProductName} is installed with custom resources enabled
-* You have created an xref:address_space[]
+* You must have already created an xref:address_space[]
 
-include::common/concept-user-model.adoc[leveloffset=+1]
-include::common/proc-creating-users-cli.adoc[leveloffset=+1]
-include::common/proc-deleting-users-cli.adoc[leveloffset=+1]
+include::../common/concept-user-model.adoc[leveloffset=+1]
+include::../common/proc-creating-users-cli.adoc[leveloffset=+1]
+include::../common/proc-deleting-users-cli.adoc[leveloffset=+1]
 
-== Additional resources
+.Additional resources
 
 * xref:enmasse_rest_api[]
 

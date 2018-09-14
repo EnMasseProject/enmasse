@@ -12,7 +12,7 @@ Plans are configured as `ConfigMaps`. Following is an example plan for the stand
 [source,yaml,options="nowrap"]
 .link:service_admin/restrictive-plan.yaml[restrictive-plan.yaml]
 ----
-include::restrictive-plan.yaml[]
+include::../service_admin/restrictive-plan.yaml[]
 ----
 
 The following fields are required:
