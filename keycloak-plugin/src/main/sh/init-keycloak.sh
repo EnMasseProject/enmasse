@@ -17,5 +17,7 @@ echo "Keystore ${KEYSTORE_PATH} created"
 
 rm -rf ${TRUSTSTORE_PATH}
 cp /etc/pki/java/cacerts ${TRUSTSTORE_PATH}
+chmod 644 ${TRUSTSTORE_PATH}
+echo "Copied system trust store. Importing OpenShift CA"
 keytool -import -noprompt -file ${OPENSHIFT_CA} -alias firstCA -deststorepass changeit -keystore $TRUSTSTORE_PATH
 echo "Truststore ${TRUSTSTORE_PATH} created"
