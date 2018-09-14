@@ -103,11 +103,13 @@ public class UserApiClient extends ApiClient {
     }
 
     public JsonObject createUser(String addressSpace, User user, int expectedCode) throws Exception {
+        return createUser(addressSpace, user.toJson(addressSpace), HTTP_CREATED);
+    }
+
+    public JsonObject createUser(String addressSpace, JsonObject userPayLoad, int expectedCode) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_USER);
         try {
-            JsonObject config = user.toJson(addressSpace);
-
-            log.info("POST-user: path {}; body {}", userPath, config.toString());
+            log.info("POST-user: path {}; body {}", userPath, userPayLoad.toString());
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
             return doRequestNTimes(initRetry, () -> {
@@ -115,10 +117,10 @@ public class UserApiClient extends ApiClient {
                                 .timeout(20_000)
                                 .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                                 .as(BodyCodec.jsonObject())
-                                .sendJsonObject(config, ar -> responseHandler(ar,
+                                .sendJsonObject(userPayLoad, ar -> responseHandler(ar,
                                         responsePromise,
                                         expectedCode,
-                                        String.format("Error: create user '%s'", user.getUsername())));
+                                        String.format("Error: create user '%s'", userPayLoad.getJsonObject("spec").getString("username"))));
                         return responsePromise.get(30, TimeUnit.SECONDS);
                     },
                     Optional.of(() -> kubernetes.getRestEndpoint()),

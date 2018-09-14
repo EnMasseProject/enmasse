@@ -277,4 +277,18 @@ class UserApiTest extends TestBase {
 
         assertThrows(ExecutionException.class, () -> getUserApiClient().createUser(brokered.getName(), testUser, HTTP_BAD_REQUEST));
     }
+
+    @Test
+    void testCreateUserUnderscoreUsername() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-underscore-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("user_pepinator", "password");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        getUserApiClient().createUser(brokered.getName(), testUser.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+    }
 }
