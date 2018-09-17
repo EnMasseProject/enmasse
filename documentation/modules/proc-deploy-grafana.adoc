@@ -1,3 +1,8 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
 [id='deploy-grafana-{context}']
 = Deploying Grafana
 
@@ -17,5 +22,5 @@
 {cmdcli} expose service grafana
 ----
 
-Grafana accepts the username `admin` and password `admin` by default. For more information about how to connect Grafana to Prometheus, see the link:https://prometheus.io/docs/visualization/grafana/#creating-a-prometheus-data-source[Prometheus documentation]. Use `prometheus.enmasse.svc.cluster.local` as the Prometheus host name.
+Grafana accepts the default username `admin` and default password `admin`. For more information about how to connect Grafana to Prometheus, see the link:https://prometheus.io/docs/visualization/grafana/#creating-a-prometheus-data-source[Prometheus documentation^]. If connecting Grafana to Prometheus, use `prometheus.enmasse.svc.cluster.local` as the Prometheus host name.
 
