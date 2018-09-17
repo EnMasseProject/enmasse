@@ -9,7 +9,6 @@ COMMIT          ?= latest
 TAG             ?= latest
 VERSION         ?= $(shell cat $(TOPDIR)/release.version)
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
-NPM             ?= $(shell command -v npm 2> /dev/null)
 SKIP_TESTS      ?= false
 
 all: init build test package docker_build
@@ -22,21 +21,6 @@ clean_node:
 
 clean: clean_node
 	rm -rf build
-
-node_modules: package.json
-		npm install
-
-npm_install: node_modules
-
-npm_test: node_modules
-        ifeq ($(SKIP_TESTS),true)
-		$(warning "node tests will be skipped")
-        else
-	       MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
-        endif
-
-npm_coverage: npm_install
-	   npm run coverage
 
 docker_build: package
 	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) . ; fi
