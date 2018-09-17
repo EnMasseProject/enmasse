@@ -46,7 +46,9 @@ function authenticate(credentials, options) {
         var handleFailure = function (context) {
             if (!handled) {
                 handled = true;
-                log.error('Authentication failed! error no: '+ context.error.errno + ' syscall: '+context.error.syscall+ ' address: '+context.error.address+ ' port: '+ context.error.port + ' code: '+ context.error.code);
+                if (context.error !== undefined) {
+                    log.error('Authentication failed! error no: '+ context.error.errno + ' syscall: '+context.error.syscall+ ' address: '+context.error.address+ ' port: '+ context.error.port + ' code: '+ context.error.code);
+                }
                 reject(JSON.stringify(context.connection.get_error()));
             }
         };
