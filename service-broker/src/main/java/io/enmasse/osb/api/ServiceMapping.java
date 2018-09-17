@@ -25,7 +25,7 @@ public class ServiceMapping {
     private final String SERVICE_DISPLAY_NAME_PATTERN = getStringFromEnv("SERVICE_BROKER_SERVICE_DISPLAY_NAME_PATTERN", "EnMasse ({0})");
 
     private final String SERVICE_PROVIDER_NAME = getStringFromEnv("SERVICE_BROKER_SERVICE_PROVIDER_NAME", "EnMasse");
-    private final String IMAGE_URL = getStringFromEnv("SERVICE_BROKER_SERVICE_IMAGE_URL", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/images/logo/enmasse_icon.png");
+    private final String IMAGE_URL = getStringFromEnv("SERVICE_BROKER_SERVICE_IMAGE_URL", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/_images/logo/enmasse_icon.png");
     private final String DOCUMENTATION_URL = getStringFromEnv("SERVICE_BROKER_DOCUMENTATION_URL", "https://github.com/EnMasseProject/enmasse");
     static final String addressRegexp = "^\\s*(([a-zA-Z0-9_-]+(([/.])[a-zA-Z0-9_-]+)*(([/.])?[#*])?)|[#*])(\\s*,\\s*(([a-zA-Z0-9_-]+([/.][a-zA-Z0-9_-]+)*([/.]?[#*])?)|[#*]))*\\s*$";
 

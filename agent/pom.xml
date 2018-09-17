@@ -43,7 +43,7 @@
                       <outputDirectory>${project.basedir}/www</outputDirectory>
                       <resources>
                           <resource>
-                             <directory>${project.basedir}/../documentation/images</directory>
+                             <directory>${project.basedir}/../documentation/_images</directory>
                              <includes>
                                 <include>favicon.ico</include>
                              </includes>
