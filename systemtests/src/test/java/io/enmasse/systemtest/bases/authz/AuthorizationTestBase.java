@@ -6,6 +6,7 @@ package io.enmasse.systemtest.bases.authz;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
@@ -280,9 +281,11 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 2, TimeUnit.SECONDS);
             return received.get(3, TimeUnit.SECONDS).size() == sent.get(3, TimeUnit.SECONDS);
         } catch (Exception ex) {
+            log.info("canAuth exception", ex);
+            return false;
+        } finally {
             sender.close();
             receiver.close();
-            return false;
         }
     }
 
