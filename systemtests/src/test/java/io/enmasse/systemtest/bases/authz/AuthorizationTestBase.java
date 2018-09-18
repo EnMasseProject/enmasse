@@ -277,8 +277,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination) throws Exception {
         try {
-            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 2, TimeUnit.SECONDS);
-            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 2, TimeUnit.SECONDS);
+            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 30, TimeUnit.SECONDS);
+            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 30, TimeUnit.SECONDS);
             return received.get(3, TimeUnit.SECONDS).size() == sent.get(3, TimeUnit.SECONDS);
         } catch (Exception ex) {
             log.info("canAuth exception", ex);
