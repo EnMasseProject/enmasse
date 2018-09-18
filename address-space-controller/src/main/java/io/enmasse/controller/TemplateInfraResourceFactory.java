@@ -27,11 +27,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private final Kubernetes kubernetes;
     private final SchemaProvider schemaProvider;
     private final AuthenticationServiceResolverFactory authResolverFactory;
+    private final boolean openShift;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, SchemaProvider schemaProvider, AuthenticationServiceResolverFactory authResolverFactory) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, SchemaProvider schemaProvider, AuthenticationServiceResolverFactory authResolverFactory, boolean openShift) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.authResolverFactory = authResolverFactory;
+        this.openShift = openShift;
     }
 
     @Override
@@ -43,10 +45,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         AddressSpacePlan plan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace);
         ResourceDefinition resourceDefinition = addressSpaceResolver.getResourceDefinition(plan);
 
+
         if (resourceDefinition != null && resourceDefinition.getTemplateName().isPresent()) {
-            Map<String, String> parameters = new HashMap<>();
             AuthenticationService authService = addressSpace.getAuthenticationService();
             AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
+
+            String kcIdpHint = "";
+            if  (addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT) != null) {
+                kcIdpHint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
+                if ("none".equals(kcIdpHint)) {
+                    kcIdpHint = "";
+                }
+            } else if (this.openShift && authService.getType() == AuthenticationServiceType.STANDARD) {
+                kcIdpHint = "openshift-v3";
+            }
+
+            Map<String, String> parameters = new HashMap<>();
 
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
@@ -56,6 +70,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
             parameters.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, KubeUtil.getAddressSpaceSaName(addressSpace));
             parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getPlan());
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint);
 
             String encodedCaCert = authResolver.getCaSecretName(authService)
                     .map(secretName ->
