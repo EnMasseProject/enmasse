@@ -1,0 +1,19 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+:parent-context: {context}
+:context: oc
+:cmdcli: oc
+
+[id='monitoring-oc-{context}']
+= Monitoring {ProductName} on OpenShift
+
+You can use Prometheus and Grafana for monitoring the {ProductName} service.
+
+include::../modules/proc-deploy-prometheus.adoc[]
+
+include::../modules/proc-deploy-grafana.adoc[]
+
+:context: {parent-context}
+

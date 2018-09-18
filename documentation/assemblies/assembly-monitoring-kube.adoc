@@ -1,0 +1,19 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+:parent-context: {context}
+:context: kube
+:cmdcli: kube
+
+[id='monitoring-kube-{context}']
+= Monitoring {ProductName} on Kubernetes
+
+You can use Prometheus and Grafana for monitoring the {ProductName} service.
+
+include::../modules/proc-deploy-prometheus.adoc[]
+
+include::../modules/proc-deploy-grafana.adoc[]
+
+:context: {parent-context}
+

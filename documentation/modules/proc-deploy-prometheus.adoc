@@ -1,0 +1,29 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='deploy-prometheus-{context}']
+= Deploying Prometheus
+
+.Prerequisites
+* For Prometheus to monitor pods in the cluster, `cluster-admin` privileges are required.
+
+.Procedure
+
+. Create the Prometheus deployment:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./resources/prometheus/prometheus.yaml -n enmasse
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Grant `cluster-reader` privileges to the Prometheus service account:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:enmasse:prometheus-server
+----
+endif::[]
+

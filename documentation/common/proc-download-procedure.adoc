@@ -3,8 +3,6 @@
 // assembly-installing-openshift.adoc
 // assembly-installing-kubernetes.adoc
 
-include::attributes.adoc[]
-
 [id='downloading-{context}']
 = Downloading {ProductName}
 
