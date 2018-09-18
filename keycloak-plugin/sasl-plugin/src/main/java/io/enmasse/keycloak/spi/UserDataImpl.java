@@ -33,4 +33,9 @@ class UserDataImpl implements UserData {
     public Set<String> getGroups() {
         return groups;
     }
+
+    @Override
+    public String toString() {
+        return "{userId=" + userId + ", userName=" + userName + ", groups=" + groups + "}";
+    }
 }

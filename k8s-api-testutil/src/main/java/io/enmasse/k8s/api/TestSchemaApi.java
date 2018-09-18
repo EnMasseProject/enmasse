@@ -14,17 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class TestSchemaApi implements SchemaApi {
-    private final Set<String> copiedTo = new HashSet<>();
-
-    public Set<String> getCopiedTo() {
-        return new HashSet<>(copiedTo);
-    }
-
-    @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace) {
-        copiedTo.add(otherNamespace);
-    }
-
     @Override
     public Schema getSchema() {
         return new Schema.Builder()

@@ -6,7 +6,6 @@ package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertSpec;
-import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -22,16 +21,18 @@ public class WildcardCertProvider implements CertProvider {
     private final KubernetesClient client;
     private final CertSpec certSpec;
     private final String wildcardSecretName;
+    private final String namespace;
 
     public WildcardCertProvider(KubernetesClient client, CertSpec certSpec, String wildcardSecretName) {
         this.client = client;
         this.certSpec = certSpec;
         this.wildcardSecretName = wildcardSecretName;
+        this.namespace = client.getNamespace();
     }
 
     @Override
     public Secret provideCert(AddressSpace addressSpace, String cn, Collection<String> sans) {
-        Secret secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).withName(certSpec.getSecretName()).get();
+        Secret secret = client.secrets().inNamespace(namespace).withName(certSpec.getSecretName()).get();
         if (secret == null) {
             Secret wildcardSecret = null;
             if (wildcardSecretName != null) {
@@ -47,7 +48,7 @@ public class WildcardCertProvider implements CertProvider {
             data.put("tls.key", wildcardSecret.getData().get("tls.key"));
             data.put("tls.crt", wildcardSecret.getData().get("tls.crt"));
 
-            secret = client.secrets().inNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).createNew()
+            secret = client.secrets().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(certSpec.getSecretName())
                     .endMetadata()

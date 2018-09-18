@@ -9,6 +9,8 @@ objects:
       name: ${NAMESPACE}.${NAME}
       labels:
         type: address-space
+        infraUuid: ${INFRA_UUID}
+        app: enmasse
     data:
       config.json: |-
         {
@@ -18,7 +20,7 @@ objects:
             "name": "${NAME}",
             "namespace": "${NAMESPACE}",
             "annotations": {
-              "enmasse.io/namespace": "${NAMESPACE}",
+              "enmasse.io/infra-uuid": "${INFRA_UUID}",
               "enmasse.io/realm-name": "${NAMESPACE}"
             }
           },
@@ -34,6 +36,10 @@ parameters:
   - name: NAMESPACE
     description: Namespace to deploy address space to
     required: true
+  - name: INFRA_UUID
+    description: Infra uuid
+    from: '[a-z]{8}'
+    generate: expression
   - name: TYPE
     description: Type of address space
     required: true

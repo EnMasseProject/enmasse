@@ -23,11 +23,13 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
     private final Kubernetes kubernetes;
     private final TemplateOptions templateOptions;
     private final String addressSpace;
+    private final String infraUuid;
 
-    public TemplateBrokerSetGenerator(Kubernetes kubernetes, TemplateOptions templateOptions, String addressSpace) {
+    public TemplateBrokerSetGenerator(Kubernetes kubernetes, TemplateOptions templateOptions, String addressSpace, String infraUuid) {
         this.kubernetes = kubernetes;
         this.templateOptions = templateOptions;
         this.addressSpace = addressSpace;
+        this.infraUuid = infraUuid;
     }
 
     /**
@@ -50,9 +52,9 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         Map<String, String> paramMap = new LinkedHashMap<>(parameterMap);
 
         paramMap.put(TemplateParameter.NAME, clusterId);
+        paramMap.put(TemplateParameter.INFRA_UUID, infraUuid);
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
         paramMap.put(TemplateParameter.ADDRESS_SPACE, addressSpace);
-        paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, templateOptions.getMessagingSecret());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, templateOptions.getAuthenticationServiceHost());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, templateOptions.getAuthenticationServicePort());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, templateOptions.getAuthenticationServiceCaSecret());

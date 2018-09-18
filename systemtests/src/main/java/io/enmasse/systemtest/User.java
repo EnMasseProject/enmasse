@@ -50,9 +50,13 @@ public class User {
     }
 
     public JsonObject toJson(String addressSpace) throws UnsupportedEncodingException {
+        return toJson(addressSpace, getUsername());
+    }
+
+    public JsonObject toJson(String addressSpace, String metaUserName) throws UnsupportedEncodingException {
         JsonObject config = new JsonObject();
         JsonObject metadata = new JsonObject();
-        metadata.put("name", addressSpace + "." + getUsername());
+        metadata.put("name", addressSpace + "." + metaUserName);
         config.put("metadata", metadata);
 
         JsonObject spec = new JsonObject();

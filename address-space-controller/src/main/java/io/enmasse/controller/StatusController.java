@@ -31,7 +31,7 @@ public class StatusController implements Controller {
     }
 
     private boolean isReady(AddressSpace addressSpace) {
-        Set<String> readyDeployments = kubernetes.withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE)).getReadyDeployments().stream()
+        Set<String> readyDeployments = kubernetes.getReadyDeployments().stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .collect(Collectors.toSet());
 

@@ -46,10 +46,6 @@ public class Main {
         return getEnvOrThrow(env, "TOPIC_NAME");
     }
 
-    private static String getBrokerName(Map<String, String> env) {
-        return getEnvOrThrow(env, "CLUSTER_ID");
-    }
-
     private static Host getLocalHost() throws UnknownHostException {
         return new Host(Inet4Address.getLocalHost().getHostAddress(), Collections.singletonMap("amqp", 5673));
     }
@@ -57,12 +53,13 @@ public class Main {
     private static Map<String,String> getLabelFilter(Map<String, String> env) {
         Map<String, String> labelMap = new LinkedHashMap<>();
         labelMap.put("role", "broker");
+        labelMap.put("infraUuid", getEnvOrThrow(env, "INFRA_UUID"));
         return labelMap;
     }
 
     private static Map<String,String> getAnnotationFilter(Map<String, String> env) {
         Map<String, String> labelMap = new LinkedHashMap<>();
-        labelMap.put("cluster_id", getBrokerName(env));
+        labelMap.put("cluster_id", getEnvOrThrow(env, "CLUSTER_ID"));
         return labelMap;
     }
 

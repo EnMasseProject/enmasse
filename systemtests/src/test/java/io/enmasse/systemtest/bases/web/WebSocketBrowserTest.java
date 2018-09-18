@@ -37,7 +37,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
             if (TestUtils.resolvable(messagingEndpoint)) {
                 return messagingEndpoint;
             } else {
-                return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "https");
+                return kubernetes.getEndpoint("messaging-" + addressSpace.getInfraUuid(), "https");
             }
         } else {
             return super.getMessagingRoute(addressSpace);

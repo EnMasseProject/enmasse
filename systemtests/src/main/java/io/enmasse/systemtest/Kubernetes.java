@@ -62,20 +62,24 @@ public abstract class Kubernetes {
         return environment.openShiftToken();
     }
 
-    public Endpoint getEndpoint(String namespace, String serviceName, String port) {
+    public Endpoint getEndpoint(String serviceName, String port) {
+        return getEndpoint(serviceName, globalNamespace, port);
+    }
+
+    public Endpoint getEndpoint(String serviceName, String namespace, String port) {
         Service service = client.services().inNamespace(namespace).withName(serviceName).get();
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
     public Endpoint getOSBEndpoint() {
-        return getEndpoint(globalNamespace, "service-broker", "https");
+        return getEndpoint("service-broker", "https");
     }
 
     public abstract Endpoint getRestEndpoint() throws MalformedURLException;
 
     public abstract Endpoint getKeycloakEndpoint();
 
-    public abstract Endpoint getExternalEndpoint(String namespace, String name);
+    public abstract Endpoint getExternalEndpoint(String name);
 
     public UserCredentials getKeycloakCredentials() {
         Secret creds = client.secrets().inNamespace(globalNamespace).withName("keycloak-credentials").get();
@@ -113,24 +117,28 @@ public abstract class Kubernetes {
         return terminatedPodsLogs;
     }
 
-    public void setDeploymentReplicas(String tenantNamespace, String name, int numReplicas) {
-        client.extensions().deployments().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
+    public void setDeploymentReplicas(String name, int numReplicas) {
+        client.extensions().deployments().inNamespace(globalNamespace).withName(name).scale(numReplicas, true);
     }
 
-    public void setStatefulSetReplicas(String tenantNamespace, String name, int numReplicas) {
-        client.apps().statefulSets().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
+    public void setStatefulSetReplicas(String name, int numReplicas) {
+        client.apps().statefulSets().inNamespace(globalNamespace).withName(name).scale(numReplicas, true);
     }
 
-    public List<Pod> listPods(String addressSpace) {
-        return new ArrayList<>(client.pods().inNamespace(addressSpace).list().getItems());
+    public List<Pod> listPods(String uuid) {
+        return new ArrayList<>(client.pods().inNamespace(globalNamespace).withLabel("enmasse.io/uuid", uuid).list().getItems());
     }
 
-    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector) {
-        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems();
+    public List<Pod> listPods() {
+        return new ArrayList<>(client.pods().inNamespace(globalNamespace).list().getItems());
     }
 
-    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector, Map<String, String> annotationSelector) {
-        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems().stream().filter(pod -> {
+    public List<Pod> listPods(Map<String, String> labelSelector) {
+        return client.pods().withLabels(labelSelector).list().getItems();
+    }
+
+    public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
+        return client.pods().withLabels(labelSelector).list().getItems().stream().filter(pod -> {
             for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
                 if (pod.getMetadata().getAnnotations() == null
                         || pod.getMetadata().getAnnotations().get(entry.getKey()) == null
@@ -151,20 +159,20 @@ public abstract class Kubernetes {
         }
     }
 
-    public Watch watchPods(String namespace, Watcher<Pod> podWatcher) {
-        return client.pods().inNamespace(namespace).watch(podWatcher);
+    public Watch watchPods(String uuid, Watcher<Pod> podWatcher) {
+        return client.pods().withLabel("enmasse.io/infra", uuid).watch(podWatcher);
     }
 
     public List<Event> listEvents(String namespace) {
         return client.events().inNamespace(namespace).list().getItems();
     }
 
-    public LogWatch watchPodLog(String namespace, String name, String container, OutputStream outputStream) {
-        return client.pods().inNamespace(namespace).withName(name).inContainer(container).watchLog(outputStream);
+    public LogWatch watchPodLog(String name, String container, OutputStream outputStream) {
+        return client.pods().withName(name).inContainer(container).watchLog(outputStream);
     }
 
-    public Pod getPod(String namespace, String name) {
-        return client.pods().inNamespace(namespace).withName(name).get();
+    public Pod getPod(String name) {
+        return client.pods().withName(name).get();
     }
 
     public Set<String> listNamespaces() {
@@ -617,14 +625,13 @@ public abstract class Kubernetes {
 
     /***
      * Creates service from resource
-     * @param namespace
      * @param resources
      * @return endpoint of service
      */
     public Endpoint createServiceFromResource(String namespace, Service resources) {
         Service serRes = client.services().inNamespace(namespace).create(resources);
         log.info("Service {} created", serRes.getMetadata().getName());
-        return getEndpoint(namespace, serRes.getMetadata().getName(), "http");
+        return getEndpoint(serRes.getMetadata().getName(), namespace, "http");
     }
 
     /***

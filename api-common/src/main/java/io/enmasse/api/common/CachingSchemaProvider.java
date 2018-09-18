@@ -4,9 +4,7 @@
  */
 package io.enmasse.api.common;
 
-import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.Schema;
-import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +13,7 @@ import java.util.Set;
 
 public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
     private static final Logger log = LoggerFactory.getLogger(CachingSchemaProvider.class);
-    private final SchemaApi schemaApi;
     private volatile Schema schema = null;
-
-    public CachingSchemaProvider(SchemaApi schemaApi) {
-        this.schemaApi = schemaApi;
-    }
 
     @Override
     public Schema getSchema() {
@@ -34,10 +27,5 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
         }
         log.info("Schema updated");
         schema = items.iterator().next();
-    }
-
-    @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String namespace) {
-        schemaApi.copyIntoNamespace(plan, namespace);
     }
 }

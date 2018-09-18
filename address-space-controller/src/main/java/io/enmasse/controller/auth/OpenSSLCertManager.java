@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
@@ -22,12 +23,14 @@ import org.slf4j.LoggerFactory;
 public class OpenSSLCertManager implements CertManager {
     private static final Logger log = LoggerFactory.getLogger(OpenSSLCertManager.class.getName());
     private final OpenShiftClient client;
+    private final String namespace;
     private final File certDir;
 
     public OpenSSLCertManager(OpenShiftClient controllerClient,
                               File certDir) {
         this.client = controllerClient;
         this.certDir = certDir;
+        this.namespace = controllerClient.getNamespace();
     }
 
     private static void createSelfSignedCert(final File keyFile, final File certFile) {
@@ -35,17 +38,17 @@ public class OpenSSLCertManager implements CertManager {
                 "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath());
     }
 
-    private static Secret createSecretFromCertAndKeyFiles(final String secretName,
-                                                        final String namespace,
+    private Secret createSecretFromCertAndKeyFiles(final String secretName,
+                                                        final Map<String, String> secretLabels,
                                                         final File keyFile,
                                                         final File certFile,
                                                         final OpenShiftClient client)
             throws IOException {
-        return createSecretFromCertAndKeyFiles(secretName, namespace, "tls.key", "tls.crt", keyFile, certFile, client);
+        return createSecretFromCertAndKeyFiles(secretName, secretLabels, "tls.key", "tls.crt", keyFile, certFile, client);
     }
 
-    private static Secret createSecretFromCertAndKeyFiles(final String secretName,
-                                                          final String namespace,
+    private Secret createSecretFromCertAndKeyFiles(final String secretName,
+                                                          final Map<String, String> secretLabels,
                                                           final String keyKey,
                                                           final String certKey,
                                                           final File keyFile,
@@ -59,6 +62,7 @@ public class OpenSSLCertManager implements CertManager {
         return client.secrets().inNamespace(namespace).withName(secretName).createOrReplaceWithNew()
                 .editOrNewMetadata()
                 .withName(secretName)
+                .withLabels(secretLabels)
                 .endMetadata()
                 .addToData(data)
                 .done();
@@ -88,37 +92,37 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public Collection<CertComponent> listComponents(String namespace) {
+    public Collection<CertComponent> listComponents(String uuid) {
         List<HasMetadata> components = new ArrayList<>();
 
-        components.addAll(client.extensions().deployments().inNamespace(namespace).list().getItems());
-        components.addAll(client.apps().statefulSets().inNamespace(namespace).list().getItems());
+        components.addAll(client.extensions().deployments().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, uuid).list().getItems());
+        components.addAll(client.apps().statefulSets().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, uuid).list().getItems());
 
         return components.stream()
                 .filter(object -> object.getMetadata().getAnnotations() != null && object.getMetadata().getAnnotations().containsKey(AnnotationKeys.CERT_SECRET_NAME))
                 .map(object -> {
                     Map<String, String> annotations = object.getMetadata().getAnnotations();
                     String cn = annotations.getOrDefault(AnnotationKeys.CERT_CN, object.getMetadata().getName());
-                    return new CertComponent(cn, namespace, annotations.get(AnnotationKeys.CERT_SECRET_NAME));
+                    return new CertComponent(cn, uuid, annotations.get(AnnotationKeys.CERT_SECRET_NAME));
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
     public boolean certExists(CertComponent component) {
-        return client.secrets().inNamespace(component.getNamespace()).withName(component.getSecretName()).get() != null;
+        return client.secrets().inNamespace(namespace).withName(component.getSecretName()).get() != null;
     }
 
     @Override
-    public Secret getCertSecret(String namespace, String name) {
+    public Secret getCertSecret(String name) {
         return client.secrets().inNamespace(namespace).withName(name).get();
     }
 
 
     @Override
     public CertSigningRequest createCsr(CertComponent component) {
-        File keyFile = new File(certDir, component.getNamespace() + "." + component.getName() + ".key");
-        File csrFile = new File(certDir, component.getNamespace() + "." + component.getName() + ".csr");
+        File keyFile = new File(certDir, component.getName() + "." + component.getUuid() + ".key");
+        File csrFile = new File(certDir, component.getName() + "." + component.getUuid() + ".csr");
         String subjString = "/O=io.enmasse";
         if (component.getName().length() <= 64) {
             subjString += "/CN=" + component.getName();
@@ -129,7 +133,7 @@ public class OpenSSLCertManager implements CertManager {
 
     @Override
     public Cert signCsr(CertSigningRequest request, Secret secret, Collection<String> sans) {
-        File crtFile = new File(certDir, request.getCertComponent().getNamespace() + "." + request.getCertComponent().getName() + ".crt");
+        File crtFile = new File(certDir, request.getCertComponent().getName() + "." + request.getCertComponent().getUuid() + ".crt");
 
         File caKey = createTempFileFromSecret(secret, "tls.key");
         File caCert = createTempFileFromSecret(secret, "tls.crt");
@@ -182,7 +186,7 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public Secret createSecret(Cert cert, Secret caSecret) {
+    public Secret createSecret(Cert cert, Secret caSecret, Map<String, String> labels) {
         try {
             Map<String, String> data = new LinkedHashMap<>();
             Base64.Encoder encoder = Base64.getEncoder();
@@ -190,9 +194,10 @@ public class OpenSSLCertManager implements CertManager {
             data.put("tls.crt", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getCertFile())));
             data.put("ca.crt", caSecret.getData().get("tls.crt"));
 
-            return client.secrets().inNamespace(cert.getComponent().getNamespace()).createNew()
+            return client.secrets().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(cert.getComponent().getSecretName())
+                    .withLabels(labels)
                     .endMetadata()
                     .withType("kubernetes.io/tls")
                     .addToData(data)
@@ -203,13 +208,14 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public Secret createSelfSignedCertSecret(String namespace, final String secretName) {
+    public Secret createSelfSignedCertSecret(final String secretName, Map<String, String> labels) {
         try {
             File key = File.createTempFile("tls", "key");
             File cert = File.createTempFile("tls", "crt");
             try {
                 createSelfSignedCert(key, cert);
-                return createSecretFromCertAndKeyFiles(secretName, namespace, key, cert, this.client);
+
+                return createSecretFromCertAndKeyFiles(secretName, labels, key, cert, this.client);
             } finally {
                 key.delete();
                 cert.delete();
@@ -217,24 +223,6 @@ public class OpenSSLCertManager implements CertManager {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    @Override
-    public void grantServiceAccountAccess(Secret secret, String saName, String saNamespace) {
-        ServiceAccount defaultAccount = client.serviceAccounts().inNamespace(saNamespace).withName(saName).get();
-        for (ObjectReference reference : defaultAccount.getSecrets()) {
-            if (reference.getName().equals(secret.getMetadata().getName())) {
-                return;
-            }
-        }
-
-        client.serviceAccounts().inNamespace(saNamespace).withName(saName).edit()
-                .addToSecrets(new ObjectReferenceBuilder()
-                        .withKind(secret.getKind())
-                        .withName(secret.getMetadata().getName())
-                        .withApiVersion(secret.getApiVersion())
-                        .build())
-                .done();
     }
 
     public static OpenSSLCertManager create(OpenShiftClient controllerClient) {

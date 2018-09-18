@@ -10,7 +10,6 @@ import static io.enmasse.controller.standard.ControllerReason.BrokerCreated;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -20,9 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,13 +46,16 @@ public class AddressProvisioner {
     private final BrokerSetGenerator clusterGenerator;
     private final Kubernetes kubernetes;
     private final EventLogger eventLogger;
+    private final String infraUuid;
 
-    public AddressProvisioner(AddressResolver addressResolver, AddressSpacePlan addressSpacePlan, BrokerSetGenerator clusterGenerator, Kubernetes kubernetes, EventLogger eventLogger) {
+    public AddressProvisioner(AddressResolver addressResolver, AddressSpacePlan addressSpacePlan, BrokerSetGenerator clusterGenerator, Kubernetes kubernetes, EventLogger eventLogger, String infraUuid) {
         this.addressResolver = addressResolver;
         this.addressSpacePlan = addressSpacePlan;
         this.clusterGenerator = clusterGenerator;
         this.kubernetes = kubernetes;
         this.eventLogger = eventLogger;
+        this.infraUuid = infraUuid;
+        this.pooledPattern = Pattern.compile("^broker-pooled-" + infraUuid + "-\\d+");
     }
 
     /**
@@ -248,7 +250,7 @@ public class AddressProvisioner {
                 } else if (resourceRequest.getAmount() < 1) {
                     boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getAmount());
                     if (!scheduled) {
-                        allocateBroker(resourceUsage, "broker-");
+                        allocateBroker(resourceUsage, "broker-pooled-" + infraUuid + "-");
                         if (!scheduleAddress(resourceUsage, address, resourceRequest.getAmount())) {
                             log.warn("Unable to find broker for scheduling {}", address);
                             return null;
@@ -339,14 +341,18 @@ public class AddressProvisioner {
         return needed;
     }
 
-    public static String getShardedClusterId(Address address) {
+    public String getShardedClusterId(Address address) {
         final String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
 
         if ( clusterId != null ) {
             return KubeUtil.sanitizeName(clusterId);
         }
 
-        return "b" + UUID.nameUUIDFromBytes(address.getAddress().getBytes(StandardCharsets.UTF_8)).toString();
+        CRC32 crc32 = new CRC32();
+        crc32.update(address.getNamespace().getBytes());
+        crc32.update(address.getAddressSpace().getBytes());
+        crc32.update(address.getAddress().getBytes());
+        return "broker-sharded-" + Long.toHexString(crc32.getValue()) + "-" + infraUuid;
     }
 
     public static Optional<String> getBrokerId(Address address) {
@@ -380,7 +386,7 @@ public class AddressProvisioner {
                 ResourceDefinition pooledDefinition = addressResolver.getResourceDefinition(resourceName);
                 int needPooled = sumNeededMatching(entry.getValue(), pooledPattern);
                 if (needPooled > 0) {
-                    provisionBroker(existingClusters, "broker", pooledDefinition, needPooled, null);
+                    provisionBroker(existingClusters, "broker-pooled-" + infraUuid, pooledDefinition, needPooled, null);
                 }
 
                 // Collect all sharded brokers
@@ -416,10 +422,10 @@ public class AddressProvisioner {
         }
     }
 
-    private final Pattern pooledPattern = Pattern.compile("^broker-\\d+");
+    private final Pattern pooledPattern;
     private boolean scheduleAddress(Map<String, UsageInfo> usageMap, Address address, double credit) {
 
-        address.putAnnotation(AnnotationKeys.CLUSTER_ID, "broker");
+        address.putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-pooled-" + infraUuid);
 
         List<BrokerInfo> brokers = new ArrayList<>();
         for (String host : usageMap.keySet()) {

@@ -13,7 +13,6 @@ import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +39,7 @@ public class AddressControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1));
-        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5));
+        controller = new AddressController("me", "plan1", "", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5));
     }
 
     @Test

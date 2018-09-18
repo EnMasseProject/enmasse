@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -28,10 +29,12 @@ public class EndpointController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(EndpointController.class.getName());
     private final KubernetesClient client;
     private final boolean exposeServicesByDefault;
+    private final String namespace;
 
     public EndpointController(KubernetesClient client, boolean exposeServicesByDefault) {
         this.client = client;
         this.exposeServicesByDefault = exposeServicesByDefault;
+        namespace = client.getNamespace();
     }
 
     @Override
@@ -45,8 +48,8 @@ public class EndpointController implements Controller {
         Map<String, String> annotations = new HashMap<>();
         annotations.put(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName());
 
-        String namespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
-        List<Service> services = client.services().inNamespace(namespace).list().getItems();
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        List<Service> services = client.services().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
         List<EndpointInfo> endpoints = collectEndpoints(addressSpace, services);
 
         /* Watch for routes and lb services */
@@ -73,12 +76,11 @@ public class EndpointController implements Controller {
 
     public List<EndpointInfo> collectEndpoints(AddressSpace addressSpace, List<Service> services) {
         List<EndpointInfo> endpoints = new ArrayList<>();
-        String infraNamespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
 
         for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
             EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder();
             statusBuilder.setName(endpoint.getName());
-            statusBuilder.setServiceHost(endpoint.getService() + "." + infraNamespace + ".svc");
+            statusBuilder.setServiceHost(endpoint.getService() + "." + namespace + ".svc");
             Service service = findService(services, endpoint.getService());
             if (service == null) {
                 continue;
@@ -143,18 +145,20 @@ public class EndpointController implements Controller {
 
     private Route ensureRouteExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {
         OpenShiftClient openShiftClient = client.adapt(OpenShiftClient.class);
-        String infraNamespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
-        Route existingRoute = openShiftClient.routes().inNamespace(infraNamespace).withName(endpointSpec.getName()).get();
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        Route existingRoute = openShiftClient.routes().inNamespace(namespace).withName(endpointSpec.getName() + "-" + infraUuid).get();
         if (existingRoute != null) {
             return existingRoute;
         }
 
         RouteBuilder route = new RouteBuilder()
                 .editOrNewMetadata()
-                .withName(endpointSpec.getName())
-                .withNamespace(infraNamespace)
+                .withName(endpointSpec.getName() + "-" + infraUuid)
+                .withNamespace(namespace)
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, endpointSpec.getService())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()
                 .withHost(endpointSpec.getHost().orElse(""))
@@ -177,19 +181,19 @@ public class EndpointController implements Controller {
                     .endSpec();
         }
 
-        return openShiftClient.routes().inNamespace(infraNamespace).create(route.build());
+        return openShiftClient.routes().inNamespace(namespace).create(route.build());
     }
 
     private Service ensureExternalServiceExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {
-        String infraNamespace = addressSpace.getAnnotation(AnnotationKeys.NAMESPACE);
-        String serviceName = endpointSpec.getName() + "-external";
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        String serviceName = endpointSpec.getName() + "-" + infraUuid + "-external";
 
-        Service existingService = client.services().inNamespace(infraNamespace).withName(serviceName).get();
+        Service existingService = client.services().inNamespace(namespace).withName(serviceName).get();
         if (existingService != null) {
             return existingService;
         }
 
-        Service service = client.services().inNamespace(infraNamespace).withName(endpointSpec.getService()).get();
+        Service service = client.services().inNamespace(namespace).withName(endpointSpec.getService()).get();
         if (service == null) {
             return null;
         }
@@ -209,9 +213,11 @@ public class EndpointController implements Controller {
         ServiceBuilder svc = new ServiceBuilder()
                 .editOrNewMetadata()
                 .withName(serviceName)
-                .withNamespace(infraNamespace)
+                .withNamespace(namespace)
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, endpointSpec.getService())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()
                 .withPorts(servicePort)
@@ -219,7 +225,7 @@ public class EndpointController implements Controller {
                 .withType("LoadBalancer")
                 .endSpec();
 
-        return client.services().inNamespace(infraNamespace).create(svc.build());
+        return client.services().inNamespace(namespace).create(svc.build());
     }
 
     @Override

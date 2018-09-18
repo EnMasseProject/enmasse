@@ -49,6 +49,7 @@ public class AddressTest {
     @Test
     public void testSanitizer() {
         Address b1 = new Address.Builder()
+                .setNamespace("ns1")
                 .setAddress("myAddr_-")
                 .setAddressSpace("myspace")
                 .setPlan("p1")
@@ -56,6 +57,7 @@ public class AddressTest {
                 .build();
 
         Address b2 = new Address.Builder()
+                .setNamespace("ns1")
                 .setAddress(b1.getAddress())
                 .setAddressSpace("myspace")
                 .setName(b1.getName())

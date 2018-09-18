@@ -39,12 +39,12 @@ public class ApiServer extends AbstractVerticle {
     @Override
     public void start(Future<Void> startPromise) throws Exception {
         SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, options.getNamespace());
-        CachingSchemaProvider schemaProvider = new CachingSchemaProvider(schemaApi);
+        CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
 
-        AuthApi authApi = new KubeAuthApi(controllerClient, null, controllerClient.getConfiguration().getOauthToken());
+        AuthApi authApi = new KubeAuthApi(controllerClient, controllerClient.getConfiguration().getOauthToken());
 
         UserApi userApi = null;
         if (options.getKeycloakUri() != null) {

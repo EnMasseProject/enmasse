@@ -11,9 +11,9 @@ Installing {ProductName} using Ansible requires creating an inventory file with 
 An example inventory file that enables both the API server and service broker integration:
 
 [source,options="nowrap"]
-.link:service_admin/multitenant-all.inventory[multitenant-all.inventory]
+.link:service_admin/example.inventory[example.inventory]
 ----
-include::../service_admin/multitenant-all.inventory[]
+include::../service_admin/example.inventory[]
 ----
 
 .Procedure

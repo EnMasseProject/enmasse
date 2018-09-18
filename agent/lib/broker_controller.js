@@ -207,7 +207,7 @@ function collect_by_address(addresses, links, name, count) {
 }
 
 function is_not_internal(conn) {
-    return conn.user !== 'agent';//Can't get properties or anything else on which to base decision yet
+    return conn.user !== undefined && conn.user.match('^agent.[a-z0-9]+$') == null; //Can't get properties or anything else on which to base decision yet
 }
 
 BrokerController.prototype.retrieve_stats = function () {

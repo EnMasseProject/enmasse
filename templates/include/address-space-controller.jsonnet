@@ -76,16 +76,6 @@ local images = import "images.jsonnet";
                   }
                 },
                 {
-                  "name": "IMPERSONATE_USER",
-                  "valueFrom": {
-                    "configMapKeyRef": {
-                      "name": "address-space-controller-config",
-                      "key": "impersonateUser",
-                      "optional": true
-                    }
-                  }
-                },
-                {
                   "name": "ADDRESS_CONTROLLER_SA",
                   "value": "enmasse-admin"
                 },

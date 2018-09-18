@@ -11,9 +11,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -23,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, ConfigMapList> {
@@ -80,39 +77,6 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
         return getResources(ResourceDefinition.class, "resource-definition", maps);
     }
 
-    @Override
-    public void copyIntoNamespace(AddressSpacePlan plan, String otherNamespace) {
-        KubernetesListBuilder listBuilder = new KubernetesListBuilder();
-        listBuilder.addAllToConfigMapItems(copyMaps(listConfigMaps("resource-definition").getItems(), m -> true, otherNamespace));
-        listBuilder.addAllToConfigMapItems(copyMaps(
-                listConfigMaps("address-space-plan").getItems(),
-                m -> getResourceFromConfig(AddressSpacePlan.class, m).equals(plan),
-                otherNamespace));
-        listBuilder.addAllToConfigMapItems(copyMaps(
-                listConfigMaps("address-plan").getItems(),
-                m -> plan.getAddressPlans().contains(getResourceFromConfig(AddressPlan.class, m).getName()),
-                otherNamespace));
-        client.lists().inNamespace(otherNamespace).create(listBuilder.build());
-    }
-
-    private Collection<ConfigMap> copyMaps(List<ConfigMap> items, Predicate<ConfigMap> filter, String otherNamespace) {
-        List<ConfigMap> list = new ArrayList<>();
-        for (ConfigMap map : items) {
-            if (filter.test(map)) {
-                list.add(new ConfigMapBuilder()
-                        .editOrNewMetadata()
-                        .withName(map.getMetadata().getName())
-                        .withNamespace(otherNamespace)
-                        .addToLabels(map.getMetadata().getLabels())
-                        .addToAnnotations(map.getMetadata().getAnnotations())
-                        .endMetadata()
-                        .addToData(map.getData())
-                        .build());
-            }
-        }
-        return list;
-    }
-
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<ResourceDefinition> resourceDefinitions) {
         Set<String> resourceDefinitionNames = resourceDefinitions.stream().map(ResourceDefinition::getName).collect(Collectors.toSet());
         String definedBy = addressSpacePlan.getAnnotations().get(AnnotationKeys.DEFINED_BY);
@@ -156,7 +120,7 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                 .setName(name)
                 .setService(name)
                 .setServicePort(port)
-                .setCertSpec(new CertSpec(null, "external-certs-" + name))
+                .setCertSpec(new CertSpec(null, null))
                 .build();
     }
 
@@ -173,7 +137,7 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                         .setName("amqp-wss")
                         .setService("messaging")
                         .setServicePort("https")
-                        .setCertSpec(new CertSpec(null, "external-certs-messaging"))
+                        .setCertSpec(new CertSpec(null, null))
                         .build(),
                 createEndpointSpec("mqtt", "secure-mqtt"),
                 createEndpointSpec("console", "https")));

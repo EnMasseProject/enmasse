@@ -21,7 +21,4 @@ include::../modules/proc-deploying-api-server.adoc[leveloffset=+1]
 
 include::../modules/proc-deploying-service-broker.adoc[leveloffset=+1]
 
-include::../modules/proc-deploying-single-namespace.adoc[leveloffset=+1]
-
 //:context: {parent-context}
-

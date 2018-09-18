@@ -12,6 +12,7 @@ import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.Schema;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
@@ -21,10 +22,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
@@ -73,32 +71,40 @@ public class CreateController implements Controller {
         }
     }
 
+    private List<EndpointSpec> replaceServiceNames(String uuid, List<EndpointSpec> endpoints) {
+        List<EndpointSpec> replacedEndpoints = new ArrayList<>();
+        for (EndpointSpec spec : endpoints) {
+            replacedEndpoints.add(
+                    new EndpointSpec.Builder()
+                    .setName(spec.getName())
+                    .setService(spec.getService() + "-" + uuid)
+                    .setCertSpec(spec.getCertSpec().orElse(null))
+                    .setServicePort(spec.getServicePort())
+                    .setHost(spec.getHost().orElse(null))
+                    .build());
+        }
+        return replacedEndpoints;
+    }
+
+
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
-        Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
-
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         addressSpaceResolver.validate(addressSpace);
+        String uuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
 
-        List<EndpointSpec> endpoints;
-        if (namespace.equals(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))) {
-            if (instanceClient.hasService("messaging")) {
-                return addressSpace;
-            }
-            endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
-        } else {
-            if (kubernetes.existsNamespace(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE))) {
-                return addressSpace;
-            }
-            endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
-            kubernetes.createNamespace(addressSpace);
-            kubernetes.addAddressSpaceAdminRoleBinding(addressSpace);
-            kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
-            kubernetes.addAddressSpaceRoleBindings(addressSpace);
-            kubernetes.createServiceAccount(addressSpace.getAnnotation(AnnotationKeys.NAMESPACE), kubernetes.getAddressSpaceAdminSa());
-            schemaProvider.copyIntoNamespace(addressSpaceResolver.getPlan(addressSpaceResolver.getType(addressSpace), addressSpace), addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
+        if (kubernetes.hasService(uuid, "messaging")) {
+            return addressSpace;
         }
+
+        List<EndpointSpec> endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
+        endpoints = replaceServiceNames(uuid, endpoints);
+        Map<String, String> labels = new HashMap<>();
+        labels.put(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+        labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+        kubernetes.createServiceAccount("sa-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID), labels);
+
         log.info("Creating address space {}", addressSpace);
 
         // Ensure the required certs are set
@@ -133,7 +139,7 @@ public class CreateController implements Controller {
             }
         }
 
-        kubernetes.create(resourceList, addressSpace.getAnnotation(AnnotationKeys.NAMESPACE));
+        kubernetes.create(resourceList);
         eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
         return addressSpace;
     }

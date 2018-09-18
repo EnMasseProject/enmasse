@@ -14,6 +14,7 @@ import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.common.UuidGenerator;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
@@ -33,6 +34,7 @@ public abstract class OSBServiceBase {
     private final AuthApi authApi;
     private final SchemaProvider schemaProvider;
     private final String namespace;
+    private final UuidGenerator uuidGenerator = new UuidGenerator();
 
     public OSBServiceBase(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider) {
         this.addressSpaceApi = addressSpaceApi;
@@ -85,15 +87,11 @@ public abstract class OSBServiceBase {
         return addressSpace;
     }
 
-    private static AddressSpace setDefaults(AddressSpace addressSpace, String namespace) {
+    private AddressSpace setDefaults(AddressSpace addressSpace, String namespace) {
         if (addressSpace.getNamespace() == null) {
             addressSpace = new AddressSpace.Builder(addressSpace)
                     .setNamespace(namespace)
                     .build();
-        }
-
-        if (addressSpace.getAnnotation(AnnotationKeys.NAMESPACE) == null) {
-            addressSpace.putAnnotation(AnnotationKeys.NAMESPACE, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
         }
 
         if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
@@ -107,6 +105,8 @@ public abstract class OSBServiceBase {
         if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
             addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
         }
+
+        addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
         return addressSpace;
     }
 

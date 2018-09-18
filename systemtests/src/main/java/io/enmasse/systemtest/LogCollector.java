@@ -28,15 +28,15 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     private final Kubernetes kubernetes;
     private final Map<String, LogWatch> logWatches = new HashMap<>();
     private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    private final String namespace;
+    private final String uuid;
     private Watch watch;
 
-    public LogCollector(Kubernetes kubernetes, File logDir, String namespace) {
+    public LogCollector(Kubernetes kubernetes, File logDir, String uuid) {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
-        this.namespace = namespace;
+        this.uuid = uuid;
         logDir.mkdirs();
-        this.watch = kubernetes.watchPods(namespace, this);
+        this.watch = kubernetes.watchPods(uuid, this);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     public void onClose(KubernetesClientException cause) {
         if (cause != null) {
             log.info("LogCollector closed with message: " + cause.getMessage() + ", reconnecting");
-            watch = kubernetes.watchPods(namespace, this);
+            watch = kubernetes.watchPods(uuid, this);
         }
     }
 
@@ -67,16 +67,16 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
             } catch (InterruptedException e) {
 
             }
-            pod = kubernetes.getPod(namespace, pod.getMetadata().getName());
+            pod = kubernetes.getPod(pod.getMetadata().getName());
         }
-        log.info("Collecting logs for pod {} in namespace {}", pod.getMetadata().getName(), namespace);
+        log.info("Collecting logs for pod {} with uuid {}", pod.getMetadata().getName(), uuid);
         for (Container container : pod.getSpec().getContainers()) {
             try {
                 File outputFile = new File(logDir, pod.getMetadata().getName() + "." + container.getName());
                 FileOutputStream outputFileStream = new FileOutputStream(outputFile);
 
                 synchronized (logWatches) {
-                    logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFileStream));
+                    logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
                 log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());

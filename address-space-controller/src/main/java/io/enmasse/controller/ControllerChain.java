@@ -132,23 +132,9 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     }
 
     private void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
-        if (desiredAddressSpaces.size() == 1 && desiredAddressSpaces.iterator().next().getAnnotation(AnnotationKeys.NAMESPACE).equals(kubernetes.getNamespace())) {
-            return;
-        }
-        Set<NamespaceInfo> actual = kubernetes.listAddressSpaces();
-        Set<NamespaceInfo> desired = desiredAddressSpaces.stream()
-                .map(space -> new NamespaceInfo(space.getUid(), space.getName(), space.getAnnotation(AnnotationKeys.NAMESPACE), space.getAnnotation(AnnotationKeys.CREATED_BY)))
-                .collect(Collectors.toSet());
-
-        actual.removeAll(desired);
-
-        for (NamespaceInfo toRemove : actual) {
-            try {
-                kubernetes.deleteNamespace(toRemove);
-                eventLogger.log(AddressSpaceDeleted, "Deleted address space", Normal, ControllerKind.AddressSpace, toRemove.getAddressSpace());
-            } catch (KubernetesClientException e) {
-                eventLogger.log(AddressSpaceDeleteFailed, "Error deleting namespace (may already be in progress): " + e.getMessage(), Warning, ControllerKind.AddressSpace, toRemove.getAddressSpace());
-            }
-        }
+        String [] uuids = desiredAddressSpaces.stream()
+                .map(a -> a.getAnnotation(AnnotationKeys.INFRA_UUID))
+                .toArray(String[]::new);
+        kubernetes.deleteResourcesNotIn(uuids);
     }
 }

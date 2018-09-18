@@ -73,7 +73,7 @@ public class AmqpClientFactory {
             Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
             if (messagingEndpoint == null) {
                 String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
-                messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), externalEndpointName);
+                messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
             }
             Endpoint clientEndpoint;
             ProtonClientOptions clientOptions = new ProtonClientOptions();
@@ -91,7 +91,7 @@ public class AmqpClientFactory {
 
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
-            return createClient(terminusFactory, kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps"), qos);
+            return createClient(terminusFactory, kubernetes.getEndpoint("messaging", "amqps"), qos);
         }
     }
 
