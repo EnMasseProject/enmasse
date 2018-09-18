@@ -3,17 +3,24 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
 
         var connectionGridConfig = function () {
           this.data = []
-          this.columnDefs = [
-            {field: 'name', displayName: 'Name'},
-            {field: 'address', displayName: 'Address'},
-            {field: 'deliveries', displayName: 'Deliveries', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
-            {field: 'accepted', displayName: 'Accepted', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
-            {field: 'rejected', displayName: 'Rejected', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
-            {field: 'released', displayName: 'Released', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
-            {field: 'modified', displayName: 'Modified', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
-            {field: 'presettled', displayName: 'Presettled', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
-            {field: 'undelivered', displayName: 'Undelivered', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'}
-          ]
+          if (address_service.address_space_type === 'brokered') {
+              this.columnDefs = [
+                  {field: 'address', displayName: 'Address'},
+                  {field: 'deliveries', displayName: 'Deliveries', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'}
+              ]
+          } else {
+              this.columnDefs = [
+                  {field: 'name', displayName: 'Name'},
+                  {field: 'address', displayName: 'Address'},
+                  {field: 'deliveries', displayName: 'Deliveries', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+                  {field: 'accepted', displayName: 'Accepted', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+                  {field: 'rejected', displayName: 'Rejected', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+                  {field: 'released', displayName: 'Released', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+                  {field: 'modified', displayName: 'Modified', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+                  {field: 'presettled', displayName: 'Presettled', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+                  {field: 'undelivered', displayName: 'Undelivered', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'}
+              ]
+          }
           this.enableHorizontalScrollbar = 0
           this.enableVerticalScrollbar = 0
           this.enableColumnMenus = false
