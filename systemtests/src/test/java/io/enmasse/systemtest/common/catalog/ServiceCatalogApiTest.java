@@ -75,6 +75,7 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
         addressSpace.setInfraUuid(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()).getInfraUuid());
         if (wait) {
             waitForServiceInstanceReady(username, provInstance.getInstanceId());
+            Thread.sleep(10_000);
         }
         instances.put(addressSpace, provInstance.getInstanceId());
         return provInstance;
