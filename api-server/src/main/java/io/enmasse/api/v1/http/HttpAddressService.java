@@ -79,6 +79,7 @@ public class HttpAddressService extends HttpAddressServiceBase {
     }
 
     @DELETE
+    @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddresses(@Context SecurityContext securityContext, @PathParam("namespace") String namespace) throws Exception {
         return super.deleteAddresses(securityContext, namespace);
     }
