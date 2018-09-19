@@ -146,4 +146,14 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
     void testCanOpenConsolePage() throws Exception {
         doTestCanOpenConsolePage(defaultCredentials);
     }
+
+    @Test
+    @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
+    void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
+        doTestCreateAddressWithSymbolsAt61stCharIndex(
+                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                        getDefaultPlan(AddressType.QUEUE)),
+                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                        getDefaultPlan(AddressType.QUEUE)));
+    }
 }

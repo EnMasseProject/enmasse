@@ -185,6 +185,15 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
         );
     }
 
+    @Test
+    void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
+        doTestCreateAddressWithSymbolsAt61stCharIndex(
+                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                        getDefaultPlan(AddressType.QUEUE)),
+                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                        getDefaultPlan(AddressType.QUEUE)));
+    }
+
     @Override
     public boolean skipDummyAddress() {
         return true;
