@@ -279,16 +279,69 @@ class UserApiTest extends TestBase {
     }
 
     @Test
-    void testCreateUserUnderscoreUsername() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-underscore-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
+    void testCreateUsersWithSymbolsInVariousPlaces() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
-        UserCredentials cred = new UserCredentials("user_pepinator", "password");
+        //valid user is created (response HTTP:201)
+        UserCredentials cred = new UserCredentials("normalusername", "password");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("*")
                         .addOperation(User.Operation.RECEIVE));
-
         getUserApiClient().createUser(brokered.getName(), testUser.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+
+        //first char of username must be a-z0-9 (other symbols respond with HTTP:400)
+        UserCredentials cred2 = new UserCredentials("-hyphensymbolfirst", "password");
+        User testUser2 = new User().setUserCredentials(cred2).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+        assertThrows(ExecutionException.class, () ->
+                getUserApiClient().createUser(brokered.getName(), testUser2.toJson(brokered.getName(), "userpepinator"), HTTP_BAD_REQUEST));
+
+        //hyphen is allowed elsewhere in user name (response HTTP:201)
+        UserCredentials cred3 = new UserCredentials("user-pepinator", "password");
+        User testUser3 = new User().setUserCredentials(cred3).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+        getUserApiClient().createUser(brokered.getName(), testUser3.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+
+        //underscore is also allowed in user name (response HTTP:201)
+        UserCredentials cred4 = new UserCredentials("user_pepinator", "password");
+        User testUser4 = new User().setUserCredentials(cred4).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        getUserApiClient().createUser(brokered.getName(), testUser4.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+
+        //last char must also be a-z (other symbols respond with HTTP:400)
+        UserCredentials cred5 = new UserCredentials("hyphensymbollast-", "password");
+        User testUser5 = new User().setUserCredentials(cred5).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+        assertThrows(ExecutionException.class, () ->
+                getUserApiClient().createUser(brokered.getName(), testUser5.toJson(brokered.getName(), "userpepinator"), HTTP_BAD_REQUEST));
+
+        //username may start/end with 0-9 ()
+        UserCredentials cred6 = new UserCredentials("01234usernamehere56789", "password");
+        User testUser6 = new User().setUserCredentials(cred6).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        getUserApiClient().createUser(brokered.getName(), testUser6.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+
+        //Foreign symbols may not be used in username (response HTTP:400)
+        UserCredentials cred7 = new UserCredentials("invalid_Ö_username", "password");
+        User testUser7 = new User().setUserCredentials(cred7).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+        assertThrows(ExecutionException.class, () ->
+                getUserApiClient().createUser(brokered.getName(), testUser7.toJson(brokered.getName(), "userpepinator"), HTTP_BAD_REQUEST));
     }
 }
