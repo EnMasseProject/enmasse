@@ -23,6 +23,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -50,15 +51,13 @@ public class OSBBindingService extends OSBServiceBase {
         Map<String, String> parameters = bindRequest.getParameters();
 
         String username = "user-" + bindingId;
-        byte[] passwordBytes = new byte[32];
-        this.random.nextBytes(passwordBytes);
-        String password = Base64.getEncoder().encodeToString(passwordBytes);
+        String password = generatePassword();
 
         UserSpec.Builder specBuilder = new UserSpec.Builder();
         specBuilder.setUsername(username);
         specBuilder.setAuthentication(new UserAuthentication.Builder()
                 .setType(UserAuthenticationType.password)
-                .setPassword(password)
+                .setPassword(Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)))
                 .build());
 
 
@@ -153,6 +152,19 @@ public class OSBBindingService extends OSBServiceBase {
 
  // TODO: return 200 OK, when binding already exists
 
+    }
+
+    private static final String PASSWORD_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    private static final int passwordLength = 32;
+
+    private String generatePassword() {
+        StringBuilder builder = new StringBuilder();
+        int length = passwordLength;
+        while (length-- != 0) {
+            int character = (int)(random.nextDouble()*PASSWORD_CHARACTERS.length());
+            builder.append(PASSWORD_CHARACTERS.charAt(character));
+        }
+        return builder.toString();
     }
 
     private Collection<String> getAddresses(String addressList) {
