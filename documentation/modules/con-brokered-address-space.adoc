@@ -1,0 +1,14 @@
+// Module included in the following assemblies:
+//
+// assembly-address-spaces.adoc
+
+[id='con-brokered-address-space-{context}']
+= Brokered address space
+
+The brokered address space is designed to support broker-specific features, at the cost of limited
+scale in terms of the number of connections and addresses. This address space supports JMS
+transactions, message groups, and so on.
+
+Clients connect to and send and receive messages in this address space using the AMQP protocol.
+
+

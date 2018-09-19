@@ -50,10 +50,18 @@ include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+2]
 
 == Managing address spaces and addresses
 
-include::common/address-model.adoc[leveloffset=+1]
-include::common/address-space.adoc[leveloffset=+1]
-include::common/configuring-using-cli.adoc[leveloffset=+1]
-include::common/configuring-using-restapi.adoc[leveloffset=+1]
+include::modules/con-standard-address-space.adoc[leveloffset=+2]
+
+include::assemblies/assembly-standard-address-types.adoc[leveloffset=+3]
+
+include::modules/con-brokered-address-space.adoc[leveloffset=+2]
+
+include::assemblies/assembly-brokered-address-types.adoc[leveloffset=+3]
+
+include::assemblies/assembly-configuring-address-spaces-addresses-using-cli.adoc[leveloffset=+2]
+
+include::assemblies/assembly-configuring-address-spaces-addresses-using-restapi.adoc[leveloffset=+2]
+
 
 include::assemblies/assembly-managing-users.adoc[leveloffset=+1]
 

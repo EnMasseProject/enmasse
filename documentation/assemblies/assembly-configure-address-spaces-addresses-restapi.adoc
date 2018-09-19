@@ -1,0 +1,21 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+[id='configure-address-spaces-addresses-restapi-{context}']
+= Configuring address spaces and addresses using a REST API
+
+{ProductName} provides an API that can be used for configuring address spaces and addresses
+within those address spaces. Clients can be configured to authenticate using
+https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^]. 
+
+All API URIs are namespaced. This means that address spaces are scoped within a particular
+namespace. Addresses are scoped within an address space. This means that an address
+space in address space A may have the same name as an address in address space B.
+
+Likewise, an address space in namespace A can have the same name as an address space in namespace B.
+
+include::../modules/proc-create-address-space-restapi.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-restapi.adoc[leveloffset=+1]
+

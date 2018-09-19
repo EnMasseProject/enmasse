@@ -1,0 +1,41 @@
+// Module included in the following assemblies:
+//
+// assembly-configure-address-spaces-addresses-cli.adoc
+
+[id='create-address-cli-{context}']
+= Creating an address
+
+include::../common/snip-address.adoc[]
+
+.Procedure
+
+. Save the following YAML data to a `address.yaml` file:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1alpha1
+kind: Address
+metadata:
+    name: myspace.myqueue
+spec:
+    address: myqueue
+    type: queue
+    plan: pooled-queue
+----
+
+NOTE: Prefixing the name with the address space name is required to ensure addresses from different address spaces do not collide.
+
+. Create the address using the command line:
++
+[source,yaml,options="nowrap"]
+----
+{cmdcli} create -f address.yaml
+----
+
+. You can now list addresses:
++
+[source,yaml,options="nowrap"]
+----
+{cmdcli} get addresses
+----
+

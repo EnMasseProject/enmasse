@@ -1,0 +1,54 @@
+// Module included in the following assemblies:
+//
+// assembly-configure-address-spaces-addresses-restapi.adoc
+
+[id='create-address-space-restapi-{context}']
+= Creating an address space
+
+.Procedure
+
+. Save the following JSON data to a `space.json` file:
++
+[source,json,options="nowrap"]
+----
+{
+    "apiVersion": "enmasse.io/v1alpha1",
+    "kind": "AddressSpace",
+    "metadata": {
+        "name": "myspace"
+    },
+    "spec": {
+        "type": "standard",
+        "plan": "unlimited-standard"
+    }
+}
+----
++
+. POST the address space definition to the API using curl:
++
+[source,options="nowrap"]
+----
+TOKEN=`oc whoami -t`
+curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces
+----
++
+This command creates the infrastructure required for that address space. Replace `namespace` with the
+namespace of the application requesting the address space to be created. Starting up the address space
+can take a while, usually depending on how fast it is able to download the Docker images for the
+various components.
+
+== Viewing address space status
+
+.Procedure
+
+* You can use the API to check the status of the address space:
++
+[source,options="nowrap"]
+----
+TOKEN=`oc whoami -t`
+curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace
+----
++
+You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON
+object.
+

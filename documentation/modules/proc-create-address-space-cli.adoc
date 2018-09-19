@@ -1,0 +1,38 @@
+// Module included in the following assemblies:
+//
+// assembly-configure-address-spaces-addresses-cli.adoc
+
+[id='create-address-space-cli-{context}']
+= Creating an address space
+
+include::../common/snip-address-space.adoc[]
+
+.Procedure
+
+. Save the following YAML data to a `space.yaml` file:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpace
+metadata:
+    name: myspace
+spec:
+    type: standard
+    plan: unlimited-standard
+----
+
+. Create the address space  (replace `oc` with `kubectl` if using Kubernetes):
++
+[source,yaml,options="nowrap"]
+----
+oc create -f space.yaml
+----
+
+. You can now list address spaces:
++
+[source,yaml,options="nowrap"]
+----
+oc get addressspaces
+----
+
