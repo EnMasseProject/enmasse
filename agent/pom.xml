@@ -171,7 +171,7 @@
              <argument>-o</argument>
              <argument>${project.basedir}/www/tooltips.json</argument>
              <argument>-v</argument>
-             <argument>${project.basedir}/../documentation/modules</argument>
+             <argument>${project.basedir}/../documentation</argument>
            </arguments>
         </configuration>
       </plugin>
