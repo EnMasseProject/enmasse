@@ -2,11 +2,11 @@ include::common/attributes.adoc[]
 
 = {Title}
 
-include::common/address-model.adoc[leveloffset=+1]
+include::modules/con-address-space.adoc[leveloffset=+1]
 
-include::common/address-space.adoc[leveloffset=+1]
+include::modules/con-address.adoc[leveloffset=+1]
 
-include::common/configuring-using-restapi.adoc[leveloffset=+1]
+include::assemblies/assembly-configure-address-spaces-addresses-restapi.adoc[leveloffset=+1]
 
 
 [appendix]

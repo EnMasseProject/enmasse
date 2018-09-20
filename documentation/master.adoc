@@ -50,6 +50,10 @@ include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+2]
 
 == Managing address spaces and addresses
 
+include::modules/con-address-space.adoc[leveloffset=+2]
+
+include::modules/con-address.adoc[leveloffset=+2]
+
 include::modules/con-standard-address-space.adoc[leveloffset=+2]
 
 include::assemblies/assembly-standard-address-types.adoc[leveloffset=+3]
