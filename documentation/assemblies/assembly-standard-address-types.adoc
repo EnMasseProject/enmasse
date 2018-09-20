@@ -3,7 +3,7 @@
 // master.adoc
 
 [id='assembly-standard-address-types-{context}']
-= Address types
+= Standard address types
 The standard address space supports five address types:
 
 * queue

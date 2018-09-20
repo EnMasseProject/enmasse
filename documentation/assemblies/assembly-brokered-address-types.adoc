@@ -3,7 +3,7 @@
 // master.adoc
 
 [id='assembly-brokered-address-types-{context}']
-== Brokered address types
+= Brokered address types
 
 The brokered address space supports two address types:
 
