@@ -8,7 +8,7 @@ messages. Currently, {ProductName} supports 4 different address types:
 * Direct anycast addresses
 * Direct broadcast addresses
 
-See the xref:con-address-space-{context}[address space] for details.
+See the xref:con-address-space-messaging[address space] for details.
 {ProductName} also comes with a console that you can use for managing
 addresses. You can get the console URL by running the following command:
 
@@ -18,7 +18,7 @@ echo "https://$({OcGetRoute} console)"
 ....
 
 You can also deploy the addressing config using the REST API
-API. See xref:configure-address-spaces-addresses-restapi-{context}[] for details on the
+API. See xref:configure-address-spaces-addresses-restapi-messaging[] for details on the
 resources consumed by the API. Here is an example config with all 4 variants that you can save to `addresses.json`:
 
 [subs=attributes+,options="nowrap"]
