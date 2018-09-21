@@ -23,6 +23,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 @Path(HttpAddressSpaceService.BASE_URI)
 public class HttpAddressSpaceService {
@@ -62,9 +63,9 @@ public class HttpAddressSpaceService {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                return Response.ok(new AddressSpaceList(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels))).build();
+                return Response.ok(removeSecrets(new AddressSpaceList(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels)))).build();
             } else {
-                return Response.ok(new AddressSpaceList(addressSpaceApi.listAddressSpaces(namespace))).build();
+                return Response.ok(removeSecrets(new AddressSpaceList(addressSpaceApi.listAddressSpaces(namespace)))).build();
             }
         });
     }
@@ -76,7 +77,7 @@ public class HttpAddressSpaceService {
         return doRequest("Error getting address space " + addressSpaceName, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.get);
             return addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .map(addressSpace -> Response.ok(addressSpace).build())
+                    .map(addressSpace -> Response.ok(removeSecrets(addressSpace)).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build());
         });
     }
@@ -96,7 +97,7 @@ public class HttpAddressSpaceService {
             AddressSpace created = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
             builder.path(created.getName());
-            return Response.created(builder.build()).entity(created).build();
+            return Response.created(builder.build()).entity(removeSecrets(created)).build();
         });
     }
 
@@ -134,6 +135,29 @@ public class HttpAddressSpaceService {
         return addressSpace;
     }
 
+    private AddressSpaceList removeSecrets(AddressSpaceList addressSpaceList) {
+        return addressSpaceList.stream()
+                .map(this::removeSecrets)
+                .collect(Collectors.toCollection(AddressSpaceList::new));
+    }
+
+    private AddressSpace removeSecrets(AddressSpace addressSpace) {
+        return new AddressSpace.Builder(addressSpace)
+                .setEndpointList(addressSpace.getEndpoints().stream()
+                        .map(e -> {
+                            if (e.getCertSpec().isPresent()) {
+                                return new EndpointSpec.Builder(e)
+                                        .setCertSpec(new CertSpec.Builder(e.getCertSpec().get())
+                                                .setTlsKey(null)
+                                                .build())
+                                        .build();
+                            } else {
+                                return e;
+                            }
+                        }).collect(Collectors.toList()))
+                .build();
+    }
+
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
@@ -152,7 +176,7 @@ public class HttpAddressSpaceService {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
             AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
-            return Response.ok().entity(replaced).build();
+            return Response.ok().entity(removeSecrets(replaced)).build();
         });
     }
 

@@ -66,12 +66,13 @@ public class ApiServer extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace());
+        boolean isOpenShift = isOpenShift(client);
+        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), isOpenShift);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
         if (options.getRestapiRouteName() != null) {
-            ensureRouteExists(client, options);
+            ensureRouteExists(client, options, isOpenShift);
         }
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
@@ -122,8 +123,8 @@ public class ApiServer extends AbstractVerticle {
         }
     }
 
-    private void ensureRouteExists(NamespacedOpenShiftClient client, ApiServerOptions options) throws IOException {
-        if (isOpenShift(client)) {
+    private void ensureRouteExists(NamespacedOpenShiftClient client, ApiServerOptions options, boolean isOpenShift) throws IOException {
+        if (isOpenShift) {
             Route restapiRoute= client.routes().withName(options.getRestapiRouteName()).get();
             if (restapiRoute == null) {
                 log.info("Creating REST API external route {}", options.getRestapiRouteName());

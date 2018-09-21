@@ -6,32 +6,33 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.ExposeSpec;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.ServiceResource;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
 
 public class EndpointControllerTest {
 
     private OpenShiftClient client;
 
+    @Rule
+    public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+
+
     @Before
     public void setup() {
-        client = mock(OpenShiftClient.class);
+        client = openShiftServer.getOpenshiftClient();
     }
 
     @Test
@@ -43,19 +44,11 @@ public class EndpointControllerTest {
                 .appendEndpoint(new EndpointSpec.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
-                        .setServicePort("amqps")
                         .build())
                 .setType("type1")
                 .setPlan("myplan")
                 .build();
 
-
-        MixedOperation<Service, ServiceList, DoneableService, ServiceResource<Service, DoneableService>> op = mock(MixedOperation.class);
-        when(client.services()).thenReturn(op);
-        when(op.inNamespace(any())).thenReturn(op);
-        FilterWatchListDeletable<Service, ServiceList, Boolean, Watch, Watcher<Service>> r = mock(FilterWatchListDeletable.class);
-        when(op.withLabel(eq(LabelKeys.INFRA_UUID), eq("1234"))).thenReturn(r);
-        when(client.getNamespace()).thenReturn("myns");
 
         Service service = new ServiceBuilder()
                 .editOrNewMetadata()
@@ -73,21 +66,22 @@ public class EndpointControllerTest {
                 .endSpec()
                 .build();
 
-        when(r.list()).thenReturn(new ServiceListBuilder().addNewItemLike(service).endItem().build());
+        client.services().create(service);
 
-        EndpointController controller = new EndpointController(client, false, true);
+        EndpointController controller = new EndpointController(client, false);
 
         AddressSpace newspace = controller.handle(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.myns.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.test.svc"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getPort(), is(0));
+        assertNull(newspace.getStatus().getEndpointStatuses().get(0).getExternalHost());
+        assertTrue(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().isEmpty());
     }
 
     @Test
-    public void testExternalCreated() {
+    public void testExternalLoadBalancerCreated() {
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
                 .setNamespace("mynamespace")
@@ -95,7 +89,10 @@ public class EndpointControllerTest {
                 .appendEndpoint(new EndpointSpec.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
-                        .setServicePort("amqps")
+                        .setExposeSpec(new ExposeSpec.Builder()
+                                .setType(ExposeSpec.ExposeType.loadbalancer)
+                                .setLoadBalancerPorts(Arrays.asList("amqps"))
+                                .build())
                         .build())
                 .setType("type1")
                 .setPlan("myplan")
@@ -118,29 +115,69 @@ public class EndpointControllerTest {
                 .endSpec()
                 .build();
 
-        MixedOperation<Service, ServiceList, DoneableService, ServiceResource<Service, DoneableService>> op = mock(MixedOperation.class);
-        when(client.services()).thenReturn(op);
-        when(op.inNamespace(any())).thenReturn(op);
-        FilterWatchListDeletable<Service, ServiceList, Boolean, Watch, Watcher<Service>> r = mock(FilterWatchListDeletable.class);
-        when(op.withLabel(eq(LabelKeys.INFRA_UUID), eq("1234"))).thenReturn(r);
-        when(client.getNamespace()).thenReturn("myns");
-        when(r.list()).thenReturn(new ServiceListBuilder().addNewItemLike(service).endItem().build());
+        client.services().create(service);
 
-        ServiceResource<Service, DoneableService> rexternal = mock(ServiceResource.class);
-        when(op.withName(eq("myendpoint-1234-external"))).thenReturn(rexternal);
-        when(rexternal.get()).thenReturn(null);
-
-        ServiceResource<Service, DoneableService> rinternal = mock(ServiceResource.class);
-        when(op.withName(eq("messaging-1234"))).thenReturn(rinternal);
-        when(rinternal.get()).thenReturn(service);
-
-        EndpointController controller = new EndpointController(client, true, false);
+        EndpointController controller = new EndpointController(client, true);
 
         AddressSpace newspace = controller.handle(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.myns.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.test.svc"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().size(), is(1));
+    }
+
+    @Test
+    public void testExternalRouteCreated() {
+        AddressSpace addressSpace = new AddressSpace.Builder()
+                .setName("myspace")
+                .setNamespace("mynamespace")
+                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
+                .appendEndpoint(new EndpointSpec.Builder()
+                        .setName("myendpoint")
+                        .setService("messaging")
+                        .setExposeSpec(new ExposeSpec.Builder()
+                                .setType(ExposeSpec.ExposeType.route)
+                                .setRouteHost("host1.example.com")
+                                .setRouteServicePort("amqps")
+                                .setRouteTlsTermination(ExposeSpec.TlsTermination.passthrough)
+                                .build())
+                        .build())
+                .setType("type1")
+                .setPlan("myplan")
+                .build();
+
+
+        Service service = new ServiceBuilder()
+                .editOrNewMetadata()
+                .withName("messaging-1234")
+                .addToAnnotations(AnnotationKeys.SERVICE_PORT_PREFIX + "amqps", "5671")
+                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+                .endMetadata()
+                .editOrNewSpec()
+                .addNewPort()
+                .withName("amqps")
+                .withPort(1234)
+                .withNewTargetPort("amqps")
+                .endPort()
+                .addToSelector("component", "router")
+                .endSpec()
+                .build();
+
+        client.services().create(service);
+
+        EndpointController controller = new EndpointController(client, true);
+
+        AddressSpace newspace = controller.handle(addressSpace);
+
+        assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.test.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().size(), is(1));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().get("amqps"), is(443));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalHost(), is("host1.example.com"));
     }
 }

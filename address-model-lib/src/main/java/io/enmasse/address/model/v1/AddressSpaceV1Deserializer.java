@@ -116,11 +116,28 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 ObjectNode endpoint = (ObjectNode) endpoints.get(i);
                 EndpointSpec.Builder b = new EndpointSpec.Builder()
                         .setName(endpoint.get(Fields.NAME).asText())
-                        .setService(endpoint.get(Fields.SERVICE).asText())
-                        .setServicePort(endpoint.get(Fields.SERVICE_PORT).asText());
+                        .setService(endpoint.get(Fields.SERVICE).asText());
 
+                ExposeSpec.Builder exposeSpec = null;
                 if (endpoint.hasNonNull(Fields.HOST)) {
-                    b.setHost(endpoint.get(Fields.HOST).asText());
+                    exposeSpec = new ExposeSpec.Builder();
+                    exposeSpec.setRouteHost(endpoint.get(Fields.HOST).asText());
+                }
+
+                if (endpoint.hasNonNull(Fields.SERVICE_PORT)) {
+                    exposeSpec = new ExposeSpec.Builder();
+                    exposeSpec.setRouteServicePort(endpoint.get(Fields.SERVICE_PORT).asText());
+                }
+
+                if (endpoint.hasNonNull(Fields.EXPOSE)) {
+                    if (exposeSpec == null) {
+                        exposeSpec = new ExposeSpec.Builder();
+                    }
+                    deserialize((ObjectNode) endpoint.get(Fields.EXPOSE), exposeSpec);
+                }
+
+                if (exposeSpec != null) {
+                    b.setExposeSpec(exposeSpec.build());
                 }
 
                 if (endpoint.hasNonNull(Fields.CERT)) {
@@ -132,6 +149,14 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
 
                     if (cert.hasNonNull(Fields.SECRET_NAME)) {
                         certSpec.setSecretName(cert.get(Fields.SECRET_NAME).asText());
+                    }
+
+                    if (cert.hasNonNull(Fields.TLS_CERT)) {
+                        certSpec.setTlsCert(cert.get(Fields.TLS_CERT).asText());
+                    }
+
+                    if (cert.hasNonNull(Fields.TLS_KEY)) {
+                        certSpec.setTlsKey(cert.get(Fields.TLS_KEY).asText());
                     }
 
                     b.setCertSpec(certSpec.build());
@@ -198,12 +223,18 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                             .setName(endpoint.get(Fields.NAME).asText())
                             .setServiceHost(endpoint.get(Fields.SERVICE_HOST).asText());
 
-                    if (endpoint.hasNonNull(Fields.HOST)) {
-                        b.setHost(endpoint.get(Fields.HOST).asText());
+                    if (endpoint.hasNonNull(Fields.EXTERNAL_HOST)) {
+                        b.setExternalHost(endpoint.get(Fields.EXTERNAL_HOST).asText());
                     }
 
-                    if (endpoint.hasNonNull(Fields.PORT)) {
-                        b.setPort(endpoint.get(Fields.PORT).asInt());
+                    if (endpoint.hasNonNull(Fields.EXTERNAL_PORTS)) {
+                        Map<String, Integer> externalPorts = new HashMap<>();
+                        ArrayNode ports = (ArrayNode) endpoint.get(Fields.EXTERNAL_PORTS);
+                        for (int p = 0; p < ports.size(); p++) {
+                            ObjectNode portEntry = (ObjectNode) ports.get(p);
+                            externalPorts.put(portEntry.get(Fields.NAME).asText(), portEntry.get(Fields.PORT).asInt());
+                        }
+                        b.setExternalPorts(externalPorts);
                     }
 
                     if (endpoint.hasNonNull(Fields.SERVICE_PORTS)) {
@@ -220,6 +251,63 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             }
         }
         return builder.build();
+    }
+
+    private void deserialize(ObjectNode exposeSpec, ExposeSpec.Builder builder) {
+        ExposeSpec.ExposeType type = ExposeSpec.ExposeType.valueOf(exposeSpec.get(Fields.TYPE).asText());
+        builder.setType(type);
+        if (exposeSpec.hasNonNull(Fields.ANNOTATIONS)) {
+            Map<String, String> annotations = new HashMap<>();
+            ObjectNode annotationObject = exposeSpec.with(Fields.ANNOTATIONS);
+            Iterator<String> annotationIt = annotationObject.fieldNames();
+
+            while (annotationIt.hasNext()) {
+                String key = annotationIt.next();
+                if (annotationObject.get(key).isTextual()) {
+                    annotations.put(key, annotationObject.get(key).asText());
+                }
+            }
+
+            builder.setAnnotations(annotations);
+        }
+        switch (type) {
+            case loadbalancer:
+            {
+                if (exposeSpec.hasNonNull(Fields.LOAD_BALANCER_SOURCE_RANGES)) {
+                    List<String> lbSourceRanges = new ArrayList<>();
+                    ArrayNode lbSrcRanges = (ArrayNode) exposeSpec.get(Fields.LOAD_BALANCER_SOURCE_RANGES);
+                    for (int i = 0; i < lbSrcRanges.size(); i++) {
+                        lbSourceRanges.add(lbSrcRanges.get(i).asText());
+                    }
+                    builder.setLoadBalancerSourceRanges(lbSourceRanges);
+                }
+
+                if (exposeSpec.hasNonNull(Fields.LOAD_BALANCER_PORTS)) {
+                    List<String> lbPorts = new ArrayList<>();
+                    ArrayNode lbJsonPorts = (ArrayNode) exposeSpec.get(Fields.LOAD_BALANCER_PORTS);
+                    for (int i = 0; i < lbJsonPorts.size(); i++) {
+                        lbPorts.add(lbJsonPorts.get(i).asText());
+                    }
+                    builder.setLoadBalancerPorts(lbPorts);
+                }
+            }
+            break;
+            case route:
+            {
+                if (exposeSpec.hasNonNull(Fields.ROUTE_HOST)) {
+                    builder.setRouteHost(exposeSpec.get(Fields.HOST).asText());
+                }
+
+                if (exposeSpec.hasNonNull(Fields.ROUTE_TLS_TERMINATION)) {
+                    builder.setRouteTlsTermination(ExposeSpec.TlsTermination.valueOf(exposeSpec.get(Fields.ROUTE_TLS_TERMINATION).asText()));
+                }
+
+                if (exposeSpec.hasNonNull(Fields.ROUTE_SERVICE_PORT)) {
+                    builder.setRouteServicePort(exposeSpec.get(Fields.ROUTE_SERVICE_PORT).asText());
+                }
+            }
+            break;
+        }
     }
 
     private void validate(ObjectNode root) {

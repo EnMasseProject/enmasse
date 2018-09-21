@@ -73,10 +73,10 @@ public class AddressSpaceController extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace());
+        boolean isOpenShift = isOpenShift(controllerClient);
+        SchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
-        boolean isOpenShift = isOpenShift(controllerClient);
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir(), isOpenShift);
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
@@ -100,7 +100,7 @@ public class AddressSpaceController extends AbstractVerticle {
         ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
-        controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
+        controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
 
         HTTPServer httpServer = new HTTPServer(8080);
@@ -111,12 +111,16 @@ public class AddressSpaceController extends AbstractVerticle {
     private CertProviderFactory createCertProviderFactory(AddressSpaceControllerOptions options, CertManager certManager) {
         return new CertProviderFactory() {
             @Override
-            public CertProvider createProvider(CertSpec certSpec) {
-                if ("wildcard".equals(certSpec.getProvider())) {
+            public CertProvider createProvider(String provider) {
+                if ("wildcard".equals(provider)) {
                     String secretName = options.getWildcardCertSecret();
-                    return new WildcardCertProvider(controllerClient, certSpec, secretName);
+                    return new WildcardCertProvider(controllerClient, secretName);
+                } else if ("openshift".equals(provider)) {
+                    return new OpenshiftCertProvider(controllerClient);
+                } else if ("certBundle".equals(provider)) {
+                    return new CertBundleCertProvider(controllerClient);
                 } else {
-                    return new SelfsignedCertProvider(controllerClient, certSpec, certManager);
+                    return new SelfsignedCertProvider(controllerClient, certManager);
                 }
             }
 

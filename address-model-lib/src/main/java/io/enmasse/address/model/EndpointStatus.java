@@ -14,17 +14,17 @@ import java.util.Objects;
  */
 public class EndpointStatus {
     private final String name;
-    private final String host;
-    private final int port;
     private final String serviceHost;
     private final Map<String, Integer> servicePorts;
+    private final String externalHost;
+    private final Map<String, Integer> externalPorts;
 
-    public EndpointStatus(String name, String serviceHost, String host, int port, Map<String, Integer> servicePorts) {
+    public EndpointStatus(String name, String serviceHost, Map<String, Integer> servicePorts, String externalHost, Map<String, Integer> externalPorts) {
         this.name = name;
         this.serviceHost = serviceHost;
-        this.host = host;
-        this.port = port;
         this.servicePorts = servicePorts;
+        this.externalHost = externalHost;
+        this.externalPorts = externalPorts;
     }
 
     public String getName() {
@@ -35,43 +35,44 @@ public class EndpointStatus {
         return serviceHost;
     }
 
-    public int getPort() {
-        return port;
+    public Map<String, Integer> getExternalPorts() {
+        return externalPorts;
     }
 
     public Map<String, Integer> getServicePorts() {
         return Collections.unmodifiableMap(servicePorts);
     }
 
-    public String getHost() {
-        return host;
+    public String getExternalHost() {
+        return externalHost;
     }
 
     @Override
     public String toString() {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
-                .append("host=").append(host).append(",")
+                .append("externalHost=").append(externalHost).append(",")
+                .append("externalPorts=").append(externalPorts).append(",")
                 .append("serviceHost=").append(serviceHost).append(",")
-                .append("port=").append(port).append("}")
+                .append("servicePorts=").append(servicePorts).append("}")
                 .toString();
     }
 
     public static class Builder {
         private String name;
         private String serviceHost;
-        private String host;
-        private int port = 0;
         private Map<String, Integer> servicePorts = new HashMap<>();
+        private String externalHost;
+        private Map<String, Integer> externalPorts = new HashMap<>();
 
         public Builder() {}
 
         public Builder(EndpointStatus endpoint) {
             this.name = endpoint.getName();
-            this.port = endpoint.getPort();
             this.serviceHost = endpoint.getServiceHost();
-            this.host = endpoint.getHost();
             this.servicePorts = new HashMap<>(endpoint.getServicePorts());
+            this.externalHost = endpoint.getExternalHost();
+            this.externalPorts = new HashMap<>(endpoint.getExternalPorts());
         }
 
         public Builder setName(String name) {
@@ -84,13 +85,13 @@ public class EndpointStatus {
             return this;
         }
 
-        public Builder setHost(String host) {
-            this.host = host;
+        public Builder setExternalHost(String externalHost) {
+            this.externalHost = externalHost;
             return this;
         }
 
-        public Builder setPort(int port) {
-            this.port = port;
+        public Builder setExternalPorts(Map<String, Integer> externalPorts) {
+            this.externalPorts = new HashMap<>(externalPorts);
             return this;
         }
 
@@ -103,7 +104,7 @@ public class EndpointStatus {
         public EndpointStatus build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(serviceHost, "service host not set");
-            return new EndpointStatus(name, serviceHost, host, port, servicePorts);
+            return new EndpointStatus(name, serviceHost, servicePorts, externalHost, externalPorts);
         }
     }
 }

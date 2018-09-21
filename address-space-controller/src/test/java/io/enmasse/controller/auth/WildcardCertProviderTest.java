@@ -15,8 +15,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Collections;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -30,10 +28,9 @@ public class WildcardCertProviderTest {
     @Before
     public void setup() {
         client = server.getClient();
-        CertSpec spec = new CertSpec("wildcard", "mycerts");
         String wildcardCert = "wildcardcert";
 
-        certProvider = new WildcardCertProvider(client, spec, wildcardCert);
+        certProvider = new WildcardCertProvider(client, wildcardCert);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -44,8 +41,9 @@ public class WildcardCertProviderTest {
                 .setType("standard")
                 .setPlan("myplan")
                 .build();
+        CertSpec spec = new CertSpec.Builder().setProvider("wildcard").setSecretName("mycerts").build();
 
-        certProvider.provideCert(space, "messaging.example.com", Collections.emptySet());
+        certProvider.provideCert(space, new EndpointInfo("messaging", spec));
     }
 
     @Test
@@ -65,7 +63,8 @@ public class WildcardCertProviderTest {
                 .addToData("tls.crt", "myvalue")
                 .build());
 
-        certProvider.provideCert(space, "messaging.example.com", Collections.emptySet());
+        CertSpec spec = new CertSpec.Builder().setProvider("wildcard").setSecretName("mycerts").build();
+        certProvider.provideCert(space, new EndpointInfo("messaging", spec));
 
         Secret cert = client.secrets().withName("mycerts").get();
         assertThat(cert.getData().get("tls.key"), is("mykey"));

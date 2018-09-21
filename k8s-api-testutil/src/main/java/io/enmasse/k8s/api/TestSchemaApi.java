@@ -23,7 +23,6 @@ public class TestSchemaApi implements SchemaApi {
                                 .setAvailableEndpoints(Collections.singletonList(new EndpointSpec.Builder()
                                         .setName("messaging")
                                         .setService("messaging")
-                                        .setServicePort("amqps")
                                         .build()))
                                 .setAddressTypes(Arrays.asList(
                                         new AddressType.Builder()

@@ -52,12 +52,10 @@ public class HttpAddressSpaceServiceTest {
                         new EndpointSpec.Builder()
                             .setName("messaging")
                             .setService("messaging")
-                            .setServicePort("amqps")
                         .build(),
                         new EndpointSpec.Builder()
                             .setName("mqtt")
                             .setService("mqtt")
-                            .setServicePort("mqtts")
                         .build()))
                 .build();
 
