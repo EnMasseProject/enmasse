@@ -2,7 +2,7 @@
 //
 // master.adoc
 
-[id='con-address-space-{context}']
+[id='con-address-{context}']
 = Address
 // !address.name.shortDescription:Type an address name
 // !address.name.longDescription:The <b>address name</b> is a unique string that specifies where messages can be sent to and received from.
