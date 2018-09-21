@@ -52,11 +52,16 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
 
         var lastLinkInfo = {}
         var saveLastLinkInfo = function (item) {
-          lastLinkInfo[item.address] =
-            {
-              ingress: angular.copy(item.outcomes.ingress.links),
-              egress: angular.copy(item.outcomes.egress.links)
+            var record = {}
+            if (item.outcomes) {
+                if (item.outcomes.ingress) {
+                    record.ingress = angular.copy(item.outcomes.ingress.links)
+                }
+                if (item.outcomes.egress) {
+                    record.egress = angular.copy(item.outcomes.egress.links)
+                }
             }
+            lastLinkInfo[item.address] = record
         }
         var calcRates = function (item) {
           var lastInfo = lastLinkInfo[item.address]
@@ -87,8 +92,10 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
                 }
               })
             }
-            calc(lastInfo.ingress, item.outcomes.ingress.links)
-            calc(lastInfo.egress, item.outcomes.egress.links)
+            if (item.outcomes) {
+              if (item.outcomes.ingress) calc(lastInfo.ingress, item.outcomes.ingress.links)
+              if (item.outcomes.egress) calc(lastInfo.egress, item.outcomes.egress.links)
+            }
           }
         }
         // construct the html tooltop for a link details row
