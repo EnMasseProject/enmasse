@@ -718,6 +718,18 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
+    protected void doTestCreateAddressWithSymbolsAt61stCharIndex(Destination... destinations) throws Exception {
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        for (Destination dest : destinations) {
+            consoleWebPage.createAddressWebConsole(dest);
+            consoleWebPage.deleteAddressWebConsole(dest);
+        }
+        assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
+    }
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================

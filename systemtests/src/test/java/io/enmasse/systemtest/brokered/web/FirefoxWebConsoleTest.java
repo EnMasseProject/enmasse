@@ -143,4 +143,14 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
         doTestAddressStatus(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
         doTestAddressStatus(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
+
+    @Test
+    void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
+        doTestCreateAddressWithSymbolsAt61stCharIndex(
+                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                        getDefaultPlan(AddressType.QUEUE)),
+                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                        getDefaultPlan(AddressType.QUEUE)));
+    }
+
 }
