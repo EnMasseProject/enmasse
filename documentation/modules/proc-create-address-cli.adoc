@@ -5,8 +5,6 @@
 [id='create-address-cli-{context}']
 = Creating an address
 
-include::../common/snip-address.adoc[]
-
 .Procedure
 
 . Save the following YAML data to a `address.yaml` file:
