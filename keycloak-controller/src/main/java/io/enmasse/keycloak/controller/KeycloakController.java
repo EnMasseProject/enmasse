@@ -4,7 +4,21 @@
  */
 package io.enmasse.keycloak.controller;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.*;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
@@ -13,34 +27,32 @@ import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.openshift.api.model.OAuthClient;
+import io.fabric8.openshift.api.model.OAuthClientBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import okhttp3.*;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.time.Clock;
-import java.time.Duration;
-import java.util.Base64;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
 
 public class KeycloakController {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(KeycloakController.class);
 
     public static void main(String [] args) throws Exception {
+
         Security.addProvider(new BouncyCastleProvider());
         Map<String, String> env = System.getenv();
 
@@ -55,12 +67,13 @@ public class KeycloakController {
             ensureConfigurationExists(client, env, isOpenShift);
         }
 
+        final String keycloakConfigName = getKeycloakConfigName(env);
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
-                getKeycloakConfigName(env),
+                keycloakConfigName,
                 getKeycloakCredentialsSecretName(env),
                 getKeycloakCertSecretName(env));
 
-        IdentityProviderParams identityProviderParams = IdentityProviderParams.fromKube(client, getKeycloakConfigName(env));
+        IdentityProviderParams identityProviderParams = IdentityProviderParams.fromKube(client, keycloakConfigName);
 
         log.info("Started with identity provider params: {}", identityProviderParams);
 
@@ -88,7 +101,30 @@ public class KeycloakController {
 
         UserApi userApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
 
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory, identityProviderParams), kubeApi, userApi);
+        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory), kubeApi, userApi, identityProviderParams);
+
+        if (isOpenShift) {
+            TimerTask watchTask = new TimerTask() {
+                Watch watch = null;
+
+                @Override
+                public void run() {
+                    try {
+                        if (watch != null) {
+                            watch.close();
+                        }
+                    } finally {
+                        watch = createConfigMapWatch(client, keycloakConfigName, keycloakManager);
+                    }
+                }
+            };
+
+            Duration watchRecreateInterval = getEnv(env, "CONFIGMAP_WATCH_INTERVAL")
+                    .map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofMinutes(5));
+
+            new Timer("configMapWatchTimer", true).schedule(watchTask, 0,
+                    watchRecreateInterval.toMillis());
+        }
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
@@ -101,7 +137,26 @@ public class KeycloakController {
         ResourceChecker<AddressSpace> resourceChecker = new ResourceChecker<>(keycloakManager, checkInterval);
         resourceChecker.start();
         addressSpaceApi.watchAddressSpaces(resourceChecker, resyncInterval);
+
     }
+
+	private static Watch createConfigMapWatch(NamespacedOpenShiftClient client, final String keycloakConfigName,
+			KeycloakManager keycloakManager) {
+		return client.configMaps().withName(keycloakConfigName).watch(new Watcher<ConfigMap>() {
+		    @Override
+		    public void eventReceived(Action action, ConfigMap unused) {
+		        if (action == Action.MODIFIED || action == Action.ADDED) {
+		            log.debug("Config map '{}' {}", keycloakConfigName, action);
+		            IdentityProviderParams updated = IdentityProviderParams.fromKube(client, keycloakConfigName);
+		            keycloakManager.update(updated);
+		        }
+		    }
+
+		    @Override
+		    public void onClose(KubernetesClientException cause) {
+		    }
+		});
+	}
 
     private static String getKeycloakRouteName(Map<String, String> env) {
         return getEnv(env, "KEYCLOAK_ROUTE_NAME").orElse("keycloak");
@@ -115,8 +170,17 @@ public class KeycloakController {
         return getEnv(env, "KEYCLOAK_CREDENTIALS_SECRET_NAME").orElse("keycloak-credentials");
     }
 
+
     private static String getKeycloakCertSecretName(Map<String, String> env) {
         return getEnv(env, "KEYCLOAK_CERT_SECRET_NAME").orElse("standard-authservice-cert");
+    }
+
+    private static String getOauthClientName(Map<String, String> env, String namespace) {
+        return getEnv(env, "OAUTH_CLIENT_NAME").orElse("enmasse-oauthclient-" + namespace);
+    }
+
+    private static String getOauthClientGrantMethod(Map<String, String> env) {
+        return getEnv(env, "OAUTH_CLIENT_GRANT_METHOD").orElse("auto");
     }
 
     private static boolean isOpenShift(NamespacedOpenShiftClient client) {
@@ -135,6 +199,8 @@ public class KeycloakController {
     }
 
     private static void ensureConfigurationExists(NamespacedOpenShiftClient client, Map<String, String> env, boolean isOpenShift) {
+        PasswordGenerator passwordGenerator = new PasswordGenerator();
+
         if (isOpenShift) {
             Route keycloakRoute = client.routes().withName(getKeycloakRouteName(env)).get();
             if (keycloakRoute == null) {
@@ -166,7 +232,6 @@ public class KeycloakController {
 
         Secret existingCredentials = client.secrets().withName(getKeycloakCredentialsSecretName(env)).get();
         if (existingCredentials == null) {
-            PasswordGenerator passwordGenerator = new PasswordGenerator();
             byte [] adminUser = "admin".getBytes(StandardCharsets.UTF_8);
             byte [] adminPassword = passwordGenerator.generateAlphaNumberic(32).getBytes(StandardCharsets.UTF_8);
             Base64.Encoder b64enc = Base64.getEncoder();
@@ -183,22 +248,63 @@ public class KeycloakController {
             log.info("{} already exists, not generating", getKeycloakCredentialsSecretName(env));
         }
 
-        ConfigMap existingConfig = client.configMaps().withName(getKeycloakConfigName(env)).get();
+        final String keycloakConfigName = getKeycloakConfigName(env);
+        final String oauthClientName = getOauthClientName(env, client.getNamespace());
+        String oauthClientSecret = null;
+        boolean oauthClientAccessible = false;
+
+        if (isOpenShift) {
+            try {
+                OAuthClient oauthClient = client.oAuthClients().withName(oauthClientName).get();
+                if (oauthClient == null) {
+                    String keycloakOauthUrl = getKeycloakAuthUrl(client, env);
+                    oauthClientSecret = passwordGenerator.generateAlphaNumberic(32);
+                    String grantMethod = getOauthClientGrantMethod(env);
+                    OAuthClient c = new OAuthClientBuilder()
+                            .editOrNewMetadata()
+                            .withName(oauthClientName)
+                            .addToLabels("app", "enmasse")
+                            .endMetadata()
+                            .withGrantMethod(grantMethod)
+                            .withApiVersion("v1")
+                            .withKind("OAuthClient")
+                            .withRedirectURIs(keycloakOauthUrl)
+                            .withSecret(oauthClientSecret)
+                            .build();
+
+                    oauthClient = client.oAuthClients().createOrReplace(c);
+                    log.info("Created OAuthClient: {} ", oauthClient.getMetadata().getName());
+                } else {
+                    oauthClientSecret = oauthClient.getSecret();
+                }
+                oauthClientAccessible = true;
+            } catch (KubernetesClientException e) {
+                if (String.valueOf(e.getMessage()).toLowerCase().contains("forbidden!")) {
+                    String message = "Unable to get or create the oauthclient '{}' owing to cluster access restrictions." +
+                            " Ensure that settings within the configmap '{}' match those of the oauthclient" +
+                            " supplied by the cluster's admin. {}";
+                    if (log.isDebugEnabled()) {
+                        log.debug(message, oauthClientName, keycloakConfigName, e.getMessage(), e);
+                    } else {
+                        log.warn(message, oauthClientName, keycloakConfigName, e.getMessage());
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        ConfigMap existingConfig = client.configMaps().withName(keycloakConfigName).get();
+
         if (existingConfig == null) {
             ConfigMapBuilder configMapBuilder = new ConfigMapBuilder()
                     .editOrNewMetadata()
-                    .withName(getKeycloakConfigName(env))
+                    .withName(keycloakConfigName)
                     .addToLabels("app", "enmasse")
                     .endMetadata();
 
             if (isOpenShift) {
-                Route keycloakRoute = client.routes().withName("keycloak").get();
-                String keycloakOauthUrl = null;
-                if (keycloakRoute != null && !keycloakRoute.getSpec().getHost().contains("127.0.0.1")) {
-                    keycloakOauthUrl = String.format("https://%s/auth",  keycloakRoute.getSpec().getHost());
-                } else {
-                    keycloakOauthUrl = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_HOST").map(ip -> "https://" + ip + ":8443/auth").orElse(null);
-                }
+                String keycloakOauthUrl = getKeycloakAuthUrl(client, env);
                 configMapBuilder.addToData("oauthUrl", keycloakOauthUrl);
 
                 String openshiftOauthUrl = getOpenShiftOauthUrl(client);
@@ -206,28 +312,14 @@ public class KeycloakController {
                     openshiftOauthUrl = String.format("https://%s:%s", env.get("KUBERNETES_SERVICE_HOST"), env.get("KUBERNETES_SERVICE_PORT"));
                 }
                 configMapBuilder.addToData("identityProviderUrl", openshiftOauthUrl);
-                String saName = "kc-oauth";
-                ServiceAccount oauthClient = client.serviceAccounts().withName(saName).get();
+            }
 
-                if (oauthClient != null) {
-
-                    if (oauthClient.getMetadata().getAnnotations() == null || oauthClient.getMetadata().getAnnotations().get("serviceaccounts.openshift.io/oauth-redirecturi.first") == null) {
-                        client.serviceAccounts().withName(saName).edit()
-                                .editMetadata()
-                                .addToAnnotations("serviceaccounts.openshift.io/oauth-redirecturi.first", keycloakOauthUrl)
-                                .endMetadata()
-                                .done();
-                    }
-                    configMapBuilder.addToData("identityProviderClientId", "system:serviceaccount:" + oauthClient.getMetadata().getNamespace() + ":" + oauthClient.getMetadata().getName());
-                    for (ObjectReference secretRef : oauthClient.getSecrets()) {
-                        Secret secret = client.secrets().withName(secretRef.getName()).get();
-                        if (secret != null && secret.getData().containsKey("token")) {
-                            configMapBuilder.addToData("identityProviderClientSecret", new String(Base64.getDecoder().decode(secret.getData().get("token")), StandardCharsets.UTF_8));
-                            log.info("Located identity provider client secret");
-                            break;
-                        }
-                    }
-                }
+            if (oauthClientAccessible) {
+                configMapBuilder.addToData("identityProviderClientId", oauthClientName);
+                configMapBuilder.addToData("identityProviderClientSecret", oauthClientSecret);
+            } else {
+                log.warn("Unable to initialize identityProviderClientId and identityProviderClientSecret " +
+                        "on config map {} as these details cannot be determined automatically.", keycloakConfigName);
             }
 
             configMapBuilder.addToData("hostname", "standard-authservice");
@@ -235,10 +327,39 @@ public class KeycloakController {
             configMapBuilder.addToData("caSecretName", getKeycloakCertSecretName(env));
 
             client.configMaps().createOrReplace(configMapBuilder.build());
-        } else {
-            log.info("{} already exists, not generating", getKeycloakConfigName(env));
+            log.debug("Created config map: {} ", keycloakConfigName);
+        } else if (oauthClientAccessible) {
+            boolean updateRequired = false;
+            log.info("{} already exists, not generating", keycloakConfigName);
+            Map<String, String> updateMap = new HashMap<>(existingConfig.getData());
+            if (!oauthClientName.equals(updateMap.get("identityProviderClientId"))) {
+                updateMap.put("identityProviderClientId", oauthClientName);
+                log.info("Updating identityProviderClientId: {}", oauthClientName);
+                updateRequired = true;
+            }
+            if (!oauthClientSecret.equals(updateMap.get("identityProviderClientSecret"))) {
+                updateMap.put("identityProviderClientSecret", oauthClientSecret);
+                log.info("Updating identityProviderClientSecret");
+                updateRequired = true;
+            }
+
+            if (updateRequired) {
+                existingConfig.setData(updateMap);
+                client.configMaps().createOrReplace(existingConfig);
+            }
         }
     }
+
+    private static String getKeycloakAuthUrl(NamespacedOpenShiftClient client, Map<String, String> env) {
+		Route keycloakRoute = client.routes().withName("keycloak").get();
+		String keycloakOauthUrl = null;
+		if (keycloakRoute != null && !keycloakRoute.getSpec().getHost().contains("127.0.0.1")) {
+            keycloakOauthUrl = String.format("https://%s/auth",  keycloakRoute.getSpec().getHost());
+		} else {
+		    keycloakOauthUrl = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_HOST").map(ip -> "https://" + ip + ":8443/auth").orElse(null);
+		}
+		return keycloakOauthUrl;
+	}
 
     private static String getOpenShiftOauthUrl(NamespacedOpenShiftClient client) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);

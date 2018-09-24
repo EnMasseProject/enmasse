@@ -28,14 +28,17 @@ import static io.enmasse.user.model.v1.Operation.view;
 public class KeycloakManager implements Watcher<AddressSpace>
 {
     private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
+    private static final String MASTER_REALM = "master";
     private final KeycloakApi keycloak;
     private final KubeApi kube;
     private final UserApi userApi;
+    private IdentityProviderParams currentParams;
 
-    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
+    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi, IdentityProviderParams currentParams) {
         this.keycloak = keycloak;
         this.kube = kube;
         this.userApi = userApi;
+        this.currentParams = currentParams;
     }
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
@@ -80,7 +83,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
         Set<String> realmNames = keycloak.getRealmNames();
         log.info("Actual: {}, Desired: {}", realmNames, standardAuthSvcSpaces.keySet());
         for(String realmName : realmNames) {
-            if(standardAuthSvcSpaces.remove(realmName) == null && !"master".equals(realmName)) {
+            if(standardAuthSvcSpaces.remove(realmName) == null && !MASTER_REALM.equals(realmName)) {
                 log.info("Deleting realm {}", realmName);
                 keycloak.deleteRealm(realmName);
             }
@@ -102,7 +105,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
-                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri);
+                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, currentParams);
                 userApi.createUser(realmName, new User.Builder()
                         .setMetadata(new UserMetadata.Builder()
                                 .setName(addressSpace.getName() + "." + userName)
@@ -127,5 +130,15 @@ public class KeycloakManager implements Watcher<AddressSpace>
                         .build());
             }
         }
+    }
+
+    public void update(IdentityProviderParams updatedParams) {
+        currentParams = updatedParams;
+        keycloak.getRealmNames().stream()
+                .filter(name -> !name.equals(MASTER_REALM))
+                .forEach(name -> {
+                    log.info("Updating realm {}", name);
+                    keycloak.updateRealm(name, updatedParams);
+                });
     }
 }
