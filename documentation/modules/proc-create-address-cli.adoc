@@ -1,13 +1,14 @@
 // Module included in the following assemblies:
 //
-// assembly-configure-address-spaces-addresses-cli.adoc
+// assembly-configure-address-spaces-addresses-cli-kube.adoc
+// assembly-configure-address-spaces-addresses-cli-oc.adoc
 
 [id='create-address-cli-{context}']
 = Creating an address
 
 .Procedure
 
-. Save the following YAML data to a `address.yaml` file:
+. In a `address.yaml` file, save the following YAML data:
 +
 [source,yaml,options="nowrap"]
 ----
@@ -23,14 +24,14 @@ spec:
 
 NOTE: Prefixing the name with the address space name is required to ensure addresses from different address spaces do not collide.
 
-. Create the address using the command line:
+. From the command line, create the address:
 +
 [source,yaml,options="nowrap"]
 ----
 {cmdcli} create -f address.yaml
 ----
 
-. You can now list addresses:
+. List the addresses:
 +
 [source,yaml,options="nowrap"]
 ----

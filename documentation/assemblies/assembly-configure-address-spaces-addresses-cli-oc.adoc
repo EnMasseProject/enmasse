@@ -1,0 +1,21 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+:parent-context: {context}
+:context: okd
+:cmdcli: oc
+
+[id='configure-address-spaces-addresses-cli-oc-{context}']
+= Configuring address spaces and addresses from the command line on OpenShift
+
+You can configure {ProductName} to support manipulating address spaces and addresses by using the
+ifdef::Kubernetes[Kubernetes and]
+ OpenShift command-line tools. For information about how to set up the API server to support this feature, see xref:register-api-service-okd[].
+
+include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

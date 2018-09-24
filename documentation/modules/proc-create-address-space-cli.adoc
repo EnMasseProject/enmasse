@@ -1,13 +1,14 @@
 // Module included in the following assemblies:
 //
-// assembly-configure-address-spaces-addresses-cli.adoc
+// assembly-configure-address-spaces-addresses-cli-kube.adoc
+// assembly-configure-address-spaces-addresses-cli-oc.adoc
 
 [id='create-address-space-cli-{context}']
 = Creating an address space
 
 .Procedure
 
-. Save the following YAML data to a `space.yaml` file:
+. In a `space.yaml` file, save the following YAML data:
 +
 [source,yaml,options="nowrap"]
 ----
@@ -20,17 +21,17 @@ spec:
     plan: unlimited-standard
 ----
 
-. Create the address space  (replace `oc` with `kubectl` if using Kubernetes):
+. Create the address space:
 +
 [source,yaml,options="nowrap"]
 ----
-oc create -f space.yaml
+{cmdcli} create -f space.yaml
 ----
 
-. You can now list address spaces:
+. List the address spaces:
 +
 [source,yaml,options="nowrap"]
 ----
-oc get addressspaces
+{cmdcli} get addressspaces
 ----
 
