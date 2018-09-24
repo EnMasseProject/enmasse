@@ -1,0 +1,15 @@
+// Module included in the following assemblies:
+//
+// assembly-brokered-address-types.adoc
+
+[id='con-brokered-queue-{context}']
+= Queue
+
+// !brokered.address.queue.shortDescription:A store-and-forward queue
+// !brokered.address.queue.longDescription:start
+The queue address type is a store-and-forward queue. This address type is appropriate for
+implementing a distributed work queue, handling traffic bursts, and other use cases where you want
+to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
+message groups, transactions, and other JMS features.
+// !brokered.address.queue.longDescription:stop
+

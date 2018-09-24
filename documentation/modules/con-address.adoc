@@ -1,0 +1,14 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+[id='con-address-{context}']
+= Address
+// !address.name.shortDescription:Type an address name
+// !address.name.longDescription:The <b>address name</b> is a unique string that specifies where messages can be sent to and received from.
+// !address.name.external:{OnlineBookURL}
+
+An address is part of an address space and represents a destination for sending and receiving messages. An address has a type, which defines the semantics of sending messages to and receiving messages from that address.
+
+The types of addresses available in {ProductName} depend on the address space type.
+

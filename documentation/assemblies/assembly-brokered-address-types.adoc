@@ -1,0 +1,16 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+[id='assembly-brokered-address-types-{context}']
+= Brokered address types
+
+The brokered address space supports two address types:
+
+* queue
+* topic
+
+include::../modules/con-brokered-queue.adoc[leveloffset=+1]
+
+include::../modules/con-brokered-topic.adoc[leveloffset=+1]
+

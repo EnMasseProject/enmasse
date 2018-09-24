@@ -1,0 +1,12 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+[id='con-address-space-{context}']
+= Address space
+An address space is a group of addresses that can be accessed through a single connection (per protocol). This means that clients connected to the endpoints of an address space can send messages to or receive messages from any authorized address within that address space. An address space can support multiple protocols, as defined by the address space type.
+
+{ProductName} has two types of address spaces:
+* Standard
+* Brokered
+

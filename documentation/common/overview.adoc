@@ -14,7 +14,7 @@ The service admin can deploy and manage messaging infrastructure, while tenants 
 
 EnMasse can be used for many purposes, such as moving your messaging infrastructure to the cloud without depending on a specific cloud provider, building a scalable messaging backbone for IoT, or just as a cloud-ready version of a message broker.
 
-EnMasse can provision different types of messaging depending on your use case. A user can request messaging resources by creating an <<address_space>>.
+EnMasse can provision different types of messaging depending on your use case. A user can request messaging resources by creating an xref:con-address-space-messaging[address space].
 
 EnMasse currently supports a `standard` and a `brokered` address space type, each with different semantics. 
 

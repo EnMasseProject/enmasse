@@ -1,12 +1,12 @@
+// Module included in the following assemblies:
+//
+//
 :parent-context: {context}
-
-// The ID is used as an anchor for linking to the module. Avoid changing it after the module has been published to ensure existing links are not broken.
-[id='a-collection-of-modules']
-// If the assembly is reused in other assemblies in a guide, include {context} in the ID: [id='a-collection-of-modules-{context}'].
-= Managing users
-//If the assembly covers a task, start the title with a verb in the gerund form, such as Creating or Configuring.
 :context: managing-users
-// The `context` attribute enables module reuse. Every module's ID includes {context}, which ensures that the module has a unique ID even if it is reused multiple times in a guide.
+
+[id='managing-users-{context}']
+
+= Managing users
 
 {ProductName} user management is only supported when using the standard authentication service. Users can
 be managed using a Kubernetes native REST API and custom resources using the command-line tools.
@@ -14,14 +14,15 @@ be managed using a Kubernetes native REST API and custom resources using the com
 .Prerequisites
 
 * {ProductName} is installed with custom resources enabled
-* You must have already created an xref:address_space[]
+* You must have already created an xref:con-address-space-messaging[address space]
 
-include::../common/concept-user-model.adoc[leveloffset=+1]
-include::../common/proc-creating-users-cli.adoc[leveloffset=+1]
-include::../common/proc-deleting-users-cli.adoc[leveloffset=+1]
+include::../modules/con-user-model.adoc[leveloffset=+1]
+include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]
+include::../modules/proc-deleting-users-cli.adoc[leveloffset=+1]
 
 .Additional resources
 
 * xref:enmasse_rest_api[]
 
 :context: {parent-context}
+

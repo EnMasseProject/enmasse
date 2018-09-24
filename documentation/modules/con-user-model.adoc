@@ -8,7 +8,7 @@
 // * Title: = My concept module A
 
 // The ID is used as an anchor for linking to the module. Avoid changing it after the module has been published to ensure existing links are not broken.
-[id='concept-user-model-{context}']
+[id='con-user-model-{context}']
 // The `context` attribute enables module reuse. Every module's ID includes {context}, which ensures that the module has a unique ID even if it is reused multiple times in a guide.
 = User model
 
@@ -19,7 +19,7 @@ modified). Following is an example user:
 [source,yaml,options="nowrap"]
 .link:common/user-example1.yaml[user-example1.yaml]
 ----
-include::user-example1.yaml[]
+include::../common/user-example1.yaml[]
 ----
 
 The following fields are required:

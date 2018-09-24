@@ -13,7 +13,7 @@
 = Creating users using the command line
 
 // Start the title of a procedure module with a verb, such as Creating or Create. See also _Wording of headings_ in _The IBM Style Guide_.
-Users can in {ProductName} can be created using standard command line tools.
+In {ProductName} users can be created using standard command-line tools.
 
 .Prerequisites
 
@@ -21,15 +21,15 @@ Users can in {ProductName} can be created using standard command line tools.
 
 .Procedure
 
-. Save user definition to file
+. Save the user definition to a file:
 +
 [source,yaml,options="nowrap"]
 .link:common/user-example1.yaml[user-example1.yaml]
 ----
-include::user-example1.yaml[]
+include::../common/user-example1.yaml[]
 ----
 
-. Create user
+. Create the user:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -39,3 +39,4 @@ include::user-example1.yaml[]
 .Additional resources
 
 * xref:_overview[Rest API Reference]
+

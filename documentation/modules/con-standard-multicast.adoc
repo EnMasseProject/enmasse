@@ -1,0 +1,11 @@
+// Module included in the following assemblies:
+//
+// assembly-standard-address-types.adoc
+
+[id='con-standard-multicast-{context}']
+= Multicast
+// !standard.address.multicast.shortDescription:A scalable 'direct' address for sending messages to multiple consumers
+// !standard.address.multicast.longDescription:start
+The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses,.
+// !standard.address.multicast.longDescription:stop
+

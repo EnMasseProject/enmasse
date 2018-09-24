@@ -1,0 +1,26 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+[id='assembly-standard-address-types-{context}']
+= Standard address types
+The standard address space supports five different address types:
+
+* queue
+* topic
+* anycast
+* multicast
+* subscription
+
+// TODO Document plan restrictions and document properties for all 4 types
+
+include::../modules/con-standard-queue.adoc[leveloffset=+1]
+
+include::../modules/con-standard-topic.adoc[leveloffset=+1]
+
+include::../modules/con-standard-anycast.adoc[leveloffset=+1]
+
+include::../modules/con-standard-multicast.adoc[leveloffset=+1]
+
+include::../modules/con-standard-subscription.adoc[leveloffset=+1]
+

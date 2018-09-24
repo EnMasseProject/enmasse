@@ -1,0 +1,11 @@
+// Module included in the following assemblies:
+//
+// assembly-standard-address-types.adoc
+
+[id='con-standard-anycast-{context}']
+= Anycast
+// !standard.address.anycast.shortDescription:A scalable 'direct' address for sending messages to one consumer
+// !standard.address.anycast.longDescription:start
+The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.
+// !standard.address.anycast.longDescription:stop
+

@@ -1,0 +1,17 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+[id='con-standard-address-space-{context}']
+= Standard Address Space
+The standard address space is the default address space in {ProductName}. It consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: 
+
+* No transaction support
+* No message ordering
+* No selectors on queues
+* No message groups
+
+Clients connect and send and receive messages in this address space using the AMQP or MQTT protocols. Note that MQTT does not support qos2 or retained messages.
+
+// TODO This reflects the status quo, but how should multiple protocols actually be surfaced?
+

@@ -1,0 +1,51 @@
+// Module included in the following assemblies:
+//
+// assembly-configure-address-spaces-addresses-restapi.adoc
+
+[id='create-address-restapi-{context}']
+= Creating addresses
+
+.Procedure
+
+. To create addresses in the standard address space, save the address definition to a file:
++
+[source,json,options="nowrap"]
+----
+{
+  "apiVersion": "enmasse.io/v1alpha1",
+  "kind": "Address",
+  "metadata": {
+      "addressSpace": "myspace"
+  },
+  "spec": {
+    "address": "myqueue",
+    "type": "queue",
+    "plan": "pooled-queue"
+  }
+}
+----
+
+. You can then create the address using the following API:
++
+[source,bash,options="nowrap"]
+----
+TOKEN=`oc whoami -t`
+curl -X POST -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
+----
+
+where `namespace` is the name of the address space.
+
+== Viewing configured addresses
+
+.Procedure 
+
+* To check which addresses are configured:
++
+[source,bash,options="nowrap"]
+----
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
+----
++
+The addresses are ready to be used by messaging clients once the `status.isReady` field of each
+address is set to `true`.
+

@@ -1,14 +1,14 @@
 == Address types
 
 {ProductName} is configured with a set of addresses that you can use for
-messages. Currently, {ProductName} supports 4 different address types:
+messages. Currently, {ProductName} supports four different address types:
 
 * Brokered queues
 * Brokered topics (pub/sub)
 * Direct anycast addresses
 * Direct broadcast addresses
 
-See the <<address_model>> for details.
+For more details, see xref:con-address-space-messaging[address space].
 {ProductName} also comes with a console that you can use for managing
 addresses. You can get the console URL by running the following command:
 
@@ -17,9 +17,7 @@ addresses. You can get the console URL by running the following command:
 echo "https://$({OcGetRoute} console)"
 ....
 
-You can also deploy the addressing config using the REST API
-API. See the <<configuring-using-restapi>> for details on the
-resources consumed by the API. Here is an example config with all 4 variants that you can save to `addresses.json`:
+You can also deploy the addressing config using the REST API. For details on the resources consumed by the API, see xref:configure-address-spaces-addresses-restapi-messaging[]. Here is an example config with all four variants that you can save to `addresses.json`:
 
 [subs=attributes+,options="nowrap"]
 ....

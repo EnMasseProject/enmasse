@@ -1,0 +1,11 @@
+// Module included in the following assemblies:
+//
+// assembly-brokered-address-types.adoc
+
+[id='con-brokered-topic-{context}']
+= Topic
+// !brokered.address.topic.shortDescription:A publish-and-subscribe address with store-and-forward semantics
+// !brokered.address.topic.longDescription:start
+The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
+// !brokered.address.topic.longDescription:stop
+
