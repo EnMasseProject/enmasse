@@ -8,7 +8,7 @@ messages. Currently, {ProductName} supports four different address types:
 * Direct anycast addresses
 * Direct broadcast addresses
 
-For more details, see the xref:con-address-space-messaging[address space].
+For more details, see xref:con-address-space-messaging[address space].
 {ProductName} also comes with a console that you can use for managing
 addresses. You can get the console URL by running the following command:
 

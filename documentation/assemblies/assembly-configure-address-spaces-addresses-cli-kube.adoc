@@ -4,7 +4,7 @@
 
 :parent-context: {context}
 :context: kube
-:cmdcli: kube
+:cmdcli: kubectl
 
 [id='configure-address-spaces-addresses-cli-kube-{context}']
 = Configuring address spaces and addresses from the command line on Kubernetes
