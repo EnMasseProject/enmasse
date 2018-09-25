@@ -50,7 +50,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getNamespace());
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
-            parameters.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, "sa-" + infraUuid);
+            parameters.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, KubeUtil.getAddressSpaceSaName(addressSpace));
             parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getPlan());
 
             authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
