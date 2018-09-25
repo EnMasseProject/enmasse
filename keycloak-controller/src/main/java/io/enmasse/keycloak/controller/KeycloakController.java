@@ -195,7 +195,7 @@ public class KeycloakController {
                 Route keycloakRoute = client.routes().withName("keycloak").get();
                 String keycloakOauthUrl = null;
                 if (keycloakRoute != null && !keycloakRoute.getSpec().getHost().contains("127.0.0.1")) {
-                    keycloakOauthUrl = "https:// " + keycloakRoute.getSpec().getHost() + "/auth";
+                    keycloakOauthUrl = String.format("https://%s/auth",  keycloakRoute.getSpec().getHost());
                 } else {
                     keycloakOauthUrl = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_HOST").map(ip -> "https://" + ip + ":8443/auth").orElse(null);
                 }
