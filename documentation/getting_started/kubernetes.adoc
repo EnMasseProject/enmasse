@@ -38,7 +38,7 @@ sed -i "s/namespace: .*/namespace: enmasse/" examples/bundles/enmasse-with-none-
 kubectl create -f examples/bundles/enmasse-with-none-authservice
 ----
 
-include::configuring-address-spaces.adoc[leveloffset=+1]
+include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
 include::configuring-addresses.adoc[leveloffset=+1]
 

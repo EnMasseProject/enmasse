@@ -8,30 +8,33 @@
 
 .Procedure
 
-. In a `space.yaml` file, save the following YAML data:
+. Create an address space definition:
 +
 [source,yaml,options="nowrap"]
+.link:../common/standard-address-space.yaml[standard-address-space.yaml]
 ----
-apiVersion: enmasse.io/v1alpha1
-kind: AddressSpace
-metadata:
-    name: myspace
-spec:
-    type: standard
-    plan: unlimited-standard
+include::../common/standard-address-space.yaml[]
 ----
 
 . Create the address space:
 +
-[source,yaml,options="nowrap"]
+[options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f space.yaml
+{cmdcli} create -f standard-address-space.yaml
 ----
-
-. List the address spaces:
 +
-[source,yaml,options="nowrap"]
+The address space is ready for use when `.status.isReady` field is set to `true`.
+
+. Check the status of the address space:
++
+[options="nowrap",subs="attributes"]
 ----
-{cmdcli} get addressspaces
+{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
 ----
 
+. Retrieve console URL:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'console\')].host}
+----

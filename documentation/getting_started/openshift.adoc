@@ -38,7 +38,7 @@ oc new-project enmasse
 oc process -f examples/templates/enmasse-with-none-authservice.yaml NAMESPACE=enmasse | oc apply -f -
 ----
 
-include::configuring-address-spaces.adoc[leveloffset=+1]
+include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
 include::configuring-addresses.adoc[leveloffset=+1]
 
