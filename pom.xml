@@ -6,7 +6,7 @@
     <groupId>io.enmasse</groupId>
     <artifactId>enmasse</artifactId>
     <packaging>pom</packaging>
-    <version>0.23</version>
+    <version>0.23.0-rc1</version>
 
     <properties>
         <minimum-maven-version>3.3.1</minimum-maven-version>
