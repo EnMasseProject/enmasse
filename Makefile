@@ -56,9 +56,6 @@ $(DOCKER_TARGETS): $(DOCKER_DIRS)
 $(DOCKER_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
-deploy:
-	./templates/install/deploy.sh -n $(OPENSHIFT_PROJECT) -u $(OPENSHIFT_USER) -m $(OPENSHIFT_MASTER) -o multitenant -a "standard none"
-
 systemtests:
 	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) \
 		OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) \
@@ -91,4 +88,4 @@ docu_check:
 	./scripts/check_docs.sh
 
 
-.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
