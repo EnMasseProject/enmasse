@@ -327,7 +327,7 @@ function clean_oc_location() {
     fi
     if [ -d "${OC_DATA_PATH}" ]; then
         info "Cleaning OpenShift work directory ${OC_DATA_PATH}"
-        find ${OC_DATA_PATH} -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \;
+        sudo find ${OC_DATA_PATH} -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \;
         sudo rm -rf ${OC_DATA_PATH}
         sudo rm -rf /var/log/containers/*
         sudo rm -rf /var/log/pods/*
