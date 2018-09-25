@@ -4,12 +4,7 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.AddressSpaceType;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.Schema;
+import io.enmasse.address.model.*;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
@@ -103,7 +98,7 @@ public class CreateController implements Controller {
         Map<String, String> labels = new HashMap<>();
         labels.put(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
         labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
-        kubernetes.createServiceAccount("sa-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID), labels);
+        kubernetes.createServiceAccount(KubeUtil.getAddressSpaceSaName(addressSpace), labels);
 
         log.info("Creating address space {}", addressSpace);
 

@@ -49,6 +49,10 @@ public class KubeUtil {
         return sanitizeName("route-ca-" + addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
+    public static String getAddressSpaceSaName(AddressSpace addressSpace) {
+        return "sa-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
     public static void validateName(String name) {
         if (name == null) {
             return;
