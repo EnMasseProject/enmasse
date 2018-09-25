@@ -313,10 +313,21 @@ function clean_docker_images() {
 }
 
 function clean_oc_location() {
-    for i in $(mount | grep openshift | awk '{ print $3}'); do sudo umount "$i"; done && sudo rm -rf /var/lib/origin
-    sudo rm -rf /var/lib/origin/openshift.local.pv
-    sudo rm -rf /var/log/containers/*
-    sudo rm -rf /var/log/pods/*
+    info "Removing previous openshift data"
+    if [[ $(get_openshift_version) == '3.9'* ]]; then
+        OC_DATA_PATH="/var/lib/origin/"
+    else
+        OC_DATA_PATH="${CURDIR}/../../openshift.local.clusterup"
+    fi
+    if [ -d "${OC_DATA_PATH}" ]; then
+        info "Cleaning OpenShift work directory ${OC_DATA_PATH}"
+        find ${OC_DATA_PATH} -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \;
+        sudo rm -rf ${OC_DATA_PATH}
+        sudo rm -rf /var/log/containers/*
+        sudo rm -rf /var/log/pods/*
+    else
+        info "${OC_DATA_PATH} not found"
+    fi
 }
 
 function check_if_ansible_ready() {
