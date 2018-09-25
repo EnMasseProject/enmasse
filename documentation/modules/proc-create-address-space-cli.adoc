@@ -23,9 +23,9 @@ include::../common/standard-address-space.yaml[]
 {cmdcli} create -f standard-address-space.yaml
 ----
 +
-The address space is ready for use when the field `.status.isReady` is set to `true`.
+The address space is ready for use when `.status.isReady` field is set to `true`.
 
-. Check status of address space:
+. Check the status of the address space:
 +
 [options="nowrap",subs="attributes"]
 ----
