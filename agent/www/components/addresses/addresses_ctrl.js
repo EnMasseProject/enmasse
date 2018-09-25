@@ -488,6 +488,9 @@ angular.module('patternfly.wizard').controller('SemanticsController', ['$rootSco
             $scope.unique_address_name = function (input) {
                 return address_service.is_unique_name(input);
             }
+            $scope.valid_address_name = function (input) {
+                return input.match(/^[^#*\/\s\.:]+$/) && address_service.is_unique_name(input);
+            }
         }
     ]);
 
