@@ -8,33 +8,27 @@
 
 .Procedure
 
-. In a `address.yaml` file, save the following YAML data:
+. Create an address definition:
 +
 [source,yaml,options="nowrap"]
+.link:../common/standard-pooled-queue.yaml[standard-pooled-queue.yaml]
 ----
-apiVersion: enmasse.io/v1alpha1
-kind: Address
-metadata:
-    name: myspace.myqueue
-spec:
-    address: myqueue
-    type: queue
-    plan: pooled-queue
+include::../common/standard-pooled-queue.yaml[]
 ----
-
++
 NOTE: Prefixing the name with the address space name is required to ensure addresses from different address spaces do not collide.
 
-. From the command line, create the address:
+. Create the address:
 +
-[source,yaml,options="nowrap"]
+[source,yaml,options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f address.yaml
+{cmdcli} create -f standard-pooled-queue.yaml
 ----
 
 . List the addresses:
 +
-[source,yaml,options="nowrap"]
+[source,yaml,options="nowrap",subs="attributes"]
 ----
-{cmdcli} get addresses
+{cmdcli} get addresses -o yaml
 ----
 
