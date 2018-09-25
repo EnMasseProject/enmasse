@@ -115,7 +115,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/address.enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -130,7 +130,7 @@ public class HTTPServerTest {
             }
             {
                 Async async = context.async();
-                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addresses/myinstance.addr1", response -> {
+                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/address.enmasse.io/v1alpha1/namespaces/ns/addresses/myinstance.addr1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         context.assertTrue(data.containsKey("metadata"));
@@ -144,7 +144,7 @@ public class HTTPServerTest {
             }
             {
                 Async async = context.async();
-                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/address.enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                     response.bodyHandler(buffer -> {
                         context.assertEquals(201, response.statusCode());
                         async.complete();
@@ -152,12 +152,12 @@ public class HTTPServerTest {
                 });
                 r3.putHeader("Content-Type", "application/json");
                 putAuthzToken(r3);
-                r3.end("{\"apiVersion\":\"enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
+                r3.end("{\"apiVersion\":\"address.enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
                 async.awaitSuccess(60_000);
             }
             {
                 Async async = context.async();
-                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
+                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/address.enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         System.out.println(data.toString());
@@ -186,7 +186,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/address.enmasse.io/v1alpha1", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -227,7 +227,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/schema", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/apis/address.enmasse.io/v1alpha1/schema", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();

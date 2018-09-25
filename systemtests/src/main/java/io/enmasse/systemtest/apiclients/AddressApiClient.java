@@ -29,30 +29,30 @@ import static java.net.HttpURLConnection.HTTP_OK;
 public class AddressApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
     private final int initRetry = 10;
-    private final String schemaPath = "/apis/enmasse.io/v1alpha1/schema";
+    private final String schemaPath = "/apis/address.enmasse.io/v1alpha1/schema";
     private final String addressSpacesPath;
     private final String addressNestedPathPattern;
     private final String addressResourcePath;
 
     public AddressApiClient(Kubernetes kubernetes) throws MalformedURLException {
-        super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1");
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
-        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
-        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
+        super(kubernetes, kubernetes.getRestEndpoint(), "address.enmasse.io/v1alpha1");
+        this.addressSpacesPath = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
+        this.addressNestedPathPattern = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
     }
 
     public AddressApiClient(Kubernetes kubernetes, String namespace) throws MalformedURLException {
-        super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1");
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
-        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
-        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
+        super(kubernetes, kubernetes.getRestEndpoint(), "address.enmasse.io/v1alpha1");
+        this.addressSpacesPath = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
+        this.addressNestedPathPattern = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
     }
 
     public AddressApiClient(Kubernetes kubernetes, String namespace, String token) throws MalformedURLException {
-        super(kubernetes, kubernetes.getRestEndpoint(), "enmasse.io/v1alpha1", token);
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
-        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
-        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
+        super(kubernetes, kubernetes.getRestEndpoint(), "address.enmasse.io/v1alpha1", token);
+        this.addressSpacesPath = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
+        this.addressNestedPathPattern = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/address.enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
     }
 
     public void close() {

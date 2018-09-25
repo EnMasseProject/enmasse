@@ -109,7 +109,7 @@ function create_address_space() {
     else
         URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
     fi
-    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addressspaces
+    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/address.enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addressspaces
     wait_until_up 2 ${NAMESPACE}-${ADDRESS_SPACE_NAME} || return 1
 }
 
@@ -127,9 +127,9 @@ function create_address() {
         URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
     fi
 
-    PAYLOAD="{\"apiVersion\": \"enmasse.io/v1alpha1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
+    PAYLOAD="{\"apiVersion\": \"address.enmasse.io/v1alpha1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
     TOKEN=$(oc whoami -t)
-    curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addresses
+    curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/address.enmasse.io/v1alpha1/namespaces/${NAMESPACE}/addresses
 }
 
 function create_user() {

@@ -18,7 +18,7 @@ import javax.ws.rs.core.*;
 /**
  * HTTP API for operating on addresses within an address space
  */
-@Path("/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses")
+@Path("/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addresses")
 public class HttpAddressService extends HttpAddressServiceBase {
     public HttpAddressService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider) {
         super(addressSpaceApi, schemaProvider);

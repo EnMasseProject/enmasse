@@ -20,9 +20,9 @@ import java.util.Arrays;
 @Path("/apis")
 public class HttpApiRootService {
     private static final APIGroup apiGroup =
-            new APIGroup("enmasse.io", Arrays.asList(
-                    new APIGroupVersion("enmasse.io/v1alpha1", "v1alpha1")),
-                    new APIGroupVersion("enmasse.io/v1alpha1", "v1alpha1"),
+            new APIGroup("address.enmasse.io", Arrays.asList(
+                    new APIGroupVersion("address.enmasse.io/v1alpha1", "v1alpha1")),
+                    new APIGroupVersion("address.enmasse.io/v1alpha1", "v1alpha1"),
                     null);
 
     private static final APIGroup userApiGroup =
@@ -47,7 +47,7 @@ public class HttpApiRootService {
     }
 
     @GET
-    @Path("enmasse.io")
+    @Path("address.enmasse.io")
     @Produces({MediaType.APPLICATION_JSON})
     public APIGroup getApiGroup(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
         verifyAuthorized(securityContext, "get", uriInfo.getPath());
@@ -55,7 +55,7 @@ public class HttpApiRootService {
     }
 
 
-    private static final APIResourceList apiResourceList = new APIResourceList("enmasse.io/v1alpha1",
+    private static final APIResourceList apiResourceList = new APIResourceList("address.enmasse.io/v1alpha1",
         Arrays.asList(
                 new APIResource("addressspaces", "", true, "AddressSpace",
                     Arrays.asList("create", "delete", "get", "list")),
@@ -63,7 +63,7 @@ public class HttpApiRootService {
                                 Arrays.asList("create", "delete", "get", "list"))));
 
     @GET
-    @Path("enmasse.io/v1alpha1")
+    @Path("address.enmasse.io/v1alpha1")
     @Produces({MediaType.APPLICATION_JSON})
     public APIResourceList getApiGroupV1(@Context SecurityContext securityContext, @Context UriInfo uriInfo) {
         // verifyAuthorized(securityContext, "get", uriInfo.getPath());

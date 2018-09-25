@@ -3,9 +3,9 @@ kind: APIService
 metadata:
   labels:
     app: enmasse
-  name: v1alpha1.enmasse.io
+  name: v1alpha1.address.enmasse.io
 spec:
-  group: enmasse.io
+  group: address.enmasse.io
   groupPriorityMinimum: 1000
   insecureSkipTLSVerify: true
   service:
