@@ -207,7 +207,7 @@ function check_link_routes (link_routes) {
     });
     var results = [];
     for (var a in by_address) {
-        if (by_address[a]['in'] && by_address[a]['out']) {
+        if (by_address[a]['out'] && (by_address[a]['in'] || a.indexOf('::') > 0)) {
             results.push(a);
         }
     }
@@ -271,7 +271,13 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
         if (results) {
             connection_registry.set(results.connections);
             for (var a in results.addresses) {
-                addresses.update_stats(a, results.addresses[a]);
+                var i = a.indexOf('::');
+                if (i > 0) {
+                    var s = a.substring(i+2);
+                    addresses.update_stats(s, results.addresses[a]);
+                } else {
+                    addresses.update_stats(a, results.addresses[a]);
+                }
             }
         }
     }).catch(function (error) {
