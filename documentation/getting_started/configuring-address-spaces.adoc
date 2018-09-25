@@ -35,5 +35,5 @@ The address space is ready for use when the field `.status.isReady` is set to `t
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name=='console')].host}
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'console\')].host}
 ----

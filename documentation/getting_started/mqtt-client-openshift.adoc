@@ -6,7 +6,7 @@ fetch the server certificate:
 [options="nowrap",subs=attributes+]
 ....
 mkdir -p certs
-{cmdcli} get secret $({cmdcli} get addressspace myspace -o jsonpath={.spec.endpoints[?(@.name=='mqtt')].cert.secretName}) -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
+{cmdcli} get secret $({cmdcli} get addressspace myspace -o jsonpath={.spec.endpoints[?(@.name==\'mqtt\')].cert.secretName}) -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
 ....
 
 === Subscriber client
