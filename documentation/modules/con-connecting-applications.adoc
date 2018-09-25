@@ -1,0 +1,19 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+[id='con-connecting-applications-{context}']
+= Connecting applications to {ProductName}
+
+You can connect your application to {ProductName} using one of the following client examples.
+
+To connect to the messaging service from outside the OpenShift 
+ifdef::Kubernetes[or Kubernetes ]
+cluster, TLS must be used with SNI set to specify the fully qualified host name for the address space. The port used is 443.
+
+The messaging protocols supported depends on the type of address space used. For more information, see the  xref:con-address-space-messaging[address space] section.
+
+//TODO: Add information about retrieving the CA certificate and using
+//that in the client examples.
+
+//TODO: Add information about authentication.

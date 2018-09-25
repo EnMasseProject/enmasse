@@ -1,0 +1,27 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+[id='assembly-client-examples-{context}']
+= Client examples
+Simple examples are available for the following clients:
+
+* xref:ref-python-example[{ClientAmqpPythonName}]
+* xref:ref-jms-example[{ClientAmqpJmsName}]
+* xref:ref-javascript-example[{ClientAmqpJavaScriptName}]
+* xref:ref-cpp-example[{ClientAmqpCppName}]
+* xref:ref-dotnet-example[{ClientAmqpDotNetName}]
+
+include::../modules/ref-python-example.adoc[leveloffset=+1]
+
+include::../modules/ref-jms-example.adoc[leveloffset=+2]
+
+include::../modules/ref-javascript-example.adoc[leveloffset=+2]
+
+include::../modules/ref-cpp-example.adoc[leveloffset=+2]
+
+include::../modules/ref-dotnet-example.adoc[leveloffset=+2]
+
+
+//TODO: add links for all these clients
+
