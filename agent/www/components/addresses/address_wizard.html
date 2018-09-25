@@ -14,8 +14,8 @@
     <div ng-controller="SemanticsController">
       <form class="form-horizontal">
         <div pf-form-group pf-label="Name" pf-label-class="col-sm-2" pf-input-class="col-sm-10" required>
-          <input id="new-name"  class="form-control" name="address" ng-model="data.address" type="text" maxlength=256 ng-change="updateName()" pf-validation="unique_address_name(input)" required/>
-          <span class="help-block">The name you typed is not unique.</span>
+          <input id="new-name"  class="form-control" name="address" ng-model="data.address" type="text" maxlength=256  ng-change="updateName()" pf-validation="valid_address_name(input)" required/>
+          <span class="help-block">The name must be unique and may not include # * / . : or whitespace.</span>
           <span title="" tooltip-append-to-body="true" tooltip-class="enmasse-tooltip" class="tip-block pull-left" uib-tooltip-html="getTooltip('name')">
               {{tooltip.address.name.label}}
           </span>
