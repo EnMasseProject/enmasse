@@ -15,6 +15,10 @@ import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
@@ -53,7 +57,19 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, KubeUtil.getAddressSpaceSaName(addressSpace));
             parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getPlan());
 
-            authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
+            String encodedCaCert = authResolver.getCaSecretName(authService)
+                    .map(secretName ->
+                        kubernetes.getSecret(secretName).map(secret ->
+                                secret.getData().get("tls.crt"))
+                                .orElseThrow(() -> new IllegalArgumentException("Unable to decode secret " + secretName)))
+                    .orElseGet(() -> {
+                        try {
+                            return Base64.getEncoder().encodeToString(Files.readAllBytes(new File("/etc/ssl/certs/ca-bundle.crt").toPath()));
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, encodedCaCert);
             authResolver.getClientSecretName(authService).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authResolver.getSaslInitHost(addressSpace, authService));
             authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
