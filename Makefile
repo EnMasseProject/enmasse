@@ -80,7 +80,7 @@ docu_swagger: scripts/swagger2markup.jar
 
 docu_html: docu_htmlclean docu_swagger docu_check
 	mkdir -p documentation/html
-	cp -vrL documentation/_images documentation/html/images
+	cp -vRL documentation/_images documentation/html/images
 	asciidoctor -v --failure-level WARN -t -dbook documentation/master.adoc -o documentation/html/index.html
 	asciidoctor -v --failure-level WARN -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
 

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-curdir="$(dirname $(readlink -f ${0}))"
+case "$OSTYPE" in
+  darwin*)  READLINK=greadlink;; 
+  *)        READLINK=readlink;;
+esac
+
+curdir="$(dirname $(${READLINK} -f ${0}))"
+
 source "${curdir}/logger.sh"
 
 if [[ -f Dockerfile ]]; then
