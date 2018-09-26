@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-.adoc
+// assembly-client-examples.adoc
 
 [id='ref-cpp-example-{context}']
 = {ClientAmqpCppName} example

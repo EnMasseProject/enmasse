@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-connecting-applications.adoc
+// assembly-client-examples.adoc
 
 [id='ref-dotnet-example-{context}']
 = {ClientAmqpDotNetName} example

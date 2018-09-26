@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-.adoc
+// assembly-client-examples.adoc
 
 [id='ref-javascript-example-{context}']
 = {ClientAmqpJavaScriptName} example
@@ -25,7 +25,7 @@ container.on('sendable', function (context) {
 container.connect({username: '<username>', password: '<password>', port:443, host:'<messaging-route-hostname>', transport:'tls', rejectUnauthorized:false});
 ----
 
-==== {ClientAmqpJavaScriptName} using WebSockets
+== {ClientAmqpJavaScriptName} example using WebSockets
 
 [source,javascript,options="nowrap"]
 ----
