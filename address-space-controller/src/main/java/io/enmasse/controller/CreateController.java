@@ -89,16 +89,8 @@ public class CreateController implements Controller {
         addressSpaceResolver.validate(addressSpace);
         String uuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
 
-        if (kubernetes.hasService(uuid, "messaging")) {
-            return addressSpace;
-        }
-
         List<EndpointSpec> endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
         endpoints = replaceServiceNames(uuid, endpoints);
-        Map<String, String> labels = new HashMap<>();
-        labels.put(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
-        labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
-        kubernetes.createServiceAccount(KubeUtil.getAddressSpaceSaName(addressSpace), labels);
 
         // Ensure the required certs are set
         List<EndpointSpec> newEndpoints = new ArrayList<>();
@@ -122,6 +114,15 @@ public class CreateController implements Controller {
                 .setEndpointList(newEndpoints)
                 .build();
 
+        if (kubernetes.hasService(uuid, "messaging")) {
+            return addressSpace;
+        }
+
+        Map<String, String> labels = new HashMap<>();
+        labels.put(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+        labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+
+        kubernetes.createServiceAccount(KubeUtil.getAddressSpaceSaName(addressSpace), labels);
         KubernetesList resourceList = new KubernetesListBuilder()
                 .addAllToItems(infraResourceFactory.createResourceList(addressSpace))
                 .build();
