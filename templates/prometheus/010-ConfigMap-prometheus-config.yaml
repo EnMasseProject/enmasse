@@ -17,7 +17,6 @@ data:
           - source_labels: [__meta_kubernetes_pod_container_port_name]
             action: keep
             regex: artemismetrics.*
-            target_label: kubernetes_pod_name
           - action: replace
             source_labels: [__meta_kubernetes_pod_name]
             target_label: kubernetes_pod_name
@@ -28,9 +27,6 @@ data:
           - source_labels: [__meta_kubernetes_pod_container_port_name]
             action: keep
             regex: routermetrics.*
-            target_label: kubernetes_pod_name
           - action: replace
             source_labels: [__meta_kubernetes_pod_name]
             target_label: kubernetes_pod_name
-
-          - source_labels: [__meta_kubernetes_pod_container_port_name]
