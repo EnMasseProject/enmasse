@@ -5,12 +5,12 @@ metadata:
   labels:
     app: enmasse
 rules:
-- apiGroups: [ "", "user.openshift.io" ]
-  resources: [ "users" ]
-  verbs: [ "get" ]
-- apiGroups: [ "enmasse.io" ]
-  resources: [ "addressspaces" ]
-  verbs: [ "list", "watch" ]
-- apiGroups: [ "oauth.openshift.io" ]
-  resources: [ "oauthclients" ]
-  verbs: [ "create", "get" ]
+  - apiGroups: [ "", "user.openshift.io" ]
+    resources: [ "users" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addressspaces" ]
+    verbs: [ "list", "watch" ]
+  - apiGroups: [ "oauth.openshift.io" ]
+    resources: [ "oauthclients" ]
+    verbs: [ "create", "get" ]
