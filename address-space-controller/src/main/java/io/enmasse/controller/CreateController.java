@@ -100,8 +100,6 @@ public class CreateController implements Controller {
         labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
         kubernetes.createServiceAccount(KubeUtil.getAddressSpaceSaName(addressSpace), labels);
 
-        log.info("Creating address space {}", addressSpace);
-
         // Ensure the required certs are set
         List<EndpointSpec> newEndpoints = new ArrayList<>();
         for (EndpointSpec endpoint : endpoints) {
@@ -133,6 +131,8 @@ public class CreateController implements Controller {
                 log.debug("Creating {} of kind {}", item.getMetadata().getName(), item.getKind());
             }
         }
+
+        log.info("Creating address space {}", addressSpace);
 
         kubernetes.create(resourceList);
         eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
