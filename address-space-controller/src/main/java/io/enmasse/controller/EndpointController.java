@@ -177,7 +177,8 @@ public class EndpointController implements Controller {
         if (endpointSpec.getCertSpec().isPresent()) {
             CertSpec certSpec = endpointSpec.getCertSpec().get();
             if ("https".equals(endpointSpec.getServicePort()) && "selfsigned".equals(certSpec.getProvider())) {
-                Secret secret = client.secrets().withName(KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace)).get();
+                String caSecretName = KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace);
+                Secret secret = client.secrets().inNamespace(namespace).withName(caSecretName).get();
                 if (secret != null) {
                     String consoleCa = new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
                     route.editOrNewSpec()
@@ -187,7 +188,7 @@ public class EndpointController implements Controller {
                             .endTls()
                             .endSpec();
                 } else {
-                    log.info("Secret for endpoint {} does not yet exist, skipping route creation for now");
+                    log.info("Ca secret {} for endpoint {} does not yet exist, skipping route creation for now", caSecretName, endpointSpec);
                     return null; // Skip this route until secret is available
                 }
             } else {
