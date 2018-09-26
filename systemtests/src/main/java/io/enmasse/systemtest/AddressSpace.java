@@ -111,7 +111,7 @@ public class AddressSpace {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
             log.info("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
                     addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
-            if (addrSpaceEndpoint.getService().equals(String.format("%s-%s", endpointService, infraUuid))) {
+            if (addrSpaceEndpoint.getService().equals(endpointService)) {
                 if (addrSpaceEndpoint.getHost() == null) {
                     return null;
                 } else {
@@ -119,8 +119,8 @@ public class AddressSpace {
                 }
             }
         }
-        throw new IllegalStateException(String.format("Endpoint with service name '%s-%s' doesn't exist in address space '%s'",
-                endpointService, infraUuid, name));
+        throw new IllegalStateException(String.format("Endpoint with service name '%s' doesn't exist in address space '%s'",
+                endpointService, name));
     }
 
     public List<AddressSpaceEndpoint> getEndpoints() {

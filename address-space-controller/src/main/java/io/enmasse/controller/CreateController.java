@@ -66,22 +66,6 @@ public class CreateController implements Controller {
         }
     }
 
-    private List<EndpointSpec> replaceServiceNames(String uuid, List<EndpointSpec> endpoints) {
-        List<EndpointSpec> replacedEndpoints = new ArrayList<>();
-        for (EndpointSpec spec : endpoints) {
-            replacedEndpoints.add(
-                    new EndpointSpec.Builder()
-                    .setName(spec.getName())
-                    .setService(spec.getService() + "-" + uuid)
-                    .setCertSpec(spec.getCertSpec().orElse(null))
-                    .setServicePort(spec.getServicePort())
-                    .setHost(spec.getHost().orElse(null))
-                    .build());
-        }
-        return replacedEndpoints;
-    }
-
-
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
         Schema schema = schemaProvider.getSchema();
@@ -90,7 +74,6 @@ public class CreateController implements Controller {
         String uuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
 
         List<EndpointSpec> endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
-        endpoints = replaceServiceNames(uuid, endpoints);
 
         // Ensure the required certs are set
         List<EndpointSpec> newEndpoints = new ArrayList<>();
@@ -104,7 +87,7 @@ public class CreateController implements Controller {
             }
 
             if (certSpec.getSecretName() == null) {
-                certSpec.setSecretName("external-certs-" + endpoint.getService());
+                certSpec.setSecretName(KubeUtil.getExternalCertSecretName(endpoint.getService(), addressSpace));
             }
 
             endpointBuilder.setCertSpec(certSpec);
