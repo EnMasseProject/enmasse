@@ -1,11 +1,11 @@
 // Module included in the following assemblies:
 //
-// assembly-client-examples.adoc
+// assembly-connecting-applications.adoc
 
 [id='ref-cpp-example-{context}']
 = {ClientAmqpCppName} example
 
-The C++ client has equivalent simple_recv and simple_send examples with the same options as python. However, the C++ library does not perform the same level of processing on the URL; in particular it won't take amqps:// to imply using TLS, so the example needs to be modified as follows:
+The C++ client has equivalent `simple_recv` and `simple_send` examples with the same options as Python. However, the C++ library does not perform the same level of processing on the URL; in particular it won't take `amqps://` to imply using TLS, so the example needs to be modified as follows:
 
 [source,cpp,options="nowrap"]
 ----

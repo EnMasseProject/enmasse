@@ -72,9 +72,7 @@ include::assemblies/assembly-configure-address-spaces-addresses-restapi.adoc[lev
 include::assemblies/assembly-managing-users.adoc[leveloffset=+1]
 
 
-include::modules/con-connecting-applications.adoc[leveloffset=+1]
-
-include::assemblies/assembly-client-examples.adoc[leveloffset=+2]
+include::assemblies/assembly-connecting-applications.adoc[leveloffset=+1]
 
 [appendix]
 

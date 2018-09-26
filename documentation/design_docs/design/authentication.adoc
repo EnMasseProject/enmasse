@@ -172,7 +172,7 @@ index 8c5aab3..ee46c55 100644
  }
 ....
 
-Routers will need to specify the the realm for their address-space in
+Routers will need to specify the realm for their address-space in
 the AMQP open frames hostname field in connections made to the
 authentication service via sasl-delegation.
 

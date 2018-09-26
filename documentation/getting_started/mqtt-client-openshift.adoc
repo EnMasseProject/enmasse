@@ -172,4 +172,4 @@ To start the publisher, the client can be used in the following way:
 ./tls_mqtt_send.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./certs/tls.crt -m "Hello EnMasse"
 ....
 
-The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
+The publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
