@@ -607,9 +607,9 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
 
-        selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
+        AddressWebItem items = (AddressWebItem) selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
 
-        assertNotNull(getAddressItem(destination), "Console failed, does not contain created address item");
+        assertNotNull(items, "Console failed, does not contain created address item");
 
         if (waitForReady)
             TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
@@ -641,7 +641,7 @@ public class ConsoleWebPage implements IWebPage {
         //open addresses
         openAddressesPageWebConsole();
 
-        AddressWebItem addressItem = getAddressItem(destination);
+        AddressWebItem addressItem = (AddressWebItem) selenium.waitUntilItemPresent(10, () -> getAddressItem(destination));
 
         //click on check box
         selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());

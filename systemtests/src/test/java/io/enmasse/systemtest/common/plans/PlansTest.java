@@ -535,15 +535,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         page.openAddressesPageWebConsole();
 
         for (Destination dest : allowedDest) {
-            selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
-            AddressWebItem item = page.getAddressItem(dest);
+            AddressWebItem item = (AddressWebItem) selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Ready", item.getStatus(), is(AddressStatus.READY));
         }
 
         for (Destination dest : notAllowedDest) {
-            selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
-            AddressWebItem item = page.getAddressItem(dest);
+            AddressWebItem item = (AddressWebItem) selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
         }

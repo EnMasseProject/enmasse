@@ -267,32 +267,34 @@ public class SeleniumProvider {
         return getElement(webElements, 30, count);
     }
 
-    public void waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
-        waitUntilItem(timeInSeconds, item, true);
+    public WebItem waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+        return waitUntilItem(timeInSeconds, item, true);
     }
 
     public void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, false);
     }
 
-    private void waitUntilItem(int timeInSeconds, IWebProperty<WebItem> item, boolean present) throws Exception {
+    private WebItem waitUntilItem(int timeInSeconds, IWebProperty<WebItem> item, boolean present) throws Exception {
         log.info("Waiting for element be present");
         int attempts = 0;
+        WebItem result = null;
         while (attempts++ < timeInSeconds) {
             if (present) {
                 try {
-                    boolean result = item.get() != null;
-                    if (result)
+                    result = item.get();
+                    if (result != null) {
                         break;
+                    }
                 } catch (Exception ignored) {
                 } finally {
                     log.info("Element not present, go to next iteration: " + attempts);
                 }
             } else {
                 try {
-                    boolean result = item.get() == null;
-                    if (result)
+                    if (item.get() == null) {
                         break;
+                    }
                 } catch (Exception ignored) {
                 } finally {
                     log.info("Element still present, go to next iteration: " + attempts);
@@ -301,6 +303,7 @@ public class SeleniumProvider {
             Thread.sleep(1000);
         }
         log.info("End of waiting");
+        return result;
     }
 
     public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws
