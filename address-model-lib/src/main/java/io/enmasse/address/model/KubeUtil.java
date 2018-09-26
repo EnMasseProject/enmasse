@@ -53,6 +53,22 @@ public class KubeUtil {
         return "sa-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
     }
 
+    public static String getAddressSpaceServiceName(String serviceName, AddressSpace addressSpace) {
+        return serviceName + "-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
+    public static String getAddressSpaceServiceHost(String serviceName, String namespace, AddressSpace addressSpace) {
+        return getAddressSpaceServiceName(serviceName, addressSpace) + "." + namespace + ".svc";
+    }
+
+    public static String getExternalCertSecretName(String serviceName, AddressSpace addressSpace) {
+        return "external-certs-" + getAddressSpaceServiceName(serviceName, addressSpace);
+    }
+
+    public static String getAddressSpaceRouteName(String routeName, AddressSpace addressSpace) {
+        return routeName + "-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
     public static void validateName(String name) {
         if (name == null) {
             return;

@@ -78,8 +78,8 @@ public class EndpointController implements Controller {
         for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
             EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder();
             statusBuilder.setName(endpoint.getName());
-            statusBuilder.setServiceHost(endpoint.getService() + "." + namespace + ".svc");
-            Service service = findService(services, endpoint.getService());
+            statusBuilder.setServiceHost(KubeUtil.getAddressSpaceServiceHost(endpoint.getService(), namespace, addressSpace));
+            Service service = findService(services, KubeUtil.getAddressSpaceServiceName(endpoint.getService(), addressSpace));
             if (service == null) {
                 continue;
             }
@@ -145,26 +145,28 @@ public class EndpointController implements Controller {
 
     private Route ensureRouteExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        Route existingRoute = client.routes().inNamespace(namespace).withName(endpointSpec.getName() + "-" + infraUuid).get();
+        String routeName = KubeUtil.getAddressSpaceRouteName(endpointSpec.getName(), addressSpace);
+
+        Route existingRoute = client.routes().inNamespace(namespace).withName(routeName).get();
         if (existingRoute != null) {
             return existingRoute;
         }
 
-        String routeName = endpointSpec.getName() + "-" + infraUuid;
+        String serviceName = KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace);
 
         RouteBuilder route = new RouteBuilder()
                 .editOrNewMetadata()
                 .withName(routeName)
                 .withNamespace(namespace)
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
-                .addToAnnotations(AnnotationKeys.SERVICE_NAME, endpointSpec.getService())
+                .addToAnnotations(AnnotationKeys.SERVICE_NAME, serviceName)
                 .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()
                 .withHost(endpointSpec.getHost().orElse(""))
                 .withNewTo()
-                .withName(endpointSpec.getService())
+                .withName(serviceName)
                 .withKind("Service")
                 .endTo()
                 .withNewPort()
@@ -212,7 +214,7 @@ public class EndpointController implements Controller {
             return existingService;
         }
 
-        Service service = client.services().inNamespace(namespace).withName(endpointSpec.getService()).get();
+        Service service = client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace)).get();
         if (service == null) {
             return null;
         }
@@ -234,7 +236,7 @@ public class EndpointController implements Controller {
                 .withName(serviceName)
                 .withNamespace(namespace)
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
-                .addToAnnotations(AnnotationKeys.SERVICE_NAME, endpointSpec.getService())
+                .addToAnnotations(AnnotationKeys.SERVICE_NAME, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace))
                 .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()

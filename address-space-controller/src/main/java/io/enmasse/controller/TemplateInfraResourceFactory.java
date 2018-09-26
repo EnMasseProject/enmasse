@@ -77,7 +77,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             Map<String, CertSpec> serviceCertMapping = new HashMap<>();
             for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
                     endpoint.getCertSpec().ifPresent(cert -> {
-                        serviceCertMapping.put(endpoint.getService().split("-")[0], cert);
+                        serviceCertMapping.put(endpoint.getService(), cert);
                 });
             }
             log.info("Service cert mapping: {}", serviceCertMapping);

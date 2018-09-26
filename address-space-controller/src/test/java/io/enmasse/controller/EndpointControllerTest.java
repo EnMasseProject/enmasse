@@ -60,7 +60,7 @@ public class EndpointControllerTest {
 
         Service service = new ServiceBuilder()
                 .editOrNewMetadata()
-                .withName("messaging")
+                .withName("messaging-1234")
                 .addToAnnotations(AnnotationKeys.SERVICE_PORT_PREFIX + "amqps", "5671")
                 .addToLabels(LabelKeys.INFRA_UUID, "1234")
                 .endMetadata()
@@ -82,7 +82,7 @@ public class EndpointControllerTest {
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging.myns.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.myns.svc"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getPort(), is(0));
     }
@@ -105,7 +105,7 @@ public class EndpointControllerTest {
 
         Service service = new ServiceBuilder()
                 .editOrNewMetadata()
-                .withName("messaging")
+                .withName("messaging-1234")
                 .addToAnnotations(AnnotationKeys.SERVICE_PORT_PREFIX + "amqps", "5671")
                 .addToLabels(LabelKeys.INFRA_UUID, "1234")
                 .endMetadata()
@@ -132,7 +132,7 @@ public class EndpointControllerTest {
         when(rexternal.get()).thenReturn(null);
 
         Resource<Service, DoneableService> rinternal = mock(Resource.class);
-        when(op.withName(eq("messaging"))).thenReturn(rinternal);
+        when(op.withName(eq("messaging-1234"))).thenReturn(rinternal);
         when(rinternal.get()).thenReturn(service);
 
         EndpointController controller = new EndpointController(client, true, false);
@@ -141,7 +141,7 @@ public class EndpointControllerTest {
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
-        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging.myns.svc"));
+        assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServiceHost(), is("messaging-1234.myns.svc"));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getServicePorts().size(), is(1));
     }
 }
