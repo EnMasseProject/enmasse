@@ -12,7 +12,7 @@ include::../modules/con-brokered-address-space.adoc[leveloffset=+1]
 
 include::../assemblies/assembly-brokered-address-types.adoc[leveloffset=+2]
 
-include::../assemblies/assembly-client-examples.adoc[leveloffset=+1]
+include::../assemblies/assembly-connecting-applications.adoc[leveloffset=+1]
 
 
 [appendix]

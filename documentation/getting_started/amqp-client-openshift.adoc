@@ -29,4 +29,4 @@ mkdir -p certs
 
 You can modify the client code to use this cert to verify the server connection.
 
-For additional client examples, see the xref:assembly-client-examples-messaging[] section.
+For more information, see xref:client-examples-messaging[].
