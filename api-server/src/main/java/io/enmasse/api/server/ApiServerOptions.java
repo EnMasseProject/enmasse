@@ -7,13 +7,10 @@ package io.enmasse.api.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.security.KeyStore;
-import java.security.cert.CertificateFactory;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +28,7 @@ public class ApiServerOptions {
     private String apiserverClientCaConfigName;
     private String apiserverClientCaConfigNamespace;
     private String restapiRouteName;
+    private Duration userApiTimeout;
 
     public static ApiServerOptions fromEnv(Map<String, String> env) {
 
@@ -44,6 +42,10 @@ public class ApiServerOptions {
         options.setResyncInterval(getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofMinutes(5)));
+
+        options.setUserApiTimeout(getEnv(env, "USER_API_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(10)));
 
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
 
@@ -155,5 +157,13 @@ public class ApiServerOptions {
 
     public void setRestapiRouteName(String restapiRouteName) {
         this.restapiRouteName = restapiRouteName;
+    }
+
+    public Duration getUserApiTimeout() {
+        return userApiTimeout;
+    }
+
+    public void setUserApiTimeout(Duration userApiTimeout) {
+        this.userApiTimeout = userApiTimeout;
     }
 }

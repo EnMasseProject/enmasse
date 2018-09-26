@@ -71,7 +71,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
     }
 
     @Override
-    public void onUpdate(Set<AddressSpace> addressSpaces) {
+    public void onUpdate(Set<AddressSpace> addressSpaces) throws Exception {
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
                              .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getEndpoints() != null)

@@ -70,7 +70,7 @@ public class ApiServer extends AbstractVerticle {
                 options.getStandardAuthserviceCredentialsSecretName(),
                 options.getStandardAuthserviceCertSecretName());
         Clock clock = Clock.systemUTC();
-        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock);
+        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
 
         String clientCa = null;
         String requestHeaderClientCa = null;

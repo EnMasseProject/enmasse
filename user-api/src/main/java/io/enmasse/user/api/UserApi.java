@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface UserApi {
-    Optional<User> getUserWithName(String realm, String name);
-    void createUser(String realm, User user);
-    boolean replaceUser(String realm, User user);
-    void deleteUser(String realm, User user);
+    Optional<User> getUserWithName(String realm, String name) throws Exception;
+    void createUser(String realm, User user) throws Exception;
+    boolean replaceUser(String realm, User user) throws Exception;
+    void deleteUser(String realm, User user) throws Exception;
 
     UserList listUsers(String namespace);
     UserList listUsersWithLabels(String namespace, Map<String, String> labels);
