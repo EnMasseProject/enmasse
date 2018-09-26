@@ -359,8 +359,6 @@ data:
                 value: ${CONTROLLER_RESYNC_INTERVAL}
               - name: CHECK_INTERVAL
                 value: ${CONTROLLER_CHECK_INTERVAL}
-              - name: CONFIGMAP_WATCH_INTERVAL
-                value: ${CONTROLLER_CONFIGMAP_WATCH_INTERVAL}
               - name: EVENT_QUEUE_SIZE
                 value: ${CONTROLLER_EVENT_QUEUE_SIZE}
               - name: ENABLE_EVENT_LOGGER
