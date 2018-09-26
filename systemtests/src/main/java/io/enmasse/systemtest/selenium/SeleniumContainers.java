@@ -31,7 +31,7 @@ public class SeleniumContainers {
     public static void deployFirefoxContainer() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox container");
-        DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "3.13");
+        DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
         try {
             TestUtils.doRequestNTimes(RETRY, () -> {
                 stopAndRemoveFirefoxContainer();
@@ -53,7 +53,7 @@ public class SeleniumContainers {
     public static void deployChromeContainer() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome container");
-        DockerCmdClient.pull("docker.io", CHROME_IMAGE, "3.13");
+        DockerCmdClient.pull("docker.io", CHROME_IMAGE, "latest");
         try {
             TestUtils.doRequestNTimes(RETRY, () -> {
                 stopAndRemoveChromeContainer();
