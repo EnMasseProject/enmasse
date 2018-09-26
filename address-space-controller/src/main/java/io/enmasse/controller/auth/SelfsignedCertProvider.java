@@ -36,6 +36,7 @@ public class SelfsignedCertProvider implements CertProvider {
             Secret secret = certManager.getCertSecret(addressSpaceCaSecretName);
             if (secret == null) {
                 secret = certManager.createSelfSignedCertSecret(addressSpaceCaSecretName, labels);
+                log.info("Created CA secret for {}", addressSpace.getName());
             }
             return secret;
         } catch (Exception e) {
