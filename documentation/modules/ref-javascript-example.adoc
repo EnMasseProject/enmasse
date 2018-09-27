@@ -1,0 +1,51 @@
+// Module included in the following assemblies:
+//
+// assembly-connecting-applications.adoc
+
+[id='ref-javascript-example-{context}']
+= {ClientAmqpJavaScriptName} example
+
+You can use the following {ClientAmqpJavaScriptName} example to connect your application to {ProductName}. This example assumes you have created an address of type `queue` named `myqueue`.
+
+[source,javascript,options="nowrap"]
+----
+var container = require('rhea');
+container.on('connection_open', function (context) {
+    context.connection.open_receiver('myqueue');
+    context.connection.open_sender('myqueue');
+});
+container.on('message', function (context) {
+    console.log(context.message.body);
+    context.connection.close();
+});
+container.on('sendable', function (context) {
+    context.sender.send({body:'Hello World!'});
+    context.sender.detach();
+});
+container.connect({username: '<username>', password: '<password>', port:443, host:'<messaging-route-hostname>', transport:'tls', rejectUnauthorized:false});
+----
+
+== {ClientAmqpJavaScriptName} example using WebSockets
+
+[source,javascript,options="nowrap"]
+----
+var container = require('rhea');
+var WebSocket = require('ws');
+
+container.on('connection_open', function (context) {
+    context.connection.open_receiver('myqueue');
+    context.connection.open_sender('myqueue');
+});
+container.on('message', function (context) {
+    console.log(context.message.body);
+    context.connection.close();
+});
+container.on('sendable', function (context) {
+    context.sender.send({body:'Hello World!'});
+    context.sender.detach();
+});
+
+var ws = container.websocket_connect(WebSocket);
+container.connect({username: '<username>', password: '<password>', connection_details: ws("wss://<messaging-route-hostname>:443", ["binary"], {rejectUnauthorized: false})});
+----
+

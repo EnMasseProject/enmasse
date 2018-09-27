@@ -53,4 +53,5 @@ include::mqtt-client-openshift.adoc[leveloffset=+1]
 == Conclusion
 
 We have seen how to setup {ProductName} on OpenShift, and how to communicate with it using AMQP and MQTT clients.
+
 :context: {parent-context}

@@ -1,0 +1,83 @@
+// Module included in the following assemblies:
+//
+// assembly-connecting-applications.adoc
+
+[id='ref-jms-example-{context}']
+= {ClientAmqpJmsName} example
+
+You can use the following {ClientAmqpJmsName} example to connect your application to {ProductName}. This example assumes you have created an address of type `queue` named `myqueue`.
+
+[source,java,options="nowrap"]
+----
+package org.apache.qpid.jms.example;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+public class HelloWorld {
+    public static void main(String[] args) throws Exception {
+        try {
+            // The configuration for the Qpid InitialContextFactory has been supplied in
+            // a jndi.properties file in the classpath, which results in it being picked
+            // up automatically by the InitialContext constructor.
+            Context context = new InitialContext();
+
+            ConnectionFactory factory = (ConnectionFactory) context.lookup("myFactoryLookup");
+            Destination queue = (Destination) context.lookup("myQueueLookup");
+
+            Connection connection = factory.createConnection(System.getProperty("USER"), System.getProperty("PASSWORD"));
+            connection.setExceptionListener(new MyExceptionListener());
+            connection.start();
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            MessageProducer messageProducer = session.createProducer(queue);
+            MessageConsumer messageConsumer = session.createConsumer(queue);
+
+            TextMessage message = session.createTextMessage("Hello world!");
+            messageProducer.send(message, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+            TextMessage receivedMessage = (TextMessage) messageConsumer.receive(2000L);
+
+            if (receivedMessage != null) {
+                System.out.println(receivedMessage.getText());
+            } else {
+                System.out.println("No message received within the given timeout!");
+            }
+
+            connection.close();
+        } catch (Exception exp) {
+            System.out.println("Caught exception, exiting.");
+            exp.printStackTrace(System.out);
+            System.exit(1);
+        }
+    }
+
+    private static class MyExceptionListener implements ExceptionListener {
+        @Override
+        public void onException(JMSException exception) {
+            System.out.println("Connection ExceptionListener fired, exiting.");
+            exception.printStackTrace(System.out);
+            System.exit(1);
+        }
+    }
+}
+----
+
+with jndi.properties:
+[source,options="nowrap"]
+----
+connectionfactory.myFactoryLookup = amqps://<messaging-route-hostname>:443?transport.trustAll=true&transport.verifyHost=false
+queue.myQueueLookup = myqueue
+----
+

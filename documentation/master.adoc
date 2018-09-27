@@ -61,9 +61,8 @@ include::assemblies/assembly-configure-address-spaces-addresses-restapi.adoc[lev
 
 include::assemblies/assembly-managing-users.adoc[leveloffset=+1]
 
-== Connecting applications to {ProductName}
 
-include::messaging_app_developer/connecting.adoc[leveloffset=+1]
+include::assemblies/assembly-connecting-applications.adoc[leveloffset=+1]
 
 == Address space and address plans
 

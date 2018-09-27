@@ -1,0 +1,73 @@
+// Module included in the following assemblies:
+//
+// assembly-connecting-applications.adoc
+
+[id='ref-cpp-example-{context}']
+= {ClientAmqpCppName} example
+
+The C++ client has equivalent `simple_recv` and `simple_send` examples with the same options as Python. However, the C++ library does not perform the same level of processing on the URL; in particular it won't take `amqps://` to imply using TLS, so the example needs to be modified as follows:
+
+[source,cpp,options="nowrap"]
+----
+#include <proton/connection.hpp>
+#include <proton/container.hpp>
+#include <proton/default_container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/ssl.hpp>
+#include <proton/thread_safe.hpp>
+#include <proton/tracker.hpp>
+#include <proton/url.hpp>
+
+#include <iostream>
+
+#include "fake_cpp11.hpp"
+
+class hello_world : public proton::messaging_handler {
+  private:
+    proton::url url;
+
+  public:
+    hello_world(const std::string& u) : url(u) {}
+
+    void on_container_start(proton::container& c) OVERRIDE {
+        proton::connection_options co;
+        co.ssl_client_options(proton::ssl_client_options());
+        c.client_connection_options(co);
+        c.connect(url);
+    }
+
+    void on_connection_open(proton::connection& c) OVERRIDE {
+        c.open_receiver(url.path());
+        c.open_sender(url.path());
+    }
+
+    void on_sendable(proton::sender &s) OVERRIDE {
+        proton::message m("Hello World!");
+        s.send(m);
+        s.close();
+    }
+
+    void on_message(proton::delivery &d, proton::message &m) OVERRIDE {
+        std::cout << m.body() << std::endl;
+        d.connection().close();
+    }
+};
+
+int main(int argc, char **argv) {
+    try {
+        std::string url = argc > 1 ? argv[1] : "<messaging-route-hostname>:443/myqueue";
+
+        hello_world hw(url);
+        proton::default_container(hw).run();
+
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+    return 1;
+}
+----
+

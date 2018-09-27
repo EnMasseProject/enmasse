@@ -30,4 +30,4 @@ mkdir -p certs
 
 You can modify the client code to use this cert to verify the server connection.
 
-Have a look at <<connecting>> for more client examples.
+For more information, see xref:client-examples-messaging[].
