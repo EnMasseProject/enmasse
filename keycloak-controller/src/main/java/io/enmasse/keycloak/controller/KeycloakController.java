@@ -107,6 +107,7 @@ public class KeycloakController {
         Duration watchRecreateInterval = getEnv(env, "CONFIGMAP_WATCH_INTERVAL")
                 .map(i -> Duration.ofMinutes(Long.parseLong(i))).orElse(Duration.ofMinutes(5));
         long watchCreateIntervalMs = watchRecreateInterval.toMillis();
+        /*
         if (isOpenShift && watchCreateIntervalMs > 0) {
             TimerTask watchTask = new TimerTask() {
                 Watch watch = null;
@@ -125,7 +126,7 @@ public class KeycloakController {
 
             new Timer("configMapWatchTimer", true).schedule(watchTask, 0,
                     watchCreateIntervalMs);
-        }
+        }*/
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
