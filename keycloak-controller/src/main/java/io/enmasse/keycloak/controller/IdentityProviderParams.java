@@ -7,34 +7,51 @@ package io.enmasse.keycloak.controller;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 
 public class IdentityProviderParams {
 
-    private String identityProviderUrl;
-    private String identityProviderClientId;
-    private String identityProviderClientSecret;
+    public static final IdentityProviderParams NULL_PARAMS = new IdentityProviderParams(null, null, null);
 
-    public static IdentityProviderParams fromKube(KubernetesClient client, String configName) {
-        IdentityProviderParams params = new IdentityProviderParams();
+    private final String identityProviderUrl;
+    private final String identityProviderClientId;
+    private final String identityProviderClientSecret;
 
-        ConfigMap config = client.configMaps().withName(configName).get();
-        getEnv(config.getData(), "identityProviderUrl").ifPresent(params::setIdentityProviderUrl);
-        getEnv(config.getData(), "identityProviderClientId").ifPresent(params::setIdentityProviderClientId);
-        getEnv(config.getData(), "identityProviderClientSecret").ifPresent(params::setIdentityProviderClientSecret);
-
-        return params;
+    public IdentityProviderParams(String identityProviderUrl, String identityProviderClientId, String identityProviderClientSecret) {
+        this.identityProviderUrl = identityProviderUrl;
+        this.identityProviderClientId = identityProviderClientId;
+        this.identityProviderClientSecret = identityProviderClientSecret;
     }
 
-    private static Optional<String> getEnv(Map<String, String> env, String envVar) {
-        return Optional.ofNullable(env.get(envVar));
+    public static IdentityProviderParams fromKube(KubernetesClient client, String configName) {
+
+        ConfigMap config = client.configMaps().withName(configName).get();
+        String identityProviderUrl = config.getData().get("identityProviderUrl");
+        String identityProviderClientId = config.getData().get("identityProviderClientId");
+        String identityProviderClientSecret = config.getData().get("identityProviderClientSecret");
+
+        return new IdentityProviderParams(identityProviderUrl, identityProviderClientId, identityProviderClientSecret);
     }
 
     @Override
     public String toString() {
         return "{identityProviderUrl=" + identityProviderUrl + "," +
                 "identityProviderClientId=" + identityProviderClientId + "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        IdentityProviderParams that = (IdentityProviderParams) o;
+        return Objects.equals(identityProviderUrl, that.identityProviderUrl) &&
+                Objects.equals(identityProviderClientId, that.identityProviderClientId) &&
+                Objects.equals(identityProviderClientSecret, that.identityProviderClientSecret);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(identityProviderUrl, identityProviderClientId, identityProviderClientSecret);
     }
 
     public String getIdentityProviderUrl() {
@@ -47,17 +64,5 @@ public class IdentityProviderParams {
 
     public String getIdentityProviderClientSecret() {
         return identityProviderClientSecret;
-    }
-
-    public void setIdentityProviderUrl(String identityProviderUrl) {
-        this.identityProviderUrl = identityProviderUrl;
-    }
-
-    public void setIdentityProviderClientId(String identityProviderClientId) {
-        this.identityProviderClientId = identityProviderClientId;
-    }
-
-    public void setIdentityProviderClientSecret(String identityProviderClientSecret) {
-        this.identityProviderClientSecret = identityProviderClientSecret;
     }
 }

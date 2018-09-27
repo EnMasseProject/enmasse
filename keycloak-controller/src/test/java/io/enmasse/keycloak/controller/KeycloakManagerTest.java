@@ -25,12 +25,14 @@ public class KeycloakManagerTest {
     private Set<String> realms;
     private Map<String, String> realmAdminUsers;
     private KubeApi mockKubeApi;
+    private IdentityProviderParams identityProviderParams;
 
     @Before
     public void setup() {
         realms = new HashSet<>();
         realmAdminUsers = new HashMap<>();
         mockKubeApi = mock(KubeApi.class);
+        identityProviderParams = IdentityProviderParams.NULL_PARAMS;
         when(mockKubeApi.findUserId(any())).thenReturn("");
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
@@ -39,8 +41,12 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String namespace, String realmName, String consoleRedirectURI) {
+            public void createRealm(String namespace, String realmName, String consoleRedirectURI, IdentityProviderParams params) {
                 realms.add(realmName);
+            }
+
+            @Override
+            public void updateRealm(String realmName, IdentityProviderParams updated) {
             }
 
             @Override
@@ -82,7 +88,7 @@ public class KeycloakManagerTest {
             public void deleteUsers(String namespace) {
 
             }
-        });
+        },  identityProviderParams);
     }
 
     @Test

@@ -11,3 +11,6 @@ rules:
   - apiGroups: [ "enmasse.io" ]
     resources: [ "addressspaces" ]
     verbs: [ "list", "watch" ]
+  - apiGroups: [ "oauth.openshift.io" ]
+    resources: [ "oauthclients" ]
+    verbs: [ "create", "get" ]
