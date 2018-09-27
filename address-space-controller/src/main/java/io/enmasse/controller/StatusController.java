@@ -45,6 +45,6 @@ public class StatusController implements Controller {
 
     @Override
     public String toString() {
-        return "EndpointController";
+        return "StatusController";
     }
 }
