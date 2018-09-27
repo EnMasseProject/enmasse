@@ -120,7 +120,6 @@ public class ConfigMapSchemaApi implements SchemaApi, ListerWatcher<ConfigMap, C
                 .setName(name)
                 .setService(name)
                 .setServicePort(port)
-                .setCertSpec(new CertSpec(null, null))
                 .build();
     }
 

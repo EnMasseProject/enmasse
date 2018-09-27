@@ -78,10 +78,9 @@ public class CreateController implements Controller {
         // Ensure the required certs are set
         List<EndpointSpec> newEndpoints = new ArrayList<>();
         for (EndpointSpec endpoint : endpoints) {
-            CertSpec certSpec = endpoint.getCertSpec().orElse(new CertSpec());
-
             EndpointSpec.Builder endpointBuilder = new EndpointSpec.Builder(endpoint);
 
+            CertSpec.Builder certSpec = endpoint.getCertSpec().map(CertSpec.Builder::new).orElse(new CertSpec.Builder());
             if (certSpec.getProvider() == null) {
                 certSpec.setProvider(defaultCertProvider);
             }
@@ -90,7 +89,7 @@ public class CreateController implements Controller {
                 certSpec.setSecretName(KubeUtil.getExternalCertSecretName(endpoint.getService(), addressSpace));
             }
 
-            endpointBuilder.setCertSpec(certSpec);
+            endpointBuilder.setCertSpec(certSpec.build());
             newEndpoints.add(endpointBuilder.build());
         }
         addressSpace = new AddressSpace.Builder(addressSpace)

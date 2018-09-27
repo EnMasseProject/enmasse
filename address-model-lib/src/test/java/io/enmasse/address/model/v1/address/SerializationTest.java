@@ -130,7 +130,7 @@ public class SerializationTest {
                         .setName("myendpoint")
                         .setService("messaging")
                         .setServicePort("amqp")
-                        .setCertSpec(new CertSpec("provider").setSecretName("secret"))
+                        .setCertSpec(new CertSpec("provider", "mysecret"))
                         .build()))
                 .setAuthenticationService(new AuthenticationService.Builder()
                         .setType(AuthenticationServiceType.EXTERNAL)
@@ -404,7 +404,7 @@ public class SerializationTest {
                         .setName("bestendpoint")
                         .setService("mqtt")
                         .setServicePort("mqtts")
-                        .setCertSpec(new CertSpec("mysecret"))
+                        .setCertSpec(new CertSpec("myprovider", "mysecret"))
                         .build()))
                 .build();
 

@@ -5,14 +5,8 @@
 package io.enmasse.address.model;
 
 public class CertSpec {
-    private String provider;
-    private String secretName;
-
-    public CertSpec() { }
-
-    public CertSpec(String provider) {
-        this.provider = provider;
-    }
+    private final String provider;
+    private final String secretName;
 
     public CertSpec(String provider, String secretName) {
         this.provider = provider;
@@ -23,18 +17,41 @@ public class CertSpec {
         return provider;
     }
 
-    public CertSpec setProvider(String provider) {
-        this.provider = provider;
-        return this;
-    }
-
     public String getSecretName() {
         return secretName;
     }
 
-    public CertSpec setSecretName(String secretName) {
-        this.secretName = secretName;
-        return this;
+    public static class Builder {
+        private String provider;
+        private String secretName;
+
+        public Builder() {
+        }
+
+        public Builder(CertSpec certSpec) {
+            this.provider = certSpec.provider;
+            this.secretName = certSpec.secretName;
+        }
+
+        public String getProvider() {
+            return provider;
+        }
+
+        public String getSecretName() {
+            return secretName;
+        }
+
+        public void setProvider(String provider) {
+            this.provider = provider;
+        }
+
+        public void setSecretName(String secretName) {
+            this.secretName = secretName;
+        }
+
+        public CertSpec build() {
+            return new CertSpec(provider, secretName);
+        }
     }
 
     @Override

@@ -125,7 +125,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
 
                 if (endpoint.hasNonNull(Fields.CERT)) {
                     ObjectNode cert = (ObjectNode) endpoint.get(Fields.CERT);
-                    CertSpec certSpec = new CertSpec();
+                    CertSpec.Builder certSpec = new CertSpec.Builder();
                     if (cert.hasNonNull(Fields.PROVIDER)) {
                         certSpec.setProvider(cert.get(Fields.PROVIDER).asText());
                     }
@@ -134,7 +134,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                         certSpec.setSecretName(cert.get(Fields.SECRET_NAME).asText());
                     }
 
-                    b.setCertSpec(certSpec);
+                    b.setCertSpec(certSpec.build());
                 }
                 builder.appendEndpoint(b.build());
             }
