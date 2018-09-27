@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,7 +54,14 @@ public class OpenshiftWebPage implements IWebPage {
 
     public WebElement getServiceFromCatalog(String name) throws Exception {
         List<WebElement> services = getServicesFromCatalog();
-        return services.stream().filter(item -> name.equals(getTitleFromService(item))).collect(Collectors.toList()).get(0);
+        Optional<WebElement> first = services.stream()
+                                             .filter(item -> name.equals(getTitleFromService(item)))
+                                             .findFirst();
+
+        if (!first.isPresent()) {
+            throw new NoSuchElementException(String.format("Failed to find service %s from catalog", name));
+        }
+        return first.get();
     }
 
     public List<WebElement> getServicesFromCatalog() throws Exception {
