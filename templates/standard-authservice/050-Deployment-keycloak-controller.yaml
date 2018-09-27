@@ -25,7 +25,7 @@ spec:
         - name: KEYCLOAK_CERT_SECRET_NAME
           value: "standard-authservice-cert"
         - name: CONFIGMAP_WATCH_INTERVAL
-          value: '5'
+          value: '0'
         image: ${KEYCLOAK_CONTROLLER_IMAGE}
         name: keycloak-controller
         resources:
