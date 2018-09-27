@@ -115,8 +115,10 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
 
         for (AddressSpace addressSpace : resources) {
             try {
+                log.info("Checking address space {}:{}", addressSpace.getNamespace(), addressSpace.getName());
                 for (Controller controller : chain) {
-                    log.debug("Controller {} input: {}", controller.getClass().getName(), addressSpace);
+                    log.info("Controller {}", controller);
+                    log.debug("Address space input: {}", addressSpace);
                     addressSpace = controller.handle(addressSpace);
                 }
 
