@@ -80,7 +80,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                         serviceCertMapping.put(endpoint.getService(), cert);
                 });
             }
-            log.info("Service cert mapping: {}", serviceCertMapping);
             if (serviceCertMapping.containsKey("messaging")) {
                 parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
             }

@@ -58,7 +58,7 @@ public class EndpointController implements Controller {
             statuses = endpoints.stream().map(e -> e.endpointStatus).collect(Collectors.toList());
         }
 
-        log.debug("Updating endpoints for " + addressSpace.getName() + " to " + statuses);
+        log.info("Updating endpoints for " + addressSpace.getName() + " to " + statuses);
         addressSpace.getStatus().setEndpointStatuses(statuses);
     }
 
