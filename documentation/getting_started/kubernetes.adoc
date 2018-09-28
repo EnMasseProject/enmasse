@@ -28,14 +28,14 @@ kubectl config set-context $(kubectl config current-context) --namespace=enmasse
 +
 [options="nowrap",subs="attributes"]
 ----
-sed -i "s/namespace: .*/namespace: enmasse/" examples/bundles/enmasse-with-none-authservice/*.yaml
+sed -i "s/myproject/enmasse/" install/bundles/enmasse-with-none-authservice/*.yaml
 ----
 
 . Deploy using `enmasse-with-none-authservice` template
 +
 [options="nowrap",subs="attributes"]
 ----
-kubectl create -f examples/bundles/enmasse-with-none-authservice
+kubectl create -f install/bundles/enmasse-with-none-authservice
 ----
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]

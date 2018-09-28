@@ -18,8 +18,8 @@ endif::[]
 +
 [source, subs="+quotes"]
 ----
-sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/api-service/*.yaml
-sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/api-server/*RoleBinding*.yaml
+sed -i 's/myproject/_<my-namespace>_/' install/components/api-service/*.yaml
+sed -i 's/myproject/_<my-namespace>_/' install/components/api-server/*RoleBinding*.yaml
 ----
 
 .Procedure
@@ -28,7 +28,7 @@ sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/api-serv
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f examples/install/api-service
+{cmdcli} apply -f install/components/api-service
 ----
 
 ifeval::["{cmdcli}" == "kubectl"]
@@ -52,5 +52,5 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f examples/install/api-server/
+{cmdcli} apply -f install/components/api-server/
 ----

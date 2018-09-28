@@ -29,5 +29,5 @@ oc new-project enmasse
 +
 [options="nowrap",subs="attributes"]
 ----
-oc process -f examples/templates/enmasse-with-standard-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=enmasse | oc apply -f -
 ----

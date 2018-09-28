@@ -18,19 +18,19 @@ KEYCLOAK_PLUGIN_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-plugin
 KEYCLOAK_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-controller:$(COMMIT)"
 SERVICE_BROKER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/service-broker:$(COMMIT)"
 
-DOCSDIR=$(TOPDIR)/documentation/html
-ANSIBLEDIR=$(TOPDIR)/ansible
+PACKAGE_DOCS_DIR=$(TOPDIR)/documentation/html
+PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
 BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
-EXAMPLESDIR=$(INSTALLDIR)/examples
+PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 MODULES=address-space-controller extra api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice tenant
 
 prepare:
-	mkdir -p $(EXAMPLESDIR)
-	mkdir -p $(EXAMPLESDIR)/templates
-	mkdir -p $(EXAMPLESDIR)/bundles
-	mkdir -p $(EXAMPLESDIR)/install
+	mkdir -p $(PACKAGE_INSTALL_DIR)
+	mkdir -p $(PACKAGE_INSTALL_DIR)/templates
+	mkdir -p $(PACKAGE_INSTALL_DIR)/bundles
+	mkdir -p $(PACKAGE_INSTALL_DIR)/components
 
 replace_images: prepare
 	mkdir -p $(BUILDDIR)/replaced
@@ -57,14 +57,14 @@ replace_images: prepare
 	done
 
 component_install: replace_images
-	cp -r $(BUILDDIR)/replaced/* $(EXAMPLESDIR)/install/
-	for i in `find $(EXAMPLESDIR)/install -name "*.yaml"`; do \
+	cp -r $(BUILDDIR)/replaced/* $(PACKAGE_INSTALL_DIR)/components/
+	for i in `find $(PACKAGE_INSTALL_DIR)/components -name "*.yaml"`; do \
 		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
 ansible_install: replace_images
-	cp -r $(ANSIBLEDIR) $(INSTALLDIR)/
+	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
 	mkdir -p $(INSTALLDIR)/ansible/playbooks/openshift/install/
 	cp -r $(BUILDDIR)/replaced/* $(INSTALLDIR)/ansible/playbooks/openshift/install/
 	for i in `find $(INSTALLDIR)/ansible/playbooks/openshift/ -name "*.yaml"`; do \
@@ -72,7 +72,7 @@ ansible_install: replace_images
 		mv $$i.tmp $$i; \
 	done
 
-ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE=$(EXAMPLESDIR)/templates/enmasse-with-standard-authservice.yaml
+ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-standard-authservice.yaml
 $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
 	echo 'apiVersion: v1' > $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
 	echo 'kind: Template' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
@@ -90,7 +90,7 @@ $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
 		done; \
 	done
 
-ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE=$(EXAMPLESDIR)/templates/enmasse-with-none-authservice.yaml
+ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-none-authservice.yaml
 $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE): replace_images
 	echo 'apiVersion: v1' > $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
 	echo 'kind: Template' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
@@ -107,7 +107,7 @@ $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE): replace_images
 		done; \
 	done
 
-ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE=$(EXAMPLESDIR)/bundles/enmasse-with-none-authservice
+ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse-with-none-authservice
 $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE)
 	for i in address-space-controller extra api-server api-service none-authservice tenant; do \
@@ -118,7 +118,7 @@ $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE): replace_images
 		mv $$i.tmp $$i; \
 	done
 
-ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE=$(EXAMPLESDIR)/bundles/enmasse-with-standard-authservice
+ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse-with-standard-authservice
 $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE)
 	for i in address-space-controller extra api-server api-service standard-authservice tenant; do \
@@ -130,7 +130,7 @@ $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE): replace_images
 	done
 
 install: ansible_install component_install $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	cp -r $(DOCSDIR) $(INSTALLDIR)/docs
+	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
 	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
