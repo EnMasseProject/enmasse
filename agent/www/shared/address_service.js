@@ -25,9 +25,10 @@ TimeSeries.prototype.push_delta = function (value) {
     this.last = value;
 }
 
-function WindowedDelta(window) {
+function WindowedDelta(name, window) {
+    this.name = name;
     this.last = undefined;
-    this.deltas = new Array(window);
+    this.deltas = Array(window).fill(0);
     this.current = 0;
 }
 
@@ -39,22 +40,14 @@ WindowedDelta.prototype.push = function (value) {
 };
 
 WindowedDelta.prototype.update = function (value) {
-    if (this.last === undefined || this.last > value) {
-        this.push(value);
-    } else {
+    if (this.last !== undefined && this.last <= value) {
         this.push(value - this.last);
     }
     this.last = value;
 };
 
 WindowedDelta.prototype.total = function (current) {
-    var t = this.last === undefined ? current : current - this.last;
-    for (var i = 0; i < this.deltas.length; i++) {
-        if (this.deltas[i] != undefined) {
-            t += this.deltas[i];
-        }
-    }
-    return t;
+    return this.deltas.reduce(function(a, b) { return a + b; });
 };
 
 function AddressDefinition(a) {
@@ -72,11 +65,12 @@ function AddressDefinition(a) {
     };
     this.update_depth_series();
     this.periodic_deltas = {
-        'messages_in': new WindowedDelta(10),
-        'messages_out': new WindowedDelta(10)
+        'messages_in': new WindowedDelta(this.address + ' messages_in', 60),
+        'messages_out': new WindowedDelta(this.address + ' messages_out', 60)
     };
     for (var name in this.periodic_deltas) {
         this.define_periodic_delta(name);
+        this.periodic_deltas[name].update(this[name]);
     }
 }
 
@@ -87,6 +81,10 @@ AddressDefinition.prototype.define_periodic_delta = function (name) {
 AddressDefinition.prototype.update = function (a) {
     for (var k in a) {
         this[k] = a[k];
+    }
+    if (a.type === 'subscription' && a.shards) {
+        this.messages_in = a.shards[0].enqueued;
+        this.messages_out = a.shards[0].acknowledged + a.shards[0].killed;
     }
 }
 
@@ -119,7 +117,7 @@ function AddressService($http) {
     this.connection.on('message', this.on_message.bind(this));
     this.sender = this.connection.open_sender();
     this.connection.open_receiver();
-    setInterval(this.update_periodic_deltas.bind(this), 30000);
+    setInterval(this.update_periodic_deltas.bind(this), 5000);
     setInterval(this.update_depth_series.bind(this), 30000);
 
     this.tooltip = {}
