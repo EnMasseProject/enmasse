@@ -1,19 +1,24 @@
-include::common/attributes.adoc[]
+include::../common/attributes.adoc[]
+
+:context: messaging
 
 = {Title}
 
-include::../modules/con-address.adoc[leveloffset=+1]
+== Address spaces and addresses
 
-include::../modules/con-standard-address-space.adoc[leveloffset=+1]
+include::../modules/con-address-space.adoc[leveloffset=+2]
 
-include::../assemblies/assembly-standard-address-types.adoc[leveloffset=+2]
+include::../modules/con-address.adoc[leveloffset=+2]
 
-include::../modules/con-brokered-address-space.adoc[leveloffset=+1]
+include::../modules/con-standard-address-space.adoc[leveloffset=+2]
 
-include::../assemblies/assembly-brokered-address-types.adoc[leveloffset=+2]
+include::../assemblies/assembly-standard-address-types.adoc[leveloffset=+3]
+
+include::../modules/con-brokered-address-space.adoc[leveloffset=+2]
+
+include::../assemblies/assembly-brokered-address-types.adoc[leveloffset=+3]
 
 include::../assemblies/assembly-connecting-applications.adoc[leveloffset=+1]
-
 
 [appendix]
 
