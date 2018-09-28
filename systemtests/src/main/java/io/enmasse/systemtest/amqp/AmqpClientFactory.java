@@ -59,6 +59,20 @@ public class AmqpClientFactory {
         return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
+    public AmqpClient createAddressClient(AddressSpace addressSpace, AddressType addressType) throws InterruptedException, UnknownHostException {
+        switch (addressType) {
+            case QUEUE:
+            case ANYCAST:
+            case SUBSCRIPTION:
+                return createQueueClient(addressSpace);
+            case TOPIC:
+                return createTopicClient(addressSpace);
+            case MULTICAST:
+                return createBroadcastClient(addressSpace);
+        }
+        throw new IllegalArgumentException("Unknown type " + addressType);
+    }
+
     public AmqpClient createBroadcastClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE, addressSpace);
     }

@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.CustomLogger;
+import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<Message>> {
@@ -26,12 +26,10 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
     private static Logger log = CustomLogger.getLogger();
     private final List<Message> messages = new ArrayList<>();
     private final Predicate<Message> done;
-    private final CountDownLatch connectLatch;
 
-    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<Message>> promise, LinkOptions linkOptions, CountDownLatch connectLatch, String containerId) {
-        super(clientOptions, linkOptions, promise, containerId);
+    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<List<Message>> resultPromise, String containerId) {
+        super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
         this.done = done;
-        this.connectLatch = connectLatch;
     }
 
     @Override
@@ -47,16 +45,21 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
             messages.add(message);
             protonDelivery.disposition(Accepted.getInstance(), true);
             if (done.test(message)) {
-                promise.complete(messages);
+                resultPromise.complete(messages);
                 conn.close();
             } else {
                 receiver.flow(1);
             }
         });
         receiver.openHandler(result -> {
-            log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
-            receiver.flow(1);
-            connectLatch.countDown();
+            if (result.succeeded()) {
+                log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
+                receiver.flow(1);
+                connectPromise.complete(null);
+            } else {
+                connectPromise.completeExceptionally(result.cause());
+                resultPromise.completeExceptionally(result.cause());
+            }
         });
 
         receiver.closeHandler(closed -> {
@@ -79,16 +82,14 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
     @Override
     protected void connectionClosed(ProtonConnection conn) {
         conn.close();
-        if (!promise.isDone()) {
-            promise.completeExceptionally(new RuntimeException("Connection closed (" + messages.size() + " messages received"));
-        }
+        resultPromise.completeExceptionally(new RuntimeException("Connection closed (" + messages.size() + " messages received"));
+        connectPromise.completeExceptionally(new RuntimeException("Connection closed (" + messages.size() + " messages received"));
     }
 
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
         conn.close();
-        if (!promise.isDone()) {
-            promise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
-        }
+        resultPromise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
+        connectPromise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
     }
 }

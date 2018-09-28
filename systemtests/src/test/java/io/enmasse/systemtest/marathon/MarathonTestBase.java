@@ -156,8 +156,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
 
             //attach senders
             for (int i = 0; i < senderCount; i++) {
-                collector.checkThat(client.sendMessages(queueList.get(i).getAddress(), msgBatch,
-                        1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
+                collector.checkThat(client.sendMessages(queueList.get(i).getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
             }
 
             //check received messages
@@ -280,8 +279,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
 
             //attach producers
             for (int i = 0; i < topicCount; i++) {
-                collector.checkThat(client.sendMessages(topicList.get(i).getAddress(), msgBatch,
-                        1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
+                collector.checkThat(client.sendMessages(topicList.get(i).getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
             }
 
             //check received messages

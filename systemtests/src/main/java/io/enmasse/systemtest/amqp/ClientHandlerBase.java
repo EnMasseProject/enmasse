@@ -20,14 +20,16 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     private static Logger log = CustomLogger.getLogger();
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
-    protected final CompletableFuture<T> promise;
     private final String containerId;
     private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
+    protected final CompletableFuture<Void> connectPromise;
+    protected final CompletableFuture<T> resultPromise;
 
-    public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise, String containerId) {
+    public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
         this.clientOptions = clientOptions;
         this.linkOptions = linkOptions;
-        this.promise = promise;
+        this.connectPromise = connectPromise;
+        this.resultPromise = resultPromise;
         this.containerId = containerId;
     }
 
@@ -42,7 +44,8 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.openHandler(result -> {
                     if (result.failed()) {
                         conn.close();
-                        promise.completeExceptionally(result.cause());
+                        resultPromise.completeExceptionally(result.cause());
+                        connectPromise.completeExceptionally(result.cause());
                     } else {
                         connectionOpened(conn);
                     }
@@ -50,7 +53,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.closeHandler(result -> {
                     if (result.failed()) {
                         conn.close();
-                        promise.completeExceptionally(result.cause());
+                        resultPromise.completeExceptionally(result.cause());
                     } else {
                         connectionClosed(conn);
                     }
@@ -59,7 +62,8 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.open();
             } else {
                 log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
-                promise.completeExceptionally(connection.cause());
+                resultPromise.completeExceptionally(connection.cause());
+                connectPromise.completeExceptionally(connection.cause());
             }
         });
     }
@@ -77,9 +81,11 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
             log.info("Link closed with " + error);
             connection.close();
             if (unauthorizedAccess.equals(error.getCondition())) {
-                promise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
+                resultPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
+                connectPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
             } else {
-                promise.completeExceptionally(new RuntimeException(error.getDescription()));
+                resultPromise.completeExceptionally(new RuntimeException(error.getDescription()));
+                connectPromise.completeExceptionally(new RuntimeException(error.getDescription()));
             }
         }
     }

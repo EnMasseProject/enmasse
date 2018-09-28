@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -277,12 +278,23 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination) throws Exception {
         try {
-            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 30, TimeUnit.SECONDS);
-            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 30, TimeUnit.SECONDS);
-            return received.get(3, TimeUnit.SECONDS).size() == sent.get(3, TimeUnit.SECONDS);
-        } catch (Exception ex) {
-            log.info("canAuth exception", ex);
-            return false;
+            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1);
+            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"));
+
+            return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+        } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
+            Throwable cause = ex;
+            if (ex instanceof ExecutionException) {
+                cause = ex.getCause();
+            }
+
+            if (cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
+                log.info("canAuth {} ({}): {}", destination.getAddress(), destination.getType(), ex.getMessage());
+                return false;
+            } else {
+                log.warn("canAuth {} ({}) exception", destination.getAddress(), destination.getType(), ex);
+                throw ex;
+            }
         } finally {
             sender.close();
             receiver.close();
