@@ -35,7 +35,7 @@
         "https"
     ],
     "paths": {
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces": {
+        "/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces": {
           "get": {
             "tags": [
                     "enmasse_v1alpha1",
@@ -119,7 +119,7 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{name}": {
+        "/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{name}": {
             "get": {
                 "tags": [
                     "enmasse_v1alpha1",
@@ -247,7 +247,7 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses": {
+        "/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses": {
             "get": {
                 "tags": [
                     "enmasse_v1alpha1",
@@ -339,7 +339,7 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses/{address}": {
+        "/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses/{address}": {
             "put": {
                 "tags": [
                     "enmasse_v1alpha1",
@@ -492,7 +492,7 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses": {
+        "/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addresses": {
           "get": {
             "tags": [
                     "enmasse_v1alpha1",
@@ -576,7 +576,7 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses/{name}": {
+        "/apis/address.enmasse.io/v1alpha1/namespaces/{namespace}/addresses/{name}": {
             "get": {
                 "tags": [
                     "enmasse_v1alpha1",
@@ -935,7 +935,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "address.enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
@@ -1070,9 +1070,9 @@
             "properties": {
                 "apiVersion": {
                     "type": "string",
-                    "default": "enmasse.io/v1alpha1",
+                    "default": "address.enmasse.io/v1alpha1",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "address.enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
@@ -1101,7 +1101,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "address.enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
@@ -1174,9 +1174,9 @@
             "properties": {
                 "apiVersion": {
                     "type": "string",
-                    "default": "enmasse.io/v1alpha1",
+                    "default": "address.enmasse.io/v1alpha1",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "address.enmasse.io/v1alpha1"
                     ]
                 },
                 "kind": {
