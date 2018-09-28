@@ -25,8 +25,8 @@ spec:
         - name: KEYCLOAK_CERT_SECRET_NAME
           value: "standard-authservice-cert"
         - name: CONFIGMAP_WATCH_INTERVAL
-          value: '0'
-        image: ${KEYCLOAK_CONTROLLER_IMAGE}
+          value: "0"
+        image: docker.io/lulf/keycloak-controller:latest
         name: keycloak-controller
         resources:
           limits:
