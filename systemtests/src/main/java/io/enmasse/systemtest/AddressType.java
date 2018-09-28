@@ -12,6 +12,10 @@ public enum AddressType {
     public String toString() {
         return super.toString().toLowerCase();
     }
+
+    public static AddressType getEnum(String type) {
+        return valueOf(type.toUpperCase());
+    }
 }
 
 

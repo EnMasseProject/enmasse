@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.ConnectTimeoutException;
 import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.VertxFactory;
 import io.vertx.core.Vertx;
@@ -14,7 +13,8 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 
-import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,38 +40,36 @@ public class AmqpClient implements AutoCloseable {
         return this;
     }
 
-    public Future<List<Message>> recvMessages(String address, int numMessages) throws InterruptedException, IOException, TimeoutException {
-        return recvMessages(address, numMessages, 2, TimeUnit.MINUTES);
+    public Future<List<Message>> recvMessages(String address, int numMessages) {
+        return recvMessages(options.getTerminusFactory().getSource(address), numMessages, Optional.empty() );
     }
 
-    public Future<List<Message>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException, TimeoutException {
-        return recvMessages(options.getTerminusFactory().getSource(address), numMessages, Optional.empty(), connectTimeout, timeUnit);
+    public Future<List<Message>> recvMessages(Source source, String linkName, int numMessages) {
+        return recvMessages(source, numMessages, Optional.of(linkName));
     }
 
-    public Future<List<Message>> recvMessages(Source source, String linkName, int numMessages) throws InterruptedException, IOException, TimeoutException {
-        return recvMessages(source, numMessages, Optional.of(linkName), 2, TimeUnit.MINUTES);
+    public Future<List<Message>> recvMessages(String address, Predicate<Message> done) {
+        return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty());
     }
 
-    public Future<List<Message>> recvMessages(String address, Predicate<Message> done) throws InterruptedException, IOException, ConnectTimeoutException {
-        return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty(), 2, TimeUnit.MINUTES);
+    public Future<List<Message>> recvMessages(Source source, String linkName, Predicate<Message> done) {
+        return recvMessages(source, done, Optional.of(linkName));
     }
 
-    public Future<List<Message>> recvMessages(Source source, String linkName, Predicate<Message> done) throws InterruptedException, IOException, ConnectTimeoutException {
-        return recvMessages(source, done, Optional.of(linkName), 2, TimeUnit.MINUTES);
-    }
-
-    public Future<List<Message>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException, ConnectTimeoutException {
-        CompletableFuture<List<Message>> promise = new CompletableFuture<>();
-        CountDownLatch connectLatch = new CountDownLatch(1);
+    public Future<List<Message>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName) {
+        CompletableFuture<List<Message>> resultPromise = new CompletableFuture<>();
 
         Vertx vertx = VertxFactory.create();
         clients.add(vertx);
         String containerId = "systemtest-receiver-" + source.getAddress();
-        vertx.deployVerticle(new Receiver(options, done, promise, new LinkOptions(source, new Target(), linkName), connectLatch, containerId));
-        if (!connectLatch.await(connectTimeout, timeUnit)) {
-            throw new ConnectTimeoutException("Timeout waiting for receiver client " + containerId + " to connect to " + source.getAddress());
+        CompletableFuture<Void> connectPromise = new CompletableFuture<>();
+        vertx.deployVerticle(new Receiver(options, done, new LinkOptions(source, new Target(), linkName), connectPromise, resultPromise, containerId));
+        try {
+            connectPromise.get(2, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            resultPromise.completeExceptionally(e);
         }
-        return promise;
+        return resultPromise;
     }
 
     @Override
@@ -82,19 +80,15 @@ public class AmqpClient implements AutoCloseable {
     }
 
 
-    public Future<List<Message>> recvMessages(Source source, int numMessages, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException, ConnectTimeoutException {
-        return recvMessages(source, new Count<>(numMessages), linkName, connectTimeout, timeUnit);
+    public Future<List<Message>> recvMessages(Source source, int numMessages, Optional<String> linkName) {
+        return recvMessages(source, new Count<>(numMessages), linkName);
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages) throws IOException, InterruptedException, ConnectTimeoutException {
+    public Future<Integer> sendMessages(String address, List<String> messages) {
         return sendMessages(address, messages, new Count<>(messages.size()));
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages, long connectTimeout, TimeUnit timeUnit) throws IOException, InterruptedException, ConnectTimeoutException {
-        return sendMessages(address, messages, new Count<>(messages.size()), connectTimeout, timeUnit);
-    }
-
-    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate, long connectTimeout, TimeUnit timeUnit) throws IOException, InterruptedException, ConnectTimeoutException {
+    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) {
         List<Message> messageList = messages.stream()
                 .map(body -> {
                     Message message = Message.Factory.create();
@@ -103,29 +97,27 @@ public class AmqpClient implements AutoCloseable {
                     return message;
                 })
                 .collect(Collectors.toList());
-        return sendMessages(address, connectTimeout, timeUnit, messageList, predicate);
+        return sendMessages(address, messageList, predicate);
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) throws IOException, InterruptedException, ConnectTimeoutException {
-        return sendMessages(address, messages, predicate, 1, TimeUnit.MINUTES);
+    public Future<Integer> sendMessages(String address, Message... messages) {
+        return sendMessages(address, Arrays.asList(messages), new Count<>(messages.length));
     }
 
-    public Future<Integer> sendMessages(String address, Message... messages) throws IOException, InterruptedException, ConnectTimeoutException {
-        return sendMessages(address, 1, TimeUnit.MINUTES, Arrays.asList(messages), new Count<>(messages.length));
-    }
+    public Future<Integer> sendMessages(String address, Iterable<Message> messages, Predicate<Message> predicate) {
 
-    public Future<Integer> sendMessages(String address, long connectTimeout, TimeUnit timeUnit, Iterable<Message> messages, Predicate<Message> predicate) throws IOException, InterruptedException, ConnectTimeoutException {
-
-        CompletableFuture<Integer> promise = new CompletableFuture<>();
-        CountDownLatch connectLatch = new CountDownLatch(1);
+        CompletableFuture<Integer> resultPromise = new CompletableFuture<>();
         Vertx vertx = VertxFactory.create();
         clients.add(vertx);
         String containerId = "systemtest-sender-" + address;
-        vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address),
-                options.getTerminusFactory().getTarget(address), Optional.empty()), connectLatch, promise, messages, predicate, containerId));
-        if (!connectLatch.await(connectTimeout, timeUnit)) {
-            throw new ConnectTimeoutException("Timeout waiting for sender client " + containerId + " to connect to " + address);
+        CompletableFuture<Void> connectPromise = new CompletableFuture<>();
+        vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), messages, predicate, connectPromise, resultPromise, containerId));
+
+        try {
+            connectPromise.get(2, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            resultPromise.completeExceptionally(e);
         }
-        return promise;
+        return resultPromise;
     }
 }

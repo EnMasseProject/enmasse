@@ -11,6 +11,7 @@ import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -26,6 +27,7 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -44,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -428,95 +431,55 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return false;
     }
 
-    protected boolean requiresWait(AddressSpace addressSpace) {
-        return addressSpace.getType().equals(AddressSpaceType.STANDARD) && addressSpace.getPlan().equals("unlimited-standard-without-mqtt");
-    }
-
     protected boolean isBrokered(AddressSpace addressSpace) {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
-        assertTrue(canConnectWithAmqp(addressSpace, credentials, destinations),
-                "Client failed, cannot connect under user " + credentials);
-        // TODO: Enable this when mqtt is stable enough
-        // assertTrue(canConnectWithMqtt(addressSpace, username, password));
+        for (Destination destination : destinations) {
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
+            AddressType addressType = AddressType.getEnum(destination.getType());
+            assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), true), message);
+        }
     }
 
     protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
-        try {
-            assertFalse(canConnectWithAmqp(addressSpace, credentials, destinations),
-                    "Client failed, can connect under user " + credentials);
-            fail("Expected connection to timeout");
-        } catch (ConnectTimeoutException ignored) {
-        }
-
-        // TODO: Enable this when mqtt is stable enough
-        // assertFalse(canConnectWithMqtt(addressSpace, username, password));
-    }
-
-
-    private boolean canConnectWithAmqp(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
-            switch (destination.getType()) {
-                case "queue":
-                    assertTrue(canConnectWithAmqpToQueue(addressSpace, credentials, destination.getAddress()), message);
-                    break;
-                case "topic":
-                    assertTrue(canConnectWithAmqpToTopic(addressSpace, credentials, destination.getAddress()), message);
-                    break;
-                case "multicast":
-                    if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, credentials, destination.getAddress()), message);
-                    break;
-                case "anycast":
-                    if (!isBrokered(addressSpace))
-                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, credentials, destination.getAddress()), message);
-                    break;
-            }
+            String message = String.format("Client failed, can connect to %s under user %s", destination.getType(), credentials);
+            AddressType addressType = AddressType.getEnum(destination.getType());
+            assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), false), message);
         }
-        return true;
     }
 
-    private boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, UserCredentials credentials, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+    private boolean canConnectWithAmqpAddress(AddressSpace addressSpace, UserCredentials credentials, AddressType addressType, String address, boolean defaultValue) throws Exception {
+        Set<AddressType> brokeredAddressTypes = new HashSet<>(Arrays.asList(AddressType.QUEUE, AddressType.TOPIC));
+        if (isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
+            return defaultValue;
+        }
+        AmqpClient client = amqpClientFactory.createAddressClient(addressSpace, addressType);
         client.getConnectOptions().setCredentials(credentials);
 
-        Future<Integer> sent = client.sendMessages(queueAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-        Future<List<Message>> received = client.recvMessages(queueAddress, 1, 10, TimeUnit.SECONDS);
+        try {
+            Future<List<Message>> received = client.recvMessages(address, 1);
+            Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
 
-        return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
-    }
+            return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+        } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
+            Throwable cause = ex;
+            if (ex instanceof ExecutionException) {
+                cause = ex.getCause();
+            }
 
-    private boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, UserCredentials credentials, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-
-        Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
-        Future<Integer> sent = client.sendMessages(anycastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-
-        return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
-    }
-
-    private boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, UserCredentials credentials, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-
-        Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
-        Future<Integer> sent = client.sendMessages(multicastAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-
-        return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
-    }
-
-    private boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, UserCredentials credentials, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-
-        Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);
-        Future<Integer> sent = client.sendMessages(topicAddress, Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-
-        return (sent.get(10, TimeUnit.SECONDS) == received.get(10, TimeUnit.SECONDS).size());
+            if (cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
+                log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
+                return false;
+            } else {
+                log.warn("canConnectWithAmqpAddress {} ({}) exception", address, addressType, ex);
+                throw ex;
+            }
+        } finally {
+            client.close();
+        }
     }
 
     protected Endpoint getMessagingRoute(AddressSpace addressSpace) {

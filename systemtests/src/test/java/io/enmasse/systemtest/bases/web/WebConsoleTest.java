@@ -466,7 +466,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         AmqpClient client = amqpClientFactory.createQueueClient();
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
-        int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
+        int sent = client.sendMessages(dest.getAddress(), msgBatch).get(2, TimeUnit.MINUTES);
         selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn(),
                 String.format("Console failed, does not contain %d messagesIN", sent));

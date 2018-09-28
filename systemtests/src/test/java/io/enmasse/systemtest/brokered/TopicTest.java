@@ -77,8 +77,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         //attach producers
         for (int i = 0; i < senderCount; i++) {
             assertThat("Wrong count of messages sent: sender" + i,
-                    client.sendMessages(topicList.get(i).getAddress(), msgBatch,
-                            1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
+                    client.sendMessages(topicList.get(i).getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
         }
 
         //check received messages
