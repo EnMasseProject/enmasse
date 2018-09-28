@@ -33,7 +33,7 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f ./examples/install/none-authservice
+{cmdcli} create -f ./install/components/none-authservice
 ----
 
 == Deploying the `standard` authentication service
@@ -44,7 +44,7 @@ endif::[]
 +
 [source, subs="+quotes"]
 ----
-sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/standard-authservice/*RoleBinding*.yaml
+sed -i 's/myproject/_<my-namespace>_/' install/components/standard-authservice/*RoleBinding*.yaml
 ----
 
 .Procedure
@@ -70,5 +70,5 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f ./examples/install/standard-authservice
+{cmdcli} create -f ./install/components/standard-authservice
 ----

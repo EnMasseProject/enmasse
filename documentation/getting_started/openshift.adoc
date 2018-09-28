@@ -35,7 +35,7 @@ oc new-project enmasse
 +
 [options="nowrap",subs="attributes"]
 ----
-oc process -f examples/templates/enmasse-with-none-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+oc process -f install/templates/enmasse-with-none-authservice.yaml NAMESPACE=enmasse | oc apply -f -
 ----
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]

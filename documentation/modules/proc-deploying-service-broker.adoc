@@ -19,8 +19,8 @@ endif::[]
 +
 [source, subs="+quotes"]
 ----
-sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/service-broker/*.yaml
-sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/cluster-service-broker/*.yaml
+sed -i 's/myproject/_<my-namespace>_/' install/components/service-broker/*.yaml
+sed -i 's/myproject/_<my-namespace>_/' install/components/cluster-service-broker/*.yaml
 ----
 
 .Procedure
@@ -29,13 +29,13 @@ sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/cluster-
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f examples/install/service-broker
+{cmdcli} apply -f install/components/service-broker
 ----
 
 . Register the Service Broker with the OpenShift Service Catalog:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f examples/install/cluster-service-broker
+{cmdcli} apply -f install/components/cluster-service-broker
 ----
 endif::[]

@@ -13,7 +13,7 @@ The Address Space Controller is responsible for creating the infrastructure used
 +
 [source, subs="+quotes"]
 ----
-sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/address-space-controller/*RoleBinding*.yaml
+sed -i 's/myproject/_<my-namespace>_/' install/components/address-space-controller/*RoleBinding*.yaml
 ----
 
 .Procedure
@@ -22,5 +22,5 @@ sed -i 's/namespace: .\*/namespace: _<my-namespace>_/' examples/install/address-
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f examples/install/address-space-controller
+{cmdcli} apply -f install/components/address-space-controller
 ----
