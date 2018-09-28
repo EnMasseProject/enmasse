@@ -48,7 +48,7 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 ```
 oc new-project myproject || oc project myproject
-oc process -f templates/build/enmasse-latest/examples/templates/enmasse-with-standard-authservice.yaml NAMESPACE=myproject | oc create -f -
+oc process -f templates/build/enmasse-latest/install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=myproject | oc create -f -
 ```
 
 #### Deploying to a Kubernetes instance assuming already logged in with cluster-admin permissions
@@ -65,7 +65,7 @@ mkdir -p standard-authservice-cert
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.myproject.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
-kubectl create -f templates/build/enmasse-latest/examples/bundles/enmasse-with-standard-authservice
+kubectl create -f templates/build/enmasse-latest/install/bundles/enmasse-with-standard-authservice
 ```
 
 #### Running smoketests against a deployed instance
