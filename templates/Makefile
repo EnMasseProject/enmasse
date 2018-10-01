@@ -52,7 +52,8 @@ replace_images: prepare
 			KEYCLOAK_CONTROLLER_IMAGE=$(KEYCLOAK_CONTROLLER_IMAGE) \
 			MQTT_GATEWAY_IMAGE=$(MQTT_GATEWAY_IMAGE) \
 			MQTT_LWT_IMAGE=$(MQTT_LWT_IMAGE) \
-			envsubst '$${ADDRESS_SPACE_CONTROLLER_IMAGE},$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${NONE_AUTHSERVICE_IMAGE},$${KEYCLOAK_IMAGE},$${KEYCLOAK_CONTROLLER_IMAGE},$${KEYCLOAK_PLUGIN_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${ARTEMIS_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${API_SERVER_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > $$i.tmp; \
+			ENMASSE_VERSION=$(VERSION) \
+			envsubst '$${ENMASSE_VERSION},$${ADDRESS_SPACE_CONTROLLER_IMAGE},$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${NONE_AUTHSERVICE_IMAGE},$${KEYCLOAK_IMAGE},$${KEYCLOAK_CONTROLLER_IMAGE},$${KEYCLOAK_PLUGIN_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${ARTEMIS_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${API_SERVER_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
@@ -84,7 +85,7 @@ $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
 	echo '  required: true' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
 	echo 'objects:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
 	for mod in address-space-controller api-server api-service standard-authservice tenant; do \
-		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml"`; do \
+		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml" | sort`; do \
 			echo "Mod $${mod} file $${i}"; \
 			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE); \
 		done; \
@@ -102,7 +103,7 @@ $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE): replace_images
 	echo '  required: true' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
 	echo 'objects:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
 	for mod in address-space-controller api-server api-service none-authservice tenant; do \
-		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml"`; do \
+		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml" | sort`; do \
 			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE); \
 		done; \
 	done

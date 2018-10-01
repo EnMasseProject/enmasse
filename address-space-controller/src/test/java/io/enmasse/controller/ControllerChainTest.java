@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.mockito.internal.util.collections.Sets;
 
 import java.time.Duration;
+import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -70,7 +71,7 @@ public class ControllerChainTest {
         when(mockController.handle(eq(a1))).thenReturn(a1);
         when(mockController.handle(eq(a2))).thenReturn(a2);
 
-        controllerChain.onUpdate(Sets.newSet(a1, a2));
+        controllerChain.onUpdate(Arrays.asList(a1, a2));
 
         verify(mockController, times(2)).handle(any());
         verify(mockController).handle(eq(a1));

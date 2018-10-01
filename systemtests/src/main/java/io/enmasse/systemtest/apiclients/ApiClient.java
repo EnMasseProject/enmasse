@@ -4,19 +4,28 @@
  */
 package io.enmasse.systemtest.apiclients;
 
+import com.google.common.net.HttpHeaders;
 import io.enmasse.systemtest.*;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
 import java.net.HttpURLConnection;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_OK;
 
 public abstract class ApiClient {
     protected static Logger log = CustomLogger.getLogger();
@@ -24,23 +33,26 @@ public abstract class ApiClient {
     protected Kubernetes kubernetes;
     protected Vertx vertx;
     protected Endpoint endpoint;
+    protected Supplier<Endpoint> endpointSupplier;
     protected String authzString;
     protected String apiVersion;
+    private final int initRetry = 10;
 
-    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion) {
-        initializeAddressClient(kubernetes, endpoint, apiVersion, "");
+    protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion) {
+        initializeAddressClient(kubernetes, endpointSupplier, apiVersion, "");
     }
 
-    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion, String authzString) {
-        initializeAddressClient(kubernetes, endpoint, apiVersion, authzString);
+    protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String authzString) {
+        initializeAddressClient(kubernetes, endpointSupplier, apiVersion, authzString);
     }
 
-    private void initializeAddressClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion, String token) {
+    private void initializeAddressClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
         this.vertx = VertxFactory.create();
         this.kubernetes = kubernetes;
         this.connect();
         this.authzString = String.format("Bearer %s", Strings.isNullOrEmpty(token) ? kubernetes.getApiToken() : token);
-        this.endpoint = endpoint;
+        this.endpoint = endpointSupplier.get();
+        this.endpointSupplier = endpointSupplier;
         this.apiVersion = apiVersion;
     }
 
@@ -68,7 +80,7 @@ public abstract class ApiClient {
                 if (response.statusCode() != expectedCode) {
                     log.error("expected-code: {}, response-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
-                } else if (response.statusCode() < HttpURLConnection.HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
+                } else if (response.statusCode() < HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
                     promise.completeExceptionally(new RuntimeException(body.toString()));
                 } else {
                     promise.complete(ar.result().body());
@@ -88,10 +100,10 @@ public abstract class ApiClient {
         }
     }
 
-    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Callable<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
+    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Supplier<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
             if (endpointFn.isPresent()) {
-                endpoint = endpointFn.get().call();
+                endpoint = endpointFn.get().get();
             }
             return fn.call();
         }, reconnect);
@@ -99,5 +111,101 @@ public abstract class ApiClient {
 
     public String getApiVersion() {
         return apiVersion;
+    }
+
+    protected JsonObject getResource(String type, String basePath, String name) throws Exception {
+        return getResource(type, basePath, name, HTTP_OK);
+    }
+
+    protected JsonObject getResource(String type, String basePath, String name, int expectedCode) throws Exception {
+        String path = basePath + "/" + name;
+        log.info("GET: path {}", path);
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+
+        return doRequestNTimes(initRetry, () -> {
+                client.get(endpoint.getPort(), endpoint.getHost(), path)
+                        .as(BodyCodec.jsonObject())
+                        .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+                        .send(ar -> responseHandler(ar,
+                                responsePromise,
+                                expectedCode,
+                                String.format("Error: get %s %s", type, name)));
+                return responsePromise.get(30, TimeUnit.SECONDS);
+            },
+            Optional.of(endpointSupplier),
+            Optional.empty());
+    }
+
+    protected void createResource(String type, String basePath, JsonObject data) throws Exception {
+        createResource(type, basePath, data, HTTP_CREATED);
+    }
+
+    protected void createResource(String type, String basePath, JsonObject data, int expectedCode) throws Exception {
+        log.info("POST-{}: path {}; body {}", type, basePath, data.toString());
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+
+        doRequestNTimes(initRetry, () -> {
+                    client.post(endpoint.getPort(), endpoint.getHost(), basePath)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(data, ar -> {
+                                responseHandler(ar,
+                                        responsePromise,
+                                        expectedCode,
+                                        String.format("Error: create %s '%s'", type, basePath));
+                            });
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(endpointSupplier),
+                Optional.empty());
+    }
+
+    protected void replaceResource(String type, String basePath, String name, JsonObject data) throws Exception {
+        replaceResource(type, basePath, name, data, HTTP_OK);
+    }
+
+    protected void replaceResource(String type, String basePath, String name, JsonObject data, int expectedCode) throws Exception {
+
+        String path = basePath + "/" + name;
+        log.info("PUT-{}: path {}; body {}", type, path, data.toString());
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+
+        doRequestNTimes(initRetry, () -> {
+                    client.put(endpoint.getPort(), endpoint.getHost(), path)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(data, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    expectedCode,
+                                    String.format("Error: create %s '%s'", type, name)));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(endpointSupplier),
+                Optional.empty());
+    }
+
+    protected void deleteResource(String type, String basePath, String name) throws Exception {
+        deleteResource(type, basePath, name, HTTP_OK);
+    }
+
+    protected void deleteResource(String type, String basePath, String name, int expectedCode) throws Exception {
+        String path = basePath + "/" + name;
+        log.info("DELETE-{}: path '{}'", type, path);
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        doRequestNTimes(initRetry, () -> {
+                    client.delete(endpoint.getPort(), endpoint.getHost(), path)
+                            .as(BodyCodec.jsonObject())
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .timeout(20_000)
+                            .send(ar -> responseHandler(ar,
+                                    responsePromise,
+                                    expectedCode,
+                                    String.format("Error: delete %s '%s'", type, name)));
+                    return responsePromise.get(2, TimeUnit.MINUTES);
+                },
+                Optional.of(endpointSupplier),
+                Optional.empty());
     }
 }

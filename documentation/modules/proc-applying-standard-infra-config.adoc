@@ -1,0 +1,45 @@
+// Module included in the following assemblies:
+//
+// assembly-configure-infrastructure-configuration.adoc
+
+[id='applying-standard-infra-config-changes-{context}']
+= Applying standard infrastructure configuration
+
+You can edit existing configurations or create new ones.
+
+.Prerequisites
+* A standard infrastructure configuration change that you want to apply. For more information, see xref:con-standard-infra-config-messaging[].
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+
+. Select the project where {ProductName} is installed:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} project enmasse
+----
+endif::[]
+
+. Apply the configuration changes:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} apply -f standard-infra-config-example.yaml
+----
+
+. Monitor the pods while they are restarted:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} get pods -w
+----
++
+The configuration changes will be applied within a couple of minutes.

@@ -4,16 +4,19 @@
  */
 package io.enmasse.address.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 
 public class AddressResolver {
-    private final Schema schema;
     private final AddressSpaceType addressSpaceType;
 
-    public AddressResolver(Schema schema, AddressSpaceType addressSpaceType) {
-        this.schema = schema;
+    public AddressResolver(AddressSpaceType addressSpaceType) {
         this.addressSpaceType = addressSpaceType;
+    }
+
+    public AddressPlan getPlan(Address address) {
+        return getType(address).findAddressPlan(address.getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getPlan() + " for address type " + address.getType()));
     }
 
     public AddressPlan getPlan(AddressType addressType, Address address) {
@@ -24,45 +27,7 @@ public class AddressResolver {
         return addressSpaceType.findAddressType(address.getType()).orElseThrow(() -> new UnresolvedAddressException("Unknown address type " + address.getType()));
     }
 
-    public List<ResourceDefinition> getResourceDefinitions(AddressPlan plan) {
-        List<ResourceDefinition> resourceDefinitions = new ArrayList<>();
-        for (ResourceRequest request : plan.getRequiredResources()) {
-            String resourceName = request.getResourceName();
-            if (plan.getAddressType().equals("topic")) {
-                resourceName = request.getResourceName() + "-topic";
-            }
-            schema.findResourceDefinition(resourceName)
-                    .ifPresent(resourceDefinitions::add);
-        }
-        return resourceDefinitions;
-    }
-
-    public ResourceDefinition getResourceDefinition(String resourceName) {
-        return schema.findResourceDefinition(resourceName).orElseThrow(() -> new UnresolvedAddressException("Unknown resource definition " + resourceName));
-    }
-
-    public ResourceDefinition getResourceDefinition(AddressPlan addressPlan, String resourceName) {
-        if (isShardedTopic(addressPlan)) {
-            resourceName = resourceName + "-topic";
-        }
-        return getResourceDefinition(resourceName);
-    }
-
-    private boolean isShardedTopic(AddressPlan addressPlan) {
-        if (addressPlan.getAddressType().equals("topic")) {
-            boolean isSharded = true;
-            for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-                if (resourceRequest.getResourceName().equals("broker") && resourceRequest.getAmount() < 1) {
-                    isSharded = false;
-                    break;
-                }
-            }
-            return isSharded;
-        }
-        return false;
-    }
-
     public void validate(Address address) {
-        getResourceDefinitions(getPlan(getType(address), address));
+        getPlan(getType(address), address);
     }
 }

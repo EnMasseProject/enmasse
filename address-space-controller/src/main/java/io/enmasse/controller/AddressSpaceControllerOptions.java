@@ -26,7 +26,9 @@ public final class AddressSpaceControllerOptions {
     private final Duration resyncInterval;
     private final Duration recheckInterval;
 
-    private AddressSpaceControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableEventLogger, boolean exposeEndpointsByDefault, String environment, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval) {
+    private final String version;
+
+    private AddressSpaceControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableEventLogger, boolean exposeEndpointsByDefault, String environment, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String version) {
         this.templateDir = templateDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
@@ -36,6 +38,7 @@ public final class AddressSpaceControllerOptions {
         this.wildcardCertSecret = wildcardCertSecret;
         this.resyncInterval = resyncInterval;
         this.recheckInterval = recheckInterval;
+        this.version = version;
     }
 
     public File getTemplateDir() {
@@ -70,6 +73,10 @@ public final class AddressSpaceControllerOptions {
         return recheckInterval;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
     public static AddressSpaceControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
@@ -97,6 +104,8 @@ public final class AddressSpaceControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30));
 
+        String version = getEnvOrThrow(env, "VERSION");
+
         return new AddressSpaceControllerOptions(
                 templateDir,
                 noneAuthService,
@@ -106,7 +115,7 @@ public final class AddressSpaceControllerOptions {
                 environment,
                 wildcardCertSecret,
                 resyncInterval,
-                recheckInterval);
+                recheckInterval, version);
     }
 
 

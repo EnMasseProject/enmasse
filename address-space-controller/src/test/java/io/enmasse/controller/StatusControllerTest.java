@@ -16,6 +16,7 @@ import java.util.Collections;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,7 +38,7 @@ public class StatusControllerTest {
 
         when(kubernetes.getReadyDeployments()).thenReturn(Collections.singleton(deployment));
 
-        StatusController controller = new StatusController(kubernetes,  infraResourceFactory);
+        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory);
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
@@ -45,7 +46,7 @@ public class StatusControllerTest {
                 .setPlan("myplan")
                 .build();
 
-        when(infraResourceFactory.createResourceList(eq(addressSpace))).thenReturn(Collections.singletonList(deployment));
+        when(infraResourceFactory.createInfraResources(eq(addressSpace), any())).thenReturn(Collections.singletonList(deployment));
 
         assertFalse(addressSpace.getStatus().isReady());
         controller.handle(addressSpace);
@@ -69,7 +70,7 @@ public class StatusControllerTest {
 
         when(kubernetes.getReadyDeployments()).thenReturn(Collections.emptySet());
 
-        StatusController controller = new StatusController(kubernetes,  infraResourceFactory);
+        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory);
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
@@ -77,7 +78,7 @@ public class StatusControllerTest {
                 .setPlan("myplan")
                 .build();
 
-        when(infraResourceFactory.createResourceList(eq(addressSpace))).thenReturn(Collections.singletonList(deployment));
+        when(infraResourceFactory.createInfraResources(eq(addressSpace), any())).thenReturn(Collections.singletonList(deployment));
 
         assertFalse(addressSpace.getStatus().isReady());
         controller.handle(addressSpace);

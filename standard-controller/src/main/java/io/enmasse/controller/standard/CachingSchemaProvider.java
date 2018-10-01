@@ -9,6 +9,7 @@ import io.enmasse.k8s.api.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Set;
 
 public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
@@ -21,11 +22,11 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
     }
 
     @Override
-    public void onUpdate(Set<Schema> items) {
+    public void onUpdate(List<Schema> items) {
         if (items.isEmpty()) {
             return;
         }
         log.info("Schema updated");
-        schema = items.iterator().next();
+        schema = items.get(0);
     }
 }

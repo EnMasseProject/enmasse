@@ -138,7 +138,7 @@ describe('configmap backed address source', function() {
         source.watcher.close();
         source.on('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
-                var address = JSON.parse(configmaps.find_resource('foo').data['config.json']);
+                var address = JSON.parse(configmaps.find_resource('configmaps', 'foo').data['config.json']);
                 assert.equal(address.status.isReady, true);
                 done();
             }).catch(done);
@@ -150,13 +150,13 @@ describe('configmap backed address source', function() {
         var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
         source.once('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
-                configmaps.remove_resource_by_name('foo');
+                configmaps.remove_resource_by_name('configmaps', 'foo');
                 source.once('addresses_defined', function (addresses) {
                     configmaps.add_address_definition({address:'foo', type:'queue'});
                     source.once('addresses_defined', function (addresses) {
                         source.watcher.close();
                         source.check_status({foo:{propagated:100}}).then(function () {
-                            var address = JSON.parse(configmaps.find_resource('foo').data['config.json']);
+                            var address = JSON.parse(configmaps.find_resource('configmaps', 'foo').data['config.json']);
                             assert.equal(address.status.isReady, true);
                             done();
                         }).catch(done);

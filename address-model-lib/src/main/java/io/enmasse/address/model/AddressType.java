@@ -4,6 +4,8 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.admin.model.v1.AddressPlan;
+
 import java.util.*;
 
 /**
@@ -49,7 +51,7 @@ public class AddressType {
 
     public Optional<AddressPlan> findAddressPlan(String planName) {
         for (AddressPlan plan : addressPlans) {
-            if (plan.getName().equals(planName)) {
+            if (plan.getMetadata().getName().equals(planName)) {
                 return Optional.of(plan);
             }
         }

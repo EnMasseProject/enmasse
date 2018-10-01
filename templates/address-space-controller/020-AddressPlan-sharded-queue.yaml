@@ -1,0 +1,17 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: sharded-queue
+  labels:
+    app: enmasse
+displayName: Sharded Queue
+displayOrder: 0
+shortDescription: Creates a queue on a standalone broker.
+longDescription: Creates a queue on a standalone broker that can be sharded.
+uuid: aeddd606-0502-11e8-ad75-507b9def37d9
+addressType: queue
+requiredResources:
+- name: router
+  credit: 0.01
+- name: broker
+  credit: 1.0

@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 
 import java.io.IOException;
 
@@ -40,7 +42,7 @@ class SchemaV1Serializer extends JsonSerializer<Schema> {
                 ArrayNode plans = t.putArray(Fields.PLANS);
                 for (AddressPlan plan : atype.getAddressPlans()) {
                     ObjectNode p = plans.addObject();
-                    p.put(Fields.NAME, plan.getName());
+                    p.put(Fields.NAME, plan.getMetadata().getName());
                     p.put(Fields.DESCRIPTION, plan.getShortDescription());
                 }
                 spaceType.put(Fields.NAME, type.getName());
@@ -49,7 +51,7 @@ class SchemaV1Serializer extends JsonSerializer<Schema> {
             ArrayNode aplans = spaceType.putArray(Fields.PLANS);
             for (AddressSpacePlan plan : type.getPlans()) {
                 ObjectNode p = aplans.addObject();
-                p.put(Fields.NAME, plan.getName());
+                p.put(Fields.NAME, plan.getMetadata().getName());
                 p.put(Fields.DESCRIPTION, plan.getShortDescription());
             }
             spaceType.put(Fields.DESCRIPTION, type.getDescription());

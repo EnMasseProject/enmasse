@@ -7,7 +7,8 @@
 
 Address space plans specify the quota available to a given address space. By default, {ProductName} includes an unlimited quota plan for both the standard and brokered address spaces.
 
-Plans are configured as `ConfigMaps`. Following is an example plan for the standard address space:
+Plans are configured as custom resources. The following example shows a plan for the standard address space:
+
 
 [source,yaml,options="nowrap"]
 .link:resources/restrictive-plan.yaml[restrictive-plan.yaml]
@@ -22,5 +23,5 @@ The following fields are required:
 * `addressPlans`
 * `addressSpaceType`
 
-The other fields are used by the {ProductName} console UI. Note the annotation `defined-by`, which points to a resource definition describing the infrastructure that must be deployed when an address space using this plan is created.
+The other fields are used by the {ProductName} console UI. Note the annotation `defined-by`, which points to a infrastructure config that must exist when an address space using this plan is created.
 

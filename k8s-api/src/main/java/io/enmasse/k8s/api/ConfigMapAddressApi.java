@@ -189,7 +189,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                         long start = System.nanoTime();
                         watcher.onUpdate(queue.list().stream()
                                 .map(this::getAddressFromConfig)
-                                .collect(Collectors.toSet()));
+                                .collect(Collectors.toList()));
                         long end = System.nanoTime();
                     }
                 });

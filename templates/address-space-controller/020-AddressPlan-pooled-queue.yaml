@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: pooled-queue
+  labels:
+    app: enmasse
+displayName: Pooled Queue
+displayOrder: 0
+shortDescription: Creates a queue on a pooled broker.
+longDescription: Creates a queue on a pooled broker shared with other queues.
+uuid: 0843743a-0503-11e8-91df-507b9def37d9
+addressType: queue
+requiredResources:
+- name: router
+  credit: 0.01
+- name: broker
+  credit: 0.01
+

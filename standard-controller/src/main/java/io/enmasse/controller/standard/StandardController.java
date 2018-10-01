@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.api.*;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -26,6 +27,15 @@ import java.util.Optional;
 public class StandardController {
     private static final Logger log = LoggerFactory.getLogger(StandardController.class.getName());
 
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw new ExceptionInInitializerError(t);
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
 
@@ -47,13 +57,16 @@ public class StandardController {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30));
 
+        String version = getEnvOrThrow(env, "VERSION");
+
         NamespacedOpenShiftClient openShiftClient = new DefaultOpenShiftClient();
-        SchemaApi schemaApi = new ConfigMapSchemaApi(openShiftClient, openShiftClient.getNamespace());
+
+        SchemaApi schemaApi = KubeSchemaApi.create(openShiftClient, openShiftClient.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, resyncInterval);
 
         Kubernetes kubernetes = new KubernetesHelper(openShiftClient, templateDir, infraUuid);
-        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace, infraUuid);
+        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace, infraUuid, schemaProvider);
 
         boolean enableEventLogger = Boolean.parseBoolean(getEnv(env, "ENABLE_EVENT_LOGGER").orElse("false"));
         EventLogger eventLogger = enableEventLogger ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
@@ -71,8 +84,8 @@ public class StandardController {
                 eventLogger,
                 schemaProvider,
                 recheckInterval,
-                resyncInterval
-        );
+                resyncInterval,
+                version);
 
         log.info("Deploying address space controller for " + addressSpace);
         Vertx vertx = Vertx.vertx();

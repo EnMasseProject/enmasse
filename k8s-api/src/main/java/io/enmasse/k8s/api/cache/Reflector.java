@@ -6,6 +6,7 @@ package io.enmasse.k8s.api.cache;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -16,6 +17,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -74,7 +76,10 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
         }
         Instant start = clock.instant();
         LT list = listerWatcher.list(new ListOptions());
-        String resourceVersion = list.getMetadata().getResourceVersion();
+        String resourceVersion = Optional.ofNullable(list)
+                .map(KubernetesResourceList::getMetadata)
+                .map(ListMeta::getResourceVersion).orElse("");
+
         syncWith(list.getItems(), resourceVersion);
         lastSyncResourceVersion = resourceVersion;
 
