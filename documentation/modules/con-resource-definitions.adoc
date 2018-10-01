@@ -14,8 +14,8 @@ A resource describes a template along with a set of parameters. The resource def
 Resource definitions with other names will not work with {ProductName}. It is, however, possible to modify these resource definitions to change the template and template parameters used when instantiating the infrastructure. For instance, the following configuration map that increases the memory available for brokers can replace the default one provided by {ProductName}:
 
 [source,yaml,options="nowrap"]
-.link:service_admin/broker-resource.yaml[broker-resource.yaml]
+.link:resources/broker-resource.yaml[broker-resource.yaml]
 ----
-include::../service_admin/broker-resource.yaml[]
+include::../common/broker-resource.yaml[]
 ----
 

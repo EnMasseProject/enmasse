@@ -11,7 +11,7 @@
 . Create an address definition:
 +
 [source,yaml,options="nowrap"]
-.link:../common/standard-pooled-queue.yaml[standard-pooled-queue.yaml]
+.link:resources/standard-pooled-queue.yaml[standard-pooled-queue.yaml]
 ----
 include::../common/standard-pooled-queue.yaml[]
 ----

@@ -17,9 +17,9 @@ For more details, see xref:con-address-space-messaging[address space]. {ProductN
 . Create an address list definition
 +
 [source,yaml,options="nowrap"]
-.link:standard-addresses.yaml[standard-addresses.yaml]
+.link:resources/standard-addresses.yaml[standard-addresses.yaml]
 ----
-include::standard-addresses.yaml[]
+include::../common/standard-addresses.yaml[]
 ----
 
 . Create the addressses

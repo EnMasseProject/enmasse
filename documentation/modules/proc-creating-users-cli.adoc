@@ -24,7 +24,7 @@ In {ProductName} users can be created using standard command-line tools.
 . Save the user definition to a file:
 +
 [source,yaml,options="nowrap"]
-.link:common/user-example1.yaml[user-example1.yaml]
+.link:resources/user-example1.yaml[user-example1.yaml]
 ----
 include::../common/user-example1.yaml[]
 ----
