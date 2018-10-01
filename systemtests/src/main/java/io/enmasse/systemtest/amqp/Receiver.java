@@ -28,8 +28,8 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
     private final Predicate<Message> done;
     private final CountDownLatch connectLatch;
 
-    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<Message>> promise, LinkOptions linkOptions, CountDownLatch connectLatch) {
-        super(clientOptions, linkOptions, promise);
+    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<Message>> promise, LinkOptions linkOptions, CountDownLatch connectLatch, String containerId) {
+        super(clientOptions, linkOptions, promise, containerId);
         this.done = done;
         this.connectLatch = connectLatch;
     }

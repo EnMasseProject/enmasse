@@ -21,12 +21,14 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
     protected final CompletableFuture<T> promise;
+    private final String containerId;
     private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
 
-    public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise) {
+    public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise, String containerId) {
         this.clientOptions = clientOptions;
         this.linkOptions = linkOptions;
         this.promise = promise;
+        this.containerId = containerId;
     }
 
     @Override
@@ -36,7 +38,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
         client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), clientOptions.getUsername(), clientOptions.getPassword(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
-                conn.setContainer("enmasse-systemtest-client");
+                conn.setContainer(containerId);
                 conn.openHandler(result -> {
                     if (result.failed()) {
                         conn.close();
