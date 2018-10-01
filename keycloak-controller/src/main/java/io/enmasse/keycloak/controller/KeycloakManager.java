@@ -21,9 +21,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.enmasse.user.model.v1.Operation.recv;
-import static io.enmasse.user.model.v1.Operation.send;
-import static io.enmasse.user.model.v1.Operation.view;
+import static io.enmasse.user.model.v1.Operation.*;
 
 
 public class KeycloakManager implements Watcher<AddressSpace>
@@ -33,16 +31,12 @@ public class KeycloakManager implements Watcher<AddressSpace>
     private final KeycloakApi keycloak;
     private final KubeApi kube;
     private final UserApi userApi;
-    private final NamespacedOpenShiftClient client;
-    private final String keycloakConfigName;
     private IdentityProviderParams lastParams;
 
-    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi, NamespacedOpenShiftClient client, String keycloakConfigName) {
+    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
         this.keycloak = keycloak;
         this.kube = kube;
         this.userApi = userApi;
-        this.client = client;
-        this.keycloakConfigName = keycloakConfigName;
     }
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
@@ -79,7 +73,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
     @Override
     public void onUpdate(Set<AddressSpace> addressSpaces) throws Exception {
-        IdentityProviderParams identityProviderParams = IdentityProviderParams.fromKube(client, keycloakConfigName);
+        IdentityProviderParams identityProviderParams = this.kube.getIdentityProviderParams();
         if (!Objects.equals(lastParams, identityProviderParams)) {
             log.info("Identity provider params: {}", identityProviderParams);
             updateExistingRealms(identityProviderParams);

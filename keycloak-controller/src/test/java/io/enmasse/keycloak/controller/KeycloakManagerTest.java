@@ -9,10 +9,6 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.dsl.BuildConfigResource;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -25,14 +21,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class KeycloakManagerTest {
-    private static final String KEYCLOAK_CONFIG_NAME = "keycloakConfigName";
 
     private KeycloakManager manager;
     private Set<String> realms;
     private List<String> updatedRealms;
     private Map<String, String> realmAdminUsers;
     private KubeApi mockKubeApi;
-    private NamespacedOpenShiftClient mockClient;
 
     @Before
     public void setup() {
@@ -40,11 +34,8 @@ public class KeycloakManagerTest {
         updatedRealms = new LinkedList<>();
         realmAdminUsers = new HashMap<>();
         mockKubeApi = mock(KubeApi.class);
-        mockClient = mock(NamespacedOpenShiftClient.class);
         when(mockKubeApi.findUserId(any())).thenReturn("");
-
-        ConfigMap keycloakConfigMap = createKeyCloakConfigMapMock("http://example.com", "id", "secret");
-        configClientToReturn(KEYCLOAK_CONFIG_NAME, keycloakConfigMap);
+        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new IdentityProviderParams("http://example.com", "id", "secret"));
 
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
@@ -101,7 +92,7 @@ public class KeycloakManagerTest {
             public void deleteUsers(String namespace) {
 
             }
-        }, mockClient, KEYCLOAK_CONFIG_NAME);
+        });
     }
 
     @Test
@@ -153,8 +144,7 @@ public class KeycloakManagerTest {
         manager.onUpdate(spaces);
         assertTrue(updatedRealms.isEmpty());
 
-        ConfigMap keycloakConfigMap = createKeyCloakConfigMapMock("http://example.com", "id", "secret1");
-        configClientToReturn(KEYCLOAK_CONFIG_NAME, keycloakConfigMap);
+        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new IdentityProviderParams("http://example.com", "id", "secret2"));
 
         manager.onUpdate(spaces);
         assertEquals(1, updatedRealms.size());
@@ -180,24 +170,5 @@ public class KeycloakManagerTest {
                                 .setHost("console.example.com")
                                 .build()))
                 .setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
-    }
-
-    private ConfigMap createKeyCloakConfigMapMock(String url, String id, String secret) {
-        ConfigMap keycloakConfigMap = mock(ConfigMap.class);
-        Map<String, String> map = new HashMap<>();
-        map.put("identityProviderUrl", url);
-        map.put("identityProviderClientId", id);
-        map.put("identityProviderClientSecret", secret);
-
-        when(keycloakConfigMap.getData()).thenReturn(map);
-        return keycloakConfigMap;
-    }
-
-    private void configClientToReturn(String keycloakConfigName, ConfigMap keycloakConfigMap) {
-        BuildConfigResource buildConfigResource = mock(BuildConfigResource.class);
-        when(buildConfigResource.get()).thenReturn(keycloakConfigMap);
-        MixedOperation configMapsOperation = mock(MixedOperation.class);
-        when(configMapsOperation.withName(keycloakConfigName)).thenReturn(buildConfigResource);
-        when(mockClient.configMaps()).thenReturn(configMapsOperation);
     }
 }

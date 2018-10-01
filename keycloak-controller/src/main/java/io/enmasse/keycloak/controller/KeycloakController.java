@@ -71,31 +71,39 @@ public class KeycloakController {
                 getKeycloakCredentialsSecretName(env),
                 getKeycloakCertSecretName(env));
 
-        KubeApi kubeApi = userName -> {
-            if (isOpenShift) {
-                if (userName == null || userName.isEmpty() || userName.contains(":")) {
-                    return "";
-                }
-                try {
-                    User user = client.users().withName(userName).get();
-                    if (user == null) {
+        KubeApi kubeApi = new KubeApi() {
+            @Override
+            public String findUserId(String userName) {
+                if (isOpenShift) {
+                    if (userName == null || userName.isEmpty() || userName.contains(":")) {
                         return "";
                     }
-                    log.info("Found user {} with id {}", user.getMetadata().getName(), user.getMetadata().getUid());
-                    return user.getMetadata().getUid();
-                } catch (KubernetesClientException e) {
-                    log.warn("Exception looking up user id, returning empty", e);
+                    try {
+                        User user = client.users().withName(userName).get();
+                        if (user == null) {
+                            return "";
+                        }
+                        log.info("Found user {} with id {}", user.getMetadata().getName(), user.getMetadata().getUid());
+                        return user.getMetadata().getUid();
+                    } catch (KubernetesClientException e) {
+                        log.warn("Exception looking up user id, returning empty", e);
+                        return "";
+                    }
+                } else {
                     return "";
                 }
-            } else {
-                return "";
+            }
+
+            @Override
+            public IdentityProviderParams getIdentityProviderParams() {
+                return IdentityProviderParams.fromKube(client, keycloakConfigName);
             }
         };
 
 
         UserApi userApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
 
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory), kubeApi, userApi, client, keycloakConfigName);
+        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory), kubeApi, userApi);
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
