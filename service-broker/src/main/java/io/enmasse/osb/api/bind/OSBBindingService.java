@@ -53,54 +53,9 @@ public class OSBBindingService extends OSBServiceBase {
         String username = "user-" + bindingId;
         String password = generatePassword();
 
-        UserSpec.Builder specBuilder = new UserSpec.Builder();
-        specBuilder.setUsername(username);
-        specBuilder.setAuthentication(new UserAuthentication.Builder()
-                .setType(UserAuthenticationType.password)
-                .setPassword(Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)))
-                .build());
-
-
-        List<UserAuthorization> authorizations = new ArrayList<>();
-
-        authorizations.add(new UserAuthorization.Builder()
-                .setOperations(Arrays.asList(Operation.send))
-                .setAddresses(getAddresses(parameters.get("sendAddresses")))
-                .build());
-
-        authorizations.add(new UserAuthorization.Builder()
-                .setOperations(Arrays.asList(Operation.recv))
-                .setAddresses(getAddresses(parameters.get("receiveAddresses")))
-                .build());
-
-        if(parameters.containsKey("consoleAccess")
-                && Boolean.valueOf(parameters.get("consoleAccess"))) {
-            authorizations.add(new UserAuthorization.Builder()
-                    .setOperations(Arrays.asList(Operation.view))
-                    .setAddresses(Arrays.asList("*"))
-                    .build());
-        }
-
-        if(parameters.containsKey("consoleAdmin")
-                && Boolean.valueOf(parameters.get("consoleAdmin"))) {
-            authorizations.add(new UserAuthorization.Builder()
-                    .setOperations(Arrays.asList(Operation.manage))
-                    .build());
-        }
-
-        specBuilder.setAuthorization(authorizations);
-
-
-        User user = new User.Builder()
-            .setMetadata(new UserMetadata.Builder()
-                    .setNamespace(addressSpace.getNamespace())
-                    .setName(addressSpace.getName() + "." + username)
-                    .build())
-                        .setSpec(specBuilder.build())
-                        .build();
         try {
 
-            userApi.createUser(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME), user);
+            createOrReplaceUser(addressSpace, username, password, parameters);
 
             Map<String, String> credentials = new LinkedHashMap<>();
             credentials.put("username", username);
@@ -152,6 +107,61 @@ public class OSBBindingService extends OSBServiceBase {
 
  // TODO: return 200 OK, when binding already exists
 
+    }
+
+    private User createOrReplaceUser(AddressSpace addressSpace, String username, String password, Map<String, String> parameters) throws Exception {
+        UserSpec.Builder specBuilder = new UserSpec.Builder();
+        specBuilder.setUsername(username);
+        specBuilder.setAuthentication(new UserAuthentication.Builder()
+                .setType(UserAuthenticationType.password)
+                .setPassword(Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)))
+                .build());
+
+
+        List<UserAuthorization> authorizations = new ArrayList<>();
+
+        authorizations.add(new UserAuthorization.Builder()
+                .setOperations(Arrays.asList(Operation.send))
+                .setAddresses(getAddresses(parameters.get("sendAddresses")))
+                .build());
+
+        authorizations.add(new UserAuthorization.Builder()
+                .setOperations(Arrays.asList(Operation.recv))
+                .setAddresses(getAddresses(parameters.get("receiveAddresses")))
+                .build());
+
+        if(parameters.containsKey("consoleAccess")
+                && Boolean.valueOf(parameters.get("consoleAccess"))) {
+            authorizations.add(new UserAuthorization.Builder()
+                    .setOperations(Arrays.asList(Operation.view))
+                    .setAddresses(Arrays.asList("*"))
+                    .build());
+        }
+
+        if(parameters.containsKey("consoleAdmin")
+                && Boolean.valueOf(parameters.get("consoleAdmin"))) {
+            authorizations.add(new UserAuthorization.Builder()
+                    .setOperations(Arrays.asList(Operation.manage))
+                    .build());
+        }
+
+        specBuilder.setAuthorization(authorizations);
+
+        User user = new User.Builder()
+            .setMetadata(new UserMetadata.Builder()
+                    .setNamespace(addressSpace.getNamespace())
+                    .setName(addressSpace.getName() + "." + username)
+                    .build())
+                        .setSpec(specBuilder.build())
+                        .build();
+
+        String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+        if (userApi.getUserWithName(realmName, username).isPresent()) {
+            userApi.replaceUser(realmName, user);
+        } else {
+            userApi.createUser(realmName, user);
+        }
+        return user;
     }
 
     private static final String PASSWORD_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
