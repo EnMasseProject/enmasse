@@ -210,8 +210,8 @@ AddressService.prototype.delete_selected = function () {
     if (changed && this.callback) this.callback('address_deleted');
 }
 
-AddressService.prototype.is_unique_name = function (name) {
-    return !this.addresses.some(function (a) { return a.address === name; });
+AddressService.prototype.is_unique_valid_name = function (name) {
+    return !this.addresses.some(function (a) { return a.address === name; }) && name.match(/^[^#*\/\s\.:]+$/);
 }
 
 AddressService.prototype.create_user = function (obj) {
