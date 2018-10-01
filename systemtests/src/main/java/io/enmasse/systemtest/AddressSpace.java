@@ -211,7 +211,7 @@ public class AddressSpace {
                 .append("namespace=").append(namespace).append(",")
                 .append("infraUuid=").append(infraUuid).append(",")
                 .append("type=").append(type.toString().toLowerCase()).append(",")
-                .append("plan=").append(plan)
+                .append("plan=").append(plan).append(",")
                 .append("annotations=").append(annotations);
         for (AddressSpaceEndpoint endpoint : endpoints) {
             addressSpaceString.append(",").append(endpoint);
