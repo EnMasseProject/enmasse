@@ -9,7 +9,9 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AddressSpace {
     private static Logger log = CustomLogger.getLogger();
@@ -20,6 +22,7 @@ public class AddressSpace {
     private AddressSpaceType type;
     private AuthService authService;
     private List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
+    private Map<String, String> annotations = new HashMap<>();
 
     public AddressSpace(String name) {
         this(name, name, AddressSpaceType.STANDARD, AuthService.NONE);
@@ -62,6 +65,7 @@ public class AddressSpace {
         setNamespace(namespace);
         setType(type);
         setAuthService(AuthService.NONE);
+        addDefaultAnnotations();
     }
 
 
@@ -70,6 +74,7 @@ public class AddressSpace {
         setNamespace(name);
         setType(type);
         setAuthService(authService);
+        addDefaultAnnotations();
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type, AuthService authService) {
@@ -85,6 +90,7 @@ public class AddressSpace {
         setType(type);
         setPlan(plan);
         setAuthService(authService);
+        addDefaultAnnotations();
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan, AuthService authService) {
@@ -186,6 +192,18 @@ public class AddressSpace {
         this.infraUuid = infraUuid;
     }
 
+    public void addAnnotation(String key, String value) {
+        this.annotations.put(key, value);
+    }
+
+    public String removeAnnotation(String key) {
+        return this.annotations.remove(key);
+    }
+
+    public void clearAnnotations() {
+        this.annotations.clear();
+    }
+
     @Override
     public String toString() {
         StringBuilder addressSpaceString = new StringBuilder()
@@ -193,7 +211,8 @@ public class AddressSpace {
                 .append("namespace=").append(namespace).append(",")
                 .append("infraUuid=").append(infraUuid).append(",")
                 .append("type=").append(type.toString().toLowerCase()).append(",")
-                .append("plan=").append(plan);
+                .append("plan=").append(plan)
+                .append("annotations=").append(annotations);
         for (AddressSpaceEndpoint endpoint : endpoints) {
             addressSpaceString.append(",").append(endpoint);
         }
@@ -213,13 +232,13 @@ public class AddressSpace {
     public JsonObject jsonMetadata() {
         JsonObject metadata = new JsonObject();
         metadata.put("name", this.getName());
-        metadata.put("annotations", createAnnotationToDisableAutomaticOpenshiftLoginRedirect());
+        metadata.put("annotations", createAnnotations());
         return metadata;
     }
 
-    private JsonObject createAnnotationToDisableAutomaticOpenshiftLoginRedirect() {
+    private JsonObject createAnnotations() {
         JsonObject annotations = new JsonObject();
-        annotations.put("enmasse.io/kc-idp-hint", "none");
+        this.annotations.forEach(annotations::put);
         return annotations;
     }
 
@@ -251,4 +270,10 @@ public class AddressSpace {
     public String getInfraUuid() {
         return infraUuid;
     }
+
+    private void addDefaultAnnotations() {
+        // disable automatic openshift login redirect
+        annotations.put("enmasse.io/kc-idp-hint", "none");
+    }
+
 }
