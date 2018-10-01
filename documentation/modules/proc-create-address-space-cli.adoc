@@ -11,7 +11,7 @@
 . Create an address space definition:
 +
 [source,yaml,options="nowrap"]
-.link:../common/standard-address-space.yaml[standard-address-space.yaml]
+.link:resources/standard-address-space.yaml[standard-address-space.yaml]
 ----
 include::../common/standard-address-space.yaml[]
 ----

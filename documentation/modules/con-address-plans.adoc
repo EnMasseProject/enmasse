@@ -10,9 +10,9 @@ Address plans specify the expected resource usage of a given address. The sum of
 In the xref:con-address-space-plans-{context}[] section, the address space plan references two address plans: `small-queue` and `small-anycast`. These address plans are stored as `ConfigMaps` and are defined as follows:
 
 [source,yaml,options="nowrap"]
-.link:service_admin/small-queue-plan.yaml[small-queue-plan.yaml]
+.link:resources/small-queue-plan.yaml[small-queue-plan.yaml]
 ----
-include::../service_admin/small-queue-plan.yaml[]
+include::../common/small-queue-plan.yaml[]
 ----
 
 The following fields are required:
@@ -28,9 +28,9 @@ Note, however, that although the address space plan allows two routers and two b
 The `small-anycast` plan does not consume any broker resources, and can provision two routers at the expense of not being able to create any brokers:
 
 [source,yaml,options="nowrap"]
-.link:service_admin/small-anycast-plan.yaml[small-anycast-plan.yaml]
+.link:resources/small-anycast-plan.yaml[small-anycast-plan.yaml]
 ----
-include::../service_admin/small-anycast-plan.yaml[]
+include::../common/small-anycast-plan.yaml[]
 ----
 
 With this plan, up to 10 addresses can be created.
