@@ -321,19 +321,17 @@ function clean_docker_images() {
 function clean_oc_location() {
     info "Removing previous openshift data"
     if [[ $(get_openshift_version) == '3.9'* ]]; then
-        OC_DATA_PATH="/var/lib/origin/"
+        info "Cleaning OpenShift work directory /var/lib/origin"
+        sudo find  /var/lib/origin -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \;
+        sudo rm -rf /var/lib/origin
     else
-        OC_DATA_PATH="${CURDIR}/../../openshift.local.clusterup"
+        info "Cleaning OpenShift work directory openshift.local.clusterup"
+        OLD_OC_LOCATIONS=$(sudo find / -type d -name 'openshift.local.clusterup')
+        for i in ${OLD_OC_LOCATIONS}; do sudo find "${i}" -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \;; done
+        sudo find / -type d -name 'openshift.local.clusterup' -exec rm -rf {} +
     fi
-    if [ -d "${OC_DATA_PATH}" ]; then
-        info "Cleaning OpenShift work directory ${OC_DATA_PATH}"
-        sudo find ${OC_DATA_PATH} -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \;
-        sudo rm -rf ${OC_DATA_PATH}
-        sudo rm -rf /var/log/containers/*
-        sudo rm -rf /var/log/pods/*
-    else
-        info "${OC_DATA_PATH} not found"
-    fi
+    sudo rm -rf /var/log/containers/*
+    sudo rm -rf /var/log/pods/*
 }
 
 function check_if_ansible_ready() {
