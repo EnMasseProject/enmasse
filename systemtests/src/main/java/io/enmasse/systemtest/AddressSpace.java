@@ -201,7 +201,6 @@ public class AddressSpace {
         return addressSpaceString.toString();
     }
 
-
     public JsonObject toJson(String version) {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", version);
@@ -214,7 +213,14 @@ public class AddressSpace {
     public JsonObject jsonMetadata() {
         JsonObject metadata = new JsonObject();
         metadata.put("name", this.getName());
+        metadata.put("annotations", createAnnotationToDisableAutomaticOpenshiftLoginRedirect());
         return metadata;
+    }
+
+    private JsonObject createAnnotationToDisableAutomaticOpenshiftLoginRedirect() {
+        JsonObject annotations = new JsonObject();
+        annotations.put("enmasse.io/kc-idp-hint", "none");
+        return annotations;
     }
 
     public JsonObject jsonSpec() {
