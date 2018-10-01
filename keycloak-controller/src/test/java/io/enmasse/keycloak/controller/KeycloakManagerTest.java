@@ -21,19 +21,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class KeycloakManagerTest {
+
     private KeycloakManager manager;
     private Set<String> realms;
+    private List<String> updatedRealms;
     private Map<String, String> realmAdminUsers;
     private KubeApi mockKubeApi;
-    private IdentityProviderParams identityProviderParams;
 
     @Before
     public void setup() {
         realms = new HashSet<>();
+        updatedRealms = new LinkedList<>();
         realmAdminUsers = new HashMap<>();
         mockKubeApi = mock(KubeApi.class);
-        identityProviderParams = IdentityProviderParams.NULL_PARAMS;
         when(mockKubeApi.findUserId(any())).thenReturn("");
+        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new IdentityProviderParams("http://example.com", "id", "secret"));
+
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
             public Set<String> getRealmNames() {
@@ -47,6 +50,7 @@ public class KeycloakManagerTest {
 
             @Override
             public void updateRealm(String realmName, IdentityProviderParams updated) {
+                updatedRealms.add(realmName);
             }
 
             @Override
@@ -88,7 +92,7 @@ public class KeycloakManagerTest {
             public void deleteUsers(String namespace) {
 
             }
-        },  identityProviderParams);
+        });
     }
 
     @Test
@@ -128,6 +132,22 @@ public class KeycloakManagerTest {
         manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertFalse(realms.contains("a1"));
         assertEquals(0, realms.size());
+    }
+
+    @Test
+    public void testUpdateRealm() throws Exception {
+        Set<AddressSpace> spaces = Collections.singleton(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
+        manager.onUpdate(spaces);
+        assertTrue(realms.contains("a1"));
+        assertTrue(updatedRealms.isEmpty());
+
+        manager.onUpdate(spaces);
+        assertTrue(updatedRealms.isEmpty());
+
+        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new IdentityProviderParams("http://example.com", "id", "secret2"));
+
+        manager.onUpdate(spaces);
+        assertEquals(1, updatedRealms.size());
     }
 
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {

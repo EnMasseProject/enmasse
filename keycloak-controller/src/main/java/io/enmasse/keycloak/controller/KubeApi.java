@@ -6,4 +6,5 @@ package io.enmasse.keycloak.controller;
 
 public interface KubeApi {
     String findUserId(String userName);
+    IdentityProviderParams getIdentityProviderParams();
 }

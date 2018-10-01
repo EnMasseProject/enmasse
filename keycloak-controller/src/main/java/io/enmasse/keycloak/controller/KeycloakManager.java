@@ -24,7 +24,6 @@ import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
 import static io.enmasse.user.model.v1.Operation.view;
 
-
 public class KeycloakManager implements Watcher<AddressSpace>
 {
     private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
@@ -32,13 +31,12 @@ public class KeycloakManager implements Watcher<AddressSpace>
     private final KeycloakApi keycloak;
     private final KubeApi kube;
     private final UserApi userApi;
-    private IdentityProviderParams currentParams;
+    private IdentityProviderParams lastParams;
 
-    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi, IdentityProviderParams currentParams) {
+    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
         this.keycloak = keycloak;
         this.kube = kube;
         this.userApi = userApi;
-        this.currentParams = currentParams;
     }
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
@@ -75,6 +73,13 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
     @Override
     public void onUpdate(Set<AddressSpace> addressSpaces) throws Exception {
+        IdentityProviderParams identityProviderParams = this.kube.getIdentityProviderParams();
+        if (!Objects.equals(lastParams, identityProviderParams)) {
+            log.info("Identity provider params: {}", identityProviderParams);
+            updateExistingRealms(identityProviderParams);
+            lastParams = identityProviderParams;
+        }
+
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
                              .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getEndpoints() != null)
@@ -105,7 +110,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
-                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, currentParams);
+                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, identityProviderParams);
                 userApi.createUser(realmName, new User.Builder()
                         .setMetadata(new UserMetadata.Builder()
                                 .setName(addressSpace.getName() + "." + userName)
@@ -132,8 +137,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
         }
     }
 
-    public void update(IdentityProviderParams updatedParams) {
-        currentParams = updatedParams;
+    private void updateExistingRealms(IdentityProviderParams updatedParams) {
         keycloak.getRealmNames().stream()
                 .filter(name -> !name.equals(MASTER_REALM))
                 .forEach(name -> {
