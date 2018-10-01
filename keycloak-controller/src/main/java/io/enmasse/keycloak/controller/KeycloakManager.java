@@ -13,7 +13,6 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.Watcher;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +20,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.enmasse.user.model.v1.Operation.*;
-
+import static io.enmasse.user.model.v1.Operation.recv;
+import static io.enmasse.user.model.v1.Operation.send;
+import static io.enmasse.user.model.v1.Operation.view;
 
 public class KeycloakManager implements Watcher<AddressSpace>
 {
