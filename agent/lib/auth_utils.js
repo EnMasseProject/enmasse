@@ -124,14 +124,26 @@ function clean_query_string(request, response, next) {
     }
 }
 
-function patch(sessions) {
+function patch(sessions, kc_idp_hint) {
     return function (request, response, next) {
         let u = url.parse(request.url, true);
+
         request.query = u.query;
         request.protocol = 'https';
         request.hostname = u.hostname || request.headers.host.split(':')[0];
         init_session(sessions, request, response);
         response.redirect = function (target) {
+            let target_url = url.parse(target, true);
+            let target_url_query = target_url.query;
+            let is_auth_endpoint_url = "client_id" in target_url_query && "response_type" in target_url_query;
+            if (kc_idp_hint && is_auth_endpoint_url && !("disable_kc_idp_hint" in u.query)) {
+                target_url_query["kc_idp_hint"] = kc_idp_hint;
+                target_url.query = target_url_query;
+                delete target_url.search;
+                target = url.format(target_url);
+                log.info("Modified redirect: %s", target);
+            }
+
             response.statusCode = 302;
             response.setHeader('Location', target);
             response.end();
@@ -266,6 +278,9 @@ module.exports.ws_auth_handler = function (authz, env) {
 module.exports.auth_handler = function (authz, env, handler) {
     if (use_oauth(env)) {
         set_defaults({rejectUnauthorized:false});
+        let kc_idp_hint = env.AUTHENTICATION_SERVICE_KC_IDP_HINT;
+        log.info('kc_idp_hint override: %s', kc_idp_hint);
+
         let keycloak_config = {
             "realm": env.AUTHENTICATION_SERVICE_SASL_INIT_HOST,
             "auth-server-url": env.AUTHENTICATION_SERVICE_OAUTH_URL || get_keycloak_auth_url(env),
@@ -274,10 +289,11 @@ module.exports.auth_handler = function (authz, env, handler) {
             "public-client": true,
             "confidential-port": 0
         };
+
         let keycloak = new Keycloak({}, keycloak_config);
         keycloak.stores.push(SessionStore);
         setInterval(purge_stale_sessions.bind(null, sessions, 15*60*1000), 60*1000);
-        let interceptors = [patch(sessions)].concat(keycloak.middleware()).concat([keycloak.protect(record_token), authenticate(authz, env, get_oauth_credentials, auth_failed), clean_query_string]);
+        let interceptors = [patch(sessions, kc_idp_hint)].concat(keycloak.middleware()).concat([keycloak.protect(record_token), authenticate(authz, env, get_oauth_credentials, auth_failed), clean_query_string]);
         return function (request, response) {
             step(interceptors, request, response, 0, handler);
         };
