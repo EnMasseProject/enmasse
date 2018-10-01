@@ -327,7 +327,7 @@ function clean_oc_location() {
     else
         info "Cleaning OpenShift work directory openshift.local.clusterup"
         OLD_OC_LOCATIONS=$(sudo find /home/cloud-user/ -type d -name 'openshift.local.clusterup')
-        for i in ${OLD_OC_LOCATIONS}; do sudo find "${i}" -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \; && rm -rf "${i}"; done
+        for i in ${OLD_OC_LOCATIONS}; do sudo find "${i}" -type d -exec mountpoint --quiet {} \; -exec umount --types tmpfs {} \; && rm sudo -rf "${i}"; done
     fi
     sudo rm -rf /var/log/containers/*
     sudo rm -rf /var/log/pods/*
