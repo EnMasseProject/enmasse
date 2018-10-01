@@ -5,13 +5,13 @@ metadata:
     app: enmasse
   name: address-space-definitions
 data:
-  standard-space-infra-without-mqtt.yaml: |-
+  standard-space-infra.yaml: |-
     apiVersion: v1
     kind: Template
     metadata:
       labels:
         app: enmasse
-      name: standard-space-infra-without-mqtt
+      name: standard-space-infra
     objects:
     - apiVersion: v1
       kind: Service
@@ -190,7 +190,7 @@ data:
             prefix: $temp
             distribution: balanced
           }
-    - apiVersion: apps/v1beta1
+    - apiVersion: apps/v1
       kind: StatefulSet
       metadata:
         annotations:
@@ -209,6 +209,13 @@ data:
       spec:
         serviceName: qdrouterd-headless-${INFRA_UUID}
         replicas: 1
+        selector:
+          matchLabels:
+            app: enmasse
+            capability: router
+            name: qdrouterd
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -234,6 +241,11 @@ data:
                 tcpSocket:
                   port: amqp
               name: router
+              resources:
+                limits:
+                  memory: ${ROUTER_MEMORY_LIMIT}
+                requests:
+                  memory: ${ROUTER_MEMORY_LIMIT}
               ports:
               - containerPort: 5672
                 name: amqp
@@ -311,7 +323,7 @@ data:
           app: enmasse
           infraType: standard
           infraUuid: ${INFRA_UUID}
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1
       kind: Deployment
       metadata:
         annotations:
@@ -327,6 +339,12 @@ data:
         replicas: 1
         strategy:
           type: Recreate
+        selector:
+          matchLabels:
+            app: enmasse
+            name: admin
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -349,6 +367,8 @@ data:
                 value: /etc/enmasse-certs
               - name: TEMPLATE_DIR
                 value: /broker-templates
+              - name: STANDARD_INFRA_CONFIG_NAME
+                value: ${STANDARD_INFRA_CONFIG_NAME}
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
               - name: INFRA_UUID
@@ -396,9 +416,9 @@ data:
                 initialDelaySeconds: 30
               resources:
                 limits:
-                  memory: 512Mi
+                  memory: ${ADMIN_MEMORY_LIMIT}
                 requests:
-                  memory: 512Mi
+                  memory: ${ADMIN_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /etc/enmasse-certs
                 name: admin-internal-cert
@@ -464,9 +484,9 @@ data:
                 timeoutSeconds: 5
               resources:
                 limits:
-                  memory: 512Mi
+                  memory: ${ADMIN_MEMORY_LIMIT}
                 requests:
-                  memory: 128Mi
+                  memory: ${ADMIN_MEMORY_LIMIT}
               volumeMounts:
               - mountPath: /etc/console-certs
                 name: console-secret
@@ -574,6 +594,9 @@ data:
     - name: INFRA_UUID
       description: UUID to use for infrastructure
       required: true
+    - name: INFRA_NAMESPACE
+      description: Namespace where infrastructure is created
+      required: true
     - name: ADDRESS_SPACE_PLAN
       description: Name of address space plan followed
       required: true
@@ -581,19 +604,10 @@ data:
       name: ROUTER_LINK_CAPACITY
       value: '250'
     - description: The hostname to use for the exposed route for messaging
-      name: MESSAGING_HOSTNAME
-    - description: The hostname to use for the exposed route for MQTT
-      name: MQTT_GATEWAY_HOSTNAME
-    - description: The hostname to use for the exposed route for the messaging console
-      name: CONSOLE_HOSTNAME
-    - description: The secret with cert for the console
       name: CONSOLE_SECRET
       required: true
     - description: The secret with cert for the messaging service
       name: MESSAGING_SECRET
-      required: true
-    - description: The secret to mount for MQTT private key and certificate
-      name: MQTT_SECRET
       required: true
     - description: The name of our address space
       name: ADDRESS_SPACE
@@ -618,6 +632,9 @@ data:
       name: AUTHENTICATION_SERVICE_OAUTH_URL
     - description: Name of Keycloak Identification Provider Hint
       name: AUTHENTICATION_SERVICE_KC_IDP_HINT
+    - description: Name standard infra config
+      name: STANDARD_INFRA_CONFIG_NAME
+      required: true
     - description: Enable logging of kubernetes events
       name: ENABLE_EVENT_LOGGER
       value: 'false'
@@ -633,56 +650,20 @@ data:
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
       required: true
-  standard-space-infra.yaml: |-
+    - description: Memory limits for admin
+      name: ADMIN_MEMORY_LIMIT
+      value: 512Mi
+    - description: Memory limits for router
+      name: ROUTER_MEMORY_LIMIT
+      value: 512Mi
+  standard-space-infra-mqtt.yaml: |-
     apiVersion: v1
     kind: Template
     metadata:
       labels:
         app: enmasse
-      name: standard-space-infra
+      name: standard-space-infra-mqtt
     objects:
-    - apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/service-port.amqp: 5672
-          enmasse.io/service-port.amqps: 5671
-          enmasse.io/service-port.amqp-wss: 443
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: messaging-${INFRA_UUID}
-      spec:
-        ports:
-        - name: amqp
-          port: 5672
-          protocol: TCP
-          targetPort: 5672
-        - name: https
-          port: 443
-          protocol: TCP
-          targetPort: 8443
-        - name: amqps
-          port: 5671
-          protocol: TCP
-          targetPort: 5671
-        - name: amqps-normal
-          port: 55671
-          protocol: TCP
-          targetPort: amqps-normal
-        - name: amqps-broker
-          port: 56671
-          protocol: TCP
-          targetPort: amqps-broker
-        - name: inter-router
-          port: 55672
-          protocol: TCP
-          targetPort: 55672
-        selector:
-          capability: router
-          infraUuid: ${INFRA_UUID}
     - apiVersion: v1
       kind: Service
       metadata:
@@ -702,522 +683,7 @@ data:
         selector:
           name: subserv
           infraUuid: ${INFRA_UUID}
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: qdrouterd-config.${INFRA_UUID}
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-      data:
-        qdrouterd.conf: |-
-          router {
-            mode: interior
-            id: ${HOSTNAME}
-            defaultDistribution: unavailable
-            allowResumableLinkRoute: false
-          }
-
-          sslProfile {
-            name: auth_service_ssl
-            certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
-          }
-
-          authServicePlugin {
-            name: auth_service
-            authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
-            saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-            authSslProfile: auth_service_ssl
-          }
-
-          listener {
-            host: 0.0.0.0
-            port: 5672
-            saslPlugin: auth_service
-            linkCapacity: ${ROUTER_LINK_CAPACITY}
-          }
-
-          listener {
-            host: 0.0.0.0
-            port: 55672
-            role: inter-router
-            authenticatePeer: yes
-            sslProfile: inter_router_tls
-            saslMechanisms: EXTERNAL
-            linkCapacity: ${ROUTER_LINK_CAPACITY}
-          }
-
-          listener {
-            host: 0.0.0.0
-            port: 8443
-            saslPlugin: auth_service
-            sslProfile: ssl_details
-            http: true
-            authenticatePeer: yes
-            linkCapacity: ${ROUTER_LINK_CAPACITY}
-          }
-
-          sslProfile {
-            name: ssl_details
-            certFile: /etc/qpid-dispatch/ssl/tls.crt
-            keyFile: /etc/qpid-dispatch/ssl/tls.key
-          }
-
-          listener {
-            host: 0.0.0.0
-            port: 5671
-            saslPlugin: auth_service
-            sslProfile: ssl_details
-            requireSsl: true
-            linkCapacity: ${ROUTER_LINK_CAPACITY}
-          }
-
-          sslProfile {
-            name: inter_router_tls
-            certFile: /etc/enmasse-certs/tls.crt
-            keyFile: /etc/enmasse-certs/tls.key
-            certDb: /etc/enmasse-certs/ca.crt
-          }
-
-          listener {
-            host: 0.0.0.0
-            port: 55671
-            sslProfile: inter_router_tls
-            saslMechanisms: EXTERNAL
-            authenticatePeer: yes
-            linkCapacity: ${ROUTER_LINK_CAPACITY}
-          }
-
-          listener {
-            host: 0.0.0.0
-            port: 56671
-            sslProfile: inter_router_tls
-            saslMechanisms: EXTERNAL
-            role: route-container
-            authenticatePeer: yes
-            linkCapacity: ${ROUTER_LINK_CAPACITY}
-          }
-
-          connector {
-            host: ragent-${INFRA_UUID}
-            port: 5671
-            sslProfile: inter_router_tls
-            verifyHostName: no
-          }
-
-          linkRoute {
-            name: override.lwt_in
-            prefix: $lwt
-            direction: in
-            containerId: lwt-service
-          }
-
-          linkRoute {
-            name: override.lwt_out
-            prefix: $lwt
-            direction: out
-            containerId: lwt-service
-          }
-
-          address {
-            name: override.mqtt
-            prefix: $mqtt
-            distribution: balanced
-          }
-
-          address {
-            name: override.subctrl
-            prefix: $subctrl
-            distribution: balanced
-          }
-
-          address {
-            name: override.temp
-            prefix: $temp
-            distribution: balanced
-          }
-    - apiVersion: apps/v1beta1
-      kind: StatefulSet
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-cn: router.${INFRA_UUID}
-          enmasse.io/cert-secret: router-internal-cert.${INFRA_UUID}
-          prometheus.io/path: /metrics
-          prometheus.io/port: '8080'
-          prometheus.io/scrape: 'true'
-        labels:
-          app: enmasse
-          name: qdrouterd
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: qdrouterd-${INFRA_UUID}
-      spec:
-        serviceName: qdrouterd-headless-${INFRA_UUID}
-        replicas: 1
-        template:
-          metadata:
-            annotations:
-              addressSpace: ${ADDRESS_SPACE}
-            labels:
-              app: enmasse
-              capability: router
-              name: qdrouterd
-              infraType: standard
-              infraUuid: ${INFRA_UUID}
-          spec:
-            containers:
-            - env:
-              - name: QDROUTERD_CONF
-                value: "/etc/qpid-dispatch/config/qdrouterd.conf"
-              - name: QDROUTERD_AUTO_MESH_DISCOVERY
-                value: "INFER"
-              - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
-                value: "qdrouterd-headless-${INFRA_UUID}"
-              image: ${ROUTER_IMAGE}
-              livenessProbe:
-                initialDelaySeconds: 60
-                tcpSocket:
-                  port: amqp
-              name: router
-              ports:
-              - containerPort: 5672
-                name: amqp
-                protocol: TCP
-              - containerPort: 5671
-                name: amqps
-                protocol: TCP
-              - containerPort: 8443
-                name: https
-                protocol: TCP
-              - containerPort: 55671
-                name: amqps-normal
-                protocol: TCP
-              - containerPort: 56671
-                name: amqps-broker
-                protocol: TCP
-              volumeMounts:
-              - mountPath: /etc/qpid-dispatch/ssl
-                name: ssl-certs
-                readOnly: true
-              - mountPath: /etc/qpid-dispatch/authservice-ca
-                name: authservice-ca
-                readOnly: true
-              - mountPath: /etc/enmasse-certs
-                name: router-internal-cert
-                readOnly: true
-              - mountPath: /etc/qpid-dispatch/config
-                name: qdrouterd-config
-            - env:
-              - name: ROUTER_HOST
-                value: 127.0.0.1
-              - name: ROUTER_PORT
-                value: '55671'
-              - name: CERT_DIR
-                value: /etc/enmasse-certs
-              image: ${ROUTER_METRICS_IMAGE}
-              livenessProbe:
-                initialDelaySeconds: 60
-                tcpSocket:
-                  port: routermetrics
-              name: metrics
-              ports:
-              - containerPort: 8080
-                name: routermetrics
-                protocol: TCP
-              resources:
-                limits:
-                  memory: 32Mi
-                requests:
-                  memory: 32Mi
-              volumeMounts:
-              - mountPath: /etc/enmasse-certs
-                name: router-internal-cert
-                readOnly: true
-            volumes:
-            - name: ssl-certs
-              secret:
-                secretName: ${MESSAGING_SECRET}
-            - name: authservice-ca
-              secret:
-                secretName: authservice-ca.${INFRA_UUID}
-            - name: router-internal-cert
-              secret:
-                secretName: router-internal-cert.${INFRA_UUID}
-            - name: qdrouterd-config
-              configMap:
-                name: qdrouterd-config.${INFRA_UUID}
-    - apiVersion: v1
-      data:
-        tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
-      kind: Secret
-      metadata:
-        name: authservice-ca.${INFRA_UUID}
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-    - apiVersion: extensions/v1beta1
-      kind: Deployment
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/cert-secret: admin-internal-cert.${INFRA_UUID}
-        labels:
-          app: enmasse
-          name: admin
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: admin.${INFRA_UUID}
-      spec:
-        replicas: 1
-        strategy:
-          type: Recreate
-        template:
-          metadata:
-            annotations:
-              addressSpace: ${ADDRESS_SPACE}
-            labels:
-              app: enmasse
-              name: admin
-              infraType: standard
-              infraUuid: ${INFRA_UUID}
-          spec:
-            containers:
-            - env:
-              - name: MESSAGING_SERVICE_HOST
-                value: messaging-${INFRA_UUID}
-              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
-                value: 55671
-              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
-                value: 56671
-              - name: INFRA_UUID
-                value: ${INFRA_UUID}
-              - name: ADDRESS_SPACE_PLAN
-                value: ${ADDRESS_SPACE_PLAN}
-              - name: CERT_DIR
-                value: /etc/enmasse-certs
-              - name: TEMPLATE_DIR
-                value: /broker-templates
-              - name: ADDRESS_SPACE
-                value: ${ADDRESS_SPACE}
-              - name: RESYNC_INTERVAL
-                value: ${CONTROLLER_RESYNC_INTERVAL}
-              - name: CHECK_INTERVAL
-                value: ${CONTROLLER_CHECK_INTERVAL}
-              - name: EVENT_QUEUE_SIZE
-                value: ${CONTROLLER_EVENT_QUEUE_SIZE}
-              - name: ENABLE_EVENT_LOGGER
-                value: ${ENABLE_EVENT_LOGGER}
-              - name: AUTHENTICATION_SERVICE_HOST
-                value: ${AUTHENTICATION_SERVICE_HOST}
-              - name: AUTHENTICATION_SERVICE_PORT
-                value: ${AUTHENTICATION_SERVICE_PORT}
-              - name: AUTHENTICATION_SERVICE_CA_SECRET
-                value: authservice-ca
-              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-              - name: JAVA_OPTS
-                value: -verbose:gc
-              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-              - name: MESSAGING_SECRET
-                value: ${MESSAGING_SECRET}
-              image: ${STANDARD_CONTROLLER_IMAGE}
-              livenessProbe:
-                httpGet:
-                  path: /health
-                  port: http
-                  scheme: HTTP
-                initialDelaySeconds: 30
-              name: standard-controller
-              ports:
-              - containerPort: 8889
-                name: http
-              readinessProbe:
-                httpGet:
-                  path: /health
-                  port: http
-                  scheme: HTTP
-                initialDelaySeconds: 30
-              resources:
-                limits:
-                  memory: 512Mi
-                requests:
-                  memory: 512Mi
-              volumeMounts:
-              - mountPath: /etc/enmasse-certs
-                name: admin-internal-cert
-                readOnly: true
-              - mountPath: /broker-templates
-                name: broker-templates
-                readOnly: true
-            - env:
-              - name: MESSAGING_SERVICE_HOST
-                value: messaging-${INFRA_UUID}
-              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
-                value: 55671
-              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
-                value: 56671
-              - name: INFRA_UUID
-                value: ${INFRA_UUID}
-              - name: ADDRESS_SPACE_PLAN
-                value: ${ADDRESS_SPACE_PLAN}
-              - name: CERT_DIR
-                value: /etc/enmasse-certs
-              - name: AUTHENTICATION_SERVICE_HOST
-                value: ${AUTHENTICATION_SERVICE_HOST}
-              - name: AUTHENTICATION_SERVICE_PORT
-                value: ${AUTHENTICATION_SERVICE_PORT}
-              - name: AUTHENTICATION_SERVICE_CA_SECRET
-                value: authservice-ca
-              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
-              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-              - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-              - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
-                value: ${AUTHENTICATION_SERVICE_KC_IDP_HINT}
-              - name: ADDRESS_SPACE
-                value: ${ADDRESS_SPACE}
-              - name: ADDRESS_SPACE_NAMESPACE
-                value: ${ADDRESS_SPACE_NAMESPACE}
-              - name: MESSAGING_CERT
-                value: /opt/agent/messaging-cert/tls.crt
-              image: ${AGENT_IMAGE}
-              livenessProbe:
-                httpGet:
-                  path: /probe
-                  port: http
-                  scheme: HTTP
-                periodSeconds: 30
-                timeoutSeconds: 5
-              name: agent
-              ports:
-              - containerPort: 8888
-                name: http
-              - containerPort: 8080
-                name: https
-              - containerPort: 56720
-                name: amqp-ws
-              readinessProbe:
-                httpGet:
-                  path: /probe
-                  port: http
-                  scheme: HTTP
-                periodSeconds: 30
-                timeoutSeconds: 5
-              resources:
-                limits:
-                  memory: 512Mi
-                requests:
-                  memory: 128Mi
-              volumeMounts:
-              - mountPath: /etc/console-certs
-                name: console-secret
-                readOnly: true
-              - mountPath: /opt/agent/authservice-ca
-                name: authservice-ca
-                readOnly: true
-              - mountPath: /etc/enmasse-certs
-                name: admin-internal-cert
-                readOnly: true
-              - mountPath: /opt/agent/messaging-cert
-                name: messaging-cert
-                readOnly: true
-            serviceAccount: ${ADDRESS_SPACE_ADMIN_SA}
-            volumes:
-            - name: console-secret
-              secret:
-                secretName: ${CONSOLE_SECRET}
-            - name: authservice-ca
-              secret:
-                secretName: authservice-ca.${INFRA_UUID}
-            - name: admin-internal-cert
-              secret:
-                secretName: admin-internal-cert.${INFRA_UUID}
-            - name: messaging-cert
-              secret:
-                secretName: ${MESSAGING_SECRET}
-            - name: broker-templates
-              configMap:
-                name: standard-broker-definitions
-    - apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: qdrouterd-headless-${INFRA_UUID}
-      spec:
-        clusterIP: None
-        ports:
-        - name: inter-router
-          port: 55672
-          targetPort: 55672
-        selector:
-          capability: router
-          infraUuid: ${INFRA_UUID}
-    - apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: ragent-${INFRA_UUID}
-      spec:
-        ports:
-        - name: amqp
-          port: 5671
-          targetPort: 55671
-        selector:
-          name: admin
-          infraUuid: ${INFRA_UUID}
-    - apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: queue-scheduler-${INFRA_UUID}
-      spec:
-        ports:
-        - name: amqp
-          port: 5672
-          targetPort: 55671
-        selector:
-          name: admin
-          infraUuid: ${INFRA_UUID}
-    - apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-        labels:
-          app: enmasse
-          infraType: standard
-          infraUuid: ${INFRA_UUID}
-        name: console-${INFRA_UUID}
-      spec:
-        ports:
-        - name: https
-          port: 8081
-          targetPort: 8080
-        selector:
-          name: admin
-          infraUuid: ${INFRA_UUID}
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1
       kind: Deployment
       metadata:
         annotations:
@@ -1231,6 +697,12 @@ data:
         name: subserv.${INFRA_UUID}
       spec:
         replicas: 1
+        selector:
+          matchLabels:
+            app: enmasse
+            name: subserv
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -1301,7 +773,7 @@ data:
           name: mqtt-gateway
           infraUuid: ${INFRA_UUID}
         type: ClusterIP
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1
       kind: Deployment
       metadata:
         annotations:
@@ -1314,6 +786,12 @@ data:
         name: mqtt-gateway.${INFRA_UUID}
       spec:
         replicas: 1
+        selector:
+          matchLabels:
+            app: enmasse
+            name: mqtt-gateway
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -1373,7 +851,7 @@ data:
             - name: ssl-certs
               secret:
                 secretName: ${MQTT_SECRET}
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1
       kind: Deployment
       metadata:
         annotations:
@@ -1387,6 +865,12 @@ data:
         name: mqtt-lwt.${INFRA_UUID}
       spec:
         replicas: 1
+        selector:
+          matchLabels:
+            app: enmasse
+            name: mqtt-lwt
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -1421,68 +905,15 @@ data:
     - name: INFRA_UUID
       description: UUID to use for infrastructure
       required: true
-    - name: ADDRESS_SPACE_PLAN
-      description: Name of address space plan followed
-      required: true
-    - description: The link capacity setting for router
-      name: ROUTER_LINK_CAPACITY
-      value: '250'
-    - description: The hostname to use for the exposed route for messaging
-      name: MESSAGING_HOSTNAME
-    - description: The hostname to use for the exposed route for MQTT
-      name: MQTT_GATEWAY_HOSTNAME
-    - description: The hostname to use for the exposed route for the messaging console
-      name: CONSOLE_HOSTNAME
-    - description: The secret with cert for the console
-      name: CONSOLE_SECRET
-      required: true
-    - description: The secret with cert for the messaging service
-      name: MESSAGING_SECRET
-      required: true
-    - description: The secret to mount for MQTT private key and certificate
-      name: MQTT_SECRET
-      required: true
     - description: The name of our address space
       name: ADDRESS_SPACE
-      required: true
-    - description: The namespace of our address space
-      name: ADDRESS_SPACE_NAMESPACE
-      required: true
-    - description: The hostname of the authentication service used by this address space
-      name: AUTHENTICATION_SERVICE_HOST
-      required: true
-    - description: The port of the authentication service used by this address space
-      name: AUTHENTICATION_SERVICE_PORT
-      required: true
-    - description: The CA cert to use for validating authentication service cert
-      name: AUTHENTICATION_SERVICE_CA_CERT
-      required: true
-    - description: The client cert to use as identity against authentication service
-      name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-    - description: The hostname to use in sasl init
-      name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-    - description: The URL to use for OAUTH (if not set, OAUTH is not used)
-      name: AUTHENTICATION_SERVICE_OAUTH_URL
-    - description: Name of Keycloak Identification Provider Hint
-      name: AUTHENTICATION_SERVICE_KC_IDP_HINT
-    - description: Enable logging of kubernetes events
-      name: ENABLE_EVENT_LOGGER
-      value: 'false'
-    - description: Interval (in seconds) to use between controller resync
-      name: CONTROLLER_RESYNC_INTERVAL
-      value: '600'
-    - description: Interval (in seconds) to use between status checks
-      name: CONTROLLER_CHECK_INTERVAL
-      value: '30'
-    - description: Max number of events queued up for controller
-      name: CONTROLLER_EVENT_QUEUE_SIZE
-      value: '10000'
-    - description: The service account with address space admin privileges
-      name: ADDRESS_SPACE_ADMIN_SA
       required: true
     - description: Maximum message size allowed by the MQTT Gateway
       name: MQTT_MAXMESSAGESIZE
       value: '131072'
+    - description: The secret with cert for the mqtt service
+      name: MQTT_SECRET
+      required: true
   brokered-space-infra.yaml: |-
     apiVersion: v1
     kind: Template
@@ -1512,8 +943,8 @@ data:
         - ReadWriteOnce
         resources:
           requests:
-            storage: ${STORAGE_CAPACITY}
-    - apiVersion: extensions/v1beta1
+            storage: ${BROKER_STORAGE_CAPACITY}
+    - apiVersion: apps/v1
       kind: Deployment
       metadata:
         annotations:
@@ -1527,6 +958,14 @@ data:
         name: broker.${INFRA_UUID}
       spec:
         replicas: 1
+        strategy:
+          type: Recreate
+        selector:
+          matchLabels:
+            app: enmasse
+            name: broker
+            role: broker
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -1546,6 +985,8 @@ data:
                 value: ${INFRA_UUID}
               - name: ADDRESS_SPACE_TYPE
                 value: brokered
+              - name: ADDRESS_FULL_POLICY
+                value: ${BROKER_ADDRESS_FULL_POLICY}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               - name: GLOBAL_MAX_SIZE
@@ -1661,7 +1102,7 @@ data:
         selector:
           role: broker
           infraUuid: ${INFRA_UUID}
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1
       kind: Deployment
       metadata:
         annotations:
@@ -1677,6 +1118,12 @@ data:
         replicas: 1
         strategy:
           type: Recreate
+        selector:
+          matchLabels:
+            app: enmasse
+            name: agent
+            role: agent
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -1733,6 +1180,11 @@ data:
                   port: http
                   scheme: HTTP
               name: agent
+              resources:
+                limits:
+                  memory: ${ADMIN_MEMORY_LIMIT}
+                requests:
+                  memory: ${ADMIN_MEMORY_LIMIT}
               ports:
               - containerPort: 8080
                 name: https
@@ -1794,8 +1246,11 @@ data:
     - name: INFRA_UUID
       description: UUID to use for infrastructure
       required: true
+    - name: INFRA_NAMESPACE
+      description: Namespace where infrastructure is created
+      required: true
     - description: Storage capacity required for volume claims
-      name: STORAGE_CAPACITY
+      name: BROKER_STORAGE_CAPACITY
       value: 2Gi
     - description: The name of our address space
       name: ADDRESS_SPACE
@@ -1835,6 +1290,9 @@ data:
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
       required: true
+    - description: Memory limits for admin
+      name: ADMIN_MEMORY_LIMIT
+      value: 512Mi
     - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
@@ -1842,3 +1300,6 @@ data:
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
       value: -1
+    - description: Broker address full policy
+      name: BROKER_ADDRESS_FULL_POLICY
+      value: FAIL

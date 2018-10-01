@@ -5,6 +5,9 @@
 
 package io.enmasse.controller.standard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -12,12 +15,14 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
  * Represents a cluster of resources for a given destination.
  */
 public class BrokerCluster {
+    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(BrokerCluster.class.getName());
 
     @Override
@@ -44,8 +49,8 @@ public class BrokerCluster {
     }
 
     private final String clusterId;
-    private final KubernetesList resources;
     private final int replicas;
+    private KubernetesList resources;
     private int newReplicas;
 
     public BrokerCluster(String clusterId, KubernetesList resources) {
@@ -64,6 +69,19 @@ public class BrokerCluster {
             }
         }
         return 0;
+    }
+
+    private StandardInfraConfig findStandardInfraConfig(List<HasMetadata> items) throws IOException {
+        StandardInfraConfig config = null;
+        for (HasMetadata item : items) {
+            if (item instanceof StatefulSet) {
+                if (item.getMetadata().getAnnotations() != null && item.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG) != null) {
+                    config = mapper.readValue(item.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG), StandardInfraConfig.class);
+                    break;
+                }
+            }
+        }
+        return config;
     }
 
 
@@ -89,5 +107,20 @@ public class BrokerCluster {
 
     public String getClusterId() {
         return clusterId;
+    }
+
+    public StandardInfraConfig getInfraConfig() throws IOException {
+        return findStandardInfraConfig(resources.getItems());
+    }
+
+    public void updateResources(BrokerCluster upgradedCluster, StandardInfraConfig infraConfig) throws Exception {
+        if (upgradedCluster != null) {
+            this.resources = upgradedCluster.getResources();
+            for (HasMetadata item : resources.getItems()) {
+                if (item instanceof StatefulSet) {
+                    Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig));
+                }
+            }
+        }
     }
 }

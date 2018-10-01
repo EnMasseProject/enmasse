@@ -110,6 +110,11 @@ function do_get(resource, options) {
     return do_get_with_options(opts);
 };
 
+function do_get_raw(path, options) {
+    var opts = get_options(options, path);
+    return do_get_with_options(opts);
+}
+
 function do_request(method, resource, input, options) {
     return new Promise(function (resolve, reject) {
         var opts = list_options(resource, options || {});
@@ -240,6 +245,9 @@ Watcher.prototype.close = function () {
         });
     });
 };
+
+module.exports.get_path = get_path;
+module.exports.get_raw = do_get_raw;
 
 module.exports.get = function (resource, options) {
     return do_get(resource, options);

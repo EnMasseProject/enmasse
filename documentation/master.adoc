@@ -68,6 +68,14 @@ include::assemblies/assembly-connecting-applications.adoc[leveloffset=+1]
 
 include::assemblies/assembly-plans.adoc[leveloffset=+2]
 
+== Infrastructure configuration
+
+include::assemblies/assembly-infrastructure-configuration.adoc[leveloffset=+2]
+
+== Upgrading
+
+include::assemblies/assembly-upgrading-enmasse.adoc[leveloffset=+2]
+
 == Monitoring
 
 include::assemblies/assembly-monitoring-oc.adoc[leveloffset=+2]

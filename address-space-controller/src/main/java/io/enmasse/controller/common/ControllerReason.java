@@ -8,6 +8,7 @@ import io.enmasse.k8s.api.EventLogger;
 
 public enum ControllerReason implements EventLogger.Reason {
     AddressSpaceCreated,
+    AddressSpaceUpgraded,
     BrokerCreated,
     AddressSpaceSyncFailed,
     CertCreated,

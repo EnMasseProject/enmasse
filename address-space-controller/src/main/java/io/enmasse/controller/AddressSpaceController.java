@@ -11,6 +11,7 @@ import java.time.Clock;
 import java.util.*;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
@@ -36,6 +37,15 @@ public class AddressSpaceController extends AbstractVerticle {
     private final NamespacedOpenShiftClient controllerClient;
     private final AddressSpaceControllerOptions options;
 
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw new ExceptionInInitializerError(t);
+        }
+    }
+
     private AddressSpaceController(AddressSpaceControllerOptions options) {
         this.controllerClient = new DefaultOpenShiftClient();
         this.options = options;
@@ -58,7 +68,7 @@ public class AddressSpaceController extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = new ConfigMapSchemaApi(controllerClient, controllerClient.getNamespace());
+        SchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         boolean isOpenShift = isOpenShift(controllerClient);
@@ -73,11 +83,11 @@ public class AddressSpaceController extends AbstractVerticle {
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, schemaProvider, resolverFactory, isOpenShift);
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, resolverFactory, isOpenShift);
 
         ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
-        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, kubernetes.getNamespace(), eventLogger, authController.getDefaultCertProvider()));
-        controllerChain.addController(new StatusController(kubernetes, infraResourceFactory));
+        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
+        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(authController);
 

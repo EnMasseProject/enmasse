@@ -5,12 +5,13 @@
 
 package io.enmasse.osb;
 
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapSchemaApi;
+import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakUserApi;
@@ -39,6 +40,15 @@ public class ServiceBroker extends AbstractVerticle {
     private final NamespacedOpenShiftClient client;
     private final ServiceBrokerOptions options;
 
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw new ExceptionInInitializerError(t);
+        }
+    }
+
     private ServiceBroker(ServiceBrokerOptions options) {
         this.client = new DefaultOpenShiftClient();
         this.options = options;
@@ -46,7 +56,7 @@ public class ServiceBroker extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = new ConfigMapSchemaApi(client, client.getNamespace());
+        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 

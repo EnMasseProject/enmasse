@@ -1,0 +1,32 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressSpacePlan
+metadata:
+  name: unlimited-standard
+  labels:
+    app: enmasse
+  annotations:
+    enmasse.io/defined-by: default-with-mqtt
+displayName: Unlimited
+displayOrder: 0
+shortDescription: Unlimited plan without resource restrictions.
+longDescription: Unlimited plan where you can create an large number of addresses until the system (probably) falls over.
+uuid: f084d7f4-0501-11e8-a572-507b9def37d9
+addressSpaceType: standard
+resources:
+- name: router
+  min: 1.0
+  max: 10000.0
+- name: broker
+  min: 1.0
+  max: 10000.0
+- name: aggregate
+  min: 1.0
+  max: 10000.0
+addressPlans:
+- standard-anycast
+- standard-multicast
+- sharded-queue
+- pooled-queue
+- sharded-topic
+- pooled-topic
+- standard-subscription

@@ -1,0 +1,26 @@
+// Module included in the following assemblies:
+//
+// assembly-plans.adoc
+
+[id='con-standard-infra-config-{context}']
+= Standard infrastructure configuration
+
+`StandardInfraConfig` resources is used to configure infrastructure deployed by `standard` address
+spaces. The standard infra configuration is referenced by address space plans using a `defined-by`
+annotation. For more information, see xref:con-address-space-plans-{context}[].
+
+[source,yaml,options="nowrap"]
+.link:resources/standard-infra-config-example.yaml[standard-infra-config-example.yaml]
+----
+include::../common/standard-infra-config-example.yaml[]
+----
+
+The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
+this field whether to upgrade the infrastructure to the requested version.
+
+The `admin` object specifies the settings you can configure for the `admin` components.
+
+The `broker` object specifies the settings you can configure for the `broker` components. Changing
+the `.broker.resources.storage` setting does not configure existing broker storage size.
+
+The `router` object specifies the settings you can configure for the `router` components.

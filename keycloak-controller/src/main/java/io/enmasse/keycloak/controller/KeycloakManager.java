@@ -72,7 +72,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
     }
 
     @Override
-    public void onUpdate(Set<AddressSpace> addressSpaces) throws Exception {
+    public void onUpdate(List<AddressSpace> addressSpaces) throws Exception {
         IdentityProviderParams identityProviderParams = this.kube.getIdentityProviderParams();
         if (!Objects.equals(lastParams, identityProviderParams)) {
             log.info("Identity provider params: {}", identityProviderParams);

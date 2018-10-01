@@ -23,19 +23,22 @@ var BrokerStats = require('../lib/broker_stats.js');
 var MockBroker = require('../testlib/mock_broker.js');
 var ResourceServer = require('../testlib/mock_resource_server.js').ResourceServer;
 
+var num_brokers = 0;
+
 function PodServer () {
-    this.resource_server = new ResourceServer('Pod', true, function (b) { return b.get_pod_definition(); });
+    this.resource_server = new ResourceServer(true, function (b) { return b.get_pod_definition(); });
 }
 
 PodServer.prototype.add_broker = function (name, port) {
-    var broker = new MockBroker(name || 'broker-' + (this.resource_server.resources.length+1));
+    num_brokers += 1;
+    var broker = new MockBroker(name || 'broker-' + num_brokers);
     broker.listen(port);
-    this.resource_server.add_resource(broker);
+    this.resource_server.add_resource('pods', broker);
     return broker;
 };
 
 PodServer.prototype.remove_broker = function (broker) {
-    this.resource_server.remove_resource(broker);
+    this.resource_server.remove_resource('pods', broker);
 };
 
 PodServer.prototype.listen = function (port) {
@@ -43,7 +46,7 @@ PodServer.prototype.listen = function (port) {
 };
 
 PodServer.prototype.close = function (callback) {
-    this.resource_server.resources.forEach(function (b) { b.close(); });
+    this.resource_server.resources["pods"].forEach(function (b) { b.close(); });
     this.resource_server.close(callback);
 };
 
@@ -54,6 +57,7 @@ describe('broker stats', function() {
 
     beforeEach(function(done) {
         discovery = new PodServer();
+        num_brokers = 0;
         broker = discovery.add_broker();
         var s = discovery.listen(0).on('listening', function () {
             process.env.CONFIGURATION_SERVICE_HOST = 'localhost';

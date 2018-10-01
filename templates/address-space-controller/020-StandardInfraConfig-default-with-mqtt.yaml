@@ -1,0 +1,25 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: StandardInfraConfig
+metadata:
+  name: default-with-mqtt
+  labels:
+    app: enmasse
+  annotations:
+    enmasse.io/template-name: standard-space-infra
+    enmasse.io/mqtt-template-name: standard-space-infra-mqtt
+    enmasse.io/queue-template-name: queue-persisted
+    enmasse.io/topic-template-name: topic-persisted
+spec:
+  version: ${ENMASSE_VERSION}
+  admin:
+    resources:
+      memory: 512Mi
+  broker:
+    resources:
+      memory: 512Mi
+      storage: 2Gi
+    addressFullPolicy: FAIL
+  router:
+    resources:
+      memory: 512Mi
+    linkCapacity: 250

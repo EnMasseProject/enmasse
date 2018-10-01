@@ -7,7 +7,7 @@ package io.enmasse.osb.api;
 import com.fasterxml.jackson.module.jsonSchema.types.BooleanSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
-import io.enmasse.address.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
 import io.enmasse.osb.api.catalog.*;
@@ -86,8 +86,8 @@ public class ServiceMapping {
         for(AddressSpacePlan addressSpacePlan : addressSpaceType.getPlans()) {
             // TODO
             boolean isFree = true;
-            Plan plan = new Plan(UUID.nameUUIDFromBytes(("plan-"+getUuidForAddressSpaceType(addressSpaceType)+"-"+addressSpacePlan.getName()).getBytes(StandardCharsets.US_ASCII)),
-                    addressSpacePlan.getName(), addressSpacePlan.getShortDescription(), isFree, true);
+            Plan plan = new Plan(UUID.nameUUIDFromBytes(("plan-"+getUuidForAddressSpaceType(addressSpaceType)+"-"+addressSpacePlan.getMetadata().getName()).getBytes(StandardCharsets.US_ASCII)),
+                    addressSpacePlan.getMetadata().getName(), addressSpacePlan.getShortDescription(), isFree, true);
 
             ObjectSchema bindParameters = new ObjectSchema();
             StringSchema sendAddressProperty = new StringSchema();

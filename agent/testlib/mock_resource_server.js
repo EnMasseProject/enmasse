@@ -36,7 +36,18 @@ function parse(request_url) {
     var result = {};
     var path = url.parse(request_url).pathname.split('/');
     shift_if_matches(path, '');
-    if (path.shift() === 'api' && path.shift() === 'v1') {
+    var api = path.shift();
+    if (api === 'api' && path.shift() === 'v1') {
+        result.watch = shift_if_matches(path, 'watch');
+        if (shift_if_matches(path, 'namespaces')) {
+            result.namespace = path.shift();
+            result.type = path.shift();
+            result.name = path.shift();
+            return result;
+        }
+    } else if (api === 'apis') {
+        result.api_group = path.shift();
+        result.api_version = path.shift();
         result.watch = shift_if_matches(path, 'watch');
         if (shift_if_matches(path, 'namespaces')) {
             result.namespace = path.shift();
@@ -45,19 +56,17 @@ function parse(request_url) {
             return result;
         }
     }
+
     return undefined;
 }
 
-function ResourceServer (kind, read_only, externalize, internalize) {
+function ResourceServer (read_only, externalize, internalize) {
     events.EventEmitter.call(this);
-    this.kind = kind;
     this.read_only = read_only;
     this.externalize = externalize || function (o) { return o; };
     this.internalize = internalize;
-    this.list_kind = kind + 'List';
-    this.resources = [];
+    this.resources = {};
     this.watch_timeout = 250;
-    Object.defineProperty(this, 'externalized', { get: function () { return this.resources.map(this.externalize); } });
     this.debug = false;
     if (this.debug) {
         this.on('added', function (o) {
@@ -69,14 +78,15 @@ function ResourceServer (kind, read_only, externalize, internalize) {
     }
 }
 
+
 util.inherits(ResourceServer, events.EventEmitter);
 
-ResourceServer.prototype.update = function (index, object) {
-    this.resources[index] = this.internalize ? this.codec.internalize(object) : object;
+ResourceServer.prototype.update = function (type, index, object) {
+    this.resources[type][index] = this.internalize ? this.codec.internalize(object) : object;
 };
 
-ResourceServer.prototype.push = function (object) {
-    this.resources.push(this.internalize ? this.codec.internalize(object) : object);
+ResourceServer.prototype.push = function (type, object) {
+    this.resources[type].push(this.internalize ? this.codec.internalize(object) : object);
     this.emit('added', this.externalize(object));
 };
 
@@ -105,19 +115,19 @@ ResourceServer.prototype.listen = function (port, callback) {
             error(request, response, self.failure_injector.code(path));
         } else {
             if (path.watch && request.method === 'GET') {
-                self.watch_resources(request, response);
+                self.watch_resources(request, response, path.type);
             } else if (request.method === 'GET') {
                 if (path.name) {
-                    self.get_resource(request, response, path.name);
+                    self.get_resource(request, response, path.type, path.name);
                 } else {
-                    self.get_resources(request, response);
+                    self.get_resources(request, response, path.type);
                 }
             } else if (request.method === 'PUT' && path.name) {
-                self.put_resource(request, response, path.name);
+                self.put_resource(request, response, path.type, path.name);
             } else if (request.method === 'DELETE' && path.name) {
-                self.delete_resource(request, response, path.name);
+                self.delete_resource(request, response, path.type, path.name);
             } else if (request.method === 'POST') {
-                self.post_resource(request, response);
+                self.post_resource(request, response, path.type);
             } else {
                 error(request, response, 405);
             }
@@ -136,34 +146,37 @@ ResourceServer.prototype.close = function (callback) {
 };
 
 ResourceServer.prototype.clear = function () {
-    this.resources = [];
+    this.resources = {};
 };
 
-ResourceServer.prototype.add_resource = function (resource) {
+ResourceServer.prototype.add_resource = function (type, resource) {
     if (this.resource_initialiser) {
         this.resource_initialiser(resource);
     }
-    this.resources.push(resource);
+    if (this.resources[type] === undefined) {
+        this.resources[type] = []
+    }
+    this.resources[type].push(resource);
     this.emit('added', this.externalize(resource));
 };
 
-ResourceServer.prototype.resource_modified = function (resource) {
+ResourceServer.prototype.resource_modified = function (type, resource) {
     this.emit('modified', this.externalize(resource));
 };
 
-ResourceServer.prototype.remove_resource = function (resource) {
-    var i = this.resources.indexOf(resource);
+ResourceServer.prototype.remove_resource = function (type, resource) {
+    var i = this.resources[type].indexOf(resource);
     if (i >= 0) {
-        this.resources.splice(i, 1);
+        this.resources[type].splice(i, 1);
         this.emit('deleted', this.externalize(resource));
     }
 };
 
-ResourceServer.prototype.remove_resource_by_name = function (name) {
-    for (var i = 0; i < this.resources.length; i++) {
-        if (this.resources[i].metadata.name === name) {
-            var removed = this.resources[i];
-            this.resources.splice(i, 1);
+ResourceServer.prototype.remove_resource_by_name = function (type, name) {
+    for (var i = 0; i < this.get_resources_type(type).length; i++) {
+        if (this.resources[type][i].metadata.name === name) {
+            var removed = this.resources[type][i];
+            this.resources[type].splice(i, 1);
             this.emit('deleted', this.externalize(removed));
             return true;
         }
@@ -231,32 +244,38 @@ Watcher.prototype.close = function () {
     this.response.end();
 }
 
-ResourceServer.prototype.get_resources = function (request, response) {
-    var filter = getLabelSelectorFn(request);
-    response.end(JSON.stringify({kind: this.list_kind, items: this.externalized.filter(filter)}));
+ResourceServer.prototype.get_resources_type = function (type) {
+    return this.resources[type] || [];
 };
 
-ResourceServer.prototype.watch_resources = function (request, response) {
+ResourceServer.prototype.get_resources = function (request, response, type) {
     var filter = getLabelSelectorFn(request);
-    for (var i = 0; i < this.resources.length; i++) {
-        if (filter(this.externalized[i])) {
-            response.write(JSON.stringify({type:'ADDED', object:this.externalized[i]}) + '\n');
+    response.end(JSON.stringify({kind: 'List', items: this.get_resources_type(type).map(this.externalize).filter(filter)}));
+};
+
+ResourceServer.prototype.watch_resources = function (request, response, type) {
+    var filter = getLabelSelectorFn(request);
+    for (var i = 0; i < this.get_resources_type(type).length; i++) {
+        var externalized = this.resources[type].map(this.externalize)[i];
+        if (filter(externalized)) {
+            response.write(JSON.stringify({type:'ADDED', object:externalized }) + '\n');
         }
     }
     var watcher = new Watcher(this, response, filter);
     setTimeout(function () { watcher.close(); }, this.watch_timeout);
 };
 
-ResourceServer.prototype.find_resource = function (name) {
-    for (var i = 0; i < this.resources.length; i++) {
-        if (this.externalized[i].metadata.name === name) {
-            return this.externalized[i];
+ResourceServer.prototype.find_resource = function (type, name) {
+    for (var i = 0; i < this.get_resources_type(type).length; i++) {
+        var externalized = this.resources[type].map(this.externalize)[i];
+        if (externalized.metadata.name === name) {
+            return externalized;
         }
     }
 };
 
-ResourceServer.prototype.get_resource = function (request, response, name) {
-    var result = this.find_resource(name);
+ResourceServer.prototype.get_resource = function (request, response, type, name) {
+    var result = this.find_resource(type, name);
     if (result) {
         response.end(JSON.stringify(result));
     } else {
@@ -264,28 +283,30 @@ ResourceServer.prototype.get_resource = function (request, response, name) {
     }
 };
 
-ResourceServer.prototype.update_resource = function (name, updated) {
-    for (var i = 0; i < this.resources.length; i++) {
-        if (this.externalized[i].metadata.name === name) {
-            this.update(i, updated);
+ResourceServer.prototype.update_resource = function (type, name, updated) {
+    for (var i = 0; i < this.get_resources_type(type).length; i++) {
+        var externalized = this.resources[type].map(this.externalize)[i];
+        if (externalized.metadata.name === name) {
+            this.update(type, i, updated);
             return true;
         }
     }
     return false;
 };
 
-ResourceServer.prototype.add_resource_if_not_exists = function (resource) {
-    for (var i = 0; i < this.resources.length; i++) {
-        if (this.externalized[i].metadata.name === resource.metadata.name) {
+ResourceServer.prototype.add_resource_if_not_exists = function (type, resource) {
+    for (var i = 0; i < this.get_resources_type(type).length; i++) {
+        var externalized = this.resources[type].map(this.externalize)[i];
+        if (externalized.metadata.name === resource.metadata.name) {
             return false;
         }
     }
-    this.add_resource(resource);
+    this.add_resource(type, resource);
     return true;
 };
 
-ResourceServer.prototype.delete_resource = function (request, response, name) {
-    if (this.remove_resource_by_name(name)) {
+ResourceServer.prototype.delete_resource = function (request, response, type, name) {
+    if (this.remove_resource_by_name(type, name)) {
         response.statusCode = 200;
         response.end();
     } else {
@@ -293,46 +314,38 @@ ResourceServer.prototype.delete_resource = function (request, response, name) {
     }
 };
 
-ResourceServer.prototype.put_resource = function (request, response, name) {
+ResourceServer.prototype.put_resource = function (request, response, type, name) {
     var self = this;
     var bodytext = '';
     request.on('data', function (data) { bodytext += data; });
     request.on('end', function () {
         var body = JSON.parse(bodytext);
-        if (body.kind === self.kind) {
-            if (self.update_resource(name, body)) {
-                response.statusCode = 200;
-                response.end();
-            } else {
-                error(request, response, 404);
-            }
+        if (self.update_resource(type, name, body)) {
+            response.statusCode = 200;
+            response.end();
         } else {
-            error(request, response, 500, 'Invalid resource kind ' + body.kind);
+            error(request, response, 404);
         }
     });
 };
 
-ResourceServer.prototype.post_resource = function (request, response) {
+ResourceServer.prototype.post_resource = function (request, response, type) {
     var self = this;
     var bodytext = '';
     request.on('data', function (data) { bodytext += data; });
     request.on('end', function () {
         var body = JSON.parse(bodytext);
-        if (body.kind === self.kind) {
-            if (self.add_resource_if_not_exists(body)) {
-                response.statusCode = 200;
-                response.end();
-            } else {
-                error(request, response, 409);
-            }
+        if (self.add_resource_if_not_exists(type, body)) {
+            response.statusCode = 200;
+            response.end();
         } else {
-            error(request, response, 500, 'Invalid resource kind ' + body.kind);
+            error(request, response, 409);
         }
     });
 };
 
 function ConfigMapServer () {
-    ResourceServer.call(this, 'ConfigMap');
+    ResourceServer.call(this);
 }
 
 util.inherits(ConfigMapServer, ResourceServer);
@@ -364,13 +377,13 @@ ConfigMapServer.prototype.add_address_definition = function (def, name, infra_uu
         labels.infraUuid = infra_uuid;
     }
     address.status = status || { phase: 'Active' };
-    this.add_resource(get_config_map(name || def.address, labels, 'config.json', address));
+    this.add_resource('configmaps', get_config_map(name || def.address, labels, 'config.json', address));
 };
 
 ConfigMapServer.prototype.add_config_map = function (name, labels, data) {
     var cm = get_empty_config_map(name, labels);
     cm.data = data;
-    this.add_resource(cm);
+    this.add_resource('configmaps', cm);
 };
 
 ConfigMapServer.prototype.add_address_definitions = function (defs) {
@@ -393,7 +406,7 @@ ConfigMapServer.prototype.add_address_space_plan = function (params) {
     if (params.required_resources) {
         plan.requiredResources = params.required_resources;
     }
-    this.add_resource(get_config_map(plan.metadata.name, {type:'address-space-plan'}, 'definition', plan));
+    this.add_resource('addressspaceplans', plan);
 }
 
 ConfigMapServer.prototype.add_address_plan = function (params) {
@@ -409,11 +422,11 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
     if (params.required_resources) {
         plan.requiredResources = params.required_resources;
     }
-    this.add_resource(get_config_map(plan.metadata.name, {type: 'address-plan'}, 'definition', plan));
+    this.add_resource('addressplans', plan);
 };
 
 ConfigMapServer.prototype.resource_initialiser = function (resource) {
-    if (resource.data['config.json']) {
+    if (resource.data !== undefined && resource.data['config.json']) {
         try {
             var address = JSON.parse(resource.data['config.json']);
             var changed = true;

@@ -3,7 +3,5 @@
   shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }}
   register: config_exists
   failed_when: config_exists.stderr != '' and 'already exists' not in config_exists.stderr
-- name: Grant permissions to read client CA
-  shell: oc apply -f "{{ playbook_dir }}/install/api-service/030-RoleBinding-apiserver-authentication-reader.yaml"
 - name: Apply the API Server configuration
   shell: oc apply -f "{{ playbook_dir }}/install/api-server"

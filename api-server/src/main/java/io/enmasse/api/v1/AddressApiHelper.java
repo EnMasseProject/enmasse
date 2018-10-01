@@ -60,7 +60,7 @@ public class AddressApiHelper {
         Schema schema = schemaProvider.getSchema();
         AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getType()));
 
-        AddressResolver addressResolver = new AddressResolver(schema, type);
+        AddressResolver addressResolver = new AddressResolver(type);
         Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getNamespace());
         addressResolver.validate(address);
         for (Address existing : existingAddresses) {

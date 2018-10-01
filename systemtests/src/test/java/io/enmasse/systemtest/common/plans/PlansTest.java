@@ -44,7 +44,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         plansProvider.tearDown();
     }
 
@@ -58,8 +58,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan weakQueuePlan = new AddressPlan("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
         AddressPlan weakTopicPlan = new AddressPlan("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
-        plansProvider.createAddressPlanConfig(weakQueuePlan);
-        plansProvider.createAddressPlanConfig(weakTopicPlan);
+        plansProvider.createAddressPlan(weakQueuePlan);
+        plansProvider.createAddressPlan(weakTopicPlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -67,9 +67,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("router", 1.0, 5.0),
                 new AddressSpaceResource("aggregate", 0.0, 10.0));
         List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
-        AddressSpacePlan weakSpacePlan = new AddressSpacePlan("weak-plan", "weak",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(weakSpacePlan);
+        AddressSpacePlan weakSpacePlan = new AddressSpacePlan("weak-plan",
+                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
         AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.STANDARD,
@@ -125,11 +125,11 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan anycastPlan = new AddressPlan("anycast-test1", AddressType.ANYCAST,
                 Collections.singletonList(new AddressResource("router", 0.3)));
 
-        plansProvider.createAddressPlanConfig(queuePlan);
-        plansProvider.createAddressPlanConfig(queuePlan2);
-        plansProvider.createAddressPlanConfig(queuePlan3);
-        plansProvider.createAddressPlanConfig(topicPlan);
-        plansProvider.createAddressPlanConfig(anycastPlan);
+        plansProvider.createAddressPlan(queuePlan);
+        plansProvider.createAddressPlan(queuePlan2);
+        plansProvider.createAddressPlan(queuePlan3);
+        plansProvider.createAddressPlan(topicPlan);
+        plansProvider.createAddressPlan(anycastPlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -137,9 +137,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("router", 1.0, 1.0),
                 new AddressSpaceResource("aggregate", 0.0, 2.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
-        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-pooled-plan", "quota-limits-pooled-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-pooled-plan",
+                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
@@ -207,8 +207,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         new AddressResource("broker", 1.0),
                         new AddressResource("router", 0.01)));
 
-        plansProvider.createAddressPlanConfig(queuePlan);
-        plansProvider.createAddressPlanConfig(topicPlan);
+        plansProvider.createAddressPlan(queuePlan);
+        plansProvider.createAddressPlan(topicPlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -216,9 +216,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("router", 1.0, 2.0),
                 new AddressSpaceResource("aggregate", 0.0, 3.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan);
-        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-sharded-plan", "quota-limits-sharded-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-sharded-plan",
+                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
@@ -262,13 +262,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(
                         new ResourceParameter("GLOBAL_MAX_SIZE", "1Mb")
                 ));
-        plansProvider.replaceResourceDefinitionConfig(limitedResource);
+        //plansProvider.replaceResourceDefinitionConfig(limitedResource);
 
         //define address plans
         AddressPlan queuePlan = new AddressPlan("limited-queue", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 0.1))); //should reserve 100Kb
 
-        plansProvider.createAddressPlanConfig(queuePlan);
+        plansProvider.createAddressPlan(queuePlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -278,12 +278,11 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan(
                 "limited-space",
-                "limited-space",
-                "standard-space",
+                "default-with-mqtt",
                 AddressSpaceType.STANDARD,
                 resources,
                 Collections.singletonList(queuePlan));
-        plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
+        plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpace("global-size-limited-space", AddressSpaceType.STANDARD,
@@ -314,7 +313,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 //        //define and create address plans
 //        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.4));
 //        AddressPlan queuePlan = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueue);
-//        plansProvider.createAddressPlanConfig(queuePlan);
+//        plansProvider.createAddressPlan(queuePlan);
 //
 //        //define and create address space plan
 //        List<AddressSpaceResource> resources = Arrays.asList(
@@ -323,7 +322,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 //                new AddressSpaceResource("aggregate", 0.0, 10.0));
 //        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
 //        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
-//                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+//                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
 //        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
 //
 //        //create address space plan with new plan
@@ -351,9 +350,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressResource> addressResourcesQueueBeta = Collections.singletonList(new AddressResource("broker", 0.6));
 
         AddressPlan queuePlanAlpha = new AddressPlan("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
-        plansProvider.createAddressPlanConfig(queuePlanAlpha);
+        plansProvider.createAddressPlan(queuePlanAlpha);
         AddressPlan queuePlanBeta = new AddressPlan("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
-        plansProvider.createAddressPlanConfig(queuePlanBeta);
+        plansProvider.createAddressPlan(queuePlanBeta);
 
 
         //define and create address space plan
@@ -362,9 +361,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("router", 1.0, 5.0),
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlanAlpha, queuePlanBeta);
-        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
+        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan",
+                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
         AddressSpace messagePersistAddressSpace = new AddressSpace("persist-messages-space-standard", AddressSpaceType.STANDARD,
@@ -423,10 +422,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressResource> addressResourcesSharded = Collections.singletonList(new AddressResource("broker", 1.0));
 
         AddressPlan queuePlanDistributed = new AddressPlan("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
-        plansProvider.createAddressPlanConfig(queuePlanDistributed);
+        plansProvider.createAddressPlan(queuePlanDistributed);
 
         AddressPlan queuePlanSharded = new AddressPlan("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
-        plansProvider.createAddressPlanConfig(queuePlanSharded);
+        plansProvider.createAddressPlan(queuePlanSharded);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -434,9 +433,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("router", 1.0, 5.0),
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
-        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scale-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
+        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan",
+                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
         AddressSpace messagePersistAddressSpace = new AddressSpace("persist-messages-space-standard", AddressSpaceType.STANDARD,
@@ -462,7 +461,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         //replace original plan in address by another
-        plansProvider.replaceAddressPlan(messagePersistAddressSpace, queue, queuePlanSharded);
+        plansProvider.replaceAddressPlan(queuePlanSharded);
 
         assertEquals(getAddressesObjects(
                 messagePersistAddressSpace,

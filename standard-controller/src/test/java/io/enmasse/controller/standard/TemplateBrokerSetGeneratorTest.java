@@ -5,6 +5,7 @@
 
 package io.enmasse.controller.standard;
 
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.*;
 import io.fabric8.kubernetes.api.model.*;
@@ -22,33 +23,31 @@ import static org.mockito.Mockito.*;
 
 public class TemplateBrokerSetGeneratorTest {
     private Kubernetes kubernetes;
+    private StandardControllerSchema standardControllerSchema;
     private BrokerSetGenerator generator;
-    private ResourceDefinition testResource;
 
     @Before
     public void setUp() {
         kubernetes = mock(Kubernetes.class);
         Map<String, String> env = new HashMap<>();
-        testResource = new ResourceDefinition.Builder()
-                .setName("res1")
-                .setTemplateName("mytemplate")
-                .build();
-        generator = new TemplateBrokerSetGenerator(kubernetes, new TemplateOptions(env), "myspace", "myid");
+        standardControllerSchema  = new StandardControllerSchema();
+        generator = new TemplateBrokerSetGenerator(kubernetes,
+                new TemplateOptions(env), "myspace", "myid", standardControllerSchema::getSchema);
     }
 
     @Test
-    public void testDirect() {
+    public void testDirect() throws Exception {
         Address dest = createAddress("foo_bar_FOO", "anycast");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(10));
+        assertThat(parameters.size(), is(13));
     }
 
     @Test
-    public void testStoreAndForward() {
+    public void testStoreAndForward() throws Exception {
         Address dest = createAddress("foo.bar", "queue");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         BrokerCluster clusterList = generateCluster(dest, captor);
@@ -60,7 +59,7 @@ public class TemplateBrokerSetGeneratorTest {
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(10));
+        assertThat(parameters.size(), is(13));
     }
 
     private Address createAddress(String address, String type) {
@@ -73,24 +72,11 @@ public class TemplateBrokerSetGeneratorTest {
                 .build();
     }
 
-    private AddressSpace createAddressSpace(String name) {
-        return new AddressSpace.Builder()
-                .setName(name)
-                .setNamespace(name)
-                .setType("standard")
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("foo")
-                        .setService("messaging")
-                        .setServicePort("amqps")
-                        .setCertSpec(new CertSpec("mysecret", "mysecret"))
-                        .build())
-                .build();
-    }
-
-    private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) {
+    private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) throws Exception {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
-        return generator.generateCluster(address.getName(), testResource, 1, address);
+        return generator.generateCluster(address.getName(), 1, address, null,
+                standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig)type.findInfraConfig("cfg1").orElse(null)).orElse(null));
     }
 
 }

@@ -9,8 +9,6 @@ Installing {ProductName} using the OpenShift Template is useful for evaluating {
 
 .Procedure 
 
-. Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
-
 . Login as as a user with cluster-admin 
 +
 [options="nowrap",subs="attributes"]

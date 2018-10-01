@@ -29,7 +29,7 @@ public class OSBApiClient extends ApiClient {
     private final int retry = 10;
 
     public OSBApiClient(Kubernetes kubernetes) {
-        super(kubernetes, kubernetes.getOSBEndpoint(), "2.13");
+        super(kubernetes, kubernetes::getOSBEndpoint, "2.13");
     }
 
     public void close() {

@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static org.mockito.Mockito.*;
@@ -25,7 +27,7 @@ public class ResourceCheckerTest {
 
     @Test
     public void testResourcesUpdated() throws Exception {
-        Set<String> items = Sets.newSet("hello", "there");
+        List<String> items = Arrays.asList("hello", "there");
         controller.onUpdate(items);
         controller.doWork();
         verify(watcher).onUpdate(eq(items));

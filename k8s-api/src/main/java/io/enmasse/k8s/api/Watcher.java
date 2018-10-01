@@ -4,8 +4,8 @@
  */
 package io.enmasse.k8s.api;
 
-import java.util.Set;
+import java.util.List;
 
 public interface Watcher<T> {
-    void onUpdate(Set<T> items) throws Exception;
+    void onUpdate(List<T> items) throws Exception;
 }

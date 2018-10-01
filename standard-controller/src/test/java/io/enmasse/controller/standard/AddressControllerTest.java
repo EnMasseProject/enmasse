@@ -16,7 +16,6 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
 
 import java.time.Duration;
 import java.util.*;
@@ -39,7 +38,7 @@ public class AddressControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1));
-        controller = new AddressController("me", "plan1", "", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5));
+        controller = new AddressController("me", "plan1", "", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5), "1.0");
     }
 
     @Test
@@ -65,7 +64,7 @@ public class AddressControllerTest {
                 .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
                 .build();
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker", new KubernetesList())));
-        controller.onUpdate(Sets.newSet(alive, terminating));
+        controller.onUpdate(Arrays.asList(alive, terminating));
         verify(mockApi).deleteAddress(any());
         verify(mockApi).deleteAddress(eq(terminating));
     }
@@ -95,7 +94,7 @@ public class AddressControllerTest {
                 new BrokerCluster("broker", new KubernetesList()),
                 new BrokerCluster("unused", oldList)));
 
-        controller.onUpdate(Sets.newSet(alive));
+        controller.onUpdate(Arrays.asList(alive));
 
         verify(mockHelper).delete(any());
         verify(mockHelper).delete(eq(oldList));

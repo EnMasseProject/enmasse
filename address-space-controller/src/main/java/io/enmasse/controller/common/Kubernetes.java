@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.AddressSpace;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -21,10 +22,8 @@ public interface Kubernetes {
     String getNamespace();
 
     void create(KubernetesList resources);
+    void apply(KubernetesList resourceList);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
-
-    boolean hasService(String service);
-    boolean hasService(String infraUuid, String service);
 
     void deleteResourcesNotIn(String[] addressSpaces);
 
@@ -32,5 +31,7 @@ public interface Kubernetes {
 
     Optional<Secret> getSecret(String secretName);
 
-    void createServiceAccount(String saName, Map<String, String> labels);
+    void ensureServiceAccountExists(AddressSpace addressSpace);
+
+    boolean existsAddressSpace(AddressSpace addressSpace);
 }

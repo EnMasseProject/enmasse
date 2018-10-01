@@ -34,7 +34,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         if (!environment.skipCleanup()) {
             plansProvider.tearDown();
         }
@@ -47,7 +47,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
         AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        plansProvider.createAddressPlanConfig(xxsQueuePlan);
+        plansProvider.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -55,9 +55,9 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
                 new AddressSpaceResource("router", 1.0, 1.0),
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
-        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan", "manybrokeresplan",
+        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(manyAddressesPlan);
+        plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
@@ -97,7 +97,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
         AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        plansProvider.createAddressPlanConfig(xxsQueuePlan);
+        plansProvider.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -105,9 +105,9 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
                 new AddressSpaceResource("router", 1.0, 1.0),
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
-        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan", "manybrokeresplan",
+        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(manyAddressesPlan);
+        plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
