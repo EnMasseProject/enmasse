@@ -4,8 +4,10 @@
  */
 package io.enmasse.controller.standard;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.ResourceDefinition;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 
 /**
  * Generates clusters for a set of addresses.
@@ -14,11 +16,10 @@ public interface BrokerSetGenerator {
 
     /**
      * Generate broker set
-     *
-     * @param clusterId The id of the cluster
-     * @param resourceDefinition Definition of the broker resource
+     *  @param clusterId The id of the cluster
      * @param numReplicas Number of replicas for the initial set
      * @param address Address to pass as template parameter (null is allowed)
+     * @param addressPlan
      */
-    BrokerCluster generateCluster(String clusterId, ResourceDefinition resourceDefinition, int numReplicas, Address address);
+    BrokerCluster generateCluster(String clusterId, int numReplicas, Address address, AddressPlan addressPlan, StandardInfraConfig standardInfraConfig) throws Exception;
 }

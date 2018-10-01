@@ -4,6 +4,9 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.InfraConfig;
+
 import java.util.*;
 
 /**
@@ -12,16 +15,20 @@ import java.util.*;
 public class AddressSpaceType {
     private final String name;
     private final String description;
+    private final InfraConfigType infraConfigType;
     private final List<AddressSpacePlan> plans;
     private final List<AddressType> addressTypes;
     private final List<EndpointSpec> availableEndpoints;
+    private final List<InfraConfig> infraConfigs;
 
-    public AddressSpaceType(String name, String description, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints) {
+    public AddressSpaceType(String name, String description, InfraConfigType infraConfigType, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints, List<InfraConfig> infraConfigs) {
         this.name = name;
         this.description = description;
+        this.infraConfigType = infraConfigType;
         this.plans = plans;
         this.addressTypes = addressTypes;
         this.availableEndpoints = availableEndpoints;
+        this.infraConfigs = infraConfigs;
     }
 
     public String getName() {
@@ -42,8 +49,17 @@ public class AddressSpaceType {
 
     public Optional<AddressSpacePlan> findAddressSpacePlan(String name) {
         for (AddressSpacePlan plan : plans) {
-            if (plan.getName().equals(name)) {
-                return Optional.ofNullable(plan);
+            if (plan.getMetadata().getName().equals(name)) {
+                return Optional.of(plan);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public <T extends InfraConfig> Optional<T> findInfraConfig(String name) {
+        for (InfraConfig infraConfig : infraConfigs) {
+            if (name.equals(infraConfig.getMetadata().getName())) {
+                return Optional.of((T) infraConfig);
             }
         }
         return Optional.empty();
@@ -62,12 +78,22 @@ public class AddressSpaceType {
         return Optional.empty();
     }
 
+    public List<InfraConfig> getInfraConfigs() {
+        return infraConfigs;
+    }
+
+    public InfraConfigType getInfraConfigType() {
+        return infraConfigType;
+    }
+
     public static class Builder {
         private String name;
         private String description;
+        private InfraConfigType infraConfigType;
         private List<AddressType> addressTypes;
         private List<AddressSpacePlan> addressSpacePlans;
         private List<EndpointSpec> availableEndpoints;
+        private List<InfraConfig> infraConfigs;
 
         public Builder setName(String name) {
             this.name = name;
@@ -76,6 +102,11 @@ public class AddressSpaceType {
 
         public Builder setDescription(String description) {
             this.description = description;
+            return this;
+        }
+
+        public Builder setInfraConfigType(InfraConfigType infraConfigType) {
+            this.infraConfigType = infraConfigType;
             return this;
         }
 
@@ -94,14 +125,21 @@ public class AddressSpaceType {
             return this;
         }
 
+        public Builder setInfraConfigs(List<InfraConfig> infraConfigs) {
+            this.infraConfigs = infraConfigs;
+            return this;
+        }
+
         public AddressSpaceType build() {
             Objects.requireNonNull(name);
             Objects.requireNonNull(description);
+            Objects.requireNonNull(infraConfigType);
             Objects.requireNonNull(addressSpacePlans);
             Objects.requireNonNull(addressTypes);
             Objects.requireNonNull(availableEndpoints);
+            Objects.requireNonNull(infraConfigs);
 
-            return new AddressSpaceType(name, description, addressSpacePlans, addressTypes, availableEndpoints);
+            return new AddressSpaceType(name, description, infraConfigType, addressSpacePlans, addressTypes, availableEndpoints, infraConfigs);
         }
     }
 }

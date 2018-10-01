@@ -1,0 +1,15 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: standard-anycast
+  labels:
+    app: enmasse
+displayName: Standard
+displayOrder: 0
+shortDescription: Creates a direct anycast address.
+longDescription: Creates a direct anycast address where messages go via a router that does not take ownership of the messages.
+uuid: 45edd942-0503-11e8-84ce-507b9def37d9
+addressType: anycast
+requiredResources:
+- name: router
+  credit: 0.01

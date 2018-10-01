@@ -67,9 +67,6 @@ public class CodecV1 {
         module.addDeserializer(AddressSpaceList.class, new AddressSpaceListV1Deserializer(addressSpaceDeserializer));
         module.addSerializer(AddressSpaceList.class, new AddressSpaceListV1Serializer());
 
-        module.addDeserializer(AddressSpacePlan.class, new AddressSpacePlanV1Deserializer());
-        module.addDeserializer(AddressPlan.class, new AddressPlanV1Deserializer());
-        module.addDeserializer(ResourceDefinition.class, new ResourceDefinitionV1Deserializer());
         module.addSerializer(Schema.class, new SchemaV1Serializer());
 
         mapper.registerModule(module);

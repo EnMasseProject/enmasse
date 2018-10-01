@@ -5,11 +5,13 @@
 
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.KubeUtil;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonArray;
@@ -51,6 +53,25 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
+    public void apply(KubernetesList resources) {
+        for (HasMetadata resource : resources.getItems()) {
+            if (resource instanceof ConfigMap) {
+                client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
+            } else if (resource instanceof Secret) {
+                client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
+            } else if (resource instanceof Deployment) {
+                client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
+            } else if (resource instanceof StatefulSet) {
+                client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
+            } else if (resource instanceof Service) {
+                client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
+            } else if (resource instanceof ServiceAccount) {
+                client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+            }
+        }
+    }
+
+    @Override
     public String getNamespace() {
         return namespace;
     }
@@ -59,16 +80,6 @@ public class KubernetesHelper implements Kubernetes {
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
         return client.templates().load(templateFile).processLocally(parameterValues);
-    }
-
-    @Override
-    public boolean hasService(String service) {
-        return client.services().inNamespace(namespace).withName(service).get() != null;
-    }
-
-    @Override
-    public boolean hasService(String infraUuid, String service) {
-        return client.services().inNamespace(namespace).withName(service + "-" + infraUuid).get() != null;
     }
 
     public Set<Deployment> getReadyDeployments() {
@@ -100,6 +111,31 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public Optional<Secret> getSecret(String secretName) {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
+    }
+
+    private static boolean isReady(Deployment deployment) {
+        Integer unavailableReplicas = deployment.getStatus().getUnavailableReplicas();
+        return unavailableReplicas == null || unavailableReplicas == 0;
+    }
+
+    @Override
+    public void ensureServiceAccountExists(AddressSpace addressSpace) {
+        String saName = KubeUtil.getAddressSpaceSaName(addressSpace);
+
+        if (client.serviceAccounts().inNamespace(namespace).withName(saName).get() == null) {
+            Map<String, String> labels = new HashMap<>();
+            labels.put(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+            labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+
+            client.serviceAccounts().inNamespace(namespace).createNew()
+                    .editOrNewMetadata()
+                    .withName(saName)
+                    .withLabels(labels)
+                    .endMetadata()
+                    .done();
+            createRoleBinding(saName + "-admin", namespace, labels, "ClusterRole", "admin", Arrays.asList(new Subject("ServiceAccount", saName, namespace)));
+            createRoleBinding(saName + "-admin-reader", namespace, labels, "Role", "enmasse.io:admin-reader", Arrays.asList(new Subject("ServiceAccount", saName, namespace)));
+        }
     }
 
     private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
@@ -134,8 +170,8 @@ public class KubernetesHelper implements Kubernetes {
 
     private void createRoleBinding(String name, String namespace, Map<String, String> labelMap, String refKind, String refName, List<Subject> subjectList) {
 
-        String apiVersion = isOpenShift ? "v1" : "rbac.authorization.k8s.io/v1";
-        String apiPath = isOpenShift ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1";
+        String apiVersion = "rbac.authorization.k8s.io/v1";
+        String apiPath = "/apis/rbac.authorization.k8s.io/v1";
 
         JsonObject body = new JsonObject();
 
@@ -162,9 +198,6 @@ public class KubernetesHelper implements Kubernetes {
 
         for (Subject subjectEntry : subjectList) {
             JsonObject subject = new JsonObject();
-            if (isOpenShift) {
-                subject.put("apiGroup", "rbac.authorization.k8s.io");
-            }
             subject.put("kind", subjectEntry.getKind());
             subject.put("name", subjectEntry.getName());
             if (subjectEntry.getNamespace() != null) {
@@ -177,24 +210,6 @@ public class KubernetesHelper implements Kubernetes {
 
 
         doRawHttpRequest(apiPath + "/namespaces/" + namespace + "/rolebindings", "POST", body, false);
-    }
-
-    @Override
-    public void createServiceAccount(String saName, Map<String, String> labels) {
-        if (client.serviceAccounts().inNamespace(namespace).withName(saName).get() == null) {
-            client.serviceAccounts().inNamespace(namespace).createNew()
-                    .editOrNewMetadata()
-                    .withName(saName)
-                    .withLabels(labels)
-                    .endMetadata()
-                    .done();
-            createRoleBinding(saName + "-admin", namespace, labels, "ClusterRole", "admin", Arrays.asList(new Subject("ServiceAccount", saName, namespace)));
-        }
-    }
-
-    private static boolean isReady(Deployment deployment) {
-        Integer unavailableReplicas = deployment.getStatus().getUnavailableReplicas();
-        return unavailableReplicas == null || unavailableReplicas == 0;
     }
 
     private static class Subject {
@@ -220,4 +235,5 @@ public class KubernetesHelper implements Kubernetes {
             return namespace;
         }
     }
+
 }

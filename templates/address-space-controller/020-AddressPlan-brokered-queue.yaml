@@ -1,0 +1,15 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: brokered-queue
+  labels:
+    app: enmasse
+displayName: Brokered Queue
+displayOrder: 0
+shortDescription: Creates a queue on a broker.
+longDescription: Creates a queue on a broker.
+uuid: 69f82df8-0501-11e8-a0a8-507b9def37d9
+addressType: queue
+requiredResources:
+- name: broker
+  credit: 0.0

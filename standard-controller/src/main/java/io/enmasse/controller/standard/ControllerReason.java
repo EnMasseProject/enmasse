@@ -11,6 +11,7 @@ public enum ControllerReason implements EventLogger.Reason {
     BrokerCreateFailed,
     RouterCheckFailed,
     BrokerDeleted,
+    BrokerUpgraded,
     BrokerDeleteFailed,
     AddressSyncFailed;
 }

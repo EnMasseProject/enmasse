@@ -8,16 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class ResourceChecker<T> implements Watcher<T>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ResourceChecker.class.getName());
     private final Watcher<T> watcher;
     private final Duration recheckInterval;
     private final Object monitor = new Object();
-    private Set<T> items = new HashSet<>();
+    private List<T> items = new ArrayList<>();
     private volatile boolean running = false;
 
     private Thread thread;
@@ -66,8 +64,8 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
     }
 
     @Override
-    public void onUpdate(Set<T> items) {
-        this.items = Collections.unmodifiableSet(new HashSet<>(items));
+    public void onUpdate(List<T> items) {
+        this.items = Collections.unmodifiableList(items);
         synchronized (monitor) {
             monitor.notifyAll();
         }

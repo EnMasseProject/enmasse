@@ -30,18 +30,24 @@ public interface Kubernetes {
         }
     }
 
+    static void addObjectAnnotation(HasMetadata item, String annotationKey, String annotationValue) {
+        Map<String, String> annotations = item.getMetadata().getAnnotations();
+        if (annotations == null) {
+            annotations = new LinkedHashMap<>();
+        }
+        annotations.put(annotationKey, annotationValue);
+        item.getMetadata().setAnnotations(annotations);
+    }
+
     static void addObjectAnnotation(KubernetesList items, String annotationKey, String annotationValue) {
         for (HasMetadata item : items.getItems()) {
-            Map<String, String> annotations = item.getMetadata().getAnnotations();
-            if (annotations == null) {
-                annotations = new LinkedHashMap<>();
-            }
-            annotations.put(annotationKey, annotationValue);
-            item.getMetadata().setAnnotations(annotations);
+            addObjectAnnotation(item, annotationKey, annotationValue);
         }
     }
 
     void create(KubernetesList resources);
+
+    void apply(KubernetesList resources);
 
     void delete(KubernetesList resources);
 

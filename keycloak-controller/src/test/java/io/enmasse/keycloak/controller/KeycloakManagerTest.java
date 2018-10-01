@@ -97,13 +97,13 @@ public class KeycloakManagerTest {
 
     @Test
     public void testAddAddressSpace() throws Exception {
-        manager.onUpdate(Collections.singleton(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.onUpdate(Collections.singletonList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertTrue(realms.isEmpty());
 
-        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a2"));
 
-        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a2"));
         assertTrue(realms.contains("a3"));
         assertEquals(2, realms.size());
@@ -114,8 +114,8 @@ public class KeycloakManagerTest {
 
     @Test
     public void testRemoveAddressSpace() throws Exception {
-        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
-        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
 
         assertTrue(realms.contains("a1"));
         assertFalse(realms.contains("a2"));
@@ -125,18 +125,18 @@ public class KeycloakManagerTest {
 
     @Test
     public void testAuthTypeChanged() throws Exception {
-        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.STANDARD)));
+        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a1"));
         assertEquals(1, realms.size());
 
-        manager.onUpdate(Sets.newSet(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertFalse(realms.contains("a1"));
         assertEquals(0, realms.size());
     }
 
     @Test
     public void testUpdateRealm() throws Exception {
-        Set<AddressSpace> spaces = Collections.singleton(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
+        List<AddressSpace> spaces = Collections.singletonList(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
         manager.onUpdate(spaces);
         assertTrue(realms.contains("a1"));
         assertTrue(updatedRealms.isEmpty());

@@ -4,47 +4,48 @@
  */
 package io.enmasse.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
+import static io.enmasse.controller.common.ControllerReason.AddressSpaceUpgraded;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 
 public class CreateController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(CreateController.class.getName());
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final Kubernetes kubernetes;
     private final SchemaProvider schemaProvider;
     private final InfraResourceFactory infraResourceFactory;
-    private final String namespace;
     private final EventLogger eventLogger;
     private final String defaultCertProvider;
 
-    public CreateController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, String namespace, EventLogger eventLogger, String defaultCertProvider) {
+    public CreateController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, EventLogger eventLogger, String defaultCertProvider) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
-        this.namespace = namespace;
         this.eventLogger = eventLogger;
         this.defaultCertProvider = defaultCertProvider;
     }
 
     private static List<EndpointSpec> validateEndpoints(AddressSpaceResolver addressSpaceResolver, AddressSpace addressSpace) {
         // Set default endpoints from type
-        AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace);
+        AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getType());
         if (addressSpace.getEndpoints().isEmpty()) {
             return addressSpaceType.getAvailableEndpoints();
         } else {
@@ -71,7 +72,6 @@ public class CreateController implements Controller {
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         addressSpaceResolver.validate(addressSpace);
-        String uuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
 
         List<EndpointSpec> endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
 
@@ -96,30 +96,51 @@ public class CreateController implements Controller {
                 .setEndpointList(newEndpoints)
                 .build();
 
-        if (kubernetes.hasService(uuid, "messaging")) {
+        InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
+        InfraConfig currentInfraConfig = parseCurrentInfraConfig(addressSpace);
+        if (currentInfraConfig == null) {
+            kubernetes.ensureServiceAccountExists(addressSpace);
+            KubernetesList resourceList = new KubernetesListBuilder()
+                    .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
+                    .build();
+
+            log.info("Creating address space {}", addressSpace);
+
+            kubernetes.create(resourceList);
+            eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+            return addressSpace;
+        } else if (!currentInfraConfig.equals(desiredInfraConfig)) {
+
+            kubernetes.ensureServiceAccountExists(addressSpace);
+            KubernetesList resourceList = new KubernetesListBuilder()
+                    .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
+                    .build();
+
+            log.info("Upgrading address space {}", addressSpace);
+
+            kubernetes.apply(resourceList);
+            eventLogger.log(AddressSpaceUpgraded, "Upgraded address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+            return addressSpace;
+        } else {
             return addressSpace;
         }
 
-        Map<String, String> labels = new HashMap<>();
-        labels.put(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
-        labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+    }
 
-        kubernetes.createServiceAccount(KubeUtil.getAddressSpaceSaName(addressSpace), labels);
-        KubernetesList resourceList = new KubernetesListBuilder()
-                .addAllToItems(infraResourceFactory.createResourceList(addressSpace))
-                .build();
+    private InfraConfig getInfraConfig(AddressSpace addressSpace) {
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+        return addressSpaceResolver.getInfraConfig(addressSpace.getType(), addressSpace.getPlan());
+    }
 
-        if (log.isDebugEnabled()) {
-            for (HasMetadata item : resourceList.getItems()) {
-                log.debug("Creating {} of kind {}", item.getMetadata().getName(), item.getKind());
-            }
+    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
+        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
+            return null;
         }
-
-        log.info("Creating address space {}", addressSpace);
-
-        kubernetes.create(resourceList);
-        eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
-        return addressSpace;
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getType());
+        return type.getInfraConfigType().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
     @Override
