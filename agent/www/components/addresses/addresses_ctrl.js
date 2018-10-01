@@ -421,7 +421,7 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             };
 
             $scope.updateName = function() {
-                $scope.semantics_complete = angular.isDefined($scope.data.address) && $scope.data.address.length > 0 && address_service.is_unique_name($scope.data.address)
+                $scope.semantics_complete = angular.isDefined($scope.data.address) && $scope.data.address.length > 0 && address_service.is_unique_valid_name($scope.data.address)
                     && $scope.data.type.length > 0 && ($scope.data.type !== 'subscription' || ($scope.data.topic && $scope.data.topic.length));
             };
             $scope.nextButtonTitle = "Next >";
@@ -500,11 +500,8 @@ angular.module('patternfly.wizard').controller('SemanticsController', ['$rootSco
         function ($rootScope, $scope, address_service) {
             'use strict';
             $scope.isValidationDisabled = false;
-            $scope.unique_address_name = function (input) {
-                return address_service.is_unique_name(input);
-            }
             $scope.valid_address_name = function (input) {
-                return input.match(/^[^#*\/\s\.:]+$/) && address_service.is_unique_name(input);
+                return address_service.is_unique_valid_name(input);
             }
         }
     ]);
