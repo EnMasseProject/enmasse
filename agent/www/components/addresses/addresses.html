@@ -58,32 +58,6 @@
           <strong>{{item.messages_out_delta}}</strong> Outgoing Traffic
           </span>
         </div>
-        <!--
-        <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
-          <span title="Messages sent to this address in last 5 minutes">
-            <span class="fa fa-sign-in"></span>
-            <strong>{{item.messages_in_delta}}</strong> Incoming Traffic
-          </span>
-        </div>
-        <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
-          <span title="Messages sent from this address in last 5 minutes">
-          <span class="fa fa-sign-out"></span>
-          <strong>{{item.messages_out_delta}}</strong> Outgoing Traffic
-          </span>
-        </div>
-        <div class="list-view-pf-additional-info-item" ng-if="item.type === 'subscription'">
-          <span title=" sent to this address in last 5 minutes">
-          <span class="fa fa-sign-in"></span>
-          <strong>{{item.shards[0].enqueued}}</strong> Incoming Traffic
-          </span>
-        </div>
-        <div class="list-view-pf-additional-info-item" ng-if="item.type === 'subscription'">
-          <span title="Messages sent from this address in last 5 minutes">
-          <span class="fa fa-sign-out"></span>
-          <strong>{{item.shards[0].acknowledged + item.shards[0].killed}}</strong> Outgoing Traffic
-          </span>
-        </div>
-        -->
         <div class="list-view-pf-additional-info-item" ng-if="item.type !== 'subscription'">
           <span class="fa pficon-import"></span> <strong>{{item.senders}}</strong> Senders
         </div>
