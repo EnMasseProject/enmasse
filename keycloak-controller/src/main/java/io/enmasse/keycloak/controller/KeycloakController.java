@@ -32,8 +32,6 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.openshift.api.model.OAuthClient;
 import io.fabric8.openshift.api.model.OAuthClientBuilder;
 import io.fabric8.openshift.api.model.Route;
@@ -73,10 +71,6 @@ public class KeycloakController {
                 getKeycloakCredentialsSecretName(env),
                 getKeycloakCertSecretName(env));
 
-        IdentityProviderParams identityProviderParams = IdentityProviderParams.fromKube(client, keycloakConfigName);
-
-        log.info("Started with identity provider params: {}", identityProviderParams);
-
         KubeApi kubeApi = userName -> {
             if (isOpenShift) {
                 if (userName == null || userName.isEmpty() || userName.contains(":")) {
@@ -101,32 +95,7 @@ public class KeycloakController {
 
         UserApi userApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
 
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory), kubeApi, userApi, identityProviderParams);
-
-
-        Duration watchRecreateInterval = getEnv(env, "CONFIGMAP_WATCH_INTERVAL")
-                .map(i -> Duration.ofMinutes(Long.parseLong(i))).orElse(Duration.ofMinutes(5));
-        long watchCreateIntervalMs = watchRecreateInterval.toMillis();
-        if (isOpenShift && watchCreateIntervalMs > 0) {
-            log.info("Starting configmap watcher task");
-            TimerTask watchTask = new TimerTask() {
-                Watch watch = null;
-
-                @Override
-                public void run() {
-                    try {
-                        if (watch != null) {
-                            watch.close();
-                        }
-                    } finally {
-                        watch = createConfigMapWatch(client, keycloakConfigName, keycloakManager);
-                    }
-                }
-            };
-
-            new Timer("configMapWatchTimer", true).schedule(watchTask, 0,
-                    watchCreateIntervalMs);
-        }
+        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory), kubeApi, userApi, client, keycloakConfigName);
 
         Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
@@ -141,24 +110,6 @@ public class KeycloakController {
         addressSpaceApi.watchAddressSpaces(resourceChecker, resyncInterval);
 
     }
-
-	private static Watch createConfigMapWatch(NamespacedOpenShiftClient client, final String keycloakConfigName,
-			KeycloakManager keycloakManager) {
-		return client.configMaps().withName(keycloakConfigName).watch(new Watcher<ConfigMap>() {
-		    @Override
-		    public void eventReceived(Action action, ConfigMap unused) {
-		        if (action == Action.MODIFIED || action == Action.ADDED) {
-		            log.debug("Config map '{}' {}", keycloakConfigName, action);
-		            IdentityProviderParams updated = IdentityProviderParams.fromKube(client, keycloakConfigName);
-		            keycloakManager.update(updated);
-		        }
-		    }
-
-		    @Override
-		    public void onClose(KubernetesClientException cause) {
-		    }
-		});
-	}
 
     private static String getKeycloakRouteName(Map<String, String> env) {
         return getEnv(env, "KEYCLOAK_ROUTE_NAME").orElse("keycloak");
