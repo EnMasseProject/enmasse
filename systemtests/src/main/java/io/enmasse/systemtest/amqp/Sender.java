@@ -30,8 +30,9 @@ class Sender extends ClientHandlerBase<Integer> {
                   CountDownLatch connectLatch,
                   CompletableFuture<Integer> promise,
                   Iterable<Message> messages,
-                  final Predicate<Message> predicate) {
-        super(clientOptions, linkOptions, promise);
+                  final Predicate<Message> predicate,
+                  String containerId) {
+        super(clientOptions, linkOptions, promise, containerId);
         this.messageQueue = messages.iterator();
         this.connectLatch = connectLatch;
         this.predicate = predicate;
