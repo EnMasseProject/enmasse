@@ -148,6 +148,12 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
     }
 
     @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testCreateAddressWithSpecialCharsShowsErrorMessage() throws Exception {
+        doTestCreateAddressWithSpecialCharsShowsErrorMessage();
+    }
+
+    @Test
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
