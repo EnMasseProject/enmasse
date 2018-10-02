@@ -136,9 +136,9 @@ function collect_by_address(links, stats, router, connections, index) {
     }
 }
 
-function collect_by_connection(links, connections, router) {
+function collect_by_connection(links, connections, router, index) {
     links.forEach(function (link) {
-        var connection = connections[link.connectionId];
+        var connection = connections[link.connectionId + '-' + index];
         if (connection) {
             var l = update_outcomes(init_outcomes({address:clean_address(link.owningAddr),name:link.name}), link);
             l.deliveries = link.deliveryCount;
@@ -297,7 +297,7 @@ RouterStats.prototype._retrieve = function () {
                 var address_stats = {};
                 results.forEach(function (links, i) {
                     collect_by_address(links, address_stats, routers[i], connections, i);
-                    collect_by_connection(links, connections, routers[i]);
+                    collect_by_connection(links, connections, routers[i], i);
                 });
                 return Promise.all(routers.map(function (router) { return router.get_addresses(); })).then(function (results) {
                     results.forEach(function (configured) {
