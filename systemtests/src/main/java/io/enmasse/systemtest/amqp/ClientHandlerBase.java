@@ -80,7 +80,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
         } else {
             log.info("Link closed with " + error);
             connection.close();
-            if (unauthorizedAccess.equals(error.getCondition())) {
+            if (unauthorizedAccess.equals(error.getCondition()) || error.getDescription().contains("not authorized")) {
                 resultPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
                 connectPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
             } else {

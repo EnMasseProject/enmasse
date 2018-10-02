@@ -57,8 +57,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
                 receiver.flow(1);
                 connectPromise.complete(null);
             } else {
-                connectPromise.completeExceptionally(result.cause());
-                resultPromise.completeExceptionally(result.cause());
+                handleError(conn, receiver.getRemoteCondition());
             }
         });
 
