@@ -495,7 +495,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         AbstractClient client = new RheaClientConnector();
         try {
             client = attachConnector(dest, 1, senderCount, receiverCount);
-            selenium.waitUntilPropertyPresent(60, senderCount, consoleWebPage.getAddressItem(dest)::getSendersCount);
+            selenium.waitUntilPropertyPresent(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
 
             assertAll(
                     () -> assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount(),
@@ -743,7 +743,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             clients.add(attachConnector(destination, 1, 1, 6));
         }
 
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
         return clients;
     }

@@ -574,6 +574,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
+
             selenium.waitUntilPropertyPresent(budget, expectedCount, () -> console.getAddressItem(destination).getReceiversCount());
         } catch (Exception ex) {
             ex.printStackTrace();
