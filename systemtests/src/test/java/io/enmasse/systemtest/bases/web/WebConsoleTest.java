@@ -519,7 +519,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertElementDisabled(String.format("Console failed, create button is disabled for user '%s'", monitorUser),
+        assertElementDisabled(String.format("Console failed, create button is enabled for user '%s'", monitorUser),
                 consoleWebPage.getCreateButton());
     }
 
@@ -536,7 +536,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
 
-        assertElementDisabled(String.format("Console failed, delete button is disabled for user '%s'", monitorUser),
+        assertElementDisabled(String.format("Console failed, delete button is enabled for user '%s'", monitorUser),
                 consoleWebPage.getRemoveButton());
     }
 
