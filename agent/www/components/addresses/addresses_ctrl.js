@@ -17,6 +17,8 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             return chart;
         };
 
+        $scope.notification = {show_alert:false, alert_msg:'default msg'};
+          
         $scope.get_plan_display_name = function (type, plan) {
             return address_service.get_plan_display_name(type, plan);
         };
@@ -215,9 +217,13 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         function is_valid_filter(filter) {
             if (filter.title === 'Name') {
                 try {
+                    $scope.notification.show_alert = false;
+
                     var dummy = new RegExp(filter.value);
                     return true;
                 } catch (error) {
+                    $scope.notification.show_alert = true;
+                    $scope.notification.alert_msg = '"'+ filter.value + '": is not valid.  Only regular expressions are supported.';
                     return false;
                 }
             } else {
