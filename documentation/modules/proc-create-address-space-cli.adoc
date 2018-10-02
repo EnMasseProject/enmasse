@@ -8,6 +8,22 @@
 
 .Procedure
 
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a messaging tenant:
++
+[source,yaml,options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+
+. Create the project for the messaging application:
++
+[source,yaml,options="nowrap"]
+----
+{cmdcli} new-project myapp
+----
+endif::[]
+
 . Create an address space definition:
 +
 [source,yaml,options="nowrap"]
