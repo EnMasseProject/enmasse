@@ -93,7 +93,7 @@ public class ConsoleWebPage implements IWebPage {
      * (addresses/connections tab)
      * get element with toolbar and all addresses/connections
      */
-    private WebElement getContentContainer() throws Exception {
+    private WebElement getContentContainer() {
         return selenium.getDriver().findElement(By.id("contentContainer"));
     }
 
@@ -101,7 +101,7 @@ public class ConsoleWebPage implements IWebPage {
      * (addresses/connections tab)
      * get toolbar with filter/sort
      */
-    private WebElement getToolbar() throws Exception {
+    private WebElement getToolbar() {
         return selenium.getDriver().findElement(By.id(toolbarType.toString()));
     }
 
@@ -109,7 +109,7 @@ public class ConsoleWebPage implements IWebPage {
      * (addresses/connections tab)
      * get element from toolbar with Filter elements
      */
-    private WebElement getFilterGroup() throws Exception {
+    private WebElement getFilterGroup() {
         return getToolbar().findElement(By.id("_fields"));
     }
 
@@ -119,7 +119,7 @@ public class ConsoleWebPage implements IWebPage {
      * or
      * (Container/Hostname/User/Encrypted) for connections
      */
-    private WebElement getFilterSwitch() throws Exception {
+    private WebElement getFilterSwitch() {
         return getFilterGroup().findElements(By.tagName("button")).get(0);
     }
 
@@ -129,7 +129,7 @@ public class ConsoleWebPage implements IWebPage {
      * or
      * (connections encrypted types: [Filter by encrypted/unencrypted/encrypted/unencrypted])
      */
-    private WebElement getAddressConnectionsSwitch() throws Exception {
+    private WebElement getAddressConnectionsSwitch() {
         return getFilterGroup().findElements(By.tagName("button")).get(1);
     }
 
@@ -137,7 +137,7 @@ public class ConsoleWebPage implements IWebPage {
      * (addresses/connections tab)
      * get input element for search with set filter to (addresses:[Name]) or (connections:[Container/Hostname/User])
      */
-    private WebElement getInputSearchAddressesConnections() throws Exception {
+    private WebElement getInputSearchAddressesConnections() {
         return getFilterGroup().findElement(By.tagName("input"));
     }
 
@@ -145,7 +145,7 @@ public class ConsoleWebPage implements IWebPage {
      * (addresses/connections tab)
      * get list of clickable li elements (addresses: [Type/Name]) or (connections: [Container/Hostname/User/Encrypted])
      */
-    private List<WebElement> getFilterDropDown() throws Exception {
+    private List<WebElement> getFilterDropDown() {
         return getFilterGroup().findElements(ByAngular.repeater("item in config.fields"));
     }
 
@@ -259,7 +259,7 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * get all addresses
      */
-    public List<AddressWebItem> getAddressItems() throws Exception {
+    public List<AddressWebItem> getAddressItems() {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<AddressWebItem> addressItems = new ArrayList<>();
@@ -274,7 +274,7 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * get specific address
      */
-    public AddressWebItem getAddressItem(Destination destination) throws Exception {
+    public AddressWebItem getAddressItem(Destination destination) {
         AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
@@ -287,7 +287,7 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * get all connections
      */
-    public List<ConnectionWebItem> getConnectionItems() throws Exception {
+    public List<ConnectionWebItem> getConnectionItems() {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
@@ -729,17 +729,6 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getOpenshiftButton());
                 OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
                 boolean login = ocLoginPage.login(username, password);
-                if (login) {
-                    try {
-                        //may raise IllegalStateException with expected message vvv
-                        AuthorizeAccessWebPage authzWebPage = new AuthorizeAccessWebPage(selenium);
-                        authzWebPage.setValueOnCheckboxRequestedPermissions(true);
-                        authzWebPage.clickOnBtnAllowSelectedPermissions();
-                    } catch (IllegalStateException ex) {
-                        assertEquals("Unexpected web page in browser!", ex.getMessage());
-                        log.info("'Authorize Access' web page was skipped!");
-                    }
-                }
                 return login;
             } else {
                 log.info("Try to login with credentials {} : {}", username, password);

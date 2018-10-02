@@ -267,15 +267,15 @@ public class SeleniumProvider {
         return getElement(webElements, 30, count);
     }
 
-    public WebItem waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+    public WebItem waitUntilItemPresent(int timeInSeconds, Supplier<WebItem> item) throws Exception {
         return waitUntilItem(timeInSeconds, item, true);
     }
 
-    public void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+    public void waitUntilItemNotPresent(int timeInSeconds, Supplier<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, false);
     }
 
-    private WebItem waitUntilItem(int timeInSeconds, IWebProperty<WebItem> item, boolean present) throws Exception {
+    private WebItem waitUntilItem(int timeInSeconds, Supplier<WebItem> item, boolean present) throws Exception {
         log.info("Waiting for element be present");
         int attempts = 0;
         WebItem result = null;
@@ -306,7 +306,7 @@ public class SeleniumProvider {
         return result;
     }
 
-    public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws
+    public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, Supplier<Integer> item) throws
             Exception {
         log.info("Waiting until data will be present");
         int attempts = 0;
