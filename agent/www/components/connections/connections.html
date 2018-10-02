@@ -1,6 +1,13 @@
 <div id="connections" ng-controller="ConnectionViewCtrl" class="row example-container">
   <div class="row card-pf col-md-12" style="height: 15px;"></div>
   <div class="row col-md-12">
+    <div class="alert alert-danger alert-dismissable" ng-show="notification.show_alert" style="margin-top: 5px;">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+        <span class="pficon pficon-close"></span>
+      </button>
+      <span class="pficon pficon-error-circle-o"></span>
+      <strong>Error:</strong> {{notification.alert_msg}}
+    </div>
     <div pf-toolbar id="connectionToolbar" config="toolbarConfig"></div>
   </div>
 
