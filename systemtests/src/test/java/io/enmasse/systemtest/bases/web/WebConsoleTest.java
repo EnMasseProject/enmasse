@@ -18,6 +18,7 @@ import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
@@ -659,62 +660,32 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
-    protected void doTestCreateAddressWithSpecialChars(AddressType... types) throws Exception {
-        int assert_value = 3;
-        Destination destStart = null;
-        Destination destMiddle = null;
-        Destination destEnd = null;
-        Destination dest_topic = null;
+    protected void doTestCreateAddressWithSpecialCharsShowsErrorMessage() throws Exception {
+        String testString = "addressName";
+        Destination destValid = Destination.destination(AddressType.QUEUE, testString, getDefaultPlan(AddressType.QUEUE), Optional.empty());
+        Destination destInvalid;
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
-        for (AddressType type : types) {
-            String testString = "address" + type.toString();
-            if (type.equals(AddressType.SUBSCRIPTION)) {
-                dest_topic = Destination.topic(type + "-topic", getDefaultPlan(AddressType.TOPIC));
-                log.info("Creating topic for subscription");
-                consoleWebPage.createAddressWebConsole(dest_topic);
-            }
-            for (char special_char : "$*".toCharArray()) { //   <!@>&% not needed to be tested   .# waiting for #1588
-                switch (type) {
-                    case SUBSCRIPTION:
-                        destStart = Destination.subscription(
-                                special_char + testString,
-                                dest_topic.getAddress(),
-                                "standard-subscription");
+        consoleWebPage.clickOnCreateButton();
+        consoleWebPage.getCreateAddressModalWindow();
 
-                        destMiddle = Destination.subscription(
-                                testString + special_char + testString,
-                                dest_topic.getAddress(),
-                                "standard-subscription");
+        for (char special_char : "#*/.:".toCharArray()) { //   <!@>&% not needed to be tested
+            destInvalid = Destination.destination(AddressType.QUEUE, testString + special_char,
+                    getDefaultPlan(AddressType.QUEUE), Optional.empty());
 
-                        destEnd = Destination.subscription(
-                                testString + special_char,
-                                dest_topic.getAddress(),
-                                "standard-subscription");
-                        assert_value = 4;
-                        break;
-                    default:
-                        destStart = Destination.destination(type, special_char + testString, getDefaultPlan(type), Optional.empty());
-                        destMiddle = Destination.destination(type, testString + special_char + testString, getDefaultPlan(type), Optional.empty());
-                        destEnd = Destination.destination(type, testString + special_char, getDefaultPlan(type), Optional.empty());
+            //fill with valid name first
+            selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))),
+                    destValid.getAddress());
+            WebElement helpBlock = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("help-block")));
+            assertTrue(helpBlock.getText().isEmpty());
 
-                }
-                consoleWebPage.createAddressWebConsole(destStart);
-                consoleWebPage.createAddressWebConsole(destMiddle);
-                consoleWebPage.createAddressWebConsole(destEnd);
-                assertWaitForValue(assert_value, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(200, TimeUnit.SECONDS));
-
-                consoleWebPage.deleteAddressWebConsole(destStart);
-                consoleWebPage.deleteAddressWebConsole(destMiddle);
-                consoleWebPage.deleteAddressWebConsole(destEnd);
-            }
-            if (type.equals(AddressType.SUBSCRIPTION)) {
-                consoleWebPage.deleteAddressWebConsole(dest_topic);
-                assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
-            }
+            //fill with invalid name (including spec_char)
+            selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))),
+                    destInvalid.getAddress());
+            assertTrue(helpBlock.isDisplayed());
         }
     }
 
