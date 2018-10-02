@@ -1,6 +1,7 @@
 angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', '$timeout', 'pfViewUtils', 'address_service',
     function ($scope, $timeout, pfViewUtils, address_service) {
 
+        $scope.address_space_type = address_service.address_space_type
         var connectionGridConfig = function () {
           this.data = []
           if (address_service.address_space_type === 'brokered') {
@@ -57,6 +58,7 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
         }
 
         address_service.on_update(function (reason) {
+            $scope.address_space_type = address_service.address_space_type
           if ($scope.filterConfig) {
             $scope.filterConfig.resultsCount = $scope.items.length;
           }
