@@ -25,7 +25,7 @@
           <span class="fa fa-sign-in"></span>
           <strong>{{item.messages_in}}</strong> Messages In
         </div>
-        <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-additional-info-item" ng-if="$parent.$parent.address_space_type !== 'brokered'">
           <span class="fa fa-sign-out"></span>
           <strong>{{item.messages_out}}</strong> Messages Out
         </div>
