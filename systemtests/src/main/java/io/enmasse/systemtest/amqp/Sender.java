@@ -41,9 +41,13 @@ class Sender extends ClientHandlerBase<Integer> {
         sender.setTarget(linkOptions.getTarget());
         sender.setQoS(clientOptions.getQos());
         sender.openHandler(result -> {
-            log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
-            connectPromise.complete(null);
-            sendNext(connection, sender);
+            if (result.succeeded()) {
+                log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
+                connectPromise.complete(null);
+                sendNext(connection, sender);
+            } else {
+                handleError(connection, sender.getRemoteCondition());
+            }
         });
         sender.closeHandler(result -> handleError(connection, sender.getRemoteCondition()));
         sender.open();

@@ -76,9 +76,9 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     protected void handleError(ProtonConnection connection, ErrorCondition error) {
         if (error == null || error.getCondition() == null) {
-            log.info("Link closed without error");
+            log.info("{}: link closed without error", containerId);
         } else {
-            log.info("Link closed with " + error);
+            log.info("{}: link closed with error {}", containerId, error);
             connection.close();
             if (unauthorizedAccess.equals(error.getCondition()) || error.getDescription().contains("not authorized")) {
                 resultPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
