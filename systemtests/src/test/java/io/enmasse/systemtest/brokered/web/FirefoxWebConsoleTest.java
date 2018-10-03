@@ -38,6 +38,11 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
+    void testFilterAddressWithRegexSymbols() throws Exception {
+        doTestFilterAddressWithRegexSymbols();
+    }
+
+    @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }
