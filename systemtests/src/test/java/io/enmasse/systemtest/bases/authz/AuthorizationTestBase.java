@@ -281,7 +281,6 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1);
             Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"));
 
-            log.info("Checking sender {}", checkSender);
             if (checkSender) {
                 int numSent = sent.get(1, TimeUnit.MINUTES);
                 log.info("Sent {}", numSent);
