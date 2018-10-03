@@ -133,7 +133,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData restricted = ocPage.viewSecretOfBinding(namespace, restrictedAccesId);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokered);
-        consolePage.login(credentials.getCredentials());
+        consolePage.login(credentials.getCredentials(), true);
         consolePage.createAddressWebConsole(queue, false, false);
         consolePage.createAddressWebConsole(topic, false, true);
 
@@ -159,7 +159,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(credentials.getCredentials());
+        consolePage.login(credentials.getCredentials(), true);
         consolePage.createAddressWebConsole(queue, false, true);
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
@@ -206,7 +206,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(credentials.getCredentials());
+        consolePage.login(credentials.getCredentials(), true);
         consolePage.createAddressWebConsole(queue, false, true);
 
         Endpoint endpoint = TestUtils.deployMessagingClientApp(namespace, kubernetes);
