@@ -66,6 +66,7 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
             return
           }
           ensureGridConfigs($scope.items)
+          $scope.items.sort(compareFn);
           $timeout(() => {}) // safely apply any changes to scope variables
         });
 

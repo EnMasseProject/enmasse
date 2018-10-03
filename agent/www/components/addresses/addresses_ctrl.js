@@ -163,6 +163,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           if (rateTimer)
             clearTimeout(rateTimer)
           rateTimer = setTimeout(forceDeliveryRateUpdate, 7500)
+          $scope.items.sort(compareFn);
         };
         address_service.on_update(on_update);
 
