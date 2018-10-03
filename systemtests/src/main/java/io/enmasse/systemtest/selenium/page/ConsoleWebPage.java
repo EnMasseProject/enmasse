@@ -22,7 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ConsoleWebPage implements IWebPage {
 
@@ -726,7 +727,6 @@ public class ConsoleWebPage implements IWebPage {
         public boolean login(String username, String password, boolean viaOpenShift) throws Exception {
             if (viaOpenShift) {
                 checkReachableWebPage();
-                selenium.clickOnItem(getOpenshiftButton());
                 OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
                 boolean login = ocLoginPage.login(username, password);
                 return login;
@@ -741,7 +741,7 @@ public class ConsoleWebPage implements IWebPage {
 
         @Override
         public void checkReachableWebPage() {
-            String pageTitle = "Log in to";  //full title is "Log in to 'project-name'"
+            String pageTitle = "Log";
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains(pageTitle));
         }
     }

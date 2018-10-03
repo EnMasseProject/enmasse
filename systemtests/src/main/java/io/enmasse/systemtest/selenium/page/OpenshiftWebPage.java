@@ -55,8 +55,8 @@ public class OpenshiftWebPage implements IWebPage {
     public WebElement getServiceFromCatalog(String name) throws Exception {
         List<WebElement> services = getServicesFromCatalog();
         Optional<WebElement> first = services.stream()
-                                             .filter(item -> name.equals(getTitleFromService(item)))
-                                             .findFirst();
+                .filter(item -> name.equals(getTitleFromService(item)))
+                .findFirst();
 
         if (!first.isPresent()) {
             throw new NoSuchElementException(String.format("Failed to find service %s from catalog", name));
@@ -217,14 +217,14 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     private void waitForRedirectToService() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.presenceOfElementLocated(By.tagName("service-instance-row")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.tagName("service-instance-row")));
     }
 
     private void waitUntilServiceIsReady() throws Exception {
         getProvisionedServiceItem().expandServiceItem();
         log.info("Waiting until provisioned service will be completed");
         selenium.takeScreenShot();
-        selenium.getDriverWait().withTimeout(Duration.ofMinutes(4)).until(ExpectedConditions.numberOfElementsToBe(By.className("alert-info"), 0));
+        selenium.getDriverWait().withTimeout(Duration.ofMinutes(5)).until(ExpectedConditions.numberOfElementsToBe(By.className("alert-info"), 0));
         selenium.takeScreenShot();
     }
 
