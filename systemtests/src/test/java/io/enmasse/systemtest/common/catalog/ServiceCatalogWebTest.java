@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -34,7 +33,6 @@ import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(isolated)
 class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
@@ -133,13 +131,12 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData restricted = ocPage.viewSecretOfBinding(namespace, restrictedAccesId);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokered);
-        consolePage.login(credentials.getCredentials(), true);
+        consolePage.login(ocTestUser, true);
         consolePage.createAddressWebConsole(queue, false, false);
         consolePage.createAddressWebConsole(topic, false, true);
 
         assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));
-        assertThrows(ExecutionException.class,
-                () -> assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic)));
+        assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic));
     }
 
     @Test
@@ -159,7 +156,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(credentials.getCredentials(), true);
+        consolePage.login(ocTestUser, true);
         consolePage.createAddressWebConsole(queue, false, true);
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
@@ -206,7 +203,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(credentials.getCredentials(), true);
+        consolePage.login(ocTestUser, true);
         consolePage.createAddressWebConsole(queue, false, true);
 
         Endpoint endpoint = TestUtils.deployMessagingClientApp(namespace, kubernetes);
