@@ -463,7 +463,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             Future<List<Message>> received = client.recvMessages(address, 1);
             Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
 
-            return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+            int numReceived = received.get(1, TimeUnit.MINUTES).size();
+            int numSent = sent.get(1, TimeUnit.MINUTES);
+            return (numSent == numReceived);
         } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
             Throwable cause = ex;
             if (ex instanceof ExecutionException) {

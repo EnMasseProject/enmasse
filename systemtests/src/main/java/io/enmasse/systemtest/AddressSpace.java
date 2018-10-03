@@ -99,7 +99,7 @@ public class AddressSpace {
 
     public Endpoint getEndpointByName(String endpoint) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
-            log.info("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
+            log.debug("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
                     addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
             if (addrSpaceEndpoint.getName().equals(endpoint)) {
                 if (addrSpaceEndpoint.getHost() == null) {
@@ -115,7 +115,7 @@ public class AddressSpace {
 
     public Endpoint getEndpointByServiceName(String endpointService) {
         for (AddressSpaceEndpoint addrSpaceEndpoint : endpoints) {
-            log.info("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
+            log.debug("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
                     addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), addrSpaceEndpoint.getHost(), addrSpaceEndpoint.getPort());
             if (addrSpaceEndpoint.getService().equals(endpointService)) {
                 if (addrSpaceEndpoint.getHost() == null) {

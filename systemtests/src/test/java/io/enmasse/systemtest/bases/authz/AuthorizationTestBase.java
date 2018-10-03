@@ -11,13 +11,13 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -261,7 +261,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         AmqpClient sender = createClient(destination, credentials);
         AmqpClient receiver = createClient(destination, defaultCredentials);
         logWithSeparator(log);
-        return canAuth(sender, receiver, destination);
+        return canAuth(sender, receiver, destination, true);
     }
 
     private boolean canReceive(Destination destination, UserCredentials credentials) throws Exception {
@@ -273,15 +273,25 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         AmqpClient sender = createClient(destination, defaultCredentials);
         AmqpClient receiver = createClient(destination, credentials);
         logWithSeparator(log);
-        return canAuth(sender, receiver, destination);
+        return canAuth(sender, receiver, destination, false);
     }
 
-    private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination) throws Exception {
+    private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination, boolean checkSender) throws Exception {
         try {
             Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1);
             Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"));
 
-            return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+            log.info("Checking sender {}", checkSender);
+            if (checkSender) {
+                int numSent = sent.get(1, TimeUnit.MINUTES);
+                log.info("Sent {}", numSent);
+                int numReceived = received.get(1, TimeUnit.MINUTES).size();
+                return numSent == numReceived;
+            } else {
+                int numReceived = received.get(1, TimeUnit.MINUTES).size();
+                int numSent = sent.get(1, TimeUnit.MINUTES);
+                return numSent == numReceived;
+            }
         } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
             Throwable cause = ex;
             if (ex instanceof ExecutionException) {
