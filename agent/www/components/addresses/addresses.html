@@ -3,7 +3,7 @@
   <div class="row col-md-12">
 
     <div class="alert alert-danger alert-dismissable" ng-show="notification.show_alert" style="margin-top: 5px;">
-      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+      <button type="button" class="close" ng-click="removeNotification()">
         <span class="pficon pficon-close"></span>
       </button>
       <span class="pficon pficon-error-circle-o"></span> 

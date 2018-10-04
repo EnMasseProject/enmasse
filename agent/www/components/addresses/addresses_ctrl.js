@@ -17,7 +17,10 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             return chart;
         };
 
-        $scope.notification = {show_alert:false, alert_msg:'default msg'};
+        $scope.notification = {show_alert:false, alert_msg:''};
+        $scope.removeNotification=function(){
+            $scope.notification.show_alert=false;
+          }
           
         $scope.get_plan_display_name = function (type, plan) {
             return address_service.get_plan_display_name(type, plan);
