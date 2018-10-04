@@ -21,7 +21,7 @@ import org.mockito.internal.util.collections.Sets;
 
 import java.time.Duration;
 
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @RunWith(VertxUnitRunner.class)
