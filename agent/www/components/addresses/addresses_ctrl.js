@@ -226,13 +226,10 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             var valid = filters.filter(function (filter) {
                 if (filter.title === 'Name') {
                     try {
-                        $scope.notification.show_alert = false;
-
                         var dummy = new RegExp(filter.value);
                         return true;
                     } catch (error) {
-                        $scope.notification.show_alert = true;
-                        $scope.notification.alert_msg = '"' + filter.value + '": is not valid.  Only regular expressions are supported.';
+                        messages.push('"' + filter.value + '": is not valid.  Only regular expressions are supported.');
                         return false;
                     }
                 } else {
