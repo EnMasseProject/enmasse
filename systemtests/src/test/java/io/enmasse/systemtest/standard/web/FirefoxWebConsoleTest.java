@@ -56,6 +56,11 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    void testFilterAddressWithRegexSymbols() throws Exception {
+        doTestFilterAddressWithRegexSymbols();
+    }
+
+    @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }
