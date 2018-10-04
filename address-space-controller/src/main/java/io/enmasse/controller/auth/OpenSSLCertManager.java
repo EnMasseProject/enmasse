@@ -95,7 +95,7 @@ public class OpenSSLCertManager implements CertManager {
     public Collection<CertComponent> listComponents(String uuid) {
         List<HasMetadata> components = new ArrayList<>();
 
-        components.addAll(client.extensions().deployments().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, uuid).list().getItems());
+        components.addAll(client.apps().deployments().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, uuid).list().getItems());
         components.addAll(client.apps().statefulSets().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, uuid).list().getItems());
 
         return components.stream()
