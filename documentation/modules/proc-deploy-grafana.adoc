@@ -12,7 +12,7 @@
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f ./resources/grafana/grafana.yaml -n enmasse
+{cmdcli} apply -f ./install/components/grafana
 ----
 
 . Expose the Grafana service:

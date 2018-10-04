@@ -16,21 +16,21 @@
 +
 [options="nowrap"]
 ----
-oc create -f ./resources/templates/address-space.yaml -n enmasse
+oc create -f ./install/components/tenant/address-space.yaml -n enmasse
 ----
 
 . Create an address space:
 +
 [options="nowrap"]
 ----
-oc process -f ./resources/templates/address-space.yaml NAME=myspace INFRA_UUID=abcd TYPE=standard PLAN=unlimited-standard | oc create -f -
+oc process -f ./install/components/tenant/address-space.yaml NAME=myspace INFRA_UUID=abcd TYPE=standard PLAN=unlimited-standard | oc create -f -
 ----
 
 . Deploy the template for creating addresses:
 +
 [options="nowrap"]
 ----
-oc create -f ./resources/templates/address.yaml -n enmasse
+oc create -f ./install/components/tenant/address.yaml -n enmasse
 ----
 
 . Create an address:

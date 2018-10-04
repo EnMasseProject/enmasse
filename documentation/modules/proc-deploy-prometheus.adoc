@@ -15,7 +15,7 @@
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f ./resources/prometheus/prometheus.yaml -n enmasse
+{cmdcli} apply -f ./install/components/prometheus
 ----
 
 ifeval::["{cmdcli}" == "oc"]
