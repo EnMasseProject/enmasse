@@ -69,8 +69,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 sharedAddressSpace, defaultCredentials);
         consoleWebPage.openWebConsolePage();
         for (Destination dest : destinations) {
-            consoleWebPage.createAddressWebConsole(dest);
-            consoleWebPage.deleteAddressesWebConsole(dest);
+            consoleWebPage.createAddressWebConsole(dest, false, true);
+            consoleWebPage.deleteAddressWebConsole(dest, false);
         }
         assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
     }
