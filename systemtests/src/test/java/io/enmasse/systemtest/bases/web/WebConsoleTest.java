@@ -190,7 +190,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestFilterAddressWithRegexSymbols() throws Exception {
-        int addressCount = 8;
+        int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
@@ -200,7 +200,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         assertThat(String.format("Console failed, does not contain %d addresses", addressCount),
                 consoleWebPage.getAddressItems().size(), is(addressCount));
 
-        //valid filter, will show 4 results
+        //valid filter, will show 2 results
         String subText = "topic";
         consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
         List<AddressWebItem> items = consoleWebPage.getAddressItems();
@@ -215,7 +215,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         WebElement regexAlert = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-error-circle-o")));
         assertTrue(regexAlert.isDisplayed());
 
-        //valid regex filter (.*), will show 8 results
+        //valid regex filter (.*), will show 4 results
         subText = ".*";
         consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
         items = consoleWebPage.getAddressItems();
@@ -223,7 +223,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 String.format("Console failed, does not contain %d addresses", addressCount));
         consoleWebPage.clearAllFilters();
 
-        //valid regex filter ([0-9]\d*$) = any address ending with a number, will show 8 results
+        //valid regex filter ([0-9]\d*$) = any address ending with a number, will show 4 results
         subText = "[0-9]\\d*$";
         consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
         items = consoleWebPage.getAddressItems();
