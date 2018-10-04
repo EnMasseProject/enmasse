@@ -14,10 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -58,7 +55,7 @@ public class TimeMeasuringSystem {
             newData.put(testName, newRecord);
             newRecord.put(operationID, record);
             measuringMap.put(testClass, newData);
-        } else if (measuringMap.get(testClass).get(testName) == null){
+        } else if (measuringMap.get(testClass).get(testName) == null) {
             LinkedHashMap<String, MeasureRecord> newRecord = new LinkedHashMap<>();
             newRecord.put(operationID, record);
             measuringMap.get(testClass).put(testName, newRecord);
@@ -117,20 +114,34 @@ public class TimeMeasuringSystem {
         });
     }
 
-    private void saveResults() {
+    private void saveResults(Map data, String name) {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String json = gson.toJson(measuringMap);
+            String json = gson.toJson(data);
             Environment env = new Environment();
             Date timestamp = new Date(System.currentTimeMillis());
             Path logPath = Paths.get(env.testLogDir(), "timeMeasuring");
             Files.createDirectories(logPath);
             Files.write(Paths.get(logPath.toString(),
-                    String.format("duration_report-%s.json", dateFormat.format(timestamp))), json.getBytes());
+                    String.format("%s-%s.json", name, dateFormat.format(timestamp))), json.getBytes());
         } catch (Exception ex) {
             log.warn("Cannot save output of time measuring: " + ex.getMessage());
         }
 
+    }
+
+    private Map<String, Long> getSumDuration() {
+        Map<String, Long> sumData = new LinkedHashMap<>();
+        Arrays.stream(Operation.values()).forEach(value -> sumData.put(value.toString(), (long) 0));
+
+        measuringMap.forEach((testClassID, testClassRecords) -> testClassRecords.forEach((testID, testRecord) -> {
+            testRecord.forEach((operationID, record) -> {
+                String key = operationID.split("-")[0];
+                sumData.put(key, sumData.get(key) + record.duration);
+            });
+        }));
+
+        return sumData;
     }
 
     //===============================================================
@@ -155,7 +166,8 @@ public class TimeMeasuringSystem {
 
     public static void printAndSaveResults() {
         TimeMeasuringSystem.getInstance().printResults();
-        TimeMeasuringSystem.getInstance().saveResults();
+        TimeMeasuringSystem.getInstance().saveResults(TimeMeasuringSystem.getInstance().measuringMap, "duration_report");
+        TimeMeasuringSystem.getInstance().saveResults(TimeMeasuringSystem.getInstance().getSumDuration(), "duration_sum_report");
     }
 
     /**
