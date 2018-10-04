@@ -69,6 +69,12 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     }
 
     @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testRegexAlertBehavesConsistently() throws Exception {
+        doTestRegexAlertBehavesConsistently();
+    }
+
+    @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }

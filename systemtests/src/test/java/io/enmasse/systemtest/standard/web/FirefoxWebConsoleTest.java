@@ -61,6 +61,11 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    void testRegexAlertBehavesConsistently() throws Exception {
+        doTestRegexAlertBehavesConsistently();
+    }
+
+    @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }
