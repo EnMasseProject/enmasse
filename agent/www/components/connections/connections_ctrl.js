@@ -27,7 +27,10 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
           this.enableColumnMenus = false
         }
 
-        $scope.notification = {show_alert:false, alert_msg:'default msg'};
+        $scope.notification = {show_alert:false, alert_msg:''};
+        $scope.removeNotification=function(){
+            $scope.notification.show_alert=false;
+        }
 
         $scope.getTableHeight = function(item, direction) {
           var rowHeight = 30;   // default row height
