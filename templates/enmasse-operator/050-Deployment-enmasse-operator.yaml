@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enmasse-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: enmasse-operator
+  template:
+    metadata:
+      labels:
+        name: enmasse-operator
+    spec:
+      serviceAccountName: enmasse-operator
+      containers:
+        - name: enmasse-operator
+          image: ${ENMASSE_OPERATOR_IMAGE}
+          imagePullPolicy: Always
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
