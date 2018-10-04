@@ -9,18 +9,17 @@ import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.ServiceResource;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -51,7 +50,7 @@ public class EndpointControllerTest {
                 .build();
 
 
-        MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> op = mock(MixedOperation.class);
+        MixedOperation<Service, ServiceList, DoneableService, ServiceResource<Service, DoneableService>> op = mock(MixedOperation.class);
         when(client.services()).thenReturn(op);
         when(op.inNamespace(any())).thenReturn(op);
         FilterWatchListDeletable<Service, ServiceList, Boolean, Watch, Watcher<Service>> r = mock(FilterWatchListDeletable.class);
@@ -119,7 +118,7 @@ public class EndpointControllerTest {
                 .endSpec()
                 .build();
 
-        MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> op = mock(MixedOperation.class);
+        MixedOperation<Service, ServiceList, DoneableService, ServiceResource<Service, DoneableService>> op = mock(MixedOperation.class);
         when(client.services()).thenReturn(op);
         when(op.inNamespace(any())).thenReturn(op);
         FilterWatchListDeletable<Service, ServiceList, Boolean, Watch, Watcher<Service>> r = mock(FilterWatchListDeletable.class);
@@ -127,11 +126,11 @@ public class EndpointControllerTest {
         when(client.getNamespace()).thenReturn("myns");
         when(r.list()).thenReturn(new ServiceListBuilder().addNewItemLike(service).endItem().build());
 
-        Resource<Service, DoneableService> rexternal = mock(Resource.class);
+        ServiceResource<Service, DoneableService> rexternal = mock(ServiceResource.class);
         when(op.withName(eq("myendpoint-1234-external"))).thenReturn(rexternal);
         when(rexternal.get()).thenReturn(null);
 
-        Resource<Service, DoneableService> rinternal = mock(Resource.class);
+        ServiceResource<Service, DoneableService> rinternal = mock(ServiceResource.class);
         when(op.withName(eq("messaging-1234"))).thenReturn(rinternal);
         when(rinternal.get()).thenReturn(service);
 
