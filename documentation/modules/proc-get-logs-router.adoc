@@ -1,0 +1,18 @@
+[id='get-logs-broker-{context}']
+= Viewing Router Logs
+
+.Procedure
+
+. List all router pods and choose the pod for the relevant address space:
++
+[options="nowrap",subs="attributes"]
+----
+oc get pods -l name=qdrouterd -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
+----
+
+. Display the logs for the pod:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs <pod> -c router
+----

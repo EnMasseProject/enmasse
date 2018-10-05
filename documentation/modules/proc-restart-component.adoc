@@ -1,0 +1,13 @@
+[id='restart-component-{context}']
+= Restarting a Component
+
+.Procedure
+
+* Delete the component's pod:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete pod -l name=<component>
+----
+
+The component will be automatically restarted in a new pod.

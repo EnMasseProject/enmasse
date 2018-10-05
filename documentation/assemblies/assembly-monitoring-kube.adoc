@@ -15,5 +15,11 @@ include::../modules/proc-deploy-prometheus.adoc[leveloffset=+1]
 
 include::../modules/proc-deploy-grafana.adoc[leveloffset=+1]
 
+include::../modules/proc-restart-component.adoc[leveloffset=+1]
+
+include::../modules/proc-get-logs-router.adoc[leveloffset=+1]
+
+include::../modules/proc-get-logs-broker.adoc[leveloffset=+1]
+
 :context: {parent-context}
 
