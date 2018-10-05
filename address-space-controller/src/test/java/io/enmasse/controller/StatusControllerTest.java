@@ -6,10 +6,9 @@ package io.enmasse.controller;
 
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import org.junit.Test;
 
 import java.util.Collections;

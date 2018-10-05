@@ -6,7 +6,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -118,7 +118,7 @@ public abstract class Kubernetes {
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
-        client.extensions().deployments().inNamespace(globalNamespace).withName(name).scale(numReplicas, true);
+        client.apps().deployments().inNamespace(globalNamespace).withName(name).scale(numReplicas, true);
     }
 
     public void setStatefulSetReplicas(String name, int numReplicas) {
@@ -616,8 +616,8 @@ public abstract class Kubernetes {
      * @throws Exception
      */
     public String createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
-        Deployment depRes = client.extensions().deployments().inNamespace(namespace).create(resources);
-        Deployment result = client.extensions().deployments().inNamespace(namespace)
+        Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
+        Deployment result = client.apps().deployments().inNamespace(namespace)
                 .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
         log.info("Deployment {} created", result.getMetadata().getName());
         return result.getMetadata().getName();
@@ -640,7 +640,7 @@ public abstract class Kubernetes {
      * @param appName
      */
     public void deleteDeployment(String namespace, String appName) {
-        client.extensions().deployments().inNamespace(namespace).withName(appName).delete();
+        client.apps().deployments().inNamespace(namespace).withName(appName).delete();
         log.info("Deployment {} removed", appName);
     }
 

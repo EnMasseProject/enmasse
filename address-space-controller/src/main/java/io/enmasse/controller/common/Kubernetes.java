@@ -4,13 +4,14 @@
  */
 package io.enmasse.controller.common;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Interface for Kubernetes operations done by the address space controller

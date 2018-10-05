@@ -9,14 +9,13 @@ import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +42,7 @@ public class KubernetesHelper implements Kubernetes {
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
-        objects.addAll(client.extensions().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
+        objects.addAll(client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.configMaps().withLabel(LabelKeys.INFRA_UUID).withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
