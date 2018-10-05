@@ -91,10 +91,16 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
     private String[] getValidMechanisms(Set<String> hashAlgos) {
         TreeSet<SaslServerMechanism> mechanisms = new TreeSet<>(Comparator.comparingInt(SaslServerMechanism::priority));
         for(SaslServerMechanism mech : ALL_MECHANISMS) {
-            for(String hashAlgo : hashAlgos) {
-                if(mech.isSupported(hashAlgo)) {
+            if(hashAlgos.isEmpty()) {
+                if (mech.isSupported("")) {
                     mechanisms.add(mech);
-                    break;
+                }
+            } else {
+                for (String hashAlgo : hashAlgos) {
+                    if (mech.isSupported(hashAlgo)) {
+                        mechanisms.add(mech);
+                        break;
+                    }
                 }
             }
         }
@@ -103,6 +109,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
 
     private Set<String> getPasswordHashAlgorithms() {
         Set<String> hashAlgos = new HashSet<>();
+        boolean enmasseRealmsFound = false;
         KeycloakSession keycloakSession = keycloakSessionFactory.create();
         KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
         transactionManager.begin();
@@ -110,12 +117,16 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
             List<RealmModel> realms = keycloakSession.realms().getRealms();
             for(RealmModel realm : realms) {
                 if(realm.getAttribute("enmasse-realm",Boolean.FALSE)) {
+                    enmasseRealmsFound = true;
                     hashAlgos.add(realm.getPasswordPolicy().getHashAlgorithm());
                 }
             }
         } finally {
             transactionManager.commit();
             keycloakSession.close();
+        }
+        if(!enmasseRealmsFound) {
+            LOG.warn("No realms with attribute \"enmasse-realm\" found, only universally accepted SASL mechanisms will be offered");
         }
         return hashAlgos;
     }
