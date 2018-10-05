@@ -43,6 +43,11 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
+    void testRegexAlertBehavesConsistently() throws Exception {
+        doTestRegexAlertBehavesConsistently();
+    }
+
+    @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }

@@ -232,6 +232,27 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.clearAllFilters();
     }
 
+    protected void doTestRegexAlertBehavesConsistently() throws Exception {
+        String subText = "*";
+        int addressCount = 2;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+
+        assertThat(String.format("Console failed, does not contain %d addresses", addressCount),
+                consoleWebPage.getAddressItems().size(), is(addressCount));
+
+        consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
+        WebElement regexAlert = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-error-circle-o")));
+        assertTrue(regexAlert.isDisplayed());
+        WebElement regexClose = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
+        selenium.clickOnItem(regexClose);
+        assertFalse(regexClose.isDisplayed());
+    }
+
     protected void doTestSortAddressesByName() throws Exception {
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
