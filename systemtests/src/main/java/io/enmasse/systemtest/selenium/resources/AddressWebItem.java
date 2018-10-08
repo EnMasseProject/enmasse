@@ -32,8 +32,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
-        this.messagesIn = getCountOfAdditionalInfoItem("Incoming Traffic");
-        this.messagesOut = getCountOfAdditionalInfoItem("Outgoing Traffic");
+        this.messagesIn = getCountOfAdditionalInfoItem("Messages In");
+        this.messagesOut = getCountOfAdditionalInfoItem("Messages Out");
         this.messagesStored = getCountOfAdditionalInfoItem("Stored");
         this.isReady = AddressStatus.READY == this.status;
     }
