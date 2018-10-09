@@ -6,6 +6,7 @@ package io.enmasse.controller.auth;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,8 @@ import org.slf4j.LoggerFactory;
  * Controller that creates self-signed certificates for instances.
  */
 public class OpenSSLCertManager implements CertManager {
-    private static final Logger log = LoggerFactory.getLogger(OpenSSLCertManager.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(OpenSSLCertManager.class);
+    private static final int PROCESS_LINE_BUFFER_SIZE = 10;
     private final OpenShiftClient client;
     private final String namespace;
     private final File certDir;
@@ -72,22 +74,45 @@ public class OpenSSLCertManager implements CertManager {
         ProcessBuilder keyGenBuilder = new ProcessBuilder(cmd).redirectErrorStream(true);
 
         log.info("Running command '{}'", keyGenBuilder.command());
-        Process keyGen = null;
+        Deque<String> outBuf = new LinkedBlockingDeque<>(PROCESS_LINE_BUFFER_SIZE);
+        boolean success = false;
         try {
-            keyGen = keyGenBuilder.start();
-            InputStream stdout = keyGen.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                log.debug(line);
+            Process process = keyGenBuilder.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    boolean added = outBuf.offerLast(line);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Command output: {}", line);
+                    }
+                    if (!added) {
+                        outBuf.removeFirst();
+                        outBuf.addLast(line);
+                    }
+                }
             }
-            reader.close();
-            if (!keyGen.waitFor(1, TimeUnit.MINUTES)) {
-                throw new RuntimeException("Command timed out");
+            if (!process.waitFor(1, TimeUnit.MINUTES)) {
+                throw new RuntimeException(String.format("Command '%s' timed out", keyGenBuilder.command()));
+            }
+
+            final int exitValue = process.waitFor();
+            success = exitValue == 0;
+            String msg = String.format("Command '%s' completed with exit value %d", keyGenBuilder.command(), exitValue);
+            if (success) {
+                log.info(msg);
+            } else {
+                log.error(msg);
+                throw new RuntimeException(String.format("Command '%s' failed with exit value {}", keyGenBuilder.command(), exitValue));
             }
         } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            if (!success && !outBuf.isEmpty()) {
+                log.error("Last {} line(s) written by command to stdout/stderr follow", outBuf.size());
+                outBuf.forEach(line -> log.error("Command output: {}", line));
+            }
         }
     }
 
@@ -171,14 +196,17 @@ public class OpenSSLCertManager implements CertManager {
 
     }
 
-    private File createTempFileFromSecret(Secret secret, String entry) {
+    private File createTempFileFromSecret(Secret secret, String key) {
         try {
+            if (secret.getData() == null || secret.getData().get(key) == null) {
+                throw new IllegalStateException(String.format("No secret data found for key '%s'", key));
+            }
+            String data = secret.getData().get(key);
             File file = File.createTempFile("secret", "pem");
-            String data = secret.getData().get(entry);
             final Base64.Decoder decoder = Base64.getDecoder();
-            FileOutputStream outputStream = new FileOutputStream(file);
-            outputStream.write(decoder.decode(data));
-            outputStream.close();
+            try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                outputStream.write(decoder.decode(data));
+            }
             return file;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
