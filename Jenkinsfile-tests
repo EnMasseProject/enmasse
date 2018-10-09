@@ -1,15 +1,6 @@
 #!/usr/bin/env groovy
 
-def storeArtifacts() {
-    sh './systemtests/scripts/store_kubernetes_info.sh "artifacts/openshift-info/"'
-    sh './systemtests/scripts/collect_logs.sh "/tmp/testlogs" "artifacts/openshift-logs"'
-    sh 'rm -rf /tmp/testlogs'
-}
-
-def tearDownOpenshift() {
-    echo "tear down openshift"
-    sh './systemtests/scripts/teardown-openshift.sh'
-}
+def lib = evaluate readTrusted('./jenkins-functions.groovy')
 
 pipeline {
     agent {
@@ -32,11 +23,8 @@ pipeline {
     }
     stages {
         stage('wait for agent ready') {
-            environment {
-                EXPECTED_DIR = '/tmp/agent_ready'
-            }
-            steps {
-                sh "./systemtests/scripts/wait_until_agent_ready.sh ${env.EXPECTED_DIR}"
+            script {
+                lib.waitUntilAgentReady()
             }
         }
         stage('add description') {
@@ -55,15 +43,15 @@ pipeline {
             steps {
                 checkout scm
                 sh "git checkout ${params.COMMIT_SHA}"
-                sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh './systemtests/scripts/setup-openshift.sh "systemtests"'
-                    sh 'sudo chmod -R 777 /var/lib/origin/ || true'
+                    script {
+                        lib.startOpenshift()
+                    }
                 }
             }
         }
@@ -81,26 +69,21 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'make templates || true'
-                    sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${env.TAG} '' ${params.TEST_CASE}"
+                    ansiColor('xterm') {
+                        script {
+                            sh 'make templates || true'
+                            lib.runSystemtests(env.CORES_DIR, env.TAG, '', params.TEST_CASE)
+                        }
+                    }
                 }
             }
         }
     }
     post {
         always {
-            storeArtifacts() //store artifacts if build was aborted - due to timeout reached
-            //store test results from build and system tests
-            junit '**/TEST-*.xml'
-
-            //archive test results and openshift logs
-            archive '**/TEST-*.xml'
-            archive 'templates/install/**'
-            sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${env.CORES_DIR} artifacts"
-            archive 'artifacts/**'
-            tearDownOpenshift()
-            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
+            script {
+                lib.postAction(env.CORES_DIR)
+            }
         }
         failure {
             echo "build failed"

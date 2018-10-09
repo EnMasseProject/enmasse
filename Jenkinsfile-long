@@ -1,15 +1,6 @@
 #!/usr/bin/env groovy
 
-def storeArtifacts() {
-    sh './systemtests/scripts/store_kubernetes_info.sh "artifacts/openshift-info/"'
-    sh './systemtests/scripts/collect_logs.sh "/tmp/testlogs" "artifacts/openshift-logs"'
-    sh 'rm -rf /tmp/testlogs'
-}
-
-def tearDownOpenshift() {
-    echo "tear down openshift"
-    sh './systemtests/scripts/teardown-openshift.sh'
-}
+def lib = evaluate readTrusted('./jenkins-functions.groovy')
 
 pipeline {
     agent {
@@ -24,6 +15,13 @@ pipeline {
         CORES_DIR = "/tmp/cores"
     }
     stages {
+        stage('wait for agent ready') {
+            steps {
+                script {
+                    lib.waitUntilAgentReady()
+                }
+            }
+        }
         stage('clean') {
             steps {
                 cleanWs()
@@ -32,15 +30,15 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh './systemtests/scripts/setup-openshift.sh "systemtests"'
-                    sh 'sudo chmod -R 777 /var/lib/origin/ || true'
+                    script {
+                        lib.startOpenshift()
+                    }
                 }
             }
         }
@@ -60,25 +58,20 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh enmasse-latest 'systemtests-marathon' ''"
+                    ansiColor('xterm') {
+                        script {
+                            lib.runSystemtests(env.CORES_DIR, "enmasse-latest", 'systemtests-marathon', '')
+                        }
+                    }
                 }
             }
         }
     }
     post {
         always {
-            storeArtifacts() //store artifacts if build was aborted - due to timeout reached
-            //store test results from build and system tests
-            junit '**/TEST-*.xml'
-
-            //archive test results and openshift logs
-            archive '**/TEST-*.xml'
-            archive 'templates/install/**'
-            sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${env.CORES_DIR} artifacts"
-            archive 'artifacts/**'
-            tearDownOpenshift()
-            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
+            script {
+                lib.postAction(env.CORES_DIR)
+            }
         }
         failure {
             echo "build failed"
