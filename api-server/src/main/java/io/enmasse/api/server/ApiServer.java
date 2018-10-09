@@ -19,7 +19,6 @@ import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -34,11 +33,14 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.time.Clock;
 
 public class ApiServer extends AbstractVerticle {
@@ -76,10 +78,14 @@ public class ApiServer extends AbstractVerticle {
         String requestHeaderClientCa = null;
         try {
             ConfigMap extensionApiserverAuthentication = client.configMaps().inNamespace(options.getApiserverClientCaConfigNamespace()).withName(options.getApiserverClientCaConfigName()).get();
-            clientCa = extensionApiserverAuthentication.getData().get("client-ca.file");
+            clientCa = extensionApiserverAuthentication.getData().get("client-ca-file");
             requestHeaderClientCa = extensionApiserverAuthentication.getData().get("requestheader-client-ca-file");
-        } catch (KubernetesClientException e) {
+            validateCert(clientCa);
+            validateCert(requestHeaderClientCa);
+        } catch (Exception e) {
             log.info("Unable to retrieve config for client CA. Skipping", e);
+            clientCa = null;
+            requestHeaderClientCa = null;
         }
 
         HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), clientCa, requestHeaderClientCa, authApi, userApi, options.isEnableRbac());
@@ -91,6 +97,11 @@ public class ApiServer extends AbstractVerticle {
                 log.error("API Server failed to start", result.cause());
             }
         });
+    }
+
+    private static void validateCert(String ca) throws CertificateException {
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        cf.generateCertificate(new ByteArrayInputStream(ca.getBytes(StandardCharsets.UTF_8)));
     }
 
     private void ensureRouteExists(NamespacedOpenShiftClient client, ApiServerOptions options) throws IOException {
