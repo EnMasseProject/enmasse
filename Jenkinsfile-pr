@@ -62,8 +62,10 @@ pipeline {
         }
         stage('build') {
             steps {
-                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
-                sh 'make docker_tag'
+                ansiColor('xterm') {
+                    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
+                    sh 'make docker_tag'
+                }
             }
         }
         stage('push docker images') {
@@ -83,8 +85,10 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                    sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${env.TAG} 'systemtests-pr' ${params.TEST_CASE}"
+                    ansiColor('xterm') {
+                        sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
+                        sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${env.TAG} 'systemtests-pr' ${params.TEST_CASE}"
+                    }
                 }
             }
         }
@@ -102,6 +106,24 @@ pipeline {
             archive 'artifacts/**'
             tearDownOpenshift()
             sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
+            plot csvFileName: 'duration_sum_report.csv',
+                    csvSeries: [[
+                                        file: 'artifacts/openshift-logs/logs/timeMeasuring/duration_sum_report.csv',
+                                        exclusionValues: '',
+                                        displayTableFlag: false,
+                                        inclusionFlag: 'OFF',
+                                        url: '']],
+                    group: 'TimeReport',
+                    title: 'Sum of test operations',
+                    style: 'line',
+                    exclZero: false,
+                    keepRecords: false,
+                    logarithmic: false,
+                    numBuilds: '',
+                    useDescr: false,
+                    yaxis: '',
+                    yaxisMaximum: '',
+                    yaxisMinimum: ''
         }
         failure {
             echo "build failed"
