@@ -6,10 +6,16 @@ package io.enmasse.systemtest.timemeasuring;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import org.slf4j.Logger;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -144,6 +150,41 @@ public class TimeMeasuringSystem {
         return sumData;
     }
 
+    private void saveCsvResults(Map<String, Long> data, String name) {
+        Environment env = new Environment();
+        Path logPath = Paths.get(env.testLogDir(), "timeMeasuring");
+        String filePath = Paths.get(logPath.toString(), String.format("%s.csv", name)).toString();
+        Map<String, Long> loadedData = null;
+
+        //Check if csv file already exists, if yes get data
+        try {
+            Reader reader = Files.newBufferedReader(Paths.get(filePath));
+            CSVReader csvReader = new CSVReaderBuilder(reader).build();
+
+            List<String[]> csvData = csvReader.readAll();
+            csvReader.close();
+            loadedData = new LinkedHashMap<>();
+            for (int i = 0; i < csvData.get(0).length; i++) {
+                loadedData.put(csvData.get(0)[i], Long.parseLong(csvData.get(1)[i]));
+            }
+        } catch (Exception ex) {
+            log.warn("Cannot load data from previous csv file");
+        }
+
+        try {
+            Files.createDirectories(logPath);
+            CSVWriter csvWriter = new CSVWriter(new FileWriter(filePath));
+            csvWriter.writeNext(data.keySet().toArray(new String[0]));
+            if (loadedData != null) {
+                loadedData.forEach((operation, duration) -> data.put(operation, data.get(operation) + duration));
+            }
+            csvWriter.writeNext(data.values().stream().map(value -> Long.toString(value)).toArray(String[]::new));
+            csvWriter.close();
+        } catch (IOException ex) {
+            log.warn("Cannot save output of time measuring: " + ex.getMessage());
+        }
+    }
+
     //===============================================================
     // public static methods
     //===============================================================
@@ -165,9 +206,11 @@ public class TimeMeasuringSystem {
     }
 
     public static void printAndSaveResults() {
+        Map<String, Long> sumData = TimeMeasuringSystem.getInstance().getSumDuration();
         TimeMeasuringSystem.getInstance().printResults();
         TimeMeasuringSystem.getInstance().saveResults(TimeMeasuringSystem.getInstance().measuringMap, "duration_report");
-        TimeMeasuringSystem.getInstance().saveResults(TimeMeasuringSystem.getInstance().getSumDuration(), "duration_sum_report");
+        TimeMeasuringSystem.getInstance().saveResults(sumData, "duration_sum_report");
+        TimeMeasuringSystem.getInstance().saveCsvResults(sumData, "duration_sum_report");
     }
 
     /**
