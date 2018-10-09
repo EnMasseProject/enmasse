@@ -1,15 +1,6 @@
 #!/usr/bin/env groovy
 
-def storeArtifacts() {
-    sh './systemtests/scripts/store_kubernetes_info.sh "artifacts/openshift-info/"'
-    sh './systemtests/scripts/collect_logs.sh "/tmp/testlogs" "artifacts/openshift-logs"'
-    sh 'rm -rf /tmp/testlogs'
-}
-
-def tearDownOpenshift() {
-    echo "tear down openshift"
-    sh './systemtests/scripts/teardown-openshift.sh'
-}
+def lib = evaluate readTrusted('./jenkins-functions.groovy')
 
 pipeline {
     agent {
@@ -33,11 +24,10 @@ pipeline {
     }
     stages {
         stage('wait for agent ready') {
-            environment {
-                EXPECTED_DIR = '/tmp/agent_ready'
-            }
             steps {
-                sh "./systemtests/scripts/wait_until_agent_ready.sh ${env.EXPECTED_DIR}"
+                script {
+                    lib.waitUntilAgentReady()
+                }
             }
         }
         stage('clean') {
@@ -48,23 +38,24 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh './systemtests/scripts/setup-openshift.sh "systemtests"'
-                    sh 'sudo chmod -R 777 /var/lib/origin/ || true'
+                    script {
+                        lib.startOpenshift()
+                    }
                 }
             }
         }
         stage('build') {
             steps {
                 ansiColor('xterm') {
-                    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
-                    sh 'make docker_tag'
+                    script {
+                        lib.buildEnmasse()
+                    }
                 }
             }
         }
@@ -86,8 +77,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     ansiColor('xterm') {
-                        sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${env.CORES_DIR}"
-                        sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${env.TAG} 'systemtests-pr' ${params.TEST_CASE}"
+                        script {
+                            lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-pr', params.TEST_CASE)
+                        }
                     }
                 }
             }
@@ -95,35 +87,9 @@ pipeline {
     }
     post {
         always {
-            storeArtifacts() //store artifacts if build was aborted - due to timeout reached
-            //store test results from build and system tests
-            junit '**/TEST-*.xml'
-
-            //archive test results and openshift logs
-            archive '**/TEST-*.xml'
-            archive 'templates/install/**'
-            sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${env.CORES_DIR} artifacts"
-            archive 'artifacts/**'
-            tearDownOpenshift()
-            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
-            plot csvFileName: 'duration_sum_report.csv',
-                    csvSeries: [[
-                                        file: 'artifacts/openshift-logs/logs/timeMeasuring/duration_sum_report.csv',
-                                        exclusionValues: '',
-                                        displayTableFlag: false,
-                                        inclusionFlag: 'OFF',
-                                        url: '']],
-                    group: 'TimeReport',
-                    title: 'Sum of test operations',
-                    style: 'line',
-                    exclZero: false,
-                    keepRecords: false,
-                    logarithmic: false,
-                    numBuilds: '',
-                    useDescr: false,
-                    yaxis: '',
-                    yaxisMaximum: '',
-                    yaxisMinimum: ''
+            script {
+                lib.postAction(env.CORES_DIR)
+            }
         }
         failure {
             echo "build failed"

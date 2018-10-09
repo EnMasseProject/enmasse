@@ -1,4 +1,7 @@
 #!/usr/bin/env groovy
+
+def lib = evaluate readTrusted('./jenkins-functions.groovy')
+
 pipeline {
     agent {
         node {
@@ -21,11 +24,10 @@ pipeline {
     }
     stages {
         stage('wait for agent ready') {
-            environment {
-                EXPECTED_DIR = '/tmp/agent_ready'
-            }
             steps {
-                sh "./systemtests/scripts/wait_until_agent_ready.sh ${env.EXPECTED_DIR}"
+                script {
+                    lib.waitUntilAgentReady()
+                }
             }
         }
         stage('cleanup registry') {
@@ -54,7 +56,6 @@ pipeline {
             steps {
                 checkout scm
                 sh 'echo $(git log --format=format:%H -n1) > actual-commit.file'
-                sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
@@ -79,8 +80,7 @@ pipeline {
                 ACTUAL_COMMIT = readFile('actual-commit.file')
             }
             steps {
-                build job: env.BROKERED_JOB_NAME, wait: false, parameters:
-                        [
+                build job: env.BROKERED_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'brokered.**'],
@@ -93,8 +93,7 @@ pipeline {
                 ACTUAL_COMMIT = readFile('actual-commit.file')
             }
             steps {
-                build job: env.STANDARD_JOB_NAME, wait: false, parameters:
-                        [
+                build job: env.STANDARD_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'standard.**'],
@@ -107,8 +106,7 @@ pipeline {
                 ACTUAL_COMMIT = readFile('actual-commit.file')
             }
             steps {
-                build job: env.PLANS_JOB_NAME, wait: false, parameters:
-                        [
+                build job: env.PLANS_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.**'],
