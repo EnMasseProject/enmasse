@@ -25,7 +25,6 @@
         <junit.jupiter.version>5.1.0</junit.jupiter.version>
         <junit.vintage.version>5.1.0</junit.vintage.version>
         <junit.platform.version>1.1.0</junit.platform.version>
-        <opencsv.version>4.3</opencsv.version>
         <artemis.version>2.6.2</artemis.version>
         <ngwebdriver.version>1.1.4</ngwebdriver.version>
         <paho.version>1.2.0</paho.version>
@@ -478,13 +477,6 @@
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>com.opencsv</groupId>
-                <artifactId>opencsv</artifactId>
-                <version>${opencsv.version}</version>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
