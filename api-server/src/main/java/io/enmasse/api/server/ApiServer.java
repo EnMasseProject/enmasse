@@ -19,6 +19,7 @@ import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -74,15 +75,13 @@ public class ApiServer extends AbstractVerticle {
         Clock clock = Clock.systemUTC();
         UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
 
-        String clientCa = null;
-        String requestHeaderClientCa = null;
+        String clientCa;
+        String requestHeaderClientCa;
         try {
             ConfigMap extensionApiserverAuthentication = client.configMaps().inNamespace(options.getApiserverClientCaConfigNamespace()).withName(options.getApiserverClientCaConfigName()).get();
-            clientCa = extensionApiserverAuthentication.getData().get("client-ca-file");
-            requestHeaderClientCa = extensionApiserverAuthentication.getData().get("requestheader-client-ca-file");
-            validateCert(clientCa);
-            validateCert(requestHeaderClientCa);
-        } catch (Exception e) {
+            clientCa = validateCert("client-ca", extensionApiserverAuthentication.getData().get("client-ca-file"));
+            requestHeaderClientCa = validateCert("request-header-client-ca", extensionApiserverAuthentication.getData().get("requestheader-client-ca-file"));
+        } catch (KubernetesClientException e) {
             log.info("Unable to retrieve config for client CA. Skipping", e);
             clientCa = null;
             requestHeaderClientCa = null;
@@ -99,9 +98,18 @@ public class ApiServer extends AbstractVerticle {
         });
     }
 
-    private static void validateCert(String ca) throws CertificateException {
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        cf.generateCertificate(new ByteArrayInputStream(ca.getBytes(StandardCharsets.UTF_8)));
+    private static String validateCert(String id, String ca) {
+        if (ca == null) {
+            return null;
+        }
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            cf.generateCertificates(new ByteArrayInputStream(ca.getBytes(StandardCharsets.UTF_8)));
+            return ca;
+        } catch (CertificateException e) {
+            log.info("Error validating certificate {}. Skipping", id);
+            return null;
+        }
     }
 
     private void ensureRouteExists(NamespacedOpenShiftClient client, ApiServerOptions options) throws IOException {
