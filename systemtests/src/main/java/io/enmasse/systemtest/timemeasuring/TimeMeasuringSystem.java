@@ -6,19 +6,18 @@ package io.enmasse.systemtest.timemeasuring;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import com.opencsv.CSVWriter;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import org.slf4j.Logger;
 
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -153,16 +152,18 @@ public class TimeMeasuringSystem {
     private void saveCsvResults(Map<String, Long> data, String name) {
         Environment env = new Environment();
         Path logPath = Paths.get(env.testLogDir(), "timeMeasuring");
-        String filePath = Paths.get(logPath.toString(), String.format("%s.csv", name)).toString();
+        Path filePath = Paths.get(logPath.toString(), String.format("%s.csv", name));
         Map<String, Long> loadedData = null;
+        List<String[]> csvData = new LinkedList<>();
 
         //Check if csv file already exists, if yes get data
         try {
-            Reader reader = Files.newBufferedReader(Paths.get(filePath));
-            CSVReader csvReader = new CSVReaderBuilder(reader).build();
-
-            List<String[]> csvData = csvReader.readAll();
-            csvReader.close();
+            BufferedReader reader = Files.newBufferedReader(Paths.get(filePath.toString()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                csvData.add(line.split(","));
+            }
+            reader.close();
             loadedData = new LinkedHashMap<>();
             for (int i = 0; i < csvData.get(0).length; i++) {
                 loadedData.put(csvData.get(0)[i], Long.parseLong(csvData.get(1)[i]));
@@ -173,13 +174,15 @@ public class TimeMeasuringSystem {
 
         try {
             Files.createDirectories(logPath);
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(filePath));
-            csvWriter.writeNext(data.keySet().toArray(new String[0]));
+            BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+            writer.write(String.join(",", data.keySet().toArray(new String[0])));
+            writer.newLine();
             if (loadedData != null) {
                 loadedData.forEach((operation, duration) -> data.put(operation, data.get(operation) + duration));
             }
-            csvWriter.writeNext(data.values().stream().map(value -> Long.toString(value)).toArray(String[]::new));
-            csvWriter.close();
+            writer.write(String.join(",", data.values().stream().map(value -> Long.toString(value)).toArray(String[]::new)));
+            writer.newLine();
+            writer.close();
         } catch (IOException ex) {
             log.warn("Cannot save output of time measuring: " + ex.getMessage());
         }

@@ -103,11 +103,6 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
