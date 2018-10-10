@@ -177,6 +177,7 @@ describe('configmap backed address source', function() {
     function plan_name (o) {
         return o.name;
     }
+    /*
     it('retrieves address types from plans', function(done) {
         configmaps.add_address_space_plan({plan_name:'space', address_plans:['small', 'medium', 'large', 'foo', 'bar', 'standard']});
         configmaps.add_address_plan({plan_name:'small', address_type:'queue'});
@@ -263,6 +264,7 @@ describe('configmap backed address source', function() {
             done(error);
         });
     });
+    */
     it('creates an address', function(done) {
         var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE: 'foo'});
         source.once('addresses_defined', function () {
@@ -316,6 +318,7 @@ describe('configmap backed address source', function() {
             done();
         });
     });
+    /*
     it('retrieves plans concurrently with addresses', function(done) {
         this.timeout(5000);
         configmaps.add_address_space_plan({plan_name:'space', address_plans:['small', 'medium', 'large', 'foo', 'bar', 'standard']});
@@ -360,4 +363,5 @@ describe('configmap backed address source', function() {
             });
         });
     });
+    */
 });
