@@ -32,7 +32,7 @@ def makePlot() {
 
 def runSystemtests(String coreDir, String tag, String profile, String testCases) {
     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${coreDir}"
-    sh "./systemtests/scripts/run_test_component.sh templates/build/enmasse-${tag} ${profile} ${testCases}"
+    sh "./systemtests/scripts/run_test_component.sh 'templates/build/enmasse-${tag}' '${profile}' '${testCases}'"
 }
 
 def startOpenshift() {
