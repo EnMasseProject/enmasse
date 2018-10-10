@@ -41,20 +41,24 @@ pipeline {
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
-        stage('start openshift') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    script {
-                        lib.startOpenshift()
+        stage('run  parallel build') {
+            parallel {
+                stage('start openshift') {
+                    steps {
+                        timeout(time: 10, unit: 'MINUTES') {
+                            script {
+                                lib.startOpenshift()
+                            }
+                        }
                     }
                 }
-            }
-        }
-        stage('build') {
-            steps {
-                ansiColor('xterm') {
-                    script {
-                        lib.buildEnmasse()
+                stage('build') {
+                    steps {
+                        ansiColor('xterm') {
+                            script {
+                                lib.buildEnmasse()
+                            }
+                        }
                     }
                 }
             }
