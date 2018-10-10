@@ -1,5 +1,37 @@
 var rhea = require('rhea');
 
+function coalesce (f, delay, max_delay) {
+    var start, scheduled, timeout = undefined;
+    var timeout = undefined;
+
+    function fire() {
+        start = undefined;
+        timeout = undefined;
+        f();
+    }
+
+    function can_delay() {
+        return start && scheduled < (start + max_delay);
+    }
+
+    function schedule() {
+        timeout = setTimeout(fire, delay);
+        scheduled = Date.now() + delay;
+    }
+
+    return function () {
+        if (timeout) {
+            if (can_delay()) {
+                clearTimeout(timeout);
+                schedule();
+            } // else just wait for previously scheduled call
+        } else {
+            start = Date.now();
+            schedule();
+        }
+    }
+};
+
 function TimeSeries(label, max_size) {
     this.yData = [label];
     this.xData = ['time'];
@@ -104,10 +136,24 @@ AddressDefinition.prototype.update_periodic_deltas = function () {
     return true;
 }
 
+Object.values = function values(O) {
+		return reduce(keys(O), (v, k) => concat(v, typeof k === 'string' && isEnumerable(O, k) ? [O[k]] : []), []);
+};
+
+function get_items_from_index(index) {
+    var items = [];
+    for (var k in index) {
+        items.push(index[k]);
+    }
+    return items;
+}
+
 function AddressService($http) {
     var self = this;  // 'this' is not available in the success funtion of $http.get
     this.admin_disabled = true;
-    this.addresses = [];
+    this.address_index = {};
+    var self = this;
+    Object.defineProperty(this, 'addresses', { get: function () { return get_items_from_index(self.address_index); } });
     this.address_types = [];
     this.address_space_type = '';
     this.connections = [];
@@ -142,7 +188,7 @@ AddressService.prototype.get_plan_display_name = function (type, plan) {
         } else {
             console.log('found no plan called %s address of type %s', plan, type);
         }
-    } else {
+    } else if (this.address_types.length) {
         console.log('found no address for type %s in %j', type, this.address_types);
     }
     return plan;
@@ -158,13 +204,20 @@ AddressService.prototype.get_valid_address_types = function () {
 };
 
 AddressService.prototype.list_topic_names = function () {
-    return this.addresses.filter(function (a) { return a.type === 'topic'; }).map(function (a) { return a.address; });
+    var topic_names = [];
+    for (var key in this.address_index) {
+        var a = this.address_index[key];
+        if (a.type === 'topic') {
+            topic_names.push(a.address);
+        }
+    }
+    return topic_names;
 };
 
 AddressService.prototype.update_depth_series = function () {
     var changed = false;
-    for (var i = 0; i < this.addresses.length; i++) {
-        if (this.addresses[i].update_depth_series()) {
+    for (var key in this.address_index) {
+        if (this.address_index[key].update_depth_series()) {
             changed = true;
         }
     }
@@ -172,21 +225,20 @@ AddressService.prototype.update_depth_series = function () {
 };
 
 AddressService.prototype.update_periodic_deltas = function () {
-    for (var i = 0; i < this.addresses.length; i++) {
-        this.addresses[i].update_periodic_deltas();
+    for (var key in this.address_index) {
+        this.address_index[key].update_periodic_deltas();
     }
     if (this.callback) this.callback('reset_periodic_deltas');
 };
 
-AddressService.prototype.update = function (a) {
-    var i = 0;
-    while (i < this.addresses.length && a.address !== this.addresses[i].address) {
-        i++;
-    }
-    if (this.addresses[i] === undefined) {
-        this.addresses[i] = new AddressDefinition(a);
+AddressService.prototype.update_address = function (a) {
+    var def = this.address_index[a.address];
+    if (def === undefined) {
+        this.address_index[a.address] = new AddressDefinition(a);
+        this.callback('address_added');
     } else {
-        this.addresses[i].update(a);
+        def.update(a);
+        this.callback('address_updated');
     }
 }
 
@@ -196,20 +248,19 @@ AddressService.prototype.create_address = function (obj) {
 
 AddressService.prototype.delete_selected = function () {
     var changed = false;
-    for (var i = 0; i < this.addresses.length;) {
-        if (this.addresses[i].selected) {
-            this.sender.send({subject: 'delete_address', body: this.addresses[i]});
-            this.addresses.splice(i, 1);
+    for (var key in this.address_index) {
+        var a = this.address_index[key];
+        if (a.selected) {
+            this.sender.send({subject: 'delete_address', body: a});
+            delete this.address_index[key];
             changed = true;
-        } else {
-            i++;
         }
     }
     if (changed && this.callback) this.callback('address_deleted');
 }
 
 AddressService.prototype.is_unique_valid_name = function (name) {
-    return !this.addresses.some(function (a) { return a.address === name; }) && name.match(/^[^#*\/\s\.:]+$/);
+    return this.address_index[name] === undefined && name.match(/^[^#*\/\s\.:]+$/);
 }
 
 AddressService.prototype.create_user = function (obj) {
@@ -250,19 +301,13 @@ AddressService.prototype.update_user = function (c) {
 
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
-        this.update(context.message.body);
+        this.update_address(context.message.body);
         if (this.callback) this.callback('address');
     } else if (context.message.subject === 'address_deleted') {
-        var changed = false;
-        for (var i = 0; i < this.addresses.length;) {
-            if (this.addresses[i].address === context.message.body) {
-                this.addresses.splice(i, 1);
-                changed = true;
-            } else {
-                i++;
-            }
+        if (this.address_index[context.message.body]) {
+            delete this.address_index[context.message.body];
+            if (this.callback) this.callback('address_deleted');
         }
-        if (changed && this.callback) this.callback('address_deleted');
     } else if (context.message.subject === 'address_types') {
         this.address_types = context.message.body;
         this.address_space_type = context.message.application_properties.address_space_type;
@@ -300,11 +345,24 @@ AddressService.prototype.on_message = function (context) {
     }
 }
 
+AddressService.prototype._notify = function () {
+    for (var reason in this._reasons) {
+        this._callback(reason);
+    }
+    this._reasons = {};
+}
+
 AddressService.prototype.on_update = function (callback) {
-    this.callback = callback;
+    this._reasons = {};
+    this._callback = callback;
+    this.notify = coalesce(this._notify.bind(this), 10, 500);
+    var self = this;
+    this.callback = function (reason) {
+        self._reasons[reason] = true;
+        this.notify();
+    }
 }
 
 angular.module('address_service', []).factory('address_service', function($http) {
     return new AddressService($http);
 });
-

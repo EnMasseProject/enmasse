@@ -140,13 +140,15 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         }
 
         var on_update = function (reason) {
-          if ($scope.filterConfig) {
-            $scope.filterConfig.resultsCount = $scope.items.length;
-          }
-          if (reason.split('_')[0] !== 'address') {
+          var params = reason.split('_');
+          if (params[0] !== 'address') {
             return
           }
-            $scope.admin_disabled = address_service.admin_disabled;
+          if (params[1] === 'added' || params[1] === 'deleted') {
+            applyFilters();
+            $scope.items.sort(compareFn);
+          }
+          $scope.admin_disabled = address_service.admin_disabled;
           $scope.items.forEach( function (item) {
             if (item.senders + item.receivers > 0) {
               if (!item.ingress_outcomes_link_table) {
@@ -165,8 +167,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           // force a rate updated even if there was no change in the address
           if (rateTimer)
             clearTimeout(rateTimer)
-          rateTimer = setTimeout(forceDeliveryRateUpdate, 7500)
-          $scope.items.sort(compareFn);
+          rateTimer = setTimeout(forceDeliveryRateUpdate, 7500);
         };
         address_service.on_update(on_update);
 
@@ -180,7 +181,6 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
 
         $scope.filtersText = '';
         $scope.items = address_service.addresses;
-        on_update("address")
 
         var matchesFilter = function (item, filter) {
           var match = true;
@@ -205,20 +205,20 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           return matches;
         };
 
-        var applyFilters = function (filters) {
-          $scope.items = [];
-          if (filters && filters.length > 0) {
-            address_service.addresses.forEach(function (item) {
-              if (matchesFilters(item, filters)) {
-                $scope.items.push(item);
-              }
-            });
-          } else {
-            $scope.items = address_service.addresses;
-          }
+        var applyFilters = function () {
+            var filters = $scope.filterConfig.appliedFilters;
+            if (filters && filters.length > 0) {
+                $scope.items = address_service.addresses.filter(function (item) {
+                    return matchesFilters(item, filters);
+                });
+            } else {
+                $scope.items = address_service.addresses;
+            }
+            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
         };
 
         var filterChange = function (filters) {
+            console.log('filters changed');
             $scope.filtersText = "";
 
             $scope.notification.show_alert = false;
@@ -245,9 +245,8 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             valid.forEach(function (filter) {
                 $scope.filtersText += filter.title + " : " + filter.value + "\n";
             });
-            applyFilters(valid);
             $scope.filterConfig.appliedFilters = valid;
-            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
+            applyFilters();
         };
 
         $scope.filterConfig = {
@@ -272,7 +271,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         };
         var compareFn = function(item1, item2) {
           var compValue = 0;
-          if ($scope.sortConfig.currentField.id === 'address') {
+          if ($scope.sortConfig.currentField === undefined || $scope.sortConfig.currentField.id === 'address') {
             compValue = item1.address.localeCompare(item2.address);
           } else if ($scope.sortConfig.currentField.id === 'senders') {
               compValue = item1.senders - item2.senders;
@@ -387,6 +386,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
                 rateTimer = null
             }
         });
+        on_update("address_added")
       }
     ]);
 
