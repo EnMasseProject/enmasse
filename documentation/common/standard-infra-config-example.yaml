@@ -1,0 +1,22 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: StandardInfraConfig
+metadata:
+  name: myconfig
+  annotations:
+    enmasse.io/template-name: standard-space-infra
+    enmasse.io/queue-template-name: queue-persisted
+    enmasse.io/topic-template-name: topic-persisted
+spec:
+  version: 0.23.0
+  admin:
+    resources:
+      memory: 256Mi
+  broker:
+    resources:
+      memory: 2Gi
+      storage: 100Gi
+    addressFullPolicy: PAGE
+  router:
+    resources:
+      memory: 256Mi
+    linkCapcity: 1000

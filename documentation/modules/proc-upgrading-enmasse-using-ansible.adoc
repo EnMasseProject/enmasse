@@ -1,0 +1,35 @@
+// Module included in the following assemblies:
+//
+// assembly-upgrading-enmasse.adoc
+
+[id='upgrading-enmasse-using-ansible-{context}']
+= Upgrading {ProductName} on {PlatformName} using Ansible
+
+.Prerequisites
+
+* A new release of {ProductName}. For more information, see xref:downloading-okd[].
+
+.Procedure
+
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+oc login -u system:admin
+----
+
+. Run the ansible playbook form the new release:
++
+[options="nowrap"]
+----
+ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
+----
+
+. Monitor pods while they are restarted:
++
+[subs="attributes",options="nowrap"]
+----
+oc get pods -w
+----
++
+The upgrade should cause all pods to be restarted within a couple of minutes.

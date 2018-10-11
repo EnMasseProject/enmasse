@@ -1,0 +1,42 @@
+// Module included in the following assemblies:
+//
+// assembly-upgrading-enmasse.adoc
+
+[id='upgrading-enmasse-using-template-{context}']
+= Upgrading {ProductName} on {PlatformName} using Template
+
+.Prerequisites
+
+* A new release of {ProductName}. For more information, see xref:downloading-okd[].
+
+.Procedure
+
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+oc login -u system:admin
+----
+
+. Select the project where {ProductName} is installed:
++
+[subs="attributes",options="nowrap"]
+----
+oc project enmasse
+----
+
+. Apply the new release template:
++
+[subs="attributes",options="nowrap"]
+----
+oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+----
+
+. Monitor pods while they are restarted:
++
+[subs="attributes",options="nowrap"]
+----
+oc get pods -w
+----
++
+The upgrade should cause all pods to be restarted within a couple of minutes.

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: enmasse
   annotations:
-    defined-by: standard-space-infra
+    defined-by: default
 displayName: Restrictive Plan
 displayOrder: 0
 shortDescription: A plan with restrictive quotas

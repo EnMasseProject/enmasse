@@ -1,0 +1,38 @@
+// This assembly is included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+:parent-context: {context}
+
+[id='infrastructure-configuration-{context}']
+= Infrastructure configuration
+
+{ProductName} creates infrastructure components like routers, brokers and consoles. These
+can be configured while the system is running, and {ProductName} will make sure the components are
+updated with the new settings.
+
+{ProductName} comes with default infrastructure configuration that can be edited by the
+{ProductName} service operator.
+
+Infrastructure configuration can be managed for both `brokered` and `standard` infrastructure
+using `BrokeredInfraConfig` and `StandardInfraConfig` resources.
+
+include::../modules/con-brokered-infra-config.adoc[leveloffset=+1]
+
+include::../modules/con-standard-infra-config.adoc[leveloffset=+1]
+
+You can edit existing configurations or create new.
+
+= Applying configuration changes on OpenShift
+
+:cmdcli: oc
+:context: {parent-context}-okd
+include::../modules/proc-applying-standard-infra-config.adoc[leveloffset=+1]
+
+= Applying configuration changes on Kubernetes
+
+:cmdcli: kubectl
+:context: {parent-context}-k8s
+include::../modules/proc-applying-standard-infra-config.adoc[leveloffset=+1]
+
+:context: {parent-context}
+
