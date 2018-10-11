@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.api.*;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -25,6 +26,13 @@ import java.util.Optional;
 
 public class StandardController {
     private static final Logger log = LoggerFactory.getLogger(StandardController.class.getName());
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (Error | RuntimeException t) {
+            t.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();

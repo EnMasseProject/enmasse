@@ -5,6 +5,7 @@
 
 package io.enmasse.osb;
 
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.api.common.CachingSchemaProvider;
@@ -38,6 +39,13 @@ public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
     private final NamespacedOpenShiftClient client;
     private final ServiceBrokerOptions options;
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (Error | RuntimeException t) {
+            t.printStackTrace();
+        }
+    }
 
     private ServiceBroker(ServiceBrokerOptions options) {
         this.client = new DefaultOpenShiftClient();

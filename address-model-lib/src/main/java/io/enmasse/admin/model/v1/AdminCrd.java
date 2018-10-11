@@ -4,10 +4,31 @@
  */
 package io.enmasse.admin.model.v1;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBuilder;
+import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class AdminCrd {
+
+    public static void registerCustomCrds() {
+        registerCrd(AddressSpacePlan.class);
+        registerCrd(AddressPlan.class);
+        registerCrd(StandardInfraConfig.class);
+        registerCrd(BrokeredInfraConfig.class);
+    }
+
+    public static void registerCrd(Class<? extends HasMetadata> clazz) {
+        KubernetesDeserializer.registerCustomKind(kind(clazz), clazz);
+    }
+
+    public static <T extends HasMetadata> String kind(Class<T> cls) {
+        try {
+            return cls.newInstance().getKind();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static CustomResourceDefinition addressspaceplans() {
         return createCrd("AddressSpacePlan");

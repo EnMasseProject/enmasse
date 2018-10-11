@@ -11,6 +11,7 @@ import java.time.Clock;
 import java.util.*;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
@@ -35,6 +36,14 @@ public class AddressSpaceController extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
     private final NamespacedOpenShiftClient controllerClient;
     private final AddressSpaceControllerOptions options;
+
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (Error | RuntimeException t) {
+            t.printStackTrace();
+        }
+    }
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
         this.controllerClient = new DefaultOpenShiftClient();

@@ -5,6 +5,7 @@
 
 package io.enmasse.api.server;
 
+import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.api.common.CachingSchemaProvider;
@@ -48,6 +49,14 @@ public class ApiServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class.getName());
     private final NamespacedOpenShiftClient client;
     private final ApiServerOptions options;
+
+    static {
+        try {
+            AdminCrd.registerCustomCrds();
+        } catch (Error | RuntimeException t) {
+            t.printStackTrace();
+        }
+    }
 
     private ApiServer(ApiServerOptions options) {
         this.client = new DefaultOpenShiftClient();
