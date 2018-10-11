@@ -121,7 +121,9 @@ public class HttpAddressSpaceService {
             addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
         }
 
-        addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
+        if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
+            addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
+        }
 
         if (securityContext.isSecure() && securityContext.getUserPrincipal() != null) {
             String createdBy = RbacSecurityContext.getUserName(securityContext.getUserPrincipal());
