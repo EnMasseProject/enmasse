@@ -742,7 +742,7 @@ public class ConsoleWebPage implements IWebPage {
         @Override
         public void checkReachableWebPage() {
             String pageTitle = "Log";
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains(pageTitle));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.titleContains(pageTitle));
         }
     }
 
