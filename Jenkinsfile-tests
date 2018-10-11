@@ -74,7 +74,7 @@ pipeline {
                     ansiColor('xterm') {
                         script {
                             sh 'make templates || true'
-                            lib.runSystemtests(env.CORES_DIR, env.TAG, '', params.TEST_CASE)
+                            lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE)
                         }
                     }
                 }
