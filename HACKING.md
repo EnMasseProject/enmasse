@@ -148,3 +148,43 @@ only consumed by some tasks:
    * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
    * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
    * TAG               - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
+
+## Debugging
+
+### Remote Debugging
+
+In order to remote debug an EnMasse component deployed to a pod within the cluster, you first need to enable the remote
+debugging options of the runtime, and the forward port from the host to the target pod.  You then connect your IDE's
+debugger to the host/port.
+
+The instructions vary depending on whether the component is written in Java or NodeJS.  The precise steps vary by
+developer tooling you use.  The below is just offered as a guide.
+
+#### Java components
+
+If you have a Java component running in a pod that you wish to debug, temporarily edit the deployment
+(`oc edit deployment` etc.) and add the Java debug options to the standard `_JAVA_OPTIONS` environment variable to the
+container.
+
+```yaml
+- env:
+ - name: _JAVA_OPTIONS
+   value: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+```
+
+#### NodeJS components
+
+If you have a NodeJS component running in a pod that you wish to debug, temporarily edit the deployment and add the
+NodeJS debug option `--debug` to a `_NODE_OPTIONS` environment variable to the container.  By default, NodeJS
+will listen on port 5858.
+
+```yaml
+- env:
+ - name: _NODE_OPTIONS
+   value: --debug
+```
+
+#### Port Forwarding
+
+On OpenShift, you can then issue a `oc port-forward <pod> <LOCAL_PORT>:<REMOTE_PORT>` command to conveniently route
+traffic to the pod's bound port.  Attach your IDE debugger the host/port.
