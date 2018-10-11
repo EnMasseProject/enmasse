@@ -4,7 +4,8 @@ CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
 ENMASSE_DIR=$1
-TESTCASE=$2
+TEST_PROFILE=$2
+TESTCASE=$3
 failure=0
 
 export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
@@ -57,7 +58,12 @@ LOGS_PID=$!
 echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
 #execute test
-run_test ${TESTCASE} systemtests "kubernetes" || failure=$(($failure + 1))
+if [[ "${TEST_PROFILE}" = "smoke" ]]; then
+    run_test "brokered.**.SmokeTest" systemtests-shared "kubernetes" || failure=$(($failure + 1))
+    run_test "standard.**.SmokeTest" systemtests-shared "kubernetes" || failure=$(($failure + 1))
+else
+    run_test ${TESTCASE} systemtests "kubernetes" || failure=$(($failure + 1))
+fi
 
 kubectl get events --all-namespaces
 
