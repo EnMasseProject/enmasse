@@ -152,11 +152,12 @@ function AddressService($http) {
     var self = this;  // 'this' is not available in the success funtion of $http.get
     this.admin_disabled = true;
     this.address_index = {};
+    this.connection_index = {};
     var self = this;
     Object.defineProperty(this, 'addresses', { get: function () { return get_items_from_index(self.address_index); } });
+    Object.defineProperty(this, 'connections', { get: function () { return get_items_from_index(self.connection_index); } });
     this.address_types = [];
     this.address_space_type = '';
-    this.connections = [];
     this.users = [];
     var ws = rhea.websocket_connect(WebSocket);
     this.connection = rhea.connect({"connection_details":ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]), "reconnect":true, rejectUnauthorized:true});
@@ -280,15 +281,15 @@ AddressService.prototype.delete_selected_users = function () {
 }
 
 AddressService.prototype.update_connection = function (c) {
-    var i = 0;
-    while (i < this.connections.length && c.id !== this.connections[i].id) {
-        i++;
+    var def = this.connection_index[c.id];
+    if (def === undefined) {
+        this.connection_index[c.id] = c;
+        this.callback('connection_added');
+    } else {
+        // don't replace existing connection items, just update them
+        Object.assign(def, c);
+        this.callback('address_updated');
     }
-    if (i >= this.connections.length)
-      this.connections[i] = c
-    else
-    // don't replace existing connection items, just update them
-      Object.assign(this.connections[i], c)
 }
 
 AddressService.prototype.update_user = function (c) {
@@ -317,16 +318,10 @@ AddressService.prototype.on_message = function (context) {
         this.update_connection(context.message.body);
         if (this.callback) this.callback('connection');
     } else if (context.message.subject === 'connection_deleted') {
-        var changed = false;
-        for (var i = 0; i < this.connections.length;) {
-            if (this.connections[i].id === context.message.body) {
-                this.connections.splice(i, 1);
-                changed = true;
-            } else {
-                i++;
-            }
+        if (this.connection_index[context.message.body]) {
+            delete this.connection_index[context.message.body];
+            if (this.callback) this.callback('connection_deleted');
         }
-        if (changed && this.callback) this.callback("connection:deleted");
     } else if (context.message.subject === 'user') {
         console.log('got user: ' + JSON.stringify(context.message.body));
         this.update_user(context.message.body);

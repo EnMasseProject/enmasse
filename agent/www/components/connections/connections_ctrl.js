@@ -63,15 +63,16 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
         }
 
         address_service.on_update(function (reason) {
-            $scope.address_space_type = address_service.address_space_type
-          if ($scope.filterConfig) {
-            $scope.filterConfig.resultsCount = $scope.items.length;
-          }
-          if (reason.split('_')[0] !== 'connection') {
+          $scope.address_space_type = address_service.address_space_type
+          var params = reason.split('_');
+          if (params[0] !== 'connection') {
             return
           }
+          if (params[1] === 'added' || params[1] === 'deleted') {
+            applyFilters();
+            $scope.items.sort(compareFn);
+          }
           ensureGridConfigs($scope.items)
-          $scope.items.sort(compareFn);
           $timeout(() => {}) // safely apply any changes to scope variables
         });
 
@@ -108,6 +109,16 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
           return hiddenItems[item.host]
         }
 
+        function applyFilters() {
+            var filters = $scope.filterConfig.appliedFilters;
+            if (filters && filters.length > 0) {
+                $scope.items = address_service.connections.filter(all(filters.map(get_filter_function)))
+            } else {
+                $scope.items = address_service.connections;
+            }
+            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
+        }
+
         var filterChange = function (filters) {
             hiddenItems = {}
 
@@ -131,17 +142,9 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
                 $scope.notification.show_alert = true;
                 $scope.notification.alert_msg = messages.join(" ");
             }
-            $scope.filtersText = valid.map(function (filter) { return  filter.title + " : " + filter.value + "\n"; }).join();
-            var visibleItems = address_service.connections.filter(all(valid.map(get_filter_function)))
-            // we can't set $scope.items to visibleItems since visibleItems is a filtered list which is actually a
-            // separate array and would not get updated when the connection's data changes
-            $scope.items.forEach( function (item) {
-              if (!visibleItems.some ( (vis) => item.host === vis.host )) {
-                hiddenItems[item.host] = true
-              }
-            })
-            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length - Object.keys(hiddenItems).length;
             $scope.filterConfig.appliedFilters = valid;
+            $scope.filtersText = valid.map(function (filter) { return  filter.title + " : " + filter.value + "\n"; }).join();
+            applyFilters();
         };
 
         $scope.filtersText = '';
@@ -238,8 +241,7 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
         $scope.connectionListConfig = {
             showSelectBox: false,
             useExpandingRows: true,
-            checkDisabled: false,
-            checkDisabled: checkHiddenItem
+            checkDisabled: false
         };
       }
     ]);
