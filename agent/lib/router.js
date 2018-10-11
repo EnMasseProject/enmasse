@@ -61,6 +61,7 @@ var ConnectedRouter = function (connection) {
     this.realise_address_definitions = myutils.serialize(this._realise_address_definitions.bind(this));
 
     this.router_mgmt = new qdr.Router(connection);
+    this.router_mgmt.name = 'mgmt';
     var self = this;
     connection.on('receiver_open', function () {
         self.emit('ready', self);
