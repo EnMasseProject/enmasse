@@ -106,7 +106,10 @@ public abstract class OSBServiceBase {
             addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
         }
 
-        addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
+        if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
+            addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
+        }
+
         return addressSpace;
     }
 
