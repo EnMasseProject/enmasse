@@ -50,9 +50,9 @@ public class Minikube extends Kubernetes {
     }
 
     @Override
-    public Endpoint getRestEndpoint() throws MalformedURLException {
+    public Endpoint getRestEndpoint() {
         if (environment.registerApiServer()) {
-            return new Endpoint(environment.openShiftUrl());
+            return new Endpoint(client.getMasterUrl());
         } else {
             return new Endpoint(getIp(globalNamespace, "restapi"), Integer.parseInt(getPort(globalNamespace, "restapi")));
         }

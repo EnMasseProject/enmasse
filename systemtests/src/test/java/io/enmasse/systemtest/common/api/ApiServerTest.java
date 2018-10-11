@@ -53,7 +53,7 @@ class ApiServerTest extends TestBase {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         plansProvider.tearDown();
     }
 
@@ -61,7 +61,7 @@ class ApiServerTest extends TestBase {
     void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = new AddressPlan("test-schema-rest-api-addr-plan", AddressType.QUEUE,
                 Collections.singletonList(new AddressResource("broker", 0.6)));
-        plansProvider.createAddressPlanConfig(queuePlan);
+        plansProvider.createAddressPlan(queuePlan);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -69,9 +69,9 @@ class ApiServerTest extends TestBase {
                 new AddressSpaceResource("router", 1.0, 1.0),
                 new AddressSpaceResource("aggregate", 0.0, 2.0));
         List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
-        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("schema-rest-api-plan", "schema-rest-api-plan",
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("schema-rest-api-plan",
                 "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(addressSpacePlan);
+        plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         Future<SchemaData> data = getSchema();
         SchemaData schemaData = data.get(20, TimeUnit.SECONDS);

@@ -5,7 +5,10 @@
 package io.enmasse.systemtest.resources;
 
 import io.enmasse.systemtest.AddressType;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AddressPlan {
@@ -39,5 +42,54 @@ public class AddressPlan {
             }
         }
         throw new java.lang.IllegalStateException(String.format("address resource '%s' didn't found", addressResource));
+    }
+
+    public JsonObject toJson() {
+        JsonObject config = new JsonObject();
+        config.put("apiVersion", "admin.enmasse.io/v1alpha1");
+        config.put("kind", "AddressPlan");
+
+        JsonObject definitionMetadata = new JsonObject(); // <metadata>
+        definitionMetadata.put("name", this.getName());
+        config.put("metadata", definitionMetadata);// </metadata>
+
+        config.put("displayName", this.getName()); // not parametrized now
+        config.put("displayOrder", "0");
+        config.put("shortDescription", "Newly defined address plan.");
+        config.put("longDescription", "Newly defined address plan.");
+        config.put("uuid", "f64cc30e-0d9e-11e8-ba89-0ed5f89f718b");
+        config.put("addressType", this.getType().toString());
+
+        JsonArray defRequiredResources = new JsonArray(); // <requiredResources>
+        JsonObject brokerResource;
+        for (AddressResource res : this.getAddressResources()) {
+            brokerResource = new JsonObject();
+            brokerResource.put("name", res.getName());
+            brokerResource.put("credit", res.getCredit());
+            defRequiredResources.add(brokerResource);
+        }
+        config.put("requiredResources", defRequiredResources); // </requiredResources>
+        return config;
+    }
+
+
+    public static AddressPlan fromJson(JsonObject planDefinition) {
+        JsonObject metadataDef = planDefinition.getJsonObject("metadata");
+
+        JsonArray requiredResourcesDef = planDefinition.getJsonArray("requiredResources");
+        List<AddressResource> requiredResources = new ArrayList<>();
+
+        for (int i = 0; i < requiredResourcesDef.size(); i++) {
+            JsonObject resourceDef = requiredResourcesDef.getJsonObject(i);
+            AddressResource requiredResource = new AddressResource(
+                    resourceDef.getString("name"),
+                    resourceDef.getDouble("credit"));
+            requiredResources.add(requiredResource);
+        }
+
+        return new AddressPlan(
+                metadataDef.getString("name"),
+                AddressType.valueOf(planDefinition.getString("addressType").toUpperCase()),
+                requiredResources);
     }
 }

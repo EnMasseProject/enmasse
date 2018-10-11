@@ -37,7 +37,7 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         plansProvider.tearDown();
     }
 
@@ -47,10 +47,12 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         List<AddressResource> addressResources = Collections.singletonList(new AddressResource("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
-        plansProvider.createAddressPlanConfig(weakQueuePlan);
+        plansProvider.createAddressPlan(weakQueuePlan);
 
-        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlanConfig("standard");
-        plansProvider.appendAddressPlan(weakQueuePlan, standardPlan);
+        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlan("standard");
+        plansProvider.createAddressPlan(weakQueuePlan);
+        standardPlan.getAddressPlans().add(weakQueuePlan);
+        plansProvider.removeAddressSpacePlan(standardPlan);
 
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 20;
