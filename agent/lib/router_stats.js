@@ -29,6 +29,7 @@ function RouterStats(connection) {
     //TODO: fix admin_service to be more sensibly generic
     var conn = connection || require('./admin_service.js').connect(rhea, options, 'MESSAGING');
     this.router = new Router(conn);
+    this.router.name = 'stats';
     var self = this;
     this.router.get_all_routers().then(function (routers) {
         self.routers = routers;

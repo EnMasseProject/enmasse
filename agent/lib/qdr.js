@@ -16,6 +16,7 @@
 'use strict';
 
 var log = require("./log.js").logger();
+var util = require('util');
 
 var Router = function (connection, router, agent) {
     if (router) {
@@ -42,30 +43,100 @@ var Router = function (connection, router, agent) {
             sent: 0,
             recv: 0,
             unexpected_responses: 0
-        }
+        };
+        this.last_status = undefined;
+        var self = this;
+        this.timer = setInterval(function () {
+            self.health_check();
+        }, 300000);
     }
     this.connection.on('receiver_open', this.ready.bind(this));
     this.connection.on('disconnected', this.disconnected.bind(this));
     this.connection.on('sender_error', this.on_sender_error.bind(this));
 };
 
+Router.prototype.get_id = function () {
+    if (this.name) {
+        return this.name + ':' + this.connection.container_id;
+    } else {
+        return this.connection.container_id;
+    }
+};
+
 Router.prototype.log_info = function () {
     log.info('[%s] qdr handlers: %d, requests pending: %d, requests sent: %d, responses received: %d, unexpected response: %d, ready: %s',
-             this.connection.container_id, Object.keys(this.handlers).length, this.requests.length,
+             this.get_id(), Object.keys(this.handlers).length, this.requests.length,
              this.tracking.sent, this.tracking.recv, this.tracking.unexpected_responses, (this.address !== undefined));
+};
+
+Router.prototype.health_check = function () {
+    var current = this._get_status();
+    var last = this.last_status;
+    if (this.last_status === undefined) {
+        this.last_status = current;
+    } else {
+        var ready_state;
+        if (current.ready) {
+            if (last.ready) {
+                ready_state = 'remains active';
+            } else {
+                ready_state = 'transitioned to active';
+            }
+        } else {
+            if (last.ready) {
+                ready_state = 'transitioned to inactive';
+            } else {
+                ready_state = 'remains inactive';
+            }
+        }
+
+        var messages = [];
+        var still_outstanding = current.outstanding.filter(function (id) { return last.outstanding.indexOf(id) >=0; });
+        if (still_outstanding.length > 0) {
+            messages.push(util.format('still waiting for responses for %j', still_outstanding));
+        }
+
+        if (current.unsent > last.unsent && current.sent === last.sent) {
+            messages.push('sending of requests appears to be blocked');
+        }
+
+        if (current.unexpected_responses > last.unexpected_responses) {
+            messages.push(util.format('%d unexpected responses since last status', current.unexpected_responses - last.unexpected_responses));
+        }
+
+        if (messages.length) {
+            log.warning('[%s] %s (%s)', this.get_id(), messages.join(', '), ready_state);
+        } else if (current.sent !== last.sent || current.recv != last.recv) {
+            log.info('[%s] %s sent %d requests and received %d responses since last status', this.get_id(), ready_state, current.sent - last.sent, current.recv - last.recv);
+        } else {
+            log.info('[%s] %s no requests/responses since last status', this.get_id(), ready_state);
+        }
+        last = current;
+    }
+};
+
+Router.prototype._get_status = function () {
+    return  {
+        sent: this.tracking.sent,
+        recv: this.tracking.recv,
+        unexpected_responses: this.tracking.unexpected_responses,
+        unsent: this.requests.length,
+        outstanding: Object.keys(this.handlers),
+        ready: (this.address !== undefined)
+    };
 };
 
 Router.prototype.closed = function (context) {
     if (context.connection.error) {
-        log.error('[%s] ERROR: router closed connection with %s', context.connection.container_id, context.connection.error.description);
+        log.error('[%s] ERROR: router closed connection with %s', this.get_id(), context.connection.error.description);
     }
-    log.info('[%s] router closed ', this.connection.container_id, this.target);
+    log.info('[%s] router closed ', this.get_id(), this.target);
     this.address = undefined;
     this._abort_requests('closed');
 };
 
 Router.prototype._abort_requests = function (error) {
-    log.info('[%s] aborting pending requests: %s', this.connection.container_id, error);
+    log.info('[%s] aborting pending requests: %s', this.get_id(), error);
     for (var h in this.handlers) {
         this.handlers[h](error);
         delete this.handlers[h];
@@ -74,7 +145,7 @@ Router.prototype._abort_requests = function (error) {
 }
 
 Router.prototype.on_sender_error = function (context) {
-    log.info('[%s] sender error %s', this.connection.container_id, error);
+    log.info('[%s] sender error %s', this.get_id(), error);
 };
 
 Router.prototype.disconnected = function (context) {
@@ -83,7 +154,7 @@ Router.prototype.disconnected = function (context) {
 }
 
 Router.prototype.ready = function (context) {
-    log.info('[%s] router ready', this.connection.container_id);
+    log.info('[%s] router ready', this.get_id());
     this.address = context.receiver.source.address;
     this._send_pending_requests();
 };
@@ -216,6 +287,7 @@ Router.prototype.incoming = function (context) {
 
 Router.prototype.close = function () {
     if (this.connection) this.connection.close();
+    if (this.timer) clearInterval(this.timer);
 }
 
 function add_resource_type (name, typename, plural) {
