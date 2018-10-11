@@ -52,6 +52,9 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         if (statusCode == 422) {
             return "Unprocessable Entity";
         }
+        if (statusCode == 409) {
+            return "AlreadyExists";
+        }
         Response.StatusType status = Response.Status.fromStatusCode(statusCode);
         return status != null ? status.getReasonPhrase() : "Unknown code";
     }
