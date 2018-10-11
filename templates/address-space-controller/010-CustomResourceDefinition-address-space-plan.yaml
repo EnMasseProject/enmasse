@@ -15,10 +15,6 @@ spec:
     plural: addressspaceplans
   validation:
     openAPIV3Schema:
-      required:
-      - addressSpaceType
-      - resources
-      - addressPlans
       properties:
         displayName:
           type: string
