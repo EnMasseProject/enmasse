@@ -19,7 +19,7 @@ public class AdminCrd {
     }
 
     public static void registerCrd(Class<? extends HasMetadata> clazz) {
-        KubernetesDeserializer.registerCustomKind(kind(clazz), clazz);
+        KubernetesDeserializer.registerCustomKind("admin.enmasse.io/v1alpha1", kind(clazz), clazz);
     }
 
     public static <T extends HasMetadata> String kind(Class<T> cls) {
