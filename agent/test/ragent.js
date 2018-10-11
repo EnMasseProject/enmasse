@@ -651,7 +651,7 @@ describe('configuration from configmaps', function() {
         ragent.wait_for_stable(2).then(function () {
             address_source.add_address_definition({address:'c', type:'anycast'}, undefined, '1234');
             address_source.add_address_definition({address:'d', type:'queue'}, undefined, '1234');
-            address_source.remove_resource_by_name('b');
+            address_source.remove_resource_by_name('configmaps', 'b');
             ragent.wait_for_stable(3).then(function () {
                 verify_addresses([{address:'a', type:'topic'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
                 done();
@@ -751,7 +751,7 @@ describe('cooperating ragent group', function() {
     beforeEach(function(done) {
         counter = 0;
         groups = fill(4, function (i) { return new RouterGroup('ragent-' + (i+1)); });
-        podserver = new ResourceServer('Pod', true);
+        podserver = new ResourceServer(true);
         Promise.all(groups.map(function (g) { return g.listen(); })).then(function (){
             podserver.listen(0).on('listening', function () {
                 done();
@@ -776,7 +776,7 @@ describe('cooperating ragent group', function() {
         routers = routers.concat(fill(3, new_router));
         //inform ragent instances of each other
         groups.forEach(function (g) {
-            podserver.add_resource(g.get_pod_definition());
+            podserver.add_resource('pods', g.get_pod_definition());
         });
         groups.forEach(function(g) {
             g.ragent.watch_pods({port:podserver.port, token:'foo', namespace:'default'});
@@ -796,7 +796,7 @@ describe('cooperating ragent group', function() {
         });
         //inform ragent instances of each other
         groups.forEach(function (g) {
-            podserver.add_resource(g.get_pod_definition());
+            podserver.add_resource('pods', g.get_pod_definition());
         });
         groups.forEach(function(g) {
             g.ragent.watch_pods({port:podserver.port, token:'foo', namespace:'default'});
@@ -805,7 +805,7 @@ describe('cooperating ragent group', function() {
         setTimeout(function () {
             verify_full_mesh([].concat.apply([], routers));
             var leaving = groups.pop();
-            podserver.remove_resource_by_name(leaving.name);
+            podserver.remove_resource_by_name('pods', leaving.name);
             //shutdown one of the ragents
             routers.pop();
             leaving.close().then(function() {
@@ -1077,7 +1077,7 @@ describe('broker configuration', function() {
                 broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 //delete configmap
-                address_source.remove_resource_by_name('address-config-a');
+                address_source.remove_resource_by_name('configmaps', 'address-config-a');
                 ragent.wait_for_stable(2, 1, 2).then(function () {
                     verify_addresses([{address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
                     broker_a.verify_addresses([{address:'c', type:'queue'}]);
