@@ -70,7 +70,7 @@ class ApiServerTest extends TestBase {
                 new AddressSpaceResource("aggregate", 0.0, 2.0));
         List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan("schema-rest-api-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         Future<SchemaData> data = getSchema();

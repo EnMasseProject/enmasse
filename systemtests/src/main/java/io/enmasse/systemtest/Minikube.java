@@ -50,6 +50,11 @@ public class Minikube extends Kubernetes {
     }
 
     @Override
+    public Endpoint getMasterEndpoint() {
+        return new Endpoint(client.getMasterUrl());
+    }
+
+    @Override
     public Endpoint getRestEndpoint() {
         if (environment.registerApiServer()) {
             return new Endpoint(client.getMasterUrl());

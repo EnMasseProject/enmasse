@@ -22,6 +22,11 @@ public class OpenShift extends Kubernetes {
                 .withUsername(environment.openShiftUser()).build()), globalNamespace);
     }
 
+    @Override
+    public Endpoint getMasterEndpoint() {
+        return new Endpoint(client.getMasterUrl());
+    }
+
     public Endpoint getRestEndpoint() {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Endpoint endpoint = null;

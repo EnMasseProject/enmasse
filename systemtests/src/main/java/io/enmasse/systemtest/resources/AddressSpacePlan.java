@@ -72,7 +72,7 @@ public class AddressSpacePlan {
         config.put("metadata", definitionMetadata); // </metadata>
 
         config.put("displayName", this.getName()); //not parameterized for now
-        config.put("displayOrder", "0");
+        config.put("displayOrder", 0);
         config.put("shortDescription", "Newly defined address space plan.");
         config.put("longDescription", "Newly defined address space plan.");
         config.put("uuid", "677485a2-0d96-11e8-ba89-0ed5f89f718b");

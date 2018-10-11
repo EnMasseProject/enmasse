@@ -54,7 +54,7 @@ public class AddressPlan {
         config.put("metadata", definitionMetadata);// </metadata>
 
         config.put("displayName", this.getName()); // not parametrized now
-        config.put("displayOrder", "0");
+        config.put("displayOrder", 0);
         config.put("shortDescription", "Newly defined address plan.");
         config.put("longDescription", "Newly defined address plan.");
         config.put("uuid", "f64cc30e-0d9e-11e8-ba89-0ed5f89f718b");

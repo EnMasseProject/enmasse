@@ -75,6 +75,8 @@ public abstract class Kubernetes {
         return getEndpoint("service-broker", "https");
     }
 
+    public abstract Endpoint getMasterEndpoint();
+
     public abstract Endpoint getRestEndpoint();
 
     public abstract Endpoint getKeycloakEndpoint();

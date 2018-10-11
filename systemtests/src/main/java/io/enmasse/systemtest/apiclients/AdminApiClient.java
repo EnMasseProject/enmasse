@@ -4,29 +4,12 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import com.google.common.collect.Sets;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_OK;
 
 public class AdminApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
@@ -35,7 +18,7 @@ public class AdminApiClient extends ApiClient {
     private final String addressPlansPath;
 
     public AdminApiClient(Kubernetes kubernetes) {
-        super(kubernetes, kubernetes.getRestEndpoint(), "admin.enmasse.io/v1alpha1");
+        super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/v1alpha1");
         this.addressSpacePlansPath = String.format("/apis/admin.enmasse.io/v1alpha1/namespaces/%s/addressspaceplans", kubernetes.getNamespace());
         this.addressPlansPath = String.format("/apis/admin.enmasse.io/v1alpha1/namespaces/%s/addressplans", kubernetes.getNamespace());
     }

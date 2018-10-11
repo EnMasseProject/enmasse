@@ -10,6 +10,7 @@ import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -31,24 +33,26 @@ public abstract class ApiClient {
     protected Kubernetes kubernetes;
     protected Vertx vertx;
     protected Endpoint endpoint;
+    protected Supplier<Endpoint> endpointSupplier;
     protected String authzString;
     protected String apiVersion;
     private final int initRetry = 10;
 
-    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion) {
-        initializeAddressClient(kubernetes, endpoint, apiVersion, "");
+    protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion) {
+        initializeAddressClient(kubernetes, endpointSupplier, apiVersion, "");
     }
 
-    protected ApiClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion, String authzString) {
-        initializeAddressClient(kubernetes, endpoint, apiVersion, authzString);
+    protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String authzString) {
+        initializeAddressClient(kubernetes, endpointSupplier, apiVersion, authzString);
     }
 
-    private void initializeAddressClient(Kubernetes kubernetes, Endpoint endpoint, String apiVersion, String token) {
+    private void initializeAddressClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
         this.vertx = VertxFactory.create();
         this.kubernetes = kubernetes;
         this.connect();
         this.authzString = String.format("Bearer %s", Strings.isNullOrEmpty(token) ? kubernetes.getApiToken() : token);
-        this.endpoint = endpoint;
+        this.endpoint = endpointSupplier.get();
+        this.endpointSupplier = endpointSupplier;
         this.apiVersion = apiVersion;
     }
 
@@ -96,10 +100,10 @@ public abstract class ApiClient {
         }
     }
 
-    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Callable<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
+    protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Supplier<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
             if (endpointFn.isPresent()) {
-                endpoint = endpointFn.get().call();
+                endpoint = endpointFn.get().get();
             }
             return fn.call();
         }, reconnect);
@@ -119,17 +123,17 @@ public abstract class ApiClient {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
         return doRequestNTimes(initRetry, () -> {
-                    client.get(endpoint.getPort(), endpoint.getHost(), path)
-                            .as(BodyCodec.jsonObject())
-                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
-                            .send(ar -> responseHandler(ar,
-                                    responsePromise,
-                                    expectedCode,
-                                    String.format("Error: get %s %s", type, name)));
-                    return responsePromise.get(30, TimeUnit.SECONDS);
-                },
-                Optional.of(() -> kubernetes.getRestEndpoint()),
-                Optional.empty());
+                client.get(endpoint.getPort(), endpoint.getHost(), path)
+                        .as(BodyCodec.jsonObject())
+                        .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+                        .send(ar -> responseHandler(ar,
+                                responsePromise,
+                                expectedCode,
+                                String.format("Error: get %s %s", type, name)));
+                return responsePromise.get(30, TimeUnit.SECONDS);
+            },
+            Optional.of(endpointSupplier),
+            Optional.empty());
     }
 
     protected void createResource(String type, String basePath, JsonObject data) throws Exception {
@@ -145,13 +149,15 @@ public abstract class ApiClient {
                             .timeout(20_000)
                             .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                             .as(BodyCodec.jsonObject())
-                            .sendJsonObject(data, ar -> responseHandler(ar,
-                                    responsePromise,
-                                    expectedCode,
-                                    String.format("Error: create %s '%s'", type, basePath)));
+                            .sendJsonObject(data, ar -> {
+                                responseHandler(ar,
+                                        responsePromise,
+                                        expectedCode,
+                                        String.format("Error: create %s '%s'", type, basePath));
+                            });
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.of(endpointSupplier),
                 Optional.empty());
     }
 
@@ -176,7 +182,7 @@ public abstract class ApiClient {
                                     String.format("Error: create %s '%s'", type, name)));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.of(endpointSupplier),
                 Optional.empty());
     }
 
@@ -199,7 +205,7 @@ public abstract class ApiClient {
                                     String.format("Error: delete %s '%s'", type, name)));
                     return responsePromise.get(2, TimeUnit.MINUTES);
                 },
-                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.of(endpointSupplier),
                 Optional.empty());
     }
 }

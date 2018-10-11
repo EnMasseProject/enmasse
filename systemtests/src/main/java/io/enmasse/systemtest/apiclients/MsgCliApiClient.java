@@ -25,7 +25,7 @@ public class MsgCliApiClient extends ApiClient {
 
 
     public MsgCliApiClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, endpoint, "");
+        super(kubernetes, () -> endpoint, "");
     }
 
     @Override
