@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
 
+import io.fabric8.kubernetes.api.model.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +28,6 @@ import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.OAuthClient;
 import io.fabric8.openshift.api.model.OAuthClientBuilder;
@@ -63,6 +60,7 @@ public class KeycloakController {
 
         if (autoCreate) {
             ensureConfigurationExists(client, env, isOpenShift);
+            ensurePersistentVolumeClaimExists(client, env);
         }
 
         final String keycloakConfigName = getKeycloakConfigName(env);
@@ -117,6 +115,34 @@ public class KeycloakController {
         resourceChecker.start();
         addressSpaceApi.watchAddressSpaces(resourceChecker, resyncInterval);
 
+    }
+
+    private static void ensurePersistentVolumeClaimExists(NamespacedOpenShiftClient client, Map<String, String> env) {
+        String pvcName = getKeycloakPvcName(env);
+        String pvcStorageSize = getKeycloakPvcStorageSize(env);
+        PersistentVolumeClaim pvc = client.persistentVolumeClaims().withName(pvcName).get();
+        if (pvc == null) {
+            client.persistentVolumeClaims().createNew()
+                    .editOrNewMetadata()
+                    .withName(pvcName)
+                    .addToLabels("app", "enmasse")
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .addToAccessModes("ReadWriteOnce")
+                    .editOrNewResources()
+                    .addToRequests("storage", new Quantity(pvcStorageSize))
+                    .endResources()
+                    .endSpec()
+                    .done();
+        }
+    }
+
+    private static String getKeycloakPvcName(Map<String, String> env) {
+        return getEnv(env, "KEYCLOAK_PVC_NAME").orElse("keycloak-data");
+    }
+
+    private static String getKeycloakPvcStorageSize(Map<String, String> env) {
+        return getEnv(env, "KEYCLOAK_PVC_STORAGE_SIZE").orElse("5Gi");
     }
 
     private static String getKeycloakRouteName(Map<String, String> env) {
