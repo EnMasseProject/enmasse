@@ -16,10 +16,12 @@ pipeline {
     }
     options {
         timeout(time: 5, unit: 'HOURS')
+        ansiColor('xterm')
     }
     environment {
         CORES_DIR = "/tmp/cores"
         TAG = "latest"
+        ANSIBLE_FORCE_COLOR = true
     }
     stages {
         stage('wait for agent ready') {
@@ -71,11 +73,9 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    ansiColor('xterm') {
-                        script {
-                            sh 'make templates || true'
-                            lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE)
-                        }
+                    script {
+                        sh 'make templates || true'
+                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE)
                     }
                 }
             }

@@ -14,6 +14,7 @@ pipeline {
     }
     options {
         timeout(time: 6, unit: 'HOURS')
+        ansiColor('xterm')
     }
     environment {
         DOCKER_REGISTRY = '172.30.1.1:5000'
@@ -21,6 +22,7 @@ pipeline {
         TAG = "${BUILD_TAG}"
         COMMIT = "${BUILD_TAG}"
         CORES_DIR = "/tmp/cores"
+        ANSIBLE_FORCE_COLOR = true
     }
     stages {
         stage('wait for agent ready') {
@@ -52,10 +54,8 @@ pipeline {
         }
         stage('build') {
             steps {
-                ansiColor('xterm') {
-                    script {
-                        lib.buildEnmasse()
-                    }
+                script {
+                    lib.buildEnmasse()
                 }
             }
         }
@@ -76,10 +76,8 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    ansiColor('xterm') {
-                        script {
-                            lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-pr', params.TEST_CASE)
-                        }
+                    script {
+                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-pr', params.TEST_CASE)
                     }
                 }
             }
