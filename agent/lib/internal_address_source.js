@@ -56,6 +56,9 @@ function ready (addr) {
 }
 
 function same_address_definition(a, b) {
+    if (a.address === b.address && a.type === b.type && a.allocated_to !== b.allocated_to) {
+        log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, a.allocated_to, b.allocated_to);
+    }
     return a.address === b.address && a.type === b.type && a.allocated_to === b.allocated_to;
 }
 
