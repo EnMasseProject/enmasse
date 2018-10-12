@@ -45,7 +45,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
     }
 
     @AfterEach
-    public void tearDownDrivers() {
+    public void tearDownDrivers() throws Exception {
         selenium.tearDownDrivers();
         plansProvider.tearDown();
     }
@@ -68,9 +68,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         AddressPlan consoleTopicPlan2 = new AddressPlan("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = new AddressPlan("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
-        plansProvider.createAddressPlanConfig(consoleQueuePlan1);
-        plansProvider.createAddressPlanConfig(consoleTopicPlan2);
-        plansProvider.createAddressPlanConfig(consoleQueuePlan3);
+        plansProvider.createAddressPlan(consoleQueuePlan1);
+        plansProvider.createAddressPlan(consoleTopicPlan2);
+        plansProvider.createAddressPlan(consoleQueuePlan3);
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
@@ -78,9 +78,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
                 new AddressSpaceResource("router", 1.0, 5.0),
                 new AddressSpaceResource("aggregate", 0.0, 8.0));
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
-        AddressSpacePlan consolePlan = new AddressSpacePlan("console-plan", "console-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlanConfig(consolePlan);
+        AddressSpacePlan consolePlan = new AddressSpacePlan("console-plan",
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = new AddressSpace("console-plan-instance", AddressSpaceType.STANDARD,

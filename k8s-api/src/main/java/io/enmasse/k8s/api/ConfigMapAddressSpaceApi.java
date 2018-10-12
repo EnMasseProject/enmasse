@@ -169,7 +169,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
             if (queue.hasSynced()) {
                 watcher.onUpdate(queue.list().stream()
                         .map(this::getAddressSpaceFromConfig)
-                        .collect(Collectors.toSet()));
+                        .collect(Collectors.toList()));
             }
         });
 

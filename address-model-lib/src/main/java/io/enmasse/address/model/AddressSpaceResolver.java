@@ -4,7 +4,11 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
+
+import java.util.Optional;
 
 public class AddressSpaceResolver {
     private final Schema schema;
@@ -12,24 +16,28 @@ public class AddressSpaceResolver {
         this.schema = schema;
     }
 
-    public AddressSpacePlan getPlan(AddressSpaceType addressSpaceType, AddressSpace addressSpace) {
-        return addressSpaceType.findAddressSpacePlan(addressSpace.getPlan()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unknown address space plan " + addressSpace.getPlan()));
+    public AddressSpacePlan getPlan(AddressSpaceType addressSpaceType, String plan) {
+        return addressSpaceType.findAddressSpacePlan(plan).orElseThrow(() -> new UnresolvedAddressSpaceException("Unknown address space plan " + plan));
     }
 
-    public AddressSpaceType getType(AddressSpace addressSpace) {
-        return schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unknown address space type " + addressSpace.getType()));
-    }
-
-    public ResourceDefinition getResourceDefinition(AddressSpacePlan plan) {
-        String definedBy = plan.getAnnotations().get(AnnotationKeys.DEFINED_BY);
-        if (definedBy == null) {
-            return null;
-        } else {
-            return schema.findResourceDefinition(definedBy).orElseThrow(() -> new UnresolvedAddressSpaceException("Unknown resource definition " + definedBy));
-        }
+    public AddressSpaceType getType(String type) {
+        return schema.findAddressSpaceType(type).orElseThrow(() -> new UnresolvedAddressSpaceException("Unknown address space type " + type));
     }
 
     public void validate(AddressSpace addressSpace) {
-        getResourceDefinition(getPlan(getType(addressSpace), addressSpace));
+        getPlan(getType(addressSpace.getType()), addressSpace.getPlan());
+    }
+
+    public InfraConfig getInfraConfig(String typeName, String planName) {
+        AddressSpaceType type = getType(typeName);
+        AddressSpacePlan plan = getPlan(type, planName);
+        String infraConfigName = Optional.ofNullable(plan.getMetadata().getAnnotations())
+                .map(a -> a.get(AnnotationKeys.DEFINED_BY))
+                .orElse(null);
+
+        return type.getInfraConfigs().stream()
+                .filter(c -> c.getMetadata().getName().equals(infraConfigName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown infra config " + infraConfigName + " for type " + type.getName()));
     }
 }

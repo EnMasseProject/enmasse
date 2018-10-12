@@ -5,6 +5,10 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -20,7 +24,9 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Status.Phase.*;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
+import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.*;
+import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 /**
@@ -83,7 +89,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     @Override
-    public void onUpdate(Set<Address> addressSet) throws Exception {
+    public void onUpdate(List<Address> addressList) throws Exception {
         long start = System.nanoTime();
         Schema schema = schemaProvider.getSchema();
         if (schema == null) {
@@ -91,12 +97,15 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             return;
         }
         AddressSpaceType addressSpaceType = schema.findAddressSpaceType("standard").orElseThrow(() -> new RuntimeException("Unable to handle updates: standard address space not found in schema!"));
-        AddressResolver addressResolver = new AddressResolver(schema, addressSpaceType);
+        AddressResolver addressResolver = new AddressResolver(addressSpaceType);
         if (addressSpaceType.getPlans().isEmpty()) {
             log.info("No address space plan available");
             return;
         }
 
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
+
+        Set<Address> addressSet = new HashSet<>(addressList);
         Map<String, Status> previousStatus = new HashMap<>();
         for (Address address : addressSet) {
             previousStatus.put(address.getAddress(), new Status(address.getStatus()));
@@ -105,7 +114,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(addressSpacePlanName).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + addressSpacePlanName + " not found!"));
 
         long resolvedPlan = System.nanoTime();
-        AddressProvisioner provisioner = new AddressProvisioner(addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, infraUuid);
+
+        AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, infraUuid);
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
@@ -145,6 +155,11 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, Arrays.asList(Terminating)));
         long deprovisionUnused = System.nanoTime();
 
+        StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
+        upgradeClusters(desiredConfig, addressResolver, clusterList, filterByNotPhases(addressSet, Arrays.asList(Terminating)));
+
+        long upgradeClusters = System.nanoTime();
+
         for (Address address : addressSet) {
             if (!previousStatus.get(address.getAddress()).equals(address.getStatus())) {
                 addressApi.replaceAddress(address);
@@ -154,8 +169,33 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         long replaceAddresses = System.nanoTime();
         garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
         long gcTerminating = System.nanoTime();
-        log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, replaceAddresses - deprovisionUnused, gcTerminating - replaceAddresses);
+        log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
+    }
+
+    private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
+        for (BrokerCluster cluster : clusterList) {
+            StandardInfraConfig currentConfig = cluster.getInfraConfig();
+            if (!desiredConfig.equals(currentConfig)) {
+                BrokerCluster upgradedCluster = null;
+                if (cluster.getClusterId().startsWith("broker-pooled")) {
+                    upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), cluster.getNewReplicas(), null, null, desiredConfig);
+                } else {
+                    Address address = addresses.stream()
+                            .filter(a -> cluster.getClusterId().equals(a.getAnnotation(AnnotationKeys.CLUSTER_ID)))
+                            .findFirst()
+                            .orElse(null);
+                    if (address != null) {
+                        AddressPlan plan = addressResolver.getPlan(address);
+                        upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), cluster.getNewReplicas(), address, plan, desiredConfig);
+                    }
+                }
+                log.info("Upgrading broker {}", cluster.getClusterId());
+                cluster.updateResources(upgradedCluster, desiredConfig);
+                kubernetes.apply(cluster.getResources());
+                eventLogger.log(BrokerUpgraded, "Upgraded broker", Normal, Broker, cluster.getClusterId());
+            }
+        }
     }
 
     private void deprovisionUnused(List<BrokerCluster> clusters, Set<Address> addressSet) {
@@ -171,7 +211,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             if (numFound == 0) {
                 try {
                     kubernetes.delete(cluster.getResources());
-                    eventLogger.log(ControllerReason.BrokerDeleted, "Deleted broker " + cluster.getClusterId(), EventLogger.Type.Normal, ControllerKind.Address, cluster.getClusterId());
+                    eventLogger.log(ControllerReason.BrokerDeleted, "Deleted broker " + cluster.getClusterId(), Normal, ControllerKind.Address, cluster.getClusterId());
                 } catch (Exception e) {
                     log.warn("Error deleting cluster {}", cluster.getClusterId(), e);
                     eventLogger.log(ControllerReason.BrokerDeleteFailed, "Error deleting broker cluster " + cluster.getClusterId() + ": " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.Address, cluster.getClusterId());
@@ -293,7 +333,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private boolean isPooled(AddressPlan plan) {
         for (ResourceRequest request : plan.getRequiredResources()) {
-            if ("broker".equals(request.getResourceName()) && request.getAmount() < 1.0) {
+            if ("broker".equals(request.getName()) && request.getCredit() < 1.0) {
                 return true;
             }
         }

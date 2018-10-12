@@ -29,6 +29,38 @@
                 "description": "Find out more",
                 "url": "https://enmasse.io"
             }
+        },
+        {
+            "name": "addressspaceplans",
+            "description": "Operating on AddressSpacePlans.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            }
+        },
+        {
+            "name": "addressplans",
+            "description": "Operating on AddressPlans.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            }
+        },
+        {
+            "name": "brokeredinfraconfigs",
+            "description": "Operating on BrokeredInfraConfigs.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            }
+        },
+        {
+            "name": "standardinfraconfigs",
+            "description": "Operating on StandardInfraConfigs.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            }
         }
     ],
     "schemes": [
@@ -920,6 +952,223 @@
                     "type": "string"
                 }
             ]
+        },
+        "/apis/admin.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaceplans": {
+          "get": {
+            "tags": [
+                    "enmasse_v1alpha1",
+                    "admin",
+                    "addressspaceplan"
+                ],
+                "description": "list objects of kind AddressSpacePlan",
+                "operationId": "listAdminEnmasseV1alpha1NamespacedAddresSpacePlan",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "uniqueItems": true,
+                        "type": "string",
+                        "description": "A selector to restrict the list of returned objects by their labels. Defaults to everything.",
+                        "name": "labelSelector",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlanList"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "admin",
+                    "addressspaceplan"
+                ],
+                "description": "create an AddressSpacePlan",
+                "operationId": "createAdminEnmasseV1alpha1NamespacedAddressSpacePlan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "namespace",
+                    "in": "path",
+                    "description": "object name and auth scope, such as for teams and projects",
+                    "required": true,
+                    "uniqueItems": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/apis/admin.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaceplans/{name}": {
+            "get": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "admin",
+                    "addressspaceplan"
+                ],
+                "description": "read the specified AddressSpacePlan",
+                "operationId": "readAdminEnmasseV1alpha1NamespacedAddressSpacePlan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of AddressSpacePlan to read.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "admin",
+                    "addressspaceplan"
+                ],
+                "description": "replace the specified AddressSpacePlan",
+                "operationId": "replaceAdminEnmasseV1alpha1NamespacedAddressSpacePlan",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of AddressSpacePlan to replace.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "enmasse_v1alpha1",
+                    "admin",
+                    "addressspaceplan"
+                ],
+                "description": "delete an AddressSpacePlan",
+                "operationId": "deleteAdminEnmasseV1alpha1NamespacedAddressSpacePlan",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of AddressSpacePlan to delete.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Status"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "namespace",
+                    "in": "path",
+                    "description": "object name and auth scope, such as for teams and projects",
+                    "required": true,
+                    "uniqueItems": true,
+                    "type": "string"
+                }
+            ]
         }
     },
     "definitions": {
@@ -1364,6 +1613,447 @@
                 "anycast",
                 "multicast"
             ]
+        },
+        "io.enmasse.admin.v1alpha1.BrokeredInfraConfig": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "spec"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "BrokeredInfraConfig"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpec"
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpec": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "admin": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecAdmin"
+                },
+                "broker": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecBroker"
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecAdmin": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecBroker": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "string"
+                        },
+                        "storage": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "addressFullPolicy": {
+                    "type": "string",
+                    "enum": [
+                        "PAGE",
+                        "BLOCK",
+                        "FAIL"
+                    ]
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "BrokeredInfraConfigList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfig"
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.StandardInfraConfig": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "spec"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "StandardInfraConfig"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpec"
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpec": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "admin": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpecAdmin"
+                },
+                "broker": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpecBroker"
+                },
+                "router": {
+                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpecRouter"
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpecAdmin": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpecBroker": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "string"
+                        },
+                        "storage": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "addressFullPolicy": {
+                    "type": "string",
+                    "enum": [
+                        "PAGE",
+                        "BLOCK",
+                        "FAIL"
+                    ]
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpecRouter": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "linkCapacity": {
+                    "type": "string"
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.StandardInfraConfigList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "StandardInfraConfigList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfig"
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.AddressSpacePlan": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "displayName",
+                "displayOrder",
+                "shortDescription",
+                "uuid",
+                "addressSpaceType",
+                "resources"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressSpacePlan"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "displayOrder": {
+                    "type": "integer"
+                },
+                "shortDescription": {
+                    "type": "string"
+                },
+                "longDescription": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "addressSpaceType": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "name",
+                            "min",
+                            "max"
+                        ],
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "min": {
+                                "type": "number"
+                            },
+                            "max": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                },
+                "addressPlans": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.AddressSpacePlanList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressSpacePlanList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.AddressPlan": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "displayName",
+                "displayOrder",
+                "shortDescription",
+                "uuid",
+                "addressType",
+                "requiredResources"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressPlan"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "displayOrder": {
+                    "type": "integer"
+                },
+                "shortDescription": {
+                    "type": "string"
+                },
+                "longDescription": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "addressType": {
+                    "type": "string"
+                },
+                "requiredResources": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "name",
+                            "credit"
+                        ],
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "credit": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "io.enmasse.admin.v1alpha1.AddressPlanList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "admin.enmasse.io/v1alpha1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressPlanList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressPlan"
+                    }
+                }
+            }
         }
     },
     "externalDocs": {

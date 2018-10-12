@@ -30,7 +30,7 @@ data:
           name: ${NAME}
           role: broker
           infraUuid: ${INFRA_UUID}
-    - apiVersion: apps/v1beta1
+    - apiVersion: apps/v1
       kind: StatefulSet
       metadata:
         annotations:
@@ -47,6 +47,14 @@ data:
       spec:
         replicas: 1
         serviceName: ${NAME}
+        selector:
+          matchLabels:
+            addresstype: queue
+            app: enmasse
+            name: ${NAME}
+            role: broker
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -86,6 +94,8 @@ data:
                 value: /etc/enmasse-certs
               - name: GLOBAL_MAX_SIZE
                 value: ${GLOBAL_MAX_SIZE}
+              - name: ADDRESS_FULL_POLICY
+                value: ${BROKER_ADDRESS_FULL_POLICY}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -169,17 +179,14 @@ data:
             - ReadWriteOnce
             resources:
               requests:
-                storage: ${STORAGE_CAPACITY}
+                storage: ${BROKER_STORAGE_CAPACITY}
     parameters:
     - name: INFRA_UUID
       description: UUID to use for infrastructure
       required: true
     - description: Storage capacity required for volume claims
-      name: STORAGE_CAPACITY
+      name: BROKER_STORAGE_CAPACITY
       value: 2Gi
-    - description: The link capacity setting for router
-      name: ROUTER_LINK_CAPACITY
-      value: '250'
     - description: A valid addressSpace name for the address Space
       name: ADDRESS_SPACE
       required: true
@@ -206,6 +213,9 @@ data:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+    - description: Address full policy
+      name: BROKER_ADDRESS_FULL_POLICY
+      value: FAIL
     - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi
@@ -239,7 +249,7 @@ data:
           role: broker
           infraType: standard
           infraUuid: ${INFRA_UUID}
-    - apiVersion: apps/v1beta1
+    - apiVersion: apps/v1
       kind: StatefulSet
       metadata:
         annotations:
@@ -256,6 +266,14 @@ data:
       spec:
         replicas: 1
         serviceName: ${NAME}
+        selector:
+          matchLabels:
+            addresstype: topic
+            app: enmasse
+            name: ${NAME}
+            role: broker
+            infraType: standard
+            infraUuid: ${INFRA_UUID}
         template:
           metadata:
             annotations:
@@ -295,6 +313,8 @@ data:
                 value: /etc/enmasse-certs
               - name: GLOBAL_MAX_SIZE
                 value: ${GLOBAL_MAX_SIZE}
+              - name: ADDRESS_FULL_POLICY
+                value: ${BROKER_ADDRESS_FULL_POLICY}
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
               - name: AUTHENTICATION_SERVICE_PORT
@@ -406,17 +426,14 @@ data:
             - ReadWriteOnce
             resources:
               requests:
-                storage: ${STORAGE_CAPACITY}
+                storage: ${BROKER_STORAGE_CAPACITY}
     parameters:
     - name: INFRA_UUID
       description: UUID to use for infrastructure
       required: true
     - description: Storage capacity required for volume claims
-      name: STORAGE_CAPACITY
+      name: BROKER_STORAGE_CAPACITY
       value: 2Gi
-    - description: The link capacity setting for router
-      name: ROUTER_LINK_CAPACITY
-      value: '250'
     - description: A valid addressSpace name for the address Space
       name: ADDRESS_SPACE
       required: true
@@ -443,6 +460,9 @@ data:
       name: AUTHENTICATION_SERVICE_CLIENT_SECRET
     - description: The hostname to use in sasl init
       name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+    - description: Address full policy
+      name: BROKER_ADDRESS_FULL_POLICY
+      value: FAIL
     - description: Memory limits for container
       name: BROKER_MEMORY_LIMIT
       value: 512Mi

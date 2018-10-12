@@ -6,9 +6,8 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -102,6 +101,25 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void create(KubernetesList resources) {
         client.lists().create(resources);
+    }
+
+    @Override
+    public void apply(KubernetesList resources) {
+        for (HasMetadata resource : resources.getItems()) {
+            if (resource instanceof ConfigMap) {
+                client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
+            } else if (resource instanceof Secret) {
+                client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
+            } else if (resource instanceof Deployment) {
+                client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
+            } else if (resource instanceof StatefulSet) {
+                client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
+            } else if (resource instanceof Service) {
+                client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
+            } else if (resource instanceof ServiceAccount) {
+                client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+            }
+        }
     }
 
     @Override

@@ -279,14 +279,6 @@ AddressSource.prototype.delete_address = function (definition) {
     return kubernetes.delete_resource('configmaps/' + this.get_configmap_name(definition.name), this.config);
 };
 
-function extract_address_plan (object) {
-    return JSON.parse(object.data.definition);
-}
-
-function extract_address_space_plan (object) {
-    return JSON.parse(object.data.definition);
-}
-
 function display_order (plan_a, plan_b) {
     // explicitly ordered plans always come before those with undefined order
     var a = plan_a.displayOrder === undefined ? Number.MAX_VALUE : plan_a.displayOrder;
@@ -304,21 +296,15 @@ function extract_plan_details (plan) {
 }
 
 AddressSource.prototype.get_address_types = function () {
-    var address_space_plan_options = myutils.merge({selector: 'type=address-space-plan'}, this.config);
-    var address_plan_options = myutils.merge({selector: 'type=address-plan'}, this.config);
-    var address_space_plan_name = this.config.ADDRESS_SPACE_PLAN;
-    return kubernetes.get('configmaps', address_space_plan_options).then(function (configmaps) {
-            var address_space_plan = configmaps.items.map(extract_address_space_plan)
-                .filter(function (plan) {
-                    return plan.metadata.name === address_space_plan_name;
-                })[0];
+    var options = this.config;
+    var address_space_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1alpha1/namespaces/', 'addressspaceplans/' + this.config.ADDRESS_SPACE_PLAN, options);
+    var address_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1alpha1/namespaces/', 'addressplans', options);
+    return kubernetes.get_raw(address_space_plan_path, options).then(function (address_space_plan) {
             return address_space_plan.addressPlans;
         }).then(function (supported_plans) {
-            return kubernetes.get('configmaps', address_plan_options).then(function (configmaps) {
-                //extract plans
-                var plans = configmaps.items.map(extract_address_plan);
+            return kubernetes.get_raw(address_plan_path, options).then(function (address_plans) {
                 // remove plans not part of address space plan
-                plans = plans.filter(function (p) {
+                var plans = address_plans.items.filter(function (p) {
                     return supported_plans.includes(p.metadata.name)
                 });
                 plans.sort(display_order);

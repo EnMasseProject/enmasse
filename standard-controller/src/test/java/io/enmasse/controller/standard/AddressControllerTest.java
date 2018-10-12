@@ -65,7 +65,7 @@ public class AddressControllerTest {
                 .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
                 .build();
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker", new KubernetesList())));
-        controller.onUpdate(Sets.newSet(alive, terminating));
+        controller.onUpdate(Arrays.asList(alive, terminating));
         verify(mockApi).deleteAddress(any());
         verify(mockApi).deleteAddress(eq(terminating));
     }
@@ -95,7 +95,7 @@ public class AddressControllerTest {
                 new BrokerCluster("broker", new KubernetesList()),
                 new BrokerCluster("unused", oldList)));
 
-        controller.onUpdate(Sets.newSet(alive));
+        controller.onUpdate(Arrays.asList(alive));
 
         verify(mockHelper).delete(any());
         verify(mockHelper).delete(eq(oldList));

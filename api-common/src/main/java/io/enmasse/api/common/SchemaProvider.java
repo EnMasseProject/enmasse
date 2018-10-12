@@ -4,7 +4,6 @@
  */
 package io.enmasse.api.common;
 
-import io.enmasse.address.model.AddressSpacePlan;
 import io.enmasse.address.model.Schema;
 
 public interface SchemaProvider {

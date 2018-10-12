@@ -4,151 +4,91 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.apiclients.AdminApiClient;
 import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
-import io.enmasse.systemtest.resources.ResourceDefinition;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class PlansProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private Kubernetes kubernetes;
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
-    private ArrayList<ResourceDefinition> resourceDefinitionConfigs;
-    private ArrayList<ResourceDefinition> resourceDefinitionForRestore;
-    private HashMap<AddressPlan, AddressSpacePlan> addressXSpaceBinding;
+    private final AdminApiClient adminApiClient;
 
     public PlansProvider(Kubernetes kubernetes) {
-        this.kubernetes = kubernetes;
+        this.adminApiClient = new AdminApiClient(kubernetes);
     }
 
     public void setUp() {
         addressPlans = new ArrayList<>();
         addressSpacePlans = new ArrayList<>();
-        resourceDefinitionConfigs = new ArrayList<>();
-        addressXSpaceBinding = new HashMap<>();
-        resourceDefinitionForRestore = new ArrayList<>();
     }
 
-    public void tearDown() {
-        addressXSpaceBinding.forEach((addressPlan, spacePlan) -> TestUtils.removeAddressPlan(kubernetes, addressPlan, spacePlan));
-        addressSpacePlans.forEach(spacePlan -> TestUtils.removeAddressSpacePlanConfig(kubernetes, spacePlan));
-        addressPlans.forEach(addressPlan -> TestUtils.removeAddressPlanConfig(kubernetes, addressPlan));
-        resourceDefinitionConfigs.forEach(resourceDefinition -> TestUtils.removeResourceDefinitionConfig(kubernetes, resourceDefinition));
-        restoreResourceDefinitionConfigs();
+    public void tearDown() throws Exception {
+        for (AddressPlan addressPlan : addressPlans) {
+            adminApiClient.deleteAddressPlan(addressPlan);
+        }
+
+        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+            adminApiClient.deleteAddressSpacePlan(addressSpacePlan);
+        }
 
         addressPlans.clear();
-        addressXSpaceBinding.clear();
         addressSpacePlans.clear();
-        resourceDefinitionConfigs.clear();
-        resourceDefinitionForRestore.clear();
     }
 
     //------------------------------------------------------------------------------------------------
     // Address plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressPlanConfig(AddressPlan addressPlan) {
-        createAddressPlanConfig(addressPlan, false);
+    public void createAddressPlan(AddressPlan addressPlan) throws Exception {
+        createAddressPlan(addressPlan, false);
     }
 
-    public void createAddressPlanConfig(AddressPlan addressPlan, boolean replaceExisting) {
-        TestUtils.createAddressPlanConfig(kubernetes, addressPlan, replaceExisting);
+    public void createAddressPlan(AddressPlan addressPlan, boolean replaceExisting) throws Exception {
+        if (replaceExisting) {
+            adminApiClient.replaceAddressPlan(addressPlan);
+        } else {
+            adminApiClient.createAddressPlan(addressPlan);
+        }
         addressPlans.add(addressPlan);
     }
 
-    public boolean removeAddressPlanConfig(AddressPlan addressPlan) {
-        boolean removed = TestUtils.removeAddressPlanConfig(kubernetes, addressPlan);
-        if (removed) {
-            addressPlans.removeIf(addressPlanIter -> addressPlanIter.getName().equals(addressPlan.getName()));
-        }
-        return removed;
+    public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
+        adminApiClient.deleteAddressPlan(addressPlan);
+        addressPlans.removeIf(addressPlanIter -> addressPlanIter.getName().equals(addressPlan.getName()));
     }
 
-    public void appendAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        TestUtils.appendAddressPlan(kubernetes, addressPlan, addressSpacePlan);
-        addressXSpaceBinding.put(addressPlan, addressSpacePlan);
-    }
-
-    public boolean removeAddressPlan(AddressPlan addressPlan, AddressSpacePlan addressSpacePlan) {
-        boolean removed = TestUtils.removeAddressPlan(kubernetes, addressPlan, addressSpacePlan);
-        if (removed) {
-            addressXSpaceBinding.remove(addressPlan, addressSpacePlan);
-        }
-        return removed;
-    }
-
-    public void replaceAddressPlan(AddressSpace addressSpace, Destination dest, AddressPlan plan) {
-        TestUtils.replaceAddressConfig(kubernetes, addressSpace, dest, plan);
+    public void replaceAddressPlan(AddressPlan plan) throws Exception {
+        adminApiClient.replaceAddressPlan(plan);
     }
 
     //------------------------------------------------------------------------------------------------
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        createAddressSpacePlanConfig(addressSpacePlan, false);
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+        createAddressSpacePlan(addressSpacePlan, false);
     }
 
-    public void createAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan, boolean replaceExisting) {
-        TestUtils.createAddressSpacePlanConfig(kubernetes, addressSpacePlan, replaceExisting);
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean replaceExisting) throws Exception {
+        if (replaceExisting) {
+            adminApiClient.replaceAddressSpacePlan(addressSpacePlan);
+        } else {
+            adminApiClient.createAddressSpacePlan(addressSpacePlan);
+        }
         addressSpacePlans.add(addressSpacePlan);
     }
 
-    public boolean removeAddressSpacePlanConfig(AddressSpacePlan addressSpacePlan) {
-        boolean removed = TestUtils.removeAddressSpacePlanConfig(kubernetes, addressSpacePlan);
-        if (removed) {
-            addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getName().equals(addressSpacePlan.getName()));
-        }
-        return removed;
+    public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) {
+        removeAddressSpacePlan(addressSpacePlan);
+        addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getName().equals(addressSpacePlan.getName()));
     }
 
-    public AddressSpacePlan getAddressSpacePlanConfig(String config) {
-        return TestUtils.getAddressSpacePlanConfig(kubernetes, config);
-    }
-
-    //------------------------------------------------------------------------------------------------
-    // Resource definitions
-    //------------------------------------------------------------------------------------------------
-
-    public void createResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        createResourceDefinitionConfig(resourceDefinition, false);
-    }
-
-    private void createResourceDefinitionConfig(ResourceDefinition resourceDefinition, boolean replaceExisting) {
-        TestUtils.createResourceDefinitionConfig(kubernetes, resourceDefinition, replaceExisting);
-        resourceDefinitionConfigs.add(resourceDefinition);
-    }
-
-    /**
-     * Replace custom configMap created by user
-     */
-    public void replaceCustomResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        createResourceDefinitionConfig(resourceDefinition, true);
-    }
-
-    /**
-     * Replace originam config map which will be restored after test
-     */
-    public void replaceResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        resourceDefinitionForRestore.add(TestUtils.getResourceDefinitionConfig(kubernetes, resourceDefinition.getName()));
-        TestUtils.createResourceDefinitionConfig(kubernetes, resourceDefinition, true);
-    }
-
-    public boolean removeResourceDefinitionConfig(ResourceDefinition resourceDefinition) {
-        boolean removed = TestUtils.removeResourceDefinitionConfig(kubernetes, resourceDefinition);
-        if (removed) {
-            resourceDefinitionConfigs.removeIf(resIter -> resIter.getName().equals(resourceDefinition.getName()));
-        }
-        return removed;
-    }
-
-    private void restoreResourceDefinitionConfigs() {
-        resourceDefinitionForRestore.forEach(
-                rs -> TestUtils.createResourceDefinitionConfig(kubernetes, rs, true));
+    public AddressSpacePlan getAddressSpacePlan(String config) throws Exception {
+        return adminApiClient.getAddressSpacePlan(config);
     }
 }

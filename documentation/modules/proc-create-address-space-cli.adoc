@@ -11,14 +11,14 @@
 ifeval::["{cmdcli}" == "oc"]
 . Log in as a messaging tenant:
 +
-[source,yaml,options="nowrap"]
+[subs="attributes",options="nowrap"]
 ----
 {cmdcli} login -u developer
 ----
 
 . Create the project for the messaging application:
 +
-[source,yaml,options="nowrap"]
+[subs="attributes",options="nowrap"]
 ----
 {cmdcli} new-project myapp
 ----

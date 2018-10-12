@@ -105,7 +105,7 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     }
 
     @Override
-    public void onUpdate(Set<AddressSpace> resources) throws Exception {
+    public void onUpdate(List<AddressSpace> resources) throws Exception {
         log.info("Check address spaces: {}", resources.stream().map(a -> a.getNamespace()+":"+a.getName()).collect(Collectors.toSet()));
 
         if (schemaProvider.getSchema() == null) {
@@ -133,7 +133,7 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
         retainAddressSpaces(resources);
     }
 
-    private void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
+    private void retainAddressSpaces(List<AddressSpace> desiredAddressSpaces) {
         String [] uuids = desiredAddressSpaces.stream()
                 .map(a -> a.getAnnotation(AnnotationKeys.INFRA_UUID))
                 .toArray(String[]::new);
