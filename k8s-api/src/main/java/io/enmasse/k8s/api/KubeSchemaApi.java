@@ -246,8 +246,6 @@ public class KubeSchemaApi implements SchemaApi {
         if (addressSpacePlans == null || addressPlans == null || brokeredInfraConfigs == null || standardInfraConfigs == null) {
             return null;
         }
-        log.info("Got brokered infra configs: {}", brokeredInfraConfigs);
-        log.info("Got standard infra configs: {}", standardInfraConfigs);
 
         for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
             if (addressSpacePlan.getAddressSpaceType().equals("brokered")) {

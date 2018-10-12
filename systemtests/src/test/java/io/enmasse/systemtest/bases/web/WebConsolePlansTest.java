@@ -79,7 +79,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
                 new AddressSpaceResource("aggregate", 0.0, 8.0));
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = new AddressSpacePlan("console-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
