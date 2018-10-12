@@ -231,17 +231,6 @@ AddressService.prototype.update_periodic_deltas = function () {
     if (this.callback) this.callback('reset_periodic_deltas');
 };
 
-AddressService.prototype.update_address = function (a) {
-    var def = this.address_index[a.address];
-    if (def === undefined) {
-        this.address_index[a.address] = new AddressDefinition(a);
-        this.callback('address_added');
-    } else {
-        def.update(a);
-        this.callback('address_updated');
-    }
-}
-
 AddressService.prototype.create_address = function (obj) {
     this.sender.send({subject: 'create_address', body: obj});
 }
@@ -279,18 +268,6 @@ AddressService.prototype.delete_selected_users = function () {
     }
 }
 
-AddressService.prototype.update_connection = function (c) {
-    var def = this.connection_index[c.id];
-    if (def === undefined) {
-        this.connection_index[c.id] = c;
-        this.callback('connection_added');
-    } else {
-        // don't replace existing connection items, just update them
-        Object.assign(def, c);
-        this.callback('connection_updated');
-    }
-}
-
 AddressService.prototype.update_user = function (c) {
     var i = 0;
     while (i < this.users.length && c.name !== this.users[i].name) {
@@ -301,7 +278,15 @@ AddressService.prototype.update_user = function (c) {
 
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
-        this.update_address(context.message.body);
+        var a = context.message.body;
+        var def = this.address_index[a.address];
+        if (def === undefined) {
+            this.address_index[a.address] = new AddressDefinition(a);
+            this.callback('address_added');
+        } else {
+            def.update(a);
+            this.callback('address_updated');
+        }
     } else if (context.message.subject === 'address_deleted') {
         if (this.address_index[context.message.body]) {
             delete this.address_index[context.message.body];
@@ -313,7 +298,16 @@ AddressService.prototype.on_message = function (context) {
         this.admin_disabled = context.message.application_properties.disable_admin;
         if (this.callback) this.callback('address_types');
     } else if (context.message.subject === 'connection') {
-        this.update_connection(context.message.body);
+        var c = context.message.body;
+        var def = this.connection_index[c.id];
+        if (def === undefined) {
+            this.connection_index[c.id] = c;
+            this.callback('connection_added');
+        } else {
+            // don't replace existing connection items, just update them
+            Object.assign(def, c);
+            this.callback('connection_updated');
+        }
     } else if (context.message.subject === 'connection_deleted') {
         if (this.connection_index[context.message.body]) {
             delete this.connection_index[context.message.body];
