@@ -74,13 +74,11 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
-    @Disabled("disable due to #1757")
     void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
 
     @Test
-    @Disabled("disable due to #1757")
     void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
