@@ -46,9 +46,10 @@ var Router = function (connection, router, agent) {
         };
         this.last_status = undefined;
         var self = this;
+        var interval = process.env.STATUS_LOG_INTERVAL || 300000;
         this.timer = setInterval(function () {
             self.health_check();
-        }, 300000);
+        }, interval);
     }
     this.connection.on('receiver_open', this.ready.bind(this));
     this.connection.on('disconnected', this.disconnected.bind(this));
