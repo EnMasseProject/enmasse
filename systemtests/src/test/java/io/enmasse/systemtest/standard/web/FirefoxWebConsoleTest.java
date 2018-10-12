@@ -86,7 +86,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-    @Disabled("disable due to #1757")
     void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
@@ -98,7 +97,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-    @Disabled("disable due to #1757")
     void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
@@ -109,7 +107,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-    @Disabled("disable due to #1757")
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId();
     }
