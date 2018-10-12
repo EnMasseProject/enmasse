@@ -10,6 +10,7 @@ pipeline {
     }
     options {
         timeout(time: 12, unit: 'HOURS')
+        ansiColor('xterm')
     }
     environment {
         CORES_DIR = "/tmp/cores"
@@ -42,14 +43,6 @@ pipeline {
                 }
             }
         }
-        stage('download enmasse') {
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'sudo chmod 777 -R ./systemtests/scripts/'
-                    sh 'OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/deploy_enmasse.sh true'
-                }
-            }
-        }
         stage('system tests') {
             environment {
                 ARTIFACTS_DIR = 'artifacts'
@@ -58,10 +51,9 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    ansiColor('xterm') {
-                        script {
-                            lib.runSystemtests(env.CORES_DIR, "enmasse-latest", 'systemtests-marathon', '')
-                        }
+                    script {
+                        sh 'make templates || true'
+                        lib.runSystemtests(env.CORES_DIR, "enmasse-latest", 'systemtests-marathon', '')
                     }
                 }
             }
