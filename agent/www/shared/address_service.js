@@ -153,7 +153,6 @@ function AddressService($http) {
     this.admin_disabled = true;
     this.address_index = {};
     this.connection_index = {};
-    var self = this;
     Object.defineProperty(this, 'addresses', { get: function () { return get_items_from_index(self.address_index); } });
     Object.defineProperty(this, 'connections', { get: function () { return get_items_from_index(self.connection_index); } });
     this.address_types = [];
@@ -288,7 +287,7 @@ AddressService.prototype.update_connection = function (c) {
     } else {
         // don't replace existing connection items, just update them
         Object.assign(def, c);
-        this.callback('address_updated');
+        this.callback('connection_updated');
     }
 }
 
@@ -303,7 +302,6 @@ AddressService.prototype.update_user = function (c) {
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
         this.update_address(context.message.body);
-        if (this.callback) this.callback('address');
     } else if (context.message.subject === 'address_deleted') {
         if (this.address_index[context.message.body]) {
             delete this.address_index[context.message.body];
@@ -316,7 +314,6 @@ AddressService.prototype.on_message = function (context) {
         if (this.callback) this.callback('address_types');
     } else if (context.message.subject === 'connection') {
         this.update_connection(context.message.body);
-        if (this.callback) this.callback('connection');
     } else if (context.message.subject === 'connection_deleted') {
         if (this.connection_index[context.message.body]) {
             delete this.connection_index[context.message.body];
