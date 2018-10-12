@@ -106,7 +106,7 @@ Router.prototype.health_check = function () {
         }
 
         if (messages.length) {
-            log.warning('[%s] %s (%s)', this.get_id(), messages.join(', '), ready_state);
+            log.warn('[%s] %s (%s)', this.get_id(), messages.join(', '), ready_state);
         } else if (current.sent !== last.sent || current.recv != last.recv) {
             log.info('[%s] %s sent %d requests and received %d responses since last status', this.get_id(), ready_state, current.sent - last.sent, current.recv - last.recv);
         } else {
