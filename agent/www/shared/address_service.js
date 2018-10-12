@@ -157,7 +157,6 @@ function AddressService($http) {
     Object.defineProperty(this, 'connections', { get: function () { return get_items_from_index(self.connection_index); } });
     this.address_types = [];
     this.address_space_type = '';
-    this.users = [];
     var ws = rhea.websocket_connect(WebSocket);
     this.connection = rhea.connect({"connection_details":ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]), "reconnect":true, rejectUnauthorized:true});
     this.connection.on('message', this.on_message.bind(this));
@@ -252,30 +251,6 @@ AddressService.prototype.is_unique_valid_name = function (name) {
     return this.address_index[name] === undefined && name.match(/^[^#*\/\s\.:]+$/);
 }
 
-AddressService.prototype.create_user = function (obj) {
-    console.log('creating user: ' + JSON.stringify(obj));
-    this.sender.send({subject: 'create_user', body: obj});
-}
-
-AddressService.prototype.delete_selected_users = function () {
-    for (var i = 0; i < this.users.length;) {
-        if (this.users[i].selected) {
-            this.sender.send({subject: 'delete_user', body: this.users[i].name});
-            this.users.splice(i, 1);
-        } else {
-            i++;
-        }
-    }
-}
-
-AddressService.prototype.update_user = function (c) {
-    var i = 0;
-    while (i < this.users.length && c.name !== this.users[i].name) {
-        i++;
-    }
-    this.users[i] = c;
-}
-
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
         var a = context.message.body;
@@ -313,21 +288,6 @@ AddressService.prototype.on_message = function (context) {
             delete this.connection_index[context.message.body];
             if (this.callback) this.callback('connection_deleted');
         }
-    } else if (context.message.subject === 'user') {
-        console.log('got user: ' + JSON.stringify(context.message.body));
-        this.update_user(context.message.body);
-        if (this.callback) this.callback("user");
-    } else if (context.message.subject === 'user_deleted') {
-        var changed = false;
-        for (var i = 0; i < this.users.length;) {
-            if (this.users[i].id === context.message.body) {
-                this.users.splice(i, 1);
-                changed = true;
-            } else {
-                i++;
-            }
-        }
-        if (changed && this.callback) this.callback("user:deleted");
     }
 }
 
