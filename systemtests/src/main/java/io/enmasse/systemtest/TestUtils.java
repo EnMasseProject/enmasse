@@ -240,6 +240,7 @@ public class TestUtils {
      * @throws Exception
      */
     public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int expectedCode, Destination... destinations) throws Exception {
+        log.info("Addresses {} in address space {} will be created", destinations, addressSpace.getName());
         String operationID = TimeMeasuringSystem.startOperation(destinations.length > 0 ? Operation.CREATE_ADDRESS : Operation.DELETE_ADDRESS);
         apiClient.setAddresses(addressSpace, expectedCode, destinations);
         if (wait) {
@@ -259,6 +260,7 @@ public class TestUtils {
     }
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+        log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getName());
         String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
         apiClient.appendAddresses(addressSpace, destinations);
         if (wait) {
@@ -274,6 +276,7 @@ public class TestUtils {
     }
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
+        log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getName());
         String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
         apiClient.appendAddresses(addressSpace, batchSize, destinations);
         if (wait) {

@@ -9,4 +9,5 @@ public class TestTag {
     public static final String shared = "shared";
     public static final String marathon = "marathon";
     public static final String nonPR = "nonPR";
+    public static final String upgrade = "upgrade";
 }
