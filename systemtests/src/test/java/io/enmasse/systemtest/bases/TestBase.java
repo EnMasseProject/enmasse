@@ -374,7 +374,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        log.info("User {} will be created", credentials);
+        log.info("User {} in address space {} will be created", credentials, addressSpace.getName());
         if (!userExist(addressSpace, credentials.getUsername())) {
             return getUserApiClient().createUser(addressSpace.getName(), credentials);
         }
@@ -382,7 +382,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
-        log.info("User {} will be created", user);
+        log.info("User {} in address space {} will be created", user, addressSpace.getName());
         if (!userExist(addressSpace, user.getUsername())) {
             return getUserApiClient().createUser(addressSpace.getName(), user);
         }
@@ -390,11 +390,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected JsonObject updateUser(AddressSpace addressSpace, User user) throws Exception {
-        log.info("User {} will be updated", user);
+        log.info("User {} in address space {} will be updated", user, addressSpace.getName());
         return getUserApiClient().updateUser(addressSpace.getName(), user);
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
+        log.info("User {} in address space {} will be removed", username, addressSpace.getName());
         getUserApiClient().deleteUser(addressSpace.getName(), username);
     }
 

@@ -20,6 +20,7 @@ public class Environment {
     public static final String urlEnv = "OPENSHIFT_URL";
     public static final String tokenEnv = "OPENSHIFT_TOKEN";
     public static final String userEnv = "OPENSHIFT_USER";
+    public static final String upgradeEnv = "SYSTEMTESTS_UPGRADED";
 
     private final String user = System.getenv(userEnv);
     private final String token = System.getenv(tokenEnv);
@@ -32,6 +33,7 @@ public class Environment {
     private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
     private final boolean registerApiServer = Boolean.parseBoolean(System.getenv(registerApiServerEnv));
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
+    private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
 
     public Environment() {
         String debugFormat = "{}:{}";
@@ -46,6 +48,7 @@ public class Environment {
         log.debug(debugFormat, urlEnv, url);
         log.debug(debugFormat, tokenEnv, token);
         log.debug(debugFormat, userEnv, user);
+        log.debug(debugFormat, upgradeEnv, upgrade);
     }
 
     /**
@@ -119,5 +122,7 @@ public class Environment {
         return storeScreenshots;
     }
 
-
+    public boolean isUpgraded() {
+        return upgrade;
+    }
 }

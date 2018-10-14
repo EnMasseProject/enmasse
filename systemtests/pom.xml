@@ -171,5 +171,12 @@
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
+        <profile>
+            <id>systemtests-upgrade</id>
+            <properties>
+                <tags>upgrade</tags>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
     </profiles>
 </project>
