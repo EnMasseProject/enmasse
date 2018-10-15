@@ -98,7 +98,7 @@ public class KeycloakUserApi implements UserApi  {
         throw new WebApplicationException("Timed out waiting for realm " + realmName + " to exist", 503);
     }
 
-    private RealmResource getRealmResource(Keycloak keycloak, String realmName) throws Exception {
+    private RealmResource getRealmResource(Keycloak keycloak, String realmName) {
         List<RealmRepresentation> realms = keycloak.realms().findAll();
         for (RealmRepresentation realm : realms) {
             if (realm.getRealm().equals(realmName)) {
@@ -353,6 +353,11 @@ public class KeycloakUserApi implements UserApi  {
             }
             return users;
         });
+    }
+
+    @Override
+    public boolean realmExists(String realmName) {
+        return withKeycloak(kc -> getRealmResource(kc, realmName) != null);
     }
 
     @Override

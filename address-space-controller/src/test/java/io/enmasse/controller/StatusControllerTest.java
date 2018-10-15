@@ -38,7 +38,7 @@ public class StatusControllerTest {
 
         when(kubernetes.getReadyDeployments()).thenReturn(Collections.singleton(deployment));
 
-        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory);
+        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, null);
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
@@ -70,7 +70,7 @@ public class StatusControllerTest {
 
         when(kubernetes.getReadyDeployments()).thenReturn(Collections.emptySet());
 
-        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory);
+        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, null);
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")

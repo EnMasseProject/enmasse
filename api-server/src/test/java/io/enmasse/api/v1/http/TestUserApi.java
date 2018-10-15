@@ -62,6 +62,11 @@ public class TestUserApi implements UserApi  {
     }
 
     @Override
+    public boolean realmExists(String realm) {
+        return userMap.containsKey(realm);
+    }
+
+    @Override
     public UserList listUsers(String namespace) {
         if (throwException) {
             throw new RuntimeException("exception");

@@ -13,33 +13,25 @@ import java.util.Optional;
 
 public final class AddressSpaceControllerOptions {
 
-    private final File templateDir;
-    private final NoneAuthServiceInfo noneAuthService;
-    private final StandardAuthServiceInfo standardAuthService;
-    private final boolean enableEventLogger;
-    private final boolean exposeEndpointsByDefault;
+    private File templateDir;
+    private NoneAuthServiceInfo noneAuthService;
+    private StandardAuthServiceInfo standardAuthService;
+    private boolean enableEventLogger;
+    private boolean exposeEndpointsByDefault;
 
-    private final String environment;
+    private String environment;
 
-    private final String wildcardCertSecret;
+    private String wildcardCertSecret;
 
-    private final Duration resyncInterval;
-    private final Duration recheckInterval;
+    private Duration resyncInterval;
+    private Duration recheckInterval;
 
-    private final String version;
+    private String version;
 
-    private AddressSpaceControllerOptions(File templateDir, NoneAuthServiceInfo noneAuthService, StandardAuthServiceInfo standardAuthService, boolean enableEventLogger, boolean exposeEndpointsByDefault, String environment, String wildcardCertSecret, Duration resyncInterval, Duration recheckInterval, String version) {
-        this.templateDir = templateDir;
-        this.noneAuthService = noneAuthService;
-        this.standardAuthService = standardAuthService;
-        this.enableEventLogger = enableEventLogger;
-        this.exposeEndpointsByDefault = exposeEndpointsByDefault;
-        this.environment = environment;
-        this.wildcardCertSecret = wildcardCertSecret;
-        this.resyncInterval = resyncInterval;
-        this.recheckInterval = recheckInterval;
-        this.version = version;
-    }
+    private String standardAuthserviceConfigName;
+    private String standardAuthserviceCredentialsSecretName;
+    private String standardAuthserviceCertSecretName;
+
 
     public File getTemplateDir() {
         return templateDir;
@@ -79,43 +71,40 @@ public final class AddressSpaceControllerOptions {
 
     public static AddressSpaceControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
+        AddressSpaceControllerOptions options = new AddressSpaceControllerOptions();
+
         File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
 
         if (!templateDir.exists()) {
             throw new IllegalArgumentException("Template directory " + templateDir.getAbsolutePath() + " not found");
         }
 
-        NoneAuthServiceInfo noneAuthService = getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
-        StandardAuthServiceInfo standardAuthService = getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG").orElse(null);
+        options.setTemplateDir(templateDir);
 
-        boolean enableEventLogger = getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false);
+        options.setNoneAuthService(getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null));
+        options.setStandardAuthService(getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
+        options.setStandardAuthserviceConfigName(getEnv(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
+        options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
+        options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
 
-        boolean exposeEndpointsByDefault = getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true);
+        options.setEnableEventLogger(getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false));
 
-        String environment = getEnv(env, "ENVIRONMENT").orElse("development");
+        options.setExposeEndpointsByDefault(getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true));
 
-        String wildcardCertSecret = getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null);
+        options.setEnvironment(getEnv(env, "ENVIRONMENT").orElse("development"));
 
-        Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
+        options.setWildcardCertSecret(getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null));
+
+        options.setResyncInterval(getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofMinutes(5));
+                .orElse(Duration.ofMinutes(5)));
 
-        Duration recheckInterval = getEnv(env, "CHECK_INTERVAL")
+        options.setRecheckInterval(getEnv(env, "CHECK_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofSeconds(30));
+                .orElse(Duration.ofSeconds(30)));
 
-        String version = getEnvOrThrow(env, "VERSION");
-
-        return new AddressSpaceControllerOptions(
-                templateDir,
-                noneAuthService,
-                standardAuthService,
-                enableEventLogger,
-                exposeEndpointsByDefault,
-                environment,
-                wildcardCertSecret,
-                resyncInterval,
-                recheckInterval, version);
+        options.setVersion(getEnvOrThrow(env, "VERSION"));
+        return options;
     }
 
 
@@ -149,5 +138,69 @@ public final class AddressSpaceControllerOptions {
 
     public boolean isExposeEndpointsByDefault() {
         return exposeEndpointsByDefault;
+    }
+
+    public String getStandardAuthserviceConfigName() {
+        return standardAuthserviceConfigName;
+    }
+
+    public void setTemplateDir(File templateDir) {
+        this.templateDir = templateDir;
+    }
+
+    public void setNoneAuthService(NoneAuthServiceInfo noneAuthService) {
+        this.noneAuthService = noneAuthService;
+    }
+
+    public void setStandardAuthService(StandardAuthServiceInfo standardAuthService) {
+        this.standardAuthService = standardAuthService;
+    }
+
+    public void setEnableEventLogger(boolean enableEventLogger) {
+        this.enableEventLogger = enableEventLogger;
+    }
+
+    public void setExposeEndpointsByDefault(boolean exposeEndpointsByDefault) {
+        this.exposeEndpointsByDefault = exposeEndpointsByDefault;
+    }
+
+    public void setEnvironment(String environment) {
+        this.environment = environment;
+    }
+
+    public void setWildcardCertSecret(String wildcardCertSecret) {
+        this.wildcardCertSecret = wildcardCertSecret;
+    }
+
+    public void setResyncInterval(Duration resyncInterval) {
+        this.resyncInterval = resyncInterval;
+    }
+
+    public void setRecheckInterval(Duration recheckInterval) {
+        this.recheckInterval = recheckInterval;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public void setStandardAuthserviceConfigName(String standardAuthserviceConfigName) {
+        this.standardAuthserviceConfigName = standardAuthserviceConfigName;
+    }
+
+    public String getStandardAuthserviceCredentialsSecretName() {
+        return standardAuthserviceCredentialsSecretName;
+    }
+
+    public void setStandardAuthserviceCredentialsSecretName(String standardAuthserviceCredentialsSecretName) {
+        this.standardAuthserviceCredentialsSecretName = standardAuthserviceCredentialsSecretName;
+    }
+
+    public String getStandardAuthserviceCertSecretName() {
+        return standardAuthserviceCertSecretName;
+    }
+
+    public void setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
+        this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
     }
 }
