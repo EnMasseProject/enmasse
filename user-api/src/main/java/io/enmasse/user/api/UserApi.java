@@ -16,6 +16,8 @@ public interface UserApi {
     boolean replaceUser(String realm, User user) throws Exception;
     void deleteUser(String realm, User user) throws Exception;
 
+    boolean realmExists(String realm);
+
     UserList listUsers(String namespace);
     UserList listUsersWithLabels(String namespace, Map<String, String> labels);
     void deleteUsers(String namespace);

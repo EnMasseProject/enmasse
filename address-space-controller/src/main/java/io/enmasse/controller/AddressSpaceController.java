@@ -8,6 +8,7 @@ package io.enmasse.controller;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
 
 import io.enmasse.address.model.*;
@@ -16,6 +17,10 @@ import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.*;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.keycloak.KeycloakFactory;
+import io.enmasse.user.keycloak.KeycloakUserApi;
+import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -85,9 +90,16 @@ public class AddressSpaceController extends AbstractVerticle {
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, resolverFactory, isOpenShift);
 
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient,
+                options.getStandardAuthserviceConfigName(),
+                options.getStandardAuthserviceCredentialsSecretName(),
+                options.getStandardAuthserviceCertSecretName());
+        Clock clock = Clock.systemUTC();
+        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
+
         ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
-        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory));
+        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(authController);
 

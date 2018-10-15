@@ -4,14 +4,13 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
+import io.enmasse.user.api.UserApi;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -22,11 +21,13 @@ public class StatusController implements Controller {
     private final Kubernetes kubernetes;
     private final SchemaProvider schemaProvider;
     private final InfraResourceFactory infraResourceFactory;
+    private final UserApi userApi;
 
-    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory) {
+    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, UserApi userApi) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
+        this.userApi = userApi;
     }
 
     @Override
@@ -57,14 +58,22 @@ public class StatusController implements Controller {
                 .map(deployment -> deployment.getMetadata().getName())
                 .collect(Collectors.toSet());
 
-
         InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
         Set<String> requiredDeployments = infraResourceFactory.createInfraResources(addressSpace, infraConfig).stream()
                 .filter(KubernetesHelper::isDeployment)
                 .map(item -> item.getMetadata().getName())
                 .collect(Collectors.toSet());
 
-        return readyDeployments.containsAll(requiredDeployments);
+        boolean isReady = readyDeployments.containsAll(requiredDeployments);
+        return isReady && checkStandardAuthservice(addressSpace);
+    }
+
+    private boolean checkStandardAuthservice(AddressSpace addressSpace) {
+        if (AuthenticationServiceType.STANDARD.equals(addressSpace.getAuthenticationService().getType())) {
+            return userApi.realmExists(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
+        } else {
+            return true;
+        }
     }
 
     @Override

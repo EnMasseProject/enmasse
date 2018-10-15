@@ -79,6 +79,11 @@ public class KeycloakManagerTest {
             }
 
             @Override
+            public boolean realmExists(String realm) {
+                return true;
+            }
+
+            @Override
             public UserList listUsers(String realm) {
                 return null;
             }
