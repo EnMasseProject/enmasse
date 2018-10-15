@@ -44,6 +44,14 @@ NOTE: At present, `password` type users can be used for both applications and co
 For the `password` type, an additional field `password` must be set to a base64-encoded value of the
 password for that user. The password will not be printed out when reading the resource.
 
+A password can be base64-encoded on the command line. To encode `my-password`, for example:
+
+[source, shell]
+----
+$ echo -n my-password | base64
+bXktcGFzc3dvcmQ=
+----
+
 === Federated authentication type
 
 For the `federated` type, an additional field `provider` must be specified. The supported values
