@@ -3,6 +3,9 @@
 #required environment variables
 #ARTIFACTS_DIR
 
+#optional envirinmnt dir
+#SYSTEMTEST_UPGRADED
+
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 source "${CURDIR}/../../scripts/logger.sh"
@@ -10,8 +13,9 @@ source "${CURDIR}/../../scripts/logger.sh"
 ENMASSE_DIR=$1
 TEST_PROFILE=${2}
 TESTCASE=${3:-"io.enmasse.**"}
+SKIP_SETUP=${4:-false}
 
-info "Running tests with profile: ${TEST_PROFILE}, tests: ${TESTCASE} "
+info "Running tests with profile: ${TEST_PROFILE}, tests: ${TESTCASE}, skip_setup: ${SKIP_SETUP}"
 
 failure=0
 
@@ -20,7 +24,7 @@ SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
 SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
 export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
-setup_test ${ENMASSE_DIR} $(get_kubeconfig_path)
+setup_test ${ENMASSE_DIR} $(get_kubeconfig_path) ${SKIP_SETUP}
 if [ $? -ne 0 ]; then
     err_and_exit "DEPLOYMENT FAILED - tests won't be executed."
 fi
@@ -46,8 +50,8 @@ info "process for syncing docker logs is running with PID: ${LOGS_PID}"
 if [[ "${TEST_PROFILE}" = "systemtests-pr" ]]; then
     run_test ${TESTCASE} systemtests-shared-pr || failure=$(($failure + 1))
     run_test ${TESTCASE} systemtests-isolated-pr || failure=$(($failure + 1))
-elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]]; then
-    run_test ${TESTCASE} ${TEST_PROFILE} || failure=$(($failure + 1))
+elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] || [[ "${TEST_PROFILE}" = "systemtests-upgrade" ]]; then
+    run_test ${TESTCASE} ${TEST_PROFILE} "openshift" ${SYSTEMTEST_UPGRADED} || failure=$(($failure + 1))
 else
     run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))
     run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
@@ -65,6 +69,6 @@ categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 if [ $failure -gt 0 ]
 then
     err_and_exit "Systemtests failed"
-else
+elif [[ "${TEST_PROFILE}" != "systemtests-upgrade" ]]; then
     teardown_test ${OPENSHIFT_PROJECT}
 fi

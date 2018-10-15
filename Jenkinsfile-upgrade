@@ -9,20 +9,21 @@ pipeline {
         }
     }
     parameters {
-        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-        string(name: 'MAILING_LIST', defaultValue: '', description: '')
+        string(name: 'TEST_CASE', defaultValue: 'common.upgrade.**', description: 'maven parameter for executing specific tests')
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
+        string(name: 'START_VERSION', defaultValue: '0.23.1', description: 'Version of enmasse which will be upgraded')
     }
     options {
-        timeout(time: 5, unit: 'HOURS')
+        timeout(time: 1, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {
         CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
-        TAG = "latest"
         ANSIBLE_FORCE_COLOR = true
+        JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+        OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
     }
     stages {
         stage('wait for agent ready') {
@@ -47,7 +48,7 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh "git checkout ${params.COMMIT_SHA}"
+                sh "git checkout infra-upgrades-pipeline" //TODO: remove it before merge
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
@@ -60,22 +61,42 @@ pipeline {
                 }
             }
         }
-        stage('system tests') {
+        stage('deploy and run systemtests before upgrade') {
             environment {
-                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
-                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+                USE_DUMMY_ADDRESS = true
+                SKIP_CLEANUP = true
+                SYSTEMTEST_UPGRADED = false
+                //COMMIT = "${params.START_VERSION}" //TODO: uncomment before merge
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        //sh "git checkout tags/${params.START_VERSION}" //TODO: uncomment before merge
+                        sh 'make templates || true'
+                        lib.runSystemtests(env.CORES_DIR, 'latest', 'systemtests-upgrade', params.TEST_CASE, false)
+                    }
+                }
+            }
+        }
+        stage('upgrade and run systemtests after upgrade') {
+            environment {
+                USE_DUMMY_ADDRESS = true
+                SKIP_CLEANUP = false
+                SYSTEMTEST_UPGRADED = true
                 DOCKER_REGISTRY = credentials('docker-registry-host')
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
                 DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
                 COMMIT = "${params.BUILD_TAG}"
-                USE_DUMMY_ADDRESS = true
+                TAG = "${params.BUILD_TAG}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
+                        //sh "git checkout ${params.COMMIT_SHA}" //TODO: uncomment before merge
+                        sh "make -C templates clean"
                         sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE, false)
+                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-upgrade', params.TEST_CASE, true)
                     }
                 }
             }
@@ -84,12 +105,11 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
+                lib.postAction(env.CORES_DIR, ARTIFACTS_DIR)
             }
         }
         failure {
             echo "build failed"
-            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
         }
     }
 }

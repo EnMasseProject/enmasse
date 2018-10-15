@@ -13,6 +13,7 @@ function setup_test() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
     REG_API_SERVER=${3:-true}
+    UPGRADE=${4:-false}
 
     export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
@@ -42,14 +43,18 @@ function setup_test() {
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
-    ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
+
+    if [[ $UPGRADE == "false" ]]; then
+        ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
+    fi
     ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"register_api_server\": ${REGISTER_API_SERVER}, \"enable_rbac\": ${ENABLE_RBAC}}"
 }
 
 function wait_until_up() {
     POD_COUNT=$1
     ADDR_SPACE=$2
-    ${CURDIR}/wait_until_up.sh ${POD_COUNT} ${ADDR_SPACE} || return 1
+    UPGRADED=$3
+    ${CURDIR}/wait_until_up.sh ${POD_COUNT} ${ADDR_SPACE} ${UPGRADED} || return 1
 }
 
 function wait_until_cluster_up() {
@@ -76,18 +81,20 @@ function run_test() {
     TESTCASE=$1
     PROFILE=${2:-systemtests}
     CLUSTER_TYPE=${3:-openshift}
+    UPGRADED=${4:-false}
 
     expected_pods=6
     if [ "$CLUSTER_TYPE" == "kubernetes" ]; then
         expected_pods=5
     fi
-    wait_until_up ${expected_pods} ${OPENSHIFT_PROJECT}
+
+    wait_until_up ${expected_pods} ${OPENSHIFT_PROJECT} ${UPGRADED}
     wait_code=$?
     if [ $wait_code -ne 0 ]; then
         echo "SYSTEM-TESTS WILL BE NOT EXECUTED (TESTCASE=${TESTCASE}; PROFILE=${PROFILE})"
         return 1
     fi
-    # Run a single test case
+
     if [ -n "${TESTCASE}" ]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
@@ -364,5 +371,17 @@ function get_oc_args() {
         echo $OC_39
     else
         echo $OC_310
+    fi
+}
+
+function is_upgraded() {
+    IMAGE=$1
+    TAG=${TAG:-"latest"}
+    TEMPLATES=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/templates/* | grep "image")
+    DEPLOYMENTS=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/components/*/*-Deployment* | grep "image")
+    if [[ "${TEMPLATES}" == *"${IMAGE}"* ]] || [[ "${DEPLOYMENTS}" == *"${IMAGE}"* ]] ; then
+        echo "true"
+    else
+        echo "false"
     fi
 }
