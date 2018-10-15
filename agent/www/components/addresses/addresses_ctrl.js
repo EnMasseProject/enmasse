@@ -470,17 +470,30 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
 
         $scope.data = {};
 
+
+        function hasItemWithName(name, list) {
+            if (!name) return false;
+            var matched = list.filter(function (item) { return item.name === name; });
+            return matched && matched.length;
+        }
+
+        function adjustForType() {
+            var f = $scope.valid_plans();
+            if (f && f.length) {
+                if (!hasItemWithName($scope.data.plan, f)) {
+                    $scope.data.plan = $scope.valid_plans()[0].name;
+                }
+            }
+            if ($scope.data.type !== 'subscription') {
+                $scope.data.topic = undefined;
+            }
+        }
+
         $scope.nextCallback = function (step) {
             if (step.stepId === 'review') {
                 address_service.create_address($scope.data);
             } else if (step.stepId === 'semantics') {
-                var f = $scope.valid_plans();
-                if (f && f.length) {
-                    $scope.data.plan = $scope.valid_plans()[0].name;
-                }
-                if ($scope.data.type !== 'subscription') {
-                    $scope.data.topic = undefined;
-                }
+                adjustForType();
             }
             return true;
         };
@@ -494,6 +507,9 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
                 $scope.nextButtonTitle = "Create";
             } else {
                 $scope.nextButtonTitle = "Next >";
+            }
+            if (parameters.step.stepId !== 'semantics') {
+                adjustForType();
             }
         });
 
