@@ -1,5 +1,5 @@
 {
-  "apiVersion": "enmasse.io/v1",
+  "apiVersion": "address.enmasse.io/v1",
   "kind": "AddressSpace",
   "metadata": {
     "name": "tck-brokered"

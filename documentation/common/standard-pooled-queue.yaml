@@ -1,4 +1,4 @@
-apiVersion: enmasse.io/v1alpha1
+apiVersion: address.enmasse.io/v1alpha1
 kind: Address
 metadata:
     name: myspace.myqueue

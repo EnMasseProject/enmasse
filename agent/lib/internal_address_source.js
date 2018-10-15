@@ -229,7 +229,7 @@ AddressSource.prototype.create_address = function (definition) {
     var address_name = get_address_name_for_address(definition.address, this.config.ADDRESS_SPACE);
     var configmap_name = this.get_configmap_name(address_name);
     var address = {
-        apiVersion: 'enmasse.io/v1alpha1',
+        apiVersion: 'address.enmasse.io/v1alpha1',
         kind: 'Address',
         metadata: {
             name: address_name,

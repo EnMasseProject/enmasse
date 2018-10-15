@@ -25,6 +25,10 @@ public class HttpRootService {
         uriList.add(baseUri.resolve("/apis"));
         uriList.add(baseUri.resolve("/apis/enmasse.io"));
         uriList.add(baseUri.resolve("/apis/enmasse.io/v1alpha1"));
+        uriList.add(baseUri.resolve("/apis/address.enmasse.io"));
+        uriList.add(baseUri.resolve("/apis/address.enmasse.io/v1alpha1"));
+        uriList.add(baseUri.resolve("/apis/user.enmasse.io"));
+        uriList.add(baseUri.resolve("/apis/user.enmasse.io/v1alpha1"));
         uriList.add(baseUri.resolve("/healthz"));
         uriList.add(baseUri.resolve("/swagger.json"));
         return Response.status(200).entity(uriList).build();
