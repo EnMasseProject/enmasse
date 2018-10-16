@@ -6,7 +6,10 @@ package io.enmasse.k8s.api.cache;
 
 import io.enmasse.k8s.api.Watch;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Controller implements Watch {
+    private static final AtomicInteger THREAD_ID = new AtomicInteger();
     private final Reflector reflector;
     private volatile boolean running;
     private Thread thread;
@@ -22,6 +25,7 @@ public class Controller implements Watch {
                 reflector.run();
             }
         });
+        thread.setName(String.format("controller-", THREAD_ID.incrementAndGet()));
         thread.start();
     }
 

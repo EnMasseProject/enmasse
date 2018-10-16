@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +36,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     private final String infraUuid;
 
     private final ObjectMapper mapper = CodecV1.getMapper();
+    private final List<Store<ConfigMap>> listeners = new CopyOnWriteArrayList<>();
 
     public ConfigMapAddressApi(NamespacedOpenShiftClient client, String namespace, String infraUuid) {
         this.client = client;
@@ -57,7 +59,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         Map<String, String> data = configMap.getData();
 
         try {
-            Address address = mapper.readValue(data.get("config.json"), Address.class);
+            String json = data.get("config.json");
+            Address address = mapper.readValue(json, Address.class);
             Address.Builder builder = new Address.Builder(address);
 
             if (address.getUid() == null) {
@@ -112,6 +115,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         labels.put(LabelKeys.NAMESPACE, namespace);
 
         client.configMaps().inNamespace(this.namespace).withLabels(labels).delete();
+
+        this.listeners.forEach(l -> l.replace(Collections.emptyList(), null));
     }
 
     @Override
@@ -134,6 +139,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         ConfigMap newMap = create(address);
         if (newMap != null) {
             client.configMaps().inNamespace(namespace).withName(name).replace(newMap);
+            listeners.forEach(s -> s.update(newMap));
         }
         return true;
     }
@@ -157,7 +163,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
         if (address.getResourceVersion() != null) {
             builder.editOrNewMetadata()
-                    .withResourceVersion(address.getResourceVersion());
+                    .withResourceVersion(address.getResourceVersion())
+                    .endMetadata();
         }
 
         try {
@@ -172,12 +179,27 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     @Override
     public boolean deleteAddress(Address address) {
         Boolean deleted = client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getNamespace(), address.getName())).delete();
-        return deleted != null && deleted.booleanValue();
+        boolean b = Boolean.TRUE.equals(deleted);
+        if (b) {
+            listeners.forEach(s -> s.delete(create(address)));
+        }
+        return b;
     }
 
     @Override
     public Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) {
-        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName(),
+                (o1, o2) -> {
+                    try {
+                        int v1 = Integer.parseInt(o1.getMetadata().getResourceVersion());
+                        int v2 = Integer.parseInt(o2.getMetadata().getResourceVersion());
+                        return Integer.compare(v1, v2);
+                    } catch (NumberFormatException e) {
+                        throw new IncomparableValueException(e);
+                    }
+                });
+        ConfigMapAddressApi.this.listeners.add(queue);
+
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(ConfigMap.class);
@@ -197,7 +219,11 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         Reflector<ConfigMap, ConfigMapList> reflector = new Reflector<>(config);
         Controller controller = new Controller(reflector);
         controller.start();
-        return controller;
+
+        return () -> {
+            ConfigMapAddressApi.this.listeners.remove(queue);
+            controller.close();
+        };
     }
 
     @Override

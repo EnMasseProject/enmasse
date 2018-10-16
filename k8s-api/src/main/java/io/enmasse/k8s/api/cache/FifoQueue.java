@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.enmasse.k8s.api.cache.FifoQueue.EventType.*;
@@ -16,6 +18,7 @@ import static io.enmasse.k8s.api.cache.FifoQueue.EventType.*;
 public class FifoQueue<T> implements WorkQueue<T> {
     private static final Logger log = LoggerFactory.getLogger(FifoQueue.class);
     private final KeyExtractor<T> keyExtractor;
+    private final Comparator<T> versionComparator;
     private final Map<String, T> store = new HashMap<>();
     private final BlockingQueue<Event<T>> queue = new LinkedBlockingDeque<>();
     private AtomicInteger initialPopulationCount = new AtomicInteger(0);
@@ -38,8 +41,13 @@ public class FifoQueue<T> implements WorkQueue<T> {
         }
     }
 
-    public FifoQueue(KeyExtractor<T> keyExtractor) {
+    public FifoQueue(KeyExtractor<T> keyExtractor, Comparator<T> versionComparator) {
         this.keyExtractor = keyExtractor;
+        this.versionComparator = versionComparator;
+    }
+
+    public FifoQueue(KeyExtractor<T> keyExtractor) {
+        this(keyExtractor, null);
     }
 
     @Override
@@ -82,9 +90,10 @@ public class FifoQueue<T> implements WorkQueue<T> {
         }
     }
 
-    private void queueEvent(EventType eventType, T obj) throws InterruptedException {
+    private void queueEvent(EventType eventType, T obj){
         populated = true;
-        queue.put(new Event<>(eventType, obj));
+        String key = obj != null ? keyExtractor.getKey(obj) : null;
+        queue.add(new Event<>(eventType, obj));
     }
 
     @Override
@@ -93,17 +102,29 @@ public class FifoQueue<T> implements WorkQueue<T> {
     }
 
     @Override
-    public void add(T t) throws InterruptedException {
+    public void add(T t) {
         queueEvent(Added, t);
     }
 
     @Override
-    public void update(T t) throws InterruptedException {
+    public void update(T t) {
+        final String key = keyExtractor.getKey(t);
+        T stored = store.get(key);
+        if (versionComparator != null && stored != null) {
+            try {
+                if (versionComparator.compare(stored, t) >= 0) {
+                    log.debug("Ignored event for key '{}' as stored version is newer", key);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                // Resource version numbers not comparable.
+            }
+        }
         queueEvent(Updated, t);
     }
 
     @Override
-    public void delete(T t) throws InterruptedException {
+    public void delete(T t) {
         queueEvent(Deleted, t);
     }
 
@@ -118,13 +139,23 @@ public class FifoQueue<T> implements WorkQueue<T> {
     }
 
     @Override
-    public synchronized void replace(List<T> list, String resourceVersion) throws InterruptedException {
+    public synchronized void replace(List<T> list, String resourceVersion) {
         Map<String, T> newItems = new HashMap<>();
         for (T item : list) {
             String key = keyExtractor.getKey(item);
+            T stored = store.get(key);
+            if (versionComparator != null && stored != null) {
+                try {
+                    if (versionComparator.compare(stored, item) >= 0) {
+                        log.debug("Ignored event for key '{}' during resync as stored version is newer", key);
+                        newItems.put(key, stored);
+                        continue;
+                    }
+                } catch (IncomparableValueException e) {
+                }
+            }
             newItems.put(key, item);
         }
-        log.debug("Replacing queue with {} items. Populated {}", list.size(), populated);
         store.clear();
         store.putAll(newItems);
         if (!populated) {

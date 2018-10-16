@@ -7,10 +7,10 @@ package io.enmasse.k8s.api.cache;
 import java.util.List;
 
 public interface Store<T> {
-    void add(T t) throws InterruptedException;
-    void update(T t) throws InterruptedException;
-    void delete(T t) throws InterruptedException;
+    void add(T t);
+    void update(T t);
+    void delete(T t);
     List<T> list();
     List<String> listKeys();
-    void replace(List<T> list, String resourceVersion) throws InterruptedException;
+    void replace(List<T> list, String resourceVersion);
 }

@@ -11,9 +11,12 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResourceChecker<T> implements Watcher<T>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ResourceChecker.class.getName());
+    private static final AtomicInteger THREAD_ID = new AtomicInteger();
+
     private final Watcher<T> watcher;
     private final Duration recheckInterval;
     private final Object monitor = new Object();
@@ -30,8 +33,8 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
     public void start() {
         running = true;
         thread = new Thread(this);
+        thread.setName(String.format("resource-checker-%d", THREAD_ID.incrementAndGet()));
         thread.start();
-
     }
 
     @Override
@@ -45,8 +48,8 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
         synchronized (monitor) {
             try {
                 monitor.wait(recheckInterval.toMillis());
-                watcher.onUpdate(items);
                 log.debug("Woke up from monitor");
+                watcher.onUpdate(items);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
