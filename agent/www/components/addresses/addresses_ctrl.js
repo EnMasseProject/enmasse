@@ -57,16 +57,16 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
 
         var lastLinkInfo = {}
         var saveLastLinkInfo = function (item) {
-            var record = {}
             if (item.outcomes) {
+                var record = {}
                 if (item.outcomes.ingress) {
                     record.ingress = angular.copy(item.outcomes.ingress.links)
                 }
                 if (item.outcomes.egress) {
                     record.egress = angular.copy(item.outcomes.egress.links)
                 }
+                lastLinkInfo[item.address] = record
             }
-            lastLinkInfo[item.address] = record
         }
         var calcRates = function (item) {
           var lastInfo = lastLinkInfo[item.address]
