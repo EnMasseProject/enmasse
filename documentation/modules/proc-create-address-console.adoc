@@ -9,7 +9,7 @@ You can create new addresses using the {ProductName} Console. The type of addres
 // For more information see the xref:ref-supported-features-table[].
 
 .Prerequisites
-* You must have created an address space. For more information see xref:create-address-space-cli[]
+* You must have created an address space. For more information see xref:create-address-space-cli-okd[]
 
 .Procedure
 
