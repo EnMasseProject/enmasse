@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ErrorResponse {
+public class Status {
 
     @JsonProperty("apiVersion")
     private final String apiVersion = "v1";
@@ -17,7 +17,7 @@ public class ErrorResponse {
     private final String kind = "Status";
 
     @JsonProperty("status")
-    private final String status = "Failure";
+    private final String status;
 
     @JsonProperty("code")
     private final int code;
@@ -28,7 +28,8 @@ public class ErrorResponse {
     @JsonProperty("message")
     private final String message;
 
-    public ErrorResponse(int statusCode, String reason, String message) {
+    private Status(String status, int statusCode, String reason, String message) {
+        this.status = status;
         this.code = statusCode;
         this.reason = reason;
         this.message = message;
@@ -44,5 +45,13 @@ public class ErrorResponse {
 
     public int getStatusCode() {
         return code;
+    }
+
+    public static Status failureStatus(int statusCode, String reason, String message) {
+        return new Status("Failure", statusCode, reason, message);
+    }
+
+    public static Status successStatus(int statusCode) {
+        return new Status("Success", statusCode, null, null);
     }
 }

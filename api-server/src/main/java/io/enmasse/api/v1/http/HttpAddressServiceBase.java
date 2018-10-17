@@ -11,6 +11,7 @@ import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.common.Status;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -165,7 +166,7 @@ public class HttpAddressServiceBase {
             if (!apiHelper.deleteAddress(namespace, addressSpace, addressName)) {
                 throw new NotFoundException("Address " + addressName + " not found");
             }
-            return Response.ok().build();
+            return Response.ok(Status.successStatus(200)).build();
         });
     }
 
@@ -173,7 +174,7 @@ public class HttpAddressServiceBase {
         return doRequest("Error deleting addresses", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
             apiHelper.deleteAddresses(namespace);
-            return Response.ok().build();
+            return Response.ok(Status.successStatus(200)).build();
         });
     }
 }

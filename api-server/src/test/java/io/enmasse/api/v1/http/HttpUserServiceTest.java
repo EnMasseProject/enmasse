@@ -6,6 +6,7 @@ package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.api.common.Status;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.user.model.v1.*;
@@ -308,6 +309,7 @@ public class HttpUserServiceTest {
     public void testDelete() {
         Response response = invoke(() -> userService.deleteUser(securityContext, "ns1", "myspace.user1"));
         assertThat(response.getStatus(), is(200));
+        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
 
         assertTrue(userApi.listUsers("ns1").getItems().isEmpty());
         assertFalse(userApi.listUsers("ns2").getItems().isEmpty());

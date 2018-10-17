@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
+import io.enmasse.api.common.Status;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -183,7 +184,7 @@ public class HttpUserService {
             User user = userApi.getUserWithName(realm, userName)
                     .orElseThrow(() -> new NotFoundException("Unable to find user " + userNameWithAddressSpace));
             userApi.deleteUser(realm, user);
-            return Response.ok().build();
+            return Response.ok(Status.successStatus(200)).build();
         });
     }
 
@@ -193,7 +194,7 @@ public class HttpUserService {
         return doRequest("Error deleting address space s", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
             userApi.deleteUsers(namespace);
-            return Response.ok().build();
+            return Response.ok(Status.successStatus(200)).build();
         });
     }
 
