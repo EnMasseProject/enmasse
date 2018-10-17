@@ -202,8 +202,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, defaultCredentials);
-        consoleWebPage.openWebConsolePage();
-        consoleWebPage.openAddressesPageWebConsole();
         consoleWebPage.createAddressWebConsole(destQueue);
         consoleWebPage.createAddressWebConsole(destTopic);
 
