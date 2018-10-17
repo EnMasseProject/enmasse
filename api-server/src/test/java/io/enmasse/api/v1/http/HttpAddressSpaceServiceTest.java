@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.api.common.Status;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
@@ -165,6 +166,7 @@ public class HttpAddressSpaceServiceTest {
 
         Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null,"a1"));
         assertThat(response.getStatus(), is(200));
+        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
 
         assertThat(addressSpaceApi.listAddressSpaces(null), hasItem(a2));
         assertThat(addressSpaceApi.listAddressSpaces(null).size(), is(1));
@@ -192,5 +194,6 @@ public class HttpAddressSpaceServiceTest {
 
         Response response = invoke(() -> addressSpaceService.deleteAddressSpaces(securityContext, "myspace"));
         assertThat(response.getStatus(), is(200));
+        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
     }
 }

@@ -9,6 +9,7 @@ import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.v1.Either;
 import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.api.common.Status;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
@@ -209,6 +210,7 @@ public class HttpNestedAddressServiceTest {
     public void testDelete() {
         Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
         assertThat(response.getStatus(), is(200));
+        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
 
         assertThat(addressApi.listAddresses("ns"), hasItem(q1));
         assertThat(addressApi.listAddresses("ns").size(), is(1));
@@ -235,6 +237,7 @@ public class HttpNestedAddressServiceTest {
 
         response = invoke(() -> addressService.deleteAddresses(securityContext, "ns"));
         assertThat(response.getStatus(), is(200));
+        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
         assertThat(addressApi.listAddresses("ns").size(), is(0));
     }
 }

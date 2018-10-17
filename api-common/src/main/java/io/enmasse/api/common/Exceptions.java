@@ -50,13 +50,13 @@ public class Exceptions {
 
     private static Response buildResponse(Response.Status status, String error, String message) {
         return Response.status(status)
-                .entity(new ErrorResponse(status.getStatusCode(), status.getReasonPhrase(), message))
+                .entity(Status.failureStatus(status.getStatusCode(), status.getReasonPhrase(), message))
                 .build();
     }
 
     private static Response buildResponse(int status, String error, String message) {
         return Response.status(status)
-                .entity(new ErrorResponse(status, error, message))
+                .entity(Status.failureStatus(status, error, message))
                 .build();
     }
 }

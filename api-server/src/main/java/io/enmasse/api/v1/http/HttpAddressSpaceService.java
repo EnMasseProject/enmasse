@@ -4,14 +4,12 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceList;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.*;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.api.common.Status;
 import io.enmasse.api.common.UuidGenerator;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
@@ -185,7 +183,7 @@ public class HttpAddressSpaceService {
             AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
                     .orElseThrow(() -> new NotFoundException("Unable to find address space " + addressSpaceName));
             addressSpaceApi.deleteAddressSpace(addressSpace);
-            return Response.ok().build();
+            return Response.ok(Status.successStatus(200)).build();
         });
     }
 
@@ -195,7 +193,7 @@ public class HttpAddressSpaceService {
         return doRequest("Error deleting address space s", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
             addressSpaceApi.deleteAddressSpaces(namespace);
-            return Response.ok().build();
+            return Response.ok(Status.successStatus(200)).build();
         });
     }
 

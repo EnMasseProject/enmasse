@@ -35,7 +35,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             statusCode = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
         }
         Response response = Response.status(statusCode)
-                .entity(new ErrorResponse(statusCode, getReasonPhrase(statusCode), exception.getMessage()))
+                .entity(Status.failureStatus(statusCode, getReasonPhrase(statusCode), exception.getMessage()))
                 .build();
 
         if (Response.Status.Family.familyOf(statusCode) == Response.Status.Family.CLIENT_ERROR) {

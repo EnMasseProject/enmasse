@@ -4,7 +4,6 @@
  */
 package io.enmasse.api.common;
 
-import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.api.model.StatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.junit.Test;
@@ -26,8 +25,8 @@ public class DefaultExceptionMapperTest {
         Response response = new DefaultExceptionMapper().toResponse(exception);
         assertEquals(code, response.getStatus());
         assertEquals(status.getReasonPhrase(), response.getStatusInfo().getReasonPhrase());
-        assertTrue(response.getEntity() instanceof ErrorResponse);
-        ErrorResponse responseEntity = (ErrorResponse) response.getEntity();
+        assertTrue(response.getEntity() instanceof Status);
+        Status responseEntity = (Status) response.getEntity();
         assertEquals(status.getReasonPhrase(), responseEntity.getReason());
         assertEquals(message, responseEntity.getMessage());
     }
@@ -35,15 +34,15 @@ public class DefaultExceptionMapperTest {
     @Test
     public void testToResponseStatus422() {
         int code = 422;
-        Status status = new StatusBuilder().withCode(code).build();
+        io.fabric8.kubernetes.api.model.Status status = new StatusBuilder().withCode(code).build();
         String message = "Some error message";
         KubernetesClientException kubernetesClientException = new KubernetesClientException(message, code, status);
 
         Response response = new DefaultExceptionMapper().toResponse(kubernetesClientException);
         assertEquals(code, response.getStatus());
         // can't check for response.getStatusInfo().getReasonPhrase() here because 422 isn't known in Response.Status 
-        assertTrue(response.getEntity() instanceof ErrorResponse);
-        ErrorResponse responseEntity = (ErrorResponse) response.getEntity();
+        assertTrue(response.getEntity() instanceof Status);
+        Status responseEntity = (Status) response.getEntity();
         assertEquals("Unprocessable Entity", responseEntity.getReason());
         assertEquals(message, responseEntity.getMessage());
     }
