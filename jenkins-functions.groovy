@@ -1,12 +1,11 @@
 def storeArtifacts() {
-    sh './systemtests/scripts/store_kubernetes_info.sh "artifacts/openshift-info/"'
-    sh './systemtests/scripts/collect_logs.sh "/tmp/testlogs" "artifacts/openshift-logs"'
-    sh 'rm -rf /tmp/testlogs'
+    sh cmd: './systemtests/scripts/store_kubernetes_info.sh "artifacts/openshift-info/"', name: "Store kubernetes info"
+    sh cmd: './systemtests/scripts/collect_logs.sh "/tmp/testlogs" "artifacts/openshift-logs"', name: "Collecting logs"
+    sh cmd: 'rm -rf /tmp/testlogs', name: "Clear logs"
 }
 
 def tearDownOpenshift() {
-    echo "tear down openshift"
-    sh './systemtests/scripts/teardown-openshift.sh'
+    sh cmd: './systemtests/scripts/teardown-openshift.sh', name: "Tear down openshift"
 }
 
 def makePlot() {
@@ -31,22 +30,22 @@ def makePlot() {
 }
 
 def runSystemtests(String coreDir, String tag, String profile, String testCases) {
-    sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${coreDir}"
-    sh "./systemtests/scripts/run_test_component.sh 'templates/build/enmasse-${tag}' '${profile}' '${testCases}'"
+    sh cmd: "sudo ./systemtests/scripts/enable_core_dumps.sh ${coreDir}", name: "Enable core dumps"
+    sh cmd: "./systemtests/scripts/run_test_component.sh 'templates/build/enmasse-${tag}' '${profile}' '${testCases}'", name: "Running systemtests"
 }
 
 def startOpenshift() {
-    sh './systemtests/scripts/setup-openshift.sh "systemtests"'
-    sh 'sudo chmod -R 777 /var/lib/origin/ || true'
+    sh cmd: './systemtests/scripts/setup-openshift.sh "systemtests"', name: "Setup opemshift"
+    sh cmd: 'sudo chmod -R 777 /var/lib/origin/ || true', name: "Add rights to oc location"
 }
 
 def waitUntilAgentReady() {
-    sh "./systemtests/scripts/wait_until_agent_ready.sh /tmp/agent_ready"
+    sh cmd: "./systemtests/scripts/wait_until_agent_ready.sh /tmp/agent_ready", name: "Wait until server ready"
 }
 
 def buildEnmasse() {
-    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
-    sh 'make docker_tag'
+    sh cmd: 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make', name: "Build enmasse"
+    sh cmd: 'make docker_tag', name: "Docker tag images"
 }
 
 def postAction(String coresDir) {
@@ -56,10 +55,10 @@ def postAction(String coresDir) {
     //archive test results and openshift logs
     archive '**/TEST-*.xml'
     archive 'templates/install/**'
-    sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} artifacts"
+    sh cmd: "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} artifacts", name: "Compress core dumps"
     archive 'artifacts/**'
     tearDownOpenshift()
-    sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
+    sh cmd: "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}", name: "Check and clear core dumps"
     makePlot()
 }
 
