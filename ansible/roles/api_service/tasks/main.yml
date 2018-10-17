@@ -9,9 +9,6 @@
 - set_fact:
     ca_bundle: "{{ secret_result.stdout }}"
 
-- name: Grant permissions to read client CA
-  shell: oc apply -f "{{ playbook_dir }}/install/api-service/030-RoleBinding-apiserver-authentication-reader.yaml"
-
 - name: Register API Server with API Aggregator
   shell:
     cmd: |
