@@ -81,15 +81,17 @@ public class HttpUserService {
 
             String addressSpaceName = parseAddressSpace(userNameWithAddressSpace);
             checkAddressSpaceName(userNameWithAddressSpace, addressSpaceName);
-            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .orElseThrow(() -> new NotFoundException("AddressSpace " + addressSpaceName + " not found"));
+            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            if (addressSpace == null) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
             String userName = parseUserName(userNameWithAddressSpace);
             log.debug("Retrieving user {} in realm {} namespace {}", userName, realm, namespace);
             return userApi.getUserWithName(realm, userName)
                     .map(user -> Response.ok(user).build())
-                    .orElseThrow(() -> new NotFoundException("User " + userNameWithAddressSpace + " not found"));
+                    .orElseGet(() -> Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build());
         });
     }
 
@@ -119,8 +121,10 @@ public class HttpUserService {
             String addressSpaceName = parseAddressSpace(user.getMetadata().getName());
             checkAddressSpaceName(user.getMetadata().getName(), addressSpaceName);
 
-            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .orElseThrow(() -> new NotFoundException("AddressSpace " + addressSpaceName + " not found"));
+            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            if (addressSpace == null) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
             userApi.createUser(realm, user);
@@ -154,12 +158,14 @@ public class HttpUserService {
             String addressSpaceName = parseAddressSpace(user.getMetadata().getName());
             checkAddressSpaceName(user.getMetadata().getName(), addressSpaceName);
             checkMatchingUserName(userNameWithAddressSpace, user);
-            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .orElseThrow(() -> new NotFoundException("AddressSpace " + addressSpaceName + " not found"));
+            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            if (addressSpace == null) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
             if (!userApi.replaceUser(realm, user)) {
-                throw new NotFoundException("User " + user.getMetadata().getName() + " not found");
+                return Response.status(404).entity(Status.notFound("MessagingUser", user.getMetadata().getName())).build();
             }
             User replaced = userApi.getUserWithName(realm, user.getSpec().getUsername()).orElse(user);
             return Response.ok().entity(replaced).build();
@@ -176,13 +182,17 @@ public class HttpUserService {
 
             String addressSpaceName = parseAddressSpace(userNameWithAddressSpace);
             checkAddressSpaceName(userNameWithAddressSpace, addressSpaceName);
-            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .orElseThrow(() -> new NotFoundException("AddressSpace " + addressSpaceName + " not found"));
+            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            if (addressSpace == null) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
             log.debug("Deleting user {} in realm {} namespace {}", userName, realm, namespace);
-            User user = userApi.getUserWithName(realm, userName)
-                    .orElseThrow(() -> new NotFoundException("Unable to find user " + userNameWithAddressSpace));
+            User user = userApi.getUserWithName(realm, userName).orElse(null);
+            if (user == null) {
+                return Response.status(404).entity(Status.notFound("MessagingUser", user.getMetadata().getName())).build();
+            }
             userApi.deleteUser(realm, user);
             return Response.ok(Status.successStatus(200)).build();
         });

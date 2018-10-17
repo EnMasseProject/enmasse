@@ -6,8 +6,7 @@
 package io.enmasse.api.v1;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -106,14 +105,14 @@ public class AddressApiHelperTest {
         Address address = createAddress("testAddress");
         when(addressApi.getAddressWithName(same("ns"), same(address.getAddress()))).thenReturn(Optional.of(address));
         when(addressApi.deleteAddress(same(address))).thenReturn(true);
-        assertThat(helper.deleteAddress("ns", "test", address.getName()), is(true));
+        assertNotNull(helper.deleteAddress("ns", "test", address.getName()));
     }
 
     @Test
     public void testDeleteAddressNotFound() throws Exception {
         Address address = createAddress("testAddress");
         when(addressApi.getAddressWithName(same("ns"), same(address.getAddress()))).thenReturn(Optional.empty());
-        assertThat(helper.deleteAddress("ns", "test", address.getName()), is(false));
+        assertNull(helper.deleteAddress("ns", "test", address.getName()));
     }
 
     @Test
@@ -121,7 +120,7 @@ public class AddressApiHelperTest {
         Address address = createAddress("testAddress");
         when(addressApi.getAddressWithName(same("ns"), same(address.getAddress()))).thenReturn(Optional.of(address));
         when(addressApi.deleteAddress(same(address))).thenReturn(false);
-        assertThat(helper.deleteAddress("ns", "test", address.getName()), is(false));
+        assertNull(helper.deleteAddress("ns", "test", address.getName()));
     }
 
     @Test
