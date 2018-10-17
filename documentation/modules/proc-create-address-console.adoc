@@ -1,11 +1,14 @@
 // Module included in the following assemblies:
 //
-// assembly-.adoc
+// master.adoc
 
 [id='create-address-console-{context}']
 = Creating addresses using the {ProductName} Console
 
 You can create new addresses using the {ProductName} Console. The type of addresses that you can create are determined by the type of address space. For more information see the xref:ref-supported-features-table[].
+
+.Prerequisites
+* You must have created an address space. For more information see xref:create-address-space-cli-messaging[]
 
 .Procedure
 

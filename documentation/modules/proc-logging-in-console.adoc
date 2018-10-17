@@ -1,12 +1,12 @@
 / Module included in the following assemblies:
 //
-// assembly-.adoc
+// master.adoc
 
 [id='logging-into-console-{context}']
-= Logging into the {ProductName} Console
+= Accessing the {ProductName} Console
 
 .Prerequisites
-*You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the last step in xref:proc-create-address-space-cli[].
+* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the last step in xref:proc-create-address-space-cli-messaging[].
 
 .Procedure
 . In a web browser, navigate to `https://__<console-host-name>__` where `<console-host-name>` is the {ProductName} Console host name.
