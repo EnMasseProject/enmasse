@@ -189,6 +189,42 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 String.format("Console failed, does not contain %d addresses", addressCount));
     }
 
+    protected void doTestDeleteFilteredAddress() throws Exception {
+        String testString = "addressName";
+        List<AddressWebItem> items;
+        int addressTotal = 2;
+
+        Destination destQueue = Destination.destination(AddressType.QUEUE, testString + "Queue",
+                getDefaultPlan(AddressType.QUEUE), Optional.empty());
+
+        Destination destTopic = Destination.destination(AddressType.TOPIC, testString + "Topic",
+                getDefaultPlan(AddressType.TOPIC), Optional.empty());
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+        consoleWebPage.createAddressWebConsole(destQueue);
+        consoleWebPage.createAddressWebConsole(destTopic);
+
+        consoleWebPage.addAddressesFilter(FilterType.NAME, "Queue");
+        items = consoleWebPage.getAddressItems();
+
+        assertEquals(addressTotal / 2, items.size(),
+                String.format("Console failed, filter does not contain %d addresses", addressTotal / 2));
+
+        assertAddressName("Console failed, filter does not contain addresses", items, "Queue");
+
+        consoleWebPage.deleteAddressWebConsole(destQueue, false);
+        items = consoleWebPage.getAddressItems();
+        assertEquals(0, items.size());
+        log.info("filtered address has been deleted and no longer present in filter");
+
+        consoleWebPage.clearAllFilters();
+        items = consoleWebPage.getAddressItems();
+        assertEquals(addressTotal / 2, items.size());
+    }
+
     protected void doTestFilterAddressWithRegexSymbols() throws Exception {
         int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
