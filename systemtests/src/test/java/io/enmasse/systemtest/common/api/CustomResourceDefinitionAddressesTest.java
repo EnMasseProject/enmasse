@@ -115,11 +115,13 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         String output = result.getStdOut().trim();
 
         String addressString = "%s \"%s.%s\" created";
+        String address2String = "%s/%s.%s created";
         List<String> dest1Expected = Arrays.asList(
                 String.format(addressString, "address", brokered.getName(), dest1.getName()),
-                String.format(addressString, "address.enmasse.io", brokered.getName(), dest1.getName()));
+                String.format(addressString, "address.enmasse.io", brokered.getName(), dest1.getName()),
+                String.format(address2String, "address.enmasse.io", brokered.getName(), dest1.getName()));
         assertTrue(dest1Expected.contains(output),
-                String.format("Unexpected response on create custom resource '%s'", address1.toString()));
+                String.format("Unexpected response on create custom resource '%s': %s", address1.toString(), output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address1.toString()));
 
         result = CRDCmdClient.createCR(address2);
@@ -127,9 +129,10 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
         List<String> dest2Expected = Arrays.asList(
                 String.format(addressString, "address", brokered.getName(), dest2.getName()),
-                String.format(addressString, "address.enmasse.io", brokered.getName(), dest2.getName()));
+                String.format(addressString, "address.enmasse.io", brokered.getName(), dest2.getName()),
+        String.format(address2String, "address.enmasse.io", brokered.getName(), dest2.getName()));
         assertTrue(dest2Expected.contains(output),
-                String.format("Unexpected response on create custom resource '%s'", address2));
+                String.format("Unexpected response on create custom resource '%s': %s", address2, output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address2));
 
         waitForDestinationsReady(brokered, dest1, dest2);
