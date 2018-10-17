@@ -77,7 +77,7 @@ public class HttpAddressSpaceService {
             verifyAuthorized(securityContext, namespace, ResourceVerb.get);
             return addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
                     .map(addressSpace -> Response.ok(addressSpace).build())
-                    .orElseThrow(() -> new NotFoundException("Address space " + addressSpaceName + " not found"));
+                    .orElseGet(() -> Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build());
         });
     }
 
@@ -149,7 +149,7 @@ public class HttpAddressSpaceService {
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
             if (!addressSpaceApi.replaceAddressSpace(addressSpace)) {
-                throw new NotFoundException("Address space " + addressSpace.getName() + " not found");
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
             AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
             return Response.ok().entity(replaced).build();
@@ -180,10 +180,12 @@ public class HttpAddressSpaceService {
     public Response deleteAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName) throws Exception {
         return doRequest("Error deleting address space " + addressSpaceName, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
-            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .orElseThrow(() -> new NotFoundException("Unable to find address space " + addressSpaceName));
+            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            if (addressSpace == null) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
             addressSpaceApi.deleteAddressSpace(addressSpace);
-            return Response.ok(Status.successStatus(200)).build();
+            return Response.ok(Status.successStatus(200, "AddressSpace", addressSpaceName, addressSpace.getUid())).build();
         });
     }
 

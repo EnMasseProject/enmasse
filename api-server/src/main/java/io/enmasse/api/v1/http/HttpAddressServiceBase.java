@@ -68,7 +68,7 @@ public class HttpAddressServiceBase {
                         return Response.ok(entity).build();
                     }
                 }
-                throw new NotFoundException("Address " + address + " not found");
+                return Response.status(404).entity(Status.notFound("Address", address)).build();
             }
         });
     }
@@ -163,10 +163,11 @@ public class HttpAddressServiceBase {
     Response deleteAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressName) throws Exception {
         return doRequest("Error deleting address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
-            if (!apiHelper.deleteAddress(namespace, addressSpace, addressName)) {
-                throw new NotFoundException("Address " + addressName + " not found");
+            Address address = apiHelper.deleteAddress(namespace, addressSpace, addressName);
+            if (address == null) {
+                return Response.status(404).entity(Status.notFound("Address", addressName)).build();
             }
-            return Response.ok(Status.successStatus(200)).build();
+            return Response.ok(Status.successStatus(200, "Address", addressName, address.getUid())).build();
         });
     }
 
