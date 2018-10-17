@@ -56,6 +56,11 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    void testDeleteFilteredAddress() throws Exception {
+        doTestDeleteFilteredAddress();
+    }
+
+    @Test
     void testFilterAddressWithRegexSymbols() throws Exception {
         doTestFilterAddressWithRegexSymbols();
     }

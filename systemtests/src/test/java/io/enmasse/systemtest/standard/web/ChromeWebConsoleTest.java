@@ -64,6 +64,12 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testDeleteFilteredAddress() throws Exception {
+        doTestDeleteFilteredAddress();
+    }
+
+    @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testFilterAddressWithRegexSymbols() throws Exception {
         doTestFilterAddressWithRegexSymbols();
     }
