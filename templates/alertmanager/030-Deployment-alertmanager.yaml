@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+  name: alertmanager
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: alertmanager
+    spec:
+      containers:
+      - image: ${ALERTMANAGER_IMAGE}
+        name: alertmanager
+        ports:
+        - containerPort: 9093
+          name: alertmanager
+        volumeMounts:
+        - mountPath: /etc/alertmanager
+          name: alertmanager-config
+          readOnly: true
+      volumes:
+      - configMap:
+          name: alertmanager-config
+        name: alertmanager-config

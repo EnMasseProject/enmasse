@@ -1,0 +1,14 @@
+---
+- name: Apply the Prometheus configuration
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/prometheus
+- name: Create the Alertmanager configuration
+  shell: oc process -f {{ playbook_dir }}/install/alertmanager/010-ConfigMap-alertmanager-config.yaml \
+          SMTP_SERVER={{ smtp_server }} \
+          SMTP_USERNAME={{ smtp_username }}  \
+          SMTP_PASSWORD={{ smtp_password }} \
+          SMTP_FROM_ADDRESS={{ smtp_from_address }} \
+          SYS_ADMIN_EMAIL={{ sys_admin_email }} \ | oc apply -n {{ namespace }} -f -
+- name: Apply the Alertmanager configuration
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/alertmanager
+- name: Apply the Grafana configuration
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana 

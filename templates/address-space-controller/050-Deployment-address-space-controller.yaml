@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: enmasse
-    name: address-space-controller
+    component: address-space-controller
   name: address-space-controller
 spec:
   replicas: 1
@@ -12,12 +12,12 @@ spec:
   selector:
     matchLabels:
       app: enmasse
-      name: address-space-controller
+      component: address-space-controller
   template:
     metadata:
       labels:
         app: enmasse
-        name: address-space-controller
+        component: address-space-controller
     spec:
       containers:
       - env:

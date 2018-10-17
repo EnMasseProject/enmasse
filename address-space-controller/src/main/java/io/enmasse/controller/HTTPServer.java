@@ -23,8 +23,18 @@ public class HTTPServer extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) {
+
         server = vertx.createHttpServer();
-        server.requestHandler(request -> request.response().setStatusCode(HttpResponseStatus.OK.code()).end());
+        server.requestHandler(request -> request.response()
+            .setStatusCode(HttpResponseStatus.OK.code())
+            .putHeader("content-type", "text/html")
+            .end(
+                "# Address space controller\n"
+                    + "version{name=\"address-space-controller\",version=\""+System.getenv().get("VERSION")+"\"} 0\n"
+                    + "health{status=\"ok\",summary=\"address-space-controller is healthy\"} 0\n"
+            )
+        );
+
         server.listen(port, result -> {
             if (result.succeeded()) {
                 log.info("Started HTTP server listening on {}", port);

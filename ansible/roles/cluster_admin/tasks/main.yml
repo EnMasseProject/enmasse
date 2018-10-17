@@ -34,3 +34,6 @@
 - import_role:
     name: tenant_clusterroles
   when: install_tenant_clusterroles
+- import_role:
+    name: monitoring
+  when: enable_monitoring
