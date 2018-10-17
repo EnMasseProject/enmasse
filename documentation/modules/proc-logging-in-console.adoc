@@ -6,7 +6,7 @@
 = Accessing the {ProductName} Console
 
 .Prerequisites
-* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the last step in xref:proc-create-address-space-cli-messaging[].
+* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the last step in xref:proc-create-address-space-cli[].
 
 .Procedure
 . In a web browser, navigate to `https://__<console-host-name>__` where `<console-host-name>` is the {ProductName} Console host name.
