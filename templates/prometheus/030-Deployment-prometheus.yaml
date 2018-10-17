@@ -13,10 +13,11 @@ spec:
   template:
     metadata:
       labels:
+        app: enmasse
         name: prometheus
     spec:
       containers:
-      - image: prom/prometheus:v2.0.0
+      - image: ${PROMETHEUS_IMAGE}
         name: prometheus
         ports:
         - containerPort: 9090

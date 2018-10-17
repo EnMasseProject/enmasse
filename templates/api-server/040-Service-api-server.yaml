@@ -12,6 +12,10 @@ spec:
     port: 443
     protocol: TCP
     targetPort: https
+  - name: health
+    port: 8080
+    protocol: TCP
+    targetPort: http
   selector:
     component: api-server
   type: ClusterIP

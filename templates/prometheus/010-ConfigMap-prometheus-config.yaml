@@ -9,13 +9,20 @@ data:
     global:
       evaluation_interval: 60s
       scrape_interval: 60s
+    rule_files:
+      - 'rules.yaml'
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager:9093
     scrape_configs:
       - job_name: 'artemis_pod_job'
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_container_port_name]
-            action: keep
+          - action: keep
+            source_labels: [__meta_kubernetes_pod_container_port_name]
             regex: artemismetrics.*
           - action: replace
             source_labels: [__meta_kubernetes_pod_name]
@@ -24,9 +31,52 @@ data:
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_container_port_name]
-            action: keep
+          - action: keep
+            source_labels: [__meta_kubernetes_pod_container_port_name]
             regex: routermetrics.*
           - action: replace
             source_labels: [__meta_kubernetes_pod_name]
             target_label: kubernetes_pod_name
+      - job_name: component-health
+        kubernetes_sd_configs:
+        - role: service
+        metrics_path: "/metrics"
+        relabel_configs:
+        - action: keep
+          regex: health.*
+          source_labels: [__meta_kubernetes_service_port_name]
+        - action: replace
+          source_labels: [__meta_kubernetes_service_name]
+          target_label: kubernetes_pod_name
+  rules.yaml: |
+    groups:
+    - name: ComponentHealth
+      rules:
+      - alert: component-health
+        annotations:
+          description: '{{ $labels.summary }}'
+          value: "{{ $value }}"
+          severity: warning
+        expr: health == 1
+        for: 10s
+      - alert: component-health
+        annotations:
+          description: '{{ $labels.summary }}'
+          value: "{{ $value }}"
+          severity: critical
+        expr: health == 2
+        for: 10s
+      - alert: component-health
+        annotations:
+          description: '{{ $labels.summary }}'
+          value: "{{ $value }}"
+          severity: unknown
+        expr: health == 3
+        for: 10s
+      - alert: Component_Ping
+        annotations:
+          description: "Component unreachable"
+          value: "{{ $value }}"
+          severity: critical
+        expr: up != 1
+        for: 10s
