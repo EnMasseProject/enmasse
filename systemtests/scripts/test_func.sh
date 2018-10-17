@@ -27,11 +27,11 @@ function setup_test() {
 
 
     if [[ $REGISTER_API_SERVER == "true" ]]; then
-    #    if [[ $(get_openshift_version) == '3.9'* ]]; then
-        export ENABLE_RBAC="false"
-    #    else
-    #        export ENABLE_RBAC="true"
-    #    fi
+        if [[ $(get_openshift_version) == '3.9'* ]]; then
+            export ENABLE_RBAC="false"
+        else
+            export ENABLE_RBAC="true"
+        fi
     else
         export ENABLE_RBAC="true"
     fi
