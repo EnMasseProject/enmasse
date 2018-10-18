@@ -57,5 +57,4 @@
 :MetricsAppendix:
 :Downloading:
 :Minishift:
-:Supported:
 
