@@ -8,7 +8,7 @@
 You can create new addresses using the {ProductName} Console. The type of addresses that you can create are determined by the type of address space.
 
 ifdef::Supported[]
-For more information see the xref:ref-supported-features-table[].
+For more information see the xref:ref-supported-features-table-messaging[].
 endif::Supported[]
 
 .Prerequisites
