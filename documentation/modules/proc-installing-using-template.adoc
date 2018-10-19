@@ -5,7 +5,7 @@
 [id='installing-using-template-{context}']
 = Installing {ProductName} using OpenShift Template
 
-Installing {ProductName} using the OpenShift Template is useful for evaluating {ProductName}. For a production setup, it is recommended to follow xref:installing-using-ansible-{context}[] or xref:installing-using-manual-steps-{context}[].
+Installing {ProductName} using the OpenShift Template is useful for evaluating {ProductName}. For a production setup, it is recommended to follow xref:installing-using-bundle-{context}[], xref:installing-using-ansible-{context}[], or xref:installing-using-manual-steps-{context}[].
 
 .Procedure 
 
@@ -20,12 +20,12 @@ oc login -u system:admin
 +
 [options="nowrap",subs="attributes"]
 ----
-oc new-project enmasse
+oc new-project {ProductNamespace}
 ----
 
 . Deploy using `enmasse-with-standard-authservice` template
 +
 [options="nowrap",subs="attributes"]
 ----
-oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE={ProductNamespace} | oc apply -f -
 ----

@@ -8,18 +8,12 @@
 The API server provides a REST API for creating address spaces and addresses. It can also serve as an aggregated API server if it is registered as an API service.
 
 .Prerequisites
-ifeval::["{PlatformName}" == "OpenShift"]
-* To install the {ProductName} API Server on {PlatformName}, you must have `cluster-admin` access to set up the
-required roles for delegating authentication to the {PlatformName} master; otherwise, you are restricted
-to using templates for creating address spaces. For more information about how to deploy without `cluster-admin` access,
-which restricts {ProductName} to using templates, see xref:installing-without-cluster-admin-privileges-{context}[].
-endif::[]
-. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/components/api-service/*.yaml
-sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/components/api-server/*.yaml
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/api-service/\*.yaml
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/api-server/*.yaml
 ----
 
 .Procedure

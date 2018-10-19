@@ -9,11 +9,11 @@ The Address Space Controller is responsible for creating the infrastructure used
 
 .Prerequisites
 
-. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/components/address-space-controller/*.yaml
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/address-space-controller/*.yaml
 ----
 
 .Procedure

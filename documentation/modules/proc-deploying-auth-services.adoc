@@ -15,10 +15,10 @@ can be `none` (allow all), `standard` (Keycloak), or `external` (not managed by 
 ifeval::["{cmdcli}" == "kubectl"]
 . Create a certificate to use with the `none` authentication service. For testing purposes, you can create a self-signed certificate:
 +
-[options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
 mkdir -p none-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.{ProductNamespace}.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
 ----
 
 . Create a secret with the `none` authentication service certificate:
@@ -40,11 +40,11 @@ endif::[]
 
 .Prerequisites
 
-. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
-[source, subs="+quotes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/standard-authservice/*RoleBinding*.yaml
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/standard-authservice/\*RoleBinding\*.yaml
 ----
 
 .Procedure
@@ -52,10 +52,10 @@ sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/standard-auth
 ifeval::["{cmdcli}" == "kubectl"]
 . Create a certificate to use with the `standard` authentication service. For testing purposes, you can create a self-signed certificate:
 +
-[options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
 mkdir -p standard-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.{ProductNamespace}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 ----
 
 . Create a secret with the `standard` authentication service certificate:
