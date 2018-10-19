@@ -1,0 +1,29 @@
+// Module included in the following assemblies:
+//
+// assembly-.adoc
+
+[id='ref-supported-features-table-{context}']
+.Supported features reference table
+[cols="25%a,25%a,25%a,25%a",options="header"]
+|===
+|Feature | |Brokered address space |Standard address space
+.5+|Address type |Queue |Yes |Yes
+|Topic |Yes |Yes
+|Multicast |No |Yes
+|Anycast |No |Yes
+|Subscription |No |Yes
+.5+|Messaging protocol | AMQP |Yes |Yes
+|MQTT |Yes |Technology preview only
+|CORE |Yes |No
+|OpenWire |Yes |No
+|STOMP |Yes |No
+.2+|Transports |TCP |Yes |Yes
+|WebSocket |Yes |Yes
+.2+|Durable subscriptions |JMS durable subscriptions |Yes |No
+|"Named" durable subscriptions |No |Yes
+.3+|JMS |Transaction support | Yes |No
+|Selectors on queues |Yes |No
+|Message ordering guarantees (including prioritization) |Yes |No
+.1+|Scalability |Scalable distributed queues and topics
+ |No |Yes
+|===

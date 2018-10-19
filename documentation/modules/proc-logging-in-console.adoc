@@ -1,0 +1,15 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+[id='logging-into-console-{context}']
+= Accessing the {ProductName} Console
+
+.Prerequisites
+* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the last step in xref:create-address-space-cli-okd[].
+
+.Procedure
+. In a web browser, navigate to `https://__<console-host-name>__` where `<console-host-name>` is the {ProductName} Console host name.
+
+. Log in with your OpenShift user credentials.
+
