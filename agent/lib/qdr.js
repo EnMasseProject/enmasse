@@ -42,6 +42,7 @@ var Router = function (connection, router, agent) {
         this.tracking = {
             sent: 0,
             recv: 0,
+            outstanding: 0,
             unexpected_responses: 0
         };
         this.last_status = undefined;
@@ -188,21 +189,26 @@ function as_handler(resolve, reject) {
     };
 }
 
+Router.prototype._sendable = function () {
+    return this.sender.sendable() && this.tracking.outstanding < 1000;
+}
+
 Router.prototype._send_pending_requests = function () {
     if (this.address === undefined) return false;
 
     var i = 0;
-    while (i < this.requests.length && this.sender.sendable()) {
+    while (i < this.requests.length && this._sendable()) {
         this._send_request(this.requests[i++]);
     }
     this.requests.splice(0, i);
-    return this.requests.length === 0 && this.sender.sendable();
+    return this.requests.length === 0 && this._sendable();
 }
 
 Router.prototype._send_request = function (request) {
     request.reply_to = this.address;
     this.sender.send(request);
     this.tracking.sent++;
+    this.tracking.outstanding++;
     log.debug('sent: %j', request);
 }
 
@@ -275,6 +281,7 @@ Router.prototype.get_all_routers = function (current) {
 Router.prototype.incoming = function (context) {
     log.debug('recv: %j', context.message);
     this.tracking.recv++
+    this.tracking.outstanding--;
     var message = context.message;
     var handler = this.handlers[message.correlation_id];
     if (handler) {
@@ -284,6 +291,7 @@ Router.prototype.incoming = function (context) {
         this.tracking.unexpected_responses++;
         log.warn('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }
+    this._send_pending_requests();
 };
 
 Router.prototype.close = function () {
