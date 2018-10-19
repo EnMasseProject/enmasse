@@ -18,6 +18,8 @@
 var log = require("./log.js").logger();
 var util = require('util');
 
+var MAX_OUTSTANDING = process.env.MAX_OUTSTANDING_QDR_REQUESTS || 1000;
+
 var Router = function (connection, router, agent) {
     if (router) {
         this.target = agent;
@@ -190,7 +192,7 @@ function as_handler(resolve, reject) {
 }
 
 Router.prototype._sendable = function () {
-    return this.sender.sendable() && this.tracking.outstanding < 1000;
+    return this.sender.sendable() && this.tracking.outstanding < MAX_OUTSTANDING;
 }
 
 Router.prototype._send_pending_requests = function () {
