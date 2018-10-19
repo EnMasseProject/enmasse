@@ -13,6 +13,7 @@ import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.user.api.UserApi;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,10 +33,10 @@ public class StatusController implements Controller {
 
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
-        boolean isReady = isReady(addressSpace);
-        if (addressSpace.getStatus().isReady() != isReady) {
-            addressSpace.getStatus().setReady(isReady);
-        }
+        addressSpace.getStatus().setReady(true);
+        addressSpace.getStatus().clearMessages();
+        checkDeploymentsReady(addressSpace);
+        checkAuthServiceReady(addressSpace);
         return addressSpace;
     }
 
@@ -53,7 +54,7 @@ public class StatusController implements Controller {
         return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
-    private boolean isReady(AddressSpace addressSpace) throws IOException {
+    private void checkDeploymentsReady(AddressSpace addressSpace) throws IOException {
         Set<String> readyDeployments = kubernetes.getReadyDeployments().stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .collect(Collectors.toSet());
@@ -65,14 +66,21 @@ public class StatusController implements Controller {
                 .collect(Collectors.toSet());
 
         boolean isReady = readyDeployments.containsAll(requiredDeployments);
-        return isReady && checkStandardAuthservice(addressSpace);
+        if (!isReady) {
+            Set<String> missing = new HashSet<>(requiredDeployments);
+            missing.removeAll(readyDeployments);
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("Following deployments and statefulsets are not ready: " +  missing);
+        }
     }
 
-    private boolean checkStandardAuthservice(AddressSpace addressSpace) {
+    private void checkAuthServiceReady(AddressSpace addressSpace) {
         if (AuthenticationServiceType.STANDARD.equals(addressSpace.getAuthenticationService().getType())) {
-            return userApi.realmExists(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
-        } else {
-            return true;
+            boolean isReady = userApi.realmExists(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
+            if (!isReady) {
+                addressSpace.getStatus().setReady(false);
+                addressSpace.getStatus().appendMessage("Standard authentication service is not configured with realm " + addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
+            }
         }
     }
 
