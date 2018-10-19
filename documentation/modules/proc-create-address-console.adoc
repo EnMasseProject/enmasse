@@ -12,7 +12,7 @@ For more information see the xref:ref-supported-features-table-messaging[].
 endif::Supported[]
 
 .Prerequisites
-* You must have created an address space. For more information see xref:create-address-space-cli-okd[]
+* You must have created an address space. For more information see xref:create-address-space-cli-okd[].
 
 .Procedure
 
@@ -20,7 +20,7 @@ endif::Supported[]
 
 . Click *New*. The Create new address window opens.
 
-. Type a name and select the address type. If selecting *subscription*, select the topic name from the *Topic* list to which you want to create a subscription.
+. Type a name and select the address type. If selecting *subscription*, from the *Topic* list select the topic name to which you want to create a subscription.
 
 . Click *Next*.
 

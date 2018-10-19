@@ -1,0 +1,28 @@
+// Module included in the following assemblies:
+//
+//master.adoc
+:parent-context: {context}
+:context: managing-users-kube
+:cmdcli: kubectl
+
+[id='managing-users-kube-{context}']
+= Managing users on Kubernetes
+
+{ProductName} user management is only supported when using the `standard` authentication service. On Kubernetes, users can
+be managed using a Kubernetes native REST API and custom resources using the command-line tools.
+
+.Prerequisites
+
+* {ProductName} is installed with custom resources enabled
+* You must have already created an xref:con-address-space-messaging[address space]
+
+include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]
+include::../modules/proc-deleting-users-cli.adoc[leveloffset=+1]
+include::../modules/proc-managing-user-permissions-cli.adoc[leveloffset=+1]
+
+.Additional resources
+
+* xref:enmasse_rest_api[]
+
+:context: {parent-context}
+
