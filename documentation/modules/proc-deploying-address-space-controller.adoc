@@ -9,11 +9,11 @@ The Address Space Controller is responsible for creating the infrastructure used
 
 .Prerequisites
 
-* Modify the installation files according to the namespace the Address Space Controller is going to be installed in
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
-[source, subs="+quotes"]
+[options="nowrap",subs="attributes"]
 ----
-sed -i 's/myproject/_<my-namespace>_/' install/components/address-space-controller/*RoleBinding*.yaml
+sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/components/address-space-controller/*.yaml
 ----
 
 .Procedure

@@ -14,12 +14,12 @@ required roles for delegating authentication to the {PlatformName} master; other
 to using templates for creating address spaces. For more information about how to deploy without `cluster-admin` access,
 which restricts {ProductName} to using templates, see xref:installing-without-cluster-admin-privileges-{context}[].
 endif::[]
-* Modify the installation files according to the namespace the API Server is going to be installed in
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
-[source, subs="+quotes"]
+[options="nowrap",subs="attributes"]
 ----
-sed -i 's/myproject/_<my-namespace>_/' install/components/api-service/*.yaml
-sed -i 's/myproject/_<my-namespace>_/' install/components/api-server/*RoleBinding*.yaml
+sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/components/api-service/*.yaml
+sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/components/api-server/*.yaml
 ----
 
 .Procedure

@@ -16,21 +16,20 @@ include::prerequisites-kubernetes.adoc[leveloffset=+1]
 
 . Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
 
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
++
+[options="nowrap",subs="attributes"]
+----
+sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/bundles/enmasse-with-none-authservice/*.yaml
+----
+
 . Create the namespace where you want to deploy {ProductName}
 +
 [options="nowrap",subs="attributes"]
 ----
-kubectl create namespace enmasse
-kubectl config set-context $(kubectl config current-context) --namespace=enmasse
+kubectl create namespace {ProductNamespace}
+kubectl config set-context $(kubectl config current-context) --namespace={ProductNamespace}
 ----
-
-. Replace namespace references in bundle
-+
-[options="nowrap",subs="attributes"]
-----
-sed -i "s/myproject/enmasse/" install/bundles/enmasse-with-none-authservice/*.yaml
-----
-
 . Deploy using `enmasse-with-none-authservice` template
 +
 [options="nowrap",subs="attributes"]

@@ -40,11 +40,11 @@ endif::[]
 
 .Prerequisites
 
-* Modify the installation files according to the namespace the Standard Authservice is going to be installed in
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
 [source, subs="+quotes"]
 ----
-sed -i 's/myproject/_<my-namespace>_/' install/components/standard-authservice/*RoleBinding*.yaml
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/standard-authservice/*RoleBinding*.yaml
 ----
 
 .Procedure
