@@ -8,6 +8,31 @@
     <packaging>pom</packaging>
     <version>0.23-SNAPSHOT</version>
 
+    <name>EnMasse</name>
+    <url>http://enmasse.io/</url>
+    <description>
+        EnMasse is an open source project for managed, self-service messaging on Kubernetes and OpenShift .
+    </description>
+
+    <organization>
+        <name>EnMasse</name>
+        <url>http://enmasse.io/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/EnMasseProject/enmasse</url>
+        <connection>scm:git:git://github.com/EnMasseProject/enmasse.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/EnMasseProject/enmasse.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <minimum-maven-version>3.3.1</minimum-maven-version>
         <minimum-java-version>1.8.0</minimum-java-version>
