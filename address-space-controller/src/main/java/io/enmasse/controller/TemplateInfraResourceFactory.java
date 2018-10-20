@@ -8,7 +8,6 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
@@ -26,6 +25,8 @@ import java.util.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class.getName());
+    private static final String KC_IDP_HINT_NONE = "none";
+    private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
 
     private final Kubernetes kubernetes;
     private final AuthenticationServiceResolverFactory authResolverFactory;
@@ -37,19 +38,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         this.openShift = openShift;
     }
 
-    private void prepareParameters(AddressSpace addressSpace, Map<String, String> parameters) {
+    private void prepareParameters(InfraConfig infraConfig,
+                                   AddressSpace addressSpace,
+                                   Map<String, String> parameters) {
         AuthenticationService authService = addressSpace.getAuthenticationService();
         AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
-        String kcIdpHint = "";
-        if  (addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT) != null) {
-            kcIdpHint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
-            if ("none".equals(kcIdpHint)) {
-                kcIdpHint = "";
-            }
-        } else if (this.openShift && authService.getType() == AuthenticationServiceType.STANDARD) {
-            kcIdpHint = "openshift-v3";
-        }
+        Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService.getType());
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
@@ -60,7 +55,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
         parameters.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, KubeUtil.getAddressSpaceSaName(addressSpace));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getPlan());
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint);
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint.orElse(""));
 
         String encodedCaCert = authResolver.getCaSecretName(authService)
                 .map(secretName ->
@@ -87,6 +82,23 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
         parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console").getSecretName());
+    }
+
+    private Optional<String> getKcIdpHint(final InfraConfig infraConfig,
+                                final AddressSpace addressSpace,
+                                final AuthenticationServiceType authenticationServiceType) {
+
+        String kcIdpHint = null;
+        if (this.openShift && authenticationServiceType == AuthenticationServiceType.STANDARD) {
+            kcIdpHint = KC_IDP_HINT_OPENSHIFT;
+        }
+
+        kcIdpHint = infraConfig.getMetadata().getAnnotations().getOrDefault(AnnotationKeys.KC_IDP_HINT, kcIdpHint);
+
+        if  (addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT) != null) {
+            kcIdpHint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
+        }
+        return KC_IDP_HINT_NONE.equals(kcIdpHint) ? Optional.empty() : Optional.ofNullable(kcIdpHint);
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {
@@ -118,7 +130,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         Map<String, String> parameters = new HashMap<>();
 
-        prepareParameters(addressSpace, parameters);
+        prepareParameters(standardInfraConfig, addressSpace, parameters);
 
         parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
         parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
@@ -143,7 +155,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private List<HasMetadata> createBrokeredInfra(AddressSpace addressSpace, BrokeredInfraConfig brokeredInfraConfig) {
         Map<String, String> parameters = new HashMap<>();
 
-        prepareParameters(addressSpace, parameters);
+        prepareParameters(brokeredInfraConfig, addressSpace, parameters);
 
         List<ParameterValue> parameterValues = new ArrayList<>();
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
