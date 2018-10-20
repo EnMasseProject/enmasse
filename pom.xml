@@ -34,6 +34,7 @@
     </scm>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <minimum-maven-version>3.3.1</minimum-maven-version>
         <minimum-java-version>1.8.0</minimum-java-version>
 
