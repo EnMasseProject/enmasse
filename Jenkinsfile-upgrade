@@ -120,6 +120,7 @@ pipeline {
                 USE_DUMMY_ADDRESS = true
                 SKIP_CLEANUP = false
                 SYSTEMTEST_UPGRADED = true
+                TAG = "${params.START_VERSION}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
