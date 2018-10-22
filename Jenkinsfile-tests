@@ -20,6 +20,7 @@ pipeline {
     }
     environment {
         CORES_DIR = "/tmp/cores"
+        ARTIFACTS_DIR = 'artifacts'
         TAG = "latest"
         ANSIBLE_FORCE_COLOR = true
     }
@@ -61,7 +62,6 @@ pipeline {
         }
         stage('system tests') {
             environment {
-                ARTIFACTS_DIR = 'artifacts'
                 JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
                 OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
                 DOCKER_REGISTRY = credentials('docker-registry-host')
@@ -75,7 +75,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE)
+                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE, false)
                     }
                 }
             }
@@ -84,7 +84,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR)
+                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
             }
         }
         failure {

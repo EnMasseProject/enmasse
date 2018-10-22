@@ -1,0 +1,146 @@
+#!/usr/bin/env groovy
+
+def lib = evaluate readTrusted('./jenkins-functions.groovy')
+
+pipeline {
+    agent {
+        node {
+            label 'enmasse'
+        }
+    }
+    parameters {
+        string(name: 'TEST_CASE', defaultValue: 'common.upgrade.**', description: 'maven parameter for executing specific tests')
+        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
+        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
+        string(name: 'START_VERSION', defaultValue: '0.23.1', description: 'Version of enmasse which will be upgraded')
+    }
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        ansiColor('xterm')
+    }
+    environment {
+        CORES_DIR = "/tmp/cores"
+        ARTIFACTS_DIR = 'artifacts'
+        ANSIBLE_FORCE_COLOR = true
+        JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+        OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+        ENABLE_RBAC = false
+    }
+    stages {
+        stage('wait for agent ready') {
+            steps {
+                script {
+                    lib.waitUntilAgentReady()
+                }
+            }
+        }
+        stage('add description') {
+            steps {
+                script {
+                    currentBuild.description = "related build: ${params.BUILD_TAG}"
+                }
+            }
+        }
+        stage('clean') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('checkout') {
+            steps {
+                checkout scm
+                sh "git checkout ${params.COMMIT_SHA}"
+                sh "sudo chmod +x systemtests/scripts/*"
+                sh 'rm -rf artifacts && mkdir -p artifacts'
+            }
+        }
+        stage('start openshift') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    script {
+                        lib.startOpenshift()
+                    }
+                }
+            }
+        }
+        stage('deploy and run systemtests before upgrade') {
+            environment {
+                USE_DUMMY_ADDRESS = true
+                SKIP_CLEANUP = true
+                SYSTEMTEST_UPGRADED = false
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+                        lib.runSystemtests(env.CORES_DIR, params.START_VERSION, 'systemtests-upgrade', params.TEST_CASE, false)
+                    }
+                }
+            }
+        }
+        stage('upgrade and run systemtests after upgrade') {
+            environment {
+                USE_DUMMY_ADDRESS = true
+                SKIP_CLEANUP = false
+                SYSTEMTEST_UPGRADED = true
+                DOCKER_REGISTRY = credentials('docker-registry-host')
+                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
+                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
+                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
+                COMMIT = "${params.BUILD_TAG}"
+                TAG = "${params.BUILD_TAG}"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        sh "make -C templates clean"
+                        sh 'make templates || true'
+                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-upgrade', params.TEST_CASE, true)
+                    }
+                }
+            }
+        }
+//        stage('run again systemtests on upgraded version') {
+//            environment {
+//                USE_DUMMY_ADDRESS = true
+//                SKIP_CLEANUP = true
+//                SYSTEMTEST_UPGRADED = false
+//                TAG = "${params.BUILD_TAG}"
+//            }
+//            steps {
+//                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+//                    script {
+//                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-upgrade', params.TEST_CASE, true)
+//                    }
+//                }
+//            }
+//        }
+//        stage('downgrade and run systemtests after downgrade') {
+//            environment {
+//                USE_DUMMY_ADDRESS = true
+//                SKIP_CLEANUP = false
+//                SYSTEMTEST_UPGRADED = true
+//                TAG = "${params.START_VERSION}"
+//            }
+//            steps {
+//                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+//                    script {
+//                        sh "make -C templates clean"
+//                        sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+//                        lib.runSystemtests(env.CORES_DIR, params.START_VERSION, 'systemtests-upgrade', params.TEST_CASE, true)
+//                    }
+//                }
+//            }
+//        }
+    }
+    post {
+        always {
+            script {
+                lib.postAction(env.CORES_DIR, ARTIFACTS_DIR)
+            }
+        }
+        failure {
+            echo "build failed"
+        }
+    }
+}

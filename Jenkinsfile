@@ -12,6 +12,7 @@ pipeline {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
         PLANS_JOB_NAME = 'enmasse-master-common'
+        UPGRADE_JOB_NAME = 'enmasse-master-upgrade'
         MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
@@ -113,6 +114,18 @@ pipeline {
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.**'],
                                 [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
+            }
+        }
+        stage('execute upgrade') {
+            environment {
+                ACTUAL_COMMIT = readFile('actual-commit.file')
+            }
+            steps {
+                build job: env.UPGRADE_JOB_NAME, wait: false, parameters: [
+                        [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
+                        [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.upgrade.**'],
+                        [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
+                ]
             }
         }
     }
