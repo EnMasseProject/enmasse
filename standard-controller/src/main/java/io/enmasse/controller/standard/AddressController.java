@@ -177,7 +177,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             StandardInfraConfig currentConfig = cluster.getInfraConfig();
             if (!desiredConfig.equals(currentConfig)) {
                 if (version.equals(desiredConfig.getSpec().getVersion())) {
-                    if (currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
+                    if (currentConfig != null && currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
                         desiredConfig = new StandardInfraConfigBuilder(desiredConfig)
                                 .editSpec()
                                 .editBroker()
