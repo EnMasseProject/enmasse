@@ -24,7 +24,7 @@ SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
 SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
 export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
-setup_test ${ENMASSE_DIR} $(get_kubeconfig_path) true ${SKIP_SETUP}
+setup_test ${ENMASSE_DIR} $(get_kubeconfig_path) "true" ${SKIP_SETUP}
 if [ $? -ne 0 ]; then
     err_and_exit "DEPLOYMENT FAILED - tests won't be executed."
 fi

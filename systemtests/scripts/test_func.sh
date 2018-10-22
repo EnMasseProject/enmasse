@@ -37,6 +37,8 @@ function setup_test() {
         export ENABLE_RBAC="true"
     fi
 
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, register api server: ${REG_API_SERVER}, skip setup: ${SKIP_SETUP}, enable RBAC: ${ENABLE_RBAC}"
+
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
 
