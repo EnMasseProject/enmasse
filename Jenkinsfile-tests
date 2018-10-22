@@ -68,7 +68,7 @@ pipeline {
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
                 DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
-                COMMIT = "${params.BUILD_TAG}"
+                TAG = "${params.BUILD_TAG}"
                 USE_DUMMY_ADDRESS = true
             }
             steps {

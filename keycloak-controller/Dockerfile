@@ -1,7 +1,8 @@
 FROM enmasseproject/java-base:8-8
 
-ARG version=latest
-ENV VERSION ${version}
+ARG version
+ARG commit
+ENV VERSION=${version} COMMIT=${commit}
 ADD target/keycloak-controller-${VERSION}.jar /keycloak-controller.jar
 
 

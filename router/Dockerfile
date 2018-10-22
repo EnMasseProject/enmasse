@@ -1,6 +1,7 @@
 FROM enmasseproject/qdrouterd-base:1.4.1-rc1
-ARG version=latest
-ENV VERSION=${version}
+ARG version
+ARG commit
+ENV VERSION=${version} COMMIT=${commit}
 
 ADD build/router-${VERSION}.tgz /etc/qpid-dispatch/
 

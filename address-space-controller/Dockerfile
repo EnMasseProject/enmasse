@@ -2,8 +2,10 @@ FROM enmasseproject/java-base:8-8
 
 RUN yum -y install openssl && yum -y clean all
 
-ARG version=latest
-ENV VERSION ${version}
+ARG version
+ARG commit
+ENV VERSION=${version} COMMIT=${commit}
+
 ADD target/address-space-controller-${VERSION}.jar /address-space-controller.jar
 ENV LOG_LEVEL info
 
