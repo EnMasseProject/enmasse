@@ -16,7 +16,7 @@ else
 fi
 
 if [[ "${UPGRADED}" == "true" ]]; then
-    sleep 120
+    sleep 300
     EXPECTED_PODS=$(($($CMD get pods -n ${NAMESPACE} | grep -v deploy | wc -l) - 1))
 fi
 info "Expected pods: ${EXPECTED_PODS}"
