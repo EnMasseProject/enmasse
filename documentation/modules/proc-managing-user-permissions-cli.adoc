@@ -14,7 +14,15 @@ You can edit the permissions for an existing user using the command line.
 
 .Procedure
 
-. In a text editor, open the desired user file, make the desired permissions changes, and save the file.
+. Retrieve the user whose permissions you want to edit:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get messaginguser user1 -o yaml > user1-example.yaml
+----
+where `user1` is the user ID and `user-example1.yaml` is the file name for the user.
+
+. Make the desired permissions change and save the file.
 
 . From the command line, run the following command:
 +
@@ -22,5 +30,7 @@ You can edit the permissions for an existing user using the command line.
 ----
 {cmdcli} apply -f user-example1.yaml
 ----
-where `user-example1` is the file name for the user.
+where `user-example1.yaml` is the file name for the user.
++
+The new user permissions are applied.
 

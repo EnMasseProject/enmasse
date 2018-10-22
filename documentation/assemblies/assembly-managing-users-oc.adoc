@@ -13,7 +13,6 @@ be managed using the OpenShift command-line tools.
 
 .Prerequisites
 
-* {ProductName} is installed with custom resources enabled
 * You must have already created an xref:con-address-space-messaging[address space]
 
 include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]

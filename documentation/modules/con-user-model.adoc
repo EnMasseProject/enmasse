@@ -7,7 +7,7 @@
 
 You can create users to access messaging clients and the {ProductName} Console. The user definition files specify the authentication type and authorization policies.
 
-Users are configured as `MessagingUsers` resources. Users can only be created, deleted, read, and listed (but not modified).
+Users are configured as `MessagingUser` resources. Users can only be created, deleted, read, and listed (but not modified).
 
 The following example shows the `user-example1.yaml` file:
 
@@ -31,8 +31,8 @@ The `spec.authentication` object defines how the user is authenticated, whereas
 
 The supported values for the authentication type are `password` and `federated`. 
 
-NOTE: Currently `password` authentication type users can access both applications and the {ProductName} console, whereas
-`federated` authentication type users can only access the {ProductName} console.
+NOTE: Currently `password` authentication type users can access both applications and the {ProductName} Console, whereas
+`federated` authentication type users can only access the {ProductName} Console.
 
 === Password authentication type
 
