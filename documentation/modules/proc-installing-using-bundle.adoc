@@ -9,24 +9,24 @@ The simplest way to install {ProductName} is to use the predefined YAML bundles.
 
 .Prerequisites
 
-* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
-+
-[options="nowrap",subs="+quotes,attributes"]
-----
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/bundles/enmasse-with-standard-authservice/*.yaml
-----
-
 .Procedure 
 
 ifeval::["{cmdcli}" == "oc"]
-. Login as as a user with cluster-admin 
+. Log in as as a user with `cluster-admin` privileges:
 +
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} login -u system:admin
 ----
 
-. Create the project where you want to deploy {ProductName}
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/bundles/enmasse-with-standard-authservice/*.yaml
+----
+
+. Create the project where you want to deploy {ProductName}:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -34,7 +34,7 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
-. Create the namespace where you want to deploy {ProductName}
+. Create the namespace where you want to deploy {ProductName}:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -73,7 +73,7 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 endif::[]
 
-. Deploy using `enmasse-with-standard-authservice` bundle
+. Deploy using the `enmasse-with-standard-authservice` bundle:
 +
 [options="nowrap",subs="attributes"]
 ----

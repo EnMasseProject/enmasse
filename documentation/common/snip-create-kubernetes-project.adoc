@@ -1,4 +1,4 @@
-. Create the `enmasse` namespace:
+. Create the `{ProductNamespace}` namespace:
 +
 [options="nowrap",subs="attributes"]
 ----

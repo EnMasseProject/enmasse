@@ -9,15 +9,16 @@ The service broker provides an implementation of the Open Service Broker API tha
 
 .Prerequisites
 * The service broker requires the `standard` authentication service to be deployed.
-* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+
+.Procedure
+
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}`:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/service-broker/\*.yaml
 sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/cluster-service-broker/*.yaml
 ----
-
-.Procedure
 
 . Deploy the Service Broker:
 +

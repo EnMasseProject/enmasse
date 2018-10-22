@@ -7,16 +7,15 @@
 
 The API server provides a REST API for creating address spaces and addresses. It can also serve as an aggregated API server if it is registered as an API service.
 
-.Prerequisites
-* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+.Procedure
+
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/api-service/\*.yaml
 sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/api-server/*.yaml
 ----
-
-.Procedure
 
 . Register API service
 +

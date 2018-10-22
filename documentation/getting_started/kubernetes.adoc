@@ -23,7 +23,7 @@ include::prerequisites-kubernetes.adoc[leveloffset=+1]
 sed -i "s/{ProductNamespace}/_<my-namespace>_/" install/bundles/enmasse-with-none-authservice/*.yaml
 ----
 
-. Create the namespace where you want to deploy {ProductName}
+. Create the namespace where you want to deploy {ProductName}:
 +
 [options="nowrap",subs="attributes"]
 ----

@@ -38,16 +38,15 @@ endif::[]
 
 == Deploying the `standard` authentication service
 
-.Prerequisites
+.Procedure
 
-* (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}`:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/standard-authservice/\*RoleBinding*.yaml
 ----
 
-.Procedure
 
 ifeval::["{cmdcli}" == "kubectl"]
 . Create a certificate to use with the `standard` authentication service. For testing purposes, you can create a self-signed certificate:
