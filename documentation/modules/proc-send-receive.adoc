@@ -1,0 +1,33 @@
+[id='send-receive-{context}']
+= Sending and receiving messages
+
+.Prerequisites
+
+* Installed link:https://qpid.apache.org/proton/index.html[Apache Qpid Proton] python bindings.
+* An address space named `myspace` must be created.
+* An address named `myqueue` must be created.
+* An user named `user1` with password "password" must be created.
+
+.Procedure
+
+. Save python client example to a file:
++
+[source,python,options="nowrap"]
+.link:resources/client-example1.py[client-example1.py]
+----
+include::../common/client-example1.py[]
+----
+
+. Retrieve address space messaging endpoint hostname:
++
+[options="nowrap",subs=attributes+]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
+----
+
+. Run client example:
++
+[options="nowrap",subs=attributes+]
+----
+python client-example1.py -u amqps://user1:password@messaging.example1.com:443/myqueue
+----

@@ -1,0 +1,38 @@
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  type: standard <1>
+  plan: unlimited-standard <2>
+  authenticationService:
+    type: standard <3>
+  endpoints: <4>
+    - name: messaging
+      service: messaging
+      expose: <5>
+        type: route
+        routeHost: messaging.example.com
+        routeTlsTermination: passthrough
+        routeServicePort: amqps
+      cert: <6>
+        provider: certBundle
+        tlsKey: ZXhhbXBsZSAtbgo=
+        tlsCert: ZXhhbXBsZSAtbgo=
+    - name: mqtt
+      service: mqtt
+      expose:
+        type: loadbalancer
+        loadBalancerPorts:
+        - mqtt
+        - mqtts
+      cert:
+        provider: selfsigned
+    - name: console
+      service: console
+      expose:
+        type: route
+        routeTlsTermination: reencrypt
+        routeServicePort: https
+      cert:
+        provider: openshift

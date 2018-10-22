@@ -1,0 +1,28 @@
+[id='quickstart-on-kubernetes-{context}']
+= {ProductName} on Kubernetes
+
+:cmdcli: kubectl
+:parent-context: {context}
+:context: {context}-kube
+:KubePlatform: Kubernetes
+
+This guide will walk through the process of setting up {ProductName} on
+Kubernetes with clients for sending and receiving messages.
+
+include::../common/snip-prerequisites-kubernetes.adoc[leveloffset=+1]
+
+include::../common/proc-download-procedure.adoc[leveloffset=+1]
+
+include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
+
+include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]
+
+include::../modules/proc-send-receive.adoc[leveloffset=+1]
+
+We have seen how to setup {ProductName} on Kubernetes, and how to communicate with it using an AMQP client.
+
+:context: {parent-context}

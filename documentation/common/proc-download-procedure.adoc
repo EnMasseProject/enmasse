@@ -1,5 +1,7 @@
 // Module included in the following assemblies:
 //
+// assembly-getting-started-openshift.adoc
+// assembly-getting-started-kubernetes.adoc
 // assembly-installing-openshift.adoc
 // assembly-installing-kubernetes.adoc
 

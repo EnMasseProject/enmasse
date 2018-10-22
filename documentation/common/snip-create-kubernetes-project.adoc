@@ -1,13 +1,13 @@
-. Create the `{ProductNamespace}` namespace:
+. Create the `_{ProductNamespace}_` namespace:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-kubectl create namespace {ProductNamespace}
+kubectl create namespace _{ProductNamespace}_
 ----
 
-. Set the `{ProductNamespace}` namespace as the default namespace:
+. Set the `_{ProductNamespace}_` namespace as the default namespace:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-kubectl config set-context $(kubectl config current-context) --namespace={ProductNamespace}
+kubectl config set-context $(kubectl config current-context) --namespace=_{ProductNamespace}_
 ----

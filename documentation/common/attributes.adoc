@@ -11,7 +11,7 @@
 :source-highlighter: highlightjs
 :toc: left
 :linkattrs:
-:toclevels: 4
+:toclevels: 3
 
 // Product attributes
 
@@ -53,7 +53,7 @@
 // Other links
 
 // Section enablers
-:Kubernetes:
+:Kubernetes: Yes
 :InstallationAppendix:
 :MetricsAppendix:
 :Downloading:

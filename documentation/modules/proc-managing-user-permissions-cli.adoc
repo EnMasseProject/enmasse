@@ -16,7 +16,7 @@ You can edit the permissions for an existing user using the command line.
 
 . Retrieve the user whose permissions you want to edit:
 +
-[options="nowrap",subs="attributes",subs="quotes"]
+[options="nowrap",subs="attributes,+quotes"]
 ----
 {cmdcli} get messaginguser __myspace.user1__ -o yaml > __user1-example.yaml__
 ----
@@ -25,7 +25,7 @@ You can edit the permissions for an existing user using the command line.
 
 . From the command line, run the following command to apply the change:
 +
-[options="nowrap",subs="attributes",subs="quotes"]
+[options="nowrap",subs="attributes,+quotes"]
 ----
 {cmdcli} apply -f __user-example1.yaml__
 ----

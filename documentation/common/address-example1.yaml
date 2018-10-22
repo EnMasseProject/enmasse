@@ -1,0 +1,8 @@
+apiVersion: enmasse.io/v1alpha1
+kind: Address
+metadata:
+    name: myspace.myqueue <1>
+spec:
+    address: myqueue <2>
+    type: queue <3>
+    plan: pooled-queue <4>

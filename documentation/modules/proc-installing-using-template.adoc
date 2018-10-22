@@ -23,14 +23,14 @@ oc login -u system:admin
 
 . Create the project where you want to deploy {ProductName}:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-oc new-project {ProductNamespace}
+oc new-project _{ProductNamespace}_
 ----
 
 . Deploy using `enmasse-with-standard-authservice` template:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE={ProductNamespace} | oc apply -f -
+oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=_{ProductNamespace}_ | oc apply -f -
 ----

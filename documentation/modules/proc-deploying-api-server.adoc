@@ -30,7 +30,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 [options="nowrap",subs="+quotes,attributes"]
 ----
 mkdir -p api-server-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.{ProductNamespace}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server._{ProductNamespace}_.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 ----
 
 . Create a secret containing the API server certificate:
