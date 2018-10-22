@@ -26,15 +26,16 @@ function setup_test() {
     export DEFAULT_AUTHSERVICE=standard
     export REGISTER_API_SERVER=${REG_API_SERVER}
 
-
-    if [[ $REGISTER_API_SERVER == "true" ]]; then
-        if [[ $(get_openshift_version) == '3.9'* ]]; then
-            export ENABLE_RBAC="false"
+    if [[ "${ENABLE_RBAC}" != "false" ]]; then
+        if [[ "${REGISTER_API_SERVER}" == "true" ]]; then
+            if [[ $(get_openshift_version) == '3.9'* ]]; then
+                export ENABLE_RBAC="false"
+            else
+                export ENABLE_RBAC="true"
+            fi
         else
             export ENABLE_RBAC="true"
         fi
-    else
-        export ENABLE_RBAC="true"
     fi
 
     info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, register api server: ${REG_API_SERVER}, skip setup: ${SKIP_SETUP}, enable RBAC: ${ENABLE_RBAC}"

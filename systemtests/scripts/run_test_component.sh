@@ -5,6 +5,7 @@
 
 #optional envirinmnt dir
 #SYSTEMTEST_UPGRADED
+#ENABLE_RBAC
 
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
