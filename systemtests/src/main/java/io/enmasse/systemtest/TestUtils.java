@@ -622,12 +622,13 @@ public class TestUtils {
                 String host = null;
                 int port = 0;
 
-                if (endpointJson.containsKey("host")) {
-                    host = endpointJson.getString("host");
+                if (endpointJson.containsKey("externalHost")) {
+                    host = endpointJson.getString("externalHost");
                 }
 
-                if (endpointJson.containsKey("port")) {
-                    port = endpointJson.getInteger("port");
+                if (endpointJson.containsKey("externalPorts")) {
+                    JsonArray array = endpointJson.getJsonArray("externalPorts");
+                    port = array.getJsonObject(0).getInteger("port");
                 }
 
 
