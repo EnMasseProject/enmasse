@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-source ./systemtests/scripts/test_func.sh
+CURDIR=`readlink -f \`dirname $0\``
+source ${CURDIR}/test_func.sh
+
 SKIP_SETUP=${1:-false}
 ENMASSE_DIR=${2}
 REG_API_SERVER=${3:-true}

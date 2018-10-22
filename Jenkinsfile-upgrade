@@ -49,6 +49,8 @@ pipeline {
             steps {
                 checkout scm
                 sh "git checkout infra-upgrades-pipeline" //TODO: remove it before merge
+                //sh "git checkout ${params.COMMIT_SHA}" //TODO: uncomment before merge
+                sh "sudo chmod +x systemtests/scripts/*"
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
@@ -61,19 +63,21 @@ pipeline {
                 }
             }
         }
+        stage('download released version of enmasse') {
+            steps {
+                sh "./systemtests/scripts/download_released_enmasse.sh ${env.START_VERSION}"
+            }
+        }
         stage('deploy and run systemtests before upgrade') {
             environment {
                 USE_DUMMY_ADDRESS = true
                 SKIP_CLEANUP = true
                 SYSTEMTEST_UPGRADED = false
-                //COMMIT = "${params.START_VERSION}" //TODO: uncomment before merge
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        //sh "git checkout tags/${params.START_VERSION}" //TODO: uncomment before merge
-                        sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, 'latest', 'systemtests-upgrade', params.TEST_CASE, false)
+                        lib.runSystemtests(env.CORES_DIR, env.START_VERSION, 'systemtests-upgrade', params.TEST_CASE, false)
                     }
                 }
             }
@@ -93,7 +97,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        //sh "git checkout ${params.COMMIT_SHA}" //TODO: uncomment before merge
                         sh "make -C templates clean"
                         sh 'make templates || true'
                         lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-upgrade', params.TEST_CASE, true)

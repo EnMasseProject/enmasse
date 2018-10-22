@@ -385,3 +385,11 @@ function is_upgraded() {
         echo "false"
     fi
 }
+
+function download_enmasse_release() {
+    VERSION=${1:-0.23.1}
+    wget https://github.com/EnMasseProject/enmasse/releases/download/${VERSION}/enmasse-${VERSION}.tgz
+    rm -rf ${CURDIR}/../../templates/build
+    mkdir ${CURDIR}/../../templates/build -p
+    tar zxvf enmasse-${VERSION}.tgz -C ${CURDIR}/../../templates/build
+}
