@@ -121,11 +121,13 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 ExposeSpec.Builder exposeSpec = null;
                 if (endpoint.hasNonNull(Fields.HOST)) {
                     exposeSpec = new ExposeSpec.Builder();
+                    exposeSpec.setType(ExposeSpec.ExposeType.route);
                     exposeSpec.setRouteHost(endpoint.get(Fields.HOST).asText());
                 }
 
                 if (endpoint.hasNonNull(Fields.SERVICE_PORT)) {
                     exposeSpec = new ExposeSpec.Builder();
+                    exposeSpec.setType(ExposeSpec.ExposeType.route);
                     exposeSpec.setRouteServicePort(endpoint.get(Fields.SERVICE_PORT).asText());
                 }
 
