@@ -49,8 +49,7 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh "git checkout infra-upgrades-pipeline" //TODO: remove it before merge
-                //sh "git checkout ${params.COMMIT_SHA}" //TODO: uncomment before merge
+                sh "git checkout ${params.COMMIT_SHA}"
                 sh "sudo chmod +x systemtests/scripts/*"
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
