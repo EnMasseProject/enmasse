@@ -126,8 +126,16 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 }
 
                 if (endpoint.hasNonNull(Fields.SERVICE_PORT)) {
-                    exposeSpec = new ExposeSpec.Builder();
+                    if (exposeSpec == null) {
+                        exposeSpec = new ExposeSpec.Builder();
+                    }
                     exposeSpec.setType(ExposeSpec.ExposeType.route);
+                    String servicePort = endpoint.get(Fields.SERVICE_PORT).asText();
+                    if ("https".equals(servicePort)) {
+                        exposeSpec.setRouteTlsTermination(ExposeSpec.TlsTermination.reencrypt);
+                    } else {
+                        exposeSpec.setRouteTlsTermination(ExposeSpec.TlsTermination.passthrough);
+                    }
                     exposeSpec.setRouteServicePort(endpoint.get(Fields.SERVICE_PORT).asText());
                 }
 
