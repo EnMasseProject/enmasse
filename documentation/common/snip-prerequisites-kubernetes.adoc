@@ -1,6 +1,6 @@
 
 .Prerequisite
 
-To install {ProductName}, you must have Kubernetes installed. You can use
-https://github.com/kubernetes/minikube[minikube] if you want to install {ProductName} on your
-laptop.
+* To install {ProductName}, you must have Kubernetes installed. You can use https://github.com/kubernetes/minikube[minikube] if you want to install {ProductName} on your laptop.
+
+* A user on the Kubernetes cluster with `cluster-admin` permissions is required, in order to set up the required cluster roles and API services.

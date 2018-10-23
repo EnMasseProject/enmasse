@@ -1,13 +1,13 @@
-. Create the `enmasse` namespace:
+. Create the `{ProductNamespace}` namespace:
 +
 [options="nowrap",subs="attributes"]
 ----
-kubectl create namespace enmasse
+kubectl create namespace {ProductNamespace}
 ----
 
-. Set the `enmasse` namespace as the default namespace:
+. Set the `{ProductNamespace}` namespace as the default namespace:
 +
 [options="nowrap",subs="attributes"]
 ----
-kubectl config set-context $(kubectl config current-context) --namespace=enmasse
+kubectl config set-context $(kubectl config current-context) --namespace={ProductNamespace}
 ----

@@ -17,6 +17,7 @@
 
 :ProductLongName: EnMasse
 :ProductName: EnMasse
+:ProductNamespace: enmasse-infra
 :ProductVersion: 
 :ProductMajorVersion: 
 :AuthProductName: Keycloak

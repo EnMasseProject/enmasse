@@ -17,6 +17,7 @@ KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.4.3.Final"
 KEYCLOAK_PLUGIN_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-plugin:$(COMMIT)"
 KEYCLOAK_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-controller:$(COMMIT)"
 SERVICE_BROKER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/service-broker:$(COMMIT)"
+DEFAULT_PROJECT ?= "enmasse-infra"
 
 PACKAGE_DOCS_DIR=$(TOPDIR)/documentation/html
 PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
@@ -60,7 +61,7 @@ replace_images: prepare
 component_install: replace_images
 	cp -r $(BUILDDIR)/replaced/* $(PACKAGE_INSTALL_DIR)/components/
 	for i in `find $(PACKAGE_INSTALL_DIR)/components -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
+		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
@@ -115,7 +116,7 @@ $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE)/; \
 	done
 	for i in `find $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
+		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
@@ -126,7 +127,7 @@ $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE)/; \
 	done
 	for i in `find $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=myproject envsubst '$${NAMESPACE}' > $$i.tmp; \
+		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 

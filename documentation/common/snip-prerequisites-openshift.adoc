@@ -8,3 +8,5 @@ been tested to work with the latest stable release of the OpenShift Origin Clien
 * An OpenShift cluster is required. If you do not have an OpenShift cluster available, see
 link:https://github.com/minishift/minishift[Minishift^] for an example of how to run a local instance of OpenShift
 on your machine.
+
+* A user on the OpenShift cluster with `cluster-admin` permissions is required, in order to set up the required cluster roles and API services.

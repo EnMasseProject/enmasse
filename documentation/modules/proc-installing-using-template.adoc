@@ -3,29 +3,34 @@
 // assembly-installing-openshift.adoc
 
 [id='installing-using-template-{context}']
-= Installing {ProductName} using OpenShift Template
+= Installing {ProductName} using OpenShift template
 
-Installing {ProductName} using the OpenShift Template is useful for evaluating {ProductName}. For a production setup, it is recommended to follow xref:installing-using-ansible-{context}[] or xref:installing-using-manual-steps-{context}[].
+Installing {ProductName} using the OpenShift template is useful for evaluating {ProductName}. For a
+production setup, it is recommended to use one of the following installation methods instead:
+
+* xref:installing-using-bundle-{context}[]
+* xref:installing-using-ansible-{context}[]
+* xref:installing-using-manual-steps-{context}[]
 
 .Procedure 
 
-. Login as as a user with cluster-admin 
+. Log in as as a user with `cluster-admin` privileges:
 +
 [options="nowrap",subs="attributes"]
 ----
 oc login -u system:admin
 ----
 
-. Create the project where you want to deploy {ProductName}
+. Create the project where you want to deploy {ProductName}:
 +
 [options="nowrap",subs="attributes"]
 ----
-oc new-project enmasse
+oc new-project {ProductNamespace}
 ----
 
-. Deploy using `enmasse-with-standard-authservice` template
+. Deploy using `enmasse-with-standard-authservice` template:
 +
 [options="nowrap",subs="attributes"]
 ----
-oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=enmasse | oc apply -f -
+oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE={ProductNamespace} | oc apply -f -
 ----

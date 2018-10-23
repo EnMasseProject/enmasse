@@ -9,21 +9,16 @@ The service broker provides an implementation of the Open Service Broker API tha
 
 .Prerequisites
 * The service broker requires the `standard` authentication service to be deployed.
-ifeval::["{PlatformName}" == "OpenShift"]
-* To install the {ProductName} Service Broker on {PlatformName}, you must have `cluster-admin` access to set up the
-required roles for delegating authentication to the {PlatformName} master; otherwise, you are restricted
-to using templates for creating address spaces. For more information about how to deploy without `cluster-admin` access,
-which restricts {ProductName} to using templates, see xref:installing-without-cluster-admin-privileges-{context}[].
-endif::[]
-* Modify the installation files according to the namespace the Service Broker is going to be installed in
-+
-[source, subs="+quotes"]
-----
-sed -i 's/myproject/_<my-namespace>_/' install/components/service-broker/*.yaml
-sed -i 's/myproject/_<my-namespace>_/' install/components/cluster-service-broker/*.yaml
-----
 
 .Procedure
+
+. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/service-broker/\*.yaml
+sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/cluster-service-broker/*.yaml
+----
 
 . Deploy the Service Broker:
 +
