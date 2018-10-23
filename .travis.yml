@@ -37,7 +37,6 @@ env:
   - BRANCH=${TRAVIS_BRANCH}
   - PULL_REQUEST=${TRAVIS_PULL_REQUEST}
   - TAG=${TRAVIS_TAG}
-  - COMMIT=${TRAVIS_COMMIT::8}
   - DOCKER_ORG=enmasseproject
   - OPENSHIFT=https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz
   - MINIKUBE=https://storage.googleapis.com/minikube/releases/v0.28.2/minikube-linux-amd64
