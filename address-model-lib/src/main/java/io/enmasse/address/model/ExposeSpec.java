@@ -111,6 +111,10 @@ public class ExposeSpec {
 
         public ExposeSpec build() {
             Objects.requireNonNull(type);
+            if (type.equals(ExposeType.route)) {
+                Objects.requireNonNull(routeServicePort);
+                Objects.requireNonNull(routeTlsTermination);
+            }
             return new ExposeSpec(type, annotations, routeHost, routeServicePort, routeTlsTermination, loadBalancerPorts, loadBalancerSourceRanges);
         }
     }
