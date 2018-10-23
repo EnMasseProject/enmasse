@@ -14,6 +14,7 @@ import java.util.Optional;
 public final class AddressSpaceControllerOptions {
 
     private File templateDir;
+    private File resourcesDir;
     private NoneAuthServiceInfo noneAuthService;
     private StandardAuthServiceInfo standardAuthService;
     private boolean enableEventLogger;
@@ -74,12 +75,16 @@ public final class AddressSpaceControllerOptions {
         AddressSpaceControllerOptions options = new AddressSpaceControllerOptions();
 
         File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
-
         if (!templateDir.exists()) {
             throw new IllegalArgumentException("Template directory " + templateDir.getAbsolutePath() + " not found");
         }
-
         options.setTemplateDir(templateDir);
+
+        File resourcesDir = new File(getEnvOrThrow(env, "RESOURCES_DIR"));
+        if (!resourcesDir.exists()) {
+            throw new IllegalArgumentException("Resources directory " + resourcesDir.getAbsolutePath() + " not found");
+        }
+        options.setResourcesDir(resourcesDir);
 
         options.setNoneAuthService(getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null));
         options.setStandardAuthService(getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
@@ -202,5 +207,33 @@ public final class AddressSpaceControllerOptions {
 
     public void setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
         this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
+    }
+
+    public File getResourcesDir() {
+        return resourcesDir;
+    }
+
+    public void setResourcesDir(File resourcesDir) {
+        this.resourcesDir = resourcesDir;
+    }
+
+    @Override
+    public String toString() {
+        return "AddressSpaceControllerOptions{" +
+                "templateDir=" + templateDir +
+                ", resourcesDir=" + resourcesDir +
+                ", noneAuthService=" + noneAuthService +
+                ", standardAuthService=" + standardAuthService +
+                ", enableEventLogger=" + enableEventLogger +
+                ", exposeEndpointsByDefault=" + exposeEndpointsByDefault +
+                ", environment='" + environment + '\'' +
+                ", wildcardCertSecret='" + wildcardCertSecret + '\'' +
+                ", resyncInterval=" + resyncInterval +
+                ", recheckInterval=" + recheckInterval +
+                ", version='" + version + '\'' +
+                ", standardAuthserviceConfigName='" + standardAuthserviceConfigName + '\'' +
+                ", standardAuthserviceCredentialsSecretName='" + standardAuthserviceCredentialsSecretName + '\'' +
+                ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
+                '}';
     }
 }

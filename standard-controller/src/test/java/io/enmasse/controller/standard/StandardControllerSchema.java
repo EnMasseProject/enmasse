@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class StandardControllerSchema {
+public class StandardControllerSchema implements SchemaProvider {
 
     private AddressSpacePlan plan;
     private AddressSpaceType type;
@@ -151,7 +151,7 @@ public class StandardControllerSchema {
                                 "FAIL"),
                         new StandardInfraConfigSpecRouter(
                                 new StandardInfraConfigSpecRouterResources("512Mi"),
-                                "500")))))
+                                500)))))
                 .setInfraConfigDeserializer(json -> null)
                 .build();
 

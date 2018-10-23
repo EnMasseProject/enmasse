@@ -4,10 +4,8 @@ metadata:
   name: default
   labels:
     app: enmasse
-  annotations:
-    enmasse.io/template-name: brokered-space-infra
 spec:
-  version: ${ENMASSE_VERSION}
+  version: ${version}
   admin:
     resources:
       memory: 512Mi

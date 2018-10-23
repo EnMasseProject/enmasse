@@ -29,10 +29,9 @@ public class TemplateBrokerSetGeneratorTest {
     @Before
     public void setUp() {
         kubernetes = mock(Kubernetes.class);
-        Map<String, String> env = new HashMap<>();
+
         standardControllerSchema  = new StandardControllerSchema();
-        generator = new TemplateBrokerSetGenerator(kubernetes,
-                new TemplateOptions(env), "myspace", "myid", standardControllerSchema::getSchema);
+        generator = new TemplateBrokerSetGenerator(kubernetes, new StandardControllerOptions());
     }
 
     @Test
