@@ -628,7 +628,9 @@ public class TestUtils {
 
                 if (endpointJson.containsKey("externalPorts")) {
                     JsonArray array = endpointJson.getJsonArray("externalPorts");
-                    port = array.getJsonObject(0).getInteger("port");
+                    if (array.size() > 0) {
+                        port = array.getJsonObject(0).getInteger("port");
+                    }
                 }
 
 
