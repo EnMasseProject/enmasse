@@ -13,7 +13,7 @@ be managed using a Kubernetes native REST API and custom resources using the com
 
 .Prerequisites
 
-* You must have already created an xref:con-address-space-messaging[address space]
+* You must have already created an xref:con-address-space-messaging[address space].
 
 include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]
 include::../modules/proc-deleting-users-cli.adoc[leveloffset=+1]

@@ -5,7 +5,7 @@
 [id='con-user-model-{context}']
 = User model
 
-You can create users to access messaging clients and the {ProductName} Console. The user definition files specify the authentication type and authorization policies.
+You can create users to access messaging clients and the {ProductName} Console through user definition files, which specify the authentication type and authorization policies.
 
 Users are configured as `MessagingUser` resources. Users can only be created, deleted, read, and listed (but not modified).
 
