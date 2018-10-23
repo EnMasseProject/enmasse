@@ -63,7 +63,7 @@
         <spring.version>1.5.4.RELEASE</spring.version>
         <logback.version>1.1.11</logback.version>
         <netty.version>4.1.25.Final</netty.version>
-        <keycloak.version>3.4.3.Final</keycloak.version>
+        <keycloak.version>4.3.0.Final</keycloak.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jboss.logging.processor.version>2.0.1.Final</jboss.logging.processor.version>
         <protonj.version>0.27.1</protonj.version>
