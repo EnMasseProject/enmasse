@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -125,21 +126,27 @@ public class EndpointController implements Controller {
 
     private EndpointStatus exposeEndpoint(AddressSpace addressSpace, EndpointInfo endpointInfo, ExposeSpec exposeSpec) {
         EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpointInfo.endpointStatus);
-        switch (exposeSpec.getType()) {
-            case route:
-                Route route = ensureRouteExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
-                if (route != null) {
-                    statusBuilder.setExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
-                    statusBuilder.setExternalHost(route.getSpec().getHost());
-                }
-                break;
-            case loadbalancer:
-                Service service = ensureExternalServiceExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
-                if (service != null && service.getSpec().getPorts().size() > 0) {
-                    statusBuilder.setExternalHost(service.getSpec().getLoadBalancerIP());
-                    statusBuilder.setExternalPorts(endpointInfo.endpointStatus.getServicePorts());
-                }
-                break;
+        try {
+            switch (exposeSpec.getType()) {
+                case route:
+                    Route route = ensureRouteExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
+                    if (route != null) {
+                        statusBuilder.setExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
+                        statusBuilder.setExternalHost(route.getSpec().getHost());
+                    }
+                    break;
+                case loadbalancer:
+                    Service service = ensureExternalServiceExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
+                    if (service != null && service.getSpec().getPorts().size() > 0) {
+                        statusBuilder.setExternalHost(service.getSpec().getLoadBalancerIP());
+                        statusBuilder.setExternalPorts(endpointInfo.endpointStatus.getServicePorts());
+                    }
+                    break;
+            }
+        } catch (KubernetesClientException e) {
+            String error = String.format("Error exposing endpoint %s: %s", endpointInfo.endpointSpec.getName(), e.getMessage());
+            log.warn(error);
+            addressSpace.getStatus().appendMessage(error);
         }
         return statusBuilder.build();
     }

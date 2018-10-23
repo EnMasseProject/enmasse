@@ -60,11 +60,13 @@ public class SelfsignedCertProvider implements CertProvider {
             labels.put(LabelKeys.INFRA_UUID, infraUuid);
             if (cn != null) {
                 Secret ca = issueAddressSpaceCert(addressSpace, labels);
-                CertComponent component = new CertComponent(cn, namespace, info.getCertSpec().getSecretName());
-                CertSigningRequest csr = certManager.createCsr(component);
-                Cert cert = certManager.signCsr(csr, ca, hosts);
+                if (ca != null) {
+                    CertComponent component = new CertComponent(cn, namespace, info.getCertSpec().getSecretName());
+                    CertSigningRequest csr = certManager.createCsr(component);
+                    Cert cert = certManager.signCsr(csr, ca, hosts);
 
-                certManager.createSecret(cert, ca, labels);
+                    certManager.createSecret(cert, ca, labels);
+                }
             } else {
                 certManager.createSelfSignedCertSecret(info.getCertSpec().getSecretName(), labels);
             }
