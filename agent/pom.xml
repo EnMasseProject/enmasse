@@ -64,6 +64,7 @@
                              <directory>${project.basedir}</directory>
                              <includes>
                                 <include>package.json</include>
+                                <include>npm-shrinkwrap.json</include>
                              </includes>
                           </resource>
                       </resources>
