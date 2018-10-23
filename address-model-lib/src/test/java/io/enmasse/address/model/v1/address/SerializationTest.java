@@ -17,6 +17,8 @@ import org.mockito.internal.util.collections.Sets;
 import java.io.IOException;
 import java.util.*;
 
+import static io.enmasse.address.model.ExposeSpec.ExposeType.route;
+import static io.enmasse.address.model.ExposeSpec.TlsTermination.passthrough;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -135,8 +137,8 @@ public class SerializationTest {
                         .setService("messaging")
                         .setCertSpec(new CertSpec.Builder().setProvider("provider").setSecretName("mysecret").build())
                         .setExposeSpec(new ExposeSpec.Builder()
-                                .setType(ExposeSpec.ExposeType.route)
-                                .setRouteTlsTermination(ExposeSpec.TlsTermination.passthrough)
+                                .setType(route)
+                                .setRouteTlsTermination(passthrough)
                                 .setRouteServicePort("amqp")
                                 .build())
                         .build()))
@@ -178,6 +180,29 @@ public class SerializationTest {
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
         assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
+    }
+
+    @Test
+    public void testDeserializeAddressSpaceCompat() throws IOException {
+        String json = "{" +
+                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"kind\":\"AddressSpace\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"myspace\"" +
+                "}," +
+                "\"spec\":{" +
+                "  \"type\": \"standard\"," +
+                "  \"plan\": \"unlimited-standard\"," +
+                " \"endpoints\":[" +
+                "   {\"name\":\"messaging\",\"service\":\"messaging\",\"servicePort\":\"amqps\"}" +
+                "  ]"+
+                "}}";
+        AddressSpace addressSpace = CodecV1.getMapper().readValue(json, AddressSpace.class);
+        assertThat(addressSpace.getEndpoints().size(), is(1));
+        assertTrue(addressSpace.getEndpoints().get(0).getExposeSpec().isPresent());
+        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getType(), is(route));
+        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getRouteTlsTermination(), is(passthrough));
+        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getRouteServicePort(), is("amqps"));
     }
 
     @Test(expected = DeserializeException.class)
