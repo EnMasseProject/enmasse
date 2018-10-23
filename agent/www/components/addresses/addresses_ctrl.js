@@ -40,6 +40,10 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             return chart;
         };
 
+        $scope.get_address_space_type = function () {
+            return address_service.address_space_type;
+        }
+
         $scope.get_subscribers_chart_config = function (address) {
             var chart = get_donut_chart(address, 'subscribers_chart', 'Subscribers');
             var subscribers = get_total(address.shards, 'subscription_count');

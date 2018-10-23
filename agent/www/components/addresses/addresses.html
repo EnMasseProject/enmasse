@@ -88,7 +88,7 @@
             <div pf-sparkline-chart config="$parent.$parent.item.depth_series_config" chart-data="$parent.$parent.item.depth_series" chart-height="115" show-x-axis="false" show-y-axis="false"></div>
           </div>
         </div>
-        <div class="row" ng-if="$parent.item.senders + $parent.item.receivers > 0">
+        <div class="row" ng-if="$parent.item.senders + $parent.item.receivers > 0 && get_address_space_type() !== 'brokered'">
           <div class="col-md-4">
             <span>Incoming links</span>
             <div ui-grid="$parent.$parent.item.ingress_outcomes_link_table" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'ingress')"></div>
