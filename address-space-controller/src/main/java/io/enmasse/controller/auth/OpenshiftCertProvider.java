@@ -24,7 +24,7 @@ public class OpenshiftCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo) {
+    public void provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo) {
         Secret secret = client.secrets().inNamespace(namespace).withName(endpointInfo.getCertSpec().getSecretName()).get();
         if (secret == null) {
             String serviceName = KubeUtil.getAddressSpaceServiceName(endpointInfo.getServiceName(), addressSpace);
@@ -38,6 +38,5 @@ public class OpenshiftCertProvider implements CertProvider {
                         .done();
             }
         }
-        return secret;
     }
 }

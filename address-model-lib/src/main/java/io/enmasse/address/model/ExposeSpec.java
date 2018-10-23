@@ -73,8 +73,8 @@ public class ExposeSpec {
         private String routeHost;
         private String routeServicePort;
         private TlsTermination routeTlsTermination;
-        private List<String> loadBalancerPorts = new ArrayList<>();
-        private List<String> loadBalancerSourceRanges = new ArrayList<>();
+        private List<String> loadBalancerPorts = Collections.emptyList();
+        private List<String> loadBalancerSourceRanges = Collections.emptyList();
 
         public Builder setType(ExposeType type) {
             this.type = type;

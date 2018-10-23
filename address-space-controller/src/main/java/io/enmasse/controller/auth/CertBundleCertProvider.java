@@ -27,26 +27,26 @@ public class CertBundleCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo) {
+    public void provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo) {
         Secret secret = client.secrets().inNamespace(namespace).withName(endpointInfo.getCertSpec().getSecretName()).get();
         if (secret == null) {
             Map<String, String> data = new HashMap<>();
             String tlsKey = endpointInfo.getCertSpec().getTlsKey();
             String tlsCert = endpointInfo.getCertSpec().getTlsCert();
             if (tlsKey == null) {
-                log.info("tlsKey not present, not providing cert for {}", endpointInfo.getServiceName());
-                return null;
+                log.warn("tlsKey not present, not providing cert for {}", endpointInfo.getServiceName());
+                return;
             }
 
             if (tlsCert == null) {
-                log.info("tlsCert not present, not providing cert for {}", endpointInfo.getServiceName());
-                return null;
+                log.warn("tlsCert not present, not providing cert for {}", endpointInfo.getServiceName());
+                return;
             }
 
             data.put("tls.key", tlsKey);
             data.put("tls.crt", tlsCert);
             log.info("Creating cert secret with certBundle input");
-            secret = client.secrets().inNamespace(namespace).withName(endpointInfo.getCertSpec().getSecretName()).createNew()
+            client.secrets().inNamespace(namespace).withName(endpointInfo.getCertSpec().getSecretName()).createNew()
                     .editOrNewMetadata()
                     .withName(endpointInfo.getCertSpec().getSecretName())
                     .addToLabels(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID))
@@ -57,6 +57,5 @@ public class CertBundleCertProvider implements CertProvider {
                     .withData(data)
                     .done();
         }
-        return secret;
     }
 }

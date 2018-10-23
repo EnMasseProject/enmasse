@@ -12,5 +12,5 @@ import java.util.Collection;
 import java.util.Set;
 
 public interface CertProvider {
-    Secret provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo);
+    void provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo);
 }

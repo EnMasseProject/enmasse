@@ -44,7 +44,7 @@ public class SelfsignedCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, EndpointInfo info) {
+    public void provideCert(AddressSpace addressSpace, EndpointInfo info) {
         Secret secret = client.secrets().inNamespace(namespace).withName(info.getCertSpec().getSecretName()).get();
         if (secret == null) {
             List<String> hosts = info.getHosts();
@@ -64,11 +64,10 @@ public class SelfsignedCertProvider implements CertProvider {
                 CertSigningRequest csr = certManager.createCsr(component);
                 Cert cert = certManager.signCsr(csr, ca, hosts);
 
-                secret = certManager.createSecret(cert, ca, labels);
+                certManager.createSecret(cert, ca, labels);
             } else {
-                secret = certManager.createSelfSignedCertSecret(info.getCertSpec().getSecretName(), labels);
+                certManager.createSelfSignedCertSecret(info.getCertSpec().getSecretName(), labels);
             }
         }
-        return secret;
     }
 }

@@ -36,7 +36,7 @@ public class EndpointStatus {
     }
 
     public Map<String, Integer> getExternalPorts() {
-        return externalPorts;
+        return Collections.unmodifiableMap(externalPorts);
     }
 
     public Map<String, Integer> getServicePorts() {

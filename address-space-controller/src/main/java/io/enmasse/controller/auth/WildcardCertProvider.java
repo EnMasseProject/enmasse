@@ -26,7 +26,7 @@ public class WildcardCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo) {
+    public void provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo) {
         Secret secret = client.secrets().inNamespace(namespace).withName(endpointInfo.getCertSpec().getSecretName()).get();
         if (secret == null) {
             Secret wildcardSecret = null;
@@ -43,7 +43,7 @@ public class WildcardCertProvider implements CertProvider {
             data.put("tls.key", wildcardSecret.getData().get("tls.key"));
             data.put("tls.crt", wildcardSecret.getData().get("tls.crt"));
 
-            secret = client.secrets().inNamespace(namespace).createNew()
+            client.secrets().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(endpointInfo.getCertSpec().getSecretName())
                     .endMetadata()
@@ -51,6 +51,5 @@ public class WildcardCertProvider implements CertProvider {
                     .addToData(data)
                     .done();
         }
-        return secret;
     }
 }
