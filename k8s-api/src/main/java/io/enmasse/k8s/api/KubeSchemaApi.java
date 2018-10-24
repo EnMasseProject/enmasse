@@ -24,20 +24,22 @@ public class KubeSchemaApi implements SchemaApi {
     private final AddressPlanApi addressPlanApi;
     private final BrokeredInfraConfigApi brokeredInfraConfigApi;
     private final StandardInfraConfigApi standardInfraConfigApi;
+    private final boolean isOpenShift;
 
     private volatile List<AddressSpacePlan> currentAddressSpacePlans;
     private volatile List<AddressPlan> currentAddressPlans;
     private volatile List<StandardInfraConfig> currentStandardInfraConfigs;
     private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs;
 
-    public KubeSchemaApi(AddressSpacePlanApi addressSpacePlanApi, AddressPlanApi addressPlanApi, BrokeredInfraConfigApi brokeredInfraConfigApi, StandardInfraConfigApi standardInfraConfigApi) {
+    public KubeSchemaApi(AddressSpacePlanApi addressSpacePlanApi, AddressPlanApi addressPlanApi, BrokeredInfraConfigApi brokeredInfraConfigApi, StandardInfraConfigApi standardInfraConfigApi, boolean isOpenShift) {
         this.addressSpacePlanApi = addressSpacePlanApi;
         this.addressPlanApi = addressPlanApi;
         this.brokeredInfraConfigApi = brokeredInfraConfigApi;
         this.standardInfraConfigApi = standardInfraConfigApi;
+        this.isOpenShift = isOpenShift;
     }
 
-    public static KubeSchemaApi create(NamespacedOpenShiftClient openShiftClient, String namespace) {
+    public static KubeSchemaApi create(NamespacedOpenShiftClient openShiftClient, String namespace, boolean isOpenShift) {
         AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(openShiftClient, namespace, AdminCrd.addressspaceplans());
 
         AddressPlanApi addressPlanApi = new KubeAddressPlanApi(openShiftClient, namespace, AdminCrd.addressplans());
@@ -46,7 +48,7 @@ public class KubeSchemaApi implements SchemaApi {
 
         StandardInfraConfigApi standardInfraConfigApi = new KubeStandardInfraConfigApi(openShiftClient, namespace, AdminCrd.standardinfraconfigs());
 
-        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi);
+        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, isOpenShift);
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
@@ -80,12 +82,27 @@ public class KubeSchemaApi implements SchemaApi {
         }
     }
 
-    private EndpointSpec createEndpointSpec(String name, String port) {
-        return new EndpointSpec.Builder()
-                .setName(name)
-                .setService(name)
-                .setServicePort(port)
-                .build();
+    private EndpointSpec createEndpointSpec(String name, String service, String port, ExposeSpec.TlsTermination tlsTermination) {
+        if (isOpenShift) {
+            return new EndpointSpec.Builder()
+                    .setName(name)
+                    .setService(service)
+                    .setExposeSpec(new ExposeSpec.Builder()
+                            .setType(ExposeSpec.ExposeType.route)
+                            .setRouteTlsTermination(tlsTermination)
+                            .setRouteServicePort(port)
+                            .build())
+                    .build();
+        } else {
+            return new EndpointSpec.Builder()
+                    .setName(name)
+                    .setService(service)
+                    .setExposeSpec(new ExposeSpec.Builder()
+                            .setType(ExposeSpec.ExposeType.loadbalancer)
+                            .setLoadBalancerPorts(Collections.singletonList(port))
+                            .build())
+                    .build();
+        }
     }
 
     private AddressSpaceType createStandardType(List<AddressSpacePlan> addressSpacePlans, List<AddressPlan> addressPlans, List<InfraConfig> standardInfraConfigs) {
@@ -96,15 +113,10 @@ public class KubeSchemaApi implements SchemaApi {
                         "and the routers with a well defined API.");
 
         builder.setAvailableEndpoints(Arrays.asList(
-                createEndpointSpec("messaging", "amqps"),
-                new EndpointSpec.Builder()
-                        .setName("amqp-wss")
-                        .setService("messaging")
-                        .setServicePort("https")
-                        .setCertSpec(new CertSpec(null, null))
-                        .build(),
-                createEndpointSpec("mqtt", "secure-mqtt"),
-                createEndpointSpec("console", "https")));
+                createEndpointSpec("messaging", "messaging", "amqps", ExposeSpec.TlsTermination.passthrough),
+                createEndpointSpec("amqp-wss", "messaging", "https", ExposeSpec.TlsTermination.reencrypt),
+                createEndpointSpec("mqtt", "mqtt", "secure-mqtt", ExposeSpec.TlsTermination.passthrough),
+                createEndpointSpec("console", "console", "https", ExposeSpec.TlsTermination.reencrypt)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "standard".equals(plan.getAddressSpaceType()))
@@ -156,8 +168,8 @@ public class KubeSchemaApi implements SchemaApi {
         builder.setDescription("A brokered address space consists of a broker combined with a console for managing addresses.");
 
         builder.setAvailableEndpoints(Arrays.asList(
-                createEndpointSpec("messaging", "amqps"),
-                createEndpointSpec("console", "https")));
+                createEndpointSpec("messaging", "messaging", "amqps", ExposeSpec.TlsTermination.passthrough),
+                createEndpointSpec("console", "console", "https", ExposeSpec.TlsTermination.reencrypt)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "brokered".equals(plan.getAddressSpaceType()))

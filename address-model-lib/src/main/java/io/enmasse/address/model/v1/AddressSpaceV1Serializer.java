@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.*;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.address.model.ExposeSpec;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -80,14 +81,49 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                 ObjectNode e = endpoints.addObject();
                 e.put(Fields.NAME, endpoint.getName());
                 e.put(Fields.SERVICE, endpoint.getService());
-                e.put(Fields.SERVICE_PORT, endpoint.getServicePort());
 
-                endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
+                endpoint.getExposeSpec().ifPresent(exposeSpec -> {
+                    ObjectNode eSpec = e.putObject(Fields.EXPOSE);
+                    eSpec.put(Fields.TYPE, exposeSpec.getType().name());
+                    if (exposeSpec.getAnnotations() != null) {
+                        ObjectNode eSpecAnnotations = eSpec.putObject(Fields.ANNOTATIONS);
+                        for (Map.Entry<String, String> eSpecAnnotationEntry : exposeSpec.getAnnotations().entrySet()) {
+                            eSpecAnnotations.put(eSpecAnnotationEntry.getKey(), eSpecAnnotationEntry.getValue());
+                        }
+                    }
+
+                    if (exposeSpec.getType().equals(ExposeSpec.ExposeType.route)) {
+                        exposeSpec.getRouteHost().ifPresent(h -> eSpec.put(Fields.ROUTE_HOST, h));
+                        eSpec.put(Fields.ROUTE_SERVICE_PORT, exposeSpec.getRouteServicePort());
+                        eSpec.put(Fields.ROUTE_TLS_TERMINATION, exposeSpec.getRouteTlsTermination().name());
+                    } else if (exposeSpec.getType().equals(ExposeSpec.ExposeType.loadbalancer)) {
+                        if (!exposeSpec.getLoadBalancerPorts().isEmpty()) {
+                            ArrayNode eSpecPorts = eSpec.putArray(Fields.LOAD_BALANCER_PORTS);
+                            for (String range : exposeSpec.getLoadBalancerPorts()) {
+                                eSpecPorts.add(range);
+                            }
+                        }
+                        if (!exposeSpec.getLoadBalancerSourceRanges().isEmpty()) {
+                            ArrayNode eSpecLbRanges = eSpec.putArray(Fields.LOAD_BALANCER_SOURCE_RANGES);
+                            for (String range : exposeSpec.getLoadBalancerSourceRanges()) {
+                                eSpecLbRanges.add(range);
+                            }
+                        }
+                    }
+                });
                 endpoint.getCertSpec().ifPresent(cert -> {
                     ObjectNode p = e.putObject(Fields.CERT);
                     p.put(Fields.PROVIDER, cert.getProvider());
                     if (cert.getSecretName() != null) {
                         p.put(Fields.SECRET_NAME, cert.getSecretName());
+                    }
+
+                    if (cert.getTlsCert() != null) {
+                        p.put(Fields.TLS_CERT, cert.getTlsCert());
+                    }
+
+                    if (cert.getTlsKey() != null) {
+                        p.put(Fields.TLS_KEY, cert.getTlsKey());
                     }
                 });
             }
@@ -127,12 +163,17 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                     }
                 }
 
-                if (endpointStatus.getHost() != null) {
-                    e.put(Fields.HOST, endpointStatus.getHost());
+                if (endpointStatus.getExternalHost() != null) {
+                    e.put(Fields.EXTERNAL_HOST, endpointStatus.getExternalHost());
                 }
 
-                if (endpointStatus.getPort() != 0) {
-                    e.put(Fields.PORT, endpointStatus.getPort());
+                if (!endpointStatus.getExternalPorts().isEmpty()) {
+                    ArrayNode ports = e.putArray(Fields.EXTERNAL_PORTS);
+                    for (Map.Entry<String, Integer> portEntry : endpointStatus.getExternalPorts().entrySet()) {
+                        ObjectNode entry = ports.addObject();
+                        entry.put(Fields.NAME, portEntry.getKey());
+                        entry.put(Fields.PORT, portEntry.getValue());
+                    }
                 }
             }
         }

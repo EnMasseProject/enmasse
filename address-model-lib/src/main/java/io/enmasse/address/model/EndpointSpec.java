@@ -13,15 +13,13 @@ import java.util.Optional;
 public class EndpointSpec {
     private final String name;
     private final String service;
-    private final String servicePort;
-    private final String host;
+    private final ExposeSpec exposeSpec;
     private final CertSpec certSpec;
 
-    public EndpointSpec(String name, String service, String servicePort, String host, CertSpec certSpec) {
+    public EndpointSpec(String name, String service, ExposeSpec exposeSpec, CertSpec certSpec) {
         this.name = name;
         this.service = service;
-        this.servicePort = servicePort;
-        this.host = host;
+        this.exposeSpec = exposeSpec;
         this.certSpec = certSpec;
     }
 
@@ -33,12 +31,8 @@ public class EndpointSpec {
         return service;
     }
 
-    public String getServicePort() {
-        return servicePort;
-    }
-
-    public Optional<String> getHost() {
-        return Optional.ofNullable(host);
+    public Optional<ExposeSpec> getExposeSpec() {
+        return Optional.ofNullable(exposeSpec);
     }
 
     public Optional<CertSpec> getCertSpec() {
@@ -49,9 +43,8 @@ public class EndpointSpec {
     public String toString() {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
-                .append("host=").append(host).append(",")
+                .append("expose=").append(exposeSpec).append(",")
                 .append("service=").append(service).append(",")
-                .append("servicePort=").append(servicePort).append(",")
                 .append("cert=").append(certSpec).append("}")
                 .toString();
     }
@@ -59,8 +52,7 @@ public class EndpointSpec {
     public static class Builder {
         private String name;
         private String service;
-        private String servicePort;
-        private String host;
+        private ExposeSpec exposeSpec;
         private CertSpec certSpec;
 
         public Builder() {}
@@ -68,8 +60,7 @@ public class EndpointSpec {
         public Builder(EndpointSpec endpoint) {
             this.name = endpoint.getName();
             this.service = endpoint.getService();
-            this.servicePort = endpoint.getServicePort();
-            this.host = endpoint.getHost().orElse(null);
+            this.exposeSpec = endpoint.getExposeSpec().orElse(null);
             this.certSpec = endpoint.getCertSpec().orElse(null);
         }
 
@@ -83,16 +74,10 @@ public class EndpointSpec {
             return this;
         }
 
-        public Builder setHost(String host) {
-            this.host = host;
+        public Builder setExposeSpec(ExposeSpec exposeSpec) {
+            this.exposeSpec = exposeSpec;
             return this;
         }
-
-        public Builder setServicePort(String servicePort) {
-            this.servicePort = servicePort;
-            return this;
-        }
-
 
         public Builder setCertSpec(CertSpec certSpec) {
             this.certSpec = certSpec;
@@ -102,8 +87,7 @@ public class EndpointSpec {
         public EndpointSpec build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(service, "service not set");
-            Objects.requireNonNull(servicePort, "service port not set");
-            return new EndpointSpec(name, service, servicePort, host, certSpec);
+            return new EndpointSpec(name, service, exposeSpec, certSpec);
         }
     }
 }

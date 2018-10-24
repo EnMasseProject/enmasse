@@ -62,8 +62,10 @@ public class OSBBindingService extends OSBServiceBase {
             credentials.put("password", password);
             if ((parameters.containsKey("consoleAccess") && Boolean.valueOf(parameters.get("consoleAccess"))) ||
                (parameters.containsKey("consoleAdmin") && Boolean.valueOf(parameters.get("consoleAdmin")))) {
-                addressSpace.getEndpoints().stream().filter(e -> e.getName().startsWith("console")).findFirst().ifPresent(e -> {
-                    e.getHost().ifPresent(h-> credentials.put("console", "https://" + h));
+                addressSpace.getStatus().getEndpointStatuses().stream().filter(e -> e.getName().startsWith("console")).findFirst().ifPresent(e -> {
+                    if (e.getExternalHost() != null) {
+                        credentials.put("console", "https://" + e.getExternalHost());
+                    }
                 });
             }
 
@@ -84,10 +86,10 @@ public class OSBBindingService extends OSBServiceBase {
                     continue;
                 }
 
-                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpointStatus.getHost() != null) {
+                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpointStatus.getExternalHost() != null) {
                     String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
-                    credentials.put(externalPrefix + "Host", endpointStatus.getHost());
-                    credentials.put(externalPrefix + "Port", String.format("%d", endpointStatus.getPort()));
+                    credentials.put(externalPrefix + "Host", endpointStatus.getExternalHost());
+                    credentials.put(externalPrefix + "Port", String.format("%d", endpointStatus.getExternalPorts().values().iterator().next()));
                 }
                 credentials.put(prefix + "Host", endpointStatus.getServiceHost());
                 for (Map.Entry<String, Integer> servicePort : endpointStatus.getServicePorts().entrySet()) {

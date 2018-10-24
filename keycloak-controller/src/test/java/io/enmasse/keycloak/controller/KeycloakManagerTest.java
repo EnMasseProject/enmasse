@@ -165,14 +165,13 @@ public class KeycloakManagerTest {
                 .appendEndpoint(new EndpointSpec.Builder()
                         .setName("console")
                         .setService("console")
-                        .setServicePort("https")
                         .build())
                 .setStatus(new AddressSpaceStatus(true)
                         .appendEndpointStatus(new EndpointStatus.Builder()
                                 .setName("console")
                                 .setServiceHost("console.svc")
-                                .setPort(443)
-                                .setHost("console.example.com")
+                                .setExternalPorts(Collections.singletonMap("http", 443))
+                                .setExternalHost("console.example.com")
                                 .build()))
                 .setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
     }

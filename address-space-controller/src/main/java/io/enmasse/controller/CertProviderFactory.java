@@ -8,6 +8,6 @@ import io.enmasse.address.model.CertSpec;
 import io.enmasse.controller.auth.CertProvider;
 
 public interface CertProviderFactory {
-    CertProvider createProvider(CertSpec certSpec);
+    CertProvider createProvider(String providerName);
     String getDefaultProviderName();
 }

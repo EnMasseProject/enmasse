@@ -63,21 +63,16 @@ public class AuthController implements Controller {
                 EndpointInfo info = endpointInfoMap.get(spec.getService());
                 if (info != null) {
                     info.addHost(status.getServiceHost());
-                    if (status.getHost() != null && !status.getHost().isEmpty()) {
-                        info.addHost(status.getHost());
+                    if (status.getExternalHost() != null && !status.getExternalHost().isEmpty()) {
+                        info.addHost(status.getExternalHost());
                     }
                 }
             }
 
             for (EndpointInfo info : endpointInfoMap.values()) {
                 try {
-                    CertProvider certProvider = certProviderFactory.createProvider(info.getCertSpec());
-                    List<String> hosts = info.getHosts();
-                    String cn = null;
-                    if (!hosts.isEmpty()) {
-                        cn = hosts.iterator().next();
-                    }
-                    certProvider.provideCert(addressSpace, cn, hosts);
+                    CertProvider certProvider = certProviderFactory.createProvider(info.getCertSpec().getProvider());
+                    certProvider.provideCert(addressSpace, info);
                 } catch (Exception e) {
                     log.warn("Error providing certificate for service {} hosts {}: {}", info.getServiceName(), info.getHosts(), e.getMessage(), e);
                 }

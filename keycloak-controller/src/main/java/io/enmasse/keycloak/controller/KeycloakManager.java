@@ -64,8 +64,8 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
     private String getConsoleUri(EndpointStatus endpoint) {
         String uri = null;
-        if (endpoint.getHost() != null) {
-            uri = "https://" + endpoint.getHost() + "/*";
+        if (endpoint.getExternalHost() != null) {
+            uri = "https://" + endpoint.getExternalHost() + "/*";
             log.info("Using {} as redirect URI for enmasse-console", uri);
         }
         return uri;
@@ -106,7 +106,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
             EndpointStatus endpointStatus = getConsoleEndpointStatus(addressSpace);
             if (endpointStatus == null) {
                 log.info("Address space {} has no endpoints defined", addressSpace.getName());
-            } else if (endpointStatus.getHost() == null && endpointStatus.getPort() == 0) {
+            } else if (endpointStatus.getExternalHost() == null && endpointStatus.getExternalPorts().isEmpty()) {
                 log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
