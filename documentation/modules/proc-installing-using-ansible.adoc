@@ -36,9 +36,10 @@ The following Ansible configuration settings are supported:
 
 . (Optional) Create an inventory file.
 
-. Run the ansible playbook:
+. Run the Ansible playbook:
 +
-[options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
+ansible-playbook -i _inventory-file_ ansible/playbooks/openshift/deploy_all.yml
 ----
+

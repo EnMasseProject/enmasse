@@ -44,7 +44,7 @@ endif::[]
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/standard-authservice/\*RoleBinding*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/standard-authservice/\*RoleBinding*.yaml
 ----
 
 

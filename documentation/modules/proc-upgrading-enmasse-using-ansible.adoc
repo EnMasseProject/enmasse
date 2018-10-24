@@ -18,11 +18,11 @@
 oc login -u system:admin
 ----
 
-. Run the ansible playbook form the new release:
+. Run the Ansible playbook from the new release:
 +
-[options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
+ansible-playbook -i _inventory-file_ ansible/playbooks/openshift/deploy_all.yml
 ----
 
 . Monitor pods while they are restarted:
@@ -32,4 +32,5 @@ ansible-playbook -i <inventory file> ansible/playbooks/openshift/deploy_all.yml
 oc get pods -w
 ----
 +
-The upgrade should cause all pods to be restarted within a couple of minutes.
+The pods restart and become active within several minutes.
+

@@ -1,5 +1,10 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-oc.adoc
+// assembly-monitoring-kube.adoc
+
 [id='restart-component-{context}']
-= Restarting a Component
+= Restarting a component
 
 .Procedure
 
@@ -7,7 +12,8 @@
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} delete pod -l name=<component>
+{cmdcli} delete pod -l name=_component_
 ----
 
 The component will be automatically restarted in a new pod.
+

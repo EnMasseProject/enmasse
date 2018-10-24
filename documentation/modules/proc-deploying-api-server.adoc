@@ -13,8 +13,8 @@ The API server provides a REST API for creating address spaces and addresses. It
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/api-service/\*.yaml
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/api-server/*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/api-service/\*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/api-server/*.yaml
 ----
 
 . Register API service

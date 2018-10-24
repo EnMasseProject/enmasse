@@ -75,9 +75,9 @@ public class HelloWorld {
 ----
 
 with jndi.properties:
-[source,options="nowrap"]
+[source,options="nowrap",subs="+quotes,attributes"]
 ----
-connectionfactory.myFactoryLookup = amqps://<messaging-route-hostname>:443?transport.trustAll=true&transport.verifyHost=false
+connectionfactory.myFactoryLookup = amqps://_messaging-route-hostname_:443?transport.trustAll=true&transport.verifyHost=false
 queue.myQueueLookup = myqueue
 ----
 

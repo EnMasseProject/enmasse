@@ -16,8 +16,8 @@ The service broker provides an implementation of the Open Service Broker API tha
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/service-broker/\*.yaml
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/cluster-service-broker/*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/service-broker/\*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/cluster-service-broker/*.yaml
 ----
 
 . Deploy the Service Broker:
