@@ -1,6 +1,6 @@
-* Create the `{ProductNamespace}` project:
+* Create the `_{ProductNamespace}_` project:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-oc new-project {ProductNamespace}
+oc new-project _{ProductNamespace}_
 ----

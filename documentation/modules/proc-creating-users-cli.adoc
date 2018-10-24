@@ -24,7 +24,7 @@ include::../common/user-example1.yaml[]
 
 . Create the user and associated user permissions:
 +
-[options="nowrap",subs="attributes",subs="quotes"]
+[options="nowrap",subs="attributes,+quotes"]
 ----
 {cmdcli} create -f __user-example1.yaml__
 ----

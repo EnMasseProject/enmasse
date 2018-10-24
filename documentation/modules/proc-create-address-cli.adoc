@@ -4,7 +4,7 @@
 // assembly-configure-address-spaces-addresses-cli-oc.adoc
 
 [id='create-address-cli-{context}']
-= Creating an address
+= Creating addresses using the command line
 
 .Procedure
 

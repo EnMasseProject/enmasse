@@ -8,7 +8,7 @@ spec:
     type: password
     password: cGFzc3dvcmQ= # Base64 encoded
   authorization:
-    - addresses: ["queue1", "queue2", "topic*"]
+    - addresses: ["myqueue", "queue1", "queue2", "topic*"]
       operations: ["send", "recv"]
     - addresses: ["anycast1"]
       operations: ["send"]

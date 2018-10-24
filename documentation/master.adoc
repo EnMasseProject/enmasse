@@ -28,17 +28,52 @@ include::common/attributes.adoc[]
 
 = Documentation for {ProductName}
 
+Welcome to the {ProductName} documentation, where you can find information to help you learn about
+{ProductName} and start exploring its features.
+
+From getting started to trying out more advanced installation and configuration, these resources provide
+what you need to set up and manage {ProductName} as a service administrator or a messaging tenant.
+
 == Overview
 
 include::common/overview.adoc[leveloffset=+1]
 
-== Installation
+== Getting Started
 
-include::assemblies/assembly-installing-openshift.adoc[leveloffset=+2]
+include::assemblies/assembly-getting-started-openshift.adoc[leveloffset=+2]
 
-include::assemblies/assembly-installing-kubernetes.adoc[leveloffset=+2]
+include::assemblies/assembly-getting-started-kubernetes.adoc[leveloffset=+2]
 
-== Address spaces and addresses
+== Service Admin Guide
+
+The service administrator guide provides resources on how to set up and manage {ProductName},
+infrastructure configuration and plans.
+
+=== Installing {ProductName}
+
+include::assemblies/assembly-installing-openshift.adoc[leveloffset=+3]
+
+include::assemblies/assembly-installing-kubernetes.adoc[leveloffset=+3]
+
+=== Configuring {ProductName}
+
+include::assemblies/assembly-plans.adoc[leveloffset=+3]
+
+include::assemblies/assembly-infrastructure-configuration.adoc[leveloffset=+3]
+
+=== Upgrading {ProductName}
+
+include::assemblies/assembly-upgrading-enmasse.adoc[leveloffset=+3]
+
+=== Monitoring {ProductName}
+
+include::assemblies/assembly-monitoring-oc.adoc[leveloffset=+3]
+include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+3]
+
+== Tenant Guide
+
+The tenant guide provides resources on how to manage address spaces, addresses,and users as a
+messaging tenant.
 
 include::modules/con-address-space.adoc[leveloffset=+2]
 
@@ -52,50 +87,20 @@ include::modules/con-brokered-address-space.adoc[leveloffset=+2]
 
 include::assemblies/assembly-brokered-address-types.adoc[leveloffset=+3]
 
-include::assemblies/assembly-configure-address-spaces-addresses-cli-oc.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-address-spaces.adoc[leveloffset=+2]
 
-include::assemblies/assembly-configure-address-spaces-addresses-cli-kube.adoc[leveloffset=+2]
-
-include::assemblies/assembly-configure-address-spaces-addresses-restapi.adoc[leveloffset=+2]
-
-include::modules/proc-create-address-console.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-addresses.adoc[leveloffset=+2]
 
 //Accessing the Console
-include::modules/proc-logging-in-console.adoc[leveloffset=+1]
+include::modules/proc-logging-in-console.adoc[leveloffset=+2]
 
-== Managing users
-
+//Managing users
 include::modules/con-user-model.adoc[leveloffset=+2]
 include::assemblies/assembly-managing-users-kube.adoc[leveloffset=+2]
 include::assemblies/assembly-managing-users-oc.adoc[leveloffset=+2]
 
 //Connecting applications
-include::assemblies/assembly-connecting-applications.adoc[leveloffset=+1]
-
-== Address space and address plans
-
-include::assemblies/assembly-plans.adoc[leveloffset=+2]
-
-== Infrastructure configuration
-
-include::assemblies/assembly-infrastructure-configuration.adoc[leveloffset=+2]
-
-== Upgrading
-
-include::assemblies/assembly-upgrading-enmasse.adoc[leveloffset=+2]
-
-== Monitoring
-
-include::assemblies/assembly-monitoring-oc.adoc[leveloffset=+2]
-
-include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+2]
-
-[appendix]
-
-== Quick start guides
-
-include::getting_started/openshift.adoc[leveloffset=+2]
-include::getting_started/kubernetes.adoc[leveloffset=+2]
+include::assemblies/assembly-connecting-applications.adoc[leveloffset=+2]
 
 [appendix]
 

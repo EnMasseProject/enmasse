@@ -18,7 +18,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 [options="nowrap",subs="+quotes,attributes"]
 ----
 mkdir -p none-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.{ProductNamespace}.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice._{ProductNamespace}_.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
 ----
 
 . Create a secret with the `none` authentication service certificate:
@@ -54,7 +54,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 [options="nowrap",subs="+quotes,attributes"]
 ----
 mkdir -p standard-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.{ProductNamespace}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice._{ProductNamespace}_.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 ----
 
 . Create a secret with the `standard` authentication service certificate:

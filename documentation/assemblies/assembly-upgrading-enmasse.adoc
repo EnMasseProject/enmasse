@@ -15,6 +15,7 @@ Upgrading {ProductName} is done by applying the YAML files for the new version.
 :cmdcli: oc
 :context: {parent-context}-okd
 :PlatformName: OpenShift
+include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-template.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-ansible.adoc[leveloffset=+1]
 
