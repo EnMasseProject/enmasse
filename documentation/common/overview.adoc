@@ -1,7 +1,7 @@
 [[enmasse_overview]]
 EnMasse is an open source project for managed, self-service messaging on link:https://kubernetes.io[Kubernetes]. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization.
 
-The service admin can deploy and manage messaging infrastructure, while messaging tenants can request messaging resources, both using cloud-native APIs and tools.
+The service admin can deploy and manage messaging infrastructure, while messaging tenants can request messaging resources, both using both cloud-native APIs and tools.
 
 == Features
 

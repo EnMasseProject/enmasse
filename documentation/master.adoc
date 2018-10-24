@@ -31,7 +31,7 @@ include::common/attributes.adoc[]
 Welcome to the {ProductName} documentation, where you can find information to help you learn about
 {ProductName} and start exploring its features.
 
-From getting started to trying out more advanced install and configuration, these resources provide
+From getting started to trying out more advanced installation and configuration, these resources provide
 what you need to set up and manage {ProductName} as a service administrator or a messaging tenant.
 
 == Overview
@@ -72,7 +72,7 @@ include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+3]
 
 == Tenant Guide
 
-The tenant guide provides resources on how to manage address spaces, addresses and users as a
+The tenant guide provides resources on how to manage address spaces, addresses,and users as a
 messaging tenant.
 
 include::modules/con-address-space.adoc[leveloffset=+2]

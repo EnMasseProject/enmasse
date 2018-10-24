@@ -3,14 +3,14 @@
 
 .Prerequisites
 
-* Installed link:https://qpid.apache.org/proton/index.html[Apache Qpid Proton] python bindings.
+* Installed link:https://qpid.apache.org/proton/index.html[Apache Qpid Proton] Python bindings.
 * An address space named `myspace` must be created.
 * An address named `myqueue` must be created.
-* An user named `user1` with password "password" must be created.
+* A user named `user1` with password "password" must be created.
 
 .Procedure
 
-. Save python client example to a file:
+. Save Python client example to a file:
 +
 [source,python,options="nowrap"]
 .link:resources/client-example1.py[client-example1.py]
@@ -18,14 +18,14 @@
 include::../common/client-example1.py[]
 ----
 
-. Retrieve address space messaging endpoint hostname:
+. Retrieve the address space messaging endpoint host name:
 +
 [options="nowrap",subs=attributes+]
 ----
 {cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
 ----
 
-. Run client example:
+. Run the client:
 +
 [options="nowrap",subs=attributes+]
 ----
