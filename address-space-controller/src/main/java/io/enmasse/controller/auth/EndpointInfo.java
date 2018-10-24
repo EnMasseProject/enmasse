@@ -27,7 +27,7 @@ class EndpointInfo {
     }
 
     public List<String> getHosts() {
-        return hosts;
+        return Collections.unmodifiableList(hosts);
     }
 
     public EndpointInfo addHost(String host) {

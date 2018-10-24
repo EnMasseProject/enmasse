@@ -7,10 +7,14 @@ package io.enmasse.address.model;
 public class CertSpec {
     private final String provider;
     private final String secretName;
+    private final String tlsKey;
+    private final String tlsCert;
 
-    public CertSpec(String provider, String secretName) {
+    public CertSpec(String provider, String secretName, String tlsKey, String tlsCert) {
         this.provider = provider;
         this.secretName = secretName;
+        this.tlsKey = tlsKey;
+        this.tlsCert = tlsCert;
     }
 
     public String getProvider() {
@@ -21,9 +25,19 @@ public class CertSpec {
         return secretName;
     }
 
+    public String getTlsKey() {
+        return tlsKey;
+    }
+
+    public String getTlsCert() {
+        return tlsCert;
+    }
+
     public static class Builder {
         private String provider;
         private String secretName;
+        private String tlsKey;
+        private String tlsCert;
 
         public Builder() {
         }
@@ -31,6 +45,8 @@ public class CertSpec {
         public Builder(CertSpec certSpec) {
             this.provider = certSpec.provider;
             this.secretName = certSpec.secretName;
+            this.tlsKey = certSpec.tlsKey;
+            this.tlsCert = certSpec.tlsCert;
         }
 
         public String getProvider() {
@@ -41,16 +57,28 @@ public class CertSpec {
             return secretName;
         }
 
-        public void setProvider(String provider) {
+        public Builder setProvider(String provider) {
             this.provider = provider;
+            return this;
         }
 
-        public void setSecretName(String secretName) {
+        public Builder setSecretName(String secretName) {
             this.secretName = secretName;
+            return this;
+        }
+
+        public Builder setTlsKey(String tlsKey) {
+            this.tlsKey = tlsKey;
+            return this;
+        }
+
+        public Builder setTlsCert(String tlsCert) {
+            this.tlsCert = tlsCert;
+            return this;
         }
 
         public CertSpec build() {
-            return new CertSpec(provider, secretName);
+            return new CertSpec(provider, secretName, tlsKey, tlsCert);
         }
     }
 

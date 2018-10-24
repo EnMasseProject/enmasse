@@ -228,7 +228,7 @@ BrokerController.prototype.retrieve_stats = function () {
                 receivers.forEach(function (r) {
                     var q = results[0].reverse_index[r.address];
                     if (q) {
-                        r.address = q.address;
+                        r.address = q;
                     }
                 });
 

@@ -94,7 +94,6 @@ public class HTTPServerTest {
                 .appendEndpoint(new EndpointSpec.Builder()
                         .setName("foo")
                         .setService("messaging")
-                        .setServicePort("amqps")
                         .build())
                 .build();
     }

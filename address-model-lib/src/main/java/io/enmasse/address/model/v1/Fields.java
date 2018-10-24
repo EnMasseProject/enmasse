@@ -68,4 +68,14 @@ interface Fields {
     String SELF_LINK = "selfLink";
     String CREATION_TIMESTAMP = "creationTimestamp";
     String RESOURCE_VERSION = "resourceVersion";
+    String EXPOSE = "expose";
+    String ROUTE_TLS_TERMINATION = "routeTlsTermination";
+    String ROUTE_HOST = "routeHost";
+    String ROUTE_SERVICE_PORT = "routeServicePort";
+    String LOAD_BALANCER_SOURCE_RANGES = "loadBalancerSourceRanges";
+    String LOAD_BALANCER_PORTS= "loadBalancerPorts";
+    String EXTERNAL_HOST = "externalHost";
+    String EXTERNAL_PORTS = "externalPorts";
+    String TLS_CERT = "tlsCert";
+    String TLS_KEY = "tlsKey";
 }

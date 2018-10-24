@@ -74,7 +74,10 @@ function backlog (link_stats) {
 function routerName (link_stats, router) {
     return router && router.target ? router.target.split('/')[3] : undefined;
 }
-var defined_linkDetails = ['identity', 'name', 'operStatus', 'adminStatus', 'deliveryCount', 'capacity', backlog, routerName];
+function clientName (link_stats, router, connection) {
+    return connection ? connection.container : undefined;
+}
+var defined_linkDetails = ['identity', 'name', 'operStatus', 'adminStatus', 'deliveryCount', 'capacity', backlog, routerName, clientName];
 defined_linkDetails.push.apply(defined_linkDetails, defined_outcomes.map((d) => d+'Count'))
 
 function init_outcomes(outcomes) {
@@ -85,7 +88,7 @@ function init_outcomes(outcomes) {
     return outcomes;
 }
 
-function update_outcomes(outcomes, link_stats, router) {
+function update_outcomes(outcomes, link_stats, router, connection) {
     if (link_stats) {
         defined_outcomes.forEach(function (name) {
             if (link_stats[name + 'Count']) outcomes[name] += link_stats[name + 'Count'];
@@ -93,7 +96,7 @@ function update_outcomes(outcomes, link_stats, router) {
         var link_details = {}
         defined_linkDetails.forEach(function (name) {
             if (typeof name === 'function')
-              link_details[name.name] = name(link_stats, router)
+              link_details[name.name] = name(link_stats, router, connection)
             else if (link_stats[name] !== undefined) link_details[name] = link_stats[name]
         });
         link_details.lastUpdated = Date.now()
@@ -122,15 +125,17 @@ function collect_by_address(links, stats, router, connections, index) {
     for (var l in links) {
         var link = links[l];
         if (link.linkType === 'endpoint' && link.owningAddr && connections[link.connectionId + '-' + index]) {
+            var connection = connections[link.connectionId + '-' + index];
             var address = clean_address(link.owningAddr);
+
             var counts = get_stats_for_address(stats, address);
             if (link.name.indexOf('qdlink.') !== 0) {
                 if (link.linkDir === 'in') {
                     counts.senders++;
-                    update_outcomes(counts.outcomes.ingress, link, router);
+                    update_outcomes(counts.outcomes.ingress, link, router, connection);
                 } else if (link.linkDir === 'out') {
                     counts.receivers++;
-                    update_outcomes(counts.outcomes.egress, link, router);
+                    update_outcomes(counts.outcomes.egress, link, router, connection);
                 }
             }
         }
@@ -145,11 +150,11 @@ function collect_by_connection(links, connections, router, index) {
             l.deliveries = link.deliveryCount;
             if (link.linkDir === 'in') {
                 connection.senders.push(l);
-                update_outcomes(connection.outcomes.ingress, link, router);
+                update_outcomes(connection.outcomes.ingress, link, router, connection);
                 connection.messages_in += l.deliveries;
             } else if (link.linkDir === 'out') {
                 connection.receivers.push(l);
-                update_outcomes(connection.outcomes.egress, link, router);
+                update_outcomes(connection.outcomes.egress, link, router, connection);
                 connection.messages_out += l.deliveries;
             }
         }

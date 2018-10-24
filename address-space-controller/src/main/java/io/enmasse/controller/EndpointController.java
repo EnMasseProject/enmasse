@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -25,13 +26,11 @@ public class EndpointController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(EndpointController.class.getName());
     private final OpenShiftClient client;
     private final boolean exposeServicesByDefault;
-    private final boolean isOpenShift;
     private final String namespace;
 
-    public EndpointController(OpenShiftClient client, boolean exposeServicesByDefault, boolean isOpenShift) {
+    public EndpointController(OpenShiftClient client, boolean exposeServicesByDefault) {
         this.client = client;
         this.exposeServicesByDefault = exposeServicesByDefault;
-        this.isOpenShift = isOpenShift;
         namespace = client.getNamespace();
     }
 
@@ -51,7 +50,8 @@ public class EndpointController implements Controller {
         List<EndpointInfo> endpoints = collectEndpoints(addressSpace, services);
 
         /* Watch for routes and lb services */
-        List<EndpointStatus> statuses;
+
+        final List<EndpointStatus> statuses;
         if (exposeServicesByDefault) {
             statuses = exposeEndpoints(addressSpace, endpoints);
         } else {
@@ -115,35 +115,43 @@ public class EndpointController implements Controller {
         List<EndpointStatus> exposedStatuses = new ArrayList<>();
 
         for (EndpointInfo endpoint : endpoints) {
-            EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpoint.endpointStatus);
 
-            if (isOpenShift) {
-                Route route = ensureRouteExists(addressSpace, endpoint.endpointSpec);
-                if (route != null) {
-                    statusBuilder.setPort(443);
-                    statusBuilder.setHost(route.getSpec().getHost());
-                }
-            } else {
-                Service service = ensureExternalServiceExists(addressSpace, endpoint.endpointSpec);
-                if (service != null && service.getSpec().getPorts().size() > 0) {
-                    Integer nodePort = service.getSpec().getPorts().get(0).getNodePort();
-                    Integer port = service.getSpec().getPorts().get(0).getPort();
-
-                    statusBuilder.setHost(service.getSpec().getLoadBalancerIP());
-                    if (nodePort != null) {
-                        statusBuilder.setPort(nodePort);
-                    } else if (port != null) {
-                        statusBuilder.setPort(port);
-                    }
-                }
+            if (endpoint.endpointSpec.getExposeSpec().isPresent()) {
+                exposedStatuses.add(exposeEndpoint(addressSpace, endpoint, endpoint.endpointSpec.getExposeSpec().get()));
             }
-            exposedStatuses.add(statusBuilder.build());
         }
 
         return exposedStatuses;
     }
 
-    private Route ensureRouteExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {
+    private EndpointStatus exposeEndpoint(AddressSpace addressSpace, EndpointInfo endpointInfo, ExposeSpec exposeSpec) {
+        EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpointInfo.endpointStatus);
+        try {
+            switch (exposeSpec.getType()) {
+                case route:
+                    Route route = ensureRouteExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
+                    if (route != null) {
+                        statusBuilder.setExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
+                        statusBuilder.setExternalHost(route.getSpec().getHost());
+                    }
+                    break;
+                case loadbalancer:
+                    Service service = ensureExternalServiceExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
+                    if (service != null && service.getSpec().getPorts().size() > 0) {
+                        statusBuilder.setExternalHost(service.getSpec().getLoadBalancerIP());
+                        statusBuilder.setExternalPorts(endpointInfo.endpointStatus.getServicePorts());
+                    }
+                    break;
+            }
+        } catch (KubernetesClientException e) {
+            String error = String.format("Error exposing endpoint %s: %s", endpointInfo.endpointSpec.getName(), e.getMessage());
+            log.warn(error);
+            addressSpace.getStatus().appendMessage(error);
+        }
+        return statusBuilder.build();
+    }
+
+    private Route ensureRouteExists(AddressSpace addressSpace, EndpointSpec endpointSpec, ExposeSpec exposeSpec) {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         String routeName = KubeUtil.getAddressSpaceRouteName(endpointSpec.getName(), addressSpace);
 
@@ -158,54 +166,66 @@ public class EndpointController implements Controller {
                 .editOrNewMetadata()
                 .withName(routeName)
                 .withNamespace(namespace)
+                .addToAnnotations(exposeSpec.getAnnotations() != null ? exposeSpec.getAnnotations() : Collections.emptyMap())
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, serviceName)
                 .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()
-                .withHost(endpointSpec.getHost().orElse(""))
+                .withHost(endpointSpec.getExposeSpec().flatMap(ExposeSpec::getRouteHost).orElse(""))
                 .withNewTo()
                 .withName(serviceName)
                 .withKind("Service")
                 .endTo()
                 .withNewPort()
                 .editOrNewTargetPort()
-                .withStrVal(endpointSpec.getServicePort())
+                .withStrVal(exposeSpec.getRouteServicePort())
                 .endTargetPort()
                 .endPort()
                 .endSpec();
 
+
         if (endpointSpec.getCertSpec().isPresent()) {
+            ExposeSpec.TlsTermination tlsTermination = exposeSpec.getRouteTlsTermination();
             CertSpec certSpec = endpointSpec.getCertSpec().get();
-            if ("https".equals(endpointSpec.getServicePort()) && "selfsigned".equals(certSpec.getProvider())) {
-                String caSecretName = KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace);
-                Secret secret = client.secrets().inNamespace(namespace).withName(caSecretName).get();
-                if (secret != null) {
-                    String consoleCa = new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
-                    route.editOrNewSpec()
-                            .withNewTls()
-                            .withTermination("reencrypt")
-                            .withDestinationCACertificate(consoleCa)
-                            .endTls()
-                            .endSpec();
-                } else {
-                    log.info("Ca secret {} for endpoint {} does not yet exist, skipping route creation for now", caSecretName, endpointSpec);
-                    return null; // Skip this route until secret is available
-                }
-            } else {
+
+            if (tlsTermination.equals(ExposeSpec.TlsTermination.passthrough)) {
                 route.editOrNewSpec()
                     .withNewTls()
                     .withTermination("passthrough")
                     .endTls()
                     .endSpec();
+            } else if (tlsTermination.equals(ExposeSpec.TlsTermination.reencrypt)) {
+                if ("selfsigned".equals(certSpec.getProvider())) {
+                    String caSecretName = KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace);
+                    Secret secret = client.secrets().inNamespace(namespace).withName(caSecretName).get();
+                    if (secret != null) {
+                        String consoleCa = new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
+                        route.editOrNewSpec()
+                                .withNewTls()
+                                .withTermination("reencrypt")
+                                .withDestinationCACertificate(consoleCa)
+                                .endTls()
+                                .endSpec();
+                    } else {
+                        log.info("Ca secret {} for endpoint {} does not yet exist, skipping route creation for now", caSecretName, endpointSpec);
+                        return null; // Skip this route until secret is available
+                    }
+                } else {
+                    route.editOrNewSpec()
+                            .withNewTls()
+                            .withTermination("reencrypt")
+                            .endTls()
+                            .endSpec();
+                }
             }
         }
         log.info("Creating route {} for endpoint {}", routeName, endpointSpec.getName());
         return client.routes().inNamespace(namespace).create(route.build());
     }
 
-    private Service ensureExternalServiceExists(AddressSpace addressSpace, EndpointSpec endpointSpec) {
+    private Service ensureExternalServiceExists(AddressSpace addressSpace, EndpointSpec endpointSpec, ExposeSpec exposeSpec) {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         String serviceName = endpointSpec.getName() + "-" + infraUuid + "-external";
 
@@ -220,14 +240,15 @@ public class EndpointController implements Controller {
         }
 
 
-        ServicePort servicePort = null;
+        List<ServicePort> servicePorts = new ArrayList<>();
         for (ServicePort port : service.getSpec().getPorts()) {
-            if (port.getName().equals(endpointSpec.getServicePort())) {
-                servicePort = port;
-                break;
+            for (String portName : exposeSpec.getLoadBalancerPorts()) {
+                if (port.getName().equals(portName)) {
+                    servicePorts.add(port);
+                }
             }
         }
-        if (servicePort == null) {
+        if (servicePorts.isEmpty()) {
             return null;
         }
 
@@ -235,17 +256,20 @@ public class EndpointController implements Controller {
                 .editOrNewMetadata()
                 .withName(serviceName)
                 .withNamespace(namespace)
+                .addToAnnotations(exposeSpec.getAnnotations())
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace))
                 .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()
-                .withPorts(servicePort)
+                .withPorts(servicePorts)
                 .withSelector(service.getSpec().getSelector())
+                .withLoadBalancerSourceRanges(exposeSpec.getLoadBalancerSourceRanges() != null ? exposeSpec.getLoadBalancerSourceRanges() : Collections.emptyList())
                 .withType("LoadBalancer")
                 .endSpec();
 
+        log.info("Creating loadbalancer service {} for endpoint {}", serviceName, endpointSpec.getName());
         return client.services().inNamespace(namespace).create(svc.build());
     }
 

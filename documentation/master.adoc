@@ -63,8 +63,11 @@ include::modules/proc-create-address-console.adoc[leveloffset=+2]
 //Accessing the Console
 include::modules/proc-logging-in-console.adoc[leveloffset=+1]
 
-//Managing users
-include::assemblies/assembly-managing-users.adoc[leveloffset=+1]
+== Managing users
+
+include::modules/con-user-model.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-users-kube.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-users-oc.adoc[leveloffset=+2]
 
 //Connecting applications
 include::assemblies/assembly-connecting-applications.adoc[leveloffset=+1]

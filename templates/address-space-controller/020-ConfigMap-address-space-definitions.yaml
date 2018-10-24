@@ -577,6 +577,7 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
+          enmasse.io/service-port.https: 8081
         labels:
           app: enmasse
           infraType: standard
@@ -928,6 +929,10 @@ data:
       kind: Secret
       metadata:
         name: authservice-ca.${INFRA_UUID}
+        labels:
+          app: enmasse
+          infraUuid: ${INFRA_UUID}
+          infraType: brokered
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
@@ -1086,6 +1091,8 @@ data:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
+          enmasse.io/service-port.amqp: 5672
+          enmasse.io/service-port.amqps: 5671
         labels:
           app: enmasse
           infraType: brokered
@@ -1228,6 +1235,7 @@ data:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
           namespace: ${ADDRESS_SPACE_NAMESPACE}
+          enmasse.io/service-port.https: 8081
         labels:
           app: enmasse
           infraType: brokered

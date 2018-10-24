@@ -17,6 +17,8 @@ import org.mockito.internal.util.collections.Sets;
 import java.io.IOException;
 import java.util.*;
 
+import static io.enmasse.address.model.ExposeSpec.ExposeType.route;
+import static io.enmasse.address.model.ExposeSpec.TlsTermination.passthrough;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -125,16 +127,20 @@ public class SerializationTest {
                 .setStatus(new AddressSpaceStatus(true).appendMessage("hello").appendEndpointStatus(
                         new EndpointStatus.Builder()
                         .setName("myendpoint")
-                        .setHost("example.com")
-                        .setPort(443)
+                        .setExternalHost("example.com")
+                        .setExternalPorts(Collections.singletonMap("amqps", 443))
                         .setServiceHost("messaging.svc")
                         .setServicePorts(Collections.singletonMap("amqp", 5672))
                         .build()))
                 .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
-                        .setServicePort("amqp")
-                        .setCertSpec(new CertSpec("provider", "mysecret"))
+                        .setCertSpec(new CertSpec.Builder().setProvider("provider").setSecretName("mysecret").build())
+                        .setExposeSpec(new ExposeSpec.Builder()
+                                .setType(route)
+                                .setRouteTlsTermination(passthrough)
+                                .setRouteServicePort("amqp")
+                                .build())
                         .build()))
                 .setAuthenticationService(new AuthenticationService.Builder()
                         .setType(AuthenticationServiceType.EXTERNAL)
@@ -162,8 +168,8 @@ public class SerializationTest {
         assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
         assertThat(deserialized.getStatus().getEndpointStatuses().size(), is(addressSpace.getEndpoints().size()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getName(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getName()));
-        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getHost()));
-        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getPort(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getPort()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalHost()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalPorts().get(0), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalPorts().get(0)));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServiceHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServiceHost()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServicePorts(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServicePorts()));
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
@@ -174,6 +180,29 @@ public class SerializationTest {
         assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
         assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
+    }
+
+    @Test
+    public void testDeserializeAddressSpaceCompat() throws IOException {
+        String json = "{" +
+                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"kind\":\"AddressSpace\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"myspace\"" +
+                "}," +
+                "\"spec\":{" +
+                "  \"type\": \"standard\"," +
+                "  \"plan\": \"unlimited-standard\"," +
+                " \"endpoints\":[" +
+                "   {\"name\":\"messaging\",\"service\":\"messaging\",\"servicePort\":\"amqps\"}" +
+                "  ]"+
+                "}}";
+        AddressSpace addressSpace = CodecV1.getMapper().readValue(json, AddressSpace.class);
+        assertThat(addressSpace.getEndpoints().size(), is(1));
+        assertTrue(addressSpace.getEndpoints().get(0).getExposeSpec().isPresent());
+        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getType(), is(route));
+        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getRouteTlsTermination(), is(passthrough));
+        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getRouteServicePort(), is("amqps"));
     }
 
     @Test(expected = DeserializeException.class)
@@ -410,7 +439,6 @@ public class SerializationTest {
                 .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
-                        .setServicePort("amqp")
                         .build()))
                 .build();
 
@@ -423,8 +451,7 @@ public class SerializationTest {
                 .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
                         .setName("bestendpoint")
                         .setService("mqtt")
-                        .setServicePort("mqtts")
-                        .setCertSpec(new CertSpec("myprovider", "mysecret"))
+                        .setCertSpec(new CertSpec.Builder().setProvider("myprovider").setSecretName("mysecret").build())
                         .build()))
                 .build();
 

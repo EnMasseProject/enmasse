@@ -5,9 +5,9 @@ DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
 NAMESPACE       ?= $(shell oc project -q)
-COMMIT          ?= latest
-TAG             ?= latest
+COMMIT 			?= $(shell git rev-parse HEAD)
 VERSION         ?= $(shell cat $(TOPDIR)/release.version)
+TAG             ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
 
@@ -23,11 +23,11 @@ clean: clean_node
 	rm -rf build
 
 docker_build: package
-	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) . ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) --build-arg commit=$(COMMIT) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi
 	docker images | grep $(PROJECT_PREFIX)
 
 docker_tag:
-	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
 
 docker_push:
 	if [ -f Dockerfile ] ; \

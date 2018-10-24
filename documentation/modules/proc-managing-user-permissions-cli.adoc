@@ -1,0 +1,34 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-users-oc.adoc
+// assembly-managing-users-kube.adoc
+
+[id='proc-managing-user-permissions-cli-{context}']
+= Managing user permissions using the command line
+
+You can edit the permissions for an existing user using the command line.
+
+.Prerequisites
+
+* You must have already created a user. For more information see xref:proc-creating-users-cli-managing-users-oc[].
+
+.Procedure
+
+. Retrieve the user whose permissions you want to edit:
++
+[options="nowrap",subs="attributes",subs="quotes"]
+----
+{cmdcli} get messaginguser __myspace.user1__ -o yaml > __user1-example.yaml__
+----
+
+. Make the desired permissions change and save the file.
+
+. From the command line, run the following command to apply the change:
++
+[options="nowrap",subs="attributes",subs="quotes"]
+----
+{cmdcli} apply -f __user-example1.yaml__
+----
++
+The new user permissions are applied.
+

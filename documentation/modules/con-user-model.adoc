@@ -1,20 +1,15 @@
 // Module included in the following assemblies:
 //
-// <List assemblies here, each on a new line>
+// master.adoc
 
-// Base the file name and the ID on the module title. For example:
-// * file name: my-concept-module-a.adoc
-// * ID: [id='my-concept-module-a']
-// * Title: = My concept module A
-
-// The ID is used as an anchor for linking to the module. Avoid changing it after the module has been published to ensure existing links are not broken.
 [id='con-user-model-{context}']
-// The `context` attribute enables module reuse. Every module's ID includes {context}, which ensures that the module has a unique ID even if it is reused multiple times in a guide.
 = User model
 
-Users define authentication and authorization for messaging clients and console users. Users are
-configured as `MessagingUsers` resources. Users can only be created, deleted, read and listed (not
-modified). Following is an example user:
+You can create users to access messaging clients and the {ProductName} Console through user definition files, which specify the authentication type and authorization policies.
+
+Users are configured as `MessagingUser` resources. Users can only be created, deleted, read, and listed (but not modified).
+
+The following example shows the `user-example1.yaml` file:
 
 [source,yaml,options="nowrap"]
 .link:resources/user-example1.yaml[user-example1.yaml]
@@ -36,8 +31,8 @@ The `spec.authentication` object defines how the user is authenticated, whereas
 
 The supported values for the authentication type are `password` and `federated`. 
 
-NOTE: At present, `password` type users can be used for both applications and console users, whereas
-`federated` type users will only work when using the messaging console.
+NOTE: Currently `password` authentication type users can access both applications and the {ProductName} Console, whereas
+`federated` authentication type users can only access the {ProductName} Console.
 
 === Password authentication type
 
@@ -54,15 +49,15 @@ bXktcGFzc3dvcmQ=
 
 === Federated authentication type
 
-For the `federated` type, an additional field `provider` must be specified. The supported values
-depend on the identity providers configured for the address space. The fields `federatedUsername`
-and `federatedUserid` must be set, and should map to the username and userid in the federated
+For the `federated` type, the `provider` field must also be specified. The supported values
+depend on the identity providers configured for the address space. The `federatedUsername`
+and `federatedUserid` fields must be set, and must map to the `username` and `userid` in the federated
 identity provider.
 
 == Authorization
 
 In addition, authorization policies can be defined using operations and addresses. Valid operations
-are `send`, `recv`, `view`, `manage`. If addresses are omitted, operations will be applied to all
+are `send`, `recv`, `view`, and `manage`. If addresses are not specified, operations will be applied to all
 addresses.
 
 .Additional resources

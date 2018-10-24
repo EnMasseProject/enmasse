@@ -12,20 +12,18 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SelfsignedCertProvider implements CertProvider {
     private static final Logger log = LoggerFactory.getLogger(SelfsignedCertProvider.class);
     private final OpenShiftClient client;
-    private final CertSpec certSpec;
     private final CertManager certManager;
     private final String namespace;
 
-    public SelfsignedCertProvider(OpenShiftClient client, CertSpec certSpec, CertManager certManager) {
+    public SelfsignedCertProvider(OpenShiftClient client, CertManager certManager) {
         this.client = client;
-        this.certSpec = certSpec;
         this.certManager = certManager;
         this.namespace = client.getNamespace();
     }
@@ -46,26 +44,32 @@ public class SelfsignedCertProvider implements CertProvider {
     }
 
     @Override
-    public Secret provideCert(AddressSpace addressSpace, String cn, Collection<String> sans) {
-        Secret secret = client.secrets().inNamespace(namespace).withName(certSpec.getSecretName()).get();
+    public void provideCert(AddressSpace addressSpace, EndpointInfo info) {
+        Secret secret = client.secrets().inNamespace(namespace).withName(info.getCertSpec().getSecretName()).get();
         if (secret == null) {
-            log.info("Creating self-signed certificates for {}", cn);
+            List<String> hosts = info.getHosts();
+            String cn = null;
+            if (!hosts.isEmpty()) {
+                cn = hosts.iterator().next();
+            }
 
+            log.info("Creating self-signed certificates for {}", cn);
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             Map<String, String> labels = new HashMap<>();
             labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
             labels.put(LabelKeys.INFRA_UUID, infraUuid);
             if (cn != null) {
                 Secret ca = issueAddressSpaceCert(addressSpace, labels);
-                CertComponent component = new CertComponent(cn, namespace, certSpec.getSecretName());
-                CertSigningRequest csr = certManager.createCsr(component);
-                Cert cert = certManager.signCsr(csr, ca, sans);
+                if (ca != null) {
+                    CertComponent component = new CertComponent(cn, namespace, info.getCertSpec().getSecretName());
+                    CertSigningRequest csr = certManager.createCsr(component);
+                    Cert cert = certManager.signCsr(csr, ca, hosts);
 
-                secret = certManager.createSecret(cert, ca, labels);
+                    certManager.createSecret(cert, ca, labels);
+                }
             } else {
-                secret = certManager.createSelfSignedCertSecret(certSpec.getSecretName(), labels);
+                certManager.createSelfSignedCertSecret(info.getCertSpec().getSecretName(), labels);
             }
         }
-        return secret;
     }
 }

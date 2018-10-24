@@ -40,6 +40,10 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             return chart;
         };
 
+        $scope.get_address_space_type = function () {
+            return address_service.address_space_type;
+        }
+
         $scope.get_subscribers_chart_config = function (address) {
             var chart = get_donut_chart(address, 'subscribers_chart', 'Subscribers');
             var subscribers = get_total(address.shards, 'subscription_count');
@@ -103,11 +107,11 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             }
           }
         }
-        // construct the html tooltop for a link details row
+        // construct the html tooltip for a link details row
         $scope.linkTooltip = function (row) {
           var tipHtml = "<table>"
           Object.keys(row).forEach( function (key) {
-            if (['$$hashKey', 'lastUpdated', 'backlog', 'name', 'deliveryRate', 'routerName'].indexOf(key) == -1) {
+            if (['$$hashKey', 'lastUpdated', 'backlog', 'name', 'deliveryRate', 'clientName'  ].indexOf(key) == -1) {
               tipHtml += "<tr><td>" + key + "&nbsp;</td><td align='right'>" + (isNaN(row[key]) ? row[key] : row[key].toLocaleString()) + "</td></tr>"
             }
           })
@@ -118,7 +122,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         var linkTableConfig = function () {
           this.data = []
           this.columnDefs = [
-            {field: 'routerName', displayName: 'Id'},
+            {field: 'clientName', displayName: 'Id'},
             {field: 'name', displayName: 'Name'},
             {field: 'deliveryRate', displayName: 'Delivery Rate', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
             {field: 'backlog', displayName: 'Backlog', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},

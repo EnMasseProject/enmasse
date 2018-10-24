@@ -42,6 +42,6 @@ public class HttpConsoleService {
         List<EndpointStatus> endpoints = addressSpace.getStatus().getEndpointStatuses();
         return endpoints == null ? Optional.empty() : endpoints.stream()
                 .filter(endpoint -> endpoint.getName().equals("console"))
-                .findAny().map(e -> URI.create("https://" + e.getHost()));
+                .findAny().map(e -> URI.create("https://" + e.getExternalHost()));
     }
 }
