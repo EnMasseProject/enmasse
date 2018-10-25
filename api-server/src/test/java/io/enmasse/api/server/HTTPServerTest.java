@@ -10,6 +10,7 @@ import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
 import io.vertx.core.Vertx;
@@ -76,7 +77,10 @@ public class HTTPServerTest {
                 .build());
         when(userApi.listUsers(any())).thenReturn(users);
 
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),"/doesnotexist", null, null, authApi, userApi, false), context.asyncAssertSuccess());
+        ApiServerOptions options = new ApiServerOptions();
+        options.setVersion("1.0");
+        options.setCertDir("/doesnotexist");
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, userApi, new Metrics(), options, null, null), context.asyncAssertSuccess());
     }
 
     @After

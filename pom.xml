@@ -93,6 +93,7 @@
     <modules>
         <module>address-model-lib</module>
         <module>user-api</module>
+        <module>metrics-api</module>
         <module>keycloak-user-api</module>
         <module>agent</module>
         <module>k8s-api</module>
@@ -151,6 +152,11 @@
             <dependency>
                 <groupId>io.enmasse</groupId>
                 <artifactId>user-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>metrics-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

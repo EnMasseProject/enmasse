@@ -15,6 +15,7 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.k8s.api.*;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
@@ -99,13 +100,14 @@ public class AddressSpaceController extends AbstractVerticle {
         Clock clock = Clock.systemUTC();
         UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
 
-        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
+        Metrics metrics = new Metrics();
+        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
 
-        HTTPServer httpServer = new HTTPServer(8080);
+        HTTPServer httpServer = new HTTPServer(8080, metrics);
 
         deployVerticles(startPromise, new Deployment(controllerChain), new Deployment(httpServer));
     }

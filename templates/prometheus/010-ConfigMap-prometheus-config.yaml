@@ -89,3 +89,10 @@ data:
           severity: critical
         expr: up != 1
         for: 10s
+      - alert: Address_Space_Health
+        annotations:
+          description: '{{ $labels.summary }}'
+          value: "{{ $value }}"
+          severity: warning
+        expr: address_spaces_ready == 0
+        for: 60s

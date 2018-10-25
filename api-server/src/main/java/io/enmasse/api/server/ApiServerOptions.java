@@ -29,6 +29,7 @@ public class ApiServerOptions {
     private String apiserverClientCaConfigNamespace;
     private String restapiRouteName;
     private Duration userApiTimeout;
+    private String version;
 
     public static ApiServerOptions fromEnv(Map<String, String> env) {
 
@@ -57,6 +58,7 @@ public class ApiServerOptions {
         options.setApiserverClientCaConfigNamespace(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAMESPACE").orElse(null));
 
         options.setRestapiRouteName(getEnv(env, "APISERVER_ROUTE_NAME").orElse(null));
+        options.setVersion(getEnvOrThrow(env, "VERSION"));
 
         return options;
     }
@@ -165,5 +167,13 @@ public class ApiServerOptions {
 
     public void setUserApiTimeout(Duration userApiTimeout) {
         this.userApiTimeout = userApiTimeout;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }
