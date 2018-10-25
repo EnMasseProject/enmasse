@@ -24,7 +24,7 @@
 
 :context: messaging
 
-include::common/attributes.adoc[]
+include::attributes/attributes.adoc[]
 
 = Documentation for {ProductName}
 
