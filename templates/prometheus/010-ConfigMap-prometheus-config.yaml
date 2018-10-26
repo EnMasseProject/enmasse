@@ -20,6 +20,9 @@ data:
       - job_name: 'artemis_pod_job'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - ${NAMESPACE}
         relabel_configs:
           - action: keep
             source_labels: [__meta_kubernetes_pod_container_port_name]
@@ -30,6 +33,9 @@ data:
       - job_name: 'router_pod_job'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - ${NAMESPACE}
         relabel_configs:
           - action: keep
             source_labels: [__meta_kubernetes_pod_container_port_name]
@@ -39,7 +45,10 @@ data:
             target_label: kubernetes_pod_name
       - job_name: component-health
         kubernetes_sd_configs:
-        - role: service
+          - role: service
+            namespaces:
+              names:
+                - ${NAMESPACE}
         metrics_path: "/metrics"
         relabel_configs:
         - action: keep
