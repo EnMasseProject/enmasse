@@ -4,6 +4,7 @@ enmasse_tmp_dir: '/tmp/enmasse/'
 systemtests_dir: "{{ playbook_dir }}../../../"
 client_executable_folder: "{{ systemtests_dir }}/client_executable"
 cli_java_git_path: "{{ systemtests_dir }}/cli-java"
+cli_java_version: "c33119eea3f0d4850eafc895ab249ed15abbd266"
 rhea_path: "{{ client_executable_folder }}/rhea"
 maven_root_path: /opt
 maven_path: "{{ maven_root_path }}/apache-maven-3.5.2/bin"

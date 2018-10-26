@@ -23,6 +23,7 @@
   git:
     repo: 'https://github.com/rh-messaging/cli-java.git'
     dest: "{{ cli_java_git_path }}"
+    version: "{{ cli_java_version }}"
     update: yes
     clone: yes
     force: yes
