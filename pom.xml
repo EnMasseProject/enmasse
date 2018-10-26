@@ -45,6 +45,7 @@
         <sundrio.version>0.7.1</sundrio.version>
         <vertx.version>3.5.3</vertx.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
         <jackson-annotations.version>2.9.6</jackson-annotations.version>
         <jackson-core.version>2.9.6</jackson-core.version>
         <jackson-databind.version>2.9.6</jackson-databind.version>
@@ -305,6 +306,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
             </dependency>
 
             <dependency>
