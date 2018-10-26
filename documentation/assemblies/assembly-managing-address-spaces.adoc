@@ -2,10 +2,8 @@
 //
 // master.adoc
 
-:parent-context: {context}
-
 [id='managing-address-spaces-{context}']
-= Managing address spaces
+= Managing address spaces on {KubePlatform}
 
 {ProductName} is configured to support managing address spaces using the
 ifdef::Kubernetes[Kubernetes and]
@@ -40,14 +38,4 @@ include::../common/address-space-example2.yaml[]
 <6> The certificate configuration can be used to specify how the endpoint certificate is provided.  The provider can be `selfsigned` (default), `wildcard` (requires it to be enabled by the {ProductName} admin), `openshift` (signed by the OpenShift cluster CA), or `certBundle` (base64-encoded PEM key and certificate).
 
 
-:context: okd
-:cmdcli: oc
-:KubePlatform: OpenShift
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
-
-:context: kube
-:cmdcli: kubectl
-:KubePlatform: Kubernetes
-include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
-
-:context: {parent-context}

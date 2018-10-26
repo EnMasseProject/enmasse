@@ -2,14 +2,10 @@
 //
 // master.adoc
 
-:parent-context: {context}
-
 [id='managing-addresses-{context}']
-= Managing addresses
+= Managing addresses on {KubePlatform}
 
-{ProductName} is configured to support managing address using the
-ifdef::Kubernetes[Kubernetes and]
-OpenShift command-line tools.
+{ProductName} is configured to support managing address using the {KubePlatform} command-line tools and the {ProductName} Console.
 
 == Example
 
@@ -23,16 +19,6 @@ include::../common/address-example1.yaml[]
 <3> The address type dictates the semantics of this address.
 <4> The address plan describes the resource usage for the address.
 
-:context: okd
-:cmdcli: oc
-:KubePlatform: OpenShift
-include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
-
-:context: kube
-:cmdcli: kubectl
-:KubePlatform: Kubernetes
 include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-console.adoc[leveloffset=+1]
-
-:context: {parent-context}

@@ -1,0 +1,8 @@
+// This assembly is included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+:cmdcli: oc
+:context: okd
+:PlatformName: OpenShift
+include::assembly-upgrading-enmasse.adoc[]
+:context: {parent-context}

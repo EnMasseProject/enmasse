@@ -6,9 +6,6 @@
 [id='deploy-prometheus-{context}']
 = Deploying Prometheus
 
-.Prerequisites
-* For Prometheus to monitor pods in the cluster, `cluster-admin` privileges are required.
-
 .Procedure
 
 . Create the Prometheus deployment:
@@ -17,13 +14,3 @@
 ----
 {cmdcli} apply -f ./install/components/prometheus
 ----
-
-ifeval::["{cmdcli}" == "oc"]
-. Grant `cluster-reader` privileges to the Prometheus service account:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:enmasse:prometheus-server
-----
-endif::[]
-

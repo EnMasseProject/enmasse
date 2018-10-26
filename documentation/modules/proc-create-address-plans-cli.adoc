@@ -4,7 +4,7 @@
 // assembly-configure-address-spaces-addresses-cli-oc.adoc
 
 [id='create-address-plans-cli-{context}']
-= Creating address plans using the command line
+= Creating address plans on {KubePlatform}
 
 .Procedure
 
@@ -40,6 +40,8 @@ include::../common/small-anycast-plan.yaml[]
 ----
 
 . Verify that schema has been updated and contains the plan:
++
+[options="nowrap",subs="attributes"]
 ----
 {cmdcli} get addressspaceschema standard -o yaml
 ----

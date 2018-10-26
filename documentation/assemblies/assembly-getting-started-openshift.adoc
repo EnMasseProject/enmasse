@@ -1,10 +1,10 @@
-[id='quickstart-on-openshift-{context}']
-= {ProductName} on OpenShift
-
 :cmdcli: oc
 :parent-context: {context}
-:context: {context}-okd
+:context: {context}-gs-okd
 :KubePlatform: OpenShift
+
+[id='quickstart-on-openshift-{context}']
+= {ProductName} on OpenShift
 
 This guide will walk through the process of setting up {ProductName} on
 OpenShift with clients for sending and receiving messages.
