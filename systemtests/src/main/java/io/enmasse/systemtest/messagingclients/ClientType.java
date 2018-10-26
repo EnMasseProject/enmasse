@@ -15,7 +15,9 @@ public enum ClientType {
     CLI_JAVA_ARTEMIS_JMS_SENDER,
     CLI_JAVA_ARTEMIS_JMS_RECEIVER,
     CLI_JAVA_OPENWIRE_JMS_SENDER,
-    CLI_JAVA_OPENWIRE_JMS_RECEIVER;
+    CLI_JAVA_OPENWIRE_JMS_RECEIVER,
+    CLI_JAVA_PAHO_MQTT_SENDER,
+    CLI_JAVA_PAHO_MQTT_RECEIVER;
 
     /**
      * Get bind client type to client executable
@@ -47,6 +49,10 @@ public enum ClientType {
                 return "./client_executable/cli-activemq.jar";
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
                 return "./client_executable/cli-activemq.jar";
+            case CLI_JAVA_PAHO_MQTT_SENDER:
+                return "./client_executable/cli-paho-java.jar";
+            case CLI_JAVA_PAHO_MQTT_RECEIVER:
+                return "./client_executable/cli-paho-java.jar";
             default:
                 return "";
         }

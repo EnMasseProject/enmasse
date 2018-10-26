@@ -11,22 +11,16 @@ import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
-import io.vertx.core.json.JsonArray;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.Future;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public abstract class ClusterClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
@@ -51,9 +45,16 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         TestUtils.deleteMessagingClientApp(environment.namespace(), kubernetes);
     }
 
-    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) {
-        return new Endpoint(String.format("messaging-%s.%s.svc",
-                addressSpace.getInfraUuid(), environment.namespace()), websocket && addressSpace.getType().equals(AddressSpaceType.STANDARD) ? 443 : 5671);
+    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) {
+        int port = ssl ? 5671 : 5672;
+        if (addressSpace.getType().equals(AddressSpaceType.STANDARD) && mqtt) {
+            port = ssl ? 8883 : 1883;
+        }
+        return new Endpoint(String.format("%s-%s.%s.svc",
+                (addressSpace.getType().equals(AddressSpaceType.STANDARD) && mqtt) ? "mqtt" : "messaging",
+                addressSpace.getInfraUuid(),
+                environment.namespace()),
+                websocket && addressSpace.getType().equals(AddressSpaceType.STANDARD) ? 443 : port);
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
@@ -67,10 +68,10 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket, true, false).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.MSG_CONTENT, "message");
         if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
             if (sharedAddressSpace.getType() == AddressSpaceType.STANDARD) {
@@ -87,5 +88,41 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
         response = cliApiClient.sendAndGetStatus(receiver);
         assertThat(response.getInteger("ecode"), is(0));
+    }
+
+    protected void doMqttMessageTest() throws Exception {
+        int expectedMsgCount = 10;
+        AbstractClient sender = new PahoMQTTClientSender();
+        AbstractClient receiver = new PahoMQTTClientReceiver();
+
+        Destination dest = Destination.topic("message-basic-mqtt",
+                sharedAddressSpace.getType().equals(AddressSpaceType.STANDARD) ? "sharded-topic" : getDefaultPlan(AddressType.TOPIC));
+        setAddresses(dest);
+
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, false, false, true).toString());
+        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
+        arguments.put(ClientArgument.MSG_CONTENT, "message");
+        arguments.put(ClientArgument.TIMEOUT, "30");
+        arguments.remove(ClientArgument.CONN_SSL);
+
+
+        sender.setArguments(arguments);
+        arguments.remove(ClientArgument.MSG_CONTENT);
+        arguments.remove(ClientArgument.COUNT);
+        receiver.setArguments(arguments);
+
+        String receiverId = cliApiClient.sendAndGetId(receiver);
+
+        JsonObject response = cliApiClient.sendAndGetStatus(sender);
+        assertThat(response.getInteger("ecode"), is(0));
+
+        Thread.sleep(30000);
+
+        response = cliApiClient.getClientInfo(receiverId);
+        log.info(response.toString());
+        assertThat(response.getInteger("ecode"), is(0));
+        assertFalse(response.getString("stdOut").isEmpty());
+        log.info(response.toString());
     }
 }
