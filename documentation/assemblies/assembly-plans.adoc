@@ -13,7 +13,29 @@ Plans are used to configure quotas and control the resources consumed by a parti
 
 include::../modules/con-address-space-plans.adoc[leveloffset=+1]
 
+:context: okd
+:cmdcli: oc
+:KubePlatform: OpenShift
+include::../modules/proc-create-address-space-plans-cli.adoc[leveloffset=+1]
+
+:context: kube
+:cmdcli: kubectl
+:KubePlatform: Kubernetes
+include::../modules/proc-create-address-space-plans-cli.adoc[leveloffset=+1]
+
+:context: {parent-context}
+
 include::../modules/con-address-plans.adoc[leveloffset=+1]
+
+:context: okd
+:cmdcli: oc
+:KubePlatform: OpenShift
+include::../modules/proc-create-address-plans-cli.adoc[leveloffset=+1]
+
+:context: kube
+:cmdcli: kubectl
+:KubePlatform: Kubernetes
+include::../modules/proc-create-address-plans-cli.adoc[leveloffset=+1]
 
 :context: {parent-context}
 

@@ -191,7 +191,7 @@ public class HTTPServerTest {
                         JsonObject data = buffer.toJsonObject();
                         context.assertTrue(data.containsKey("resources"));
                         JsonArray resources = data.getJsonArray("resources");
-                        context.assertEquals(2, resources.size());
+                        context.assertEquals(3, resources.size());
                         async.complete();
                     });
                 });
@@ -226,13 +226,13 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/schema", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/myinstance/addressspaceschemas", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         System.out.println(data.toString());
-                        context.assertTrue(data.containsKey("spec"));
-                        context.assertEquals("type1", data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(0).getString("name"));
+                        context.assertTrue(data.containsKey("items"));
+                        context.assertEquals(1, data.getJsonArray("items").size());
                         async.complete();
                     });
                 });

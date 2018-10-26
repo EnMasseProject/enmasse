@@ -8,9 +8,11 @@ import java.util.*;
 
 public class Schema {
     private final List<AddressSpaceType> addressSpaceTypes;
+    private final String creationTimestamp;
 
-    public Schema(List<AddressSpaceType> addressSpaceTypes) {
+    public Schema(List<AddressSpaceType> addressSpaceTypes, String creationTimestamp) {
         this.addressSpaceTypes = addressSpaceTypes;
+        this.creationTimestamp = creationTimestamp;
     }
 
     public List<AddressSpaceType> getAddressSpaceTypes() {
@@ -26,18 +28,27 @@ public class Schema {
         return Optional.empty();
     }
 
+    public String getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
     public static class Builder {
         private List<AddressSpaceType> addressSpaceTypes = new ArrayList<>();
+        private String creationTimestamp;
 
         public Builder setAddressSpaceTypes(List<AddressSpaceType> addressSpaceTypes) {
             this.addressSpaceTypes = new ArrayList<>(addressSpaceTypes);
             return this;
         }
 
+        public Builder setCreationTimestamp(String creationTimestamp) {
+            this.creationTimestamp = creationTimestamp;
+            return this;
+        }
 
         public Schema build() {
             Objects.requireNonNull(addressSpaceTypes, "addressSpaceTypes not set");
-            return new Schema(addressSpaceTypes);
+            return new Schema(addressSpaceTypes, creationTimestamp);
         }
     }
 }

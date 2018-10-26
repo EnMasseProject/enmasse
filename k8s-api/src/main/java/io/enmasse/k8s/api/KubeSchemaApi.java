@@ -12,7 +12,10 @@ import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,10 @@ public class KubeSchemaApi implements SchemaApi {
     private final AddressPlanApi addressPlanApi;
     private final BrokeredInfraConfigApi brokeredInfraConfigApi;
     private final StandardInfraConfigApi standardInfraConfigApi;
+    private final Clock clock;
+    private static final DateTimeFormatter formatter = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .withZone(ZoneId.of("UTC"));
     private final boolean isOpenShift;
 
     private volatile List<AddressSpacePlan> currentAddressSpacePlans;
@@ -31,11 +38,12 @@ public class KubeSchemaApi implements SchemaApi {
     private volatile List<StandardInfraConfig> currentStandardInfraConfigs;
     private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs;
 
-    public KubeSchemaApi(AddressSpacePlanApi addressSpacePlanApi, AddressPlanApi addressPlanApi, BrokeredInfraConfigApi brokeredInfraConfigApi, StandardInfraConfigApi standardInfraConfigApi, boolean isOpenShift) {
+    public KubeSchemaApi(AddressSpacePlanApi addressSpacePlanApi, AddressPlanApi addressPlanApi, BrokeredInfraConfigApi brokeredInfraConfigApi, StandardInfraConfigApi standardInfraConfigApi, Clock clock, boolean isOpenShift) {
         this.addressSpacePlanApi = addressSpacePlanApi;
         this.addressPlanApi = addressPlanApi;
         this.brokeredInfraConfigApi = brokeredInfraConfigApi;
         this.standardInfraConfigApi = standardInfraConfigApi;
+        this.clock = clock;
         this.isOpenShift = isOpenShift;
     }
 
@@ -48,7 +56,9 @@ public class KubeSchemaApi implements SchemaApi {
 
         StandardInfraConfigApi standardInfraConfigApi = new KubeStandardInfraConfigApi(openShiftClient, namespace, AdminCrd.standardinfraconfigs());
 
-        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, isOpenShift);
+        Clock clock = Clock.systemUTC();
+
+        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, clock, isOpenShift);
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
@@ -276,6 +286,7 @@ public class KubeSchemaApi implements SchemaApi {
         types.add(createStandardType(addressSpacePlans, addressPlans, new ArrayList<>(standardInfraConfigs)));
         return new Schema.Builder()
                 .setAddressSpaceTypes(types)
+                .setCreationTimestamp(formatter.format(clock.instant()))
                 .build();
     }
 }

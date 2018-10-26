@@ -59,6 +59,8 @@ public class HttpApiRootService {
         Arrays.asList(
                 new APIResource("addressspaces", "", true, "AddressSpace",
                     Arrays.asList("create", "delete", "get", "list")),
+                new APIResource("addressspaceschemas", "", true, "AddressSpaceSchema",
+                        Arrays.asList("get", "list")),
                 new APIResource("addresses", "", true, "Address",
                                 Arrays.asList("create", "delete", "get", "list"))));
 

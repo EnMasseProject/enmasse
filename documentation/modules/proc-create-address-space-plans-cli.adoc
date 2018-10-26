@@ -1,0 +1,45 @@
+// Module included in the following assemblies:
+//
+// assembly-configure-address-spaces-addresses-cli-kube.adoc
+// assembly-configure-address-spaces-addresses-cli-oc.adoc
+
+[id='create-address-space-plans-cli-{context}']
+= Creating address space plans using the command line
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service admin:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u system:admin
+----
+
+. Select the project where {ProductName} is installed:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
+
+. Create an address space plan definition:
++
+[source,yaml,options="nowrap"]
+.link:resources/restrictive-plan.yaml[restrictive-plan.yaml]
+----
+include::../common/restrictive-plan.yaml[]
+----
+
+. Create the address space plan:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f restrictive-plan.yaml
+----
+
+. Verify that schema has been updated and contains the plan:
+----
+{cmdcli} get addressspaceschema standard -o yaml
+----
