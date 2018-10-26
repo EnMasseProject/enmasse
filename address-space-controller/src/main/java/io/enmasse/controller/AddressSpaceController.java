@@ -5,14 +5,13 @@
 
 package io.enmasse.controller;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.AdminCrd;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
@@ -21,7 +20,7 @@ import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
-import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
@@ -74,7 +73,10 @@ public class AddressSpaceController extends AbstractVerticle {
     @Override
     public void start(Future<Void> startPromise) throws Exception {
         boolean isOpenShift = isOpenShift(controllerClient);
-        SchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
+        KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
+
+        log.info("AddressSpaceController starting with options: {}", options);
+        configureDefaultResources(controllerClient, options.getResourcesDir());
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir(), isOpenShift);
@@ -106,6 +108,27 @@ public class AddressSpaceController extends AbstractVerticle {
         HTTPServer httpServer = new HTTPServer(8080);
 
         deployVerticles(startPromise, new Deployment(controllerChain), new Deployment(httpServer));
+    }
+
+    private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
+        String namespace = client.getNamespace();
+        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "brokeredinfraconfigs"),
+                client.customResources(AdminCrd.brokeredinfraconfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace),
+                BrokeredInfraConfig.class,
+                Comparator.comparing(BrokeredInfraConfig::getVersion));
+
+        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "standardinfraconfigs"),
+                client.customResources(AdminCrd.standardinfraconfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
+                StandardInfraConfig.class,
+                Comparator.comparing(StandardInfraConfig::getVersion));
+
+        KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressplans"),
+                client.customResources(AdminCrd.addressplans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
+                AddressPlan.class);
+
+        KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressspaceplans"),
+                client.customResources(AdminCrd.addressspaceplans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace),
+                AddressSpacePlan.class);
     }
 
     private CertProviderFactory createCertProviderFactory(AddressSpaceControllerOptions options, CertManager certManager) {

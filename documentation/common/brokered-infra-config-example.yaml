@@ -2,8 +2,6 @@ apiVersion: admin.enmasse.io/v1alpha1
 kind: BrokeredInfraConfig
 metadata:
   name: brokered-infra-config-example
-  annotations:
-    enmasse.io/template-name: brokered-space-infra
 spec:
   version: 0.23.0
   admin:

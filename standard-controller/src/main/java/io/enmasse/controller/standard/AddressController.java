@@ -15,14 +15,14 @@ import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Status.Phase.*;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
 import static io.enmasse.controller.standard.ControllerKind.Broker;
-import static io.enmasse.controller.standard.ControllerReason.*;
+import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
+import static io.enmasse.controller.standard.ControllerReason.RouterCheckFailed;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
@@ -31,42 +31,30 @@ import static io.enmasse.k8s.api.EventLogger.Type.Warning;
  */
 public class AddressController extends AbstractVerticle implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
-    private final String addressSpaceName;
-    private final String addressSpacePlanName;
-    private final String infraUuid;
+    private final StandardControllerOptions options;
     private final AddressApi addressApi;
     private final Kubernetes kubernetes;
     private final BrokerSetGenerator clusterGenerator;
     private Watch watch;
-    private final String certDir;
     private final EventLogger eventLogger;
     private final SchemaProvider schemaProvider;
-    private final Duration recheckInterval;
-    private final Duration resyncInterval;
-    private final String version;
 
-    public AddressController(String addressSpaceName, String addressSpacePlanName, String infraUuid, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, String certDir, EventLogger eventLogger, SchemaProvider schemaProvider, Duration recheckInterval, Duration resyncInterval, String version) {
-        this.addressSpaceName = addressSpaceName;
-        this.addressSpacePlanName = addressSpacePlanName;
-        this.infraUuid = infraUuid;
+    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider) {
+        this.options = options;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
-        this.certDir = certDir;
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
-        this.recheckInterval = recheckInterval;
-        this.resyncInterval = resyncInterval;
-        this.version = version;
     }
 
     @Override
     public void start(Future<Void> startPromise) {
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
-                ResourceChecker<Address> checker = new ResourceChecker<Address>(this, recheckInterval);
+                ResourceChecker<Address> checker = new ResourceChecker<Address>(this, options.getRecheckInterval());
                 checker.start();
-                promise.complete(addressApi.watchAddresses(checker, resyncInterval));
+                promise.complete(addressApi.watchAddresses(checker, options.getResyncInterval()));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -110,11 +98,11 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             previousStatus.put(address.getAddress(), new Status(address.getStatus()));
         }
 
-        AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(addressSpacePlanName).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + addressSpacePlanName + " not found!"));
+        AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
 
         long resolvedPlan = System.nanoTime();
 
-        AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, infraUuid);
+        AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid());
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
@@ -176,7 +164,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         for (BrokerCluster cluster : clusterList) {
             StandardInfraConfig currentConfig = cluster.getInfraConfig();
             if (!desiredConfig.equals(currentConfig)) {
-                if (version.equals(desiredConfig.getSpec().getVersion())) {
+                if (options.getVersion().equals(desiredConfig.getSpec().getVersion())) {
                     if (currentConfig != null && currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
                         desiredConfig = new StandardInfraConfigBuilder(desiredConfig)
                                 .editSpec()
@@ -206,7 +194,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     kubernetes.apply(cluster.getResources());
                     eventLogger.log(BrokerUpgraded, "Upgraded broker", Normal, Broker, cluster.getClusterId());
                 } else {
-                    log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredConfig.getSpec().getVersion(), version);
+                    log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredConfig.getSpec().getVersion(), options.getVersion());
                 }
             }
         }
@@ -277,7 +265,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
         // TODO: Instead of going to the routers directly, list routers, and perform a request against the
         // router agent to do the check
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, certDir);
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (Readiness.isPodReady(router)) {
@@ -288,7 +276,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     }
                 } catch (Exception e) {
                     log.info("Error requesting router status from {}. Ignoring", router.getMetadata().getName(), e);
-                    eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, addressSpaceName);
+                    eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, options.getAddressSpace());
                 }
             }
         }

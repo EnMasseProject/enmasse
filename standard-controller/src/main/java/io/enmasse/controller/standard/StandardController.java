@@ -16,13 +16,10 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Clock;
-import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 
 
 /**
@@ -45,61 +42,38 @@ public class StandardController {
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
 
-        TemplateOptions templateOptions = new TemplateOptions(env);
-        File templateDir = new File(getEnvOrThrow(env, "TEMPLATE_DIR"));
-        if (!templateDir.exists()) {
-            throw new IllegalArgumentException("Template directory " + templateDir.getAbsolutePath() + " not found");
-        }
+        StandardControllerOptions options = StandardControllerOptions.fromEnv(env);
 
-        String certDir = getEnvOrThrow(env, "CERT_DIR");
-        String addressSpace = getEnvOrThrow(env, "ADDRESS_SPACE");
-        String addressSpacePlanName = getEnvOrThrow(env, "ADDRESS_SPACE_PLAN");
-        String infraUuid = getEnvOrThrow(env, "INFRA_UUID");
-        Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
-                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofMinutes(5));
-
-        Duration recheckInterval = getEnv(env, "CHECK_INTERVAL")
-                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofSeconds(30));
-
-        String version = getEnvOrThrow(env, "VERSION");
+        log.info("StandardController starting with options: {}", options);
 
         NamespacedOpenShiftClient openShiftClient = new DefaultOpenShiftClient();
 
         SchemaApi schemaApi = KubeSchemaApi.create(openShiftClient, openShiftClient.getNamespace(), isOpenShift(openShiftClient));
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
-        schemaApi.watchSchema(schemaProvider, resyncInterval);
+        schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        Kubernetes kubernetes = new KubernetesHelper(openShiftClient, templateDir, infraUuid);
-        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, templateOptions, addressSpace, infraUuid, schemaProvider);
+        Kubernetes kubernetes = new KubernetesHelper(openShiftClient, options.getTemplateDir(), options.getInfraUuid());
+        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, options);
 
-        boolean enableEventLogger = Boolean.parseBoolean(getEnv(env, "ENABLE_EVENT_LOGGER").orElse("false"));
-        EventLogger eventLogger = enableEventLogger ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
+        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
                 : new LogEventLogger();
 
 
         AddressController addressController = new AddressController(
-                addressSpace,
-                addressSpacePlanName,
-                infraUuid,
-                new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace(), infraUuid),
+                options,
+                new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace(), options.getInfraUuid()),
                 kubernetes,
                 clusterGenerator,
-                certDir,
                 eventLogger,
-                schemaProvider,
-                recheckInterval,
-                resyncInterval,
-                version);
+                schemaProvider);
 
-        log.info("Deploying address space controller for " + addressSpace);
+        log.info("Deploying address space controller for " + options.getAddressSpace());
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(addressController, result -> {
             if (result.succeeded()) {
-                log.info("Standard controller for {} deployed", addressSpace);
+                log.info("Standard controller for {} deployed", options.getAddressSpace());
             } else {
-                log.warn("Unable to deploy standard controller for {}", addressSpace);
+                log.warn("Unable to deploy standard controller for {}", options.getAddressSpace());
             }
         });
         vertx.createHttpServer()
@@ -119,10 +93,6 @@ public class StandardController {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    private static Optional<String> getEnv(Map<String, String> env, String envVar) {
-        return Optional.ofNullable(env.get(envVar));
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {

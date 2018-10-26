@@ -26,17 +26,11 @@ import java.util.*;
 public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
     private static final ObjectMapper mapper = new ObjectMapper();
     private final Kubernetes kubernetes;
-    private final TemplateOptions templateOptions;
-    private final String addressSpace;
-    private final String infraUuid;
-    private final SchemaProvider schemaProvider;
+    private final StandardControllerOptions options;
 
-    public TemplateBrokerSetGenerator(Kubernetes kubernetes, TemplateOptions templateOptions, String addressSpace, String infraUuid, SchemaProvider schemaProvider) {
+    public TemplateBrokerSetGenerator(Kubernetes kubernetes, StandardControllerOptions options) {
         this.kubernetes = kubernetes;
-        this.templateOptions = templateOptions;
-        this.addressSpace = addressSpace;
-        this.infraUuid = infraUuid;
-        this.schemaProvider = schemaProvider;
+        this.options = options;
     }
 
     private boolean isShardedTopic(AddressPlan addressPlan) {
@@ -55,14 +49,20 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
 
     private String getTemplateName(Address address, AddressPlan addressPlan, StandardInfraConfig standardInfraConfig) {
         if (address == null || addressPlan == null) {
-            return standardInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.QUEUE_TEMPLATE_NAME);
+            return getAnnotation(standardInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.QUEUE_TEMPLATE_NAME, "queue-persisted");
         } else {
             if (isShardedTopic(addressPlan)) {
-                return standardInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.TOPIC_TEMPLATE_NAME);
+                return getAnnotation(standardInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TOPIC_TEMPLATE_NAME, "topic-persisted");
             } else {
-                return standardInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.QUEUE_TEMPLATE_NAME);
+                return getAnnotation(standardInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.QUEUE_TEMPLATE_NAME, "queue-persisted");
             }
         }
+    }
+
+    private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
+        return Optional.ofNullable(annotations)
+                .flatMap(m -> Optional.ofNullable(m.get(key)))
+                .orElse(defaultValue);
     }
 
     /**
@@ -88,14 +88,14 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         Map<String, String> paramMap = new LinkedHashMap<>();
 
         paramMap.put(TemplateParameter.NAME, clusterId);
-        paramMap.put(TemplateParameter.INFRA_UUID, infraUuid);
+        paramMap.put(TemplateParameter.INFRA_UUID, options.getInfraUuid());
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
-        paramMap.put(TemplateParameter.ADDRESS_SPACE, addressSpace);
-        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, templateOptions.getAuthenticationServiceHost());
-        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, templateOptions.getAuthenticationServicePort());
-        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, templateOptions.getAuthenticationServiceCaSecret());
-        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, templateOptions.getAuthenticationServiceClientSecret());
-        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, templateOptions.getAuthenticationServiceSaslInitHost());
+        paramMap.put(TemplateParameter.ADDRESS_SPACE, options.getAddressSpace());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, options.getAuthenticationServiceHost());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, options.getAuthenticationServicePort());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, options.getAuthenticationServiceCaSecret());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, options.getAuthenticationServiceClientSecret());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, options.getAuthenticationServiceSaslInitHost());
 
         if (address != null) {
             paramMap.put(TemplateParameter.ADDRESS, address.getAddress());
@@ -124,7 +124,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
 
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
-        Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, addressSpace);
+        Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, options.getAddressSpace());
         if (address != null) {
             Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getAddress());
         }

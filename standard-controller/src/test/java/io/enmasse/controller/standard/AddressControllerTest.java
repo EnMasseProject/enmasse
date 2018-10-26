@@ -38,7 +38,12 @@ public class AddressControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1));
-        controller = new AddressController("me", "plan1", "", mockApi, mockHelper, mockGenerator, null, eventLogger, standardControllerSchema::getSchema, Duration.ofSeconds(5), Duration.ofSeconds(5), "1.0");
+        StandardControllerOptions options = new StandardControllerOptions();
+        options.setAddressSpace("me1");
+        options.setAddressSpacePlanName("plan1");
+        options.setResyncInterval(Duration.ofSeconds(5));
+        options.setVersion("1.0");
+        controller = new AddressController(options,  mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema);
     }
 
     @Test

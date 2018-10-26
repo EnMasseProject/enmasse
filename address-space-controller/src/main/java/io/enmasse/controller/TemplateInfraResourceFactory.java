@@ -93,7 +93,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             kcIdpHint = KC_IDP_HINT_OPENSHIFT;
         }
 
-        kcIdpHint = infraConfig.getMetadata().getAnnotations().getOrDefault(AnnotationKeys.KC_IDP_HINT, kcIdpHint);
+        kcIdpHint = getAnnotation(infraConfig.getMetadata().getAnnotations(), AnnotationKeys.KC_IDP_HINT, kcIdpHint);
 
         if  (addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT) != null) {
             kcIdpHint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
@@ -136,7 +136,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
         parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
         parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
-        parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, standardInfraConfig.getSpec().getRouter().getLinkCapacity());
+        parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
 
         List<ParameterValue> parameterValues = new ArrayList<>();
@@ -144,12 +144,20 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameterValues.add(new ParameterValue(entry.getKey(), entry.getValue()));
         }
 
-        String templateName = standardInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.TEMPLATE_NAME);
+        Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
+        String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
         List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
-        if (standardInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.MQTT_TEMPLATE_NAME) != null) {
-            items.addAll(createStandardInfraMqtt(addressSpace, standardInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.MQTT_TEMPLATE_NAME)));
+        if (Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
+            String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
+            items.addAll(createStandardInfraMqtt(addressSpace, mqttTemplateName));
         }
         return items;
+    }
+
+    private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
+        return Optional.ofNullable(annotations)
+                .flatMap(m -> Optional.ofNullable(m.get(key)))
+                .orElse(defaultValue);
     }
 
     private List<HasMetadata> createBrokeredInfra(AddressSpace addressSpace, BrokeredInfraConfig brokeredInfraConfig) {
@@ -162,7 +170,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameterValues.add(new ParameterValue(entry.getKey(), entry.getValue()));
         }
 
-        String templateName = brokeredInfraConfig.getMetadata().getAnnotations().get(AnnotationKeys.TEMPLATE_NAME);
+        String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
         return new ArrayList<>(kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
     }
 
