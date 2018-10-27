@@ -123,12 +123,30 @@ public class MsgCliApiClient extends ApiClient {
 
         JsonObject response = startClients(apiArgument, 1);
         log.info(response.toString());
-
         JsonArray ids = response.getJsonArray("clients");
         String uuid = ids.getString(0);
+
+        Thread.sleep(5000);
 
         response = getClientInfo(uuid);
         log.info(response.toString());
         return response;
+    }
+
+    /***
+     * Send request with one client and receive id
+     * @param client
+     * @return id of client
+     */
+    public String sendAndGetId(AbstractClient client) throws Exception {
+        List<String> apiArgument = new LinkedList<>();
+        apiArgument.addAll(client.getExecutable());
+        apiArgument.addAll(client.getArguments());
+
+        JsonObject response = startClients(apiArgument, 1);
+        log.info(response.toString());
+
+        JsonArray ids = response.getJsonArray("clients");
+        return ids.getString(0);
     }
 }
