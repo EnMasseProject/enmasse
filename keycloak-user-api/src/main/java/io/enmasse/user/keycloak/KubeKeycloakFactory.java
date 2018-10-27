@@ -54,9 +54,9 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
         KeyStore trustStore = createKeyStore(b64dec.decode(certificate.getData().get("tls.crt")));
         ResteasyClient resteasyClient = new ResteasyClientBuilder()
-                .establishConnectionTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(30, TimeUnit.SECONDS)
                 .connectionPoolSize(1)
-                .asyncExecutor(executorService)
+                .asyncExecutor(executorService) // executorService is the replacement but returns the wrong type
                 .trustStore(trustStore)
                 .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
                 .build();
