@@ -229,6 +229,12 @@
                 <groupId>io.sundr</groupId>
                 <artifactId>builder-annotations</artifactId>
                 <version>${sundrio.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun</groupId>
+                        <artifactId>tools</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
