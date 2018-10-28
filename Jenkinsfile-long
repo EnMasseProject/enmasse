@@ -5,7 +5,7 @@ def lib = evaluate readTrusted('./jenkins-functions.groovy')
 pipeline {
     agent {
         node {
-            label 'enmasse-long'
+            label 'enmasse'
         }
     }
     options {
