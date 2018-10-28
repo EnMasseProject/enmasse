@@ -122,7 +122,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         var linkTableConfig = function () {
           this.data = []
           this.columnDefs = [
-            {field: 'clientName', displayName: 'Id'},
+            {field: 'clientName', displayName: 'Container ID'},
             {field: 'name', displayName: 'Name'},
             {field: 'deliveryRate', displayName: 'Delivery Rate', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
             {field: 'backlog', displayName: 'Backlog', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
