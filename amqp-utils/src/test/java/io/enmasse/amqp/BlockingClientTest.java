@@ -4,7 +4,6 @@
  */
 package io.enmasse.amqp;
 
-import io.enmasse.amqp.BlockingClient;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
@@ -13,6 +12,8 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,13 +27,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class BlockingClientTest {
+    private static final Logger log = LoggerFactory.getLogger(BlockingClientTest.class);
+
     private Vertx vertx;
     private ProtonServer server;
     private BlockingQueue<Message> inbox;
     private BlockingQueue<Message> outbox;
+    private int actualPort;
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup() throws Exception {
         vertx = Vertx.vertx();
         server = ProtonServer.create(vertx);
         inbox = new LinkedBlockingDeque<>();
@@ -50,7 +54,7 @@ public class BlockingClientTest {
             conn.sessionOpenHandler(ProtonSession::open);
 
             conn.receiverOpenHandler(receiver -> {
-                System.out.println("Receiver open");
+                log.debug("Receiver open");
                 receiver.setTarget(receiver.getRemoteTarget());
                 receiver.handler((delivery, message) -> {
                     inbox.add(message);
@@ -66,18 +70,21 @@ public class BlockingClientTest {
                             sender.send(m);
                         }
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         // Try again later
                     }
                 });
                 sender.open();
             });
-        }).listen(12345, res -> latch.countDown());
+        }).listen(0, res -> latch.countDown());
         latch.await();
+        actualPort = server.actualPort();
+        log.debug("Using port {}", actualPort);
     }
 
     @Test
-    public void testSend() throws InterruptedException {
-        try (BlockingClient client = new BlockingClient("127.0.0.1", 12345)) {
+    public void testSend() throws Exception {
+        try (BlockingClient client = new BlockingClient("127.0.0.1", actualPort)) {
             Message m = Message.Factory.create();
             m.setAddress("testsend");
             m.setBody(new AmqpValue("hello there"));
@@ -91,8 +98,8 @@ public class BlockingClientTest {
     }
 
     @Test
-    public void testReceive() throws InterruptedException {
-        try (BlockingClient client = new BlockingClient("127.0.0.1", 12345)) {
+    public void testReceive() throws Exception {
+        try (BlockingClient client = new BlockingClient("127.0.0.1", actualPort)) {
             Message m = Message.Factory.create();
             m.setAddress("testreceive");
             m.setBody(new AmqpValue("hello there"));
