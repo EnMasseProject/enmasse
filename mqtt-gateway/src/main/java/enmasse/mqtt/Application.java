@@ -8,6 +8,7 @@ package enmasse.mqtt;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.vertx.core.logging.LoggerFactory.LOGGER_DELEGATE_FACTORY_CLASS_NAME;
 
 /**
  * EnMasse MQTT gateway main application class
@@ -145,6 +148,10 @@ public class Application {
     }
 
     public static void main(String[] args) {
+
+        if (System.getProperty(LOGGER_DELEGATE_FACTORY_CLASS_NAME) == null) {
+            System.setProperty(LOGGER_DELEGATE_FACTORY_CLASS_NAME, SLF4JLogDelegateFactory.class.getName());
+        }
 
         Map<String, String> env = System.getenv();
 
