@@ -8,9 +8,11 @@
 
 {ProductName} creates infrastructure components such as routers, brokers, and consoles. These
 components can be configured while the system is running, and {ProductName} automatically updates
-the components with the new settings.
+the components with the new settings. The {ProductName} service operator can edit the {ProductName}
+default infrastructure configuration or create new configurations.
 
-The {ProductName} service operator can edit the {ProductName} default infrastructure configuration.
+Infrastructure configs can be referred to from 1 or more address space plans. For more information
+about address space plans, see xref:con-address-space-plans-{context}[].
 
 Infrastructure configuration can be managed for both `brokered` and `standard` infrastructure
 using `BrokeredInfraConfig` and `StandardInfraConfig` resources.
