@@ -154,7 +154,7 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
             fields: [
                 {
                     id: 'container',
-                    title:  'Container',
+                    title:  'Container ID',
                     placeholder: 'Filter by Container ID...',
                     filterType: 'text'
                 },
