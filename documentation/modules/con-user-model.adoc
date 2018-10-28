@@ -31,8 +31,8 @@ The `spec.authentication` object defines how the user is authenticated, whereas
 
 The supported values for the authentication type are `password` and `federated`. 
 
-NOTE: Currently `password` authentication type users can access both applications and the {ProductName} Console, whereas
-`federated` authentication type users can only access the {ProductName} Console.
+NOTE: Currently `password` authentication type users can only access messaging endpoints, whereas
+`federated` authentication type users can only access the {ProductName} Console. 
 
 === Password authentication type
 
