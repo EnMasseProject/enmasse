@@ -179,6 +179,7 @@ public class KubeSchemaApi implements SchemaApi {
 
         builder.setAvailableEndpoints(Arrays.asList(
                 createEndpointSpec("messaging", "messaging", "amqps", ExposeSpec.TlsTermination.passthrough),
+                createEndpointSpec("amqp-wss", "messaging", "amqps", ExposeSpec.TlsTermination.reencrypt),
                 createEndpointSpec("console", "console", "https", ExposeSpec.TlsTermination.reencrypt)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
