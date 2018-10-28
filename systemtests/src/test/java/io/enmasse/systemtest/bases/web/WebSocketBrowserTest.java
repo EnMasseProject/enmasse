@@ -33,7 +33,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
     @Override
     protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
         if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
-            Endpoint messagingEndpoint = addressSpace.getEndpointByName("amqp-wss");
+            Endpoint messagingEndpoint = addressSpace.getEndpointByName("messaging-wss");
             if (TestUtils.resolvable(messagingEndpoint)) {
                 return messagingEndpoint;
             } else {
