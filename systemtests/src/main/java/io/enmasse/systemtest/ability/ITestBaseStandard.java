@@ -6,6 +6,7 @@ package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.DestinationPlan;
 
 public interface ITestBaseStandard extends ITestBase {
 
@@ -18,13 +19,13 @@ public interface ITestBaseStandard extends ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return "pooled-queue";
+                return DestinationPlan.STANDARD_POOLED_QUEUE.plan();
             case TOPIC:
-                return "pooled-topic";
+                return DestinationPlan.STANDARD_POOLED_TOPIC.plan();
             case ANYCAST:
-                return "standard-anycast";
+                return DestinationPlan.STANDARD_ANYCAST.plan();
             case MULTICAST:
-                return "standard-multicast";
+                return DestinationPlan.STANDARD_MULTICAST.plan();
         }
         return null;
     }

@@ -297,4 +297,23 @@ public abstract class Kubernetes {
         client.services().inNamespace(namespace).withName(serviceName).delete();
         log.info("Service {} removed", serviceName);
     }
+
+    /***
+     * Returns list of running containers in pod
+     * @param podName name of pod
+     * @return list of containers
+     */
+    public List<Container> getContainersFromPod(String podName) {
+        return client.pods().inNamespace(globalNamespace).withName(podName).get().getSpec().getContainers();
+    }
+
+    /***
+     * Returns log of conrainer in pod
+     * @param podName name of pod
+     * @param containerName name of container in pod
+     * @return log
+     */
+    public String getLog(String podName, String containerName) {
+        return client.pods().inNamespace(globalNamespace).withName(podName).inContainer(containerName).getLog();
+    }
 }

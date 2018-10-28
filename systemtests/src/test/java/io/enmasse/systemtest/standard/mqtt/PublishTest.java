@@ -7,6 +7,7 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttUtils;
@@ -78,7 +79,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     @Disabled("related issue: #1529")
     void testRetainedMessages() throws Exception {
-        Destination topic = Destination.topic("retained-message-topic", "sharded-topic");
+        Destination topic = Destination.topic("retained-message-topic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
@@ -106,7 +107,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic(MYTOPIC, "sharded-topic");
+        Destination dest = Destination.topic(MYTOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         setAddresses(dest);
 
         IMqttClient client = mqttClientFactory.create();

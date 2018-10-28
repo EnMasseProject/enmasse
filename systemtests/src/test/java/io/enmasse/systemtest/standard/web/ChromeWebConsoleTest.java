@@ -6,6 +6,7 @@ package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
@@ -22,22 +23,22 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue1", "pooled-queue"),
-                Destination.queue("test-queue2", "sharded-queue"));
+        doTestCreateDeleteAddress(Destination.queue("test-queue1", DestinationPlan.STANDARD_POOLED_QUEUE.plan()),
+                Destination.queue("test-queue2", DestinationPlan.STANDARD_SHARDED_QUEUE.plan()));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic1", "pooled-topic"),
-                Destination.topic("test-topic2", "sharded-topic"));
+        doTestCreateDeleteAddress(Destination.topic("test-topic1", DestinationPlan.STANDARD_POOLED_TOPIC.plan()),
+                Destination.topic("test-topic2", DestinationPlan.STANDARD_SHARDED_TOPIC.plan()));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteDurableSubscription() throws Exception {
-        doTestCreateDeleteDurableSubscription(Destination.topic("test-topic1", "pooled-topic"),
-                Destination.topic("test-topic2", "sharded-topic"));
+        doTestCreateDeleteDurableSubscription(Destination.topic("test-topic1", DestinationPlan.STANDARD_POOLED_TOPIC.plan()),
+                Destination.topic("test-topic2", DestinationPlan.STANDARD_SHARDED_TOPIC.plan()));
     }
 
     @Test

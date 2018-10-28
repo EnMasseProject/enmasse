@@ -5,10 +5,7 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
@@ -60,9 +57,9 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedTopics() throws Exception {
-        Destination t1 = Destination.topic("col-topic1", "pooled-topic");
-        Destination t2 = Destination.topic("col-topic2", "pooled-topic");
-        Destination t3 = Destination.topic("col-topic3", "pooled-topic");
+        Destination t1 = Destination.topic("col-topic1", DestinationPlan.STANDARD_POOLED_TOPIC.plan());
+        Destination t2 = Destination.topic("col-topic2", DestinationPlan.STANDARD_POOLED_TOPIC.plan());
+        Destination t3 = Destination.topic("col-topic3", DestinationPlan.STANDARD_POOLED_TOPIC.plan());
         setAddresses(t1, t2, t3);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -73,8 +70,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedTopic() throws Exception {
-        Destination t1 = Destination.topic("shardedTopic1", "sharded-topic");
-        Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), "sharded-topic");
+        Destination t1 = Destination.topic("shardedTopic1", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
+        Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         addressApiClient.createAddress(t2);
 
         appendAddresses(t1);
@@ -97,7 +94,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testMessageSelectorsAppProperty() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopicAppProp", "sharded-topic");
+        Destination selTopic = Destination.topic("selectorTopicAppProp", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
 
@@ -200,7 +197,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testMessageSelectorsProperty() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopicProp", "sharded-topic");
+        Destination selTopic = Destination.topic("selectorTopicProp", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
@@ -244,7 +241,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnPooledTopic() throws Exception {
-        Destination topic = Destination.topic("mytopic", "pooled-topic");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_POOLED_TOPIC.plan());
         Destination subscription = Destination.subscription("mysub", "mytopic", "standard-subscription");
         setAddresses(topic, subscription);
 
@@ -271,7 +268,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnShardedTopic() throws Exception {
-        Destination topic = Destination.topic("mytopic", "sharded-topic");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-subscription");
         Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-subscription");
         setAddresses(topic, subscription1, subscription2);
@@ -306,7 +303,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnShardedTopic2() throws Exception {
-        Destination topic = Destination.topic("mytopic", "sharded-topic");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-subscription");
         setAddresses(topic, subscription1);
 
@@ -343,8 +340,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("topic wildcards are not supported")
     void testTopicWildcards() throws Exception {
-        Destination t1 = Destination.topic("topic/No1", "sharded-topic");
-        Destination t2 = Destination.topic("topic/No2", "sharded-topic");
+        Destination t1 = Destination.topic("topic/No1", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
+        Destination t2 = Destination.topic("topic/No2", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
 
         setAddresses(t1, t2);
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
@@ -369,7 +366,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("durable subscriptions are not supported")
     void testDurableLinkRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("lrtopic", "sharded-topic");
+        Destination dest = Destination.topic("lrtopic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         String linkName = "systest-durable";
         setAddresses(dest);
         scale(dest, 4);
@@ -418,7 +415,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("durable subscriptions are not supported")
     void testDurableMessageRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("mrtopic", "sharded-topic");
+        Destination dest = Destination.topic("mrtopic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         String address = "myaddress";
         log.info("Deploying");
         setAddresses(dest);

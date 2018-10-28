@@ -7,6 +7,7 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -45,7 +46,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendMqttReceiveAmqp() throws Exception {
-        Destination mqttTopic = Destination.topic(MQTT_AMQP_TOPIC, "sharded-topic");
+        Destination mqttTopic = Destination.topic(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
@@ -75,7 +76,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendAmqpReceiveMqtt() throws Exception {
-        Destination mqttTopic = Destination.topic(AMQP_MQTT_TOPIC, "sharded-topic");
+        Destination mqttTopic = Destination.topic(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";

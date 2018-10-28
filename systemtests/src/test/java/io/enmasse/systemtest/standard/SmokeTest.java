@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -35,9 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(nonPR)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private Destination queue = Destination.queue("smokeQueue_1", "pooled-queue");
-    private Destination topic = Destination.topic("smoketopic", "pooled-topic");
-    private Destination mqttTopic = Destination.topic("smokeMqtt_1", "sharded-topic");
+    private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
+    private Destination topic = Destination.topic("smoketopic", DestinationPlan.STANDARD_POOLED_TOPIC.plan());
+    private Destination mqttTopic = Destination.topic("smokeMqtt_1", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
     private Destination anycast = Destination.anycast("smokeanycast");
     private Destination multicast = Destination.multicast("smokemulticast");
 

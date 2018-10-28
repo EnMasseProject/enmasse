@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(shared)
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
-    private static final Destination dummyAddress = Destination.queue("dummy-address", "pooled-queue");
+    private static final Destination dummyAddress = Destination.queue("dummy-address", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
     protected static AddressSpace sharedAddressSpace;
     private static Logger log = CustomLogger.getLogger();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();

@@ -7,6 +7,7 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
@@ -40,7 +41,7 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
      */
     @Test
     public void previousPersistentSessionDiscarded() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, "sharded-topic");
+        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         setAddresses(dest);
 
         IMqttClient publisher = mqttClientFactory.build().clientId(PUBLISHER_ID).create();
