@@ -37,5 +37,24 @@ include::../common/address-space-example2.yaml[]
 <5> Expose the configuration of an endpoint. Endpoints can be kept internal to the cluster, or exposed using an OpenShift route or a load-balancer service.
 <6> The certificate configuration can be used to specify how the endpoint certificate is provided.  The provider can be `selfsigned` (default), `wildcard` (requires it to be enabled by the {ProductName} admin), `openshift` (signed by the OpenShift cluster CA), or `certBundle` (base64-encoded PEM key and certificate).
 
+== Example address space status output
+
+The `AddressSpace` resource contains a `status` field that can be used to retrieve information about
+its state and endpoints. The following output is an example of the output you can get from running
+`oc get addressspace myspace -o yaml`:
+
+[source,yaml,options="nowrap"]
+.link:resources/address-space-output-example1.yaml[address-space-output-example1.yaml]
+----
+include::../common/address-space-output-example1.yaml[]
+----
+<1> The `status.isReady` field can be either `true` or `false`.
+<2> The `status.endpointStatuses` field provide information about available endpoints for this address space.
+<3> The `certificate` field contains the base64-encoded certificate for a given endpoint.
+<4> The `serviceHost` field contains the cluster-internal host name for a given endpoint.
+<5> The `servicePorts` field contains the available ports for the cluster-internal host.
+<6> The `externalHost` field contains the external host name for a given endpoint.
+<7> The `externalPorts` field contains the available ports for the external host.
+
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]

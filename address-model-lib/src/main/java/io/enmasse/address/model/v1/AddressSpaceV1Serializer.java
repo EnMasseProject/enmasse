@@ -167,6 +167,10 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                     e.put(Fields.EXTERNAL_HOST, endpointStatus.getExternalHost());
                 }
 
+                if (endpointStatus.getCertificate() != null) {
+                    e.put(Fields.CERT, endpointStatus.getCertificate());
+                }
+
                 if (!endpointStatus.getExternalPorts().isEmpty()) {
                     ArrayNode ports = e.putArray(Fields.EXTERNAL_PORTS);
                     for (Map.Entry<String, Integer> portEntry : endpointStatus.getExternalPorts().entrySet()) {

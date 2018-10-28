@@ -15,13 +15,15 @@ import java.util.Objects;
 public class EndpointStatus {
     private final String name;
     private final String serviceHost;
+    private final String certificate;
     private final Map<String, Integer> servicePorts;
     private final String externalHost;
     private final Map<String, Integer> externalPorts;
 
-    public EndpointStatus(String name, String serviceHost, Map<String, Integer> servicePorts, String externalHost, Map<String, Integer> externalPorts) {
+    public EndpointStatus(String name, String serviceHost, String certificate, Map<String, Integer> servicePorts, String externalHost, Map<String, Integer> externalPorts) {
         this.name = name;
         this.serviceHost = serviceHost;
+        this.certificate = certificate;
         this.servicePorts = servicePorts;
         this.externalHost = externalHost;
         this.externalPorts = externalPorts;
@@ -47,6 +49,10 @@ public class EndpointStatus {
         return externalHost;
     }
 
+    public String getCertificate() {
+        return certificate;
+    }
+
     @Override
     public String toString() {
         return new StringBuilder()
@@ -61,6 +67,7 @@ public class EndpointStatus {
     public static class Builder {
         private String name;
         private String serviceHost;
+        private String certificate;
         private Map<String, Integer> servicePorts = new HashMap<>();
         private String externalHost;
         private Map<String, Integer> externalPorts = new HashMap<>();
@@ -70,6 +77,7 @@ public class EndpointStatus {
         public Builder(EndpointStatus endpoint) {
             this.name = endpoint.getName();
             this.serviceHost = endpoint.getServiceHost();
+            this.certificate = endpoint.getCertificate();
             this.servicePorts = new HashMap<>(endpoint.getServicePorts());
             this.externalHost = endpoint.getExternalHost();
             this.externalPorts = new HashMap<>(endpoint.getExternalPorts());
@@ -82,6 +90,11 @@ public class EndpointStatus {
 
         public Builder setServiceHost(String serviceHost) {
             this.serviceHost = serviceHost;
+            return this;
+        }
+
+        public Builder setCertificate(String certificate) {
+            this.certificate = certificate;
             return this;
         }
 
@@ -104,7 +117,7 @@ public class EndpointStatus {
         public EndpointStatus build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(serviceHost, "service host not set");
-            return new EndpointStatus(name, serviceHost, servicePorts, externalHost, externalPorts);
+            return new EndpointStatus(name, serviceHost, certificate, servicePorts, externalHost, externalPorts);
         }
     }
 }
