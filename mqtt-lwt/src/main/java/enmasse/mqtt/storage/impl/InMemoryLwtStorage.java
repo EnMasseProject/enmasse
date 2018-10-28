@@ -12,7 +12,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +19,6 @@ import java.util.Map;
 /**
  * In memory implementation of the LWT Storage service
  */
-@Component
 public class InMemoryLwtStorage implements LwtStorage {
 
     public static final Logger LOG = LoggerFactory.getLogger(InMemoryLwtStorage.class);
