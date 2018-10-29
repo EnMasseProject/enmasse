@@ -1,4 +1,10 @@
 ---
+- name: Copy component files for mutation
+  synchronize:
+    src: "{{ playbook_dir }}/components/"
+    dest: "{{ playbook_dir }}/install"
+    recursive: yes
+    delete: yes
 - name: Find all yaml files
   find:
     paths: "{{ playbook_dir }}/install/"
@@ -8,7 +14,7 @@
 - name: Replace namespace in configuration
   replace:
     dest: "{{item.path}}"
-    regexp: "ANSIBLE_NAMESPACE"
+    regexp: "enmasse-infra"
     replace: "{{ namespace }}"
   with_items: "{{ yamls.files }}"
 - import_role:

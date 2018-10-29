@@ -72,14 +72,9 @@ component_install: replace_images
 		mv $$i.tmp $$i; \
 	done
 
-ansible_install: replace_images
+ansible_install: component_install
 	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
-	mkdir -p $(INSTALLDIR)/ansible/playbooks/openshift/install/
-	cp -r $(BUILDDIR)/replaced/* $(INSTALLDIR)/ansible/playbooks/openshift/install/
-	for i in `find $(INSTALLDIR)/ansible/playbooks/openshift/ -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=ANSIBLE_NAMESPACE envsubst '$${NAMESPACE}' > $$i.tmp; \
-		mv $$i.tmp $$i; \
-	done
+	ln -srf $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
 
 ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-standard-authservice.yaml
 $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
