@@ -155,7 +155,7 @@ public abstract class Kubernetes {
 
     public int getExpectedPods(String plan) {
         if (plan.endsWith("with-mqtt")) {
-            return 5;
+            return 6;
         } else {
             return 2;
         }
