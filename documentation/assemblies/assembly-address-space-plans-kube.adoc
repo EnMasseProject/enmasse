@@ -1,0 +1,9 @@
+:parent-context: {context}
+:context: kube
+:cmdcli: kubectl
+:KubePlatform: Kubernetes
+
+include::../modules/proc-create-address-space-plans-cli.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

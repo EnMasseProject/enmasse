@@ -237,6 +237,10 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                         b.setExternalHost(endpoint.get(Fields.EXTERNAL_HOST).asText());
                     }
 
+                    if (endpoint.hasNonNull(Fields.CERT)) {
+                        b.setCertificate(endpoint.get(Fields.CERT).asText());
+                    }
+
                     if (endpoint.hasNonNull(Fields.EXTERNAL_PORTS)) {
                         Map<String, Integer> externalPorts = new HashMap<>();
                         ArrayNode ports = (ArrayNode) endpoint.get(Fields.EXTERNAL_PORTS);

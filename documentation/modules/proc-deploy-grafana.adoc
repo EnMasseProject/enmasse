@@ -14,13 +14,3 @@
 ----
 {cmdcli} apply -f ./install/components/grafana
 ----
-
-. Expose the Grafana service:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} expose service grafana
-----
-
-Grafana accepts the default username `admin` and default password `admin`. For more information about how to connect Grafana to Prometheus, see the link:https://prometheus.io/docs/visualization/grafana/#creating-a-prometheus-data-source[Prometheus documentation^]. If connecting Grafana to Prometheus, use `prometheus.enmasse.svc.cluster.local` as the Prometheus host name.
-

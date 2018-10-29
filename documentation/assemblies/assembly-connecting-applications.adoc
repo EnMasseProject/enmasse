@@ -2,6 +2,8 @@
 //
 // master.adoc
 
+:parent-context: {context}
+
 [id='assembly-connecting-applications-{context}']
 = Connecting applications to {ProductName}
 
@@ -40,3 +42,4 @@ include::../modules/ref-dotnet-example.adoc[leveloffset=+2]
 
 //TODO: add links for all these clients
 
+:context: {parent-context}

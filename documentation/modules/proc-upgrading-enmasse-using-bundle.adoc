@@ -7,10 +7,11 @@
 
 .Prerequisites
 
-* A new release of {ProductName}. For more information, see xref:downloading-okd[].
+* A new release of {ProductName}. For more information, see xref:downloading-{context}[].
 
 .Procedure
 
+ifeval::["{cmdcli}" == "oc"]
 . Log in as a service operator:
 +
 [subs="attributes",options="nowrap"]
@@ -24,19 +25,28 @@ oc login -u system:admin
 ----
 oc project _{ProductNamespace}_
 ----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Select the namespace where {ProductName} is installed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} config set-context $(kubectl config current-context) --namespace=_{ProductNamespace}_
+----
+endif::[]
 
 . Apply the new release bundle:
 +
 [subs="attributes",options="nowrap"]
 ----
-oc apply -f install/bundles/enmasse-with-standard-authservice.yaml
+{cmdcli} apply -f install/bundles/enmasse-with-standard-authservice.yaml
 ----
 
 . Monitor pods while they are restarted:
 +
 [subs="attributes",options="nowrap"]
 ----
-oc get pods -w
+{cmdcli} get pods -w
 ----
 +
 The upgrade should cause all pods to be restarted within a couple of minutes.

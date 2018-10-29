@@ -4,13 +4,15 @@
 :parent-context: {context}
 
 [id='infrastructure-configuration-{context}']
-= Infrastructure configuration
+= Infrastructure configuration 
 
 {ProductName} creates infrastructure components such as routers, brokers, and consoles. These
 components can be configured while the system is running, and {ProductName} automatically updates
-the components with the new settings.
+the components with the new settings. The {ProductName} service operator can edit the {ProductName}
+default infrastructure configuration or create new configurations.
 
-The {ProductName} service operator can edit the {ProductName} default infrastructure configuration.
+Infrastructure configurations can be referred to from one or more address space plans. For more information
+about address space plans, see xref:con-address-space-plans-{context}[].
 
 Infrastructure configuration can be managed for both `brokered` and `standard` infrastructure
 using `BrokeredInfraConfig` and `StandardInfraConfig` resources.
@@ -18,18 +20,6 @@ using `BrokeredInfraConfig` and `StandardInfraConfig` resources.
 include::../modules/con-brokered-infra-config.adoc[leveloffset=+1]
 
 include::../modules/con-standard-infra-config.adoc[leveloffset=+1]
-
-= Applying configuration changes on OpenShift
-
-:cmdcli: oc
-:context: {parent-context}-okd
-include::../modules/proc-applying-standard-infra-config.adoc[leveloffset=+1]
-
-= Applying configuration changes on Kubernetes
-
-:cmdcli: kubectl
-:context: {parent-context}-k8s
-include::../modules/proc-applying-standard-infra-config.adoc[leveloffset=+1]
 
 :context: {parent-context}
 

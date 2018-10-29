@@ -1,10 +1,8 @@
 // This assembly is included in the following assemblies:
 //
 // <List assemblies here, each on a new line>
-:parent-context: {context}
-
 [id='upgrading-enmasse-{context}']
-= Upgrading {ProductName}
+= Upgrading {ProductName} on {KubePlatform}
 
 {ProductName} supports upgrades between minor versions using cloud native tools and the same
 mechanism used to apply configuration changes.  When upgrading, the updated infrastructure
@@ -12,12 +10,11 @@ configuration of the new version will trigger the upgrade to start.
 
 Upgrading {ProductName} is done by applying the YAML files for the new version.
 
-:cmdcli: oc
-:context: {parent-context}-okd
-:PlatformName: OpenShift
+ifeval::["{cmdcli}" == "oc"]
 include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-template.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-ansible.adoc[leveloffset=+1]
-
-:context: {parent-context}
-
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
+endif::[]

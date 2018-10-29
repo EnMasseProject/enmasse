@@ -1,10 +1,10 @@
-[id='quickstart-on-kubernetes-{context}']
-= {ProductName} on Kubernetes
-
 :cmdcli: kubectl
 :parent-context: {context}
-:context: {context}-kube
+:context: {context}-gs-kube
 :KubePlatform: Kubernetes
+
+[id='quickstart-on-kubernetes-{context}']
+= {ProductName} on Kubernetes
 
 This guide will walk through the process of setting up {ProductName} on
 Kubernetes with clients for sending and receiving messages.

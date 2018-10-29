@@ -1,0 +1,23 @@
+apiVersion: enmasse.io/v1alpha1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  ...
+status:
+  isReady: false <1>
+  messages:
+    - "One or more deployments are not ready: "
+  endpointStatuses: <2>
+    - name: messaging
+      certificate: aGVsbG8= <3>
+      serviceHost: messaging-123.enmasse-infra.svc <4>
+      servicePorts: <5>
+        - name: amqp
+          port: 5672
+        - name: amqps
+          port: 5671
+      externalHost: messaging.example.com <6>
+      externalPorts: <7>
+        - name: amqps
+          port: 443

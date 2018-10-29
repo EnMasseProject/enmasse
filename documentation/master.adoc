@@ -57,13 +57,29 @@ include::assemblies/assembly-installing-kubernetes.adoc[leveloffset=+3]
 
 === Configuring {ProductName}
 
-include::assemblies/assembly-plans.adoc[leveloffset=+3]
+include::modules/con-address-space-plans.adoc[leveloffset=+3]
 
-include::assemblies/assembly-infrastructure-configuration.adoc[leveloffset=+3]
+include::assemblies/assembly-address-space-plans-oc.adoc[leveloffset=+3]
+
+include::assemblies/assembly-address-space-plans-kube.adoc[leveloffset=+3]
+
+include::modules/con-address-plans.adoc[leveloffset=+3]
+
+include::assemblies/assembly-address-plans-oc.adoc[leveloffset=+3]
+
+include::assemblies/assembly-address-plans-kube.adoc[leveloffset=+3]
+
+include::modules/con-infrastructure-configuration.adoc[leveloffset=+3]
+
+include::assemblies/assembly-infrastructure-configuration-oc.adoc[leveloffset=+3]
+
+include::assemblies/assembly-infrastructure-configuration-kube.adoc[leveloffset=+3]
 
 === Upgrading {ProductName}
 
-include::assemblies/assembly-upgrading-enmasse.adoc[leveloffset=+3]
+include::assemblies/assembly-upgrading-enmasse-oc.adoc[leveloffset=+3]
+
+include::assemblies/assembly-upgrading-enmasse-kube.adoc[leveloffset=+3]
 
 === Monitoring {ProductName}
 
@@ -87,17 +103,19 @@ include::modules/con-brokered-address-space.adoc[leveloffset=+2]
 
 include::assemblies/assembly-brokered-address-types.adoc[leveloffset=+3]
 
-include::assemblies/assembly-managing-address-spaces.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-address-spaces-oc.adoc[leveloffset=+1]
+include::assemblies/assembly-managing-address-spaces-kube.adoc[leveloffset=+1]
 
-include::assemblies/assembly-managing-addresses.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-addresses-oc.adoc[leveloffset=+1]
+include::assemblies/assembly-managing-addresses-kube.adoc[leveloffset=+1]
 
 //Accessing the Console
 include::modules/proc-logging-in-console.adoc[leveloffset=+2]
 
 //Managing users
 include::modules/con-user-model.adoc[leveloffset=+2]
-include::assemblies/assembly-managing-users-kube.adoc[leveloffset=+2]
 include::assemblies/assembly-managing-users-oc.adoc[leveloffset=+2]
+include::assemblies/assembly-managing-users-kube.adoc[leveloffset=+2]
 
 //Connecting applications
 include::assemblies/assembly-connecting-applications.adoc[leveloffset=+2]

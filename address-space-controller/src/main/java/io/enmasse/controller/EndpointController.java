@@ -133,6 +133,14 @@ public class EndpointController implements Controller {
                     if (route != null) {
                         statusBuilder.setExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
                         statusBuilder.setExternalHost(route.getSpec().getHost());
+                        if (exposeSpec.getRouteTlsTermination().equals(ExposeSpec.TlsTermination.passthrough)) {
+                            Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
+                            if (certSecret != null) {
+                                statusBuilder.setCertificate(certSecret.getData().get("tls.crt"));
+                            }
+                        } else {
+                            statusBuilder.setCertificate(route.getSpec().getTls().getCertificate());
+                        }
                     }
                     break;
                 case loadbalancer:

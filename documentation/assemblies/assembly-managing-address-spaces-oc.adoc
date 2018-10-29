@@ -1,0 +1,11 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+:parent-context: {context}
+
+:context: {parent-context}-okd
+:cmdcli: oc
+:KubePlatform: OpenShift
+include::assembly-managing-address-spaces.adoc[leveloffset=+1]
+:context: {parent-context}

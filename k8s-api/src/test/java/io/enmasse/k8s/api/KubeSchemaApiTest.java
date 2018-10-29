@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ public class KubeSchemaApiTest {
 
     @Test
     public void testSchemaAssemble() {
-        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, false);
+        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, Clock.systemUTC(), false);
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
@@ -134,7 +135,7 @@ public class KubeSchemaApiTest {
         when(brokeredInfraConfigApi.watchBrokeredInfraConfigs(any(), any())).thenReturn(mockWatch);
         when(standardInfraConfigApi.watchStandardInfraConfigs(any(), any())).thenReturn(mockWatch);
 
-        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, true);
+        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, Clock.systemUTC(), true);
 
         schemaApi.watchSchema(items -> { }, Duration.ofSeconds(5));
         verify(addressSpacePlanApi).watchAddressSpacePlans(any(), eq(Duration.ofSeconds(5)));

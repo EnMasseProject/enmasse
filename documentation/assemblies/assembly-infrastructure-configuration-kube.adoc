@@ -1,0 +1,11 @@
+// This assembly is included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+:parent-context: {context}
+
+:cmdcli: kubectl
+:context: kube
+:KubePlatform: Kubernetes
+include::../modules/proc-applying-infra-config.adoc[leveloffset=+1]
+:context: {parent-context}
+

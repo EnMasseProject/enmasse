@@ -2,13 +2,13 @@
 //
 // assembly-configure-infrastructure-configuration.adoc
 
-[id='applying-standard-infra-config-changes-{context}']
-= Applying standard infrastructure configuration
+[id='applying-infra-config-changes-{context}']
+= Applying infrastructure configuration on {KubePlatform}
 
 You can edit existing configurations or create new ones.
 
 .Prerequisites
-* A standard infrastructure configuration change that you want to apply. For more information, see xref:con-standard-infra-config-messaging[].
+* An infrastructure configuration change that you want to apply. For more information, see xref:infrastructure-configuration-messaging[].
 
 .Procedure
 
@@ -27,6 +27,14 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} project enmasse
 ----
 endif::[]
+
+. Create infrastructure configuration:
++
+[source,yaml,options="nowrap"]
+.link:resources/standard-infra-config-example.yaml[standard-infra-config-example.yaml]
+----
+include::../common/standard-infra-config-example.yaml[]
+----
 
 . Apply the configuration changes:
 +

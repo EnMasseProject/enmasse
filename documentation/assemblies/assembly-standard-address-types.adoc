@@ -2,6 +2,8 @@
 //
 // master.adoc
 
+:parent-context: {context}
+
 [id='assembly-standard-address-types-{context}']
 = Standard address types
 The standard address space supports five different address types:
@@ -24,3 +26,4 @@ include::../modules/con-standard-multicast.adoc[leveloffset=+1]
 
 include::../modules/con-standard-subscription.adoc[leveloffset=+1]
 
+:context: {parent-context}
