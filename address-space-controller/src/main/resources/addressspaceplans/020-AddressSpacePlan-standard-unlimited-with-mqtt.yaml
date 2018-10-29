@@ -1,12 +1,12 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressSpacePlan
 metadata:
-  name: unlimited-standard-with-mqtt
+  name: standard-unlimited-with-mqtt
   labels:
     app: enmasse
   annotations:
     enmasse.io/defined-by: default-with-mqtt
-displayName: Unlimited Standard With MQTT
+displayName: Unlimited With MQTT
 displayOrder: 0
 shortDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support.
 longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support. This plan allows an unlimited number of routers (minimum 2) and brokers, and is suitable for applications where you do not want to impose any restrictions.
@@ -23,20 +23,20 @@ resources:
   min: 1.0
   max: 10000.0
 addressPlans:
-- small-standard-anycast
-- medium-standard-anycast
-- large-standard-anycast
-- small-standard-multicast
-- medium-standard-multicast
-- large-standard-multicast
-- small-standard-queue
-- medium-standard-queue
-- large-standard-queue
-- xlarge-standard-queue
-- small-standard-topic
-- medium-standard-topic
-- large-standard-topic
-- xlarge-standard-topic
-- small-standard-subscription
-- medium-standard-subscription
-- large-standard-subscription
+- standard-small-anycast
+- standard-medium-anycast
+- standard-large-anycast
+- standard-small-multicast
+- standard-medium-multicast
+- standard-large-multicast
+- standard-small-queue
+- standard-medium-queue
+- standard-large-queue
+- standard-xlarge-queue
+- standard-small-topic
+- standard-medium-topic
+- standard-large-topic
+- standard-xlarge-topic
+- standard-small-subscription
+- standard-medium-subscription
+- standard-large-subscription

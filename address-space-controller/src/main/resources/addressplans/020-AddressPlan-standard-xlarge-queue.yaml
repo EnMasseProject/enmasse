@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: xlarge-standard-queue
+  name: standard-xlarge-queue
   labels:
     app: enmasse
 displayName: Extra Large Queue

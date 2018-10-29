@@ -17,7 +17,7 @@ metadata:
   name: space1
 spec:
   type: standard
-  plan: unlimited-standard
+  plan: standard-unlimited
 EOF
 
 cat <<EOF | oc create -f -
@@ -28,7 +28,7 @@ metadata:
 spec:
   address: myqueue
   type: queue
-  plan: pooled-queue
+  plan: standard-small-queue
 EOF
 ```
 

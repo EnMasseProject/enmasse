@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: large-standard-multicast
+  name: standard-large-multicast
   labels:
     app: enmasse
 displayName: Large Multicast

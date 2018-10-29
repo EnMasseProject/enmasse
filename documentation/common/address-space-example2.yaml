@@ -4,7 +4,7 @@ metadata:
   name: myspace
 spec:
   type: standard <1>
-  plan: unlimited-standard <2>
+  plan: standard-unlimited <2>
   authenticationService:
     type: standard <3>
   endpoints: <4>

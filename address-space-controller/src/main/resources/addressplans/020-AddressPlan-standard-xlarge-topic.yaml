@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: xlarge-standard-topic
+  name: standard-xlarge-topic
   labels:
     app: enmasse
 displayName: Extra Large Topic

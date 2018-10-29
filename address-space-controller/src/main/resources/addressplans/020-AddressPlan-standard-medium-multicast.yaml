@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: medium-standard-multicast
+  name: standard-medium-multicast
   labels:
     app: enmasse
 displayName: Medium Multicast

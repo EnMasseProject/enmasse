@@ -261,7 +261,7 @@ public class OpenshiftWebPage implements IWebPage {
         if (addressSpace.getType() == AddressSpaceType.BROKERED) {
             createAddressSpaceBrokered(addressSpace.getNamespace(), projectName);
         } else {
-            createAddressSpaceStandard(addressSpace.getNamespace(), projectName, "unlimited-standard");
+            createAddressSpaceStandard(addressSpace.getNamespace(), projectName, "standard-unlimited");
         }
         try {
             selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");

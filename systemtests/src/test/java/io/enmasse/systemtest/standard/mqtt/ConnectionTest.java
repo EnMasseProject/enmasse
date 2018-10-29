@@ -13,8 +13,6 @@ import io.enmasse.systemtest.mqtt.MqttConnectionLostCallback;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.junit.Ignore;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +32,7 @@ public class ConnectionTest extends TestBaseWithShared implements ITestBaseStand
      */
     @Test
     public void newSessionDisconnectsExisting() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
+        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
         setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();

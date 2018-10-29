@@ -5,4 +5,4 @@ metadata:
 spec:
     address: myqueue
     type: queue
-    plan: pooled-queue
+    plan: standard-small-queue

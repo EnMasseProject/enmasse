@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: medium-standard-queue
+  name: standard-medium-queue
   labels:
     app: enmasse
 displayName: Medium Queue

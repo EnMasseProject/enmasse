@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: small-standard-queue
+  name: standard-small-queue
   labels:
     app: enmasse
 displayName: Small Queue

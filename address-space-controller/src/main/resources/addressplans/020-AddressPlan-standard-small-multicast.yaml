@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: small-standard-multicast
+  name: standard-small-multicast
   labels:
     app: enmasse
 displayName: Small Multicast

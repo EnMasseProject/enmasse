@@ -79,7 +79,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     @Disabled("related issue: #1529")
     void testRetainedMessages() throws Exception {
-        Destination topic = Destination.topic("retained-message-topic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
+        Destination topic = Destination.topic("retained-message-topic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
         setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
@@ -107,7 +107,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic(MYTOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
+        Destination dest = Destination.topic(MYTOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
         setAddresses(dest);
 
         IMqttClient client = mqttClientFactory.create();

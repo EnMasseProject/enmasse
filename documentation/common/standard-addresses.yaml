@@ -6,22 +6,22 @@ items:
   spec:
     address: anycast1
     type: anycast
-    plan: standard-anycast
+    plan: standard-small-anycast
 - metadata:
     name: myspace.multicast1
   spec:
     address: multicast1
     type: multicast
-    plan: standard-multicast
+    plan: standard-small-multicast
 - metadata:
     name: myspace.queue1
   spec:
     address: queue1
     type: queue
-    plan: pooled-queue
+    plan: standard-small-queue
 - metadata:
     name: myspace.topic1
   spec:
     address: topic1
     type: topic
-    plan: pooled-topic
+    plan: standard-small-topic

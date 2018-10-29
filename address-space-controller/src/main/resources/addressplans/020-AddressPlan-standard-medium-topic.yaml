@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: medium-standard-topic
+  name: standard-medium-topic
   labels:
     app: enmasse
 displayName: Medium Topic

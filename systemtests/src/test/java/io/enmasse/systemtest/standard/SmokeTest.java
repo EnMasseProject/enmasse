@@ -36,9 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(nonPR)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
-    private Destination topic = Destination.topic("smoketopic", DestinationPlan.STANDARD_POOLED_TOPIC.plan());
-    private Destination mqttTopic = Destination.topic("smokeMqtt_1", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
+    private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+    private Destination topic = Destination.topic("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
+    private Destination mqttTopic = Destination.topic("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
     private Destination anycast = Destination.anycast("smokeanycast");
     private Destination multicast = Destination.multicast("smokemulticast");
 

@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: small-standard-anycast
+  name: standard-small-anycast
   labels:
     app: enmasse
 displayName: Small Anycast

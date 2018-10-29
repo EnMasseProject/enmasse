@@ -78,9 +78,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedQueues() throws Exception {
-        Destination q1 = Destination.queue("queue1", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
-        Destination q2 = Destination.queue("queue2", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
-        Destination q3 = Destination.queue("queue3", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
+        Destination q1 = Destination.queue("queue1", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        Destination q2 = Destination.queue("queue2", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        Destination q3 = Destination.queue("queue3", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
         setAddresses(q1, q2, q3);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -116,10 +116,10 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Tag(nonPR)
     void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Destination destExtra = Destination.queue("ext-queue", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
+        Destination destExtra = Destination.queue("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
 
         List<Destination> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(Destination.queue(queue, DestinationPlan.STANDARD_POOLED_QUEUE.plan())));
+        queues.forEach(queue -> addresses.add(Destination.queue(queue, DestinationPlan.STANDARD_SMALL_QUEUE.plan())));
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         for (Destination address : addresses) {

@@ -1,7 +1,7 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressPlan
 metadata:
-  name: medium-standard-subscription
+  name: standard-medium-subscription
   labels:
     app: enmasse
 displayName: Medium Subscription
