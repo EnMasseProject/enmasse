@@ -92,6 +92,8 @@ function configure() {
     keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
     keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $TRUSTSTORE_PATH
 
+    cp /etc/pki/java/cacerts ${AUTH_TRUSTSTORE_PATH}
+    chmod 644 ${AUTH_TRUSTSTORE_PATH}
     keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $AUTH_TRUSTSTORE_PATH
 
     if [ -d /etc/external-certs ]
