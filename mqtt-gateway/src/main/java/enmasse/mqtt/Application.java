@@ -5,60 +5,43 @@
 
 package enmasse.mqtt;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static io.vertx.core.logging.LoggerFactory.LOGGER_DELEGATE_FACTORY_CLASS_NAME;
+
 /**
  * EnMasse MQTT gateway main application class
  */
-@SpringBootApplication // same as using @Configuration, @EnableAutoConfiguration and @ComponentScan
 public class Application {
 
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     private final Vertx vertx = Vertx.vertx();
-
-    @Value(value = "${enmasse.mqtt.maxinstances:1}")
-    private int maxInstances;
-    @Value(value = "${enmasse.mqtt.startuptimeout:20}")
-    private int startupTimeout;
-    @Autowired
-    private MqttGateway mqttGateway;
+    private final MqttGatewayOptions options;
+    private final MqttGateway mqttGateway;
 
     private AtomicBoolean running = new AtomicBoolean();
 
-    @PostConstruct
+    public Application(MqttGatewayOptions options, MqttGateway mqttGateway) {
+        this.options = options;
+        this.mqttGateway = mqttGateway;
+    }
+
     public void registerVerticles() {
 
         if (this.running.compareAndSet(false, true)) {
 
-            // instance count is upper bounded to the number of available processors
-            int instanceCount =
-                    (this.maxInstances > 0 && this.maxInstances < Runtime.getRuntime().availableProcessors()) ?
-                            this.maxInstances :
-                            Runtime.getRuntime().availableProcessors();
-
-
-            if (instanceCount > 1) {
-                // See https://github.com/EnMasseProject/enmasse/issues/1508
-                throw new IllegalStateException("MQTT Gateway cannot currently be scaled above 1");
-            }
+            long startupTimeout = this.options.getStartupTimeout().getSeconds();
             try {
 
                 CountDownLatch latch = new CountDownLatch(1);
@@ -73,18 +56,17 @@ public class Application {
                 });
 
                 // start deploying more verticle instances
-                this.deployVerticles(instanceCount, startFuture);
+                this.deployVerticles(startFuture);
 
                 // wait for deploying end
-                if (latch.await(this.startupTimeout, TimeUnit.SECONDS)) {
+                if (latch.await(startupTimeout, TimeUnit.SECONDS)) {
                     LOG.info("MQTT gateway startup completed successfully");
                 } else {
-                    LOG.error("Startup timed out after {} seconds, shutting down ...", this.startupTimeout);
+                    LOG.error("Startup timed out after {} seconds, shutting down ...", startupTimeout);
                     this.shutdown();
                 }
 
             } catch (InterruptedException e) {
-
                 LOG.error("Startup process has been interrupted, shutting down ...");
                 this.shutdown();
             }
@@ -94,46 +76,37 @@ public class Application {
     /**
      * Execute verticles deploy operation
      *
-     * @param instanceCount     number of verticle instances to deploy
      * @param resultHandler     handler called when the deploy ends
      */
-    private void deployVerticles(int instanceCount, Future<Void> resultHandler) {
+    private void deployVerticles(Future<Void> resultHandler) {
 
-        LOG.debug("Starting up {} instances of MQTT gateway verticle", instanceCount);
+        LOG.debug("Starting up MQTT gateway verticle");
 
-        List<Future> results = new ArrayList<>();
+        Future<Void> result = Future.future();
 
-        for (int i = 1; i <= instanceCount; i++) {
+        this.vertx.deployVerticle(this.mqttGateway, done -> {
+            if (done.succeeded()) {
+                LOG.debug("Verticle instance deployed [{}]", done.result());
+                result.complete();
+            } else {
+                LOG.debug("Failed to deploy verticle instance {}", done.cause());
+                result.fail(done.cause());
+            }
+        });
 
-            int instanceId = i;
-            Future<Void> result = Future.future();
-            results.add(result);
-
-            this.vertx.deployVerticle(this.mqttGateway, done -> {
-                if (done.succeeded()) {
-                    LOG.debug("Verticle instance {} deployed [{}]", instanceId, done.result());
-                    result.complete();
-                } else {
-                    LOG.debug("Failed to deploy verticle instance {}", instanceId, done.cause());
-                    result.fail(done.cause());
-                }
-            });
-        }
-
-        // combine all futures related to verticle instances deploy
-        CompositeFuture.all(results).setHandler(done -> {
+        result.setHandler(done -> {
             if (done.succeeded()) {
                 resultHandler.complete();
             } else {
                 resultHandler.fail(done.cause());
             }
         });
+
     }
 
-    @PreDestroy
     public void shutdown() {
         if (this.running.compareAndSet(true, false)) {
-            this.shutdown(this.startupTimeout, result -> {
+            this.shutdown(this.options.getStartupTimeout().getSeconds(), result -> {
                 // do nothing ?
             });
         }
@@ -141,11 +114,10 @@ public class Application {
 
     /**
      * Execute Vert.x shutdown with related verticles
-     *
-     * @param timeout   max timeout to wait for shutdown
+     *  @param timeout   max timeout to wait for shutdown
      * @param shutdownHandler   handler called when the shutdown ends
      */
-    private void shutdown(int timeout, Handler<Boolean> shutdownHandler) {
+    private void shutdown(long timeout, Handler<Boolean> shutdownHandler) {
 
         try {
 
@@ -176,6 +148,29 @@ public class Application {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+
+        if (System.getProperty(LOGGER_DELEGATE_FACTORY_CLASS_NAME) == null) {
+            System.setProperty(LOGGER_DELEGATE_FACTORY_CLASS_NAME, SLF4JLogDelegateFactory.class.getName());
+        }
+
+        Map<String, String> env = System.getenv();
+
+        MqttGatewayOptions options = MqttGatewayOptions.fromEnv(env);
+
+        LOG.info("MqttGateway starting with options: {}", options);
+
+        MqttGateway gateway = new MqttGateway(options);
+
+        Application app = new Application(options, gateway);
+        app.registerVerticles();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                LOG.info("MqttGateway shutdown");
+                app.shutdown();
+            }
+        });
     }
 }

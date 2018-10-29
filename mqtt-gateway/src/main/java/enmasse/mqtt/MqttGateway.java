@@ -15,8 +15,6 @@ import io.vertx.mqtt.MqttServer;
 import io.vertx.mqtt.MqttServerOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -29,125 +27,21 @@ import java.util.stream.Collectors;
 /**
  * Vert.x based MQTT gateway for EnMasse
  */
-@Component
 public class MqttGateway extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttGateway.class);
-
-    // binding info for listening
-    private String bindAddress;
-    private int listenPort;
-    // mqtt server options
-    private int maxMessageSize;
-    // connection info to the messaging service
-    private String messagingServiceHost;
-    private int messagingServicePort;
-
-    // SSL/TLS support stuff
-    private boolean ssl;
-    private String certFile;
-    private String keyFile;
+    private final MqttGatewayOptions options;
 
     private MqttServer server;
 
     private final Map<String, AmqpBridge> bridges = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Semaphore> clientIdSemaphores = new ConcurrentHashMap<>();
 
-    /**
-     * Set the IP address the MQTT gateway will bind to
-     *
-     * @param bindAddress   the IP address
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${enmasse.mqtt.bindaddress:0.0.0.0}")
-    public MqttGateway setBindAddress(String bindAddress) {
-        this.bindAddress = bindAddress;
-        return this;
+    public MqttGateway(MqttGatewayOptions options) {
+
+        this.options = options;
     }
 
-    /**
-     * Set the port the MQTT gateway will listen on for MQTT connections.
-     *
-     * @param listePort the port to listen on
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${enmasse.mqtt.listenport:1883}")
-    public MqttGateway setListenPort(int listePort) {
-        this.listenPort = listePort;
-        return this;
-    }
-
-    /**
-     * Set max message size for MQTT Gateway
-     *
-     * @param maxMessageSize   max message size for MQTT messages
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${enmasse.mqtt.maxmessagesize:131072}")
-    public MqttGateway setMaxMessageSize(int maxMessageSize) {
-        this.maxMessageSize = maxMessageSize;
-        return this;
-    }
-
-    /**
-     * Set the address for connecting to the AMQP services
-     *
-     * @param messagingServiceHost    address for AMQP connections
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${messaging.service.host:0.0.0.0}")
-    public MqttGateway setMessagingServiceHost(String messagingServiceHost) {
-        this.messagingServiceHost = messagingServiceHost;
-        return this;
-    }
-
-    /**
-     * Set the port for connecting to the AMQP services
-     *
-     * @param messagingServicePort   port for AMQP connections
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${messaging.service.port:5672}")
-    public MqttGateway setMessagingServicePort(int messagingServicePort) {
-        this.messagingServicePort = messagingServicePort;
-        return this;
-    }
-
-    /**
-     * Set the SSL/TLS support needed for the MQTT connections
-     *
-     * @param ssl   SSL/TLS is needed
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${enmasse.mqtt.ssl:false}")
-    public MqttGateway setSsl(boolean ssl) {
-        this.ssl = ssl;
-        return this;
-    }
-
-    /**
-     * Set the server certificate file path for SSL/TLS support
-     *
-     * @param certFile  server certificate file path
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${enmasse.mqtt.certfile:./src/test/resources/tls/server-cert.pem}")
-    public MqttGateway setCertFile(String certFile) {
-        this.certFile = certFile;
-        return this;
-    }
-
-    /**
-     * Set the server private key file path for SSL/TLS support
-     *
-     * @param keyFile   server private key file path
-     * @return  current MQTT gateway instance
-     */
-    @Value(value = "${enmasse.mqtt.keyfile:./src/test/resources/tls/server-key.pem}")
-    public MqttGateway setKeyFile(String keyFile) {
-        this.keyFile = keyFile;
-        return this;
-    }
 
     /**
      * Start the MQTT server component
@@ -157,20 +51,20 @@ public class MqttGateway extends AbstractVerticle {
     private void bindMqttServer(Future<Void> startFuture) {
 
         MqttServerOptions options = new MqttServerOptions();
-        options.setMaxMessageSize(this.maxMessageSize);
-        options.setHost(this.bindAddress).setPort(this.listenPort);
+        options.setMaxMessageSize(this.options.getMaxMessageSize());
+        options.setHost(this.options.getBindAddress()).setPort(this.options.getListenPort());
         options.setAutoClientId(true);
 
-        if (this.ssl) {
+        if (this.options.isSsl()) {
 
             PemKeyCertOptions pemKeyCertOptions = new PemKeyCertOptions()
-                    .setKeyPath(this.keyFile)
-                    .setCertPath(this.certFile);
+                    .setKeyPath(this.options.getKeyFile())
+                    .setCertPath(this.options.getCertFile());
 
             options.setKeyCertOptions(pemKeyCertOptions)
-                    .setSsl(this.ssl);
+                    .setSsl(this.options.isSsl());
 
-            LOG.info("SSL/TLS support enabled key {} cert {}", this.keyFile, this.certFile);
+            LOG.info("SSL/TLS support enabled key {} cert {}", this.options.getKeyFile(), this.options.getCertFile());
         }
 
         this.server = MqttServer.create(this.vertx, options);
@@ -182,8 +76,8 @@ public class MqttGateway extends AbstractVerticle {
 
                     if (done.succeeded()) {
 
-                        LOG.info("MQTT gateway running on {}:{}", this.bindAddress, this.server.actualPort());
-                        LOG.info("AMQP messaging service on {}:{}", this.messagingServiceHost, this.messagingServicePort);
+                        LOG.info("MQTT gateway running on {}:{}", this.options.getBindAddress(), this.server.actualPort());
+                        LOG.info("AMQP messaging service on {}:{}", this.options.getMessagingServiceHost(), this.options.getMessagingServicePort());
                         startFuture.complete();
                     } else {
                         LOG.error("Error while starting up MQTT gateway", done.cause());
@@ -217,7 +111,7 @@ public class MqttGateway extends AbstractVerticle {
                 } finally {
                     clientIdSemaphores.remove(clientIdentifier, clientIdSemaphore);
                 }
-            }).open(this.messagingServiceHost, this.messagingServicePort, done -> {
+            }).open(this.options.getMessagingServiceHost(), this.options.getMessagingServicePort(), done -> {
                 if (done.succeeded()) {
                     AmqpBridge newBridge = done.result();
                     this.bridges.put(newBridge.id(), newBridge);

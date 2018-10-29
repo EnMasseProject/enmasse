@@ -10,6 +10,7 @@ import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import enmasse.mqtt.storage.LwtStorage;
+import enmasse.mqtt.storage.impl.InMemoryLwtStorage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -19,37 +20,34 @@ import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 
 /**
  * Vert.x based MQTT Last Will and Testament service for EnMasse
  */
-@Component
 public class MqttLwt extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttLwt.class);
 
     private static final String CONTAINER_ID = "lwt-service";
+    private final MqttLwtOptions options;
+    private final LwtStorage lwtStorage;
 
-    private String certDir;
-
-    // connection info to the messaging service
-    private String host;
-    private int normalPort;
-    private int routeContainerPort;
 
     private ProtonClient client;
 
     private AmqpLwtEndpoint lwtEndpoint;
-    private LwtStorage lwtStorage;
     private AmqpPublishEndpoint publishEndpoint;
 
     // counter for the message identifier
     private int messageIdCounter;
+
+    public MqttLwt(MqttLwtOptions options) {
+
+        this.options = options;
+        this.lwtStorage = new InMemoryLwtStorage();
+    }
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -83,7 +81,7 @@ public class MqttLwt extends AbstractVerticle {
         Future<ProtonConnection> lwtConnFuture = Future.future();
 
         // connecting to the messaging service internal (router network)
-        this.client.connect(options, this.host, this.routeContainerPort, done -> {
+        this.client.connect(options, this.options.getMessagingServiceHost(), this.options.getRouteContainerPort(), done -> {
 
             if (done.succeeded()) {
 
@@ -116,7 +114,7 @@ public class MqttLwt extends AbstractVerticle {
 
             Future<ProtonConnection> publishConnFuture = Future.future();
 
-            this.client.connect(options, this.host, this.normalPort, done -> {
+            this.client.connect(options, this.options.getMessagingServiceHost(), this.options.getMessagingServiceNormalPort(), done -> {
 
                 if (done.succeeded()) {
 
@@ -181,6 +179,7 @@ public class MqttLwt extends AbstractVerticle {
         options.setConnectTimeout(5000);
         options.setReconnectAttempts(-1).setReconnectInterval(1000); // reconnect forever, every 1000 millisecs
 
+        String certDir = this.options.getCertDir();
         if (certDir != null) {
             options.setSsl(true)
                     .addEnabledSaslMechanism("EXTERNAL")
@@ -249,66 +248,5 @@ public class MqttLwt extends AbstractVerticle {
                 }
             });
         }
-    }
-
-    /**
-     * Set the certificate directory where LWT certificates can be found.
-     *
-     * @param certDir path to certificate directory
-     * @return current MQTT LWT instance
-     */
-    @Value(value = "${cert.dir}")
-    public MqttLwt setCertDir(String certDir) {
-        this.certDir = certDir;
-        return this;
-    }
-
-    /**
-     * Set the address for connecting to the AMQP internal network
-     *
-     * @param host hostname for AMQP connection
-     * @return  current MQTT LWT instance
-     */
-    @Value(value = "${messaging.service.host:localhost}")
-    public MqttLwt setHost(String host) {
-        this.host = host;
-        return this;
-    }
-
-    /**
-     * Set the port for connecting to the internal AMQP network
-     *
-     * @param normalPort port for AMQP connections
-     * @return  current MQTT LWT instance
-     */
-    @Value(value = "${messaging.service.normal.port:5672}")
-    public MqttLwt setNormalPort(int normalPort) {
-        this.normalPort = normalPort;
-        return this;
-    }
-
-    /**
-     * Set the port for connecting to the internal AMQP network where the port
-     * has the route-container role.
-     *
-     * @param routeContainerPort port (with role route-container) for AMQP connections
-     * @return  current MQTT LWT instance
-     */
-    @Value(value = "${messaging.service.route.container.port:55671}")
-    public MqttLwt setRouteContainerPort(int routeContainerPort) {
-        this.routeContainerPort = routeContainerPort;
-        return this;
-    }
-
-    /**
-     * Set the LWT Storage service implementation to use
-     *
-     * @param lwtStorage    LWT Storage service instance
-     * @return  current MQTT LWT instance
-     */
-    @Autowired
-    public MqttLwt setLwtStorage(LwtStorage lwtStorage) {
-        this.lwtStorage = lwtStorage;
-        return this;
     }
 }
