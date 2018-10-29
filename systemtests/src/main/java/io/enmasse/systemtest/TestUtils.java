@@ -683,16 +683,15 @@ public class TestUtils {
     /**
      * Create object of SchemaData class from JsonObject
      *
-     * @param addressJsonObject
+     * @param schemaList
      * @return
      */
-    private static SchemaData getSchemaObject(JsonObject addressJsonObject) {
-        log.info("Got Schema object: {}", addressJsonObject.toString());
+    private static SchemaData getSchemaObject(JsonObject schemaList) {
+        log.info("Got Schema object: {}", schemaList.toString());
         List<AddressSpaceTypeData> data = new ArrayList<>();
-        JsonObject spec = addressJsonObject.getJsonObject("spec");
-        JsonArray addressSpaceTypes = spec.getJsonArray("addressSpaceTypes");
-        for (int i = 0; i < addressSpaceTypes.size(); i++) {
-            data.add(new AddressSpaceTypeData(addressSpaceTypes.getJsonObject(i)));
+        JsonArray items = schemaList.getJsonArray("items");
+        for (int i = 0; i < items.size(); i++) {
+            data.add(new AddressSpaceTypeData(items.getJsonObject(i)));
         }
 
         return new SchemaData(data);

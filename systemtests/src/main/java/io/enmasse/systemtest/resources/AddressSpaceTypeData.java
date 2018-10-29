@@ -24,16 +24,18 @@ public class AddressSpaceTypeData {
         this.plans = plans;
     }
 
-    public AddressSpaceTypeData(JsonObject addressSpaceTypeData) {
-        this.name = addressSpaceTypeData.getString("name");
-        this.description = addressSpaceTypeData.getString("description");
+    public AddressSpaceTypeData(JsonObject schema) {
+        JsonObject metadata = schema.getJsonObject("metadata");
+        this.name = metadata.getString("name");
+        JsonObject spec = schema.getJsonObject("spec");
+        this.description = spec.getString("description");
         this.addressTypes = new ArrayList<>();
-        JsonArray addressTypes = addressSpaceTypeData.getJsonArray("addressTypes");
+        JsonArray addressTypes = spec.getJsonArray("addressTypes");
         for (int i = 0; i < addressTypes.size(); i++) {
             this.addressTypes.add(new AddressTypeData(addressTypes.getJsonObject(i)));
         }
         this.plans = new ArrayList<>();
-        JsonArray plansData = addressSpaceTypeData.getJsonArray("plans");
+        JsonArray plansData = spec.getJsonArray("plans");
         for (int i = 0; i < plansData.size(); i++) {
             this.plans.add(new PlanData(plansData.getJsonObject(i)));
         }
