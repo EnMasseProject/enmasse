@@ -154,10 +154,10 @@ public abstract class Kubernetes {
     }
 
     public int getExpectedPods(String plan) {
-        if (plan.endsWith("without-mqtt")) {
-            return 2;
-        } else {
+        if (plan.endsWith("with-mqtt")) {
             return 5;
+        } else {
+            return 2;
         }
     }
 

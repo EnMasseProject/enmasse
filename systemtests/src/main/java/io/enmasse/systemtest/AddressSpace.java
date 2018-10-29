@@ -174,7 +174,7 @@ public class AddressSpace {
             if (type.equals(AddressSpaceType.BROKERED)) {
                 plan = "brokered-single-broker";
             } else {
-                plan = "standard-unlimited";
+                plan = "standard-unlimited-with-mqtt";
             }
         }
         return this;
