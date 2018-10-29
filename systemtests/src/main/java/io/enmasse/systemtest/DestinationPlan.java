@@ -7,12 +7,12 @@ package io.enmasse.systemtest;
 public enum DestinationPlan {
     BROKERED_QUEUE("brokered-queue"),
     BROKERED_TOPIC("brokered-topic"),
-    STANDARD_POOLED_QUEUE("pooled-queue"),
-    STANDARD_POOLED_TOPIC("pooled-topic"),
-    STANDARD_SHARDED_QUEUE("sharded-queue"),
-    STANDARD_SHARDED_TOPIC("sharded-topic"),
-    STANDARD_ANYCAST("standard-anycast"),
-    STANDARD_MULTICAST("standard-multicast");
+    STANDARD_POOLED_QUEUE("small-standard-queue"),
+    STANDARD_POOLED_TOPIC("small-standard-topic"),
+    STANDARD_SHARDED_QUEUE("large-standard-queue"),
+    STANDARD_SHARDED_TOPIC("large-standard-topic"),
+    STANDARD_ANYCAST("small-standard-anycast"),
+    STANDARD_MULTICAST("small-standard-multicast");
 
     private String plan;
 
