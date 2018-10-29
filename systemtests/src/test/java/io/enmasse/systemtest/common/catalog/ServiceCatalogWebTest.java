@@ -114,8 +114,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
-        Destination queue = Destination.queue("test-queue", "brokered-queue");
-        Destination topic = Destination.topic("test-topic", "brokered-topic");
+        Destination queue = Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan());
+        Destination topic = Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan());
         AddressSpace brokered = new AddressSpace("test-messaging-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
@@ -142,7 +142,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
-        Destination queue = Destination.queue("test-queue", "sharded-queue");
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
         AddressSpace addressSpace = new AddressSpace("test-cert-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
@@ -189,7 +189,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendReceiveInsideCluster() throws Exception {
-        Destination queue = Destination.queue("test-queue", "sharded-queue");
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
         AddressSpace addressSpace = new AddressSpace("test-messaging-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);

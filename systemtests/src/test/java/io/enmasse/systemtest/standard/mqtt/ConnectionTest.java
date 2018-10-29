@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttConnectionLostCallback;
@@ -33,7 +34,7 @@ public class ConnectionTest extends TestBaseWithShared implements ITestBaseStand
      */
     @Test
     public void newSessionDisconnectsExisting() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, "sharded-topic");
+        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();

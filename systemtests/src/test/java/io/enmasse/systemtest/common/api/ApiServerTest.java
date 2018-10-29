@@ -120,7 +120,7 @@ class ApiServerTest extends TestBase {
         AnycastTest.runAnycastTest(anycast, client1, client2);
 
         //mqtt
-        Destination topic = Destination.topic("mytopic", "sharded-topic");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_SHARDED_TOPIC.plan());
         appendAddresses(addressSpace, topic);
         Thread.sleep(10_000);
         MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace, luckyUser);
@@ -185,7 +185,7 @@ class ApiServerTest extends TestBase {
         logWithSeparator(log, "Check if uuid is propagated");
         String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
         Destination dest1 = new Destination("test-rest-api-queue", uuid, addressSpace.getName(),
-                "test-rest-api-queue", AddressType.QUEUE.toString(), "brokered-queue");
+                "test-rest-api-queue", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
 
         setAddresses(addressSpace, dest1);
         Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getName())).get(20, TimeUnit.SECONDS).get(0);
@@ -193,7 +193,7 @@ class ApiServerTest extends TestBase {
 
         logWithSeparator(log, "Check if name is optional");
         Destination dest2 = new Destination(null, null, addressSpace.getName(),
-                "test-rest-api-queue2", AddressType.QUEUE.toString(), "brokered-queue");
+                "test-rest-api-queue2", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
         setAddresses(addressSpace, dest2);
 
         HashMap<String, String> queryParams = new HashMap<>();
@@ -206,7 +206,7 @@ class ApiServerTest extends TestBase {
 
         logWithSeparator(log, "Check if addressSpace is optional");
         Destination dest3 = new Destination(null, null, null,
-                "test-rest-api-queue3", AddressType.QUEUE.toString(), "brokered-queue");
+                "test-rest-api-queue3", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
         deleteAddresses(addressSpace);
         setAddresses(addressSpace, dest3);
 
@@ -215,7 +215,7 @@ class ApiServerTest extends TestBase {
 
         logWithSeparator(log, "Check behavior when addressSpace is set to another existing address space");
         Destination dest4 = new Destination(null, null, addressSpace2.getName(),
-                "test-rest-api-queue4", AddressType.QUEUE.toString(), "brokered-queue");
+                "test-rest-api-queue4", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
         try {
             setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4);
         } catch (java.util.concurrent.ExecutionException ex) {
@@ -224,7 +224,7 @@ class ApiServerTest extends TestBase {
         }
 
         try { //missing address
-            Destination destWithoutAddress = Destination.queue(null, "brokered-queue");
+            Destination destWithoutAddress = Destination.queue(null, DestinationPlan.BROKERED_QUEUE.plan());
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
@@ -233,7 +233,7 @@ class ApiServerTest extends TestBase {
         }
 
         try { //missing type
-            Destination destWithoutType = new Destination("not-created-address", null, "brokered-queue");
+            Destination destWithoutType = new Destination("not-created-address", null, DestinationPlan.BROKERED_QUEUE.plan());
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType);
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
@@ -259,19 +259,19 @@ class ApiServerTest extends TestBase {
         AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, "unlimited-standard-without-mqtt");
         createAddressSpace(addrSpace);
 
-        Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), "standard-anycast");
+        Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_ANYCAST.plan());
         addressApiClient.createAddress(anycast);
         List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(1));
         assertThat(addresses.get(0).getName(), is(String.format("%s.%s", addrSpace.getName(), anycast.getName())));
 
-        Destination multicast = new Destination("addr2", null, addrSpace.getName(), "addr_2", AddressType.MULTICAST.toString(), "standard-multicast");
+        Destination multicast = new Destination("addr2", null, addrSpace.getName(), "addr_2", AddressType.MULTICAST.toString(), DestinationPlan.STANDARD_MULTICAST.plan());
         addressApiClient.createAddress(multicast);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(2));
 
         String uuid = UUID.randomUUID().toString();
-        Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), "sharded-queue");
+        Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
         addressApiClient.createAddress(longname);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(3));

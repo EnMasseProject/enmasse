@@ -72,7 +72,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
         setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
 
 //        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getAddressPlanConfig("pooled-queue").getRequiredCreditFromResource("broker");
+//        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_POOLED_QUEUE.plan()).getRequiredCreditFromResource("broker");
 //        int replicasCount = (int) (destCount * requiredCredit);
 //        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
         waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
@@ -123,7 +123,7 @@ class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFir
         appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Destination[0]));
 
 //        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getAddressPlanConfig("pooled-queue").getRequiredCreditFromResource("broker");
+//        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_POOLED_QUEUE.plan()).getRequiredCreditFromResource("broker");
 //        int replicasCount = (int) (destCount * requiredCredit);
 //        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
         waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);

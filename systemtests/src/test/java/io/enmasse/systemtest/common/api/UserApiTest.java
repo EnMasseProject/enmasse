@@ -174,7 +174,7 @@ class UserApiTest extends TestBase {
 
         createAddressSpace(standard);
 
-        Destination queue = Destination.queue("myqueue", "pooled-queue");
+        Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
         setAddresses(standard, queue);
 
         UserCredentials cred = new UserCredentials("pepa", "pepapw");

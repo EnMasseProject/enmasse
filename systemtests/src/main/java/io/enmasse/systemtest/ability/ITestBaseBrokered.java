@@ -6,6 +6,7 @@ package io.enmasse.systemtest.ability;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.DestinationPlan;
 
 public interface ITestBaseBrokered extends ITestBase {
 
@@ -18,9 +19,9 @@ public interface ITestBaseBrokered extends ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return "brokered-queue";
+                return DestinationPlan.BROKERED_QUEUE.plan();
             case TOPIC:
-                return "brokered-topic";
+                return DestinationPlan.BROKERED_TOPIC.plan();
         }
         return null;
     }
