@@ -94,6 +94,7 @@ function configure() {
 
     cp /etc/pki/java/cacerts ${AUTH_TRUSTSTORE_PATH}
     chmod 644 ${AUTH_TRUSTSTORE_PATH}
+    keytool -storepasswd -storepass changeit -new ${TRUSTSTORE_PASS} -keystore $AUTH_TRUSTSTORE_PATH
     keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $AUTH_TRUSTSTORE_PATH
 
     if [ -d /etc/external-certs ]
