@@ -24,7 +24,7 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     @Test
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
-                Destination.queue("test-queue2", DestinationPlan.STANDARD_SHARDED_QUEUE.plan()));
+                Destination.queue("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE.plan()));
     }
 
     @Test

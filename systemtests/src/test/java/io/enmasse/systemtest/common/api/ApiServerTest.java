@@ -271,7 +271,7 @@ class ApiServerTest extends TestBase {
         assertThat(addresses.size(), is(2));
 
         String uuid = UUID.randomUUID().toString();
-        Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
+        Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE.plan());
         addressApiClient.createAddress(longname);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(3));

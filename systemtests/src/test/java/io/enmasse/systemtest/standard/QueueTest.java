@@ -91,8 +91,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedQueues() throws Exception {
-        Destination q1 = Destination.queue("shardedQueue1", DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
-        Destination q2 = new Destination("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
+        Destination q1 = Destination.queue("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        Destination q2 = new Destination("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE.plan());
         addressApiClient.createAddress(q2);
 
         appendAddresses(q1);
@@ -178,7 +178,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("disabled due to issue #851")
     void testScaledown() throws Exception {
-        Destination dest = Destination.queue("scalequeue", DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
+        Destination dest = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
         setAddresses(dest);
         scale(dest, 4);
 
