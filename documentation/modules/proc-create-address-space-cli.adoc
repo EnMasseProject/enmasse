@@ -48,7 +48,7 @@ The address space is ready for use when `.status.isReady` field is set to `true`
 {cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
 ----
 
-. Retrieve messaging endpoint hostname:
+. Retrieve messaging endpoint host name:
 +
 [options="nowrap",subs="attributes"]
 ----

@@ -11,7 +11,7 @@ components can be configured while the system is running, and {ProductName} auto
 the components with the new settings. The {ProductName} service operator can edit the {ProductName}
 default infrastructure configuration or create new configurations.
 
-Infrastructure configs can be referred to from 1 or more address space plans. For more information
+Infrastructure configurations can be referred to from one or more address space plans. For more information
 about address space plans, see xref:con-address-space-plans-{context}[].
 
 Infrastructure configuration can be managed for both `brokered` and `standard` infrastructure
