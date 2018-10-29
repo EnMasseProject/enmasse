@@ -124,29 +124,6 @@ public class OpenshiftWebPage implements IWebPage {
         return new ProvisionedServiceItem(selenium);
     }
 
-    private WebElement getBindingCheckBoxes(String name) {
-        List<WebElement> checkBoxes = selenium.getDriver().findElements(By.className("checkbox"));
-        for (WebElement el : checkBoxes) {
-            if (name.equals(el.findElement(By.tagName("label")).findElement(By.tagName("span")).getText())) {
-                log.info(el.findElement(By.tagName("span")).getAttribute("innerHTML"));
-                return el.findElement(By.tagName("span"));
-            }
-        }
-        return null;
-    }
-
-    private void allowConsoleAccess() throws Exception {
-        selenium.clickOnItem(getBindingCheckBoxes("consoleAccess"), "consoleAccess");
-    }
-
-    private void allowConsoleAdmin() throws Exception {
-        selenium.clickOnItem(getBindingCheckBoxes("consoleAdmin"), "consoleAdmin");
-    }
-
-    private void allowExternalAccess() throws Exception {
-        selenium.clickOnItem(getBindingCheckBoxes("externalAccess"), "externalAccess");
-    }
-
     private void fillReceiveAddresses(String text) throws Exception {
         selenium.fillInputItem(selenium.getDriver().findElement(By.id("receiveAddresses")), text);
     }
@@ -345,8 +322,7 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.className("projects-view-all")), "Show all projects");
     }
 
-    public String createBinding(String projectName, boolean consoleAccess, boolean adminConsole, boolean external,
-                                String receiveAddress, String sendAddresses) throws Exception {
+    public String createBinding(String projectName, String receiveAddress, String sendAddresses) throws Exception {
         log.info("Binding in namespace {} will be created", projectName);
         openOpenshiftPage();
         clickOnShowAllProjects();
@@ -354,15 +330,6 @@ public class OpenshiftWebPage implements IWebPage {
         waitForRedirectToService();
         selenium.clickOnItem(getProvisionedServiceItem().getServiceActionCreateBinding(), "Create Binding");
         next();
-        if (consoleAccess) {
-            allowConsoleAccess();
-        }
-        if (adminConsole) {
-            allowConsoleAdmin();
-        }
-        if (external) {
-            allowExternalAccess();
-        }
         if (receiveAddress != null) {
             fillReceiveAddresses(receiveAddress);
         }

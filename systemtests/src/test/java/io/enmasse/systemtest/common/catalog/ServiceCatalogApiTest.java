@@ -121,9 +121,6 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
         HashMap<String, String> bindResources = new HashMap<>();
         bindResources.put("sendAddresses", String.format("queue.%s", wildcardMark));
         bindResources.put("receiveAddresses", String.format("queue.%s", wildcardMark));
-        bindResources.put("consoleAccess", "true");
-        bindResources.put("consoleAdmin", "true");
-        bindResources.put("externalAccess", "true");
         BindingSecretData binding = generateBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), bindResources);
 
         reloadAddressSpaceEndpoints(addressSpace);
