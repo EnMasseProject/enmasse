@@ -4,17 +4,28 @@
  */
 package io.enmasse.osb.api;
 
-import com.fasterxml.jackson.module.jsonSchema.types.BooleanSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
-import io.enmasse.osb.api.catalog.*;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.osb.api.catalog.InputParameters;
+import io.enmasse.osb.api.catalog.Plan;
+import io.enmasse.osb.api.catalog.Schemas;
+import io.enmasse.osb.api.catalog.Service;
+import io.enmasse.osb.api.catalog.ServiceBindingSchema;
+import io.enmasse.osb.api.catalog.ServiceInstanceSchema;
 
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 public class ServiceMapping {
     private final Map<AddressSpaceType, Service> services;
@@ -103,23 +114,8 @@ public class ServiceMapping {
             receiveAddressProperty.setDefault("*");
 
 
-            BooleanSchema consoleAccessProperty = new BooleanSchema();
-            consoleAccessProperty.setRequired(true);
-            consoleAccessProperty.setDefault("false");
-
-            BooleanSchema consoleAdminProperty = new BooleanSchema();
-            consoleAdminProperty.setRequired(true);
-            consoleAdminProperty.setDefault("false");
-
-            BooleanSchema externalAccessProperty = new BooleanSchema();
-            externalAccessProperty.setRequired(true);
-            externalAccessProperty.setDefault("false");
-
             bindParameters.putProperty("sendAddresses", sendAddressProperty);
             bindParameters.putProperty("receiveAddresses", receiveAddressProperty);
-            bindParameters.putProperty("consoleAccess", consoleAccessProperty);
-            bindParameters.putProperty("consoleAdmin", consoleAdminProperty);
-            bindParameters.putProperty("externalAccess", externalAccessProperty);
             InputParameters bindParametersSchema = new InputParameters(bindParameters);
             ServiceBindingSchema bindSchema = new ServiceBindingSchema(bindParametersSchema);
             ObjectSchema serviceCreateParameters = new ObjectSchema();
