@@ -9,8 +9,8 @@ import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.NamespaceInfo;
 import io.enmasse.k8s.api.*;
+import io.enmasse.metrics.api.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -20,13 +20,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.enmasse.controller.common.ControllerReason.AddressSpaceDeleteFailed;
-import static io.enmasse.controller.common.ControllerReason.AddressSpaceDeleted;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceSyncFailed;
-import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 /**
@@ -43,6 +39,8 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
     private final List<Controller> chain = new ArrayList<>();
     private final SchemaProvider schemaProvider;
     private final EventLogger eventLogger;
+    private final Metrics metrics;
+    private final String version;
     private final Duration recheckInterval;
     private final Duration resyncInterval;
 
@@ -50,12 +48,15 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
                            AddressSpaceApi addressSpaceApi,
                            SchemaProvider schemaProvider,
                            EventLogger eventLogger,
-                           Duration recheckInterval,
+                           Metrics metrics,
+                           String version, Duration recheckInterval,
                            Duration resyncInterval) {
         this.kubernetes = kubernetes;
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.eventLogger = eventLogger;
+        this.metrics = metrics;
+        this.version = version;
         this.recheckInterval = recheckInterval;
         this.resyncInterval = resyncInterval;
     }
@@ -131,6 +132,29 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
             }
         }
         retainAddressSpaces(resources);
+
+        long now = System.currentTimeMillis();
+        metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", "address-space-controller"), new MetricLabel("version", version))));
+        metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", "address-space-controller is healthy"))));
+
+        List<MetricValue> healthValues = new ArrayList<>();
+        for (AddressSpace addressSpace : resources) {
+            List<MetricLabel> healthLabels = new ArrayList<>();
+            healthLabels.add(new MetricLabel("name", addressSpace.getName()));
+            healthLabels.add(new MetricLabel("messages", String.join(",", addressSpace.getStatus().getMessages())));
+            healthValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, healthLabels));
+        }
+        metrics.reportMetric(new Metric(
+                "address_spaces_ready",
+                "Address Spaces Ready",
+                MetricType.gauge,
+                healthValues));
+        metrics.reportMetric(new Metric(
+                "address_spaces_total",
+                "Total number of address spaces",
+                MetricType.gauge,
+                new MetricValue(resources.size(), now)));
+
     }
 
     private void retainAddressSpaces(List<AddressSpace> desiredAddressSpaces) {

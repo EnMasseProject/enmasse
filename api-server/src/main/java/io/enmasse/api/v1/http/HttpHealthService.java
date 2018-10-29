@@ -12,11 +12,10 @@ import javax.ws.rs.core.Response;
 
 @Path(HttpHealthService.BASE_URI)
 public class HttpHealthService {
-    public static final String BASE_URI = "/";
+    public static final String BASE_URI = "/healthz";
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    @Path("healthz")
     public Response getHealth() {
         return Response.status(200).entity(new HealthResponse(200, "OK")).build();
     }
@@ -29,19 +28,5 @@ public class HttpHealthService {
             this.status = status;
             this.message = message;
         }
-    }
-
-    @GET
-    @Produces({MediaType.TEXT_HTML})
-    @Path("metrics")
-    public Response getMetrics() {
-        String version = System.getenv().get("VERSION");
-        return Response
-            .ok(
-                "# api_server\n"
-                    + "version{name=\"api-server\",version=\""+version+"\"} 0\n"
-                    + "health{status=\"ok\",summary=\"api-server is healthy\"} 0\n"
-            )
-            .build();
     }
 }

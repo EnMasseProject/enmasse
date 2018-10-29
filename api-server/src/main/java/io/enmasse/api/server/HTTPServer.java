@@ -13,6 +13,7 @@ import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
@@ -46,20 +47,31 @@ public class HTTPServer extends AbstractVerticle {
     private final String requestHeaderClientCa;
     private final AuthApi authApi;
     private final UserApi userApi;
+    private final Metrics metrics;
     private final boolean isRbacEnabled;
+    private final String version;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, String certDir, String clientCa, String requestHeaderClientCa, AuthApi authApi, UserApi userApi, boolean isRbacEnabled) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi,
+                      SchemaProvider schemaProvider,
+                      AuthApi authApi,
+                      UserApi userApi,
+                      Metrics metrics,
+                      ApiServerOptions options,
+                      String clientCa,
+                      String requestHeaderClientCa) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
-        this.certDir = certDir;
+        this.metrics = metrics;
+        this.certDir = options.getCertDir();
         this.clientCa = clientCa;
         this.requestHeaderClientCa = requestHeaderClientCa;
         this.authApi = authApi;
         this.userApi = userApi;
-        this.isRbacEnabled = isRbacEnabled;
+        this.isRbacEnabled = options.isEnableRbac();
+        this.version = options.getVersion();
     }
 
     @Override
@@ -74,6 +86,7 @@ public class HTTPServer extends AbstractVerticle {
             log.info("Enabling RBAC for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
                     path.equals(HttpHealthService.BASE_URI) ||
+                            path.equals(HttpMetricsService.BASE_URI) ||
                             path.equals("/swagger.json")));
         } else {
             log.info("Disabling authentication and authorization for REST API");
@@ -92,6 +105,7 @@ public class HTTPServer extends AbstractVerticle {
             log.info("User API not available, disabling");
         }
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
+        deployment.getRegistry().addSingletonResource(new HttpMetricsService(version, metrics));
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());
 

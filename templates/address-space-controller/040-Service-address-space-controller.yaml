@@ -11,5 +11,5 @@ spec:
     protocol: TCP
     targetPort: http
   selector:
-    component: address-space-controller
+    name: address-space-controller
   type: ClusterIP

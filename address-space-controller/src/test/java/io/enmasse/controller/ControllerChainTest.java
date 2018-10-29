@@ -6,8 +6,9 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
-import io.enmasse.address.model.Status;
 import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.metrics.api.Metric;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
@@ -17,12 +18,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.internal.util.collections.Sets;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(VertxUnitRunner.class)
@@ -48,7 +50,8 @@ public class ControllerChainTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, new TestSchemaProvider(), testLogger, Duration.ofSeconds(5), Duration.ofSeconds(5));
+        Metrics metrics = new Metrics();
+        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, new TestSchemaProvider(), testLogger, metrics, "1.0", Duration.ofSeconds(5), Duration.ofSeconds(5));
         Controller mockController = mock(Controller.class);
         controllerChain.addController(mockController);
 
@@ -76,7 +79,9 @@ public class ControllerChainTest {
         verify(mockController, times(2)).handle(any());
         verify(mockController).handle(eq(a1));
         verify(mockController).handle(eq(a2));
-    }
 
+        List<Metric> metricList = metrics.snapshot();
+        assertThat(metricList.size(), is(4));
+    }
 }
 

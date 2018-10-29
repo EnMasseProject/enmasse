@@ -13,6 +13,7 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
@@ -98,7 +99,8 @@ public class ApiServer extends AbstractVerticle {
             requestHeaderClientCa = null;
         }
 
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, options.getCertDir(), clientCa, requestHeaderClientCa, authApi, userApi, options.isEnableRbac());
+        Metrics metrics = new Metrics();
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
