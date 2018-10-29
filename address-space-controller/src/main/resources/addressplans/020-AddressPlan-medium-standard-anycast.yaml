@@ -1,0 +1,15 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: medium-standard-anycast
+  labels:
+    app: enmasse
+displayName: Medium Anycast
+displayOrder: 1
+shortDescription: Creates a medium anycast address.
+longDescription: Creates a medium anycast address where messages go via a router that does not take ownership of the messages.
+uuid: eb62f1d6-db73-11e8-9570-d45ddf138840
+addressType: anycast
+requiredResources:
+- name: router
+  credit: 0.01

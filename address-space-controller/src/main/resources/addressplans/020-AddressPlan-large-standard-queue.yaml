@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: large-standard-queue
+  labels:
+    app: enmasse
+displayName: Large Queue
+displayOrder: 2
+shortDescription: Creates a large queue backed by a dedicated broker.
+longDescription: Creates a large queue backed by a dedicated broker.
+uuid: ae13292a-db70-11e8-8013-d45ddf138840
+addressType: queue
+requiredResources:
+- name: router
+  credit: 0.1
+- name: broker
+  credit: 1.0
+

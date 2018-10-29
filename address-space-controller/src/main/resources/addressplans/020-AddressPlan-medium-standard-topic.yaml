@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: medium-standard-topic
+  labels:
+    app: enmasse
+displayName: Medium Topic
+displayOrder: 1
+shortDescription: Creates a medium sized topic sharing underlying broker with other topics.
+longDescription: Creates a medium sized topic sharing underlying broker with other topics.
+uuid: 16db0426-db73-11e8-9a10-d45ddf138840
+addressType: topic
+requiredResources:
+- name: router
+  credit: 0.01
+- name: broker
+  credit: 0.1
+

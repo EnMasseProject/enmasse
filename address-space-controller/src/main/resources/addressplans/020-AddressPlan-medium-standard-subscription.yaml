@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: medium-standard-subscription
+  labels:
+    app: enmasse
+displayName: Medium Subscription
+displayOrder: 1
+shortDescription: Creates a medium durable subscription on a topic.
+longDescription: Creates a medium durable subscription on a topic, which is then accessed as a distinct address.
+uuid: 8dd4a758-db73-11e8-9971-d45ddf138840
+addressType: subscription
+requiredResources:
+- name: router
+  credit: 0.01
+- name: broker
+  credit: 0.1
+

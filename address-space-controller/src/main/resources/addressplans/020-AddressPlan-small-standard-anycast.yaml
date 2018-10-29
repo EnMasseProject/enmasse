@@ -1,0 +1,15 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: small-standard-anycast
+  labels:
+    app: enmasse
+displayName: Small Anycast
+displayOrder: 0
+shortDescription: Creates a small anycast address.
+longDescription: Creates a small anycast address where messages go via a router that does not take ownership of the messages.
+uuid: eb62f1d6-db73-11e8-9570-d45ddf138840
+addressType: anycast
+requiredResources:
+- name: router
+  credit: 0.001

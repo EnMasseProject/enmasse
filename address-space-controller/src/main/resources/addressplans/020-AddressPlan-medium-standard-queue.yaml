@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: medium-standard-queue
+  labels:
+    app: enmasse
+displayName: Medium Queue
+displayOrder: 1
+shortDescription: Creates a medium sized queue sharing underlying broker with other queues.
+longDescription: Creates a medium sized queue sharing underlying broker with other queues.
+uuid: fbc9178e-db6f-11e8-b9eb-d45ddf138840
+addressType: queue
+requiredResources:
+- name: router
+  credit: 0.01
+- name: broker
+  credit: 0.1
+

@@ -1,0 +1,15 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: large-standard-anycast
+  labels:
+    app: enmasse
+displayName: Large Anycast
+displayOrder: 2
+shortDescription: Creates a large anycast address.
+longDescription: Creates a large anycast address where messages go via a router that does not take ownership of the messages.
+uuid: 1643dbcc-db74-11e8-bbe9-d45ddf138840
+addressType: anycast
+requiredResources:
+- name: router
+  credit: 0.1
