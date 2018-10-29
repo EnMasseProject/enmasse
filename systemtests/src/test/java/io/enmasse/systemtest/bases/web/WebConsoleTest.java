@@ -86,7 +86,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.createAddressWebConsole(dest);
 
             //create subscription
-            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), "standard-subscription");
+            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), "standard-small-subscription");
             consoleWebPage.createAddressWebConsole(subscription);
             assertWaitForValue(2, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(120, TimeUnit.SECONDS));
 
@@ -740,7 +740,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                     dest_topic = Destination.topic("topic" + testString, getDefaultPlan(AddressType.TOPIC));
                     log.info("Creating topic for subscription");
                     consoleWebPage.createAddressWebConsole(dest_topic);
-                    dest = Destination.subscription(testString, dest_topic.getAddress(), "standard-subscription");
+                    dest = Destination.subscription(testString, dest_topic.getAddress(), "standard-small-subscription");
                     assert_value = 2;
                     break;
                 default:

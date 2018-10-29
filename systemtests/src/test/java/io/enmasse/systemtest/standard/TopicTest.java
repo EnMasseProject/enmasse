@@ -242,7 +242,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     void testDurableSubscriptionOnPooledTopic() throws Exception {
         Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
-        Destination subscription = Destination.subscription("mysub", "mytopic", "standard-subscription");
+        Destination subscription = Destination.subscription("mysub", "mytopic", "standard-small-subscription");
         setAddresses(topic, subscription);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -269,8 +269,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     void testDurableSubscriptionOnShardedTopic() throws Exception {
         Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-subscription");
-        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-subscription");
+        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-small-subscription");
+        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-small-subscription");
         setAddresses(topic, subscription1, subscription2);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -304,7 +304,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     void testDurableSubscriptionOnShardedTopic2() throws Exception {
         Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-subscription");
+        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-small-subscription");
         setAddresses(topic, subscription1);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -319,7 +319,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
 
         log.info("Creating second subscription");
-        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-subscription");
+        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-small-subscription");
         appendAddresses(subscription2);
 
         log.info("Sending second batch");
