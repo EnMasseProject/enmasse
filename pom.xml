@@ -87,6 +87,8 @@
         <maven-site-plugin.version>3.5.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>2.9</maven-project-info-reports-plugin.version>
         <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
+        <security-versions-plugin.version>1.0.6</security-versions-plugin.version>
+        <dependency-check-maven-plugin.version>3.3.2</dependency-check-maven-plugin.version>
     </properties>
 
     <modules>
@@ -638,6 +640,17 @@
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>${maven-enforcer-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.redhat.victims.maven</groupId>
+                    <artifactId>security-versions</artifactId>
+                    <version>${security-versions-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${dependency-check-maven-plugin.version}</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
         <plugins>
@@ -778,6 +791,45 @@
                         <configuration>
                             <argLine>${surefireArgLine}</argLine>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>cvecheck</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- Note this plugin does not fail the build if a vulnerability is found -->
+                        <groupId>com.redhat.victims.maven</groupId>
+                        <artifactId>security-versions</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>validate</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <configuration>
+                            <!--<failBuildOnCVSS>5</failBuildOnCVSS>-->
+                            <enableExperimental>true</enableExperimental>
+                            <suppressionFiles>
+                                <suppressionFile>.owasp/project-suppressions.xml</suppressionFile>
+                            </suppressionFiles>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>validate</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
