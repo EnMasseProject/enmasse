@@ -215,23 +215,14 @@ public class OSBBindingService extends OSBServiceBase {
     }
 
     private boolean deleteUser(AddressSpace addressSpace, String username) throws Exception {
-            UserSpec.Builder specBuilder = new UserSpec.Builder();
-            specBuilder.setUsername(username);
-            User user = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                                 .setNamespace(addressSpace.getNamespace())
-                                 .setName(addressSpace.getName() + "." + username)
-                                 .build())
-                .setSpec(specBuilder.build())
-                .build();
 
-            String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-            if (userApi.getUserWithName(realmName, username).isPresent()) {
-                userApi.deleteUser(realmName, user);
-                return true;
-            } else {
-                return false;
-
+        String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+        Optional<User> user = userApi.getUserWithName(realmName, username);
+        if (user.isPresent()) {
+            userApi.deleteUser(realmName, user.get());
+            return true;
+        } else {
+            return false;
         }
 
     }
