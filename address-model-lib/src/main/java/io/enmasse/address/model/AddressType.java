@@ -55,6 +55,7 @@ public class AddressType {
                 return Optional.of(plan);
             }
         }
+
         return Optional.empty();
     }
 

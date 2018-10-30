@@ -24,6 +24,11 @@ public class AddressSpaceResolver {
         return schema.findAddressSpaceType(type).orElseThrow(() -> new UnresolvedAddressSpaceException("Unknown address space type " + type));
     }
 
+    public Optional<AddressSpacePlan> getPlan(String type, String plan) {
+        AddressSpaceType addressSpaceType = getType(type);
+        return addressSpaceType.findAddressSpacePlan(plan);
+    }
+
     public void validate(AddressSpace addressSpace) {
         getPlan(getType(addressSpace.getType()), addressSpace.getPlan());
     }
