@@ -8,6 +8,8 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 
+import java.util.Optional;
+
 public class AddressResolver {
     private final AddressSpaceType addressSpaceType;
 
@@ -16,7 +18,11 @@ public class AddressResolver {
     }
 
     public AddressPlan getPlan(Address address) {
-        return getType(address).findAddressPlan(address.getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getPlan() + " for address type " + address.getType()));
+        return findPlan(address).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getPlan() + " for address type " + address.getType()));
+    }
+
+    public Optional<AddressPlan> findPlan(Address address) {
+        return getType(address).findAddressPlan(address.getPlan());
     }
 
     public AddressPlan getPlan(AddressType addressType, Address address) {
