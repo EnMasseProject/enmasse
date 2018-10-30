@@ -1,3 +1,16 @@
+## 0.23.2 (October 25, 2018)
+* Allow overriding INFRA_UUID annotation on AddressSpace
+* Update to Qpid Dispatch Router image with memory leak fix
+
+## 0.23.0 (October 2, 2018)
+* Deploy EnMasse to a single namespace. This removes the need to create new namespaces/projects.
+* Simplify installation process. Release tarball now comes with OpenShift templates and simple to use bundles. Ansible still supported, but not required to performaed advanced install.
+* Use reencrypt routes for http(s) services on OpenShift (signed by OpenShift cluster CA)
+* Allow CA cert to be omitted for external authentication services (using trusted root CAs instead)
+* Bugfixes and improvements to console UI such as improving stats reporting, removing unneeded UI elements, improved validation of user input
+* Improvements to documentation. Documentation now included in release tarball.
+* Simplify Console -> Keycloak -> OpenShift login flow. No longer showing keycloak login if using OpenShift and standard authentication service (by default)
+
 ## 0.22.0 (September 10, 2018)
 * New address type ‘subscription’ available in standard address space. This can be used to create durable subscription queues.
 * New API for managing users in standard authentication service using custom resources (kubectl/oc).
