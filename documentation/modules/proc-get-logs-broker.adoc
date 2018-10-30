@@ -1,5 +1,10 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-oc.adoc
+// assembly-monitoring-kube.adoc
+
 [id='get-logs-router-{context}']
-= Viewing Broker Logs
+= Viewing broker logs
 
 .Procedure
 
@@ -14,5 +19,6 @@
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs <pod>
+{cmdcli} logs _pod_
 ----
+

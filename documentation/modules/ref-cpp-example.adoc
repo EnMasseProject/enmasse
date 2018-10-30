@@ -5,9 +5,9 @@
 [id='ref-cpp-example-{context}']
 = {ClientAmqpCppName} example
 
-The C++ client has equivalent `simple_recv` and `simple_send` examples with the same options as Python. However, the C++ library does not perform the same level of processing on the URL; in particular it won't take `amqps://` to imply using TLS, so the example needs to be modified as follows:
+The C\++ client has equivalent `simple_recv` and `simple_send` examples with the same options as Python. However, the C++ library does not perform the same level of processing on the URL; in particular it will not accept `amqps://` to imply using TLS, so the example needs to be modified as follows:
 
-[source,cpp,options="nowrap"]
+[source,cpp,options="nowrap",subs="+quotes,attributes"]
 ----
 #include <proton/connection.hpp>
 #include <proton/container.hpp>
@@ -57,7 +57,7 @@ class hello_world : public proton::messaging_handler {
 
 int main(int argc, char **argv) {
     try {
-        std::string url = argc > 1 ? argv[1] : "<messaging-route-hostname>:443/myqueue";
+        std::string url = argc > 1 ? argv[1] : "_messaging-route-hostname_:443/myqueue";
 
         hello_world hw(url);
         proton::default_container(hw).run();

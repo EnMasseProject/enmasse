@@ -1,11 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-oc.adoc
+// assembly-monitoring-kube.adoc
+
 [id='get-logs-broker-{context}']
-= Viewing Router Logs
+= Viewing router logs
 
 .Procedure
 
 . List all router pods and choose the pod for the relevant address space:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} get pods -l name=qdrouterd -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
 ----
@@ -14,5 +19,6 @@
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs <pod> -c router
+{cmdcli} logs _pod_ -c router
 ----
+

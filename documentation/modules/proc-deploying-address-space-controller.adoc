@@ -13,7 +13,7 @@ The Address Space Controller is responsible for creating the infrastructure used
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_<my-namespace>_/' install/components/address-space-controller/*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/address-space-controller/*.yaml
 ----
 
 . Deploy the Address Space Controller
