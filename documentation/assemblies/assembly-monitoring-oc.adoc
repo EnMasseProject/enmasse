@@ -21,5 +21,7 @@ include::../modules/proc-get-logs-router.adoc[leveloffset=+1]
 
 include::../modules/proc-get-logs-broker.adoc[leveloffset=+1]
 
+include::../modules/ref-view-message-conn-stats-table.adoc[leveloffset=+1]
+
 :context: {parent-context}
 
