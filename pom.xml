@@ -73,6 +73,7 @@
         <jacoco.version>0.7.9</jacoco.version>
         <node.version>v8.11.2</node.version>
         <npm.version>5.6.0</npm.version>
+        <snakeyaml.version>1.18</snakeyaml.version>
 
         <asciidoctor-maven-plugin.version>1.5.6</asciidoctor-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
@@ -299,6 +300,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>jul-to-slf4j</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
             </dependency>
             <!-- Used for testing -->
             <dependency>
