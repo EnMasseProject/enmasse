@@ -103,12 +103,12 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered, namespace);
-        String external = ocPage.createBinding(namespace, false, false, true, null, null);
-        String consoleAdmin = ocPage.createBinding(namespace, false, true, false, null, null);
-        String consoleAccess = ocPage.createBinding(namespace, true, false, false, null, null);
-        ocPage.removeBinding(namespace, external);
-        ocPage.removeBinding(namespace, consoleAccess);
-        ocPage.removeBinding(namespace, consoleAdmin);
+        String binding1 = ocPage.createBinding(namespace, null, null);
+        String binding2 = ocPage.createBinding(namespace, "test_*", "pepa_*");
+        String binding3 = ocPage.createBinding(namespace, "test_address", "test_address");
+        ocPage.removeBinding(namespace, binding1);
+        ocPage.removeBinding(namespace, binding2);
+        ocPage.removeBinding(namespace, binding3);
     }
 
     @Test
@@ -125,8 +125,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         ocPage.provisionAddressSpaceViaSC(brokered, namespace);
         reloadAddressSpaceEndpoints(brokered);
 
-        String bindingID = ocPage.createBinding(namespace, false, true, true, null, null);
-        String restrictedAccesId = ocPage.createBinding(namespace, false, false, true, "noexists", "noexists");
+        String bindingID = ocPage.createBinding(namespace, null, null);
+        String restrictedAccesId = ocPage.createBinding(namespace, "noexists", "noexists");
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
         BindingSecretData restricted = ocPage.viewSecretOfBinding(namespace, restrictedAccesId);
 
@@ -156,7 +156,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);
         reloadAddressSpaceEndpoints(addressSpace);
 
-        String bindingID = ocPage.createBinding(namespace, false, true, true, null, null);
+        String bindingID = ocPage.createBinding(namespace, null, null);
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
@@ -203,7 +203,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);
         reloadAddressSpaceEndpoints(addressSpace);
 
-        String bindingID = ocPage.createBinding(namespace, false, true, true, null, null);
+        String bindingID = ocPage.createBinding(namespace, null, null);
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);

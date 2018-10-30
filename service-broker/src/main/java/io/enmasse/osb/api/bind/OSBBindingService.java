@@ -60,14 +60,6 @@ public class OSBBindingService extends OSBServiceBase {
             Map<String, String> credentials = new LinkedHashMap<>();
             credentials.put("username", username);
             credentials.put("password", password);
-            if ((parameters.containsKey("consoleAccess") && Boolean.valueOf(parameters.get("consoleAccess"))) ||
-               (parameters.containsKey("consoleAdmin") && Boolean.valueOf(parameters.get("consoleAdmin")))) {
-                addressSpace.getStatus().getEndpointStatuses().stream().filter(e -> e.getName().startsWith("console")).findFirst().ifPresent(e -> {
-                    if (e.getExternalHost() != null) {
-                        credentials.put("console", "https://" + e.getExternalHost());
-                    }
-                });
-            }
 
             for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
                 if (endpointSpec.getService().startsWith("console")) {
@@ -86,11 +78,9 @@ public class OSBBindingService extends OSBServiceBase {
                     continue;
                 }
 
-                if (parameters.containsKey("externalAccess") && Boolean.valueOf(parameters.get("externalAccess")) && endpointStatus.getExternalHost() != null) {
-                    String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
-                    credentials.put(externalPrefix + "Host", endpointStatus.getExternalHost());
-                    credentials.put(externalPrefix + "Port", String.format("%d", endpointStatus.getExternalPorts().values().iterator().next()));
-                }
+                String externalPrefix = "external" + prefix.substring(0, 1).toUpperCase() + prefix.substring(1);
+                credentials.put(externalPrefix + "Host", endpointStatus.getExternalHost());
+                credentials.put(externalPrefix + "Port", String.format("%d", endpointStatus.getExternalPorts().values().iterator().next()));
                 credentials.put(prefix + "Host", endpointStatus.getServiceHost());
                 for (Map.Entry<String, Integer> servicePort : endpointStatus.getServicePorts().entrySet()) {
                     String portName = servicePort.getKey().substring(0, 1).toUpperCase() + servicePort.getKey().substring(1);
@@ -131,21 +121,6 @@ public class OSBBindingService extends OSBServiceBase {
                 .setOperations(Arrays.asList(Operation.recv))
                 .setAddresses(getAddresses(parameters.get("receiveAddresses")))
                 .build());
-
-        if(parameters.containsKey("consoleAccess")
-                && Boolean.valueOf(parameters.get("consoleAccess"))) {
-            authorizations.add(new UserAuthorization.Builder()
-                    .setOperations(Arrays.asList(Operation.view))
-                    .setAddresses(Arrays.asList("*"))
-                    .build());
-        }
-
-        if(parameters.containsKey("consoleAdmin")
-                && Boolean.valueOf(parameters.get("consoleAdmin"))) {
-            authorizations.add(new UserAuthorization.Builder()
-                    .setOperations(Arrays.asList(Operation.manage))
-                    .build());
-        }
 
         specBuilder.setAuthorization(authorizations);
 
