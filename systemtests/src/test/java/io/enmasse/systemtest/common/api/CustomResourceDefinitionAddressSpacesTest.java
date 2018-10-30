@@ -27,7 +27,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testAddressSpaceCreateViaCmdRemoveViaApi() throws Exception {
-        AddressSpace brokered = new AddressSpace("crd-addressspaces-test-foo", AddressSpaceType.BROKERED, AuthService.NONE);
+        AddressSpace brokered = new AddressSpace("crd-addressspaces-test-foo", AddressSpaceType.BROKERED, AuthService.STANDARD);
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
         createCR(addressSpacePayloadJson.toString());
         waitForAddressSpaceReady(brokered);
@@ -42,7 +42,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testAddressSpaceCreateViaApiRemoveViaCmd() throws Exception {
-        AddressSpace brokered = new AddressSpace("crd-addressspaces-test-bar", AddressSpaceType.BROKERED, AuthService.NONE);
+        AddressSpace brokered = new AddressSpace("crd-addressspaces-test-bar", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(brokered);
 
         ExecutionResultData addressSpaces = CRDCmdClient.getAddressSpace(environment.namespace(), brokered.getName());
@@ -64,7 +64,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
         UserCredentials user = new UserCredentials("pepik", "pepik");
         try {
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
-            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.NONE);
+            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.STANDARD);
             JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
             CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
@@ -89,7 +89,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     void testCannotCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
         UserCredentials user = new UserCredentials("pepik", "pepik");
         try {
-            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthService.NONE);
+            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthService.STANDARD);
             JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
             CRDCmdClient.loginUser(user.getUsername(), user.getPassword());

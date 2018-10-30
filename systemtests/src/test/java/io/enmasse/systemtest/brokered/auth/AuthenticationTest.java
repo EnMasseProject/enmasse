@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static io.enmasse.systemtest.TestTag.noneAuth;
 
 class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
@@ -44,6 +45,7 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
     }
 
     @Test
+    @Tag(noneAuth)
     void testNoneAuthenticationServiceBrokered() throws Exception {
         testNoneAuthenticationServiceGeneral(AddressSpaceType.BROKERED, anonymousUser, anonymousPswd);
     }

@@ -178,5 +178,21 @@
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
+        <profile>
+            <id>systemtests-shared-release</id>
+            <properties>
+                <tags>sharded</tags>
+                <skip.tests>false</skip.tests>
+                <skip.tags>noneAuth</skip.tags>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-isolated-release</id>
+            <properties>
+                <tags>isolated</tags>
+                <skip.tests>false</skip.tests>
+                <skip.tags>noneAuth</skip.tags>
+            </properties>
+        </profile>
     </profiles>
 </project>
