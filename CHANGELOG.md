@@ -3,6 +3,9 @@
 * Update default set of address space plans and address plans to better show their use
 * Allow changing router and broker configuration using infrastructure configuration CRDs
 * Simplify console and use consistent wording + fixes to console UI filtering and stats reporting
+* Support configuring load balancer endpoints when creating address space
+* Support generating certs signed by OpenShift Cluster CA
+* Support providing certs for endpoints when creating address space
 * Improve monitoring using prometheus alertmanager for alerting on components down or address space not ready.
 * Upgrade to Artemis 2.6.3
 * Upgrade to Qpid Dispatch Router 1.4.0
