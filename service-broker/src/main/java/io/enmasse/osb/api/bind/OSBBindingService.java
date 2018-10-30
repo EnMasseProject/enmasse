@@ -196,12 +196,35 @@ public class OSBBindingService extends OSBServiceBase {
     public Response unbindServiceInstance(@Context SecurityContext securityContext, @PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId) {
         log.info("Received unbind request for instance {}, binding {}", instanceId, bindingId);
         verifyAuthorized(securityContext, ResourceVerb.get);
-/*
-        AddressSpace addressSpace = findAddressSpaceByAddressUuid(instanceId)
-                .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
-*/
 
-        return Response.ok(new EmptyResponse()).build();
+        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId)
+            .orElseThrow(() -> Exceptions.notFoundException("Service instance " + instanceId + " does not exist"));
+
+        try {
+            String username = "user-" + bindingId;
+
+            if(deleteUser(addressSpace, username)) {
+                return Response.ok(new EmptyResponse()).build();
+            } else {
+                return Response.status(Response.Status.GONE).build();
+            }
+        } catch (Exception e) {
+            throw new InternalServerErrorException("Exception interacting with auth service", e);
+        }
+
+    }
+
+    private boolean deleteUser(AddressSpace addressSpace, String username) throws Exception {
+
+        String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+        Optional<User> user = userApi.getUserWithName(realmName, username);
+        if (user.isPresent()) {
+            userApi.deleteUser(realmName, user.get());
+            return true;
+        } else {
+            return false;
+        }
+
     }
 
 }

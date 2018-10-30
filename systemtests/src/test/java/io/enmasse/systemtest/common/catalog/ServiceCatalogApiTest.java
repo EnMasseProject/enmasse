@@ -16,6 +16,7 @@ import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -128,10 +129,11 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
 
         reloadAddressSpaceEndpoints(addressSpace);
         setAddresses(addressSpace, queue);
-        assertCanConnect(addressSpace, binding.getCredentials(), Arrays.asList(queue));
+        assertCanConnect(addressSpace, binding.getCredentials(), Collections.singletonList(queue));
 
-        //!TODO to deleteBinding is not implemented, returns 200 every time
         deprovisionBinding(addressSpace, developer.getUsername(), provInstance.getInstanceId(), binding.getId());
+        assertCannotConnect(addressSpace, binding.getCredentials(), Collections.singletonList(queue));
+
         deleteServiceInstance(addressSpace, developer.getUsername(), provInstance.getInstanceId());
     }
 

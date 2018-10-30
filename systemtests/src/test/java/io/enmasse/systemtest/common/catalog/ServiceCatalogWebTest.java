@@ -137,6 +137,10 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));
         assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic));
+
+        log.info("Remove binding and check if client cannot connect");
+        ocPage.removeBinding(namespace, bindingID);
+        assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));
     }
 
     @Test
