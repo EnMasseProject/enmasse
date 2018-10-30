@@ -63,7 +63,9 @@ public class User {
         spec.put("username", getUsername());
         JsonObject authentication = new JsonObject();
         authentication.put("type", "password");
-        authentication.put("password", Base64.getEncoder().encodeToString(getPassword().getBytes("UTF-8")));
+        if (password != null) {
+            authentication.put("password", Base64.getEncoder().encodeToString(getPassword().getBytes("UTF-8")));
+        }
         spec.put("authentication", authentication);
 
         JsonArray authorization = new JsonArray();
