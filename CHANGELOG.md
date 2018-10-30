@@ -1,3 +1,12 @@
+## 0.24.0 (...)
+* Support automatic upgrades of EnMasse based on infrastructure configuration versions
+* Update default set of address space plans and address plans to better show their use
+* Allow changing router and broker configuration using infrastructure configuration CRDs
+* Simplify console and use consistent wording + fixes to console UI filtering and stats reporting
+* Improve monitoring using prometheus alertmanager for alerting on components down or address space not ready.
+* Upgrade to Artemis 2.6.3
+* Upgrade to Qpid Dispatch Router 1.4.0
+
 ## 0.23.2 (October 25, 2018)
 * Allow overriding INFRA_UUID annotation on AddressSpace
 * Update to Qpid Dispatch Router image with memory leak fix
