@@ -1,0 +1,30 @@
+// Module included in the following assemblies:
+//
+// assemblies/assembly-qdstat.adoc
+
+[id='view-router-links-qdstat-{context}']
+= Viewing router links using qdstat
+
+You can view the router links using `qdstat`.
+
+.Procedure
+
+* On the command line, run the following command:
+
+[source=bash,options="nowrap"]
+----
+qdstat -l
+
+Router Links
+  type      dir  conn id  id  peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
+  ====================================================================================================================================================
+  endpoint  in   3        8                                            250  0      0       3829  0        0       3829  0    0    0    enabled  up
+  endpoint  out  3        9         local   temp.k2RGQNPe6sDMvz4       250  0      0       3829  3829     0       0     0    0    0    enabled  up
+  endpoint  in   12       10                                           250  0      0       5     0        0       5     0    0    0    enabled  up
+  endpoint  out  12       11        local   temp.xg+y8I_Tr4Y94LA       250  0      0       5     5        0       0     0    0    0    enabled  up
+  endpoint  in   645      26        mobile  $management           0    50   0      0       1     0        0       1     0    0    0    enabled  up
+  endpoint  out  645      27        local   temp.0BrHJ1O+fi6whyg       50   0      0       0     0        0       0     0    0    0    enabled  up
+
+----
+
+

@@ -1,0 +1,25 @@
+// Module included in the following assemblies:
+//
+// assemblies/assembly-qdstat.adoc
+
+[id='view-connections-qdstat-{context}']
+= Viewing router connections using qdstat
+
+A connection to the container running `qdstat` is created by default on the router. You can view the router connections using `qdstat`.
+
+.Procedure
+
+* On the command line, run the following command:
+
+[source=bash,options="nowrap"]
+----
+qdstat -c
+
+Connections
+  id   host                 container                             role    dir  security                              authentication                tenant
+  =========================================================================================================================================================
+  3    172.17.0.9:34998     admin-78794c68c8-9jdd6                normal  in   TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  CN=admin,O=io.enmasse(x.509)  
+  12   172.30.188.174:5671  27803a14-42d2-6148-9491-a6c1e69e875a  normal  out  TLSv1.2(ECDHE-RSA-AES128-GCM-SHA256)  x.509                         
+  567  127.0.0.1:43546      b240c652-82df-48dd-b54e-3b8bbaef16c6  normal  in   no-security                           PLAIN   
+----
+
