@@ -11,9 +11,9 @@
 . Create an address definition:
 +
 [source,yaml,options="nowrap"]
-.link:resources/standard-pooled-queue.yaml[standard-pooled-queue.yaml]
+.link:resources/standard-small-queue.yaml[standard-small-queue.yaml]
 ----
-include::../common/standard-pooled-queue.yaml[]
+include::../common/standard-small-queue.yaml[]
 ----
 +
 NOTE: Prefixing the name with the address space name is required to ensure addresses from different address spaces do not collide.
@@ -22,7 +22,7 @@ NOTE: Prefixing the name with the address space name is required to ensure addre
 +
 [source,yaml,options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f standard-pooled-queue.yaml
+{cmdcli} create -f standard-small-queue.yaml
 ----
 
 . List the addresses:

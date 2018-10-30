@@ -22,7 +22,7 @@ class CommonTest extends TestBase {
         AddressSpace standard = new AddressSpace("standard-addr-space-logs", AddressSpaceType.STANDARD, AuthService.STANDARD);
         createAddressSpace(standard);
 
-        Destination dest = Destination.queue("test-queue", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
+        Destination dest = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
         setAddresses(standard, dest);
 
         kubernetes.listPods().forEach(pod -> {

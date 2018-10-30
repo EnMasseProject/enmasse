@@ -19,7 +19,7 @@
     },
     "spec": {
         "type": "standard",
-        "plan": "unlimited-standard"
+        "plan": "standard-unlimited"
     }
 }
 ----

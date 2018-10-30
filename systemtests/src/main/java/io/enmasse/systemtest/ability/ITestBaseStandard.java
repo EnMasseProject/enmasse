@@ -19,13 +19,13 @@ public interface ITestBaseStandard extends ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return DestinationPlan.STANDARD_POOLED_QUEUE.plan();
+                return DestinationPlan.STANDARD_SMALL_QUEUE.plan();
             case TOPIC:
-                return DestinationPlan.STANDARD_POOLED_TOPIC.plan();
+                return DestinationPlan.STANDARD_SMALL_TOPIC.plan();
             case ANYCAST:
-                return DestinationPlan.STANDARD_ANYCAST.plan();
+                return DestinationPlan.STANDARD_SMALL_ANYCAST.plan();
             case MULTICAST:
-                return DestinationPlan.STANDARD_MULTICAST.plan();
+                return DestinationPlan.STANDARD_SMALL_MULTICAST.plan();
         }
         return null;
     }

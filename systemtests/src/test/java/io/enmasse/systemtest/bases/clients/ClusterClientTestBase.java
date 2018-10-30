@@ -96,7 +96,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         AbstractClient receiver = new PahoMQTTClientReceiver();
 
         Destination dest = Destination.topic("message-basic-mqtt",
-                sharedAddressSpace.getType().equals(AddressSpaceType.STANDARD) ? DestinationPlan.STANDARD_SHARDED_TOPIC.plan() : getDefaultPlan(AddressType.TOPIC));
+                sharedAddressSpace.getType().equals(AddressSpaceType.STANDARD) ? DestinationPlan.STANDARD_LARGE_TOPIC.plan() : getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, false, false, true).toString());

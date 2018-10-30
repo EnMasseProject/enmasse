@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: standard-small-topic
+  labels:
+    app: enmasse
+displayName: Small Topic
+displayOrder: 0
+shortDescription: Creates a small topic sharing underlying broker with other topics.
+longDescription: Creates a small topic sharing underlying broker with other topics.
+uuid: c10377e0-db72-11e8-91a3-d45ddf138840
+addressType: topic
+requiredResources:
+- name: router
+  credit: 0.001
+- name: broker
+  credit: 0.01
+

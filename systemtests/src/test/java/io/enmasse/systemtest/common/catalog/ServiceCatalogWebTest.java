@@ -146,7 +146,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
         AddressSpace addressSpace = new AddressSpace("test-cert-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
@@ -193,7 +193,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendReceiveInsideCluster() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SHARDED_QUEUE.plan());
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
         AddressSpace addressSpace = new AddressSpace("test-messaging-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);

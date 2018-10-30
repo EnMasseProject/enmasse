@@ -361,6 +361,14 @@ public class AddressProvisioner {
         return limits;
     }
 
+    private Map<String, Double> computeMinimum() {
+        Map<String, Double> min = new HashMap<>();
+        for (ResourceAllowance allowance : addressSpacePlan.getResources()) {
+            min.put(allowance.getName(), allowance.getMin());
+        }
+        return min;
+    }
+
     public void provisionResources(RouterCluster router, List<BrokerCluster> existingClusters, Map<String, Map<String, UsageInfo>> neededMap, Set<Address> addressSet) {
 
         Map<String, Address> addressByClusterId = new HashMap<>();
@@ -370,11 +378,12 @@ public class AddressProvisioner {
             }
         }
 
+        Map<String, Double> minResources = computeMinimum();
         for (Map.Entry<String, Map<String, UsageInfo>> entry : neededMap.entrySet()) {
             String resourceName = entry.getKey();
             if ("router".equals(resourceName)) {
                 int totalNeeded = sumNeeded(entry.getValue());
-                router.setNewReplicas(totalNeeded);
+                router.setNewReplicas(Math.max(totalNeeded, (int) Math.ceil(minResources.get("router"))));
             } else if ("broker".equals(resourceName)) {
                 // Provision pooled broker
                 int needPooled = sumNeededMatching(entry.getValue(), pooledPattern);

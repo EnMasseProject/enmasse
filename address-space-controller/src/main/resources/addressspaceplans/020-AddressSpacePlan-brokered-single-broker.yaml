@@ -1,15 +1,15 @@
 apiVersion: admin.enmasse.io/v1alpha1
 kind: AddressSpacePlan
 metadata:
-  name: unlimited-brokered
+  name: brokered-single-broker
   labels:
     app: enmasse
   annotations:
     enmasse.io/defined-by: default
-displayName: Unlimited
+displayName: Single Broker
 displayOrder: 0
-shortDescription: Unlimited plan without resource restrictions.
-longDescription: Unlimited plan where you can create an infinite number of queues until the system falls over.
+shortDescription: Single Broker instance
+longDescription: Single Broker plan where you can create an infinite number of queues until the system falls over.
 uuid: 5d5acf5c-0500-11e8-ab55-507b9def37d9
 addressSpaceType: brokered
 resources:

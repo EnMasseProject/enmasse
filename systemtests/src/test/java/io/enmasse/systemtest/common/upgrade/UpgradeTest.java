@@ -35,10 +35,10 @@ class UpgradeTest extends TestBase {
         AddressSpace brokered = new AddressSpace("brokered-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
         AddressSpace standard = new AddressSpace("standard-addr-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
         List<Destination> standardAddresses = Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.STANDARD_POOLED_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.STANDARD_POOLED_TOPIC.plan()),
-                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_SHARDED_QUEUE.plan()),
-                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_SHARDED_TOPIC.plan()),
+                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
+                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
+                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE.plan()),
+                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC.plan()),
                 Destination.anycast("test-anycast"),
                 Destination.multicast("test-multicast"));
 

@@ -170,11 +170,11 @@ class UserApiTest extends TestBase {
     @Test
     void testUpdateUserPermissionsUserAPI() throws Exception {
         AddressSpace standard = new AddressSpace("user-api-space-update-user", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        standard.setPlan("unlimited-standard-without-mqtt");
+        standard.setPlan("standard-unlimited");
 
         createAddressSpace(standard);
 
-        Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_POOLED_QUEUE.plan());
+        Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
         setAddresses(standard, queue);
 
         UserCredentials cred = new UserCredentials("pepa", "pepapw");

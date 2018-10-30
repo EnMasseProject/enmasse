@@ -1,0 +1,18 @@
+apiVersion: admin.enmasse.io/v1alpha1
+kind: AddressPlan
+metadata:
+  name: standard-large-subscription
+  labels:
+    app: enmasse
+displayName: Large Subscription
+displayOrder: 2
+shortDescription: Creates a large durable subscription on a topic.
+longDescription: Creates a large durable subscription on a topic, which is then accessed as a distinct address.
+uuid: a7c5caf2-db73-11e8-a0fe-d45ddf138840
+addressType: subscription
+requiredResources:
+- name: router
+  credit: 0.1
+- name: broker
+  credit: 1.0
+
