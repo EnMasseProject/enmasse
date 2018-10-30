@@ -4,5 +4,6 @@
 :cmdcli: oc
 :context: okd
 :PlatformName: OpenShift
+:KubePlatform: OpenShift
 include::assembly-upgrading-enmasse.adoc[]
 :context: {parent-context}
