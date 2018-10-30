@@ -40,7 +40,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
     @BeforeEach
     void setUpSelenium() throws Exception {
         if (brokered == null) {
-            brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.NONE);
+            brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.STANDARD);
             createAddressSpace(brokered);
         }
         if (selenium.getDriver() == null) {

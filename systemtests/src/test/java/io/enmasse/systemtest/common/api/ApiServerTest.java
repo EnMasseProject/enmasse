@@ -287,7 +287,7 @@ class ApiServerTest extends TestBase {
             String token = CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
             CRDCmdClient.createNamespace(namespace);
 
-            AddressSpace addrSpace = new AddressSpace("non-admin-addr-space", AddressSpaceType.BROKERED, AuthService.NONE);
+            AddressSpace addrSpace = new AddressSpace("non-admin-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace, token);
 
             createAddressSpace(addrSpace, apiClient);

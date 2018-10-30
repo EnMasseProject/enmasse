@@ -53,6 +53,9 @@ if [[ "${TEST_PROFILE}" = "systemtests-pr" ]]; then
     run_test ${TESTCASE} systemtests-isolated-pr || failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] || [[ "${TEST_PROFILE}" = "systemtests-upgrade" ]]; then
     run_test ${TESTCASE} ${TEST_PROFILE} "openshift" ${SYSTEMTEST_UPGRADED} || failure=$(($failure + 1))
+elif [[ "${TEST_PROFILE}" = "systemtests-release" ]]; then
+    run_test ${TESTCASE} systemtests-shared-release || failure=$(($failure + 1))
+    run_test ${TESTCASE} systemtests-isolated-release || failure=$(($failure + 1))
 else
     run_test ${TESTCASE} systemtests-shared || failure=$(($failure + 1))
     run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
