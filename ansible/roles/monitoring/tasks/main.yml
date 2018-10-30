@@ -11,4 +11,6 @@
 - name: Apply the Alertmanager configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/alertmanager
 - name: Apply the Grafana configuration
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana 
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana
+- name: Apply the Kube-state-metrics configuration
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/kube-state-metrics

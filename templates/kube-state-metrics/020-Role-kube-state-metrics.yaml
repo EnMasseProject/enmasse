@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+# kubernetes versions before 1.8.0 should use rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  namespace: ${NAMESPACE}
+  name: enmasse.io:kube-state-metrics
+rules:
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "watch"]
