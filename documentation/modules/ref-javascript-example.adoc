@@ -27,7 +27,7 @@ container.connect({username: '_username_', password: '_password_', port:443, hos
 
 == {ClientAmqpJavaScriptName} example using WebSockets
 
-[source,javascript,options="nowrap"]
+[source,javascript,options="nowrap",subs="+quotes,attributes"]
 ----
 var container = require('rhea');
 var WebSocket = require('ws');

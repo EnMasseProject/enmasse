@@ -7,7 +7,7 @@
 
 You can use the following {ClientAmqpJmsName} example to connect your application to {ProductName}. This example assumes you have created an address of type `queue` named `myqueue`.
 
-[source,java,options="nowrap"]
+[source,java,options="nowrap",subs="+quotes,attributes"]
 ----
 package org.apache.qpid.jms.example;
 

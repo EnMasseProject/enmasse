@@ -204,7 +204,7 @@ ConsoleServer.prototype.listen = function (env, callback) {
         if (request.method === 'GET') {
             try {
                 if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
-                    var transform = replacer('\&lt\;messaging\-route\-hostname\&gt\;', env.MESSAGING_ROUTE_HOSTNAME);
+                    var transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
                     static_handler(request, response,  transform);
                 } else if (url.parse(request.url).pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
                     file_load_handler(request, response, env.MESSAGING_CERT);
