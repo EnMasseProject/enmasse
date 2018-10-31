@@ -73,7 +73,10 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+                        // TODO: Workaround for plan name change
+                        sh "git checkout 0b2c022819300cb26e80c04bb1055bf63e169beb"
                         lib.runSystemtests(env.CORES_DIR, params.START_VERSION, 'systemtests-upgrade', params.TEST_CASE, false)
+                        sh "git checkout ${params.COMMIT_SHA}"
                     }
                 }
             }
