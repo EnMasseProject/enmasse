@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+  name: kube-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enmasse
+      component: kube-metrics
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        component: kube-metrics
+    spec:
+      containers:
+      - name: kube-metrics
+        image: ${KUBE_STATE_METRICS_IMAGE}
+        ports:
+        - containerPort: 8080
+          name: kube-metrics
+        command:
+          - /kube-state-metrics
+          - --port=8080
+          - --telemetry-port=8081
+          - --namespace=${NAMESPACE}
+          - --collectors=pods
+      serviceAccount: kube-state-metrics

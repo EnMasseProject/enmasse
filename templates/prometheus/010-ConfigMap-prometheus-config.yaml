@@ -57,25 +57,37 @@ data:
         - action: replace
           source_labels: [__meta_kubernetes_service_name]
           target_label: kubernetes_pod_name
+      - job_name: 'kube-metrics'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - ${NAMESPACE}
+        relabel_configs:
+        - action: keep
+          regex: kube-metrics.*
+          source_labels: [__meta_kubernetes_pod_container_port_name]
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
   rules.yaml: |
     groups:
     - name: ComponentHealth
       rules:
-      - alert: component-health
+      - alert: Component_Health
         annotations:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
           severity: warning
         expr: health == 1
         for: 10s
-      - alert: component-health
+      - alert: Component_Health
         annotations:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
           severity: critical
         expr: health == 2
         for: 10s
-      - alert: component-health
+      - alert: Component_Health
         annotations:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
@@ -96,3 +108,17 @@ data:
           severity: warning
         expr: address_spaces_ready == 0
         for: 60s
+      - alert: Terminating_Pods
+        annotations:
+          description: '{{ $labels.pod }}'
+          value: "{{ $value }}"
+          severity: warning
+        expr: kube_pod_container_status_terminated == 1
+        for: 10s
+      - alert: Restarting Pods
+        annotations:
+          description: '{{ $labels.pod }}'
+          value: "{{ $value }}"
+          severity: warning
+        expr: rate(kube_pod_container_status_restarts_total[10m]) * 600 > 5
+        for: 10s
