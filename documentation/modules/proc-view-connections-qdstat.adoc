@@ -5,7 +5,7 @@
 [id='view-connections-qdstat-{context}']
 = Viewing router connections using qdstat
 
-A connection to the container running `qdstat` is created by default on the router. You can view the router connections using `qdstat`.
+You can view the router connections using `qdstat`.
 
 .Procedure
 

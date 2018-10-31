@@ -5,7 +5,7 @@
 [id='view-link-routes-qdstat-{context}']
 = Viewing link routes using qdstat
 
-Two link routes are created by default to manage last will and testament. You can view these link routes using `qdstat`.
+You can view the link routes using `qdstat`.
 
 .Procedure
 
