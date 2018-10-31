@@ -92,7 +92,37 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
 
-        Set<Address> addressSet = new HashSet<>(addressList);
+        // Migrate plan names
+        Set<Address> addressSet = new HashSet<>();
+        if (options.getVersion().startsWith("0.24")) {
+            for (Address address : addressList) {
+                if (addressResolver.findPlan(address).isPresent()) {
+                    addressSet.add(address);
+                } else {
+                    Address.Builder builder = new Address.Builder(address);
+                    String planName = address.getPlan();
+                    if ("pooled-queue".equals(planName)) {
+                        builder.setPlan("standard-small-queue");
+                    } else if ("pooled-topic".equals(planName)) {
+                        builder.setPlan("standard-small-topic");
+                    } else if ("standard-anycast".equals(planName)) {
+                        builder.setPlan("standard-small-anycast");
+                    } else if ("standard-multicast".equals(planName)) {
+                        builder.setPlan("standard-small-multicast");
+                    } else if ("standard-subscription".equals(planName)) {
+                        builder.setPlan("standard-small-subscription");
+                    } else if ("sharded-queue".equals(planName)) {
+                        builder.setPlan("standard-large-queue");
+                    } else if ("sharded-topic".equals(planName)) {
+                        builder.setPlan("standard-large-topic");
+                    }
+                    addressSet.add(builder.build());
+                }
+            }
+        } else {
+            addressSet = new HashSet<>(addressList);
+        }
+
         Map<String, Status> previousStatus = new HashMap<>();
         for (Address address : addressSet) {
             previousStatus.put(address.getAddress(), new Status(address.getStatus()));
