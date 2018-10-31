@@ -148,7 +148,8 @@ class UserApiTest extends TestBase {
         assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
         assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
 
-        testUser = new User().setUserCredentials(cred).addAuthorization(
+        UserCredentials updatedCred = new UserCredentials("pepanatestovani", null);
+        testUser = new User().setUserCredentials(updatedCred).addAuthorization(
                 new User.AuthorizationRule()
                         .addAddress("jenda")
                         .addOperation(User.Operation.RECEIVE));

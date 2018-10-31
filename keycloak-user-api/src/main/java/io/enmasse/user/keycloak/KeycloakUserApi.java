@@ -261,19 +261,23 @@ public class KeycloakUserApi implements UserApi  {
             return false;
         }
 
-        String existingAuthType = userRep.getAttributes().get("authenticationType").get(0);
-        if (!user.getSpec().getAuthentication().getType().name().equals(existingAuthType)) {
-            throw new IllegalArgumentException("Changing authentication type of a user is not allowed (existing is " + existingAuthType + ")");
+        if (user.getSpec().getAuthentication() != null) {
+            String existingAuthType = userRep.getAttributes().get("authenticationType").get(0);
+            if (!user.getSpec().getAuthentication().getType().name().equals(existingAuthType)) {
+                throw new IllegalArgumentException("Changing authentication type of a user is not allowed (existing is " + existingAuthType + ")");
+            }
         }
 
         return withRealm(realmName, realm -> {
-            switch (user.getSpec().getAuthentication().getType()) {
-                case password:
-                    setUserPassword(realm.users().get(userRep.getId()), user.getSpec().getAuthentication());
-                    break;
-                case federated:
-                    setFederatedIdentity(realm.users().get(userRep.getId()), user.getSpec().getAuthentication());
-                    break;
+            if (user.getSpec().getAuthentication() != null) {
+                switch (user.getSpec().getAuthentication().getType()) {
+                    case password:
+                        setUserPassword(realm.users().get(userRep.getId()), user.getSpec().getAuthentication());
+                        break;
+                    case federated:
+                        setFederatedIdentity(realm.users().get(userRep.getId()), user.getSpec().getAuthentication());
+                        break;
+                }
             }
             applyAuthorizationRules(realm, user, realm.users().get(userRep.getId()));
             return true;
