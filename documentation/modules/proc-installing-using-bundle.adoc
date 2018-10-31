@@ -23,7 +23,7 @@ ifeval::["{cmdcli}" == "oc"]
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_my-namespace_/' install/bundles/enmasse-with-standard-authservice/*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/bundles/{ProductBundleName}/*.yaml
 ----
 
 . Create the project where you want to deploy {ProductName}:
@@ -73,9 +73,9 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 endif::[]
 
-. Deploy using the `enmasse-with-standard-authservice` bundle:
+. Deploy using the `{ProductBundleName}` bundle:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f install/bundles/enmasse-with-standard-authservice
+{cmdcli} apply -f install/bundles/{ProductBundleName}
 ----

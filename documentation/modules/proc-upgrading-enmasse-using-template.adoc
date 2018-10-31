@@ -29,7 +29,7 @@ oc project _{ProductNamespace}_
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=_{ProductNamespace}_ | oc apply -f -
+oc process -f install/templates/{ProductTemplateName} NAMESPACE=_{ProductNamespace}_ | oc apply -f -
 ----
 
 . Monitor pods while they are restarted:

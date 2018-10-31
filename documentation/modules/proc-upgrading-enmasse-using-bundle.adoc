@@ -39,7 +39,7 @@ endif::[]
 +
 [subs="attributes",options="nowrap"]
 ----
-{cmdcli} apply -f install/bundles/enmasse-with-standard-authservice.yaml
+{cmdcli} apply -f install/bundles/{ProductBundleName}
 ----
 
 . Monitor pods while they are restarted:

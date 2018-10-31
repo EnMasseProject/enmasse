@@ -28,9 +28,9 @@ oc login -u system:admin
 oc new-project _{ProductNamespace}_
 ----
 
-. Deploy using `enmasse-with-standard-authservice` template:
+. Deploy using `{ProductTemplateName}` template:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-oc process -f install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=_{ProductNamespace}_ | oc apply -f -
+oc process -f install/templates/{ProductTemplateName} NAMESPACE=_{ProductNamespace}_ | oc apply -f -
 ----
