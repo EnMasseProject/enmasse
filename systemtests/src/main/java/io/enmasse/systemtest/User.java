@@ -61,12 +61,12 @@ public class User {
 
         JsonObject spec = new JsonObject();
         spec.put("username", getUsername());
-        JsonObject authentication = new JsonObject();
-        authentication.put("type", "password");
         if (password != null) {
+            JsonObject authentication = new JsonObject();
+            authentication.put("type", "password");
             authentication.put("password", Base64.getEncoder().encodeToString(getPassword().getBytes("UTF-8")));
+            spec.put("authentication", authentication);
         }
-        spec.put("authentication", authentication);
 
         JsonArray authorization = new JsonArray();
 
