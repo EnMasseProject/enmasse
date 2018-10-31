@@ -68,7 +68,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("aggregate", 0.0, 10.0));
         List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
         AddressSpacePlan weakSpacePlan = new AddressSpacePlan("weak-plan",
-                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
@@ -138,7 +138,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("aggregate", 0.0, 2.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-pooled-plan",
-                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
@@ -217,7 +217,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("aggregate", 0.0, 3.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan);
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan("quota-limits-sharded-plan",
-                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
@@ -278,7 +278,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan(
                 "limited-space",
-                "default-with-mqtt",
+                "default",
                 AddressSpaceType.STANDARD,
                 resources,
                 Collections.singletonList(queuePlan));
@@ -322,7 +322,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 //                new AddressSpaceResource("aggregate", 0.0, 10.0));
 //        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
 //        AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan", "scaleplan",
-//                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+//                "default", AddressSpaceType.STANDARD, resources, addressPlans);
 //        plansProvider.createAddressSpacePlanConfig(scaleSpacePlan);
 //
 //        //create address space plan with new plan
@@ -362,7 +362,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlanAlpha, queuePlanBeta);
         AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan",
-                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
@@ -434,7 +434,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
         AddressSpacePlan scaleSpacePlan = new AddressSpacePlan("scale-plan",
-                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
