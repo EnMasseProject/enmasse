@@ -197,4 +197,33 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+        <id>cvecheck</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <!-- Can't find a way to tell DCM about the node_modules directory -->
+                    <configuration>
+                        <enableExperimental>true</enableExperimental>
+                        <bundleAuditAnalyzerEnabled>false</bundleAuditAnalyzerEnabled>
+                        <rubygemsAnalyzerEnabled>false</rubygemsAnalyzerEnabled>
+                        <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                        <pyDistributionAnalyzerEnabled>false</pyDistributionAnalyzerEnabled>
+                        <pyPackageAnalyzerEnabled>false</pyPackageAnalyzerEnabled>
+                        <nuspecAnalyzerEnabled>false</nuspecAnalyzerEnabled>
+                        <scanSet>
+                            <fileSet>
+                                <directory>${project.basedir}</directory>
+                            </fileSet>
+                        </scanSet>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+  </profiles>
+
 </project>

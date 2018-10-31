@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+    <suppress>
+        <notes>fabric8's kubernetes-client is being identified as Kubernetes, which is false.</notes>
+        <gav regex="true">^io\.fabric8:kubernetes-client:.*$</gav>
+        <cpe>cpe:/a:kubernetes:kubernetes</cpe>
+    </suppress>
+
+    <suppress>
+        <notes>artemis-amqp-protocol is being identified comprising the Apache HTTPD server, which is false.</notes>
+        <gav regex="true">^org\.apache\.activemq:artemis-amqp-protocol:.*$</gav>
+        <cpe>cpe:/a:apache:apache_http_server</cpe>
+        <cpe>cpe:/a:apache:http_server</cpe>
+    </suppress>
+
+    <suppress>
+        <notes>EnMasse's own modules (specifically those named keycloak) are being misidentified.</notes>
+        <gav regex="true">^io\.enmasse:keycloak-.*:.*$</gav>
+        <cpe>cpe:/a:user_project:user</cpe>
+        <cpe>cpe:/a:keycloak:keycloak</cpe>
+    </suppress>
+</suppressions>
