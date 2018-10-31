@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag(isolated)
 public class CustomResourceDefinitionAddressesTest extends TestBase implements ISeleniumProviderChrome {
     private AddressSpace brokered;
+    private UserCredentials userCredentials;
 
     protected AddressSpace getSharedAddressSpace() {
         return brokered;
@@ -42,6 +43,8 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         if (brokered == null) {
             brokered = new AddressSpace("crd-address-test-shared", AddressSpaceType.BROKERED, AuthService.STANDARD);
             createAddressSpace(brokered);
+            userCredentials = new UserCredentials("test", "test");
+            createUser(brokered, userCredentials);
         }
         if (selenium.getDriver() == null) {
             selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
@@ -62,7 +65,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         Destination dest1 = Destination.topic("mytopic-agent", DestinationPlan.BROKERED_TOPIC.plan());
         Destination dest2 = Destination.topic("mytopic-api", DestinationPlan.BROKERED_TOPIC.plan());
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new UserCredentials(null, null));
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, userCredentials);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
@@ -147,7 +150,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         dest2.getAddressName(brokered.getName()), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, new UserCredentials(null, null));
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, userCredentials);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.deleteAddressWebConsole(dest1, false);
