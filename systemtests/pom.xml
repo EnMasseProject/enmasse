@@ -181,7 +181,7 @@
         <profile>
             <id>systemtests-shared-release</id>
             <properties>
-                <tags>sharded</tags>
+                <tags>shared</tags>
                 <skip.tests>false</skip.tests>
                 <skip.tags>noneAuth</skip.tags>
             </properties>
