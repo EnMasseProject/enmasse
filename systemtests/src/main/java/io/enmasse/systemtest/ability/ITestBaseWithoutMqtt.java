@@ -15,6 +15,6 @@ public interface ITestBaseWithoutMqtt extends ITestBase {
     }
 
     default String getAddressSpacePlan() {
-        return "standard-unlimited";
+        return "standard-small";
     }
 }
