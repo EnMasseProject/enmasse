@@ -14,5 +14,5 @@ ifdef::Downloading[]
 endif::Downloading[]
 
 ifdef::Productdownload[]
-* Download the release from 
+* Download and extract the `install_and_examples.zip` file from the {ZipDownload}.
 endif::Productdownload[]
