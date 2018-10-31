@@ -71,7 +71,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 210;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.anycast("small-anycast-" + i));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
+            dest.add(Destination.anycast("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
         }
         setAddresses(dest.toArray(new Destination[0]));
 //        TODO once getAddressPlanConfig() method will be implemented
@@ -90,20 +90,16 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
         //remove part of destinations
         int removeCount = 120;
-        deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.2 => 0.90 pods + dummy-address in special case
-        waitForRouterReplicas(sharedAddressSpace, 1);
+        deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.2 => max(2, 0.90 pods + dummy-address in special case)
+        waitForRouterReplicas(sharedAddressSpace, 2);
 
         //simple send/receive
         for (int i = removeCount; i < destCount; i = i + 3) {
             runAnycastTest(dest.get(i), client1, client2);
         }
 
-        //append 15 addresses due to scale to 2 replicas
-        appendAddresses(dest.subList(0, 15).toArray(new Destination[0])); //router credit => 0.9 + 0.15 => 1.05 pods ~2pods
-        waitForRouterReplicas(sharedAddressSpace, 2);
-
         //remove all destinations
         setAddresses();
-        waitForRouterReplicas(sharedAddressSpace, 1);
+        waitForRouterReplicas(sharedAddressSpace, 2);
     }
 }
