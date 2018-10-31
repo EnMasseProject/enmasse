@@ -15,4 +15,8 @@ endif::Downloading[]
 
 ifdef::Productdownload[]
 * Download and extract the `install_and_examples.zip` file from the {ZipDownload}.
+
+NOTE: Although container images for {ProductName} are available in the {DockerRepository}, we recommend that you use the YAML files provided instead.
+
+
 endif::Productdownload[]
