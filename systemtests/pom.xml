@@ -131,6 +131,14 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <skipAddThirdParty>true</skipAddThirdParty>
+                    <skipDownloadLicenses>true</skipDownloadLicenses>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <profiles>
