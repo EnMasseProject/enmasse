@@ -103,7 +103,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "message");
-        arguments.put(ClientArgument.TIMEOUT, "30");
+        arguments.put(ClientArgument.TIMEOUT, "20");
         arguments.remove(ClientArgument.CONN_SSL);
 
 
