@@ -9,6 +9,9 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.enmasse</groupId>
   <artifactId>agent</artifactId>
+  <properties>
+      <www-node-install-directory>${project.build.directory}/noderoot/www</www-node-install-directory>
+  </properties>
   <build>
     <resources>
       <resource>
@@ -27,7 +30,7 @@
         </includes>
         <filtering>true</filtering>
       </resource>
-    </resources>  
+    </resources>
     <plugins>
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -62,6 +65,25 @@
                       <resources>
                           <resource>
                              <directory>${project.basedir}</directory>
+                             <includes>
+                                <include>package.json</include>
+                                <include>npm-shrinkwrap.json</include>
+                             </includes>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+              <execution>
+                  <id>copy-packagejson-www</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                      <outputDirectory>${www-node-install-directory}</outputDirectory>
+                      <resources>
+                          <resource>
+                             <directory>${project.basedir}/www</directory>
                              <includes>
                                 <include>package.json</include>
                                 <include>npm-shrinkwrap.json</include>
@@ -108,7 +130,18 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm install</id>
+            <id>install node and npm - www</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <configuration>
+              <nodeVersion>${node.version}</nodeVersion>
+              <npmVersion>${npm.version}</npmVersion>
+              <installDirectory>${www-node-install-directory}</installDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm install - agent</id>
             <goals>
               <goal>npm</goal>
             </goals>
@@ -116,6 +149,17 @@
             <configuration>
                <workingDirectory>${project.basedir}/build</workingDirectory>
                <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2 --quiet</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm install - www</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+               <workingDirectory>${www-node-install-directory}</workingDirectory>
+               <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2</arguments>
             </configuration>
           </execution>
           <execution>
@@ -191,6 +235,7 @@
               <descriptors>
                 <descriptor>src/assembly/unix-dist.xml</descriptor>
               </descriptors>
+              <tarLongFileMode>gnu</tarLongFileMode>
             </configuration>
           </execution>
         </executions>
