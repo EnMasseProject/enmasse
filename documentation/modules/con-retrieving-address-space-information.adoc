@@ -1,7 +1,7 @@
 [id='retrieving-address-space-information-{context}']
 = Example commands for retrieving address space information
 
-* Retrieving the console hostname:
+* Retrieving the {ProductName} Console host name:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -22,7 +22,7 @@
 {cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].cert
 ----
 
-* Retrieving the hostname for the messaging endpoint:
+* Retrieving the host name for the messaging endpoint:
 +
 [options="nowrap",subs="attributes"]
 ----
