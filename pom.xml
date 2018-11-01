@@ -74,10 +74,12 @@
         <jacoco.version>0.7.9</jacoco.version>
         <node.version>v8.11.2</node.version>
         <npm.version>5.6.0</npm.version>
+        <snakeyaml.version>1.18</snakeyaml.version>
 
         <asciidoctor-maven-plugin.version>1.5.6</asciidoctor-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
-        <license-maven-plugin.version>2.11</license-maven-plugin.version>
+        <mycila-license-maven-plugin.version>2.11</mycila-license-maven-plugin.version>
+        <codehaus-license-maven-plugin.version>1.16</codehaus-license-maven-plugin.version>
         <frontend-maven-plugin.version>1.6</frontend-maven-plugin.version>
         <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
@@ -176,6 +178,7 @@
 
             <!-- Other dependencies -->
 
+            <!-- Overridden to avoid CVE-2017-15708 -->
             <dependency>
                 <groupId>commons-collections</groupId>
                 <artifactId>commons-collections</artifactId>
@@ -258,11 +261,23 @@
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jackson2-provider</artifactId>
                 <version>${resteasy.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>net.jcip</groupId>
+                        <artifactId>jcip-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jaxrs</artifactId>
                 <version>${resteasy.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>net.jcip</groupId>
+                        <artifactId>jcip-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
@@ -316,6 +331,7 @@
                 <version>${log4j.version}</version>
             </dependency>
 
+            <!-- Overridden to avoid CVE-2018-10237 -->
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
@@ -340,6 +356,10 @@
                     <exclusion>
                         <groupId>org.checkerframework</groupId>
                         <artifactId>checker-compat-qual</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>net.jcip</groupId>
+                        <artifactId>jcip-annotations</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -569,6 +589,14 @@
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
+
+            <!-- Overridden as new version resolves problem with license metadata -->
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -618,7 +646,7 @@
                 <plugin>
                     <groupId>com.mycila</groupId>
                     <artifactId>license-maven-plugin</artifactId>
-                    <version>${license-maven-plugin.version}</version>
+                    <version>${mycila-license-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -650,7 +678,11 @@
                     <artifactId>dependency-check-maven</artifactId>
                     <version>${dependency-check-maven-plugin.version}</version>
                 </plugin>
-
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${codehaus-license-maven-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -775,6 +807,47 @@
                             </rules>
                             <fail>true</fail>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <failIfWarning>true</failIfWarning>
+                    <excludedScopes>provided,test,system</excludedScopes>
+                    <licenseMerges>
+                        <licenseMerge>Apache Software License, Version 2.0|The Apache Software License, Version 2.0|
+                            Apache Software License - Version 2.0|Apache v2|Apache 2|Apache License, Version 2.0|
+                            Apache 2.0|Apache Public License 2.0|Apache License Version 2.0|Apache License, version 2.0|
+                            Apache License 2.0|The Apache License, Version 2.0</licenseMerge>
+                    </licenseMerges>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-thirdparty-summary</id>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <!-- Note: the license download can be skipped by setting license.skipDownloadLicenses true -->
+                        <id>download-thirdparty-licenses</id>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <licensesOutputFile>${project.build.outputDirectory}/licenses.xml</licensesOutputFile>
+                            <licensesOutputDirectory>${project.build.outputDirectory}/licenses</licensesOutputDirectory>
+                            <!-- org.reactivestreams:reactive-streams is http://creativecommons.org/publicdomain/zero/1.0/,
+                                 but the programmatic download of the license seems to be disallowed by the server. -->
+                            <excludedGroups>org.reactivestreams</excludedGroups>
+                        </configuration>
+                        <goals>
+                            <goal>download-licenses</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
