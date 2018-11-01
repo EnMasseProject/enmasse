@@ -1,0 +1,36 @@
+// Module included in the following assemblies:
+//
+// assemblies/assembly-qdstat.adoc
+
+[id='view-router-addresses-qdstat-{context}']
+= Viewing router addresses using qdstat
+
+You can view the router addresses using `qdstat`.
+
+.Procedure
+
+* On the command line, run the following command:
+
+[source=bash,options="nowrap"]
+----
+qdstat -a
+
+Router Addresses
+  class     addr                   phs  distrib       in-proc  local  remote  cntnr  in     out    thru  to-proc  from-proc
+  ===========================================================================================================================
+  local     $_management_internal       closest       1        0      0       0      0      0      0     588      588
+  link-in   $lwt                        linkBalanced  0        0      0       0      0      0      0     0        0
+  link-out  $lwt                        linkBalanced  0        0      0       0      0      0      0     0        0
+  mobile    $management            0    closest       1        0      0       0      601    0      0     601      0
+  local     $management                 closest       1        0      0       0      2,925  0      0     2,925    0
+  local     qdhello                     flood         1        0      0       0      0      0      0     0        5,856
+  local     qdrouter                    flood         1        0      0       0      0      0      0     0        0
+  topo      qdrouter                    flood         1        0      0       0      0      0      0     0        196
+  local     qdrouter.ma                 multicast     1        0      0       0      0      0      0     0        0
+  topo      qdrouter.ma                 multicast     1        0      0       0      0      0      0     0        0
+  local     temp.VTXOKyyWsq7OEei        balanced      0        1      0       0      0      0      0     0        0
+  local     temp.k2RGQNPe6sDMvz4        balanced      0        1      0       0      0      3,511  0     0        3,511
+  local     temp.xg+y8I_Tr4Y94LA        balanced      0        1      0       0      0      5      0     0        5
+----
+
+

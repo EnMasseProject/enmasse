@@ -104,7 +104,7 @@ Three connections are created by default on the router:
 
 [source=bash,options="nowrap"]
 ----
-$ dstat -c
+$ qdstat -c
 Connections
   id   host                 container                             role    dir  security                              authentication                tenant
   =========================================================================================================================================================
