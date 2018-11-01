@@ -67,7 +67,7 @@ pipeline {
             environment {
                 USE_DUMMY_ADDRESS = true
                 SKIP_CLEANUP = true
-                SYSTEMTEST_UPGRADED = false
+                SYSTEMTESTS_UPGRADED = false
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
@@ -85,7 +85,7 @@ pipeline {
             environment {
                 USE_DUMMY_ADDRESS = true
                 SKIP_CLEANUP = false
-                SYSTEMTEST_UPGRADED = true
+                SYSTEMTESTS_UPGRADED = true
                 DOCKER_REGISTRY = credentials('docker-registry-host')
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
@@ -106,7 +106,7 @@ pipeline {
 //            environment {
 //                USE_DUMMY_ADDRESS = true
 //                SKIP_CLEANUP = true
-//                SYSTEMTEST_UPGRADED = false
+//                SYSTEMTESTS_UPGRADED = false
 //                TAG = "${params.BUILD_TAG}"
 //            }
 //            steps {
