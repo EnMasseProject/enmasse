@@ -3,12 +3,8 @@
 // assembly-monitoring-kube.adoc
 // assembly-monitoring-oc.adoc
 
-[id='deploy-grafana-{context}']
-= Deploying Grafana
-
-.Prerequisites
-
-* You must have already installed Prometheus and kube-state-metrics.
+[id='deploy-kube-state-metrics-{context}']
+= Deploying kube-state-metrics
 
 .Procedure
 
@@ -16,12 +12,12 @@
 +
 [options="nowrap",subs="attributes"]
 ----
-sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/grafana/*.yaml
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/kube-state-metrics/*.yaml
 ----
 
-. Create the Grafana deployment:
+. Create the kube-state-metrics deployment:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f ./install/components/grafana
+{cmdcli} apply -f ./install/components/kube-state-metrics
 ----

@@ -8,6 +8,13 @@
 
 .Procedure
 
+. Replace the namespace with the namespace EnMasse is currently deployed to:
++
+[options="nowrap",subs="attributes"]
+----
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/prometheus/*.yaml
+----
+
 . Create the Prometheus deployment:
 +
 [options="nowrap",subs="attributes"]
