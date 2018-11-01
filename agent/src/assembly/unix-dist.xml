@@ -27,11 +27,11 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
         <fileSet>
-           <directory>${project.basedir}/build/node_modules</directory>
-           <outputDirectory>node_modules</outputDirectory>
-           <includes>
-              <include>**</include>
-           </includes>
+           <directory>${project.basedir}/target/noderoot/agent</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>node_modules/**</include>
+            </includes>
            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
@@ -55,6 +55,14 @@
            <outputDirectory>www</outputDirectory>
            <includes>
               <include>**</include>
+           </includes>
+           <fileMode>0644</fileMode>
+        </fileSet>
+        <fileSet>
+           <directory>${project.basedir}/target/noderoot/www</directory>
+           <outputDirectory>www</outputDirectory>
+           <includes>
+              <include>node_modules/**</include>
            </includes>
            <fileMode>0644</fileMode>
         </fileSet>

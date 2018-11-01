@@ -5,40 +5,42 @@
     <!-- PatternFly Styles -->
     <!-- Note: No other CSS files are needed regardless of what other JS packages located in patternfly/components that you decide to pull in -->
 
-    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly.min.css">
-    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly-additions.min.css">
+    <link rel="stylesheet" href="node_modules/angular-patternfly/node_modules/patternfly/dist/css/patternfly.min.css">
+    <link rel="stylesheet" href="node_modules/angular-patternfly/node_modules/patternfly/dist/css/patternfly-additions.min.css">
     <!-- Angular-PatternFly Styles -->
-    <link rel="stylesheet" href="bower_components/angular-patternfly/dist/styles/angular-patternfly.min.css" />
-    <link rel="stylesheet" type="text/css" href="bower_components/angular-ui-grid/ui-grid.min.css">
+    <link rel="stylesheet" href="node_modules/angular-patternfly/dist/styles/angular-patternfly.min.css" />
+    <link rel="stylesheet" type="text/css" href="node_modules/angular-ui-grid/ui-grid.min.css">
     <link rel="stylesheet" href="assets/css/enmasse.css" />
 
-    <script src="bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="bower_components/moment/moment.js"></script>
-    <script src="bower_components/c3/c3.min.js"></script>
-    <script src="bower_components/d3/d3.min.js"></script>
-    <script src="bower_components/angular/angular.min.js"></script>
-    <script src="bower_components/angular-ui-grid/ui-grid.min.js"></script>
-    <script src="bower_components/angular-dragdrop/src/angular-dragdrop.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/moment/moment.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/c3/c3.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/d3/d3.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/angular/angular.min.js"></script>
+    <script src="node_modules/angular-ui-grid/ui-grid.min.js"></script>
+    <script src="node_modules/angular-dragdrop/src/angular-dragdrop.min.js"></script>
 
-    <!--    <script src="https://www.patternfly.org/angular-patternfly/grunt-scripts/angular-datatables.min.js"></script>
-    <script src="https://www.patternfly.org/angular-patternfly/grunt-scripts/angular-datatables.select.min.js"></script>
--->
-    <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
-    <script src="bower_components/angular-animate/angular-animate.min.js"></script>
-    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-    <script src="bower_components/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <script src="bower_components/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js"></script>
-    <script src="bower_components/patternfly-bootstrap-combobox/js/bootstrap-combobox.js"></script>
-    <script src="bower_components/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js"></script>
-    <script src="bower_components/patternfly/dist/js/patternfly.min.js"></script>
-    <script src="bower_components/angular-patternfly/dist/angular-patternfly.js"></script>
-    <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
-    <script src="bower_components/angular-bootstrap/ui-bootstrap.min.js"></script>
-    <script src="bower_components/lodash/lodash.min.js"></script>
-    <script src="bower_components/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/angular-animate/angular-animate.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/angular-ui-bootstrap/ui-bootstrap-tpls.min.js"></script>
+
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/patternfly-bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js"></script>
+
+    <script src="node_modules/angular-patternfly/node_modules/patternfly/dist/js/patternfly.min.js"></script>
+    <script src="node_modules/angular-patternfly/dist/angular-patternfly.js"></script>
+    <script src="node_modules/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/angular-ui-bootstrap/ui-bootstrap.min.js"></script>
+
+    <!-- TODO - lodash is not minitfied in the NPM distribution as it was in the Bower -->
+    <script src="node_modules/angular-patternfly/node_modules/lodash/index.js"></script>
+    <script src="node_modules/angular-patternfly/node_modules/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js"></script>
 
     <script src="app.module.js"></script>
     <script src="shared/script.js"></script>
