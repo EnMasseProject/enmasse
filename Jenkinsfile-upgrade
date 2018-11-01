@@ -121,7 +121,7 @@ pipeline {
 //            environment {
 //                USE_DUMMY_ADDRESS = true
 //                SKIP_CLEANUP = false
-//                SYSTEMTEST_UPGRADED = true
+//                SYSTEMTESTS_UPGRADED = true
 //                TAG = "${params.START_VERSION}"
 //            }
 //            steps {
