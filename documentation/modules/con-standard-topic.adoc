@@ -9,4 +9,19 @@
 The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
 // !standard.address.topic.longDescription:stop
 
+== Dynamic subscriptions on topics and wildcard behavior
+
+You can specify a dynamic subscription on topics in the standard address space using wildcards. The wildcard behavior follows the MQTT syntax:
+
+* `/` is a separator
+* `+` matches one level
+* `#` matches one or more levels
+
+So, for example:
+
+* `a/#/b` matches `a/foo/b`, `a/bar/b`, and `a/foo/bar/b`
+
+* `a/+/b` matches `a/foo/b` and `a/bar/b`, but would not match `a/foo/bar`
+
+In the standard address space, the first level must always be a defined topic address; that is, `#` and `+` are not valid as the first characters of a subscribing address.
 
