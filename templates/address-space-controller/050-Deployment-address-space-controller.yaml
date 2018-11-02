@@ -23,10 +23,6 @@ spec:
       - env:
         - name: JAVA_OPTS
           value: -verbose:gc
-        - name: STANDARD_AUTHSERVICE_CONFIG_NAME
-          value: keycloak-config
-        - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
-          value: standard-authservice-cert
         - name: ENABLE_EVENT_LOGGER
           valueFrom:
             configMapKeyRef:
