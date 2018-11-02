@@ -112,6 +112,7 @@ include::assemblies/assembly-managing-addresses-kube.adoc[leveloffset=+1]
 
 //Accessing the Console
 include::modules/proc-logging-in-console.adoc[leveloffset=+2]
+include::modules/ref-console-address-filtering.adoc[leveloffset=+2]
 
 //Managing users
 include::modules/con-user-model.adoc[leveloffset=+2]

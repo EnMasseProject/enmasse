@@ -1,0 +1,18 @@
+// Module included in the following assemblies:
+//
+// master.adoc
+
+[id='ref-console-address-filtering-{context}']
+= Using the {ProductName} Console address filtering
+
+The address name filtering feature in the {ProductName} Console uses regular expressions. Also, filters are cumulative.
+
+.{ProductName} Console address name filtering behavior
+[cols="34%a,33%a,33%a",options="header"]
+|===
+|To match... |Use this |Result
+|An expression exactly |Use a period followed by an expression: `.my` |The address `my`
+|The beginning of an expression |Use a caret followed by an expression: `^my` |All addresses that begin with `my`
+|All addresses containing an expression |Use a period followed by an asterisk and an expression: `.*my` |All addresses containing `my`
+|===
+
