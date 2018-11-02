@@ -62,6 +62,7 @@ function Ragent() {
     this.container.sasl_server_mechanisms.enable_anonymous();
     this.configure_handlers();
     this.status = new events.EventEmitter();
+    this.disable_connectivity = false;
 }
 
 Ragent.prototype.subscribe = function (context) {
@@ -101,23 +102,27 @@ Ragent.prototype.get_all_routers = function () {
 }
 
 Ragent.prototype.check_connectivity = function () {
-    var all_routers = this.get_all_routers();
+    if (!this.disable_connectivity) {
+        var all_routers = this.get_all_routers();
 
-    for (var r in this.connected_routers) {
-        this.check_router_connectors(this.connected_routers[r], all_routers);
+        for (var r in this.connected_routers) {
+            this.check_router_connectors(this.connected_routers[r], all_routers);
+        }
     }
 }
 
 Ragent.prototype.check_router_connectors = function (router, all_routers) {
-    try {
-        if (router.is_ready_for_connectivity_check()) {
-            log.info('checking connectivity for ' + router.container_id);
-            router.check_connectors(all_routers || this.get_all_routers());
-        } else {
-            log.info(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
+    if (!this.disable_connectivity) {
+        try {
+            if (router.is_ready_for_connectivity_check()) {
+                log.info('checking connectivity for ' + router.container_id);
+                router.check_connectors(all_routers || this.get_all_routers());
+            } else {
+                log.info(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
+            }
+        } catch (error) {
+            log.error('connectivity check failed for %s: %s', router.container_id, error);
         }
-    } catch (error) {
-        log.error('connectivity check failed for %s: %s', router.container_id, error);
     }
 }
 

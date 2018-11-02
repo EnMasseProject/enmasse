@@ -53,6 +53,7 @@ function start(env) {
             stats.init(console_server);
 
             var ragent = new Ragent();
+            ragent.disable_connectivity = true;
             bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses')
             ragent.start_listening(env);
             ragent.listen_probe({PROBE_PORT:8888});
