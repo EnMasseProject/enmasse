@@ -11,8 +11,9 @@ The address name filtering feature in the {ProductName} Console uses regular exp
 [cols="34%a,33%a,33%a",options="header"]
 |===
 |To match... |Use... |Results in...
-|Only the beginning of an expression |A caret followed by an expression: `^my` |All addresses that begin with `my`
-|An expression |A period followed by an asterisk and an expression: `.*my` |All addresses containing `my`
-|Only the end of an expression |An expression followed by the dollar sign: `my$` |All addresses ending with `my`
+|The beginning of an expression only |A caret followed by an expression: `^my` |All addresses beginning with `my`
+|An expression |The matching string: `my` |All addresses containing `my`
+|The end of an expression only |An expression followed by the dollar sign: `my$` |All addresses ending with `my`
+|An exact expression |A caret followed by an expression and a dollar sign: `^my$` |Only the address `my`
 |===
 
