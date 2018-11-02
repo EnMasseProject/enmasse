@@ -9,9 +9,9 @@
 The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
 // !standard.address.topic.longDescription:stop
 
-== Dynamic subscriptions on topics and wildcard behavior
+== Hierarchical topics and wildcards
 
-You can specify a dynamic subscription on topics in the standard address space using wildcards. The wildcard behavior follows the MQTT syntax:
+A client receiving from a topic address can specify a wildcard address with the topic address as the root. The wildcard behavior follows the MQTT syntax:
 
 * `/` is a separator
 * `+` matches one level
