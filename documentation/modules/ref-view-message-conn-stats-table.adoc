@@ -20,7 +20,7 @@
 |Number of senders attached |*Senders*
 |Number of receivers attached |*Receivers*
 |Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored*
-|Standard address space only: Message deliveries per second |For the desired address, expand the twistie on the left to show the *Senders* table; see the *Delivery Rate* column.
+|Standard address space only: Message deliveries per second |For the desired address, expand the twisty on the left to show the *Senders* table; see the *Delivery Rate* column.
 |===
 
 
@@ -30,7 +30,7 @@
 |To view... |On the Connections page see...
 |Total number of messages received as long the connection has existed |*Messages In*
 |Standard address space only: Total number of messages sent as long the connection has existed |*Messages Out*
-|Total number of messages delivered |For the desired connection, expand the twistie on the left to show the *Senders* and *Receivers* tables; see the *Deliveries* columns.
+|Total number of messages delivered |For the desired connection, expand the twisty on the left to show the *Senders* and *Receivers* tables; see the *Deliveries* columns.
 |Standard address space only: Username used by the client to connect |The third column
 |===
 
