@@ -11,4 +11,4 @@ spec:
     termination: edge
   to:
     kind: Service
-    name: prometheus 
+    name: prometheus

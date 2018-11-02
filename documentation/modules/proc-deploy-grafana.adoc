@@ -6,7 +6,18 @@
 [id='deploy-grafana-{context}']
 = Deploying Grafana
 
+.Prerequisites
+
+* You must have already installed Prometheus and `kube-state-metrics`.
+
 .Procedure
+
+. Replace the namespace with the namespace {ProcuctName} is currently deployed to:
++
+[options="nowrap",subs="attributes"]
+----
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/grafana/*.yaml
+----
 
 . Create the Grafana deployment:
 +

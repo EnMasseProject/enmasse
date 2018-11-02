@@ -1,15 +1,48 @@
 ---
 - name: Apply the Prometheus configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/prometheus
-- name: Create the Alertmanager configuration
-  shell: oc process -f {{ playbook_dir }}/install/alertmanager/010-ConfigMap-alertmanager-config.yaml \
-          SMTP_SERVER={{ smtp_server }} \
-          SMTP_USERNAME={{ smtp_username }}  \
-          SMTP_PASSWORD={{ smtp_password }} \
-          SMTP_FROM_ADDRESS={{ smtp_from_address }} \
-          SYS_ADMIN_EMAIL={{ sys_admin_email }} \ | oc apply -n {{ namespace }} -f -
 - name: Apply the Alertmanager configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/alertmanager
+- name: Create Alertmanager configmap
+  when: smtp_server is defined
+  shell:
+    cmd: |
+      cat <<EOF | oc apply -f -
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        labels:
+          app: enmasse
+        name: alertmanager-config
+      data:
+        alertmanager.yml: |
+          global:
+            resolve_timeout: 5m
+            smtp_smarthost: "{{ smtp_server }}"
+            smtp_from: "{{ smtp_from_address }}"
+            smtp_auth_username: "{{ smtp_username }}"
+            smtp_auth_password: "{{ smtp_password }}"
+          route:
+            group_by: ['alertname']
+            group_wait: 60s
+            group_interval: 60s
+            repeat_interval: 1h
+            receiver: 'sysadmins'
+          receivers:
+          - name: 'sysadmins'
+            email_configs:
+            - to: "{{ sysadmin_email }}"
+          inhibit_rules:
+            - source_match:
+                severity: 'critical'
+              target_match:
+                severity: 'warning'
+              equal: ['alertname']
+      EOF
+- name: Update Alertmanager pod
+  when: smtp_server is defined
+  shell:
+    cmd: oc get pods | grep alertmanager | awk '{print $1}' | xargs oc delete pod
 - name: Apply the Grafana configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana
 - name: Apply the Kube-state-metrics configuration

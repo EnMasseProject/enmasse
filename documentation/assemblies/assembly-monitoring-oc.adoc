@@ -9,9 +9,16 @@
 [id='monitoring-oc-{context}']
 = Monitoring {ProductName} on OpenShift
 
-You can use Prometheus and Grafana for monitoring the {ProductName} service.
+Monitoring services run frequent health checks  on {ProductName} and send alerts when health checks
+fail. Health is assessed using Prometheus and `kube-state-metrics`. Alerting is implemented with
+`Alertmanager`. Grafana is also configured to provide a dashboard of the current status of health
+checks.
 
 include::../modules/proc-deploy-prometheus.adoc[leveloffset=+1]
+
+include::../modules/proc-deploy-kube-state-metrics.adoc[leveloffset=+1]
+
+include::../modules/proc-deploy-alertmanager.adoc[leveloffset=+1]
 
 include::../modules/proc-deploy-grafana.adoc[leveloffset=+1]
 

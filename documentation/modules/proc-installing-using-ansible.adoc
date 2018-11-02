@@ -29,6 +29,12 @@ The following Ansible configuration settings are supported:
 |api_server|Specifies whether to enable the REST API server.|True |no
 |register_api_server|Specifies whether to register the API server with Kubernetes master.|False |no
 |secure_api_server|Specifies whether to enable mutual TLS for the API server.|False |no
+|enable_monitoring|Specifies whether to enable the monitoring services|Not applicable|no
+|smtp_server|Specifies the SMTP server used to send alert emails|Not applicable|no
+|smtp_username|Specifies the username used to authenticate to the SMTP server|Not applicable|no
+|smtp_password|Specifies the password used to authenticate to the SMTP server|Not applicable|no
+|smtp_from_address|Specifies the from address displayed in alert emails|Not applicable|no
+|sysadmin_email|Specifies the email address to which alerts are sent|Not applicable|no
 |===
 
 

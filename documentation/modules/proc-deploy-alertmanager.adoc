@@ -1,0 +1,69 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='deploy-alertmanager-{context}']
+= Deploying Alertmanager
+
+.Prerequisites
+
+* You must have already installed Prometheus and `kube-state-metrics`.
+
+.Procedure
+
+. Replace the namespace with the namespace {ProductName} is currently deployed to:
++
+[options="nowrap",subs="attributes"]
+----
+sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/alertmanager/*.yaml
+----
+
+. Create the `Alertmanager` deployment:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f ./install/components/alertmanager
+----
+
+. (Optional) Configure `Alertmanager` to send emails using a custom configmap with the relevant SMTP details:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f ./alertmanager-configmap.yaml
+----
+An example `Alertmanager` config map:
+[options="nowrap",subs="attributes"]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: enmasse
+  name: alertmanager-config
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_smarthost: localhost
+      smtp_from: alerts@localhost
+      smtp_auth_username: admin
+      smtp_auth_password: password
+    route:
+      group_by: ['alertname']
+      group_wait: 60s
+      group_interval: 60s
+      repeat_interval: 1h
+      receiver: 'sysadmins'
+    receivers:
+    - name: 'sysadmins'
+      email_configs:
+      - to: sysadmin@localhost
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname']
+----
+
