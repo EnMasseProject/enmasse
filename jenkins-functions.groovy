@@ -53,12 +53,12 @@ def postAction(String coresDir, String artifactDir) {
     storeArtifacts(artifactDir)
     makePlot()
     //store test results from build and system tests
-    junit '**/TEST-*.xml'
+    junit testResults: '**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
-    archive '**/TEST-*.xml'
-    archive 'templates/install/**'
+    archiveArtifacts artifacts: '**/TEST-*.xml', allowEmptyArchive: true
+    archiveArtifacts artifacts: 'templates/install/**', allowEmptyArchive: true
     sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
-    archive "${artifactDir}/**"
+    archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
     tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 }
