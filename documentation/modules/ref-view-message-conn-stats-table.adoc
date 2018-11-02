@@ -11,15 +11,15 @@
 .Message statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
-|To view... |Do this on the Addresses page
-|Address status |See the first column (the symbol preceding the address name)
-|Address type |See the third column
-|Address plan |See the fourth column
-|Message ingress rate (during the last 5 minutes) |See *Messages In*
-|Message egress rate (during the last 5 minutes) |See *Messages Out*
-|Number of senders attached |See *Senders*
-|Number of receivers attached |See *Receivers*
-|Queue and topic address types only: Number of stored messages on the broker |See *Stored*
+|To view... |On the Addresses page see...
+|Address status |The first column (the symbol preceding the address name)
+|Address type |The third column
+|Address plan |The fourth column
+|Message ingress rate (during the last 5 minutes) |*Messages In*
+|Message egress rate (during the last 5 minutes) |*Messages Out*
+|Number of senders attached |*Senders*
+|Number of receivers attached |*Receivers*
+|Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored*
 |Standard address space only: Message deliveries per second |For the desired address, expand the twistie on the left to show the *Senders* table; see the *Delivery Rate* column.
 |===
 
@@ -27,10 +27,10 @@
 .Connection statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
-|To view... |Do this on the Connections page
-|Total number of messages received as long the connection has existed |See *Messages In*
-|Standard address space only: Total number of messages sent as long the connection has existed |See *Messages Out*
+|To view... |On the Connections page see...
+|Total number of messages received as long the connection has existed |*Messages In*
+|Standard address space only: Total number of messages sent as long the connection has existed |*Messages Out*
 |Total number of messages delivered |For the desired connection, expand the twistie on the left to show the *Senders* and *Receivers* tables; see the *Deliveries* columns.
-|Standard address space only: Username used by the client to connect |See the third column
+|Standard address space only: Username used by the client to connect |The third column
 |===
 
