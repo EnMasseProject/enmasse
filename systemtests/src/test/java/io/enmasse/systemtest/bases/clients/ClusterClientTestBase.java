@@ -103,7 +103,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "message");
-        arguments.put(ClientArgument.TIMEOUT, "30");
+        arguments.put(ClientArgument.TIMEOUT, "20");
         arguments.remove(ClientArgument.CONN_SSL);
 
 
@@ -115,14 +115,14 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         String receiverId = cliApiClient.sendAndGetId(receiver);
 
         JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat(response.getInteger("ecode"), is(0));
+        assertThat("Return code of sender is not 0", response.getInteger("ecode"), is(0));
 
         Thread.sleep(30000);
 
         response = cliApiClient.getClientInfo(receiverId);
         log.info(response.toString());
-        assertThat(response.getInteger("ecode"), is(0));
-        assertFalse(response.getString("stdOut").isEmpty());
+        assertThat("Return code of receiver is not 0", response.getInteger("ecode"), is(0));
+        assertFalse(response.getString("stdOut").isEmpty(), "Receiver does not receive message");
         log.info(response.toString());
     }
 }
