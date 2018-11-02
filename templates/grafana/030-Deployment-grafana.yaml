@@ -31,7 +31,7 @@ spec:
           readOnly: true
         - mountPath: /usr/share/grafana/data
           name: grafana-data
-        readOnly: false
+          readOnly: false
         env:
         - name: GF_INSTALL_PLUGINS
           value: "camptocamp-prometheus-alertmanager-datasource"
