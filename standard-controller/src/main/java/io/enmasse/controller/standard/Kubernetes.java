@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.client.ParameterValue;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ public interface Kubernetes {
 
     KubernetesList processTemplate(String templateName, ParameterValue... parameterValues);
 
-    RouterCluster getRouterCluster();
+    RouterCluster getRouterCluster() throws IOException;
 
     void scaleStatefulSet(String name, int numReplicas);
 }

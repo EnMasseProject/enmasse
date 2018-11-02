@@ -17,6 +17,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
@@ -30,14 +31,14 @@ public class AddressControllerTest {
     private BrokerSetGenerator mockGenerator;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         mockHelper = mock(Kubernetes.class);
         mockGenerator = mock(BrokerSetGenerator.class);
         mockApi = mock(AddressApi.class);
         mockClient = mock(OpenShiftClient.class);
         EventLogger eventLogger = mock(EventLogger.class);
         StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
-        when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1));
+        when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1, null));
         StandardControllerOptions options = new StandardControllerOptions();
         options.setAddressSpace("me1");
         options.setAddressSpacePlanName("plan1");

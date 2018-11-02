@@ -23,19 +23,16 @@ import java.util.Map;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"name", "min", "max"})
+@JsonPropertyOrder({"name", "max"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResourceAllowance {
     private final String name;
-    private final double min;
     private final double max;
 
     @JsonCreator
     public ResourceAllowance(@JsonProperty("name") String name,
-                             @JsonProperty("min") double min,
                              @JsonProperty("max") double max) {
         this.name = name;
-        this.min = min;
         this.max = max;
     }
 
@@ -43,10 +40,6 @@ public class ResourceAllowance {
 
     public String getName() {
         return name;
-    }
-
-    public double getMin() {
-        return min;
     }
 
     public double getMax() {

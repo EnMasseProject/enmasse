@@ -177,7 +177,7 @@ public class AddressProvisionerTest {
     }
 
     private static RouterCluster createDeployment(int replicas) {
-        return new RouterCluster("router", replicas);
+        return new RouterCluster("router", replicas, null);
     }
 
     @Test
@@ -205,9 +205,9 @@ public class AddressProvisionerTest {
     @Test
     public void testProvisionColocated() {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 2),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 2)));
+                new ResourceAllowance("broker",  2),
+                new ResourceAllowance("router",  1),
+                new ResourceAllowance("aggregate", 2)));
 
         Set<Address> addressSet = Sets.newSet(
                 createQueue("q9", "pooled-queue-tiny"),
@@ -232,7 +232,7 @@ public class AddressProvisionerTest {
         List<BrokerCluster> brokerClusters = Arrays.asList(
                 createCluster("broker-pooled-1234", 2));
 
-        provisioner.provisionResources(new RouterCluster("router", 1), brokerClusters, neededMap, addressSet);
+        provisioner.provisionResources(new RouterCluster("router", 1, null), brokerClusters, neededMap, addressSet);
 
         for (Address address : addressSet) {
             assertThat(address.getStatus().getPhase(), is(Configuring));
@@ -300,9 +300,9 @@ public class AddressProvisionerTest {
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
 
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 3),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 4)));
+                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address q1 = createQueue("q1", "xlarge-queue");
@@ -330,9 +330,9 @@ public class AddressProvisionerTest {
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
 
         final AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 3),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 4)));
+                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
         final Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         final String manualClusterId = "foobar";
@@ -365,9 +365,9 @@ public class AddressProvisionerTest {
 
 
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 0),
-                new ResourceAllowance("router", 0, 100000),
-                new ResourceAllowance("aggregate", 0, 100000)));
+                new ResourceAllowance("broker", 0),
+                new ResourceAllowance("router", 100000),
+                new ResourceAllowance("aggregate", 100000)));
 
         Map<String, Map<String, UsageInfo>> usageMap = new HashMap<>();
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addresses, addresses);
@@ -381,9 +381,9 @@ public class AddressProvisionerTest {
     @Test
     public void testDurableSubscriptionsColocated() {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 2),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 3)));
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 3)));
 
         Set<Address> addressSet = Sets.newSet(
                 createAddress("t1", "topic", "small-topic"),
@@ -408,9 +408,9 @@ public class AddressProvisionerTest {
     @Test
     public void testDurableSubscriptionsColocatedStaysOnTopicBroker() {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 2),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 3)));
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 3)));
 
         Set<Address> addressSet = Sets.newSet(
                 createAddress("t1", "topic", "small-topic"),
@@ -456,9 +456,9 @@ public class AddressProvisionerTest {
     @Test
     public void testDurableSubscriptionsSharded() throws Exception {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 2),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 3)));
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 3)));
 
         Address t1 = createAddress("t1", "topic", "xlarge-topic");
         Address t2 = createAddress("t2", "topic", "xlarge-topic");
@@ -490,9 +490,9 @@ public class AddressProvisionerTest {
     @Test
     public void testDurableSubscriptionsShardedStaysOnTopicBroker() {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker", 0, 2),
-                new ResourceAllowance("router", 0, 1),
-                new ResourceAllowance("aggregate", 0, 3)));
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 3)));
 
         Address t1 = createAddress("t1", "topic", "small-topic");
         Address t2 = createAddress("t2", "topic", "small-topic");

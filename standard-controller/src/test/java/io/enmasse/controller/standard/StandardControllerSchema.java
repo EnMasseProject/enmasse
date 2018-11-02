@@ -21,9 +21,9 @@ public class StandardControllerSchema implements SchemaProvider {
     private Schema schema;
 
     public StandardControllerSchema() {
-        this(Arrays.asList(new ResourceAllowance("router", 0.0, 1.0),
-                new ResourceAllowance("broker", 0.0, 3.0),
-                new ResourceAllowance("aggregate", 0.0, 3.0)));
+        this(Arrays.asList(new ResourceAllowance("router", 1.0),
+                new ResourceAllowance("broker", 3.0),
+                new ResourceAllowance("aggregate", 3.0)));
 
     }
 
@@ -152,6 +152,7 @@ public class StandardControllerSchema implements SchemaProvider {
                                 "FAIL"),
                         new StandardInfraConfigSpecRouter(
                                 new StandardInfraConfigSpecRouterResources("512Mi"),
+                                1,
                                 500)))))
                 .setInfraConfigDeserializer(json -> null)
                 .build();

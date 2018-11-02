@@ -14,7 +14,6 @@ uuid: 5d5acf5c-0500-11e8-ab55-507b9def37d9
 addressSpaceType: brokered
 resources:
 - name: broker
-  min: 1.0
   max: 1.9 
 addressPlans:
 - brokered-queue

@@ -34,13 +34,10 @@ spec:
             type: object
             required:
             - name
-            - min
             - max
             properties:
               name:
                 type: string
-              min:
-                type: number
               max:
                 type: number
         addressPlans:

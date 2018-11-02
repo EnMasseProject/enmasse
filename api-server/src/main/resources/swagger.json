@@ -1822,8 +1822,11 @@
                         }
                     }
                 },
+                "minReplicas": {
+                    "type": "integer"
+                },
                 "linkCapacity": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -1908,15 +1911,11 @@
                         "type": "object",
                         "required": [
                             "name",
-                            "min",
                             "max"
                         ],
                         "properties": {
                             "name": {
                                 "type": "string"
-                            },
-                            "min": {
-                                "type": "number"
                             },
                             "max": {
                                 "type": "number"
