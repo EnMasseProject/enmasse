@@ -31,6 +31,6 @@
 |Total number of messages received as long the connection has existed |See *Messages In*
 |Standard address space only: Total number of messages sent as long the connection has existed |See *Messages Out*
 |Total number of messages delivered |For the desired connection, expand the twistie on the left to show the *Senders* and *Receivers* tables; see the *Deliveries* columns.
-|Connection protocol |??
+|Standard address space only: Username used by the client to connect |See the third column
 |===
 
