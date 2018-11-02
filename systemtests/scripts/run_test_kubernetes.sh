@@ -57,6 +57,8 @@ ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
 LOGS_PID=$!
 echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
+export PN_TRACE_FRM=1
+
 #execute test
 if [[ "${TEST_PROFILE}" = "smoke" ]]; then
     run_test "brokered.**.SmokeTest" systemtests-shared "kubernetes" || failure=$(($failure + 1))

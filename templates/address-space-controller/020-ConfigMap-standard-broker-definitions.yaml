@@ -84,6 +84,8 @@ data:
                 value: queue-scheduler-${INFRA_UUID}
               - name: QUEUE_SCHEDULER_SERVICE_PORT
                 value: 5672
+              - name: PN_TRACE_FRM
+                value: "1"
               - name: INFRA_UUID
                 value: ${INFRA_UUID}
               - name: QUEUE_NAME
