@@ -927,6 +927,7 @@ public class TestUtils {
         logCollector.collectEvents();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
+        logCollector.collectRouterState("deleteAddressSpace");
         addressApiClient.deleteAddressSpace(addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -942,6 +943,7 @@ public class TestUtils {
         logCollector.collectEvents();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
+        logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");
         kubernetes.deleteNamespace(namespace);
         waitForNamespaceDeleted(kubernetes, namespace);
         waitForAddressSpaceDeleted(kubernetes, addressSpace);

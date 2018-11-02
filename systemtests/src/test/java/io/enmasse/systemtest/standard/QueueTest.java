@@ -59,6 +59,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         try {
             actual = numSent.get(1, TimeUnit.MINUTES);
         } catch (TimeoutException t) {
+            logCollector.collectRouterState("runQueueTestSend");
             fail("Sending messages timed out after sending " + predicate.actual());
         }
         assertThat("Wrong count of messages sent", actual, is(msgs.size()));
@@ -69,6 +70,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         try {
             actual = received.get(1, TimeUnit.MINUTES).size();
         } catch (TimeoutException t) {
+            logCollector.collectRouterState("runQueueTestRecv");
             fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
         }
 
