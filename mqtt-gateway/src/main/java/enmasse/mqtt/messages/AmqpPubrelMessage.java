@@ -36,7 +36,7 @@ public class AmqpPubrelMessage {
     public static AmqpPubrelMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {
-            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
+            throw new IllegalArgumentException(String.format("AMQP message subject is no %s", AMQP_SUBJECT));
         }
 
         return new AmqpPubrelMessage(message.getMessageId());

@@ -102,7 +102,7 @@ public class OpenSSLCertManager implements CertManager {
                 log.info(msg);
             } else {
                 log.error(msg);
-                throw new RuntimeException(String.format("Command '%s' failed with exit value {}", keyGenBuilder.command(), exitValue));
+                throw new RuntimeException(String.format("Command '%s' failed with exit value %d", keyGenBuilder.command(), exitValue));
             }
         } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
