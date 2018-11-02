@@ -4,12 +4,14 @@
  */
 package io.enmasse.systemtest;
 
+import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -107,6 +109,36 @@ public class GlobalLogCollector {
             }
         } catch (Exception e) {
             log.error("Error collecting events for {}", namespace, e);
+        }
+    }
+
+    public void collectRouterState(String operation) {
+        log.info("Collecting router state in namespace {}", namespace);
+        long timestamp = System.currentTimeMillis();
+        kubernetes.listPods(Collections.singletonMap("capability", "router")).stream().forEach(pod -> {
+            collectRouterInfo(pod, "." + operation + ".autolinks." + timestamp, "qdmanage", "QUERY", "--type=autoLink");
+            collectRouterInfo(pod, "." + operation + ".links." + timestamp, "qdmanage", "QUERY", "--type=link");
+            collectRouterInfo(pod, "." + operation + ".connections." + timestamp, "qdmanage", "QUERY", "--type=connection");
+            collectRouterInfo(pod, "." + operation + ".qdstat_anlc." + timestamp, "qdstat", "-a", "-n", "-l", "-c");
+            collectRouterInfo(pod, "." + operation + ".qdstat_al." + timestamp, "qdstat", "-a", "-l");
+            collectRouterInfo(pod, "." + operation + ".qdstat_a." + timestamp, "qdstat", "-a");
+        });
+    }
+
+    private void collectRouterInfo(Pod pod, String filesuffix, String ... command) {
+        String output = kubernetes.runOnPod(pod, "router", command);
+        try {
+            Path path = Paths.get(logDir.getPath(), namespace);
+            File routerAutoLinks = new File(
+                    Files.createDirectories(path).toFile(),
+                    pod.getMetadata().getName() + filesuffix);
+            if (!routerAutoLinks.exists()) {
+                try (BufferedWriter bf = Files.newBufferedWriter(routerAutoLinks.toPath())) {
+                    bf.write(output);
+                }
+            }
+        } catch (IOException e) {
+            log.warn("Error collecting router state: {}", e.getMessage());
         }
     }
 }
