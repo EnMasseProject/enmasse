@@ -1307,7 +1307,7 @@ data:
     - description: Global max size for all addresses in broker. Cannot be larger than
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
-      value: -1
+      value: "-1"
     - description: Broker address full policy
       name: BROKER_ADDRESS_FULL_POLICY
       value: FAIL
