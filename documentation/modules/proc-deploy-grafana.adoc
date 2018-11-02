@@ -8,11 +8,11 @@
 
 .Prerequisites
 
-* You must have already installed Prometheus and kube-state-metrics.
+* You must have already installed Prometheus and `kube-state-metrics`.
 
 .Procedure
 
-. Replace the namespace with the namespace EnMasse is currently deployed to:
+. Replace the namespace with the namespace {ProcuctName} is currently deployed to:
 +
 [options="nowrap",subs="attributes"]
 ----

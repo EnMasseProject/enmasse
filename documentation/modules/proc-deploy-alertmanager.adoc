@@ -12,7 +12,7 @@
 
 .Procedure
 
-. Replace the namespace with the namespace EnMasse is currently deployed to:
+. Replace the namespace with the namespace {ProductName} is currently deployed to:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -26,13 +26,13 @@ sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/alertmanager/*.
 {cmdcli} apply -f ./install/components/alertmanager
 ----
 
-. (Optional) Configure Alertmanager to send emails using a custom configmap with the relevant SMTP details
+. (Optional) Configure `Alertmanager` to send emails using a custom configmap with the relevant SMTP details:
 +
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} apply -f ./alertmanager-configmap.yaml
 ----
-An example Alertmanager config map:
+An example `Alertmanager` config map:
 [options="nowrap",subs="attributes"]
 ----
 apiVersion: v1

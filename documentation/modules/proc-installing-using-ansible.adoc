@@ -34,7 +34,7 @@ The following Ansible configuration settings are supported:
 |smtp_username|Specifies the username used to authenticate to the SMTP server|Not applicable|no
 |smtp_password|Specifies the password used to authenticate to the SMTP server|Not applicable|no
 |smtp_from_address|Specifies the from address displayed in alert emails|Not applicable|no
-|sysadmin_email|Specifies the email address alerts should be sent to|Not applicable|no
+|sysadmin_email|Specifies the email address to which alerts are sent|Not applicable|no
 |===
 
 
