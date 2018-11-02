@@ -159,7 +159,7 @@ public class AddressApiClient extends ApiClient {
                             .send(ar -> responseHandler(ar,
                                     responsePromise,
                                     expectedCode,
-                                    String.format("Error: get address space {}", name)));
+                                    String.format("Error: get address space %s", name)));
                     return responsePromise.get(30, TimeUnit.SECONDS);
                 },
                 Optional.of(() -> kubernetes.getRestEndpoint()),

@@ -43,7 +43,7 @@ public class AmqpUnsubscribeMessage {
     public static AmqpUnsubscribeMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {
-            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
+            throw new IllegalArgumentException(String.format("AMQP message subject is no %s", AMQP_SUBJECT));
         }
 
         Section section = message.getBody();
