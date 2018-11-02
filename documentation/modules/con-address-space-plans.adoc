@@ -24,7 +24,7 @@ The following fields are required:
 * `addressPlans`
 * `addressSpaceType`
 
-The other fields are used by the {ProductName} Console UI. Note the annotation `defined-by`, which
+The other fields are used by the {ProductName} Console UI. Note the annotation `enmasse.io/defined-by`, which
 points to an infrastructure configuration that must exist when an address space using this plan is created.
 For more information on infrastructure configurations, see xref:infrastructure-configuration-{context}[].
 

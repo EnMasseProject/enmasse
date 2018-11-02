@@ -6,7 +6,7 @@
 = Standard infrastructure configuration
 
 `StandardInfraConfig` resources is used to configure infrastructure deployed by `standard` address
-spaces. The standard infra configuration is referenced by address space plans using a `defined-by`
+spaces. The standard infra configuration is referenced by address space plans using a `enmasse.io/defined-by`
 annotation. For more information, see xref:con-address-space-plans-{context}[].
 
 [source,yaml,options="nowrap"]
