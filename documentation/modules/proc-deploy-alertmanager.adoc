@@ -8,7 +8,7 @@
 
 .Prerequisites
 
-* You must have already installed Prometheus and kube-state-metrics.
+* You must have already installed Prometheus and `kube-state-metrics`.
 
 .Procedure
 
@@ -19,7 +19,7 @@
 sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/alertmanager/*.yaml
 ----
 
-. Create the Alertmanager deployment:
+. Create the `Alertmanager` deployment:
 +
 [options="nowrap",subs="attributes"]
 ----

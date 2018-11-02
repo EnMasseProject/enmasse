@@ -15,7 +15,7 @@
 sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/kube-state-metrics/*.yaml
 ----
 
-. Create the kube-state-metrics deployment:
+. Create the `kube-state-metrics` deployment:
 +
 [options="nowrap",subs="attributes"]
 ----
