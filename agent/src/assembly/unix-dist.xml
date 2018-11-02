@@ -73,5 +73,13 @@
            </includes>
            <fileMode>0644</fileMode>
         </fileSet>
+        <fileSet>
+           <directory>${project.build.outputDirectory}</directory>
+            <outputDirectory>/</outputDirectory>
+           <includes>
+              <include>licenses/**</include>
+           </includes>
+           <fileMode>0644</fileMode>
+        </fileSet>
     </fileSets>
 </assembly>
