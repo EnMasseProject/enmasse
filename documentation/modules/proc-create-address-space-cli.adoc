@@ -38,8 +38,6 @@ include::../common/standard-address-space.yaml[]
 ----
 {cmdcli} create -f standard-address-space.yaml
 ----
-+
-The address space is ready for use when `.status.isReady` field is set to `true`.
 
 . Check the status of the address space:
 +
@@ -47,24 +45,5 @@ The address space is ready for use when `.status.isReady` field is set to `true`
 ----
 {cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
 ----
-
-. Retrieve messaging endpoint host name:
 +
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
-----
-
-. Retrieve the certificate for the messaging endpoint:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].certificate}
-----
-
-. Retrieve console URL:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'console\')].externalHost}
-----
+The address space is ready for use when the above command outputs `true`.

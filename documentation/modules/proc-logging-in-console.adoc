@@ -6,7 +6,7 @@
 = Accessing the {ProductName} Console
 
 .Prerequisites
-* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the last step in xref:create-address-space-cli-messaging-okd[].
+* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see the first step in xref:retrieving-address-space-information-messaging-okd[].
 
 .Procedure
 . In a web browser, navigate to `https://_console-host-name_` where `_console-host-name_` is the {ProductName} Console host name.

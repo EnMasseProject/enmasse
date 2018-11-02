@@ -16,7 +16,7 @@ endif::Supported[]
 
 .Procedure
 
-. Log in to the {ProductName} Console.
+. Log in to the {ProductName} Console. For more information, see xref:logging-into-console-messaging[].
 
 . Click *New*. The Create new address window opens.
 

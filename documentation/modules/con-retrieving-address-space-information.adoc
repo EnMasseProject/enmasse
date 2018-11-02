@@ -1,0 +1,30 @@
+[id='retrieving-address-space-information-{context}']
+= Example commands for retrieving address space information
+
+* Retrieving the {ProductName} Console host name:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'console\')].externalHost}
+----
+
+* Retrieving the status of an address space:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
+----
+
+* Retrieving the base64-encoded PEM certificate for the messaging endpoint:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].cert
+----
+
+* Retrieving the host name for the messaging endpoint:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost
+----

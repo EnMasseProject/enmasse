@@ -50,11 +50,13 @@ include::../common/address-space-output-example1.yaml[]
 ----
 <1> The `status.isReady` field can be either `true` or `false`.
 <2> The `status.endpointStatuses` field provides information about available endpoints for this address space.
-<3> The `certificate` field contains the base64-encoded certificate for a given endpoint.
+<3> The `cert` field contains the base64-encoded certificate for a given endpoint.
 <4> The `serviceHost` field contains the cluster-internal host name for a given endpoint.
 <5> The `servicePorts` field contains the available ports for the cluster-internal host.
 <6> The `externalHost` field contains the external host name for a given endpoint.
 <7> The `externalPorts` field contains the available ports for the external host.
 
-
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
+
+include::../modules/con-retrieving-address-space-information.adoc[leveloffset=+1]
+
