@@ -251,6 +251,7 @@ public class TestUtils {
                 }
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+            Thread.sleep(10_000);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
