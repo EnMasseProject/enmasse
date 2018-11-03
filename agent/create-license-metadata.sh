@@ -29,7 +29,7 @@ if [ ! -f "${LICENSE_REPORTER_EXE}" ]; then
    exit 1
 fi
 
-mkdir -p ${TARGET_DIR}/licenses
+mkdir -p ${TARGET_DIR}
 
 declare -a license_list
 while [[ $# -gt 0 ]]
@@ -46,7 +46,7 @@ do
     license_list+=("${output}")
 
     if compgen -G "licenses/*.TXT" > /dev/null; then
-        cp -f licenses/*.TXT ${TARGET_DIR}/licenses
+        cp -f licenses/*.TXT ${TARGET_DIR}
     fi
     popd
 done
@@ -55,6 +55,6 @@ list=$(join "," ${license_list[@]})
 
 pushd ${TARGET_DIR}
 # Merges the license metadata together
-${NODE_EXE} ${LICENSE_REPORTER_EXE} merge --merge-project-name agent_all  --merge-license-xmls ${list} --merge-output licenses.xml ${LICENSE_REPORTER_OPTS}
+${NODE_EXE} ${LICENSE_REPORTER_EXE} merge --merge-project-name agent_all  --merge-license-xmls ${list} --merge-output licenses.xml --outputDir . ${LICENSE_REPORTER_OPTS}
 popd
 

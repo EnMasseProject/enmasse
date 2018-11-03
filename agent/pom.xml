@@ -14,6 +14,7 @@
       <agent-node-install-directory>${project.build.directory}/noderoot/agent</agent-node-install-directory>
       <licensereporter-node-install-directory>${project.build.directory}/noderoot/licensereporter</licensereporter-node-install-directory>
       <license-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
+      <license-report-stylesheet>${project.basedir}/licenses.xsl</license-report-stylesheet>
   </properties>
   <build>
     <resources>
@@ -148,7 +149,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>package</phase>
+            <phase>process-resources</phase>
             <configuration>
                <workingDirectory>${agent-node-install-directory}</workingDirectory>
                <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2 --quiet</arguments>
@@ -159,7 +160,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>package</phase>
+            <phase>process-resources</phase>
             <configuration>
                <workingDirectory>${www-node-install-directory}</workingDirectory>
                <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2</arguments>
@@ -282,11 +283,14 @@
     </profile>
 
     <profile>
-      <id>node-license-metadata</id>
-      <activation>
-          <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
+        <id>license-artifacts</id>
+        <activation>
+          <property>
+              <name>skipLicenseArtifactGeneration</name>
+              <value>!true</value>
+            </property>
+        </activation>
+        <build>
           <plugins>
               <plugin>
                   <groupId>com.github.eirslett</groupId>
@@ -297,7 +301,6 @@
                           <goals>
                               <goal>install-node-and-npm</goal>
                           </goals>
-                          <phase>prepare-package</phase>
                           <configuration>
                               <nodeVersion>${node.version}</nodeVersion>
                               <npmVersion>${npm.version}</npmVersion>
@@ -309,7 +312,7 @@
                           <goals>
                               <goal>npm</goal>
                           </goals>
-                          <phase>prepare-package</phase>
+                          <phase>process-resources</phase>
                           <configuration>
                               <workingDirectory>${licensereporter-node-install-directory}</workingDirectory>
                               <arguments>install --prefix ${licensereporter-node-install-directory} -g
@@ -328,13 +331,13 @@
                           <goals>
                               <goal>exec</goal>
                           </goals>
-                          <phase>package</phase>
+                          <phase>process-resources</phase>
                           <configuration>
                               <workingDirectory>${project.build.directory}</workingDirectory>
                               <executable>${project.basedir}/create-license-metadata.sh</executable>
                               <arguments>
                                   <argument>${licensereporter-node-install-directory}</argument>
-                                  <argument>${project.build.outputDirectory}</argument>
+                                  <argument>${project.build.outputDirectory}/licenses</argument>
                                   <argument>${agent-node-install-directory}</argument>
                                   <argument>${www-node-install-directory}</argument>
                               </arguments>

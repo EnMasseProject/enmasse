@@ -91,6 +91,9 @@
         <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
         <security-versions-plugin.version>1.0.6</security-versions-plugin.version>
         <dependency-check-maven-plugin.version>3.3.2</dependency-check-maven-plugin.version>
+        <maven-xml-plugin.version>1.0.2</maven-xml-plugin.version>
+
+        <license-report-stylesheet>${maven.multiModuleProjectDirectory}/licenses.xsl</license-report-stylesheet>
     </properties>
 
     <modules>
@@ -683,6 +686,11 @@
                     <artifactId>license-maven-plugin</artifactId>
                     <version>${codehaus-license-maven-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>xml-maven-plugin</artifactId>
+                    <version>${maven-xml-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -747,15 +755,6 @@
                         <ENV_VAR_EXISTS_BOOLEAN>true</ENV_VAR_EXISTS_BOOLEAN>
                     </environmentVariables>
                 </configuration>
-                <!--
-                <dependencies>
-                  <dependency>
-                    <groupId>org.junit.platform</groupId>
-                    <artifactId>junit-platform-surefire-provider</artifactId>
-                    <version>${junit.platform.version}</version>
-                  </dependency>
-                </dependencies>
-                -->
             </plugin>
             <plugin>
                 <groupId>com.mycila</groupId>
@@ -810,50 +809,111 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <configuration>
-                    <failIfWarning>true</failIfWarning>
-                    <excludedScopes>provided,test,system</excludedScopes>
-                    <licenseMerges>
-                        <licenseMerge>Apache Software License, Version 2.0|The Apache Software License, Version 2.0|
-                            Apache Software License - Version 2.0|Apache v2|Apache 2|Apache License, Version 2.0|
-                            Apache 2.0|Apache Public License 2.0|Apache License Version 2.0|Apache License, version 2.0|
-                            Apache License 2.0|The Apache License, Version 2.0</licenseMerge>
-                    </licenseMerges>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>generate-thirdparty-summary</id>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>add-third-party</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <!-- Note: the license download can be skipped by setting license.skipDownloadLicenses true -->
-                        <id>download-thirdparty-licenses</id>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <licensesOutputFile>${project.build.outputDirectory}/licenses.xml</licensesOutputFile>
-                            <licensesOutputDirectory>${project.build.outputDirectory}/licenses</licensesOutputDirectory>
-                            <!-- org.reactivestreams:reactive-streams is http://creativecommons.org/publicdomain/zero/1.0/,
-                                 but the programmatic download of the license seems to be disallowed by the server. -->
-                            <excludedGroups>org.reactivestreams</excludedGroups>
-                        </configuration>
-                        <goals>
-                            <goal>download-licenses</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>license-artifacts</id>
+            <activation>
+                <property>
+                    <name>skipLicenseArtifactGeneration</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <configuration>
+                            <failIfWarning>true</failIfWarning>
+                            <excludedScopes>provided,test,system</excludedScopes>
+                            <licenseMerges>
+                                <licenseMerge>Apache Software License, Version 2.0|The Apache Software License, Version 2.0|
+                                    Apache Software License - Version 2.0|Apache v2|Apache 2|Apache License, Version 2.0|
+                                    Apache 2.0|Apache Public License 2.0|Apache License Version 2.0|Apache License, version 2.0|
+                                    Apache License 2.0|The Apache License, Version 2.0</licenseMerge>
+                            </licenseMerges>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-thirdparty-summary</id>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                </configuration>
+                                <goals>
+                                    <goal>add-third-party</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <!-- Note: the license download can be skipped by setting license.skipDownloadLicenses true -->
+                                <id>download-thirdparty-licenses</id>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <licensesOutputFile>${project.build.outputDirectory}/licenses/licenses.xml</licensesOutputFile>
+                                    <licensesOutputDirectory>${project.build.outputDirectory}/licenses</licensesOutputDirectory>
+                                    <!-- org.reactivestreams:reactive-streams is http://creativecommons.org/publicdomain/zero/1.0/,
+                                         but the programmatic download of the license seems to be disallowed by the server. -->
+                                    <excludedGroups>org.reactivestreams</excludedGroups>
+                                    <organizeLicensesByDependencies>true</organizeLicensesByDependencies>
+                                </configuration>
+                                <goals>
+                                    <goal>download-licenses</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>xml-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>produce-license-html</id>
+                                <goals>
+                                    <goal>transform</goal>
+                                </goals>
+                                <phase>prepare-package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <transformationSets>
+                                <transformationSet>
+                                    <dir>${project.build.outputDirectory}/licenses</dir>
+                                    <includes>licenses.xml</includes>
+                                    <outputDir>${project.build.outputDirectory}/licenses</outputDir>
+                                    <stylesheet>${license-report-stylesheet}</stylesheet>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                            <targetExtension>.html</targetExtension>
+                                        </fileMapper>
+                                    </fileMappers>
+                                    <parameters>
+                                        <parameter>
+                                            <name>version</name>
+                                            <value>${project.version}</value>
+                                        </parameter>
+                                        <parameter>
+                                            <name>applicationDisplayName</name>
+                                            <value>${application.display.name}</value>
+                                        </parameter>
+                                        <parameter>
+                                            <name>licenseAdviceText</name>
+                                            <value>${license.advice.text}</value>
+                                        </parameter>
+                                        <parameter>
+                                            <name>projectArtifactId</name>
+                                            <value>${project.artifactId}</value>
+                                        </parameter>
+                                    </parameters>
+                                </transformationSet>
+                            </transformationSets>
+                        </configuration>
+                    </plugin>
+                </plugins>
+
+            </build>
+        </profile>
         <profile>
             <id>coverage</id>
             <build>
