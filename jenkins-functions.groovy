@@ -30,9 +30,9 @@ def makePlot() {
             yaxisMinimum: ''
 }
 
-def runSystemtests(String coreDir, String tag, String profile, String testCases, Boolean skipSetup) {
+def runSystemtests(String coreDir, String profile, String testCases) {
     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${coreDir}"
-    sh "./systemtests/scripts/run_test_component.sh 'templates/build/enmasse-${tag}' '${profile}' '${testCases}' '${skipSetup}'"
+    sh "./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}' 'true'"
 }
 
 def startOpenshift() {
@@ -63,12 +63,12 @@ def postAction(String coresDir, String artifactDir) {
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 }
 
-def deployEnmasse(String tag, Boolean skipDependencies, Boolean cleanTemplates) {
-    if (cleanTemplates) {
+def installEnmasse(String tag, Boolean skipDependencies, Boolean upgrade, Boolean generateTemplates) {
+    if (generateTemplates) {
         sh "make -C templates clean"
+        sh 'make templates || true'
     }
-    sh 'make templates || true'
-    sh "./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' true ${skipDependencies}"
+    sh "./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' true ${skipDependencies} ${upgrade}"
 }
 
 return this

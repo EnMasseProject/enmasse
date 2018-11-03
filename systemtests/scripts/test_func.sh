@@ -13,17 +13,10 @@ function setup_test() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
     REG_API_SERVER=${3:-true}
-    SKIP_SETUP=${4:-false}
+    SKIP_DEPENDENCIES=${4:-false}
+    UPGRADE=${6:-false}
 
-    export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
-    export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
-    export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
-    export OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
-    export OPENSHIFT_TEST_LOGDIR=${OPENSHIFT_TEST_LOGDIR:-/tmp/testlogs}
-    export OPENSHIFT_USE_TLS=${OPENSHIFT_USE_TLS:-true}
-    export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
-    export CURDIR=`readlink -f \`dirname $0\``
-    export DEFAULT_AUTHSERVICE=standard
+    export_required_env
     export REGISTER_API_SERVER=${REG_API_SERVER}
 
     if [[ "${ENABLE_RBAC}" != "false" ]]; then
@@ -38,7 +31,7 @@ function setup_test() {
         fi
     fi
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, register api server: ${REG_API_SERVER}, skip setup: ${SKIP_SETUP}, enable RBAC: ${ENABLE_RBAC}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, register api server: ${REG_API_SERVER}, skip setup: ${SKIP_DEPENDENCIES}, enable RBAC: ${ENABLE_RBAC}"
 
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
@@ -47,12 +40,48 @@ function setup_test() {
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     export OPENSHIFT_TOKEN=`oc whoami -t`
 
-    if [[ "${SKIP_SETUP}" == "false" ]]; then
+    if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
         ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
     fi
     ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"register_api_server\": ${REGISTER_API_SERVER}, \"enable_rbac\": ${ENABLE_RBAC}}"
+
+    wait_until_enmasse_up 'openshift' ${OPENSHIFT_PROJECT} ${UPGRADE}
 }
 
+function export_required_env {
+    SANITIZED_PROJECT=${OPENSHIFT_PROJECT}
+    SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
+    SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
+    export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
+
+    export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
+    export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
+    export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
+    export OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
+    export OPENSHIFT_TEST_LOGDIR=${OPENSHIFT_TEST_LOGDIR:-/tmp/testlogs}
+    export OPENSHIFT_USE_TLS=${OPENSHIFT_USE_TLS:-true}
+    export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
+    export CURDIR=`readlink -f \`dirname $0\``
+    export DEFAULT_AUTHSERVICE=standard
+}
+
+function wait_until_enmasse_up() {
+    CLUSTER_TYPE=${1:-openshift}
+    NAMESPACE=${2:-OPENSHIFT_PROJECT}
+    UPGRADE=${3:-false}
+
+    expected_pods=6
+    if [ "$CLUSTER_TYPE" == "kubernetes" ]; then
+        expected_pods=5
+    fi
+
+    wait_until_up ${expected_pods} ${NAMESPACE} ${UPGRADE}
+    wait_code=$?
+    if [ $wait_code -ne 0 ]; then
+        error_and_exit 1
+    fi
+
+}
 function wait_until_up() {
     POD_COUNT=$1
     ADDR_SPACE=$2
@@ -83,20 +112,6 @@ function wait_until_cluster_up() {
 function run_test() {
     TESTCASE=$1
     PROFILE=${2:-systemtests}
-    CLUSTER_TYPE=${3:-openshift}
-    UPGRADED=${4:-false}
-
-    expected_pods=6
-    if [ "$CLUSTER_TYPE" == "kubernetes" ]; then
-        expected_pods=5
-    fi
-
-    wait_until_up ${expected_pods} ${OPENSHIFT_PROJECT} ${UPGRADED}
-    wait_code=$?
-    if [ $wait_code -ne 0 ]; then
-        echo "SYSTEM-TESTS WILL BE NOT EXECUTED (TESTCASE=${TESTCASE}; PROFILE=${PROFILE})"
-        return 1
-    fi
 
     if [ -n "${TESTCASE}" ]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
@@ -395,4 +410,14 @@ function download_enmasse_release() {
     rm -rf ${CURDIR}/../../templates/build
     mkdir ${CURDIR}/../../templates/build -p
     tar zxvf enmasse-${VERSION}.tgz -C ${CURDIR}/../../templates/build
+}
+
+function get_oc_url() {
+    OC_VERSION=${OC_VERSION:-"3.11"}
+
+    if [[ ${OC_VERSION} == "3.11" ]]; then
+        echo "https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz"
+    elif [[ ${OC_VERSION} == "3.10" ]]; then
+        echo "https://github.com/openshift/origin/releases/download/v3.10.0/openshift-origin-client-tools-v3.10.0-dd10d17-linux-64bit.tar.gz"
+    fi
 }

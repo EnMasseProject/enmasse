@@ -63,7 +63,17 @@ pipeline {
                 }
             }
         }
-        stage('deploy and run systemtests before upgrade') {
+        stage('deploy enmasse') {
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+                        lib.installEnmasse(params.START_VERSION, false, false, false)
+                    }
+                }
+            }
+        }
+        stage('run systemtests before upgrade') {
             environment {
                 USE_DUMMY_ADDRESS = true
                 SKIP_CLEANUP = true
@@ -72,20 +82,16 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
                         // TODO: Workaround for plan name change
                         sh "git checkout 0b2c022819300cb26e80c04bb1055bf63e169beb"
-                        lib.runSystemtests(env.CORES_DIR, params.START_VERSION, 'systemtests-upgrade', params.TEST_CASE, false)
+                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
                         sh "git checkout ${params.COMMIT_SHA}"
                     }
                 }
             }
         }
-        stage('upgrade and run systemtests after upgrade') {
+        stage('upgrade enmasse') {
             environment {
-                USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = false
-                SYSTEMTESTS_UPGRADED = true
                 DOCKER_REGISTRY = credentials('docker-registry-host')
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
@@ -95,9 +101,21 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "make -C templates clean"
-                        sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-upgrade', params.TEST_CASE, true)
+                        lib.installEnmasse(env.TAG, true, true, true)
+                    }
+                }
+            }
+        }
+        stage('run systemtests after upgrade') {
+            environment {
+                USE_DUMMY_ADDRESS = true
+                SKIP_CLEANUP = false
+                SYSTEMTESTS_UPGRADED = true
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
                     }
                 }
             }

@@ -11,24 +11,13 @@ CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 source "${CURDIR}/../../scripts/logger.sh"
 
-ENMASSE_DIR=$1
-TEST_PROFILE=${2}
-TESTCASE=${3:-"io.enmasse.**"}
-SKIP_SETUP=${4:-false}
+TEST_PROFILE=${1}
+TESTCASE=${2:-"io.enmasse.**"}
+REG_API_SERVER=${3:-true}
 
 info "Running tests with profile: ${TEST_PROFILE}, tests: ${TESTCASE}, skip_setup: ${SKIP_SETUP}"
 
 failure=0
-
-SANITIZED_PROJECT=$OPENSHIFT_PROJECT
-SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
-SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
-export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
-
-setup_test ${ENMASSE_DIR} $(get_kubeconfig_path) "true" ${SKIP_SETUP}
-if [ $? -ne 0 ]; then
-    err_and_exit "DEPLOYMENT FAILED - tests won't be executed."
-fi
 
 #environment info before tests
 LOG_DIR="${ARTIFACTS_DIR}/openshift-info/"
@@ -41,6 +30,9 @@ ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
 STATS_PID=$!
 info "process for checking system resources is running with PID: ${STATS_PID}"
 
+export_required_env
+export OPENSHIFT_TOKEN=`oc whoami -t`
+
 #start docker logging
 DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
 ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
@@ -52,7 +44,7 @@ if [[ "${TEST_PROFILE}" = "systemtests-pr" ]]; then
     run_test ${TESTCASE} systemtests-shared-pr || failure=$(($failure + 1))
     run_test ${TESTCASE} systemtests-isolated-pr || failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] || [[ "${TEST_PROFILE}" = "systemtests-upgrade" ]]; then
-    run_test ${TESTCASE} ${TEST_PROFILE} "openshift" ${SYSTEMTESTS_UPGRADED} || failure=$(($failure + 1))
+    run_test ${TESTCASE} ${TEST_PROFILE}|| failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-release" ]]; then
     run_test ${TESTCASE} systemtests-shared-release || failure=$(($failure + 1))
     run_test ${TESTCASE} systemtests-isolated-release || failure=$(($failure + 1))
