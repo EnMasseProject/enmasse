@@ -72,6 +72,7 @@ class Sender extends ClientHandlerBase<Integer> {
         Message message;
         if (messageQueue.hasNext() && (message = messageQueue.next()) != null) {
             if (sender.getQoS().equals(ProtonQoS.AT_MOST_ONCE)) {
+                log.info("Sending message {} (QoS 0), has credit {}", numSent.get(), sender.getCredit());
                 sender.send(message);
                 numSent.incrementAndGet();
                 if (predicate.test(message)) {
@@ -80,6 +81,7 @@ class Sender extends ClientHandlerBase<Integer> {
                     vertx.runOnContext(id -> sendNext(connection, sender));
                 }
             } else {
+                log.info("Sending message {}, has credit {}", numSent.get(), sender.getCredit());
                 sender.send(message, protonDelivery -> {
                     if (protonDelivery.getRemoteState().equals(Accepted.getInstance())) {
                         numSent.incrementAndGet();
