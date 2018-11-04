@@ -15,6 +15,10 @@ pipeline {
     environment {
         CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
+
+        TAG = 'latest'
+        JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+        OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
     }
     stages {
         stage('wait for agent ready') {
@@ -44,16 +48,20 @@ pipeline {
                 }
             }
         }
-        stage('system tests') {
-            environment {
-                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
-                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
-            }
+        stage('install enmasse') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, "latest", 'systemtests-marathon', '', false)
+                        lib.installEnmasse(env.TAG, false, false, true)
+                    }
+                }
+            }
+        }
+        stage('system tests') {
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        lib.runSystemtests(env.CORES_DIR, 'systemtests-marathon', 'marathon.**')
                     }
                 }
             }

@@ -6,9 +6,7 @@ source "${CURDIR}/test_func.sh"
 
 #parameters:
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
-# {2} url to OpenShift origin client (default value is set to oc version v3.7.0)
 SYSTEMTESTS_DIR=${1}
-OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz"}
 OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 DOCKER=${DOCKER:-docker}
 
@@ -17,7 +15,7 @@ stop_and_check_openshift
 check_if_ansible_ready
 
 ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
-    --extra-vars "{\"openshift_client_url\": \"${OPENSHIFT_CLIENT_URL}\"}" -t openshift,kubectl
+    --extra-vars "{\"openshift_client_url\": \"$(get_oc_url)\"}" -t openshift,kubectl
 
 clean_docker_images
 clean_oc_location

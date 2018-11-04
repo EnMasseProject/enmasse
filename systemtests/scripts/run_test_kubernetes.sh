@@ -57,12 +57,14 @@ ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
 LOGS_PID=$!
 echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
+wait_until_enmasse_up 'kubernetes' ${OPENSHIFT_PROJECT}
+
 #execute test
 if [[ "${TEST_PROFILE}" = "smoke" ]]; then
-    run_test "brokered.**.SmokeTest" systemtests-shared "kubernetes" || failure=$(($failure + 1))
-    run_test "standard.**.SmokeTest" systemtests-shared "kubernetes" || failure=$(($failure + 1))
+    run_test "brokered.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
+    run_test "standard.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
 else
-    run_test ${TESTCASE} systemtests "kubernetes" || failure=$(($failure + 1))
+    run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
 fi
 
 kubectl get events --all-namespaces

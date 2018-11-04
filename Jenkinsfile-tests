@@ -21,8 +21,16 @@ pipeline {
     environment {
         CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
-        TAG = "latest"
         ANSIBLE_FORCE_COLOR = true
+
+        JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+        OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+        DOCKER_REGISTRY = credentials('docker-registry-host')
+        DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
+        DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
+        DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
+        TAG = "${params.BUILD_TAG}"
+        USE_DUMMY_ADDRESS = true
     }
     stages {
         stage('wait for agent ready') {
@@ -60,22 +68,20 @@ pipeline {
                 }
             }
         }
-        stage('system tests') {
-            environment {
-                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
-                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
-                DOCKER_REGISTRY = credentials('docker-registry-host')
-                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
-                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
-                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
-                TAG = "${params.BUILD_TAG}"
-                USE_DUMMY_ADDRESS = true
-            }
+        stage('install enmasse') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests', params.TEST_CASE, false)
+                        lib.installEnmasse(env.TAG, false, false, true)
+                    }
+                }
+            }
+        }
+        stage('system tests') {
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        lib.runSystemtests(env.CORES_DIR, 'systemtests', params.TEST_CASE)
                     }
                 }
             }
