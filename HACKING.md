@@ -188,3 +188,9 @@ will listen on port 5858.
 
 On OpenShift, you can then issue a `oc port-forward <pod> <LOCAL_PORT>:<REMOTE_PORT>` command to conveniently route
 traffic to the pod's bound port.  Attach your IDE debugger the host/port.
+
+## Hints to speed up your build/test cycle.
+
+The build process generates license metadata which include license text files.  The latter are downloaded from the
+ internet. In order to save time during your build/test cycle, turn off license artifact generation using
+ `-DskipLicenseArtifactGeneration=true` on the Maven command line.  **Remember not to set this flag during release builds.**
