@@ -57,7 +57,7 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type, String plan) {
-        this(name, namespace, type, plan, AuthService.NONE);
+        this(name, namespace, type, plan, AuthService.STANDARD);
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type) {
