@@ -7,11 +7,7 @@ TAG=${TAG:-latest}
 DOCKER_ORG=enmasseproject
 SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}
 SYSTEMTEST_PROFILE=${SYSTEMTEST_PROFILE:-"smoke"}
-
-if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
-then
-    export DOCKER_REGISTRY="localhost:5000"
-fi
+export DOCKER_REGISTRY=docker.io
 
 echo "Building EnMasse with tag $TAG, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
 make clean
