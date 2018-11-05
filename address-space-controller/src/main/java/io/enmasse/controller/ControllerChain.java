@@ -129,6 +129,8 @@ public class ControllerChain extends AbstractVerticle implements Watcher<Address
             } catch (KubernetesClientException e) {
                 log.warn("Error syncing address space {}", addressSpace.getName(), e);
                 eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getName());
+            } catch (Exception e) {
+                log.warn("Error processing address space {}", addressSpace.getName(), e);
             }
         }
         retainAddressSpaces(resources);
