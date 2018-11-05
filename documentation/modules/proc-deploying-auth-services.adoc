@@ -6,7 +6,7 @@
 = Deploying authentication services
 
 {ProductName} requires at least one authentication service to be deployed. The authentication service
-can be `none` (allow all), `standard` (Keycloak), or `external` (not managed by {ProductName}).
+can be `none` (allow all), `standard` ({AuthProductName}), or `external` (not managed by {ProductName}).
 
 == Deploying the `none` authentication service
 
