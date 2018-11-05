@@ -29,7 +29,7 @@ spec:
         - mountPath: /prometheus
           name: prometheus-data
           readOnly: false
-      serviceAccount: prometheus-server
+      serviceAccountName: prometheus-server
       volumes:
       - configMap:
           name: prometheus-config
