@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -6,9 +6,14 @@ metadata:
   name: alertmanager
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: enmasse
+      name: alertmanager
   template:
     metadata:
       labels:
+        app: enmasse
         name: alertmanager
     spec:
       containers:
