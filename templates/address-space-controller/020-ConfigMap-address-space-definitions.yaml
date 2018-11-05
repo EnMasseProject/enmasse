@@ -229,6 +229,8 @@ data:
           spec:
             containers:
             - env:
+              - name: PN_TRACE_FRM
+                value: "1"
               - name: QDROUTERD_CONF
                 value: "/etc/qpid-dispatch/config/qdrouterd.conf"
               - name: QDROUTERD_AUTO_MESH_DISCOVERY
