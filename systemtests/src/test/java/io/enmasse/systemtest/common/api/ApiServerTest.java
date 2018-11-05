@@ -178,8 +178,8 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testRestApiAddressResourceParams() throws Exception {
-        AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED);
-        AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED);
+        AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpaceList(addressSpace, addressSpace2);
 
         logWithSeparator(log, "Check if uuid is propagated");
