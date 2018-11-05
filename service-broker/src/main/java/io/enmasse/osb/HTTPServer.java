@@ -77,6 +77,8 @@ public class HTTPServer extends AbstractVerticle {
 
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
         deployment.getRegistry().addSingletonResource(new HttpConsoleService(authApi.getNamespace(), addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new HttpLogoService());
+        deployment.getRegistry().addSingletonResource(new HttpFaviconService());
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consoleProxy));
         deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, userApi));

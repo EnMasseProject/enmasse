@@ -114,6 +114,36 @@
   <build>
     <plugins>
       <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <executions>
+              <execution>
+                  <id>copy-icon</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
+                      <resources>
+                          <resource>
+                             <directory>${project.basedir}/../documentation/_images</directory>
+                             <includes>
+                                <include>favicon.ico</include>
+                             </includes>
+                          </resource>
+                          <resource>
+                             <directory>${project.basedir}/../documentation/_images/logo</directory>
+                             <includes>
+                                <include>enmasse_icon.png</include>
+                             </includes>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
