@@ -10,6 +10,12 @@ VERSION         ?= $(shell cat $(TOPDIR)/release.version)
 TAG             ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
+UNAME_S := $(shell uname -s)
+LN=ln
+
+ifeq ($(UNAME_S),Darwin)
+	LN = gln
+endif
 
 all: init build test package docker_build
 

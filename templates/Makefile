@@ -76,7 +76,7 @@ component_install: replace_images
 
 ansible_install: component_install
 	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
-	ln -srf $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
+	$(LN) -srf $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
 
 ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-standard-authservice.yaml
 $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
