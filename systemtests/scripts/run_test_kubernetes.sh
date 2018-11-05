@@ -61,7 +61,7 @@ wait_until_enmasse_up 'kubernetes' ${OPENSHIFT_PROJECT}
 
 #execute test
 if [[ "${TEST_PROFILE}" = "smoke" ]]; then
-    run_test "brokered.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
+#    run_test "brokered.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
     run_test "standard.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
 else
     run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
