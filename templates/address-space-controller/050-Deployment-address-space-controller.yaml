@@ -93,7 +93,7 @@ spec:
         - mountPath: /address-space-definitions
           name: address-space-definitions
           readOnly: true
-      serviceAccount: address-space-controller
+      serviceAccountName: address-space-controller
       volumes:
       - configMap:
           name: address-space-definitions

@@ -500,7 +500,7 @@ data:
               - mountPath: /opt/agent/messaging-cert
                 name: messaging-cert
                 readOnly: true
-            serviceAccount: ${ADDRESS_SPACE_ADMIN_SA}
+            serviceAccountName: ${ADDRESS_SPACE_ADMIN_SA}
             volumes:
             - name: console-secret
               secret:
@@ -1215,7 +1215,7 @@ data:
               - mountPath: /opt/agent/messaging-cert
                 name: messaging-cert
                 readOnly: true
-            serviceAccount: ${ADDRESS_SPACE_ADMIN_SA}
+            serviceAccountName: ${ADDRESS_SPACE_ADMIN_SA}
             volumes:
             - name: authservice-ca
               secret:

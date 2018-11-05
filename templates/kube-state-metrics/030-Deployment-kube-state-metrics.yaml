@@ -28,4 +28,4 @@ spec:
           - --telemetry-port=8081
           - --namespace=${NAMESPACE}
           - --collectors=pods
-      serviceAccount: kube-state-metrics
+      serviceAccountName: kube-state-metrics

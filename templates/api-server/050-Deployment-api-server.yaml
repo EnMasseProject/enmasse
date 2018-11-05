@@ -68,7 +68,7 @@ spec:
         - mountPath: /api-server-cert
           name: api-server-cert
           readOnly: true
-      serviceAccount: api-server
+      serviceAccountName: api-server
       volumes:
       - name: api-server-cert
         secret:
