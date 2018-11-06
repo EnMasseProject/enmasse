@@ -77,9 +77,9 @@ class CommonTest extends TestBase {
 
         log.info("Restarting whole enmasse");
         CRDCmdClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
-        Thread.sleep(80_000);
+        Thread.sleep(120_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(120, TimeUnit.SECONDS));
-        TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(60, TimeUnit.SECONDS),
+        TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(180, TimeUnit.SECONDS),
                 standardAddresses.toArray(new Destination[0]));
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
     }
