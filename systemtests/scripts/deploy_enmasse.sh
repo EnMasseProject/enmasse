@@ -8,7 +8,6 @@ REG_API_SERVER=${3:-true}
 SKIP_DEPENDENCIES=${4:-false}
 UPGRADE=${5:-false}
 
-download_enmasse
 
 if [[ ${SKIP_SETUP} != 'true' ]]; then
     setup_test "${ENMASSE_DIR}" $(get_kubeconfig_path) "${REG_API_SERVER}" "${SKIP_DEPENDENCIES}" "${UPGRADE}"
