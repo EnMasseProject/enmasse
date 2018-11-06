@@ -177,18 +177,8 @@ public class CRDCmdClient extends CmdClient {
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
-    public static ExecutionResultData deletePodByCompenent(String componentLabel) {
-        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("component=%s", componentLabel));
+    public static ExecutionResultData deletePodByLabel(String labelName, String labelValue) {
+        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("%s=%s", labelName, labelValue));
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData deletePodbyName(String componentLabel) {
-        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("name=%s", componentLabel));
-        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData getComponentStatus(String componentLabel) {
-        List<String> getCmd = Arrays.asList(CMD, "get", "pod", String.format("name=%s", componentLabel), "-o=go-template='{{ .status.phase }}'");
-        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 }

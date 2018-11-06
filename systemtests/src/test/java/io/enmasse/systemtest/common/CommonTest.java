@@ -11,13 +11,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.IntStream;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 class CommonTest extends TestBase {
@@ -40,84 +38,86 @@ class CommonTest extends TestBase {
     }
 
     @Test
-    void testRestartContainersByLabel() throws Exception {
-        UserCredentials user = new UserCredentials("admin", "admin");
-        List<String> compLabel = Arrays.asList("api-server");
-        List<String> nameLabel = Arrays.asList("keycloak", "keycloak-controller", "address-space-controller");
-        AddressSpace standard = new AddressSpace("none-addr-space-restart", AddressSpaceType.STANDARD, AuthService.STANDARD);
+    void testRestartComponents() throws Exception {
+        List<Label> labels = new LinkedList<>();
+        labels.add(new Label("component", "api-server"));
+        labels.add(new Label("name", "keycloak"));
+        labels.add(new Label("name", "keycloak-controller"));
+        labels.add(new Label("name", "address-space-controller"));
 
-        //create addr space and addresses
-        createAddressSpace(standard);
-        Destination queue = new Destination("test-queue", Destination.QUEUE, "pooled-queue");
-        setAddresses(standard, queue);
+        UserCredentials user = new UserCredentials("frantisek", "dobrota");
+        AddressSpace standard = new AddressSpace("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace brokered = new AddressSpace("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpaceList(standard, brokered);
+        createUser(brokered, user);
+        createUser(standard, user);
+
+        List<Destination> brokeredAddresses = getAllBrokeredAddresses();
+        List<Destination> standardAddresses = getAllStandardAddresses();
+
+        setAddresses(brokered, brokeredAddresses.toArray(new Destination[0]));
+        setAddresses(standard, standardAddresses.toArray(new Destination[0]));
+
+        assertCanConnect(brokered, user, brokeredAddresses);
+        assertCanConnect(standard, user, standardAddresses);
 
         //number of pods running before restarting any
-        int runningPodsBefore = TestUtils.listRunningPods(kubernetes, standard).size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);  //this is a wrong result (3)?
+        int runningPodsBefore = kubernetes.listPods().size();
+        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
-        nameLabel.stream().forEach(label -> {
-            CRDCmdClient.deletePodbyName(label);
-            //sleep after restarting pod and assert no connection possible
-            try {
-                assertCannotConnect(standard, user, Arrays.asList(queue));
-                Thread.sleep(20);    //not best to time it, need another way
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        for (Label label : labels) {
+            log.info("Restarting {}", label.labelValue);
+            CRDCmdClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+            Thread.sleep(30_000);
+            TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(60, TimeUnit.SECONDS));
+            assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+        }
 
-            try {
-                assertCanConnect(standard, user, Arrays.asList(queue));
-            } catch (Exception e) {
-                log.warn("Exception happened here ( can connect ) ");
-            }
-
-        });
-
-        //restart each pod in turn ( by label=can be more than pod )
-        compLabel.stream().forEach(label -> {
-            CRDCmdClient.deletePodByCompenent(label);
-
-            //sleep after restarting pod
-            try {
-                log.info("************   assertCannotConnect   COMPLABEL  *****************");
-                assertCannotConnect(standard, user, Arrays.asList(queue));
-                Thread.sleep(30);
-            } catch (Exception e) {
-                //e.printStackTrace();
-                log.warn("Exception happened here ( cannot connect )");
-            }
-
-            //number of pods running after restarting one by label
-            int runningPodsAfter = TestUtils.listRunningPods(kubernetes, standard).size();
-            assertTrue(runningPodsAfter == runningPodsBefore, "Problem with restarting pod");
-
-            //try to connect to enmasse after each pod restart
-            try {
-                log.info("************   assertCanConnect  COMPLABEL   *****************");
-                assertCanConnect(standard, user, Arrays.asList(queue));
-            } catch (Exception e) {
-                //e.printStackTrace();
-                log.warn("Exception happened here ( can connect ) ");
-            }
-        });
-        deleteAddressSpace(standard);
+        log.info("Restarting whole enmasse");
+        CRDCmdClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+        Thread.sleep(80_000);
+        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(120, TimeUnit.SECONDS));
+        TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(60, TimeUnit.SECONDS),
+                standardAddresses.toArray(new Destination[0]));
+        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
     }
 
-//use in built monitoring tools to see whats going on with enmasse
-//        cfeate addr space
-//use qdstat and ( may need installing , check docs ) to see if all router metrics are exposed ( check whats  in docs )
-// qdstat should run from inside qdrouter-* pod
     @Test
     void testMonitoringTools() throws Exception {
-        UserCredentials user = new UserCredentials("developer", "developer");
         AddressSpace standard = new AddressSpace("standard-addr-space-monitor", AddressSpaceType.STANDARD, AuthService.STANDARD);
         createAddressSpace(standard);
+        setAddresses(standard, getAllStandardAddresses().toArray(new Destination[0]));
 
-        Destination anycast = new Destination("test-queue-before", null, standard.getName(),
-                "addr_1", AddressType.QUEUE.toString(), "pooled-queue");
-        addressApiClient.createAddress(anycast);
 
-        //not sure how to use executor to use qdsat from within qdrouter- pod
+    }
+
+    private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
+                                   List<Destination> brAddresses, List<Destination> stAddresses) throws Exception {
+        log.info("Check if system works");
+        brokered = getAddressSpace(brokered.getName());
+        standard = getAddressSpace(standard.getName());
+        createUser(brokered, new UserCredentials("jenda", "cenda"));
+        createUser(standard, new UserCredentials("jura", "fura"));
+        assertCanConnect(brokered, existingUser, brAddresses);
+        assertCanConnect(standard, existingUser, stAddresses);
+    }
+
+    private class Label {
+        String labelName;
+        String labelValue;
+
+        Label(String labelName, String labelValue) {
+            this.labelName = labelName;
+            this.labelValue = labelValue;
+        }
+
+        String getLabelName() {
+            return labelName;
+        }
+
+        String getLabelValue() {
+            return labelValue;
+        }
     }
 
 }

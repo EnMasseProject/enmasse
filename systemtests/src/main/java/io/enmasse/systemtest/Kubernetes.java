@@ -318,4 +318,22 @@ public abstract class Kubernetes {
     public String getLog(String podName, String containerName) {
         return client.pods().inNamespace(globalNamespace).withName(podName).inContainer(containerName).getLog();
     }
+
+    /***
+     * Wait until pod ready
+     * @param pod
+     * @throws Exception
+     */
+    public void waitUntilPodIsReady(Pod pod) throws InterruptedException {
+        log.info("Waiting until pod: {} is ready", pod.getMetadata().getName());
+        client.resource(pod).inNamespace(globalNamespace).waitUntilReady(5, TimeUnit.MINUTES);
+    }
+
+    /***
+     * Get app label value
+     * @return app label value
+     */
+    public String getEnmasseAppLabel() {
+        return listPods().get(0).getMetadata().getLabels().get("app");
+    }
 }
