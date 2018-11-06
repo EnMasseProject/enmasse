@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @Tag(isolated)
@@ -88,7 +90,12 @@ class CommonTest extends TestBase {
         createAddressSpace(standard);
         setAddresses(standard, getAllStandardAddresses().toArray(new Destination[0]));
 
-
+        String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
+                .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
+                .collect(Collectors.toList()).get(0).getMetadata().getName();
+        assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-c").getRetCode());
+        assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-a").getRetCode());
+        assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-l").getRetCode());
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,

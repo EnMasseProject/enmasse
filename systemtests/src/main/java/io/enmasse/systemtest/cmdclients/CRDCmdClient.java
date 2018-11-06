@@ -6,8 +6,6 @@ package io.enmasse.systemtest.cmdclients;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.fabric8.kubernetes.api.model.ComponentStatus;
-import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -15,9 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Class represent abstract client which keeps common features of client
@@ -180,5 +176,13 @@ public class CRDCmdClient extends CmdClient {
     public static ExecutionResultData deletePodByLabel(String labelName, String labelValue) {
         List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("%s=%s", labelName, labelValue));
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData runQDstat(String podName, String... args) {
+        List<String> runCmd = new ArrayList<>();
+        String[] base = new String[]{CMD, "exec", podName, "--", "qdstat"};
+        Collections.addAll(runCmd, base);
+        Collections.addAll(runCmd, args);
+        return execute(runCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 }
