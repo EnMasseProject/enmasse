@@ -30,7 +30,7 @@
 :ExampleAuthInstruction: Enable anonymous access.
 :OnlineBookURL: http://enmasse.io/documentation/
 :Title: Using {ProductName}
-:CloudProductName: Kubernetes
+:KubePlatform: Kubernetes
 
 // Component attributes
 
