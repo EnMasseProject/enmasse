@@ -28,7 +28,7 @@ The following Ansible configuration settings are supported:
 |authentication_services|Specifies the list of authentication services to deploy. Supported values are `none` and `standard`. |`none` |no
 |keycloak_admin_password|Specifies the admin password to use for the `standard` authentication service {AuthProductName} instance |Not applicable |yes (if `standard` authentication service is enabled)
 |api_server|Specifies whether to enable the REST API server|True |no
-|register_api_server|Specifies whether to register the API server with Kubernetes master|False |no
+|register_api_server|Specifies whether to register the API server with {KubePlatform} master|False |no
 |secure_api_server|Specifies whether to enable mutual TLS for the API server|False |no
 |enable_monitoring|Specifies whether to enable the monitoring services|Not applicable|no
 |smtp_server|Specifies the SMTP server used to send alert emails|Not applicable|no
