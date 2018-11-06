@@ -12,7 +12,7 @@ pipeline {
         string(name: 'TEST_CASE', defaultValue: 'common.upgrade.**', description: 'maven parameter for executing specific tests')
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
-        string(name: 'START_VERSION', defaultValue: '0.23.1', description: 'Version of enmasse which will be upgraded')
+        string(name: 'START_VERSION', defaultValue: '0.24.0', description: 'Version of enmasse which will be upgraded')
     }
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -63,11 +63,16 @@ pipeline {
                 }
             }
         }
+        stage('download released version') {
+            steps {
+                sh "git checkout tags/${params.START_VERSION}"
+                sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+            }
+        }
         stage('deploy enmasse') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
                         lib.installEnmasse(params.START_VERSION, false, false, false)
                     }
                 }
@@ -82,10 +87,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        // TODO: Workaround for plan name change
-                        sh "git checkout 0b2c022819300cb26e80c04bb1055bf63e169beb"
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
-                        sh "git checkout ${params.COMMIT_SHA}"
                     }
                 }
             }
@@ -101,6 +103,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
+                        sh "git checkout ${params.COMMIT_SHA}"
                         lib.installEnmasse(env.TAG, true, true, true)
                     }
                 }
