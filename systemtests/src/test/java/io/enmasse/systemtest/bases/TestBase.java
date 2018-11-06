@@ -27,7 +27,6 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.fabric8.kubernetes.api.model.Secret;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -43,10 +42,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import java.io.File;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1025,5 +1022,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void deleteAddressSpaceCreatedBySC(String namespace, AddressSpace addressSpace) throws Exception {
         TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, namespace, logCollector);
+    }
+
+    protected List<Destination> getAllStandardAddresses() {
+        return Arrays.asList(
+                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
+                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
+                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE.plan()),
+                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC.plan()),
+                Destination.anycast("test-anycast"),
+                Destination.multicast("test-multicast"));
+    }
+
+    protected List<Destination> getAllBrokeredAddresses() {
+        return Arrays.asList(
+                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan()),
+                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan()));
     }
 }

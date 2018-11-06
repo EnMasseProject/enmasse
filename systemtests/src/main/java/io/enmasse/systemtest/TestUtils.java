@@ -178,7 +178,7 @@ public class TestUtils {
      * @param budget       timeout budget - this method throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForExpectedPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForExpectedReadyPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         List<Pod> pods = listRunningPods(client, addressSpace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
@@ -186,6 +186,29 @@ public class TestUtils {
         }
         if (pods.size() != numExpected) {
             throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
+        }
+    }
+
+    /**
+     * Wait for expected count of pods within AddressSpace
+     *
+     * @param client       client for manipulation with kubernetes cluster
+     * @param numExpected  count of expected pods
+     * @param budget       timeout budget - this method throws Exception when timeout is reached
+     * @throws InterruptedException
+     */
+    public static void waitForExpectedReadyPods(Kubernetes client, int numExpected, TimeoutBudget budget) throws InterruptedException {
+        log.info("Waiting for expected ready pods: {}", numExpected);
+        List<Pod> pods = listRunningPods(client);
+        while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
+            Thread.sleep(2000);
+            pods = listRunningPods(client);
+        }
+        if (pods.size() != numExpected) {
+            throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
+        }
+        for (Pod pod : pods) {
+            client.waitUntilPodIsReady(pod);
         }
     }
 
@@ -210,6 +233,19 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         return kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).stream()
+                .filter(pod -> pod.getStatus().getPhase().equals("Running")
+                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get list of all running pods from specific AddressSpace
+     *
+     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @return
+     */
+    public static List<Pod> listRunningPods(Kubernetes kubernetes) {
+        return kubernetes.listPods().stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running")
                         && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
                 .collect(Collectors.toList());
@@ -247,7 +283,7 @@ public class TestUtils {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
             if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
                 if (destinations.length == 0) {
-                    waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+                    waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
                 }
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
@@ -267,7 +303,7 @@ public class TestUtils {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
             if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
                 if (destinations.length == 0) {
-                    waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+                    waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
                 }
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
@@ -283,7 +319,7 @@ public class TestUtils {
             JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
             if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
                 if (destinations.length == 0) {
-                    waitForExpectedPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
+                    waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getPlan()), budget);
                 }
             }
             waitForDestinationsReady(apiClient, addressSpace, budget, destinations);

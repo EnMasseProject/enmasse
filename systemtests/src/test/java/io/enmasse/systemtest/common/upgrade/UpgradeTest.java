@@ -34,17 +34,8 @@ class UpgradeTest extends TestBase {
     void testFunctionalityBeforeAndAfterUpgrade() throws Exception {
         AddressSpace brokered = new AddressSpace("brokered-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
         AddressSpace standard = new AddressSpace("standard-addr-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        List<Destination> standardAddresses = Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
-                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE.plan()),
-                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC.plan()),
-                Destination.anycast("test-anycast"),
-                Destination.multicast("test-multicast"));
-
-        List<Destination> brokeredAddresses = Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan()));
+        List<Destination> standardAddresses = getAllStandardAddresses();
+        List<Destination> brokeredAddresses = getAllBrokeredAddresses();
 
         List<Destination> brokeredQueues = getQueues(brokeredAddresses);
         List<Destination> standardQueues = getQueues(standardAddresses);
