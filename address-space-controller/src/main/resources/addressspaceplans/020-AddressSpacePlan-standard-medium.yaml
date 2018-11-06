@@ -9,12 +9,12 @@ metadata:
 displayName: Medium
 displayOrder: 0
 shortDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.
-longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 3 routers and 3 broker in total, and is suitable for applications using small address plans and few addresses.
+longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 3 routers (minimum 2) and 3 broker in total, and is suitable for applications using small address plans and few addresses.
 uuid: 3610533c-db6e-11e8-a390-d45ddf138840
 addressSpaceType: standard
 resources:
 - name: router
-  min: 1.0
+  min: 2.0
   max: 3.0
 - name: broker
   min: 1.0
