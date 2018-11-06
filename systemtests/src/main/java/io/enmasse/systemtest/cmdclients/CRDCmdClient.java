@@ -6,6 +6,7 @@ package io.enmasse.systemtest.cmdclients;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.fabric8.kubernetes.api.model.ComponentStatus;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
@@ -174,5 +175,20 @@ public class CRDCmdClient extends CmdClient {
     public static ExecutionResultData deleteUser(String namespace, String addressSpace, String username) {
         List<String> deleteCmd = getRessourcesCmd("delete", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData deletePodByCompenent(String componentLabel) {
+        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("component=%s", componentLabel));
+        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData deletePodbyName(String componentLabel) {
+        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("name=%s", componentLabel));
+        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData getComponentStatus(String componentLabel) {
+        List<String> getCmd = Arrays.asList(CMD, "get", "pod", String.format("name=%s", componentLabel), "-o=go-template='{{ .status.phase }}'");
+        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 }
