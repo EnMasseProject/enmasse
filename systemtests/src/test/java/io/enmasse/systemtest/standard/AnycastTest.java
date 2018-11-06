@@ -91,7 +91,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         //remove part of destinations
         int removeCount = 120;
         deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.2 => max(2, 0.90 pods + dummy-address in special case)
-        waitForRouterReplicas(sharedAddressSpace, 1);
+        waitForRouterReplicas(sharedAddressSpace, 2);
 
         //simple send/receive
         for (int i = removeCount; i < destCount; i = i + 3) {
@@ -100,6 +100,6 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
         //remove all destinations
         setAddresses();
-        waitForRouterReplicas(sharedAddressSpace, 1);
+        waitForRouterReplicas(sharedAddressSpace, 2);
     }
 }

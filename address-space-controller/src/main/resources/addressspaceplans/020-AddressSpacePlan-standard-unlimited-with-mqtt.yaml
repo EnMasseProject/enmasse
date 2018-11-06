@@ -9,12 +9,12 @@ metadata:
 displayName: Unlimited With MQTT
 displayOrder: 0
 shortDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support.
-longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support. This plan allows an unlimited number of routers and brokers, and is suitable for applications where you do not want to impose any restrictions.
+longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support. This plan allows an unlimited number of routers (minimum 2) and brokers, and is suitable for applications where you do not want to impose any restrictions.
 uuid: b10bce7c-db6e-11e8-a6b8-d45ddf138840
 addressSpaceType: standard
 resources:
 - name: router
-  min: 1.0
+  min: 2.0
   max: 10000.0
 - name: broker
   min: 1.0
