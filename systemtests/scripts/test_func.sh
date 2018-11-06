@@ -14,7 +14,7 @@ function setup_test() {
     KUBEADM=$2
     REG_API_SERVER=${3:-true}
     SKIP_DEPENDENCIES=${4:-false}
-    UPGRADE=${6:-false}
+    UPGRADE=${5:-false}
 
     export_required_env
     export REGISTER_API_SERVER=${REG_API_SERVER}
