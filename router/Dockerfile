@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.4.1
+FROM gordons/qdrouterd-base:debug
 ARG version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit}
