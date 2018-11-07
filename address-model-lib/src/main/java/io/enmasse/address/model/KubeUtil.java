@@ -11,13 +11,23 @@ import io.enmasse.config.AnnotationKeys;
  */
 public class KubeUtil {
     private static int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
-    private static final String pattern = "[^a-z0-9\\-]";
+    private static final String addressPattern = "[^a-z0-9\\-]";
+    private static final String usernamePattern = "[^a-z0-9\\-.@_]";
+
     public static String sanitizeName(String name) {
-        if (name == null) {
+        return sanitizeWithPattern(name, addressPattern);
+    }
+
+    public static String sanitizeUserName(String name) {
+        return sanitizeWithPattern(name, usernamePattern);
+    }
+
+    private static String sanitizeWithPattern(String value, String pattern) {
+        if (value == null) {
             return null;
         }
 
-        String clean = name.toLowerCase().replaceAll(pattern, "");
+        String clean = value.toLowerCase().replaceAll(pattern, "");
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }
@@ -78,8 +88,8 @@ public class KubeUtil {
             throw new IllegalArgumentException("Name length is longer than " + MAX_KUBE_NAME + " characters");
         }
 
-        if (name.matches(pattern)) {
-            throw new IllegalArgumentException("Illegal characters found in " + name + ". Must not match " + pattern);
+        if (name.matches(addressPattern)) {
+            throw new IllegalArgumentException("Illegal characters found in " + name + ". Must not match " + addressPattern);
         }
     }
 }

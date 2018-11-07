@@ -19,7 +19,7 @@ public class UserMetadata {
     private final String selfLink;
     private final String resourceVersion;
 
-    private final Pattern namePattern = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)$");
+    private final Pattern namePattern = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     @JsonCreator
     public UserMetadata(@JsonProperty("name") String name,
