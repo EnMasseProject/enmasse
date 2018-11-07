@@ -41,8 +41,8 @@ public class CertBundleCertProvider implements CertProvider {
             return;
         }
 
-        data.put("tls.key", tlsKey);
-        data.put("tls.crt", tlsCert);
+        data.put("tls.key", tlsKey.replace("\n", ""));
+        data.put("tls.crt", tlsCert.replace("\n", ""));
 
         Secret secret = new SecretBuilder()
                 .editOrNewMetadata()
@@ -60,7 +60,7 @@ public class CertBundleCertProvider implements CertProvider {
         if (existing == null) {
             log.info("Creating cert secret {} with certBundle input", secret.getMetadata().getName());
             client.secrets().inNamespace(namespace).createOrReplace(secret);
-        } else if (!secret.getData().equals(existing.getData())) {
+        } else if (!data.equals(existing.getData())) {
             log.info("Replacing cert secret {} with certBundle input", secret.getMetadata().getName());
             client.secrets().inNamespace(namespace).withName(endpointInfo.getCertSpec().getSecretName()).patch(secret);
         }
