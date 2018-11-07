@@ -19,12 +19,12 @@
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].cert
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].cert}
 ----
 
 * Retrieving the host name for the messaging endpoint:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost
+{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
 ----
