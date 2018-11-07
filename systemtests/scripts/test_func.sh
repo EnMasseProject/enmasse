@@ -19,19 +19,7 @@ function setup_test() {
     export_required_env
     export REGISTER_API_SERVER=${REG_API_SERVER}
 
-    if [[ "${ENABLE_RBAC}" != "false" ]]; then
-        if [[ "${REGISTER_API_SERVER}" == "true" ]]; then
-            if [[ $(get_openshift_version) == '3.9'* ]]; then
-                export ENABLE_RBAC="false"
-            else
-                export ENABLE_RBAC="true"
-            fi
-        else
-            export ENABLE_RBAC="true"
-        fi
-    fi
-
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, register api server: ${REG_API_SERVER}, skip setup: ${SKIP_DEPENDENCIES}, enable RBAC: ${ENABLE_RBAC}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}"
 
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
@@ -43,7 +31,7 @@ function setup_test() {
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
         ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
     fi
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"register_api_server\": ${REGISTER_API_SERVER}, \"enable_rbac\": ${ENABLE_RBAC}}"
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\"}"
 
     wait_until_enmasse_up 'openshift' ${OPENSHIFT_PROJECT} ${UPGRADE}
 }
