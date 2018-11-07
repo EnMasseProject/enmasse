@@ -119,9 +119,10 @@ public class GlobalLogCollector {
             collectRouterInfo(pod, "." + operation + ".autolinks." + timestamp, "qdmanage", "QUERY", "--type=autoLink");
             collectRouterInfo(pod, "." + operation + ".links." + timestamp, "qdmanage", "QUERY", "--type=link");
             collectRouterInfo(pod, "." + operation + ".connections." + timestamp, "qdmanage", "QUERY", "--type=connection");
-            collectRouterInfo(pod, "." + operation + ".qdstat_anlc." + timestamp, "qdstat", "-a", "-n", "-l", "-c");
-            collectRouterInfo(pod, "." + operation + ".qdstat_al." + timestamp, "qdstat", "-a", "-l");
             collectRouterInfo(pod, "." + operation + ".qdstat_a." + timestamp, "qdstat", "-a");
+            collectRouterInfo(pod, "." + operation + ".qdstat_l." + timestamp, "qdstat", "-l");
+            collectRouterInfo(pod, "." + operation + ".qdstat_n." + timestamp, "qdstat", "-n");
+            collectRouterInfo(pod, "." + operation + ".qdstat_c." + timestamp, "qdstat", "-c");
         });
     }
 
