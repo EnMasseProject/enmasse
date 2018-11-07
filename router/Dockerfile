@@ -1,4 +1,4 @@
-FROM gordons/qdrouterd-base:debug
+FROM gordons/qdrouterd-base:debug2
 ARG version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit}
