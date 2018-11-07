@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -88,7 +89,7 @@ public class HttpAddressSpaceService {
     public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull AddressSpace input) throws Exception {
         return doRequest("Error creating address space " + input.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
-            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, input, namespace);
+            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, namespace, input, null);
             addressSpace.validate();
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
@@ -101,35 +102,55 @@ public class HttpAddressSpaceService {
         });
     }
 
-    private AddressSpace setAddressSpaceDefaults(SecurityContext securityContext, AddressSpace addressSpace, String namespace) {
-        if (addressSpace.getNamespace() == null) {
-            addressSpace = new AddressSpace.Builder(addressSpace)
-                    .setNamespace(namespace)
+    private AddressSpace setAddressSpaceDefaults(SecurityContext securityContext, String namespace, AddressSpace addressSpace, AddressSpace existing) {
+        if (existing == null) {
+            if (addressSpace.getNamespace() == null) {
+                addressSpace = new AddressSpace.Builder(addressSpace)
+                        .setNamespace(namespace)
+                        .build();
+            }
+
+            if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
+                addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
+            }
+
+            if (addressSpace.getLabel(LabelKeys.ADDRESS_SPACE_TYPE) == null) {
+                addressSpace.putLabel(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getType());
+            }
+
+            if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
+                addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
+            }
+
+            if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
+                addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
+            }
+
+            if (securityContext.isSecure() && securityContext.getUserPrincipal() != null) {
+                String createdBy = RbacSecurityContext.getUserName(securityContext.getUserPrincipal());
+                String createdByUid = RbacSecurityContext.getUserId(securityContext.getUserPrincipal());
+
+                addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
+                addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
+            }
+        } else {
+            Map<String, String> annotations = existing.getAnnotations();
+            if (annotations == null) {
+                annotations = new HashMap<>();
+            }
+            annotations.putAll(addressSpace.getAnnotations());
+
+            Map<String, String> labels = existing.getLabels();
+            if (labels == null) {
+                labels = new HashMap<>();
+            }
+            labels.putAll(addressSpace.getLabels());
+
+            addressSpace = new AddressSpace.Builder(existing)
+                    .setEndpointList(addressSpace.getEndpoints())
+                    .setAnnotations(annotations)
+                    .setLabels(labels)
                     .build();
-        }
-
-        if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
-            addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
-        }
-
-        if (addressSpace.getLabel(LabelKeys.ADDRESS_SPACE_TYPE) == null) {
-            addressSpace.putLabel(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getType());
-        }
-
-        if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
-            addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
-        }
-
-        if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
-            addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
-        }
-
-        if (securityContext.isSecure() && securityContext.getUserPrincipal() != null) {
-            String createdBy = RbacSecurityContext.getUserName(securityContext.getUserPrincipal());
-            String createdByUid = RbacSecurityContext.getUserId(securityContext.getUserPrincipal());
-
-            addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
-            addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
         }
 
         return addressSpace;
@@ -168,7 +189,8 @@ public class HttpAddressSpaceService {
         checkMatchingAddressSpaceName(addressSpaceName, payload);
         return doRequest("Error replacing address space " + payload.getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
-            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, payload, namespace);
+            AddressSpace existing = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, namespace, payload, existing);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
