@@ -235,6 +235,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         logCollector.collectConfigMaps();
+        logCollector.collectRouterState("deleteAddresses");
         TestUtils.delete(addressApiClient, addressSpace, destinations);
     }
 
@@ -265,6 +266,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        logCollector.collectRouterState("setAddresses");
         setAddresses(addressSpace, budget, expectedCode, destinations);
     }
 
