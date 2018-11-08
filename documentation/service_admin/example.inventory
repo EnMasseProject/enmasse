@@ -9,3 +9,4 @@ service_catalog=True
 register_api_server=True
 keycloak_admin_password=admin
 authentication_services=["standard"]
+enable_monitoring=False
