@@ -5,7 +5,7 @@
 [id='ref-cpp-example-{context}']
 = {ClientAmqpCppName} example
 
-The C\++ client has equivalent `simple_recv` and `simple_send` examples with the same options as Python. However, the C++ library does not perform the same level of processing on the URL; in particular it will not accept `amqps://` to imply using TLS, so the example needs to be modified as follows:
+The {cpp} client has equivalent `simple_recv` and `simple_send` examples with the same options as Python. However, the {cpp} library does not perform the same level of processing on the URL; in particular it will not accept `amqps://` to imply using TLS, so the example needs to be modified as follows:
 
 [source,cpp,options="nowrap",subs="+quotes,attributes"]
 ----
