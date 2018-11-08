@@ -13,6 +13,8 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,8 +43,17 @@ public class CertBundleCertProvider implements CertProvider {
             return;
         }
 
-        data.put("tls.key", tlsKey.replace("\n", ""));
-        data.put("tls.crt", tlsCert.replace("\n", ""));
+        boolean isPemFormat = tlsCert.startsWith("-----BEGIN");
+        if (isPemFormat) {
+            Base64.Encoder b64enc = Base64.getEncoder();
+            String tlsKeyB64 = b64enc.encodeToString(tlsKey.getBytes(StandardCharsets.UTF_8));
+            String tlsCertB64 = b64enc.encodeToString(tlsCert.getBytes(StandardCharsets.UTF_8));
+            data.put("tls.key", tlsKeyB64);
+            data.put("tls.crt", tlsCertB64);
+        } else { // Assume already base64 encoded
+            data.put("tls.key", tlsKey);
+            data.put("tls.crt", tlsCert);
+        }
 
         Secret secret = new SecretBuilder()
                 .editOrNewMetadata()

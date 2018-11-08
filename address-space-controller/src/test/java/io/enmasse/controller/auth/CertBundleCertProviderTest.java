@@ -13,6 +13,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -69,7 +72,7 @@ public class CertBundleCertProviderTest {
 
         Secret cert = client.secrets().withName("mycerts").get();
         assertNotNull(cert);
-        assertThat(cert.getData().get("tls.key"), is(spec.getTlsKey()));
-        assertThat(cert.getData().get("tls.crt"), is(spec.getTlsCert()));
+        assertThat(cert.getData().get("tls.key"), is(Base64.getEncoder().encodeToString(spec.getTlsKey().getBytes(StandardCharsets.UTF_8))));
+        assertThat(cert.getData().get("tls.crt"), is(Base64.getEncoder().encodeToString(spec.getTlsCert().getBytes(StandardCharsets.UTF_8))));
     }
 }
