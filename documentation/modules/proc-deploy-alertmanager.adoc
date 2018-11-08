@@ -33,7 +33,7 @@ sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/alertmanager/*.
 {cmdcli} apply -f ./alertmanager-configmap.yaml
 ----
 An example `Alertmanager` config map:
-[options="nowrap",subs="attributes"]
+[source,yaml,options="nowrap",subs="attributes"]
 ----
 apiVersion: v1
 kind: ConfigMap
