@@ -1,0 +1,23 @@
+// This assembly is included in the following assemblies:
+//
+// master.adoc
+
+:parent-context: {context}
+:context: okd
+:cmdcli: oc
+
+[id='using-qdstat-{context}']
+= Using qdstat on OpenShift
+
+You can use `qdstat` to monitor the {ProductName} service.
+
+include::../modules/proc-view-connections-qdstat.adoc[leveloffset=+1]
+
+include::../modules/proc-view-router-addresses-qdstat.adoc[leveloffset=+1]
+
+include::../modules/proc-view-router-links-qdstat.adoc[leveloffset=+1]
+
+include::../modules/proc-view-link-routes-qdstat.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

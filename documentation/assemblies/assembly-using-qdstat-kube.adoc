@@ -3,9 +3,11 @@
 // master.adoc
 
 :parent-context: {context}
+:context: kube
+:cmdcli: kube
 
 [id='using-qdstat-{context}']
-= Using qdstat
+= Using qdstat on Kubernetes
 
 You can use `qdstat` to monitor the {ProductName} service.
 

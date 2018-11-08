@@ -84,8 +84,12 @@ include::assemblies/assembly-upgrading-enmasse-kube.adoc[leveloffset=+3]
 === Monitoring {ProductName}
 
 include::assemblies/assembly-monitoring-oc.adoc[leveloffset=+3]
+
 include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+3]
-include::assemblies/assembly-using-qdstat.adoc[leveloffset=+3]
+
+include::assemblies/assembly-using-qdstat-oc.adoc[leveloffset=+3]
+
+include::assemblies/assembly-using-qdstat-kube.adoc[leveloffset=+3]
 
 == Tenant Guide
 

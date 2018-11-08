@@ -9,11 +9,18 @@ You can view the link routes using `qdstat`.
 
 .Procedure
 
-* On the command line, run the following command:
+. On the command line, run the following command to obtain the `podname` value needed in the following step:
++
+[options="nowrap"]
+----
+{cmdcli} get pods
+----
 
+. On the command line, run the following command:
++
 [source=bash,options="nowrap"]
 ----
-qdstat --linkroutes
+{cmdcli} exec -n _namespace_ -it qdrouterd-_podname_ -- qdstat --linkroutes
 
 Link Routes
   address  dir  distrib       status

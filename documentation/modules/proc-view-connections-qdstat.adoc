@@ -9,11 +9,18 @@ You can view the router connections using `qdstat`.
 
 .Procedure
 
-* On the command line, run the following command:
+. On the command line, run the following command to obtain the `podname` value needed in the following step:
++
+[options="nowrap"]
+----
+{cmdcli} get pods
+----
 
+. On the command line, run the following command:
++
 [source=bash,options="nowrap"]
 ----
-qdstat -c
+{cmdcli} exec -n _namespace_ -it qdrouterd-_podname_ -- qdstat -c
 
 Connections
   id   host                 container                             role    dir  security                              authentication                tenant
