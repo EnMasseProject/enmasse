@@ -134,6 +134,7 @@ public class HttpAddressSpaceService {
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
             }
         } else {
+            validateChanges(existing, addressSpace);
             Map<String, String> annotations = existing.getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();
@@ -154,6 +155,45 @@ public class HttpAddressSpaceService {
         }
 
         return addressSpace;
+    }
+
+    private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {
+        if (!existing.getType().equals(addressSpace.getType())) {
+            throw new BadRequestException("Cannot change type of address space " + addressSpace.getName() + " from " + existing.getType() + " to " + addressSpace.getType());
+        }
+
+        if (!existing.getPlan().equals(addressSpace.getPlan())) {
+            throw new BadRequestException("Cannot change plan of address space " + addressSpace.getName() + " from " + existing.getPlan() + " to " + addressSpace.getPlan());
+        }
+
+        if (!existing.getAuthenticationService().equals(addressSpace.getAuthenticationService())) {
+            throw new BadRequestException("Cannot change authentication service of address space " + addressSpace.getName() + " from " + existing.getAuthenticationService() + " to " + addressSpace.getAuthenticationService());
+        }
+
+        validateAnnotation(existing, addressSpace, AnnotationKeys.REALM_NAME);
+        validateAnnotation(existing, addressSpace, AnnotationKeys.INFRA_UUID);
+        validateAnnotation(existing, addressSpace, AnnotationKeys.CREATED_BY);
+        validateAnnotation(existing, addressSpace, AnnotationKeys.CREATED_BY_UID);
+        validateLabel(existing, addressSpace, LabelKeys.ADDRESS_SPACE_TYPE);
+        validateLabel(existing, addressSpace, LabelKeys.NAMESPACE);
+    }
+
+    private static void validateAnnotation(AddressSpace existing, AddressSpace addressSpace, String annotationKey) {
+        if (existing.getAnnotation(annotationKey) == null) {
+            return;
+        }
+        if (!existing.getAnnotation(annotationKey).equals(addressSpace.getAnnotation(annotationKey))) {
+            throw new BadRequestException("Cannot change annotation " + annotationKey + " of existing address space " + addressSpace.getName());
+        }
+    }
+
+    private static void validateLabel(AddressSpace existing, AddressSpace addressSpace, String labelKey) {
+        if (existing.getLabel(labelKey) == null) {
+            return;
+        }
+        if (!existing.getLabel(labelKey).equals(addressSpace.getLabel(labelKey))) {
+            throw new BadRequestException("Cannot change label " + labelKey + " of existing address space " + addressSpace.getName());
+        }
     }
 
     private AddressSpaceList removeSecrets(AddressSpaceList addressSpaceList) {
