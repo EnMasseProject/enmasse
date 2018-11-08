@@ -4,6 +4,9 @@
  */
 package io.enmasse.address.model;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 public class CertSpec {
     private final String provider;
     private final String secretName;
@@ -29,8 +32,21 @@ public class CertSpec {
         return tlsKey;
     }
 
+    public void validate() {
+        if (tlsKey != null) {
+            requireBase64(tlsKey);
+        }
+        if (tlsCert != null) {
+            requireBase64(tlsCert);
+        }
+    }
+
     public String getTlsCert() {
         return tlsCert;
+    }
+
+    private static void requireBase64(String value) {
+        Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8));
     }
 
     public static class Builder {

@@ -43,17 +43,8 @@ public class CertBundleCertProvider implements CertProvider {
             return;
         }
 
-        boolean isPemFormat = tlsCert.startsWith("-----BEGIN");
-        if (isPemFormat) {
-            Base64.Encoder b64enc = Base64.getEncoder();
-            String tlsKeyB64 = b64enc.encodeToString(tlsKey.getBytes(StandardCharsets.UTF_8));
-            String tlsCertB64 = b64enc.encodeToString(tlsCert.getBytes(StandardCharsets.UTF_8));
-            data.put("tls.key", tlsKeyB64);
-            data.put("tls.crt", tlsCertB64);
-        } else { // Assume already base64 encoded
-            data.put("tls.key", tlsKey);
-            data.put("tls.crt", tlsCert);
-        }
+        data.put("tls.key", tlsKey.replace("\r\n", "").replace("\n", ""));
+        data.put("tls.crt", tlsCert.replace("\r\n", "").replace("\n", ""));
 
         Secret secret = new SecretBuilder()
                 .editOrNewMetadata()

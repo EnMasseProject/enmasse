@@ -231,6 +231,7 @@ public class HttpAddressSpaceService {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
             AddressSpace existing = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
             AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, namespace, payload, existing);
+            addressSpace.validate();
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);

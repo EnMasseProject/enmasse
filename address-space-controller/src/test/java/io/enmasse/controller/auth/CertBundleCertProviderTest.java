@@ -68,11 +68,35 @@ public class CertBundleCertProviderTest {
                 .setTlsCert("d29ybGQ=")
                 .build();
 
+        space.validate();
+
         certProvider.provideCert(space, new EndpointInfo("messaging", spec));
 
         Secret cert = client.secrets().withName("mycerts").get();
         assertNotNull(cert);
-        assertThat(cert.getData().get("tls.key"), is(Base64.getEncoder().encodeToString(spec.getTlsKey().getBytes(StandardCharsets.UTF_8))));
-        assertThat(cert.getData().get("tls.crt"), is(Base64.getEncoder().encodeToString(spec.getTlsCert().getBytes(StandardCharsets.UTF_8))));
+        assertThat(cert.getData().get("tls.key"), is(spec.getTlsKey()));
+        assertThat(cert.getData().get("tls.crt"), is(spec.getTlsCert()));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateBadKey() {
+        new CertSpec.Builder()
+                .setProvider("certBundle")
+                .setSecretName("mycerts")
+                .setTlsKey("/%^$lkg")
+                .setTlsCert("d29ybGQ=")
+                .build()
+                .validate();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateBadCert() {
+        new CertSpec.Builder()
+                .setProvider("certBundle")
+                .setSecretName("mycerts")
+                .setTlsKey("d29ybGQ=")
+                .setTlsCert("/%^$lkg")
+                .build()
+                .validate();
     }
 }
