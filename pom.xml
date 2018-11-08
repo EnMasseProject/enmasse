@@ -118,6 +118,7 @@
         <module>systemtests</module>
         <module>artemis</module>
         <module>service-broker</module>
+        <module>bundle</module>
     </modules>
 
     <dependencyManagement>
