@@ -17,7 +17,7 @@ public class UserSpec {
     private final String username;
     private final UserAuthentication authentication;
     private final List<UserAuthorization> authorization;
-    private final Pattern usernamePattern = Pattern.compile("^[a-z0-9]+([a-z0-9_\\-]*[a-z0-9]+|[a-z0-9]*)$");
+    private final Pattern usernamePattern = Pattern.compile("^[a-z0-9]+([a-z0-9_@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     @JsonCreator
     public UserSpec(@JsonProperty("username") String username,

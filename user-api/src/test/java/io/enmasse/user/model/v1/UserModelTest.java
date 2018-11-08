@@ -153,6 +153,16 @@ public class UserModelTest {
         createAndValidate("myspace.user_1", "user1", false);
         createAndValidate("myspace.user1", "user_1", true);
 
+        createAndValidate("myspace.user1@", "user1", false);
+        createAndValidate("myspace@.user1", "user1", false);
+        createAndValidate("@myspace.user1", "user1", false);
+        createAndValidate("myspace.@user1", "user1", false);
+        createAndValidate("myspace.user1", "user1@", false);
+        createAndValidate("myspace.user@1", "user1", true);
+        createAndValidate("myspace.user1", "user@1", true);
+
+        createAndValidate("myspace.user1@example.com", "user1@example.com", true);
+
         createAndValidate("myspace.user1-", "user1", false);
         createAndValidate("myspace-.user1", "user1", false);
         createAndValidate("-myspace.user1", "user1", false);

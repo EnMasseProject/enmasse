@@ -5,10 +5,7 @@
 
 package io.enmasse.keycloak.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.Watcher;
 import io.enmasse.user.api.UserApi;
@@ -113,11 +110,11 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, identityProviderParams);
                 userApi.createUser(realmName, new User.Builder()
                         .setMetadata(new UserMetadata.Builder()
-                                .setName(addressSpace.getName() + "." + userName)
+                                .setName(addressSpace.getName() + "." + KubeUtil.sanitizeUserName(userName))
                                 .setNamespace(addressSpace.getNamespace())
                                 .build())
                         .setSpec(new UserSpec.Builder()
-                                .setUsername(userName)
+                                .setUsername(KubeUtil.sanitizeUserName(userName))
                                 .setAuthentication(new UserAuthentication.Builder()
                                         .setType(UserAuthenticationType.federated)
                                         .setProvider("openshift")
