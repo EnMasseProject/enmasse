@@ -93,8 +93,8 @@ public class KeycloakController {
             }
 
             @Override
-            public IdentityProviderParams getIdentityProviderParams() {
-                return IdentityProviderParams.fromKube(client, keycloakConfigName);
+            public KeycloakRealmParams getIdentityProviderParams() {
+                return KeycloakRealmParams.fromKube(client, keycloakConfigName);
             }
         };
 

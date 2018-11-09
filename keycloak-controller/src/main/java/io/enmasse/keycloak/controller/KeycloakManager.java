@@ -28,7 +28,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
     private final KeycloakApi keycloak;
     private final KubeApi kube;
     private final UserApi userApi;
-    private IdentityProviderParams lastParams;
+    private KeycloakRealmParams lastParams;
 
     public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
         this.keycloak = keycloak;
@@ -70,11 +70,11 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
     @Override
     public void onUpdate(List<AddressSpace> addressSpaces) throws Exception {
-        IdentityProviderParams identityProviderParams = this.kube.getIdentityProviderParams();
-        if (!Objects.equals(lastParams, identityProviderParams)) {
-            log.info("Identity provider params: {}", identityProviderParams);
-            updateExistingRealms(identityProviderParams);
-            lastParams = identityProviderParams;
+        KeycloakRealmParams keycloakRealmParams = this.kube.getIdentityProviderParams();
+        if (!Objects.equals(lastParams, keycloakRealmParams)) {
+            log.info("Identity provider params: {}", keycloakRealmParams);
+            updateExistingRealms(keycloakRealmParams);
+            lastParams = keycloakRealmParams;
         }
 
         Map<String, AddressSpace> standardAuthSvcSpaces =
@@ -107,7 +107,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
                 log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
-                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, identityProviderParams);
+                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, keycloakRealmParams);
                 userApi.createUser(realmName, new User.Builder()
                         .setMetadata(new UserMetadata.Builder()
                                 .setName(addressSpace.getName() + "." + KubeUtil.sanitizeUserName(userName))
@@ -134,7 +134,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
         }
     }
 
-    private void updateExistingRealms(IdentityProviderParams updatedParams) {
+    private void updateExistingRealms(KeycloakRealmParams updatedParams) {
         keycloak.getRealmNames().stream()
                 .filter(name -> !name.equals(MASTER_REALM))
                 .forEach(name -> {

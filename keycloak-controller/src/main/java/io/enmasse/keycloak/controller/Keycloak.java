@@ -26,7 +26,7 @@ public class Keycloak implements KeycloakApi {
     private static final String IDENTITY_PROVIDER_BASE_URL = "baseUrl";
 
     private final KeycloakFactory keycloakFactory;
-    private final Map<String, IdentityProviderParams> realmState = new ConcurrentHashMap<>();
+    private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
     private volatile org.keycloak.admin.client.Keycloak keycloak;
 
     public Keycloak(KeycloakFactory keycloakFactory) {
@@ -52,7 +52,7 @@ public class Keycloak implements KeycloakApi {
     }
 
     @Override
-    public void createRealm(String namespace, String realmName, String consoleRedirectURI, IdentityProviderParams params) {
+    public void createRealm(String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
         final RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setRealm(realmName);
         newRealm.setEnabled(true);
@@ -60,6 +60,13 @@ public class Keycloak implements KeycloakApi {
         newRealm.setAttributes(new HashMap<>());
         newRealm.getAttributes().put("namespace", namespace);
         newRealm.getAttributes().put("enmasse-realm", "true");
+
+        if (params.getBrowserSecurityHeaders() != null && !params.getBrowserSecurityHeaders().isEmpty()) {
+            log.info("Setting browser security headers to {}", params.getBrowserSecurityHeaders());
+            newRealm.setBrowserSecurityHeaders(params.getBrowserSecurityHeaders());
+        } else {
+            log.info("Not setting browser security headers");
+        }
 
         if (params.getIdentityProviderUrl() != null && params.getIdentityProviderClientId() != null && params.getIdentityProviderClientSecret() != null) {
             IdentityProviderRepresentation openshiftIdProvider = new IdentityProviderRepresentation();
@@ -97,8 +104,8 @@ public class Keycloak implements KeycloakApi {
     }
 
     @Override
-    public void updateRealm(String realmName, IdentityProviderParams updated) {
-        IdentityProviderParams current = realmState.getOrDefault(realmName, IdentityProviderParams.NULL_PARAMS);
+    public void updateRealm(String realmName, KeycloakRealmParams updated) {
+        KeycloakRealmParams current = realmState.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
         if (!updated.equals(current)) {
             withKeycloak(kc -> {
                 RealmResource realm = kc.realm(realmName);
@@ -106,38 +113,49 @@ public class Keycloak implements KeycloakApi {
 
                     IdentityProvidersResource identityProvidersResource = realm.identityProviders();
                     IdentityProviderResource identityProviderResource = identityProvidersResource.get(OPENSHIFT_PROVIDER_ALIAS);
+                    Set<String> updatedProviderItems = new HashSet<>();
+
                     if (identityProviderResource != null) {
                         IdentityProviderRepresentation identityProviderRepresentation = identityProviderResource.toRepresentation();
                         Map<String, String> newConfig = new HashMap<>(identityProviderRepresentation.getConfig());
-                        Set<String> updatedItems = new HashSet<>();
-
                         String updatedBaseUrl = updated.getIdentityProviderUrl();
                         if (!Objects.equals(updatedBaseUrl, current.getIdentityProviderUrl())) {
                             newConfig.put(IDENTITY_PROVIDER_BASE_URL, updatedBaseUrl);
-                            updatedItems.add(IDENTITY_PROVIDER_BASE_URL);
+                            updatedProviderItems.add(IDENTITY_PROVIDER_BASE_URL);
                         }
 
                         String updatedClientId = updated.getIdentityProviderClientId();
                         if (!Objects.equals(updatedClientId, current.getIdentityProviderClientId())) {
                             newConfig.put(IDENTITY_PROVIDER_CLIENT_ID, updatedClientId);
-                            updatedItems.add(IDENTITY_PROVIDER_CLIENT_ID);
+                            updatedProviderItems.add(IDENTITY_PROVIDER_CLIENT_ID);
                         }
 
                         String updatedSecret = updated.getIdentityProviderClientSecret();
                         if (!Objects.equals(updatedSecret, current.getIdentityProviderClientSecret())) {
                             newConfig.put(IDENTITY_PROVIDER_CLIENT_SECRET, updatedSecret);
-                            updatedItems.add(IDENTITY_PROVIDER_CLIENT_SECRET);
+                            updatedProviderItems.add(IDENTITY_PROVIDER_CLIENT_SECRET);
                         }
 
-                        if (!updatedItems.isEmpty()) {
+                        if (!updatedProviderItems.isEmpty()) {
                             identityProviderRepresentation.setConfig(newConfig);
                             identityProviderResource.update(identityProviderRepresentation);
                             log.info("Updated identity provider alias {}. Parameters updated: {}",
-                                    OPENSHIFT_PROVIDER_ALIAS, updatedItems);
-                            realmState.put(realmName, updated);
+                                    OPENSHIFT_PROVIDER_ALIAS, updatedProviderItems);
                         }
                     } else {
                         log.info("Could not find identity provider with alias {}", OPENSHIFT_PROVIDER_ALIAS);
+                    }
+
+                    RealmRepresentation realmRep = realm.toRepresentation();
+                    boolean browserSecurityHeadersChanged = !Objects.equals(realmRep.getBrowserSecurityHeaders(), current.getBrowserSecurityHeaders());
+                    if (browserSecurityHeadersChanged) {
+                        realmRep.setBrowserSecurityHeaders(current.getBrowserSecurityHeaders());
+                        realm.update(realmRep);
+                        log.info("Updated browser security headers of {}", realmName);
+                    }
+
+                    if (!updatedProviderItems.isEmpty() || browserSecurityHeadersChanged) {
+                        realmState.put(realmName, updated);
                     }
                 }
                 return true;
