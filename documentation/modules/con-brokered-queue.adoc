@@ -9,7 +9,7 @@
 // !brokered.address.queue.longDescription:start
 The queue address type is a store-and-forward queue. This address type is appropriate for
 implementing a distributed work queue, handling traffic bursts, and other use cases where you want
-to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
-message groups, transactions, and other JMS features.
+to decouple the producer and consumer. A queue in the brokered address space supports selectors,
+message groups, transactions, and other JMS features. Message order can be lost with released messages.
 // !brokered.address.queue.longDescription:stop
 

@@ -6,6 +6,6 @@
 = Queue
 // !standard.address.queue.shortDescription:A store-and-forward queue
 // !standard.address.queue.longDescription:start
-The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units; however, message order is no longer guaranteed.
+The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.
 // !standard.address.queue.longDescription:stop
 
