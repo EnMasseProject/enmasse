@@ -9,11 +9,18 @@ You can view the router links using `qdstat`.
 
 .Procedure
 
-* On the command line, run the following command:
-
-[source=bash,options="nowrap"]
+. On the command line, run the following command to obtain the `podname` value needed in the following step:
++
+[options="nowrap",subs="+quotes,attributes"]
 ----
-qdstat -l
+{cmdcli} get pods
+----
+
+. On the command line, run the following command:
++
+[source=bash,options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} exec -n _namespace_ -it qdrouterd-_podname_ -- qdstat -l
 
 Router Links
   type      dir  conn id  id  peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
