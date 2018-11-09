@@ -9,7 +9,7 @@
 The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
 // !standard.address.topic.longDescription:stop
 
-NOTE: Because subscriptions created after messages have been sent to the topic do not currently work properly, you must create the subscription before you create the topic.
+NOTE: If you create a subscription on a topic, any senders to that topic must specify the `topic` capability.
 
 == Hierarchical topics and wildcards
 
