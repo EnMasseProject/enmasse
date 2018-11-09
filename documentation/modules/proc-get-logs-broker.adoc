@@ -12,7 +12,7 @@
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} get pods -l name=broker -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
+{cmdcli} get pods -l role=broker -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
 ----
 
 . Display the logs for the pod:
