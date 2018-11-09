@@ -40,7 +40,7 @@ endif::[]
 ----
 
 ifeval::["{cmdcli}" == "oc"]
-. Delete cluster level resources:
+. Delete "cluster level" resources:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -59,7 +59,7 @@ ifeval::["{cmdcli}" == "oc"]
 endif::[]
 
 ifeval::["{cmdcli}" == "kubectl"]
-. Delete cluster level resources:
+. Delete "cluster level" resources:
 +
 [options="nowrap",subs="attributes"]
 ----
