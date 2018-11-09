@@ -15,21 +15,45 @@ import io.enmasse.osb.api.catalog.Schemas;
 import io.enmasse.osb.api.catalog.Service;
 import io.enmasse.osb.api.catalog.ServiceBindingSchema;
 import io.enmasse.osb.api.catalog.ServiceInstanceSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Properties;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public class ServiceMapping {
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceMapping.class);
+
+    private static final Properties SERVICE_PROPERTIES = new Properties();
+
     private final Map<AddressSpaceType, Service> services;
     private final Schema schema;
+
+    {
+        String servicePropsResource = "/service.properties";
+        try {
+            try (InputStream resourceAsStream = ServiceMapping.class.getResourceAsStream(servicePropsResource)) {
+                if (resourceAsStream != null) {
+                    SERVICE_PROPERTIES.load(resourceAsStream);
+                } else {
+                    LOG.warn("Could not load {} from classpath, ignoring", servicePropsResource);
+                }
+            }
+        } catch (IOException e) {
+            LOG.warn("Could not load {} from classpath, ignoring", servicePropsResource, e);
+        }
+    }
 
     private final String SERVICE_NAME_PATTERN = getStringFromEnv("SERVICE_BROKER_SERVICE_NAME_PATTERN", "enmasse-{0}");
     private final String[] TAGS = getStringsFromEnv("SERVICE_BROKER_SERVICE_TAGS", new String[] {"middleware", "messaging", "amqp", "mqtt", "enmasse"});
@@ -41,16 +65,14 @@ public class ServiceMapping {
     static final String addressRegexp = "^\\s*(([a-zA-Z0-9_-]+(([/.])[a-zA-Z0-9_-]+)*(([/.])?[#*])?)|[#*])(\\s*,\\s*(([a-zA-Z0-9_-]+([/.][a-zA-Z0-9_-]+)*([/.]?[#*])?)|[#*]))*\\s*$";
 
     private String getStringFromEnv(String varName, String defaultValue) {
-        if(System.getenv().containsKey(varName)) {
-            return System.getenv().get(varName);
-        } else {
-            return defaultValue;
-        }
+
+        return System.getenv().getOrDefault(varName, SERVICE_PROPERTIES.getProperty(varName, defaultValue));
     }
 
     private String[] getStringsFromEnv(String varName, String[] defaultValue) {
-        if(System.getenv().containsKey(varName)) {
-            return System.getenv().get(varName).split(",");
+        String value = getStringFromEnv(varName, null);
+        if(value != null) {
+            return value.split(",");
         } else {
             return defaultValue;
         }
