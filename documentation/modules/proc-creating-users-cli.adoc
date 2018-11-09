@@ -29,6 +29,13 @@ include::../common/user-example1.yaml[]
 {cmdcli} create -f __user-example1.yaml__
 ----
 
+. Confirm that the user was created:
++
+[options="nowrap",subs="attributes,+quotes"]
+----
+{cmdcli} get messagingusers
+----
+
 .Additional resources
 
 * xref:_overview[Rest API Reference]
