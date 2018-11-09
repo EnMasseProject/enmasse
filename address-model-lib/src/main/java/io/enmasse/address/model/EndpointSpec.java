@@ -49,6 +49,12 @@ public class EndpointSpec {
                 .toString();
     }
 
+    public void validate() {
+        if (certSpec != null) {
+            certSpec.validate();
+        }
+    }
+
     public static class Builder {
         private String name;
         private String service;

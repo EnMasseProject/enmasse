@@ -138,6 +138,11 @@ public class AddressSpace {
 
     public void validate() {
         KubeUtil.validateName(name);
+        if (endpointList != null) {
+            for (EndpointSpec endpointSpec : endpointList) {
+                endpointSpec.validate();
+            }
+        }
     }
 
     public static class Builder {
