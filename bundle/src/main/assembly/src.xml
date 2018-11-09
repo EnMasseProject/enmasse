@@ -52,7 +52,8 @@
                 <!-- CI config -->
                 <exclude>.github/**</exclude>
                 <exclude>.travis*/**</exclude>
-                <!--<exclude>.travis.yml</exclude>-->
+                <exclude>Jenkinsfile*</exclude>
+                <exclude>jenkins-functions.groovy</exclude>
             </excludes>
         </fileSet>
     </fileSets>
