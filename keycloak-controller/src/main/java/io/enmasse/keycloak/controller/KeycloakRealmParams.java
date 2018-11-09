@@ -29,7 +29,7 @@ public class KeycloakRealmParams {
         this.identityProviderUrl = identityProviderUrl;
         this.identityProviderClientId = identityProviderClientId;
         this.identityProviderClientSecret = identityProviderClientSecret;
-        this.browserSecurityHeaders = browserSecurityHeaders;
+        this.browserSecurityHeaders = browserSecurityHeaders == null ? Collections.emptyMap() : new HashMap<>(browserSecurityHeaders);
     }
 
     public static KeycloakRealmParams fromKube(KubernetesClient client, String configName) {
@@ -50,7 +50,7 @@ public class KeycloakRealmParams {
                     browserSecurityHeaders.put(key, data.get(key).asText());
                 }
             } catch (IOException e) {
-                log.warn("Error parsing browserSecurityHeaders, skipping");
+                log.warn("Error parsing browserSecurityHeaders, skipping", e);
             }
         }
 
@@ -60,7 +60,8 @@ public class KeycloakRealmParams {
     @Override
     public String toString() {
         return "{identityProviderUrl=" + identityProviderUrl + "," +
-                "identityProviderClientId=" + identityProviderClientId + "}";
+                "identityProviderClientId=" + identityProviderClientId + "," +
+                "browserSecurityHeaders=" + browserSecurityHeaders + "}";
     }
 
     @Override
