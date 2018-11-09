@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   name: enmasse.io:tenant-view
   labels:
+    app: enmasse
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
   - apiGroups: [ "enmasse.io" ]
