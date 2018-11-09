@@ -4,7 +4,7 @@
 
 :parent-context: {context}
 :context: kube
-:cmdcli: kube
+:cmdcli: kubectl
 
 [id='using-qdstat-{context}']
 = Using qdstat on Kubernetes
