@@ -1,12 +1,23 @@
 
 .Prerequisites
 
+ifdef::Prereqs[]
 * To install {ProductName}, the OpenShift client tools are required. You can download the OpenShift
 Origin client from link:https://github.com/openshift/origin/releases[OpenShift Origin^]. {ProductName} has
-been tested to work with the latest stable release of the OpenShift Origin Client.
+been tested to work with the latest stable release of the OpenShift Origin client.
 
 * An OpenShift cluster is required. If you do not have an OpenShift cluster available, see
 link:https://github.com/minishift/minishift[Minishift^] for an example of how to run a local instance of OpenShift
 on your machine.
 
-* A user on the OpenShift cluster with `cluster-admin` permissions is required, in order to set up the required cluster roles and API services.
+* A user on the OpenShift cluster with `cluster-admin` permissions is required to set up the required cluster roles and API services.
+endif::Prereqs[]
+
+ifndef::Prereqs[]
+* To install {ProductName}, the OpenShift client tools are required.
+
+* An OpenShift cluster is required.
+
+* A user on the OpenShift cluster with `cluster-admin` permissions is required to set up the required cluster roles and API services.
+endif::Prereqs[]
+
