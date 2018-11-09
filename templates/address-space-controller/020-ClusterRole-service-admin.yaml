@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   name: enmasse.io:service-admin
   labels:
+    app: enmasse
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: [ "admin.enmasse.io" ]
