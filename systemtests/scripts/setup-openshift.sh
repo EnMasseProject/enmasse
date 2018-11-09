@@ -42,3 +42,4 @@ wait_until_cluster_up "${TIMEOUT}"
 
 sleep 30
 oc get pv
+oc adm policy add-scc-to-group hostmount-anyuid system:serviceaccounts
