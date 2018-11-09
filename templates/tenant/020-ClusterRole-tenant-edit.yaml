@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   name: enmasse.io:tenant-edit
   labels:
+    app: enmasse
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
 rules:
