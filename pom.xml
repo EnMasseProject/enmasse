@@ -118,6 +118,7 @@
         <module>systemtests</module>
         <module>artemis</module>
         <module>service-broker</module>
+        <module>bundle</module>
     </modules>
 
     <dependencyManagement>
@@ -813,13 +814,7 @@
     </build>
     <profiles>
         <profile>
-            <id>license-artifacts</id>
-            <activation>
-                <property>
-                    <name>skipLicenseArtifactGeneration</name>
-                    <value>!true</value>
-                </property>
-            </activation>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>

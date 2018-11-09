@@ -283,13 +283,7 @@
     </profile>
 
     <profile>
-        <id>license-artifacts</id>
-        <activation>
-          <property>
-              <name>skipLicenseArtifactGeneration</name>
-              <value>!true</value>
-            </property>
-        </activation>
+        <id>release</id>
         <build>
           <plugins>
               <plugin>
