@@ -1,0 +1,69 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-openshift.adoc
+
+[id='uninstalling-{context}']
+= Uninstalling {ProductName} on {KubePlatform}
+
+.Procedure 
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a user with `cluster-admin` privileges:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} login -u system:admin
+----
+
+. Delete the project where {ProductName} is deployed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete project _{ProductNamespace}_
+----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Delete the namespace where {ProductName} is deployed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete namespace _{ProductNamespace}_
+----
+endif::[]
+
+. Delete rolebindings in `kube-system` namespace:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} delete rolebindings -l app=enmasse -n kube-system
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Delete cluster level resources:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} delete clusterrolebindings -l app=enmasse
+{cmdcli} delete clusterroles -l app=enmasse
+{cmdcli} delete apiservices -l app=enmasse
+{cmdcli} delete oauthclients -l app=enmasse
+----
+
+. (Optional) Delete service catalog integration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} delete clusterservicebrokers -l app=enmasse
+----
+endif::[]
+
+ifeval::["{cmdcli}" == "kubectl"]
+. Delete cluster level resources:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} delete clusterrolebindings -l app=enmasse
+{cmdcli} delete clusterroles -l app=enmasse
+{cmdcli} delete apiservices -l app=enmasse
+----
+endif::[]

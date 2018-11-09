@@ -87,6 +87,12 @@ include::assemblies/assembly-monitoring-oc.adoc[leveloffset=+3]
 include::assemblies/assembly-monitoring-kube.adoc[leveloffset=+3]
 include::assemblies/assembly-using-qdstat.adoc[leveloffset=+3]
 
+=== Uninstalling {ProductName}
+
+include::assemblies/assembly-uninstalling-openshift.adoc[leveloffset=+3]
+
+include::assemblies/assembly-uninstalling-kubernetes.adoc[leveloffset=+3]
+
 == Tenant Guide
 
 The tenant guide provides resources on how to manage address spaces, addresses,and users as a

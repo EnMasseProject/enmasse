@@ -1,0 +1,11 @@
+// This assembly is included in the following assemblies:
+//
+// <List assemblies here, each on a new line>
+:parent-context: {context}
+:cmdcli: kubectl
+:KubePlatform: Kubernetes
+:context: kube
+
+include::../modules/proc-uninstalling.adoc[]
+
+:context: {parent-context}
