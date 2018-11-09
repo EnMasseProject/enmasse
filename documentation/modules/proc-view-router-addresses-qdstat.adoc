@@ -18,7 +18,7 @@ You can view the router addresses using `qdstat`.
 
 . Run the following command:
 +
-[source=bash,options="nowrap",,subs="+quotes,attributes"]
+[source=bash,options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} exec -n _namespace_ -it qdrouterd-_podname_ -- qdstat -a
 
