@@ -6,6 +6,9 @@
 :KubePlatform: Kubernetes
 :context: kube
 
-include::../modules/proc-uninstalling.adoc[]
+[id='uninstalling-kubernetes-{context}']
+= Uninstalling {ProductName} on Kubernetes
+
+include::../modules/proc-uninstalling.adoc[leveloffset=+1]
 
 :context: {parent-context}

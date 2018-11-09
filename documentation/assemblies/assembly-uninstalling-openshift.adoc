@@ -6,6 +6,9 @@
 :KubePlatform: OpenShift
 :context: okd
 
-include::../modules/proc-uninstalling.adoc[]
+[id='uninstalling-openshift-{context}']
+= Uninstalling {ProductName} on OpenShift
+
+include::../modules/proc-uninstalling.adoc[leveloffset=+1]
 
 :context: {parent-context}

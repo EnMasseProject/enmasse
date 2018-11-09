@@ -1,9 +1,10 @@
 // Module included in the following assemblies:
 //
-// assembly-installing-openshift.adoc
+// assembly-uninstalling-openshift.adoc
+// assembly-uninstalling-kubernetes.adoc
 
 [id='uninstalling-{context}']
-= Uninstalling {ProductName} on {KubePlatform}
+= Uninstalling {ProductName}
 
 .Procedure 
 
