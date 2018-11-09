@@ -31,7 +31,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 ----
 endif::[]
 
-. Delete rolebindings in `kube-system` namespace:
+. Delete the rolebinding in the `kube-system` namespace:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -49,7 +49,7 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} delete oauthclients -l app=enmasse
 ----
 
-. (Optional) Delete service catalog integration:
+. (Optional) Delete the service catalog integration:
 +
 [options="nowrap",subs="attributes"]
 ----
