@@ -11,7 +11,7 @@ You can view the router addresses using `qdstat`.
 
 . On the command line, run the following command to obtain the `podname` value needed in the following step:
 +
-[options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} get pods
 ----
