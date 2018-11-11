@@ -149,7 +149,7 @@ public class Keycloak implements KeycloakApi {
                     RealmRepresentation realmRep = realm.toRepresentation();
                     boolean browserSecurityHeadersChanged = !Objects.equals(realmRep.getBrowserSecurityHeaders(), current.getBrowserSecurityHeaders());
                     if (browserSecurityHeadersChanged) {
-                        realmRep.setBrowserSecurityHeaders(current.getBrowserSecurityHeaders());
+                        realmRep.setBrowserSecurityHeaders(updated.getBrowserSecurityHeaders());
                         realm.update(realmRep);
                         log.info("Updated browser security headers of {}", realmName);
                     }
