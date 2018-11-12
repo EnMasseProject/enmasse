@@ -5,10 +5,10 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.SysytemTestsErrorCollector;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
@@ -30,7 +30,7 @@ import static io.enmasse.systemtest.TestTag.marathon;
 import static org.hamcrest.CoreMatchers.is;
 
 @Tag(marathon)
-abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFirefox {
+abstract class MarathonTestBase extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
     private ConsoleWebPage consoleWebPage;
@@ -45,25 +45,30 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
     // Runner tests methods
     //========================================================================================================
 
-    protected void runTestInLoop(int durationMinutes, ITestMethod test) {
+    private void runTestInLoop(int durationMinutes, ITestMethod test) throws Exception {
         log.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
         int fails = 0;
         int limit = 10;
+        int i = 0;
         for (long stop = System.nanoTime() + TimeUnit.MINUTES.toNanos(durationMinutes); stop > System.nanoTime(); ) {
             try {
+                log.info("*********************************** Test run {} ***********************************", ++i);
                 test.run();
                 fails = 0;
             } catch (Exception ex) {
+                log.warn("Test run {} failed with: {}", i, ex.getMessage());
                 collector.addError(ex);
                 if (++fails >= limit) {
                     throw new IllegalStateException(String.format("Test failed: %d times in a row: %s", fails, collector.toString()));
                 }
             } finally {
                 closeClients();
+                log.info("***********************************************************************************");
+                Thread.sleep(60_000);
             }
         }
-        if (fails < limit && !collector.verify()) {
+        if (!collector.verify()) {
             throw new IllegalStateException(String.format("Test failed with these exceptions: %s", collector.toString()));
         }
     }
@@ -84,27 +89,19 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
     // Tests methods
     //========================================================================================================
 
-    void doTestCreateDeleteAddressSpaceLong(AddressSpace addressSpace) {
+    void doTestCreateDeleteAddressSpaceLong(AddressSpace addressSpace) throws Exception {
         runTestInLoop(30, () -> {
+            UserCredentials cred = new UserCredentials("david", "kornelius");
             createAddressSpace(addressSpace);
+            createUser(addressSpace, cred);
+
             log.info("Address space created");
 
-            doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
-                    "test-queue-createdelete-brokered-%d");
+            doAddressTest(addressSpace,"test-topic-createdelete-brokered-%d",
+                    "test-queue-createdelete-brokered-%d", cred);
 
             deleteAddressSpace(addressSpace);
             log.info("Address space removed");
-            Thread.sleep(10000);
-        });
-    }
-
-    void doTestCreateDeleteAddressesLong(AddressSpace addressSpace) throws Exception {
-        createAddressSpace(addressSpace);
-
-        runTestInLoop(30, () -> {
-            doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
-                    "test-queue-createdelete-brokered-%d");
-            Thread.sleep(30000);
         });
     }
 
@@ -118,7 +115,6 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
                     "test-queue-createdelete-auth-brokered-%d", user);
-            Thread.sleep(30000);
         });
     }
 
@@ -141,6 +137,8 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
+        createUser(addressSpace, credentials);
+
         runTestInLoop(30, () -> {
             //create client
             AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
@@ -163,7 +161,6 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
             for (int i = 0; i < recvCount; i++) {
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount / 2));
             }
-            Thread.sleep(5000);
         });
     }
 
@@ -189,13 +186,12 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
             createUsers(addressSpace, prefixUser, prefixPswd, from.get(), to.get());
             log.info("Users <{};{}> successfully created", from.get(), to.get());
             for (int i = from.get(); i < to.get(); i += step) {
-                doBasicAuthQueueTopicTest(addressSpace, queue, topic, new UserCredentials(prefixUser + i, prefixPswd + i));
+                assertCanConnect(addressSpace, new UserCredentials(prefixUser + i, prefixPswd + i), Arrays.asList(queue, topic));
             }
             removeUsers(addressSpace, prefixUser, from.get(), to.get() - step);
             log.info("Users <{};{}> successfully removed", from.get(), to.get() - step);
             from.set(from.get() + iteration);
             to.set(to.get() + iteration);
-            Thread.sleep(5000);
         });
         log.info("testCreateDeleteUsersLong finished");
     }
@@ -215,38 +211,10 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
 
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
-            doBasicAuthQueueTopicTest(addressSpace, queue, topic, user);
+            assertCanConnect(addressSpace, user, Arrays.asList(queue, topic));
             assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic));
-            Thread.sleep(5000);
         });
         log.info("testAuthSendReceiveLong finished");
-    }
-
-    void doTestCreateDeleteUsersRestartKeyCloakLong(AddressSpace addressSpace) throws Exception {
-        log.info("testCreateDeleteUsersRestartKeyCloakLong start");
-        createAddressSpace(addressSpace);
-        log.info("Address space '{}'created", addressSpace);
-
-        final Destination queue = Destination.queue("test-create-delete-users-restart-queue", getDefaultPlan(AddressType.QUEUE));
-        final Destination topic = Destination.topic("test-create-delete-users-restart-topic", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpace, queue, topic);
-        log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
-
-        UserCredentials user = new UserCredentials("test-user", "test-user");
-
-
-        runTestInLoop(30, () -> {
-            log.info("Start test iteration");
-            createUser(addressSpace, user);
-            assertCanConnect(addressSpace, user, Arrays.asList(queue, topic));
-            log.info("Restart keycloak");
-            scaleKeycloak(0);
-            scaleKeycloak(1);
-            Thread.sleep(160000);
-            assertCanConnect(addressSpace, user, Arrays.asList(queue, topic));
-            removeUser(addressSpace, user.getUsername());
-        });
-        log.info("testCreateDeleteUsersRestartKeyCloakLong finished");
     }
 
     void doTestTopicPubSubLong(AddressSpace addressSpace) throws Exception {
@@ -266,6 +234,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
+        createUser(addressSpace, credentials);
         runTestInLoop(30, () -> {
             AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
@@ -286,7 +255,6 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
             for (int i = 0; i < topicCount; i++) {
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount));
             }
-            Thread.sleep(5000);
         });
     }
 
@@ -294,19 +262,19 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         log.info("testCreateDeleteAddressesViaAgentLong start");
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
-
+        SeleniumContainers.deployFirefoxContainer();
 
         UserCredentials user = new UserCredentials("test", "test");
         createUser(addressSpace, user);
-
-        selenium.setupDriver(environment, kubernetes, buildDriver());
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
-        consoleWebPage.openWebConsolePage(user);
 
         int addressCount = 5;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         runTestInLoop(30, () -> {
+            SeleniumProvider selenium = new SeleniumProvider();
+            selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
+            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
+            consoleWebPage.openWebConsolePage(user);
             try {
                 consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
                 consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
@@ -314,7 +282,7 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
                 selenium.saveScreenShots(className, testName);
                 selenium.tearDownDrivers();
             } catch (Exception ex) {
-                selenium.setupDriver(environment, kubernetes, buildDriver());
+                selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
                 consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
                 consoleWebPage.openWebConsolePage(user);
                 throw new Exception(ex);
@@ -344,48 +312,26 @@ abstract class MarathonTestBase extends TestBase implements ISeleniumProviderFir
         AmqpClient topicClient;
 
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
-        for (Destination queue : queueList) {
-            queueClient = amqpClientFactory.createQueueClient(addressSpace);
-            queueClient.getConnectOptions().setCredentials(credentials);
-            clients.add(queueClient);
+        appendAddresses(addressSpace, topicList.toArray(new Destination[0]));
 
+        queueClient = amqpClientFactory.createQueueClient(addressSpace);
+        queueClient.getConnectOptions().setCredentials(credentials);
+        clients.add(queueClient);
+
+        topicClient = amqpClientFactory.createTopicClient(addressSpace);
+        topicClient.getConnectOptions().setCredentials(credentials);
+        clients.add(topicClient);
+
+        for (Destination queue : queueList) {
             QueueTest.runQueueTest(queueClient, queue, 1024);
         }
 
-        setAddresses(addressSpace, topicList.toArray(new Destination[0]));
-
         for (Destination topic : topicList) {
-            topicClient = amqpClientFactory.createTopicClient(addressSpace);
-            topicClient.getConnectOptions().setCredentials(credentials);
-            clients.add(topicClient);
-
             TopicTest.runTopicTest(topicClient, topic, 1024);
         }
 
         deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         deleteAddresses(addressSpace, topicList.toArray(new Destination[0]));
         Thread.sleep(15000);
-    }
-
-    private void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception {
-        doAddressTest(addressSpace, topicPattern, queuePattern, new UserCredentials("test", "test"));
-    }
-
-    private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
-                                           UserCredentials credentials) throws Exception {
-        int messageCount = 100;
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
-        queueClient.getConnectOptions().setCredentials(credentials);
-        clients.add(queueClient);
-        io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
-        log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
-                credentials, messageCount, queue.getAddress());
-
-        AmqpClient topicClient = amqpClientFactory.createTopicClient(addressSpace);
-        topicClient.getConnectOptions().setCredentials(credentials);
-        clients.add(topicClient);
-        TopicTest.runTopicTest(topicClient, topic, messageCount);
-        log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
-                credentials, messageCount, topic.getAddress());
     }
 }

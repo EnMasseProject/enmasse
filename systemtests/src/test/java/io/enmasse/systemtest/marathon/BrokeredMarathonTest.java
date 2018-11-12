@@ -16,13 +16,7 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
     @Test
     void testCreateDeleteAddressSpaceLong() throws Exception {
         doTestCreateDeleteAddressSpaceLong(
-                new AddressSpace("test-create-delete-brokered-space", AddressSpaceType.BROKERED));
-    }
-
-    @Test
-    void testCreateDeleteAddressesLong() throws Exception {
-        doTestCreateDeleteAddressesLong(
-                new AddressSpace("test-create-delete-addresses-brokered", AddressSpaceType.BROKERED));
+                new AddressSpace("test-create-delete-brokered-space", AddressSpaceType.BROKERED, AuthService.STANDARD));
     }
 
     @Test
@@ -35,7 +29,7 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
     @Test
     void testQueueSendReceiveLong() throws Exception {
         doTestQueueSendReceiveLong(
-                new AddressSpace("test-queue-sendreceive-brokered", AddressSpaceType.BROKERED));
+                new AddressSpace("test-queue-sendreceive-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD));
     }
 
     @Test
@@ -53,16 +47,9 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
     }
 
     @Test
-    void testCreateDeleteUsersRestartKeyCloakLong() throws Exception {
-        doTestCreateDeleteUsersRestartKeyCloakLong(
-                new AddressSpace("test-create-delete-users-restart-brokered",
-                        AddressSpaceType.BROKERED, AuthService.STANDARD));
-    }
-
-    @Test
     void testTopicPubSubLong() throws Exception {
         doTestTopicPubSubLong(
-                new AddressSpace("test-topic-pubsub-brokered", AddressSpaceType.BROKERED));
+                new AddressSpace("test-topic-pubsub-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD));
     }
 
     @Test

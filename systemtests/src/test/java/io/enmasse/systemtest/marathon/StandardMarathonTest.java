@@ -14,15 +14,9 @@ import org.junit.jupiter.api.TestInfo;
 class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard {
 
     @Test
-    void testCreateDeleteAddressSpaceLong() {
+    void testCreateDeleteAddressSpaceLong() throws Exception {
         doTestCreateDeleteAddressSpaceLong(
-                new AddressSpace("test-create-delete-standard-space", AddressSpaceType.STANDARD));
-    }
-
-    @Test
-    void testCreateDeleteAddressesLongStandard() throws Exception {
-        doTestCreateDeleteAddressesLong(
-                new AddressSpace("test-create-delete-addresses-standard", AddressSpaceType.STANDARD));
+                new AddressSpace("test-create-delete-standard-space", AddressSpaceType.STANDARD, AuthService.STANDARD));
     }
 
     @Test
@@ -35,7 +29,7 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
     @Test
     void testQueueSendReceiveLong() throws Exception {
         doTestQueueSendReceiveLong(
-                new AddressSpace("test-queue-sendreceive-standard", AddressSpaceType.STANDARD));
+                new AddressSpace("test-queue-sendreceive-standard", AddressSpaceType.STANDARD, AuthService.STANDARD));
     }
 
     @Test
@@ -53,16 +47,9 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
     }
 
     @Test
-    void testCreateDeleteUsersRestartKeyCloakLong() throws Exception {
-        doTestCreateDeleteUsersRestartKeyCloakLong(
-                new AddressSpace("test-create-delete-users-restart-standard",
-                        AddressSpaceType.STANDARD, AuthService.STANDARD));
-    }
-
-    @Test
     void testTopicPubSubLong() throws Exception {
         doTestTopicPubSubLong(
-                new AddressSpace("test-topic-pubsub-standard", AddressSpaceType.STANDARD));
+                new AddressSpace("test-topic-pubsub-standard", AddressSpaceType.STANDARD, AuthService.STANDARD));
     }
 
     @Test
