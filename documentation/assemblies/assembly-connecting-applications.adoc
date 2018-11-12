@@ -29,7 +29,7 @@ The messaging protocols supported depends on the type of address space used. For
 [id='client-examples-{context}']
 == Client examples
 
-include::../modules/ref-python-example.adoc[leveloffset=+1]
+include::../modules/ref-python-example.adoc[leveloffset=+2]
 
 include::../modules/ref-jms-example.adoc[leveloffset=+2]
 
@@ -43,3 +43,4 @@ include::../modules/ref-dotnet-example.adoc[leveloffset=+2]
 //TODO: add links for all these clients
 
 :context: {parent-context}
+
