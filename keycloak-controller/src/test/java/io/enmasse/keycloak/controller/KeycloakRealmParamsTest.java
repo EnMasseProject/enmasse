@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class IdentityProviderParamsTest {
+public class KeycloakRealmParamsTest {
     @Rule
     public KubernetesServer server = new KubernetesServer(true, true);
 
@@ -34,7 +34,7 @@ public class IdentityProviderParamsTest {
                 .addToData("identityProviderClientSecret", "mysecret")
                 .done();
 
-        IdentityProviderParams params = IdentityProviderParams.fromKube(client, "myconfig");
+        KeycloakRealmParams params = KeycloakRealmParams.fromKube(client, "myconfig");
         assertEquals("https://localhost:8443/auth", params.getIdentityProviderUrl());
         assertEquals("myclient", params.getIdentityProviderClientId());
         assertEquals("mysecret", params.getIdentityProviderClientSecret());
