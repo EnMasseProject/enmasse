@@ -14,7 +14,6 @@ OpenShift command-line tools.
 The minimal example shows the smallest set of options needed to create an `AddressSpace`.
 
 [source,yaml,options="nowrap"]
-.link:resources/address-space-example1.yaml[address-space-example1.yaml]
 ----
 include::../common/address-space-example1.yaml[]
 ----
@@ -26,7 +25,6 @@ include::../common/address-space-example1.yaml[]
 The advanced example show how you can configure the authentication service and endpoints of an `AddressSpace`.
 
 [source,yaml,options="nowrap"]
-.link:resources/address-space-example2.yaml[address-space-example2.yaml]
 ----
 include::../common/address-space-example2.yaml[]
 ----
@@ -44,7 +42,6 @@ its state and endpoints. The following output is an example of the output you ca
 `oc get addressspace myspace -o yaml`:
 
 [source,yaml,options="nowrap"]
-.link:resources/address-space-output-example1.yaml[address-space-output-example1.yaml]
 ----
 include::../common/address-space-output-example1.yaml[]
 ----

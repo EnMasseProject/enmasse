@@ -27,7 +27,6 @@ endif::[]
 . Create an address space plan definition:
 +
 [source,yaml,options="nowrap"]
-.link:resources/restrictive-plan.yaml[restrictive-plan.yaml]
 ----
 include::../common/restrictive-plan.yaml[]
 ----
@@ -45,3 +44,4 @@ include::../common/restrictive-plan.yaml[]
 ----
 {cmdcli} get addressspaceschema standard -o yaml
 ----
+

@@ -10,7 +10,6 @@ spaces. The brokered infra configuration is referenced by address space plans us
 annotation. For more information, see xref:con-address-space-plans-{context}[].
 
 [source,yaml,options="nowrap"]
-.link:resources/brokered-infra-config-example.yaml[brokered-infra-config-example.yaml]
 ----
 include::../common/brokered-infra-config-example.yaml[]
 ----
@@ -22,3 +21,4 @@ The `admin` object specifies the settings you can configure for the `admin` comp
 
 The `broker` object specifies the settings you can configure for the `broker` components. Changing
 the `.broker.resources.storage` setting does not configure existing broker storage size.
+

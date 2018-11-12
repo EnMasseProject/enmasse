@@ -7,12 +7,11 @@
 
 You can create users to access messaging clients and the {ProductName} Console through user definition files, which specify the authentication type and authorization policies.
 
-Users are configured as `MessagingUser` resources. Users can only be created, deleted, read, updated and listed.
+Users are configured as `MessagingUser` resources. Users can only be created, deleted, read, updated, and listed.
 
 The following example shows the `user-example1.yaml` file:
 
 [source,yaml,options="nowrap"]
-.link:resources/user-example1.yaml[user-example1.yaml]
 ----
 include::../common/user-example1.yaml[]
 ----
@@ -63,3 +62,4 @@ addresses.
 .Additional resources
 
 * xref:_io_enmasse_user_v1alpha1_messaginguser[MessagingUser definition]
+

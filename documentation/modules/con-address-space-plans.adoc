@@ -12,7 +12,6 @@ Address space plans are used to configure quotas and control the resources consu
 Plans are configured as custom resources. The following example shows a plan for the standard address space:
 
 [source,yaml,options="nowrap"]
-.link:resources/restrictive-plan.yaml[restrictive-plan.yaml]
 ----
 include::../common/restrictive-plan.yaml[]
 ----
