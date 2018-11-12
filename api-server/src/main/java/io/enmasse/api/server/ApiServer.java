@@ -8,7 +8,7 @@ package io.enmasse.api.server;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
-import io.enmasse.api.common.CachingSchemaProvider;
+import io.enmasse.k8s.api.CachingSchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;

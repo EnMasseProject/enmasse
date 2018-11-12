@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
-import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -7,6 +7,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 import java.util.Arrays;
