@@ -12,7 +12,7 @@
 
 .Procedure
 
-. Replace the namespace with the namespace {ProcuctName} is currently deployed to:
+. Replace the namespace with the namespace {ProductName} is currently deployed to:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -25,3 +25,4 @@ sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/grafana/*.yaml
 ----
 {cmdcli} apply -f ./install/components/grafana
 ----
+
