@@ -10,7 +10,6 @@ import io.enmasse.systemtest.resources.AddressPlan;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlan;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class PlansMarathonTest extends MarathonTestBase implements ISeleniumProviderFirefox {
+class PlansMarathonTest extends MarathonTestBase {
 
     private static Logger log = CustomLogger.getLogger();
     private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
