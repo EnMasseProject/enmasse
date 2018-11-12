@@ -11,7 +11,6 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
 
 import java.util.*;
 
@@ -35,7 +34,7 @@ public class KeycloakManagerTest {
         realmAdminUsers = new HashMap<>();
         mockKubeApi = mock(KubeApi.class);
         when(mockKubeApi.findUserId(any())).thenReturn("");
-        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new IdentityProviderParams("http://example.com", "id", "secret"));
+        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new KeycloakRealmParams("http://example.com", "id", "secret", Collections.singletonMap("hdr1", "value1")));
 
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
@@ -44,12 +43,12 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String namespace, String realmName, String consoleRedirectURI, IdentityProviderParams params) {
+            public void createRealm(String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
                 realms.add(realmName);
             }
 
             @Override
-            public void updateRealm(String realmName, IdentityProviderParams updated) {
+            public void updateRealm(String realmName, KeycloakRealmParams updated) {
                 updatedRealms.add(realmName);
             }
 
@@ -149,7 +148,7 @@ public class KeycloakManagerTest {
         manager.onUpdate(spaces);
         assertTrue(updatedRealms.isEmpty());
 
-        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new IdentityProviderParams("http://example.com", "id", "secret2"));
+        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new KeycloakRealmParams("http://example.com", "id", "secret2", Collections.singletonMap("hdr1", "value1")));
 
         manager.onUpdate(spaces);
         assertEquals(1, updatedRealms.size());
