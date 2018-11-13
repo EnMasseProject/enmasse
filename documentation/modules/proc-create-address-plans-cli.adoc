@@ -27,7 +27,6 @@ endif::[]
 . Create an address plan definition:
 +
 [source,yaml,options="nowrap"]
-.link:resources/small-anycast-plan.yaml[small-anycast-plan.yaml]
 ----
 include::../common/small-anycast-plan.yaml[]
 ----
@@ -45,3 +44,4 @@ include::../common/small-anycast-plan.yaml[]
 ----
 {cmdcli} get addressspaceschema standard -o yaml
 ----
+

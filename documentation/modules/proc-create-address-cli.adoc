@@ -11,7 +11,6 @@
 . Create an address definition:
 +
 [source,yaml,options="nowrap"]
-.link:resources/standard-small-queue.yaml[standard-small-queue.yaml]
 ----
 include::../common/standard-small-queue.yaml[]
 ----

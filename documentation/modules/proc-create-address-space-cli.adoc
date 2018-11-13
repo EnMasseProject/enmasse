@@ -27,7 +27,6 @@ endif::[]
 . Create an address space definition:
 +
 [source,yaml,options="nowrap"]
-.link:resources/standard-address-space.yaml[standard-address-space.yaml]
 ----
 include::../common/standard-address-space.yaml[]
 ----
@@ -47,3 +46,4 @@ include::../common/standard-address-space.yaml[]
 ----
 +
 The address space is ready for use when the above command outputs `true`.
+

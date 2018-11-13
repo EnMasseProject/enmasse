@@ -31,7 +31,6 @@ endif::[]
 . Create infrastructure configuration:
 +
 [source,yaml,options="nowrap"]
-.link:resources/standard-infra-config-example.yaml[standard-infra-config-example.yaml]
 ----
 include::../common/standard-infra-config-example.yaml[]
 ----
@@ -51,3 +50,4 @@ include::../common/standard-infra-config-example.yaml[]
 ----
 +
 The configuration changes will be applied within a couple of minutes.
+

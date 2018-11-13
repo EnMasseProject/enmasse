@@ -10,7 +10,6 @@ spaces. The standard infra configuration is referenced by address space plans us
 annotation. For more information, see xref:con-address-space-plans-{context}[].
 
 [source,yaml,options="nowrap"]
-.link:resources/standard-infra-config-example.yaml[standard-infra-config-example.yaml]
 ----
 include::../common/standard-infra-config-example.yaml[]
 ----
@@ -24,3 +23,4 @@ The `broker` object specifies the settings you can configure for the `broker` co
 the `.broker.resources.storage` setting does not configure existing broker storage size.
 
 The `router` object specifies the settings you can configure for the `router` components.
+

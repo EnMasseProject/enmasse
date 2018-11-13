@@ -10,7 +10,6 @@
 == Example
 
 [source,yaml,options="nowrap"]
-.link:resources/address-example1.yaml[address-example1.yaml]
 ----
 include::../common/address-example1.yaml[]
 ----
