@@ -15,7 +15,7 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
 
     @Test
     void testCreateDeleteAddressSpaceLong() throws Exception {
-        doTestCreateDeleteAddressSpaceLong(
+        doTestCreateDeleteAddressSpaceLong(() ->
                 new AddressSpace("test-create-delete-brokered-space", AddressSpaceType.BROKERED, AuthService.STANDARD));
     }
 
