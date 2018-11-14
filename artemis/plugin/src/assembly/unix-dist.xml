@@ -51,7 +51,7 @@
            <fileMode>0644</fileMode>
         </file>
         <file>
-          <directory>${project.basedir}/../sasl-delegation/target/sasl-delegation-${project.version}.jar</source>
+          <source>${project.basedir}/../sasl-delegation/target/sasl-delegation-${project.version}.jar</source>
           <outputDirectory>${plugin.home}/lib</outputDirectory>
           <destName>sasl-delegation.jar</destName>
           <fileMode>0644</fileMode>
