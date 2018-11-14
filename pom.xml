@@ -168,6 +168,21 @@
             </dependency>
             <dependency>
                 <groupId>io.enmasse</groupId>
+                <artifactId>amqp-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>sasl-delegation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>shutdown-hook</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.enmasse</groupId>
                 <artifactId>keycloak-user-api</artifactId>
                 <version>${project.version}</version>
             </dependency>

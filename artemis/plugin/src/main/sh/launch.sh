@@ -1,9 +1,10 @@
 #!/bin/sh
 
-source /usr/local/dynamic-resources/dynamic_resources.sh
+source /opt/run-java/dynamic_resources.sh
 
 export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
-CONFIG_TEMPLATES=/config_templates
+CONFIG_TEMPLATES=${PLUGIN_HOME}/conf
+
 JAVA_OPTS="-Djava.net.preferIPv4Stack=true -Dcom.sun.management.jmxremote=true -Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.ssl=true -Dcom.sun.management.jmxremote.registry.ssl=true -Dcom.sun.management.jmxremote.ssl.need.client.auth=true -Dcom.sun.management.jmxremote.authenticate=false -javaagent:/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar=8080:/etc/prometheus-config/config.yaml"
 
 if [ -n "$ADMIN_SERVICE_HOST" ]
@@ -61,6 +62,7 @@ function configure() {
     TRUSTSTORE_PASS=enmasse
     KEYSTORE_PASS=enmasse
 
+    cp -r ${PLUGIN_HOME}/lib/*.jar ${ARTEMIS_HOME}/lib/
 
     export JAVA_OPTS="${JAVA_OPTS} -Djavax.net.ssl.keyStore=${KEYSTORE_PATH} -Djavax.net.ssl.keyStorePassword=${KEYSTORE_PASS} -Djavax.net.ssl.trustStore=${TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASS}"
 
