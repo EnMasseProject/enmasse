@@ -66,10 +66,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 builder.setUid(configMap.getMetadata().getUid());
             }
 
-// resourceVersion is server assigned when the update is received, so any value from the config.json will always be stale.
-//            if (address.getResourceVersion() == null) {
-//                builder.setResourceVersion(configMap.getMetadata().getResourceVersion());
-//            }
+            builder.setResourceVersion(configMap.getMetadata().getResourceVersion());
 
             if (address.getCreationTimestamp() == null) {
                 builder.setCreationTimestamp(configMap.getMetadata().getCreationTimestamp());

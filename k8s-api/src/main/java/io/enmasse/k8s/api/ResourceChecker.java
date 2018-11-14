@@ -43,8 +43,8 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
         synchronized (monitor) {
             try {
                 monitor.wait(recheckInterval.toMillis());
-                watcher.onUpdate(items);
                 log.debug("Woke up from monitor");
+                watcher.onUpdate(items);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
