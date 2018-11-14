@@ -156,11 +156,15 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .addToLabels(LabelKeys.INFRA_TYPE, "any")
                 .addToAnnotations(address.getAnnotations())
-// I think that resourceVersion is always assigned by the server, so I think doing this unconditionally is safe.
-                .withResourceVersion(address.getResourceVersion())
                 // TODO: Support other ways of doing this
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
                 .endMetadata();
+
+        if (address.getResourceVersion() != null) {
+            builder.editOrNewMetadata()
+                    .withResourceVersion(address.getResourceVersion())
+                    .endMetadata();
+        }
 
         try {
             builder.addToData("config.json", mapper.writeValueAsString(address));
