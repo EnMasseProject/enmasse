@@ -76,9 +76,9 @@ public class HttpAddressServiceBase {
     Response getAddress(SecurityContext securityContext, String namespace, String addressSpace, String address) throws Exception {
         return doRequest("Error getting address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
-            return Response.ok(apiHelper.getAddress(namespace, addressSpace, address)
-                    .orElseThrow(() -> Exceptions.notFoundException("Address " + address + " not found")))
-                    .build();
+            return apiHelper.getAddress(namespace, addressSpace, address)
+                    .map(a -> Response.ok(a).build())
+                    .orElseGet(() -> Response.status(404).entity(Status.notFound("Address", address)).build());
         });
     }
 
@@ -105,7 +105,7 @@ public class HttpAddressServiceBase {
         });
     }
 
-    static Address setAddressDefaults(String namespace, String addressSpace, Address address) {
+    private static Address setAddressDefaults(String namespace, String addressSpace, Address address) {
         if (address.getNamespace() == null || address.getAddressSpace() == null || address.getName() == null) {
             Address.Builder builder = new Address.Builder(address);
             if (address.getNamespace() == null) {
@@ -143,8 +143,12 @@ public class HttpAddressServiceBase {
         Address finalAddress = setAddressDefaults(namespace, addressSpace, payload);
         return doRequest("Error updating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
-            Address replaced = apiHelper.replaceAddress(addressSpace, finalAddress);
-            return Response.ok(replaced).build();
+            try {
+                Address replaced = apiHelper.replaceAddress(addressSpace, finalAddress);
+                return Response.ok(replaced).build();
+            } catch (NotFoundException e) {
+                return Response.status(404).entity(Status.notFound("Address", finalAddress.getName())).build();
+            }
         });
     }
 
