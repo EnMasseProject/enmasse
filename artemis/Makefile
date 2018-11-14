@@ -18,7 +18,7 @@ build_tar:
 	mkdir -p $(ARTEMIS_HOME)/lib
 	mkdir -p $(ARTIFACT_BASE)/opt
 
-	tar xvf plugin/target/artemis-plugin-$(VERSION)-dist.tar.gz -C $(ARTIFACT_BASE)
+	tar xvf plugin/target/broker-plugin-$(VERSION)-dist.tar.gz -C $(ARTIFACT_BASE)
 
 	# Prometheus support
 	mkdir -p $(ARTIFACT_BASE)/jmx_exporter
