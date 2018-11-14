@@ -62,8 +62,6 @@ function configure() {
     TRUSTSTORE_PASS=enmasse
     KEYSTORE_PASS=enmasse
 
-    cp -r ${PLUGIN_HOME}/lib/*.jar ${ARTEMIS_HOME}/lib/
-
     export JAVA_OPTS="${JAVA_OPTS} -Djavax.net.ssl.keyStore=${KEYSTORE_PATH} -Djavax.net.ssl.keyStorePassword=${KEYSTORE_PASS} -Djavax.net.ssl.trustStore=${TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASS}"
 
     if [ ! -d "${instanceDir}" ]; then

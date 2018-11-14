@@ -20,6 +20,8 @@ build_tar:
 
 	tar xvf plugin/target/broker-plugin-$(VERSION)-dist.tar.gz -C $(ARTIFACT_BASE)
 
+	cp -r $(ARTIFACT_BASE)/opt/broker-plugin/lib/*.jar $(ARTEMIS_HOME)/lib
+
 	# Prometheus support
 	mkdir -p $(ARTIFACT_BASE)/jmx_exporter
 	cp -f jmx_exporter/target/lib/jmx_prometheus_javaagent-0.1.0.jar $(ARTIFACT_BASE)/jmx_exporter/
