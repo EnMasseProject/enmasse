@@ -27,22 +27,6 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
         <fileSet>
-          <directory>${project.basedir}/../amqp-connector/target</directory>
-          <outputDirectory>${plugin.home}/lib</outputDirectory>
-            <includes>
-              <include>amqp-connector-${project.version}.jar</include>
-            </includes>
-           <fileMode>0644</fileMode>
-        </fileSet>
-        <fileSet>
-          <directory>${project.basedir}/../sasl-delegation/target</directory>
-          <outputDirectory>${plugin.home}/lib</outputDirectory>
-            <includes>
-              <include>sasl-delegation-${project.version}.jar</include>
-            </includes>
-           <fileMode>0644</fileMode>
-        </fileSet>
-        <fileSet>
           <directory>${project.basedir}/src/main/resources</directory>
           <outputDirectory>${plugin.home}/conf</outputDirectory>
             <includes>
@@ -60,12 +44,24 @@
         </fileSet>
     </fileSets>
     <files>
-      <file>
-        <source>${project.basedir}/../shutdown-hook/target/shutdown-hook-${project.version}.jar</source>
-        <outputDirectory>shutdown-hook</outputDirectory>
-        <destName>shutdown-hook.jar</destName>
-        <fileMode>0644</fileMode>
-      </file>
+        <file>
+          <source>${project.basedir}/../amqp-connector/target/amqp-connector-${project.version}.jar</source>
+          <outputDirectory>${plugin.home}/lib</outputDirectory>
+          <destName>amqp-connector.jar</destName>
+           <fileMode>0644</fileMode>
+        </file>
+        <file>
+          <directory>${project.basedir}/../sasl-delegation/target/sasl-delegation-${project.version}.jar</source>
+          <outputDirectory>${plugin.home}/lib</outputDirectory>
+          <destName>sasl-delegation.jar</destName>
+          <fileMode>0644</fileMode>
+        </file>
+        <file>
+          <source>${project.basedir}/../shutdown-hook/target/shutdown-hook-${project.version}.jar</source>
+          <outputDirectory>shutdown-hook</outputDirectory>
+          <destName>shutdown-hook.jar</destName>
+          <fileMode>0644</fileMode>
+        </file>
       <file>
         <source>${project.basedir}/../shutdown-hook/src/main/sh/shutdown-hook.sh</source>
         <outputDirectory>shutdown-hook</outputDirectory>
