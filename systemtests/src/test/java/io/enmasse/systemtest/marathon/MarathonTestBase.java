@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.marathon;
@@ -59,6 +60,7 @@ abstract class MarathonTestBase extends TestBase {
             } catch (Exception ex) {
                 log.warn("Test run {} failed with: {}", i, ex.getMessage());
                 collector.addError(ex);
+                deleteAllAddressSpaces();
                 if (++fails >= limit) {
                     throw new IllegalStateException(String.format("Test failed: %d times in a row: %s", fails, collector.toString()));
                 }
@@ -89,9 +91,10 @@ abstract class MarathonTestBase extends TestBase {
     // Tests methods
     //========================================================================================================
 
-    void doTestCreateDeleteAddressSpaceLong(AddressSpace addressSpace) throws Exception {
+    void doTestCreateDeleteAddressSpaceLong(Supplier<AddressSpace> supplier) throws Exception {
         runTestInLoop(30, () -> {
             UserCredentials cred = new UserCredentials("david", "kornelius");
+            AddressSpace addressSpace = supplier.get();
             createAddressSpace(addressSpace);
             createUser(addressSpace, cred);
 

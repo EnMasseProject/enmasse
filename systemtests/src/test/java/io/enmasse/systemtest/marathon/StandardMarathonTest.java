@@ -15,7 +15,7 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
 
     @Test
     void testCreateDeleteAddressSpaceLong() throws Exception {
-        doTestCreateDeleteAddressSpaceLong(
+        doTestCreateDeleteAddressSpaceLong(() ->
                 new AddressSpace("test-create-delete-standard-space", AddressSpaceType.STANDARD, AuthService.STANDARD));
     }
 
