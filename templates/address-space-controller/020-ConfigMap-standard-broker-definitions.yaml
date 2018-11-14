@@ -111,7 +111,7 @@ data:
                 preStop:
                   exec:
                     command:
-                    - /shutdown-hook/shutdown-hook.sh
+                    - /opt/shutdown-hook/bin/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:
@@ -330,7 +330,7 @@ data:
                 preStop:
                   exec:
                     command:
-                    - /shutdown-hook/shutdown-hook.sh
+                    - /opt/shutdown-hook/bin/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:

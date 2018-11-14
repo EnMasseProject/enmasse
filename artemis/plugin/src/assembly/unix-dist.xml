@@ -58,13 +58,13 @@
         </file>
         <file>
           <source>${project.basedir}/../shutdown-hook/target/shutdown-hook-${project.version}.jar</source>
-          <outputDirectory>shutdown-hook</outputDirectory>
+          <outputDirectory>opt/shutdown-hook/lib</outputDirectory>
           <destName>shutdown-hook.jar</destName>
           <fileMode>0644</fileMode>
         </file>
       <file>
         <source>${project.basedir}/../shutdown-hook/src/main/sh/shutdown-hook.sh</source>
-        <outputDirectory>shutdown-hook</outputDirectory>
+        <outputDirectory>opt/shutdown-hook/bin</outputDirectory>
         <destName>shutdown-hook.sh</destName>
         <fileMode>0755</fileMode>
       </file>
