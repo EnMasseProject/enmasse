@@ -9,6 +9,7 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -91,42 +92,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
+        Set<Address> addressSet = migratePlanNames(addressList, addressResolver);
 
-        // Migrate plan names
-        Set<Address> addressSet = new HashSet<>();
-        if (options.getVersion().startsWith("0.24")) {
-            for (Address address : addressList) {
-                if (addressResolver.findPlan(address).isPresent()) {
-                    addressSet.add(address);
-                } else {
-                    Address.Builder builder = new Address.Builder(address);
-                    String planName = address.getPlan();
-                    if ("pooled-queue".equals(planName)) {
-                        builder.setPlan("standard-small-queue");
-                    } else if ("pooled-topic".equals(planName)) {
-                        builder.setPlan("standard-small-topic");
-                    } else if ("standard-anycast".equals(planName)) {
-                        builder.setPlan("standard-small-anycast");
-                    } else if ("standard-multicast".equals(planName)) {
-                        builder.setPlan("standard-small-multicast");
-                    } else if ("standard-subscription".equals(planName)) {
-                        builder.setPlan("standard-small-subscription");
-                    } else if ("sharded-queue".equals(planName)) {
-                        builder.setPlan("standard-large-queue");
-                    } else if ("sharded-topic".equals(planName)) {
-                        builder.setPlan("standard-large-topic");
-                    }
-                    addressSet.add(builder.build());
-                }
-            }
-        } else {
-            addressSet = new HashSet<>(addressList);
-        }
-
-        Map<String, Status> previousStatus = new HashMap<>();
-        for (Address address : addressSet) {
-            previousStatus.put(address.getAddress(), new Status(address.getStatus()));
-        }
+        final Map<String, ProvisionState> previousStatus = addressSet.stream()
+                .collect(Collectors.toMap(Address::getAddress,
+                                          a -> new ProvisionState(a.getStatus(),
+                                                                  a.getAnnotation(AnnotationKeys.BROKER_ID),
+                                                                  a.getAnnotation(AnnotationKeys.CLUSTER_ID))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
 
@@ -177,10 +149,30 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         long upgradeClusters = System.nanoTime();
 
+        int staleCount = 0;
         for (Address address : addressSet) {
-            if (!previousStatus.get(address.getAddress()).equals(address.getStatus())) {
-                addressApi.replaceAddress(address);
+            ProvisionState previous = previousStatus.get(address.getAddress());
+            ProvisionState current = new ProvisionState(address.getStatus(),
+                    address.getAnnotation(AnnotationKeys.BROKER_ID),
+                    address.getAnnotation(AnnotationKeys.CLUSTER_ID));
+            if (!current.equals(previous)) {
+                try {
+                    addressApi.replaceAddress(address);
+                } catch (KubernetesClientException e) {
+                    if (e.getStatus().getCode() == 409) {
+                        // The address record is stale.  The address controller will be notified again by the watcher,
+                        // so safe ignore the stale record.
+                        log.debug("Address {} has stale resource version {}", address.getName(), address.getResourceVersion());
+                        staleCount++;
+                    } else {
+                        throw e;
+                    }
+                }
             }
+        }
+
+        if (staleCount > 0) {
+            log.info("{} address(es) were stale.", staleCount);
         }
 
         long replaceAddresses = System.nanoTime();
@@ -188,6 +180,40 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         long gcTerminating = System.nanoTime();
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
+    }
+
+    private Set<Address> migratePlanNames(List<Address> addressList, AddressResolver addressResolver) {
+        // Migrate plan names
+        Set<Address> addressSet = new HashSet<>();
+        if (options.getVersion().startsWith("0.24")) {
+            for (Address address : addressList) {
+                if (addressResolver.findPlan(address).isPresent()) {
+                    addressSet.add(address);
+                } else {
+                    Address.Builder builder = new Address.Builder(address);
+                    String planName = address.getPlan();
+                    if ("pooled-queue".equals(planName)) {
+                        builder.setPlan("standard-small-queue");
+                    } else if ("pooled-topic".equals(planName)) {
+                        builder.setPlan("standard-small-topic");
+                    } else if ("standard-anycast".equals(planName)) {
+                        builder.setPlan("standard-small-anycast");
+                    } else if ("standard-multicast".equals(planName)) {
+                        builder.setPlan("standard-small-multicast");
+                    } else if ("standard-subscription".equals(planName)) {
+                        builder.setPlan("standard-small-subscription");
+                    } else if ("sharded-queue".equals(planName)) {
+                        builder.setPlan("standard-large-queue");
+                    } else if ("sharded-topic".equals(planName)) {
+                        builder.setPlan("standard-large-topic");
+                    }
+                    addressSet.add(builder.build());
+                }
+            }
+        } else {
+            addressSet = new HashSet<>(addressList);
+        }
+        return addressSet;
     }
 
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
@@ -234,7 +260,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         for (BrokerCluster cluster : clusters) {
             int numFound = 0;
             for (Address address : addressSet) {
-                String clusterId = address.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
+                String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
                 if (cluster.getClusterId().equals(clusterId)) {
                     numFound++;
                 }
@@ -373,4 +399,39 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
 
+    private class ProvisionState {
+        private final Status status;
+        private final String brokerId;
+        private final String clusterId;
+
+        public ProvisionState(Status status, String brokerId, String clusterId) {
+            this.status = new Status(status);
+            this.brokerId = brokerId;
+            this.clusterId = clusterId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ProvisionState that = (ProvisionState) o;
+            return Objects.equals(status, that.status) &&
+                    Objects.equals(brokerId, that.brokerId) &&
+                    Objects.equals(clusterId, that.clusterId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(status, brokerId, clusterId);
+        }
+
+        @Override
+        public String toString() {
+            return "ProvisionState{" +
+                    "status=" + status +
+                    ", brokerId='" + brokerId + '\'' +
+                    ", clusterId='" + clusterId + '\'' +
+                    '}';
+        }
+    }
 }

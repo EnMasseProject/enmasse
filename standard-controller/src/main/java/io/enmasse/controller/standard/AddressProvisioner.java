@@ -175,18 +175,18 @@ public class AddressProvisioner {
     }
 
     private boolean scheduleSubscription(Address subscription, Address topic, Map<String, UsageInfo> brokerUsage, Map<String, UsageInfo> subscriptionUsage, ResourceRequest requested) {
-        String cluster = topic.getAnnotations().get(AnnotationKeys.CLUSTER_ID);
-        String broker = topic.getAnnotations().get(AnnotationKeys.BROKER_ID);
+        String cluster = topic.getAnnotation(AnnotationKeys.CLUSTER_ID);
+        String broker = topic.getAnnotation(AnnotationKeys.BROKER_ID);
 
         boolean isPooled = broker !=null;
 
-        subscription.getAnnotations().put(AnnotationKeys.CLUSTER_ID, cluster);
+        subscription.putAnnotation(AnnotationKeys.CLUSTER_ID, cluster);
 
         if (isPooled) {
             UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(broker, k -> new UsageInfo());
             if (usageInfo.getUsed()+requested.getCredit() <= 1) {
                 usageInfo.addUsed(requested.getCredit());
-                subscription.getAnnotations().put(AnnotationKeys.BROKER_ID, broker);
+                subscription.putAnnotation(AnnotationKeys.BROKER_ID, broker);
             } else {
                 log.info("no quota available on broker {} for {} on topic {}", cluster, subscription.getAddress(), topic.getAddress());
             }
@@ -208,13 +208,13 @@ public class AddressProvisioner {
             for (BrokerInfo brokerInfo : shardedBrokers) {
                 UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(brokerInfo.getBrokerId(), k -> new UsageInfo());
                 if (brokerInfo.getCredit() + requested.getCredit() < 1) {
-                    subscription.getAnnotations().put(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
+                    subscription.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                     usageInfo.addUsed(requested.getCredit());
                     break;
                 }
             }
         }
-        return subscription.getAnnotations().get(AnnotationKeys.BROKER_ID) != null;
+        return subscription.getAnnotation(AnnotationKeys.BROKER_ID) != null;
     }
 
     private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
@@ -270,7 +270,7 @@ public class AddressProvisioner {
 
                     for (BrokerInfo brokerInfo : brokers) {
                         if (brokerInfo.getCredit() + resourceRequest.getCredit() < 1) {
-                            address.getAnnotations().put(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
+                            address.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                             UsageInfo used = resourceUsage.get(brokerInfo.getBrokerId());
                             used.addUsed(resourceRequest.getCredit());
                             break;
@@ -439,7 +439,7 @@ public class AddressProvisioner {
 
         for (BrokerInfo brokerInfo : brokers) {
             if (brokerInfo.getCredit() + credit < 1) {
-                address.getAnnotations().put(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
+                address.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                 UsageInfo used = usageMap.get(brokerInfo.getBrokerId());
                 used.addUsed(credit);
                 return true;

@@ -19,6 +19,8 @@ import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
@@ -64,9 +66,10 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 builder.setUid(configMap.getMetadata().getUid());
             }
 
-            if (address.getResourceVersion() == null) {
-                builder.setResourceVersion(configMap.getMetadata().getResourceVersion());
-            }
+// resourceVersion is server assigned when the update is received, so any value from the config.json will always be stale.
+//            if (address.getResourceVersion() == null) {
+//                builder.setResourceVersion(configMap.getMetadata().getResourceVersion());
+//            }
 
             if (address.getCreationTimestamp() == null) {
                 builder.setCreationTimestamp(configMap.getMetadata().getCreationTimestamp());
@@ -132,9 +135,11 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
             return false;
         }
         ConfigMap newMap = create(address);
-        if (newMap != null) {
-            client.configMaps().inNamespace(namespace).withName(name).replace(newMap);
-        }
+        client.configMaps()
+                .inNamespace(namespace)
+                .withName(name)
+                .lockResourceVersion(address.getResourceVersion())
+                .replace(newMap);
         return true;
     }
 
@@ -151,21 +156,18 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .addToLabels(LabelKeys.INFRA_TYPE, "any")
                 .addToAnnotations(address.getAnnotations())
+// I think that resourceVersion is always assigned by the server, so I think doing this unconditionally is safe.
+                .withResourceVersion(address.getResourceVersion())
                 // TODO: Support other ways of doing this
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
                 .endMetadata();
 
-        if (address.getResourceVersion() != null) {
-            builder.editOrNewMetadata()
-                    .withResourceVersion(address.getResourceVersion());
-        }
-
         try {
             builder.addToData("config.json", mapper.writeValueAsString(address));
             return builder.build();
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.info("Error serializing address for {}", address, e);
-            return null;
+            throw new UncheckedIOException(e);
         }
     }
 
