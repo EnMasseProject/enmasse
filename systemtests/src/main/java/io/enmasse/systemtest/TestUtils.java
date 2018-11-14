@@ -1073,7 +1073,7 @@ public class TestUtils {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .withImage("docker.io/kornysd/docker-clients:1.0")
+                .withImage("docker.io/kornysd/docker-clients:1.1")
                 .addNewPort()
                 .withContainerPort(4242)
                 .endPort()
