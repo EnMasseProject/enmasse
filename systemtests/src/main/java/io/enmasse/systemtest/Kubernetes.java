@@ -8,6 +8,7 @@ import io.enmasse.systemtest.executor.Executor;
 import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -199,10 +200,38 @@ public abstract class Kubernetes {
         return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), "UTF-8");
     }
 
-    private ConfigMapList listConfigMaps(String type) {
+    public List<ConfigMap> listConfigMaps(String type) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("type", type);
-        return client.configMaps().inNamespace(globalNamespace).withLabels(labels).list();
+        return listConfigMaps(labels);
+    }
+
+    public List<ConfigMap> listConfigMaps(Map<String, String> labels) {
+        return client.configMaps().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<Service> listServices(Map<String, String> labels) {
+        return client.services().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<Secret> listSecrets(Map<String, String> labels) {
+        return client.secrets().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<Deployment> listDeployments(Map<String, String> labels) {
+        return client.apps().deployments().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<StatefulSet> listStatefulSets(Map<String, String> labels) {
+        return client.apps().statefulSets().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<ServiceAccount> listServiceAccounts(Map<String, String> labels) {
+        return client.serviceAccounts().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<PersistentVolumeClaim> listPersistentVolumeClaims(Map<String, String> labels) {
+        return client.persistentVolumeClaims().inNamespace(globalNamespace).withLabels(labels).list().getItems();
     }
 
     public ConfigMapList getAllConfigMaps(String namespace) {

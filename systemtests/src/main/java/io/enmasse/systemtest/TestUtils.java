@@ -862,11 +862,23 @@ public class TestUtils {
      * @param addressSpace AddressSpace that should be removed
      */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
+        log.info("Waiting for AddressSpace {} to be deleted", addressSpace);
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size() > 0) {
+        waitForItems(addressSpace, budget, () -> kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listConfigMaps(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listServices(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listSecrets(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listDeployments(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listStatefulSets(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listServiceAccounts(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
+    }
+
+    private static void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<Integer> callable) throws Exception {
+        while (budget.timeLeft() >= 0 && callable.call() > 0) {
             Thread.sleep(1000);
         }
-        if (kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size() > 0) {
+        if (callable.call() > 0) {
             throw new TimeoutException("Timed out waiting for namespace " + addressSpace.getName() + " to disappear");
         }
     }
