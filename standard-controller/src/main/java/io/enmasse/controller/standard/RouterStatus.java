@@ -104,7 +104,6 @@ class RouterStatus {
     public static int checkActiveLinkRoute(Address address, List<RouterStatus> routerStatusList) {
         int ok = 0;
         Set<String> active = new HashSet<>();
-        String brokerId = address.getAnnotations().get(AnnotationKeys.BROKER_ID);
 
         for (RouterStatus routerStatus : routerStatusList) {
 
