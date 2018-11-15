@@ -15,5 +15,6 @@
      <module>shutdown-hook</module>
      <module>jmx_exporter</module>
      <module>tcnative</module>
+     <module>plugin</module>
   </modules>
 </project>

@@ -111,13 +111,13 @@ data:
                 preStop:
                   exec:
                     command:
-                    - /shutdown-hook/shutdown-hook.sh
+                    - /opt/shutdown-hook/bin/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:
                   - sh
                   - -c
-                  - $ARTEMIS_HOME/bin/probe.sh
+                  - /opt/broker-plugin/bin/probe.sh
                 initialDelaySeconds: 120
               name: broker
               ports:
@@ -132,7 +132,7 @@ data:
                   command:
                   - sh
                   - -c
-                  - $ARTEMIS_HOME/bin/probe.sh
+                  - /opt/broker-plugin/bin/probe.sh
                 initialDelaySeconds: 10
               resources:
                 limits:
@@ -330,13 +330,13 @@ data:
                 preStop:
                   exec:
                     command:
-                    - /shutdown-hook/shutdown-hook.sh
+                    - /opt/shutdown-hook/bin/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:
                   - sh
                   - -c
-                  - $ARTEMIS_HOME/bin/probe.sh
+                  - /opt/broker-plugin/bin/probe.sh
                 initialDelaySeconds: 120
               name: broker
               ports:
@@ -351,7 +351,7 @@ data:
                   command:
                   - sh
                   - -c
-                  - $ARTEMIS_HOME/bin/probe.sh
+                  - /opt/broker-plugin/bin/probe.sh
                 initialDelaySeconds: 10
               resources:
                 limits:
