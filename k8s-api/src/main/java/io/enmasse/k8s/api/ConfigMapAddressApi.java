@@ -132,11 +132,19 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
             return false;
         }
         ConfigMap newMap = create(address);
-        client.configMaps()
-                .inNamespace(namespace)
-                .withName(name)
-                .lockResourceVersion(address.getResourceVersion())
-                .replace(newMap);
+        if (address.getResourceVersion() != null) {
+            client.configMaps()
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .lockResourceVersion(address.getResourceVersion())
+                    .replace(newMap);
+
+        } else {
+            client.configMaps()
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .replace(newMap);
+        }
         return true;
     }
 
