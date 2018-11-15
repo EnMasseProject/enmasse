@@ -11,14 +11,16 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
@@ -52,51 +54,68 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        try {
-            create(client.configMaps().createNew(), addressSpace);
-        } catch (Exception e) {
-            log.error("Error creating {}", addressSpace.getName());
-            throw e;
-        }
+    public void createAddressSpace(AddressSpace addressSpace) {
+        String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+        ConfigMap map = create(addressSpace);
+        client.configMaps().withName(name).create(map);
     }
 
     @Override
-    public boolean replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        ConfigMap previous = client.configMaps().withName(getConfigMapName(addressSpace.getNamespace(), addressSpace.getName())).get();
+    public boolean replaceAddressSpace(AddressSpace addressSpace) {
+        String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+        ConfigMap previous = client.configMaps().withName(name).get();
         if (previous == null) {
             log.warn("Cannot replace addressSpace {}: No previous configMap found", addressSpace.getName());
             return false;
         }
-        try {
-            create(client.configMaps().createOrReplaceWithNew(), addressSpace);
-        } catch (Exception e) {
-            log.error("Error replacing {}", addressSpace.getName());
-            throw e;
+
+        ConfigMap newMap = create(addressSpace);
+        if (addressSpace.getResourceVersion() != null) {
+            client.configMaps()
+                    .withName(name)
+                    .lockResourceVersion(addressSpace.getResourceVersion())
+                    .replace(newMap);
+
+        } else {
+            client.configMaps()
+                    .withName(name)
+                    .replace(newMap);
         }
         return true;
     }
 
-    private void create(DoneableConfigMap config, AddressSpace addressSpace) throws Exception {
-        Map<String, String> labels = new HashMap<>(addressSpace.getLabels());
+    private ConfigMap create(AddressSpace addressSpace) {
+        Map<String, String> labels = addressSpace.getLabels();
         String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
         labels.put(LabelKeys.TYPE, "address-space");
         labels.put(LabelKeys.NAMESPACE, addressSpace.getNamespace());
-        config.withNewMetadata()
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .editOrNewMetadata()
                 .withName(name)
                 .addToLabels(labels)
-                .withResourceVersion(addressSpace.getResourceVersion())
                 .addToAnnotations(addressSpace.getAnnotations())
-                .endMetadata()
-                .addToData("config.json", mapper.writeValueAsString(addressSpace))
-                .done();
+                .endMetadata();
+
+        if (addressSpace.getResourceVersion() != null) {
+            builder.editOrNewMetadata()
+                    .withResourceVersion(addressSpace.getResourceVersion())
+                    .endMetadata();
+        }
+
+        try {
+            builder.addToData("config.json", mapper.writeValueAsString(addressSpace));
+            return builder.build();
+        } catch (IOException e) {
+            log.info("Error serializing addressspace for {}", addressSpace, e);
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override
     public boolean deleteAddressSpace(AddressSpace addressSpace) {
         String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
         Boolean deleted = client.configMaps().withName(name).delete();
-        return deleted != null && deleted.booleanValue();
+        return deleted != null && deleted;
     }
 
     @Override
@@ -137,9 +156,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
                 builder.setUid(map.getMetadata().getUid());
             }
 
-            if (addressSpace.getResourceVersion() == null) {
-                builder.setResourceVersion(map.getMetadata().getResourceVersion());
-            }
+            builder.setResourceVersion(map.getMetadata().getResourceVersion());
 
             if (addressSpace.getCreationTimestamp() == null) {
                 builder.setCreationTimestamp(map.getMetadata().getCreationTimestamp());
@@ -150,9 +167,9 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
             }
 
             return builder.build();
-        } catch (Exception e) {
-            log.error("Error decoding address space", e);
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            log.error("Error decoding address space from configmap : {}", map, e);
+            throw new UncheckedIOException(e);
         }
     }
 
