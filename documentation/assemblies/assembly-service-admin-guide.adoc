@@ -4,7 +4,7 @@
 // master-openshift.adoc
 
 [id='service-admin-guide-{context}]
-= Service Admin Guide
+= Service admin guide
 
 The service administrator guide provides resources on how to set up and manage {ProductName},
 infrastructure configuration and plans.

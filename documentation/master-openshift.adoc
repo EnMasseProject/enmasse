@@ -23,6 +23,6 @@ include::assemblies/assembly-tenant-guide.adoc[leveloffset=+1]
 
 [appendix]
 
-== REST API Reference
+== REST API reference
 
 include::common/restapi-reference.adoc[leveloffset=+2]

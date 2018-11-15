@@ -1,7 +1,7 @@
 :context: {context}-gs
 
 [id='quickstart-{context}']
-= Getting Started
+= Getting started
 
 This guide will walk through the process of setting up {ProductName} on
 {KubePlatform} with clients for sending and receiving messages.
