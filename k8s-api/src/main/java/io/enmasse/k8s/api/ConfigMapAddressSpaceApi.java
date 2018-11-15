@@ -6,6 +6,7 @@ package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.v1.CodecV1;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
@@ -103,7 +104,8 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         }
 
         try {
-            builder.addToData("config.json", mapper.writeValueAsString(addressSpace));
+            // Reset resource version to avoid unneeded extra writes
+            builder.addToData("config.json", mapper.writeValueAsString(new AddressSpace.Builder(addressSpace).setResourceVersion(null).build()));
             return builder.build();
         } catch (IOException e) {
             log.info("Error serializing addressspace for {}", addressSpace, e);
