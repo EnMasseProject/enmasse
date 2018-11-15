@@ -109,16 +109,16 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
         if (countByPhase.get(Configuring) < 5) {
-            log.debug("Addresses in configuring: {}", filterByPhases(addressSet, Arrays.asList(Configuring)));
+            log.debug("Addresses in configuring: {}", filterByPhases(addressSet, EnumSet.of(Configuring)));
         }
         if (countByPhase.get(Pending) < 5) {
-            log.debug("Addresses in pending : {}", filterByPhases(addressSet, Arrays.asList(Pending)));
+            log.debug("Addresses in pending : {}", filterByPhases(addressSet, EnumSet.of(Pending)));
         }
 
-        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, Arrays.asList(Pending)));
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, EnumSet.of(Pending)));
 
         long calculatedUsage = System.nanoTime();
-        Set<Address> pendingAddresses = filterByPhases(addressSet, Arrays.asList(Pending));
+        Set<Address> pendingAddresses = filterByPhases(addressSet, EnumSet.of(Pending));
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
         log.info("Usage: {}, Needed: {}", usageMap, neededMap);
@@ -133,19 +133,19 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         long provisionResources = System.nanoTime();
 
-        checkStatuses(filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active)), addressResolver);
+        checkStatuses(filterByPhases(addressSet, EnumSet.of(Configuring, Active)), addressResolver);
         long checkStatuses = System.nanoTime();
-        for (Address address : filterByPhases(addressSet, Arrays.asList(Status.Phase.Configuring, Status.Phase.Active))) {
+        for (Address address : filterByPhases(addressSet, EnumSet.of(Configuring, Active))) {
             if (address.getStatus().isReady()) {
                 address.getStatus().setPhase(Active);
             }
         }
 
-        deprovisionUnused(clusterList, filterByNotPhases(addressSet, Arrays.asList(Terminating)));
+        deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
         long deprovisionUnused = System.nanoTime();
 
         StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
-        upgradeClusters(desiredConfig, addressResolver, clusterList, filterByNotPhases(addressSet, Arrays.asList(Terminating)));
+        upgradeClusters(desiredConfig, addressResolver, clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
 
         long upgradeClusters = System.nanoTime();
 
@@ -176,7 +176,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
 
         long replaceAddresses = System.nanoTime();
-        garbageCollectTerminating(filterByPhases(addressSet, Arrays.asList(Status.Phase.Terminating)), addressResolver);
+        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver);
         long gcTerminating = System.nanoTime();
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
@@ -278,7 +278,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
     }
 
-    private Set<Address> filterByPhases(Set<Address> addressSet, List<Status.Phase> phases) {
+    private Set<Address> filterByPhases(Set<Address> addressSet, Set<Status.Phase> phases) {
         return addressSet.stream()
                 .filter(address -> phases.contains(address.getStatus().getPhase()))
                 .collect(Collectors.toSet());
@@ -295,7 +295,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         return countMap;
     }
 
-    private Set<Address> filterByNotPhases(Set<Address> addressSet, List<Status.Phase> phases) {
+    private Set<Address> filterByNotPhases(Set<Address> addressSet, Set<Status.Phase> phases) {
         return addressSet.stream()
                 .filter(address -> !phases.contains(address.getStatus().getPhase()))
                 .collect(Collectors.toSet());
