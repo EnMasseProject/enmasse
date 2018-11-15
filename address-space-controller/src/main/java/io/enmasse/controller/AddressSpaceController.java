@@ -30,7 +30,6 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Signal;
-import sun.misc.SignalHandler;
 
 public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
@@ -45,6 +44,9 @@ public class AddressSpaceController {
             throw new ExceptionInInitializerError(t);
         }
     }
+
+    private HTTPServer metricsServer;
+    private ControllerChain controllerChain;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
         this.controllerClient = new DefaultOpenShiftClient();
@@ -66,7 +68,7 @@ public class AddressSpaceController {
         }
     }
 
-    public void run() throws Exception {
+    public void start() throws Exception {
         boolean isOpenShift = isOpenShift(controllerClient);
         KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
 
@@ -95,15 +97,38 @@ public class AddressSpaceController {
         UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
 
         Metrics metrics = new Metrics();
-        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
+        controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new MigrationController(schemaProvider, options.getVersion()));
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
+        controllerChain.start();
 
-        HTTPServer httpServer = new HTTPServer(8080, metrics);
-        httpServer.start();
+        metricsServer = new HTTPServer(8080, metrics);
+        metricsServer.start();
+    }
+
+    private void stop() {
+        try {
+            log.info("AddressSpaceController stopping");
+
+            if (metricsServer != null) {
+                metricsServer.stop();
+            }
+        } finally {
+            try {
+                if (controllerChain != null) {
+                    try {
+                        controllerChain.stop();
+                    } catch (Exception ignore) {
+                    }
+                }
+            } finally {
+                controllerClient.close();
+                log.info("AddressSpaceController stopped");
+            }
+        }
     }
 
     private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
@@ -195,24 +220,20 @@ public class AddressSpaceController {
     }
 
     public static void main(String args[]) {
+        AddressSpaceController controller = null;
         try {
-            Signal.handle(new Signal("INT"), signal -> {
-                log.info("Received SIGINT, shutting down");
-                System.exit(0);
-            });
-            Signal.handle(new Signal("TERM"), signal -> {
-                log.info("Received SIGTERM, shutting down");
-                System.exit(0);
-            });
-
-            AddressSpaceController controller = new AddressSpaceController(AddressSpaceControllerOptions.fromEnv(System.getenv()));
-            controller.run();
+            controller = new AddressSpaceController(AddressSpaceControllerOptions.fromEnv(System.getenv()));
+            controller.start();
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
         } catch (Exception e) {
             System.out.println("Error starting address space controller: " + e.getMessage());
             System.exit(1);
+        } finally {
+            if (controller != null) {
+                Runtime.getRuntime().addShutdownHook(new Thread(controller::stop));
+            }
         }
     }
 }

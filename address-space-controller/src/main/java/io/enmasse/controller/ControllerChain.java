@@ -40,6 +40,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
     private final String version;
     private final Duration recheckInterval;
     private final Duration resyncInterval;
+    private ResourceChecker<AddressSpace> checker;
 
     public ControllerChain(Kubernetes kubernetes,
                            AddressSpaceApi addressSpaceApi,
@@ -63,7 +64,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
     }
 
     public void start() throws Exception {
-        ResourceChecker<AddressSpace> checker = new ResourceChecker<>(this, recheckInterval);
+        checker = new ResourceChecker<>(this, recheckInterval);
         checker.start();
         this.watch = addressSpaceApi.watchAddressSpaces(checker, resyncInterval);
     }
@@ -72,6 +73,10 @@ public class ControllerChain implements Watcher<AddressSpace> {
         if (watch != null) {
             watch.close();
             watch = null;
+        }
+        if (checker != null) {
+            checker.stop();
+            checker = null;
         }
     }
 

@@ -32,6 +32,10 @@ public class HTTPServer {
         server.start();
     }
 
+    public void stop() {
+        server.stop(0);
+    }
+
     private static class HealthHandler implements HttpHandler {
 
         @Override
