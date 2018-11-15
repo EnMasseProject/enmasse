@@ -10,7 +10,7 @@ You can edit the permissions for an existing user using the command line.
 
 .Prerequisites
 
-* You must have already created a user. For more information see xref:proc-creating-users-cli-managing-users-oc[].
+* You must have already created a user. For more information see xref:proc-creating-users-cli-{context}[].
 
 .Procedure
 

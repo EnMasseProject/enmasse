@@ -3,7 +3,7 @@
 // assembly-upgrading-enmasse.adoc
 
 [id='upgrading-enmasse-using-bundle-{context}']
-= Upgrading {ProductName} on {PlatformName} using a YAML bundle
+= Upgrading {ProductName} using a YAML bundle
 
 .Prerequisites
 

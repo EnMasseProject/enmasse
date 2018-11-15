@@ -1,15 +1,18 @@
-:cmdcli: oc
-:parent-context: {context}
-:context: {context}-gs-okd
-:KubePlatform: OpenShift
+:context: {context}-gs
 
-[id='quickstart-on-openshift-{context}']
-= {ProductName} on OpenShift
+[id='quickstart-{context}']
+= Getting Started
 
 This guide will walk through the process of setting up {ProductName} on
-OpenShift with clients for sending and receiving messages.
+{KubePlatform} with clients for sending and receiving messages.
 
+ifeval::["{cmdcli}" == "kubectl"]
+include::../common/snip-prerequisites-kubernetes.adoc[leveloffset=+1]
+endif::[]
+
+ifeval::["{cmdcli}" == "oc"]
 include::../common/snip-prerequisites-openshift.adoc[leveloffset=+1]
+endif::[]
 
 include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
@@ -23,6 +26,6 @@ include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]
 
 include::../modules/proc-send-receive.adoc[leveloffset=+1]
 
-We have seen how to set up {ProductName} on OpenShift, and how to communicate with it using an AMQP client.
+We have seen how to set up {ProductName} on {KubePlatform}, and how to communicate with it using an AMQP client.
 
 :context: {parent-context}

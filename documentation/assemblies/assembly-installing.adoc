@@ -1,14 +1,21 @@
 // This assembly is included in the following assemblies:
 //
-// <List assemblies here, each on a new line>
-:parent-context: {context}
-:cmdcli: oc
-:PlatformName: OpenShift
-:context: okd
+// assembly-service-admin-guide.adoc
+[id='installing-{context}']
+= Installing {ProductName}
 
-[id='installing-on-openshift-{context}']
-= Installing {ProductName} on OpenShift
+ifeval::["{cmdcli}" == "kubectl"]
+These steps follow the manual deployment procedure and work on any platform supporting the `kubectl` command-line client.
 
+include::../common/snip-prerequisites-kubernetes.adoc[]
+
+include::../common/proc-download-procedure.adoc[leveloffset=+1]
+
+include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
+
+include::assembly-installing-manual-steps.adoc[leveloffset=+1]
+endif::[]
+ifeval::["{cmdcli}" == "oc"]
 {ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the OpenShift template, or the manual steps.
 
 include::../common/snip-prerequisites-openshift.adoc[]
@@ -22,5 +29,4 @@ include::../modules/proc-installing-using-template.adoc[leveloffset=+1]
 include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
 
 include::assembly-installing-manual-steps.adoc[leveloffset=+1]
-
-:context: {parent-context}
+endif::[]

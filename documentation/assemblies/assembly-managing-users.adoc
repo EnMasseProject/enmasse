@@ -1,15 +1,14 @@
 // Module included in the following assemblies:
 //
-//master.adoc
+// assembly-tenant-guide.adoc
+
 :parent-context: {context}
-:context: managing-users-kube
-:cmdcli: kubectl
 
-[id='managing-users-kube-{context}']
-= Managing users on Kubernetes
+[id='managing-users-{context}']
+= Managing users
 
-{ProductName} user management is only supported when using the `standard` authentication service. On Kubernetes, users can
-be managed using a Kubernetes native REST API and custom resources using the command-line tools.
+{ProductName} user management is only supported when using the `standard` authentication service. On {KubePlatform}, users can
+be managed using the {KubePlatform} command-line tools.
 
 .Prerequisites
 

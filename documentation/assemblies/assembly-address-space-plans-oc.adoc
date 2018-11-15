@@ -1,9 +1,0 @@
-:parent-context: {context}
-:context: okd
-:cmdcli: oc
-:KubePlatform: OpenShift
-
-include::../modules/proc-create-address-space-plans-cli.adoc[leveloffset=+1]
-
-:context: {parent-context}
-

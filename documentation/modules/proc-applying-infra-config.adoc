@@ -3,7 +3,7 @@
 // assembly-configure-infrastructure-configuration.adoc
 
 [id='applying-infra-config-changes-{context}']
-= Applying infrastructure configuration on {KubePlatform}
+= Applying infrastructure configuration
 
 You can edit existing configurations or create new ones.
 
