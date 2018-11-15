@@ -256,7 +256,7 @@ function replace_docker_log_driver() {
     sudo systemctl stop "${docker}"
     info "create or replace log-driver=json-file in ${docker_config_path}"
     jq '."log-driver"="json-file"' "${docker_config_path}" >"${tmpf}"
-    cat "${tmpf}" >"${docker_config_path}"
+    sudo cat "${tmpf}" | sudo tee "${docker_config_path}"
     rm -f "${tmpf}"
 }
 
