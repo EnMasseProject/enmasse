@@ -1,13 +1,10 @@
 // This assembly is included in the following assemblies:
 //
-// master.adoc
+// assembly-service-admin-guide.adoc
 
 :parent-context: {context}
-:context: kube
-:cmdcli: kubectl
-
-[id='monitoring-kube-{context}']
-= Monitoring {ProductName} on Kubernetes
+[id='monitoring-{context}']
+= Monitoring {ProductName}
 
 Monitoring services run frequent health checks  on {ProductName} and send alerts when health checks
 fail. Health is assessed using Prometheus and `kube-state-metrics`. Alerting is implemented with
@@ -27,6 +24,8 @@ include::../modules/proc-restart-component.adoc[leveloffset=+1]
 include::../modules/proc-get-logs-router.adoc[leveloffset=+1]
 
 include::../modules/proc-get-logs-broker.adoc[leveloffset=+1]
+
+include::../modules/ref-view-message-conn-stats-table.adoc[leveloffset=+1]
 
 :context: {parent-context}
 

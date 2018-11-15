@@ -1,15 +1,13 @@
 // This assembly is included in the following assemblies:
 //
-// assembly-installing-openshift.adoc
-// assembly-installing-kubernetes.adoc
+// assembly-installing.adoc
 // Commented out because this file is an assembly within an assembly:
-//:parent-context: {context}
 
 [id='installing-using-manual-steps-{context}']
 = Installing {ProductName} manually
 
 The manual deployment procedure can be performed on any platform
-supporting the {PlatformName} client.
+supporting the {KubePlatform} client.
 
 include::../modules/proc-creating-project.adoc[leveloffset=+1]
 

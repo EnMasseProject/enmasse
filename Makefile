@@ -77,11 +77,12 @@ docu_swagger: scripts/swagger2markup.jar
 
 docu_html: docu_htmlclean docu_swagger docu_check
 	mkdir -p documentation/html
-	cp -vRL documentation/_images documentation/html/images
-	mkdir -p documentation/html/resources
-	cp -vRL documentation/common/*.yaml documentation/html/resources
-	cp -vRL documentation/common/*.py documentation/html/resources
-	asciidoctor -v --failure-level WARN -t -dbook documentation/master.adoc -o documentation/html/index.html
+	mkdir -p documentation/html/kubernetes
+	mkdir -p documentation/html/openshift
+	cp -vRL documentation/_images documentation/html/kubernetes/images
+	cp -vRL documentation/_images documentation/html/openshift/images
+	asciidoctor -v --failure-level WARN -t -dbook documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
+	asciidoctor -v --failure-level WARN -t -dbook documentation/master-openshift.adoc -o documentation/html/openshift/index.html
 	asciidoctor -v --failure-level WARN -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
 
 docu_htmlclean:

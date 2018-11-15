@@ -1,6 +1,6 @@
 // This assembly is included in the following assemblies:
 //
-// <List assemblies here, each on a new line>
+// assembly-service-admin-guide.adoc
 :parent-context: {context}
 
 [id='infrastructure-configuration-{context}']

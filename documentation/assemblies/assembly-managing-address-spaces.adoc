@@ -1,9 +1,9 @@
 // Module included in the following assemblies:
 //
-// master.adoc
+// assembly-tenant-guide.adoc
 
 [id='managing-address-spaces-{context}']
-= Managing address spaces on {KubePlatform}
+= Managing address spaces
 
 {ProductName} is configured to support managing address spaces using the
 ifdef::Kubernetes[Kubernetes and]
@@ -39,7 +39,12 @@ include::../common/address-space-example2.yaml[]
 
 The `AddressSpace` resource contains a `status` field that can be used to retrieve information about
 its state and endpoints. The following output is an example of the output you can get from running
+ifeval::["{cmdcli}" == "kubectl"]
+`kubectl get addressspace myspace -o yaml`:
+endif::[]
+ifeval::["{cmdcli}" == "oc"]
 `oc get addressspace myspace -o yaml`:
+endif::[]
 
 [source,yaml,options="nowrap"]
 ----

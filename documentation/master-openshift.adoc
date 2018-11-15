@@ -1,0 +1,28 @@
+:parent-context: messaging
+:context: messaging
+:cmdcli: oc
+:KubePlatform: OpenShift
+
+include::common/attributes.adoc[]
+
+= Documentation for {ProductName} on OpenShift
+
+Welcome to the {ProductName} documentation, where you can find information to help you learn about
+{ProductName} and start exploring its features.
+
+From getting started to trying out more advanced installation and configuration, these resources provide
+what you need to set up and manage {ProductName} as a service administrator or a messaging tenant.
+
+include::common/overview.adoc[leveloffset=+1]
+
+include::assemblies/assembly-getting-started.adoc[leveloffset=+1]
+
+include::assemblies/assembly-service-admin-guide.adoc[leveloffset=+1]
+
+include::assemblies/assembly-tenant-guide.adoc[leveloffset=+1]
+
+[appendix]
+
+== REST API reference
+
+include::common/restapi-reference.adoc[leveloffset=+2]

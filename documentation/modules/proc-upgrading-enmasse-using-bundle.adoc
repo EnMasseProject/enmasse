@@ -3,11 +3,11 @@
 // assembly-upgrading-enmasse.adoc
 
 [id='upgrading-enmasse-using-bundle-{context}']
-= Upgrading {ProductName} on {PlatformName} using a YAML bundle
+= Upgrading {ProductName} using a YAML bundle
 
 .Prerequisites
 
-* A new release of {ProductName}. For more information, see xref:downloading-{context}[].
+* A new release of {ProductName}. For more information, see xref:downloading-messaging[].
 
 .Procedure
 

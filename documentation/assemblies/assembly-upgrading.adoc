@@ -1,8 +1,8 @@
 // This assembly is included in the following assemblies:
 //
-// <List assemblies here, each on a new line>
-[id='upgrading-enmasse-{context}']
-= Upgrading {ProductName} on {KubePlatform}
+// assembly-service-admin-guide.adoc
+[id='upgrading-{context}']
+= Upgrading {ProductName}
 
 {ProductName} supports upgrades between minor versions using cloud native tools and the same
 mechanism used to apply configuration changes.  When upgrading, the updated infrastructure

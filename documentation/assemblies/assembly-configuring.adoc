@@ -1,0 +1,17 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-service-admin-guide.adoc
+[id='configuring-{context}']
+= Configuring {ProductName}
+
+include::../modules/con-address-space-plans.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-space-plans-cli.adoc[leveloffset=+1]
+
+include::../modules/con-address-plans.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-plans-cli.adoc[leveloffset=+1]
+
+include::../modules/con-infrastructure-configuration.adoc[leveloffset=+1]
+
+include::../modules/proc-applying-infra-config.adoc[leveloffset=+1]

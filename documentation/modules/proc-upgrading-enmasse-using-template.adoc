@@ -3,11 +3,11 @@
 // assembly-upgrading-enmasse.adoc
 
 [id='upgrading-enmasse-using-template-{context}']
-= Upgrading {ProductName} on {PlatformName} using Template
+= Upgrading {ProductName} using Template
 
 .Prerequisites
 
-* A new release of {ProductName}. For more information, see xref:downloading-okd[].
+* A new release of {ProductName}. For more information, see xref:downloading-messaging[].
 
 .Procedure
 

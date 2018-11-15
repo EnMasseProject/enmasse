@@ -1,0 +1,37 @@
+// This assembly is included in the following assemblies:
+//
+// master-kubernetes.adoc
+// master-openshift.adoc
+
+[id='tenant-guide-{context}']
+= Tenant guide
+The tenant guide provides resources on how to manage address spaces, addresses, and users as a
+messaging tenant.
+
+
+include::../modules/con-address-space.adoc[leveloffset=+1]
+
+include::../modules/con-address.adoc[leveloffset=+1]
+
+include::../modules/con-standard-address-space.adoc[leveloffset=+1]
+
+include::assembly-standard-address-types.adoc[leveloffset=+2]
+
+include::../modules/con-brokered-address-space.adoc[leveloffset=+1]
+
+include::assembly-brokered-address-types.adoc[leveloffset=+2]
+
+include::assembly-managing-address-spaces.adoc[leveloffset=+1]
+
+include::assembly-managing-addresses.adoc[leveloffset=+1]
+
+//Accessing the Console
+include::../modules/proc-logging-in-console.adoc[leveloffset=+1]
+include::../modules/ref-console-address-filtering.adoc[leveloffset=+1]
+
+//Managing users
+include::../modules/con-user-model.adoc[leveloffset=+1]
+include::assembly-managing-users.adoc[leveloffset=+1]
+
+//Connecting applications
+include::assembly-connecting-applications.adoc[leveloffset=+1]

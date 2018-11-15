@@ -1,0 +1,20 @@
+// This assembly is included in the following assemblies:
+//
+// master-kubernetes.adoc
+// master-openshift.adoc
+
+[id='service-admin-guide-{context}]
+= Service admin guide
+
+The service administrator guide provides resources on how to set up and manage {ProductName},
+infrastructure configuration, and plans.
+
+include::assembly-installing.adoc[leveloffset=+1]
+
+include::assembly-configuring.adoc[leveloffset=+1]
+
+include::assembly-upgrading.adoc[leveloffset=+1]
+
+include::assembly-monitoring.adoc[leveloffset=+1]
+
+include::../modules/proc-uninstalling.adoc[leveloffset=+1]

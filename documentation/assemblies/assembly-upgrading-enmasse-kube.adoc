@@ -1,8 +1,0 @@
-// This assembly is included in the following assemblies:
-//
-// <List assemblies here, each on a new line>
-:cmdcli: kubectl
-:context: kube
-:PlatformName: Kubernetes
-include::assembly-upgrading-enmasse.adoc[]
-:context: {parent-context}

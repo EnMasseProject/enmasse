@@ -4,7 +4,7 @@
 // assembly-configure-address-spaces-addresses-cli-oc.adoc
 
 [id='create-address-space-plans-cli-{context}']
-= Creating address space plans on {KubePlatform}
+= Creating address space plans
 
 .Procedure
 

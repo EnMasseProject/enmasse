@@ -1,9 +1,9 @@
 // Module included in the following assemblies:
 //
-// master.adoc
+// assembly-tenant-guide.adoc
 
 [id='managing-addresses-{context}']
-= Managing addresses on {KubePlatform}
+= Managing addresses
 
 {ProductName} is configured to support managing address using the {KubePlatform} command-line tools and the {ProductName} Console.
 
