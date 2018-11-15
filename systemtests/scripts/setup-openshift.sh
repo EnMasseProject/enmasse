@@ -26,6 +26,7 @@ if [[ "${DOCKER_STATUS}" != "active" ]]; then
     info "Docker service is not running"
     info "Starting docker service"
     sudo systemctl restart ${DOCKER}
+    sudo chmod 777 /var/run/${DOCKER}.sock
 fi
 
 OC_CLUSTER_ARGS=$(get_oc_args)
