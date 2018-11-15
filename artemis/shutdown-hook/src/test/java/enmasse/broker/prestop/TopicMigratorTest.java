@@ -8,7 +8,7 @@ package enmasse.broker.prestop;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
-import io.enmasse.amqp.PubSubBroker;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -88,7 +88,7 @@ public class TopicMigratorTest {
         publisher.publish(from.amqpEndpoint(), "mytopic", "hello, world");
 
         System.out.println("Done publishing");
-        TopicMigrator migrator = new TopicMigrator(Vertx.vertx(), from, new Endpoint("messaging.example.com", 5672), (vertx, clientOptions, endpoint) -> new Artemis(localBroker), new ProtonClientOptions());
+        TopicMigrator migrator = new TopicMigrator(Vertx.vertx(), from, new Endpoint("messaging.example.com", 5672), (clientOptions, endpoint) -> new Artemis(localBroker), new ProtonRequestClientOptions(), new ProtonClientOptions());
 
         localBroker.setHandler(message -> {
             Map<String, Object> props = message.getApplicationProperties().getValue();

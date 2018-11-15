@@ -4,7 +4,7 @@
  */
 
 
-package io.enmasse.amqp;
+package enmasse.broker.prestop;
 
 import java.util.*;
 

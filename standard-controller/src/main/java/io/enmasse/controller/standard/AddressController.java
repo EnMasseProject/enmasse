@@ -11,8 +11,6 @@ import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +28,7 @@ import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 /**
  * Controller for a single standard address space
  */
-public class AddressController extends AbstractVerticle implements Watcher<Address> {
+public class AddressController implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
     private final StandardControllerOptions options;
     private final AddressApi addressApi;
@@ -49,28 +47,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         this.schemaProvider = schemaProvider;
     }
 
-    @Override
-    public void start(Future<Void> startPromise) {
-        vertx.executeBlocking((Future<Watch> promise) -> {
-            try {
-                ResourceChecker<Address> checker = new ResourceChecker<Address>(this, options.getRecheckInterval());
-                checker.start();
-                promise.complete(addressApi.watchAddresses(checker, options.getResyncInterval()));
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, result -> {
-            if (result.succeeded()) {
-                watch = result.result();
-                startPromise.complete();
-            } else {
-                startPromise.fail(result.cause());
-            }
-        });
+    public void start() throws Exception {
+        ResourceChecker<Address> checker = new ResourceChecker<Address>(this, options.getRecheckInterval());
+        checker.start();
+        watch = addressApi.watchAddresses(checker, options.getResyncInterval());
     }
 
-    @Override
-    public void stop(Future<Void> stopPromise) throws Exception {
+    public void stop() throws Exception {
         if (watch != null) {
             watch.close();
         }
@@ -321,7 +304,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         }
         // TODO: Instead of going to the routers directly, list routers, and perform a request against the
         // router agent to do the check
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(options.getCertDir());
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (Readiness.isPodReady(router)) {

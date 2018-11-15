@@ -1,0 +1,44 @@
+/*
+ * Copyright 2016-2018, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+package io.enmasse.controller.standard;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+
+public class HTTPServer {
+    private final HttpServer server;
+
+    public HTTPServer(int port) throws IOException {
+        this.server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/healthz", new HealthHandler());
+        server.setExecutor(null); // creates a default executor
+    }
+
+    public void start() {
+        server.start();
+    }
+
+    public void stop() {
+        server.stop(0);
+    }
+
+    private static class HealthHandler implements HttpHandler {
+
+        @Override
+        public void handle(HttpExchange t) throws IOException {
+            byte [] response = "OK".getBytes(StandardCharsets.UTF_8);
+            t.sendResponseHeaders(200, response.length);
+            OutputStream os = t.getResponseBody();
+            os.write(response);
+            os.close();
+        }
+    }
+}

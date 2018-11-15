@@ -8,6 +8,7 @@ package enmasse.broker.prestop;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -15,10 +16,6 @@ import io.vertx.proton.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,12 +28,14 @@ public class QueueDrainer {
     private final Host fromHost;
     private final BrokerFactory brokerFactory;
     private final Optional<Runnable> debugFn;
+    private final ProtonRequestClientOptions requestClientOptions;
     private final ProtonClientOptions protonClientOptions;
 
-    public QueueDrainer(Vertx vertx, Host from, BrokerFactory brokerFactory, ProtonClientOptions clientOptions, Optional<Runnable> debugFn) throws Exception {
+    public QueueDrainer(Vertx vertx, Host from, BrokerFactory brokerFactory, ProtonRequestClientOptions requestClientOptions, ProtonClientOptions clientOptions, Optional<Runnable> debugFn) throws Exception {
         this.vertx = vertx;
         this.fromHost = from;
         this.brokerFactory = brokerFactory;
+        this.requestClientOptions = requestClientOptions;
         this.protonClientOptions = clientOptions;
         this.debugFn = debugFn;
     }
@@ -48,7 +47,7 @@ public class QueueDrainer {
     }
 
     public void drainMessages(Endpoint to, String queueName) throws Exception {
-        Artemis broker = brokerFactory.createClient(vertx, protonClientOptions, fromHost.amqpEndpoint());
+        Artemis broker = brokerFactory.createClient(requestClientOptions, fromHost.amqpEndpoint());
 
         if (queueName != null && !queueName.isEmpty()) {
             broker.destroyConnectorService("amqp-connector");

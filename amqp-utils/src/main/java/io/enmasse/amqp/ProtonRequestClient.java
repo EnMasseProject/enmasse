@@ -5,15 +5,18 @@
 
 package io.enmasse.amqp;
 
-import io.vertx.core.Context;
-import io.vertx.core.Vertx;
-import io.vertx.proton.*;
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.reactor.Reactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -21,28 +24,19 @@ import java.util.concurrent.*;
 /**
  * A simple client for doing request-response over AMQP.
  */
-public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
+public class ProtonRequestClient implements SyncRequestClient, AutoCloseable, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ProtonRequestClient.class);
-    private final Vertx vertx;
-    private final int maxRetries;
-    private final BlockingQueue<Message> replies = new LinkedBlockingQueue<>();
-    private Context context;
-    private ProtonConnection connection;
-    private ProtonSender sender;
-    private ProtonReceiver receiver;
     private String replyTo;
-
-    public ProtonRequestClient(Vertx vertx) {
-        this(vertx, 0);
-    }
-
-    public ProtonRequestClient(Vertx vertx, int maxRetries) {
-        this.vertx = vertx;
-        this.maxRetries = maxRetries;
-    }
+    private String remoteContainer;
+    private ReactorClient client;
+    private Reactor reactor;
+    private final Thread thread = new Thread(this);
+    private final BlockingQueue<Message> toSend = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Message> replies = new LinkedBlockingQueue<>();
+    private volatile boolean running = false;
 
     public String getRemoteContainer() {
-        return connection.getRemoteContainer();
+        return remoteContainer;
     }
 
     public String getReplyTo() {
@@ -50,76 +44,54 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
     }
 
     public void connect(String host, int port, CompletableFuture<Void> promise) {
-        connect(host, port, new ProtonClientOptions(), null, promise);
+        connect(host, port, new ProtonRequestClientOptions(), null, promise);
     }
 
-    public void connect(String host, int port, ProtonClientOptions clientOptions, String address, CompletableFuture<Void> promise) {
-        if (connection != null) {
+    public void connect(String host, int port, ProtonRequestClientOptions clientOptions, String address, CompletableFuture<Void> promise) {
+        if (client != null) {
             log.info("Already connected");
             promise.complete(null);
             return;
         }
-        ProtonClient client = ProtonClient.create(vertx);
-        log.info("Connecting to {}:{}", host, port);
-        client.connect(clientOptions, host, port, result -> {
-            if (result.succeeded()) {
-                log.info("Connected to {}:{}", host, port);
-                connection = result.result();
-                createSender(vertx, address, promise, 0);
-                connection.open();
-            } else {
-                log.info("Connection to {}:{} failed", host, port);
-                promise.completeExceptionally(result.cause());
-            }
-        });
-    }
 
-    private void createSender(Vertx vertx, String address, CompletableFuture<Void> promise, int retries) {
-
-        sender = connection.createSender(address);
-        sender.openHandler(result -> {
-            if (result.succeeded()) {
-                createReceiver(vertx, address, promise, 0);
-            } else {
-                if (retries > maxRetries) {
-                    promise.completeExceptionally(result.cause());
-                } else {
-                    log.info("Error creating sender, retries = {}", retries);
-                    vertx.setTimer(1000, id -> createSender(vertx, address, promise, retries + 1));
-                }
-            }
-        });
-        sender.open();
-    }
-
-    private void createReceiver(Vertx vertx, String address, CompletableFuture<Void> promise, int retries) {
-        receiver = connection.createReceiver(address);
-        Source source = new Source();
-        source.setDynamic(true);
-        receiver.setSource(source);
-        receiver.openHandler(h -> {
-            if (h.succeeded()) {
-                context = vertx.getOrCreateContext();
-                replyTo = receiver.getRemoteSource().getAddress();
+        client = new ReactorClient(host, port, clientOptions, address, new ClientHandler() {
+            @Override
+            public void onReceiverAttached(String remoteContainer, String replyTo) {
+                ProtonRequestClient.this.remoteContainer = remoteContainer;
+                ProtonRequestClient.this.replyTo = replyTo;
                 promise.complete(null);
-            } else {
-                if (retries > maxRetries) {
-                    promise.completeExceptionally(h.cause());
-                } else {
-                    log.info("Error creating receiver, retries = {}", retries);
-                    vertx.setTimer(1000, id -> createReceiver(vertx, address, promise, retries + 1));
+            }
+
+
+            @Override
+            public void onMessage(Message message, Delivery delivery) {
+                try {
+                    replies.put(message);
+                    delivery.disposition(new Accepted());
+                } catch (Exception e) {
+                    log.error("Error handling client reply", e);
+                    delivery.disposition(new Rejected());
+                }
+                delivery.settle();
+            }
+
+            @Override
+            public void onTransportError(ErrorCondition condition) {
+                if (!promise.isDone()) {
+                    log.error("Transport error: {}", condition);
+                    promise.completeExceptionally(new RuntimeException(condition.getDescription()));
                 }
             }
         });
-        receiver.handler(((protonDelivery, message) -> {
-            try {
-                replies.put(message);
-                ProtonHelper.accepted(protonDelivery, true);
-            } catch (Exception e) {
-                ProtonHelper.rejected(protonDelivery, true);
-            }
-        }));
-        receiver.open();
+
+        try {
+            reactor = Proton.reactor(client);
+            running = true;
+            thread.start();
+        } catch (IOException e) {
+            log.error("Error connecting client", e);
+        }
+
     }
 
     public Message request(Message message, long timeout, TimeUnit timeUnit) {
@@ -132,8 +104,8 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
         if (message.getReplyTo() == null) {
             message.setReplyTo(replyTo);
         }
-        context.runOnContext(h -> sender.send(message));
         try {
+            toSend.put(message);
             return replies.poll(timeout, timeUnit);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -142,6 +114,25 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
 
     @Override
     public void close() {
-        context.runOnContext(v -> connection.close());
+        running = false;
+    }
+
+    @Override
+    public void run() {
+        reactor.setTimeout(3141);
+        reactor.start();
+        while (reactor.process()) {
+            if (!toSend.isEmpty()) {
+                Message message = toSend.remove();
+                if (message != null) {
+                    client.sendMessage(message);
+                }
+            }
+            if (!running) {
+                client.close();
+            }
+        }
+        reactor.stop();
+        reactor.free();
     }
 }

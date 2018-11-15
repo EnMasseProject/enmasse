@@ -5,17 +5,15 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.amqp.ProtonRequestClient;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.vertx.core.Vertx;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.engine.SslDomain;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 class RouterStatusCollector {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusCollector.class);
-    private final Vertx vertx;
     private final String certDir;
 
-    public RouterStatusCollector(Vertx vertx, String certDir) {
-        this.vertx = vertx;
+    public RouterStatusCollector(String certDir) {
         this.certDir = certDir;
     }
 
@@ -49,16 +45,18 @@ class RouterStatusCollector {
 
         if (port != 0) {
             log.debug("Checking router status of router " + router.getStatus().getPodIP());
-            ProtonClientOptions clientOptions = new ProtonClientOptions()
-                    .setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
-                    .setHostnameVerificationAlgorithm("")
-                    .setPemTrustOptions(new PemTrustOptions()
-                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
-                    .setPemKeyCertOptions(new PemKeyCertOptions()
-                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-            try (ProtonRequestClient client = new ProtonRequestClient(vertx)) {
+            SslDomain sslDomain = SslDomain.Factory.create();
+            sslDomain.init(SslDomain.Mode.CLIENT);
+            sslDomain.setTrustedCaDb(new File(certDir, "ca.crt").getAbsolutePath());
+            sslDomain.setPeerAuthentication(SslDomain.VerifyMode.VERIFY_PEER);
+            sslDomain.setCredentials(new File(certDir, "tls.crt").getAbsolutePath(), new File(certDir, "tls.key").getAbsolutePath(), null);
+            ProtonRequestClientOptions clientOptions = new ProtonRequestClientOptions()
+                    .setSaslEnabled(true)
+                    .setSaslMechanisms(new String[]{"EXTERNAL"})
+                    .setContainerId("router-status-checker")
+                    .setSslEnabled(true)
+                    .setSslDomain(sslDomain);
+            try (ProtonRequestClient client = new ProtonRequestClient()) {
                 CompletableFuture<Void> promise = new CompletableFuture<>();
                 client.connect(router.getStatus().getPodIP(), port, clientOptions, "$management", promise);
 

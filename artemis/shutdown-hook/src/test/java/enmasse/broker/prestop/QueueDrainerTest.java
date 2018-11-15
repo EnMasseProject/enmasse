@@ -7,7 +7,7 @@ package enmasse.broker.prestop;
 
 import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
-import io.enmasse.amqp.PubSubBroker;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -67,7 +67,7 @@ public class QueueDrainerTest {
         to = TestUtil.createHost("127.0.0.1", toServer.port());
         localBroker = new TestManagementServer();
 
-        client = new QueueDrainer(Vertx.vertx(), from, (vertx, clientOptions, endpoint) -> new Artemis(localBroker), new ProtonClientOptions(), Optional.empty());
+        client = new QueueDrainer(Vertx.vertx(), from, (clientOptions, endpoint) -> new Artemis(localBroker), new ProtonRequestClientOptions(), new ProtonClientOptions(), Optional.empty());
     }
 
     @Test

@@ -8,10 +8,13 @@ package enmasse.broker.prestop;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import io.enmasse.amqp.ProtonRequestClient;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
+import org.apache.qpid.proton.engine.SslDomain;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +39,7 @@ public class BrokerShutdownHook {
 
         String certDir = System.getenv("CERT_DIR");
         ProtonClientOptions clientOptions = createClientOptions(certDir);
+        ProtonRequestClientOptions requestClientOptions = createRequestClientOptions(certDir);
 
         if (System.getenv("TOPIC_NAME") != null) {
             String clusterId = System.getenv("CLUSTER_ID");
@@ -50,12 +54,12 @@ public class BrokerShutdownHook {
             CompletableFuture<Set<Host>> peers = new CompletableFuture<>();
             discoveryClient.addListener(peers::complete);
 
-            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory, clientOptions);
+            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory, requestClientOptions, clientOptions);
             migrator.migrate(peers.get(60, TimeUnit.SECONDS));
         } else {
             Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_NORMAL")));
             String queueName = System.getenv("QUEUE_NAME");
-            QueueDrainer client = new QueueDrainer(vertx, localHost, brokerFactory, clientOptions, debugFn);
+            QueueDrainer client = new QueueDrainer(vertx, localHost, brokerFactory, requestClientOptions, clientOptions, debugFn);
 
             client.drainMessages(messagingEndpoint, queueName);
         }
@@ -86,6 +90,23 @@ public class BrokerShutdownHook {
                     .setPemKeyCertOptions(new PemKeyCertOptions()
                             .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
                             .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        }
+        return options;
+    }
+
+    private static ProtonRequestClientOptions createRequestClientOptions(String certDir)
+    {
+        ProtonRequestClientOptions options = new ProtonRequestClientOptions();
+
+        if (certDir != null) {
+            SslDomain sslDomain = SslDomain.Factory.create();
+            sslDomain.init(SslDomain.Mode.CLIENT);
+            sslDomain.setTrustedCaDb(new File(certDir, "ca.crt").getAbsolutePath());
+            sslDomain.setPeerAuthentication(SslDomain.VerifyMode.VERIFY_PEER);
+            sslDomain.setCredentials(new File(certDir, "tls.crt").getAbsolutePath(), new File(certDir, "tls.key").getAbsolutePath(), null);
+            options.setContainerId("shutdown-hook")
+                   .setSslEnabled(true)
+                   .setSslDomain(sslDomain);
         }
         return options;
     }

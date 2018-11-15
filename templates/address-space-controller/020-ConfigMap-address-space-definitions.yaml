@@ -400,7 +400,7 @@ data:
               image: ${STANDARD_CONTROLLER_IMAGE}
               livenessProbe:
                 httpGet:
-                  path: /health
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 initialDelaySeconds: 30
@@ -410,7 +410,7 @@ data:
                 name: http
               readinessProbe:
                 httpGet:
-                  path: /health
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 initialDelaySeconds: 30

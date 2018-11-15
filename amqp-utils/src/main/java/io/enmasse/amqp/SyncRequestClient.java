@@ -4,14 +4,13 @@
  */
 package io.enmasse.amqp;
 
-import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public interface SyncRequestClient {
-    void connect(String host, int port, ProtonClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise);
+    void connect(String host, int port, ProtonRequestClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise);
     String getRemoteContainer();
     String getReplyTo();
     void close();

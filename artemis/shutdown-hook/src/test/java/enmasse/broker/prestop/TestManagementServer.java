@@ -4,6 +4,7 @@
  */
 package enmasse.broker.prestop;
 
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.enmasse.amqp.SyncRequestClient;
 import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.message.Message;
@@ -19,7 +20,7 @@ class TestManagementServer implements SyncRequestClient {
     private Handler handler;
 
     @Override
-    public void connect(String host, int port, ProtonClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise) {
+    public void connect(String host, int port, ProtonRequestClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise) {
 
     }
 

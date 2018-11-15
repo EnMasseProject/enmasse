@@ -79,7 +79,7 @@ public class ProtonRequestClientTest {
 
     @Test
     public void testRequest() throws Exception {
-        try (ProtonRequestClient client = new ProtonRequestClient(Vertx.vertx())) {
+        try (ProtonRequestClient client = new ProtonRequestClient()) {
             CompletableFuture<Void> future = new CompletableFuture<>();
             client.connect("127.0.0.1", 12347, future);
             future.get(10, TimeUnit.SECONDS);

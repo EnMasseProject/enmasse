@@ -5,9 +5,11 @@
 
 package enmasse.broker.prestop;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClientOptions;
 import org.slf4j.Logger;
@@ -28,13 +30,15 @@ public class TopicMigrator {
     private final Endpoint messagingEndpoint;
     private final BrokerFactory brokerFactory;
     private final ExecutorService service = Executors.newSingleThreadExecutor();
+    private final ProtonRequestClientOptions requestClientOptions;
     private final ProtonClientOptions protonClientOptions;
 
-    public TopicMigrator(Vertx vertx, Host localHost, Endpoint messagingEndpoint, BrokerFactory brokerFactory, ProtonClientOptions clientOptions) throws Exception {
+    public TopicMigrator(Vertx vertx, Host localHost, Endpoint messagingEndpoint, BrokerFactory brokerFactory, ProtonRequestClientOptions requestClientOptions, ProtonClientOptions clientOptions) throws Exception {
         this.vertx = vertx;
         this.localHost = localHost;
         this.brokerFactory = brokerFactory;
-        this.localBroker = brokerFactory.createClient(vertx, clientOptions, localHost.amqpEndpoint());
+        this.requestClientOptions = requestClientOptions;
+        this.localBroker = brokerFactory.createClient(requestClientOptions, localHost.amqpEndpoint());
         this.messagingEndpoint = messagingEndpoint;
         this.protonClientOptions = clientOptions;
     }
@@ -73,7 +77,7 @@ public class TopicMigrator {
 
     private void activateQueues(Map<QueueInfo, Host> queueMap) throws Exception {
         for (Map.Entry<QueueInfo, Host> entry : queueMap.entrySet()) {
-            try (Artemis mgr = brokerFactory.createClient(vertx, protonClientOptions, entry.getValue().amqpEndpoint())) {
+            try (Artemis mgr = brokerFactory.createClient(requestClientOptions, entry.getValue().amqpEndpoint())) {
                 mgr.resumeQueue(entry.getKey().getQueueName());
             }
         }
@@ -92,7 +96,7 @@ public class TopicMigrator {
             }
             Host dest = destinations.next();
             QueueInfo queue = subscriptionInfo.getQueueInfo();
-            try (Artemis manager = brokerFactory.createClient(vertx, protonClientOptions, dest.amqpEndpoint())) {
+            try (Artemis manager = brokerFactory.createClient(requestClientOptions, dest.amqpEndpoint())) {
                 manager.createQueue(queue.getQueueName(), queue.getAddress());
                 manager.pauseQueue(queue.getQueueName());
                 if (subscriptionInfo.getDivertInfo().isPresent()) {
@@ -106,7 +110,7 @@ public class TopicMigrator {
         return queueMap;
     }
 
-    private void createConnectorService(Endpoint messagingEndpoint, String address) throws TimeoutException {
+    private void createConnectorService(Endpoint messagingEndpoint, String address) throws TimeoutException, JsonProcessingException {
         Map<String, String> parameters = new LinkedHashMap<>();
         parameters.put("host", messagingEndpoint.hostname());
         parameters.put("port", String.valueOf(messagingEndpoint.port()));

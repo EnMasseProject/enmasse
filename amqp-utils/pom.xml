@@ -15,14 +15,24 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-proton</artifactId>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>proton-j</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
+      <artifactId>vertx-proton</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

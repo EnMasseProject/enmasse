@@ -20,16 +20,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-proton</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>k8s-api</artifactId>
       <scope>compile</scope>

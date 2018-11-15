@@ -7,6 +7,7 @@ package enmasse.broker.prestop;
 import enmasse.discovery.Endpoint;
 import io.enmasse.amqp.Artemis;
 import io.enmasse.amqp.ProtonRequestClient;
+import io.enmasse.amqp.ProtonRequestClientOptions;
 import io.enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClientOptions;
@@ -23,8 +24,8 @@ public class ArtemisBrokerFactory implements BrokerFactory {
     }
 
     @Override
-    public Artemis createClient(Vertx vertx, ProtonClientOptions protonClientOptions, Endpoint endpoint) throws InterruptedException, TimeoutException, ExecutionException {
-        SyncRequestClient requestClient = new ProtonRequestClient(vertx, 10);
+    public Artemis createClient(ProtonRequestClientOptions protonClientOptions, Endpoint endpoint) throws InterruptedException, TimeoutException, ExecutionException {
+        SyncRequestClient requestClient = new ProtonRequestClient();
         CompletableFuture<Void> promise = new CompletableFuture<>();
         requestClient.connect(endpoint.hostname(), endpoint.port(), protonClientOptions, "activemq.management", promise);
         Artemis artemis = new Artemis(requestClient);

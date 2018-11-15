@@ -5,12 +5,14 @@
 
 package io.enmasse.amqp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +28,7 @@ public class ArtemisTest {
         Message request;
 
         @Override
-        public void connect(String host, int port, ProtonClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise) {
+        public void connect(String host, int port, ProtonRequestClientOptions clientOptions, String address, CompletableFuture<Void> connectedPromise) {
 
         }
 
@@ -53,7 +55,7 @@ public class ArtemisTest {
     }
 
     @Test
-    public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
+    public void testManagement() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         TestClient testClient = new TestClient();
         Artemis artemis = new Artemis(testClient);
 
