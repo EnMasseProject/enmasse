@@ -15,9 +15,7 @@ You can connect your application to {ProductName} using one of the following cli
 * xref:ref-cpp-example-messaging[{ClientAmqpCppName}]
 * xref:ref-dotnet-example-messaging[{ClientAmqpDotNetName}]
 
-To connect to the messaging service from outside the OpenShift 
-ifdef::Kubernetes[or Kubernetes ]
-cluster, TLS must be used with SNI set to specify the fully qualified host name for the address space. The port used is 443.
+To connect to the messaging service from outside the {KubePlatform} cluster, TLS must be used with SNI set to specify the fully qualified host name for the address space. The port used is 443.
 
 The messaging protocols supported depends on the type of address space used. For more information, see the  xref:con-address-space-messaging[address space] section.
 

@@ -5,9 +5,7 @@
 [id='managing-address-spaces-{context}']
 = Managing address spaces
 
-{ProductName} is configured to support managing address spaces using the
-ifdef::Kubernetes[Kubernetes and]
-OpenShift command-line tools.
+{ProductName} is configured to support managing address spaces using the {KubePlatform} command-line tools.
 
 == Minimal example
 
