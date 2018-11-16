@@ -168,7 +168,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         }
 
         try {
-            builder.addToData("config.json", mapper.writeValueAsString(address));
+            // Reset resource version to avoid unneeded extra writes
+            builder.addToData("config.json", mapper.writeValueAsString(new Address.Builder(address).setResourceVersion(null).build()));
             return builder.build();
         } catch (IOException e) {
             log.info("Error serializing address for {}", address, e);
