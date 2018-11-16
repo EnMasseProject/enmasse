@@ -13,6 +13,7 @@ import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -46,7 +47,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public Optional<Address> getAddressWithName(String namespace, String name) {
-        ConfigMap map = client.configMaps().inNamespace(this.namespace).withName(getConfigMapName(namespace, name)).get();
+        ConfigMap map = client.configMaps().withName(getConfigMapName(namespace, name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -55,30 +56,30 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @SuppressWarnings("unchecked")
-    private Address getAddressFromConfig(ConfigMap configMap) {
-        Map<String, String> data = configMap.getData();
+    private Address getAddressFromConfig(ConfigMap map) {
+        Map<String, String> data = map.getData();
 
         try {
             Address address = mapper.readValue(data.get("config.json"), Address.class);
             Address.Builder builder = new Address.Builder(address);
 
             if (address.getUid() == null) {
-                builder.setUid(configMap.getMetadata().getUid());
+                builder.setUid(map.getMetadata().getUid());
             }
 
-            builder.setResourceVersion(configMap.getMetadata().getResourceVersion());
+            builder.setResourceVersion(map.getMetadata().getResourceVersion());
 
             if (address.getCreationTimestamp() == null) {
-                builder.setCreationTimestamp(configMap.getMetadata().getCreationTimestamp());
+                builder.setCreationTimestamp(map.getMetadata().getCreationTimestamp());
             }
 
             if (address.getSelfLink() == null) {
                 builder.setSelfLink("/apis/enmasse.io/v1alpha1/namespaces/" + address.getNamespace() + "/addressspaces/" + address.getAddressSpace());
             }
             return builder.build();
-        } catch (Exception e) {
-            log.warn("Unable to decode address", e);
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            log.error("Error decoding address from configmap : {}", map, e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -94,7 +95,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         labels.put(LabelKeys.INFRA_UUID, infraUuid);
 
         Set<Address> addresses = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().inNamespace(this.namespace).withLabels(labels).list();
+        ConfigMapList list = client.configMaps().withLabels(labels).list();
         for (ConfigMap config : list.getItems()) {
             Address address = getAddressFromConfig(config);
             if (namespace.equals(address.getNamespace())) {
@@ -111,41 +112,41 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         labels.put(LabelKeys.INFRA_UUID, infraUuid);
         labels.put(LabelKeys.NAMESPACE, namespace);
 
-        client.configMaps().inNamespace(this.namespace).withLabels(labels).delete();
+        client.configMaps().withLabels(labels).delete();
     }
 
     @Override
     public void createAddress(Address address) {
         String name = getConfigMapName(address.getNamespace(), address.getName());
         ConfigMap map = create(address);
-        if (map != null) {
-            client.configMaps().inNamespace(namespace).withName(name).create(map);
-        }
+        client.configMaps().withName(name).create(map);
     }
 
     @Override
     public boolean replaceAddress(Address address) {
-        String name = getConfigMapName(address.getNamespace(), address.getName());
-        ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
-        if (previous == null) {
-            log.warn("Cannot replace address {}: No previous configMap found", address.getName());
-            return false;
-        }
-        ConfigMap newMap = create(address);
-        if (address.getResourceVersion() != null) {
-            client.configMaps()
-                    .inNamespace(namespace)
-                    .withName(name)
-                    .lockResourceVersion(address.getResourceVersion())
-                    .replace(newMap);
+        try {
+            String name = getConfigMapName(address.getNamespace(), address.getName());
+            ConfigMap newMap = create(address);
+            ConfigMap result;
+            if (address.getResourceVersion() != null) {
+                result = client.configMaps()
+                        .withName(name)
+                        .lockResourceVersion(address.getResourceVersion())
+                        .replace(newMap);
 
-        } else {
-            client.configMaps()
-                    .inNamespace(namespace)
-                    .withName(name)
-                    .replace(newMap);
+            } else {
+                result = client.configMaps()
+                        .withName(name)
+                        .replace(newMap);
+            }
+            return result != null;
+        } catch (KubernetesClientException e) {
+            if (e.getStatus().getCode() == 404) {
+                return false;
+            } else {
+                throw e;
+            }
         }
-        return true;
     }
 
     private String getConfigMapName(String namespace, String name) {
@@ -172,7 +173,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         }
 
         try {
-            builder.addToData("config.json", mapper.writeValueAsString(address));
+            // Reset resource version to avoid unneeded extra writes
+            builder.addToData("config.json", mapper.writeValueAsString(new Address.Builder(address).setResourceVersion(null).build()));
             return builder.build();
         } catch (IOException e) {
             log.info("Error serializing address for {}", address, e);
@@ -182,8 +184,8 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean deleteAddress(Address address) {
-        Boolean deleted = client.configMaps().inNamespace(namespace).withName(getConfigMapName(address.getNamespace(), address.getName())).delete();
-        return deleted != null && deleted.booleanValue();
+        Boolean deleted = client.configMaps().withName(getConfigMapName(address.getNamespace(), address.getName())).delete();
+        return deleted != null && deleted;
     }
 
     @Override
@@ -197,11 +199,9 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         config.setWorkQueue(queue);
         config.setProcessor(map -> {
                     if (queue.hasSynced()) {
-                        long start = System.nanoTime();
                         watcher.onUpdate(queue.list().stream()
                                 .map(this::getAddressFromConfig)
                                 .collect(Collectors.toList()));
-                        long end = System.nanoTime();
                     }
                 });
 
@@ -214,7 +214,6 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     @Override
     public ConfigMapList list(ListOptions listOptions) {
         return client.configMaps()
-                        .inNamespace(namespace)
                         .withLabel(LabelKeys.TYPE, "address-config")
                         .withLabel(LabelKeys.INFRA_UUID, infraUuid)
                         .list();
@@ -227,7 +226,6 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 .build();
         return client.withRequestConfig(requestConfig).call(c ->
                 c.configMaps()
-                        .inNamespace(namespace)
                         .withLabel(LabelKeys.TYPE, "address-config")
                         .withLabel(LabelKeys.INFRA_UUID, infraUuid)
                         .withResourceVersion(listOptions.getResourceVersion())
