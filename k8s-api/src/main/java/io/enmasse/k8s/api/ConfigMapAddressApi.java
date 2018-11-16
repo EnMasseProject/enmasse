@@ -13,6 +13,7 @@ import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -123,25 +124,29 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean replaceAddress(Address address) {
-        String name = getConfigMapName(address.getNamespace(), address.getName());
-        ConfigMap previous = client.configMaps().withName(name).get();
-        if (previous == null) {
-            log.warn("Cannot replace address {}: No previous configMap found", address.getName());
-            return false;
-        }
-        ConfigMap newMap = create(address);
-        if (address.getResourceVersion() != null) {
-            client.configMaps()
-                    .withName(name)
-                    .lockResourceVersion(address.getResourceVersion())
-                    .replace(newMap);
+        try {
+            String name = getConfigMapName(address.getNamespace(), address.getName());
+            ConfigMap newMap = create(address);
+            ConfigMap result;
+            if (address.getResourceVersion() != null) {
+                result = client.configMaps()
+                        .withName(name)
+                        .lockResourceVersion(address.getResourceVersion())
+                        .replace(newMap);
 
-        } else {
-            client.configMaps()
-                    .withName(name)
-                    .replace(newMap);
+            } else {
+                result = client.configMaps()
+                        .withName(name)
+                        .replace(newMap);
+            }
+            return result != null;
+        } catch (KubernetesClientException e) {
+            if (e.getStatus().getCode() == 404) {
+                return false;
+            } else {
+                throw e;
+            }
         }
-        return true;
     }
 
     private String getConfigMapName(String namespace, String name) {

@@ -14,6 +14,7 @@ import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -63,26 +64,29 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public boolean replaceAddressSpace(AddressSpace addressSpace) {
-        String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
-        ConfigMap previous = client.configMaps().withName(name).get();
-        if (previous == null) {
-            log.warn("Cannot replace addressSpace {}: No previous configMap found", addressSpace.getName());
-            return false;
-        }
+        try {
+            String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+            ConfigMap newMap = create(addressSpace);
+            ConfigMap result;
+            if (addressSpace.getResourceVersion() != null) {
+                result = client.configMaps()
+                        .withName(name)
+                        .lockResourceVersion(addressSpace.getResourceVersion())
+                        .replace(newMap);
 
-        ConfigMap newMap = create(addressSpace);
-        if (addressSpace.getResourceVersion() != null) {
-            client.configMaps()
-                    .withName(name)
-                    .lockResourceVersion(addressSpace.getResourceVersion())
-                    .replace(newMap);
-
-        } else {
-            client.configMaps()
-                    .withName(name)
-                    .replace(newMap);
+            } else {
+                result = client.configMaps()
+                        .withName(name)
+                        .replace(newMap);
+            }
+            return result != null;
+        } catch (KubernetesClientException e) {
+            if (e.getStatus().getCode() == 404) {
+                return false;
+            } else {
+                throw e;
+            }
         }
-        return true;
     }
 
     private ConfigMap create(AddressSpace addressSpace) {
