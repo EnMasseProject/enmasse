@@ -10,7 +10,7 @@ import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
-import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.osb.api.EmptyResponse;

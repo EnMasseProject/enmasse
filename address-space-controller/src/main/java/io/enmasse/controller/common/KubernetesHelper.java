@@ -5,6 +5,7 @@
 
 package io.enmasse.controller.common;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
@@ -14,8 +15,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
  * Wraps the Kubernetes client and adds some helper methods.
  */
 public class KubernetesHelper implements Kubernetes {
+    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".yaml";
 
@@ -143,28 +143,30 @@ public class KubernetesHelper implements Kubernetes {
         return client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get() != null;
     }
 
-    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
+    private Map doRawHttpRequest(String path, String method, Map body, boolean errorOk) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + controllerToken)
-                .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
+        try {
+            HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(url)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", "Bearer " + controllerToken)
+                    .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsBytes(body)) : null);
 
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-            try (ResponseBody responseBody = response.body()) {
-                String responseString = responseBody != null ? responseBody.string() : "{}";
-                if (response.isSuccessful()) {
-                    return new JsonObject(responseString);
-                } else {
-                    if (errorOk) {
-                        return null;
+            try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+                try (ResponseBody responseBody = response.body()) {
+                    String responseString = responseBody != null ? responseBody.string() : "{}";
+                    if (response.isSuccessful()) {
+                        return mapper.readValue(responseString, Map.class);
                     } else {
-                        String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), responseString);
-                        log.warn(errorMessage);
-                        throw new RuntimeException(errorMessage);
+                        if (errorOk) {
+                            return null;
+                        } else {
+                            String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), responseString);
+                            log.warn(errorMessage);
+                            throw new RuntimeException(errorMessage);
+                        }
                     }
                 }
             }
@@ -178,31 +180,31 @@ public class KubernetesHelper implements Kubernetes {
         String apiVersion = "rbac.authorization.k8s.io/v1";
         String apiPath = "/apis/rbac.authorization.k8s.io/v1";
 
-        JsonObject body = new JsonObject();
+        Map<String, Object> body = new HashMap<>();
 
         body.put("kind", "RoleBinding");
         body.put("apiVersion", apiVersion);
 
-        JsonObject metadata = new JsonObject();
+        Map<String, Object>  metadata = new HashMap<>();
         metadata.put("name", name);
         metadata.put("namespace", namespace);
-        JsonObject labels = new JsonObject();
+        Map<String, String> labels = new HashMap<>();
         for (Map.Entry<String, String> labelEntry : labelMap.entrySet()) {
             labels.put(labelEntry.getKey(), labelEntry.getValue());
         }
         metadata.put("labels", labels);
         body.put("metadata", metadata);
 
-        JsonObject roleRef = new JsonObject();
+        Map<String, String> roleRef = new HashMap<>();
         roleRef.put("apiGroup", "rbac.authorization.k8s.io");
         roleRef.put("kind", refKind);
         roleRef.put("name", refName);
         body.put("roleRef", roleRef);
 
-        JsonArray subjects = new JsonArray();
+        List<Map<String, String>> subjects = new ArrayList<>();
 
         for (Subject subjectEntry : subjectList) {
-            JsonObject subject = new JsonObject();
+            Map<String, String> subject = new HashMap<>();
             subject.put("kind", subjectEntry.getKind());
             subject.put("name", subjectEntry.getName());
             if (subjectEntry.getNamespace() != null) {

@@ -11,13 +11,8 @@ import io.enmasse.metrics.api.Metric;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -27,35 +22,25 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-@RunWith(VertxUnitRunner.class)
 public class ControllerChainTest {
-    private Vertx vertx;
     private TestAddressSpaceApi testApi;
     private Kubernetes kubernetes;
 
     @Before
     public void setup() {
-        vertx = Vertx.vertx();
         kubernetes = mock(Kubernetes.class);
         testApi = new TestAddressSpaceApi();
 
         when(kubernetes.getNamespace()).thenReturn("myspace");
     }
 
-    @After
-    public void teardown() {
-        vertx.close();
-    }
-
     @Test
-    public void testController(TestContext context) throws Exception {
+    public void testController() throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
         Metrics metrics = new Metrics();
         ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, new TestSchemaProvider(), testLogger, metrics, "1.0", Duration.ofSeconds(5), Duration.ofSeconds(5));
         Controller mockController = mock(Controller.class);
         controllerChain.addController(mockController);
-
-        vertx.deployVerticle(controllerChain, context.asyncAssertSuccess());
 
         AddressSpace a1 = new AddressSpace.Builder()
                 .setName("myspace")

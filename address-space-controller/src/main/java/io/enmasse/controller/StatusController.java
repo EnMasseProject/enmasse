@@ -6,10 +6,10 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.InfraConfig;
-import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.user.api.UserApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

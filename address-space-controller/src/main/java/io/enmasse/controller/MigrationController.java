@@ -7,10 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
-import io.enmasse.api.common.SchemaProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.enmasse.k8s.api.SchemaProvider;
 
 public class MigrationController implements Controller {
     private final SchemaProvider schemaProvider;

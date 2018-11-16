@@ -7,7 +7,7 @@ package io.enmasse.api.v1.http;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.v1.Either;
-import io.enmasse.api.common.SchemaProvider;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.UnprocessableEntityException;
 import io.enmasse.k8s.api.AddressSpaceApi;
 

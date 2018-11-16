@@ -5,9 +5,9 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.api.common.SchemaProvider;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.junit.Test;

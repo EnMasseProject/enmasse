@@ -12,7 +12,6 @@ import java.util.*;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
-import io.enmasse.api.common.CachingSchemaProvider;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.metrics.api.Metrics;
@@ -24,20 +23,15 @@ import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Verticle;
-import io.vertx.core.Vertx;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Signal;
 
-public class AddressSpaceController extends AbstractVerticle {
+public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
     private final NamespacedOpenShiftClient controllerClient;
     private final AddressSpaceControllerOptions options;
@@ -50,6 +44,9 @@ public class AddressSpaceController extends AbstractVerticle {
             throw new ExceptionInInitializerError(t);
         }
     }
+
+    private HTTPServer metricsServer;
+    private ControllerChain controllerChain;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
         this.controllerClient = new DefaultOpenShiftClient();
@@ -71,8 +68,7 @@ public class AddressSpaceController extends AbstractVerticle {
         }
     }
 
-    @Override
-    public void start(Future<Void> startPromise) throws Exception {
+    public void start() throws Exception {
         boolean isOpenShift = isOpenShift(controllerClient);
         KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
 
@@ -101,16 +97,38 @@ public class AddressSpaceController extends AbstractVerticle {
         UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
 
         Metrics metrics = new Metrics();
-        ControllerChain controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
+        controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new MigrationController(schemaProvider, options.getVersion()));
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
+        controllerChain.start();
 
-        HTTPServer httpServer = new HTTPServer(8080, metrics);
+        metricsServer = new HTTPServer(8080, metrics);
+        metricsServer.start();
+    }
 
-        deployVerticles(startPromise, new Deployment(controllerChain), new Deployment(httpServer));
+    private void stop() {
+        try {
+            log.info("AddressSpaceController stopping");
+
+            if (metricsServer != null) {
+                metricsServer.stop();
+            }
+        } finally {
+            try {
+                if (controllerChain != null) {
+                    try {
+                        controllerChain.stop();
+                    } catch (Exception ignore) {
+                    }
+                }
+            } finally {
+                controllerClient.close();
+                log.info("AddressSpaceController stopped");
+            }
+        }
     }
 
     private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
@@ -201,53 +219,21 @@ public class AddressSpaceController extends AbstractVerticle {
         return resolver;
     }
 
-    private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {
-        List<Future> futures = new ArrayList<>();
-        for (Deployment deployment : deployments) {
-            Future<Void> promise = Future.future();
-            futures.add(promise);
-            vertx.deployVerticle(deployment.verticle, deployment.options, result -> {
-                if (result.succeeded()) {
-                    promise.complete();
-                } else {
-                    promise.fail(result.cause());
-                }
-            });
-        }
-
-        CompositeFuture.all(futures).setHandler(result -> {
-            if (result.succeeded()) {
-                startPromise.complete();
-            } else {
-                startPromise.fail(result.cause());
-            }
-        });
-    }
-
-    private static class Deployment {
-        final Verticle verticle;
-        final DeploymentOptions options;
-
-        private Deployment(Verticle verticle) {
-            this(verticle, new DeploymentOptions());
-        }
-
-        private Deployment(Verticle verticle, DeploymentOptions options) {
-            this.verticle = verticle;
-            this.options = options;
-        }
-    }
-
     public static void main(String args[]) {
+        AddressSpaceController controller = null;
         try {
-            Vertx vertx = Vertx.vertx();
-            vertx.deployVerticle(new AddressSpaceController(AddressSpaceControllerOptions.fromEnv(System.getenv())));
+            controller = new AddressSpaceController(AddressSpaceControllerOptions.fromEnv(System.getenv()));
+            controller.start();
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
         } catch (Exception e) {
             System.out.println("Error starting address space controller: " + e.getMessage());
             System.exit(1);
+        } finally {
+            if (controller != null) {
+                Runtime.getRuntime().addShutdownHook(new Thread(controller::stop));
+            }
         }
     }
 }
