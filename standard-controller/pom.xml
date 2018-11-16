@@ -25,6 +25,11 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>openshift-client</artifactId>
       <scope>compile</scope>
@@ -95,6 +100,16 @@
                   <mainClass>io.enmasse.controller.standard.StandardController</mainClass>
                 </transformer>
               </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>

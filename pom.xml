@@ -75,6 +75,7 @@
         <node.version>v8.11.2</node.version>
         <npm.version>5.6.0</npm.version>
         <snakeyaml.version>1.18</snakeyaml.version>
+        <bouncycastle.version>1.60</bouncycastle.version>
 
         <asciidoctor-maven-plugin.version>1.5.6</asciidoctor-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
@@ -196,6 +197,11 @@
             </dependency>
 
             <!-- Other dependencies -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
 
             <!-- Overridden to avoid CVE-2017-15708 -->
             <dependency>
