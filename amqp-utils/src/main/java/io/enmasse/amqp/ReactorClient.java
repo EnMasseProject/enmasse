@@ -43,18 +43,22 @@ class ReactorClient extends BaseHandler {
 
     @Override
     public void onReactorInit(Event event) {
-        if (options.isSslEnabled()) {
-            event.getTransport().ssl(options.getSslDomain());
-        }
-        if (options.isSaslEnabled()) {
-            event.getTransport().sasl().setMechanisms(options.getSaslMechanisms());
-        }
         event.getReactor().connectionToHost(host, port, this);
     }
 
     @Override
     public void onTransportError(Event event) {
         clientHandler.onTransportError(event.getTransport().getCondition());
+    }
+
+    @Override
+    public void onConnectionBound(Event event) {
+        if (options.isSslEnabled()) {
+            event.getTransport().ssl(options.getSslDomain());
+        }
+        if (options.isSaslEnabled()) {
+            event.getTransport().sasl().setMechanisms(options.getSaslMechanisms());
+        }
     }
 
     @Override
