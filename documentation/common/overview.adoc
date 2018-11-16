@@ -7,7 +7,7 @@ The service admin can deploy and manage messaging infrastructure, while messagin
 == Features
 
 * Built-in authentication and authorization of clients and identity management
-* Runs on Kubernetes: deploy on-premise or in the cloud
+* Runs on Kubernetes and OpenShift: deploy on-premise or in the cloud
 * Different messaging patterns such as request-response, publish-subscribe and events
 * Decouple operation of infrastructure from configuration and use by applications
 
