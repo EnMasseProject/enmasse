@@ -27,6 +27,13 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
     }
 
     @Test
+    void testCreateHighAddressCountCheckStatusDeleteLong() throws Exception {
+        doTestCreateHighAddressCountCheckStatusDeleteLong(
+                new AddressSpace("test-create-addresses-check-status-delete",
+                        AddressSpaceType.BROKERED, AuthService.STANDARD));
+    }
+
+    @Test
     void testQueueSendReceiveLong() throws Exception {
         doTestQueueSendReceiveLong(
                 new AddressSpace("test-queue-sendreceive-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD));
