@@ -285,6 +285,16 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         WebElement regexClose = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
         selenium.clickOnItem(regexClose);
         assertFalse(regexClose.isDisplayed());
+
+        //check on connections tab filter
+        consoleWebPage.openConnectionsPageWebConsole();
+        consoleWebPage.addConnectionsFilter(FilterType.HOSTNAME, subText);
+        regexAlert = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-error-circle-o")));
+        assertTrue(regexAlert.isDisplayed());
+        regexClose = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
+        selenium.clickOnItem(regexClose);
+        assertFalse(regexClose.isDisplayed());
+        assertFalse(regexAlert.isDisplayed());
     }
 
     protected void doTestSortAddressesByName() throws Exception {
