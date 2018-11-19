@@ -6,21 +6,20 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.marathon;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.CoreMatchers.is;
 
 @Tag(marathon)
@@ -118,6 +118,33 @@ abstract class MarathonTestBase extends TestBase {
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
                     "test-queue-createdelete-auth-brokered-%d", user);
+        });
+    }
+
+    void doTestCreateHighAddressCountCheckStatusDeleteLong(AddressSpace addressSpace) throws Exception {
+        createAddressSpace(addressSpace);
+
+        AddressApiClient apiClient = new AddressApiClient(kubernetes);
+        JsonObject response = apiClient.getAddresses(addressSpace, HTTP_OK, Optional.empty());
+        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
+
+        UserCredentials user = new UserCredentials("test-user", "test-user");
+        createUser(addressSpace, user);
+
+        List<Destination> queueList = new ArrayList<>();
+        int queueCount = 1500;
+        for (int i = 0; i < queueCount; i++) {
+            queueList.add(Destination.queue(String.format("test-queue-status-%d", i), getDefaultPlan(AddressType.QUEUE)));
+        }
+
+        runTestInLoop(60, () -> {
+            setAddresses(addressSpace, queueList.toArray(new Destination[0]));
+
+            for (Destination destination : current) {
+                TestUtils.isAddressReady(destination.toJson("v1"));
+            }
+
+            deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         });
     }
 

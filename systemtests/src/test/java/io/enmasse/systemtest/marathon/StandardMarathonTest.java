@@ -6,6 +6,7 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.AuthService;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,13 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
     void testCreateDeleteAddressesWithAuthLong() throws Exception {
         doTestCreateDeleteAddressesWithAuthLong(
                 new AddressSpace("test-create-delete-addresses-auth-standard",
+                        AddressSpaceType.STANDARD, AuthService.STANDARD));
+    }
+
+    @Test
+    void testCreateHighAddressCountCheckStatusDeleteLong() throws Exception {
+        doTestCreateHighAddressCountCheckStatusDeleteLong(
+                new AddressSpace("test-create-addresses-check-status-delete",
                         AddressSpaceType.STANDARD, AuthService.STANDARD));
     }
 
