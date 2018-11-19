@@ -56,8 +56,9 @@ def postAction(String coresDir, String artifactDir) {
     junit testResults: '**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
     archiveArtifacts artifacts: '**/TEST-*.xml', allowEmptyArchive: true
-    archiveArtifacts artifacts: 'templates/install/**', allowEmptyArchive: true
+    archiveArtifacts artifacts: 'templates/build/**', allowEmptyArchive: true
     sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
+    sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
     archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
     tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"

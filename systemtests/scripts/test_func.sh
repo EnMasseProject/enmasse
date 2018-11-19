@@ -409,3 +409,28 @@ function get_oc_url() {
         echo "https://github.com/openshift/origin/releases/download/v3.10.0/openshift-origin-client-tools-v3.10.0-dd10d17-linux-64bit.tar.gz"
     fi
 }
+
+function wait_until_file_close() {
+    FOLDER=$1
+
+    TIMEOUT=120
+    NOW=$(date +%s)
+    END=$(($NOW + $TIMEOUT))
+    info "Waiting until ${END}"
+    while true
+    do
+        NOW=$(date +%s)
+        if [[ ${NOW} -gt ${END} ]]; then
+            err "Timed out waiting for closing files!"
+            err_and_exit "Files in folder ${FOLDER} are still opened"
+        fi
+        if [[ -n "$(lsof +D "${FOLDER}")" ]]; then
+            lsof +D "${FOLDER}" || true
+            info "Files in ${FOLDER} are still opened"
+        else
+            info "All files in ${FOLDER} are closed"
+            return  0
+        fi
+        sleep 5
+    done
+}
