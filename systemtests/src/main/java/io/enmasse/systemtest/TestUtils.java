@@ -7,7 +7,9 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.OSBApiClient;
-import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressSpaceTypeData;
+import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -192,9 +194,9 @@ public class TestUtils {
     /**
      * Wait for expected count of pods within AddressSpace
      *
-     * @param client       client for manipulation with kubernetes cluster
-     * @param numExpected  count of expected pods
-     * @param budget       timeout budget - this method throws Exception when timeout is reached
+     * @param client      client for manipulation with kubernetes cluster
+     * @param numExpected count of expected pods
+     * @param budget      timeout budget - this method throws Exception when timeout is reached
      * @throws InterruptedException
      */
     public static void waitForExpectedReadyPods(Kubernetes client, int numExpected, TimeoutBudget budget) throws InterruptedException {
@@ -241,7 +243,7 @@ public class TestUtils {
     /**
      * Get list of all running pods from specific AddressSpace
      *
-     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param kubernetes client for manipulation with kubernetes cluster
      * @return
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes) {
@@ -935,6 +937,24 @@ public class TestUtils {
     }
 
     /**
+     * Repeat command n-times
+     *
+     * @param retry count of remaining retries
+     * @param fn    request function
+     * @return
+     */
+    public static <T> Boolean doCommandNTimes(int retry, Callable<Boolean> fn) throws Exception {
+        if (retry == 0)
+            throw new IllegalStateException(String.format("Operation was not correctly completed within %d attempts", retry));
+        Boolean result = fn.call();
+        if (!result) {
+            Thread.sleep(1000);
+            return doCommandNTimes(retry - 1, fn);
+        }
+        return true;
+    }
+
+    /**
      * Replace address plan in ConfigMap of already existing address
      *
      * @param kubernetes client for manipulation with kubernetes cluster
@@ -1008,20 +1028,35 @@ public class TestUtils {
 
     private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
         int attempts = 30;
+        URL hubUrl = new URL(String.format("http://%s:%s/wd/hub", host, port));
         for (int i = 0; i < attempts; i++) {
-            if (pingHost(host, port, 500)) {
-                return new RemoteWebDriver(new URL(String.format("http://%s:%s/wd/hub", host, port)), options);
+            if (pingHost(host, port, 500) && isReachable(hubUrl)) {
+                return new RemoteWebDriver(hubUrl, options);
             }
             Thread.sleep(1000);
         }
         throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
     }
 
-    private static boolean pingHost(String host, int port, int timeout) {
+    public static boolean pingHost(String host, int port, int timeout) {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(host, port), timeout);
+            log.info("Client is able to ping selenium container");
             return true;
         } catch (IOException e) {
+            log.warn("Client is unable to ping selenium container");
+            return false;
+        }
+    }
+
+    public static boolean isReachable(URL url) {
+        try {
+            url.openConnection();
+            url.getContent();
+            log.info("Client is able to connect to the selenium hub");
+            return true;
+        } catch (Exception ex) {
+            log.warn("Cannot connect to hub: {}", ex.getMessage());
             return false;
         }
     }

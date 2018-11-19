@@ -13,10 +13,8 @@ import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Arrays;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SeleniumContainers {
 
@@ -33,15 +31,13 @@ public class SeleniumContainers {
         log.info("Deploy firefox container");
         DockerCmdClient.pull("docker.io", FIREFOX_IMAGE, "latest");
         try {
-            TestUtils.doRequestNTimes(RETRY, () -> {
+            TestUtils.doCommandNTimes(RETRY, () -> {
                 stopAndRemoveFirefoxContainer();
                 DockerCmdClient.runContainer(FIREFOX_IMAGE, FIREFOX_CONTAINER_NAME,
                         generateSeleniumOpts("4444", ":99"));
                 copyRheaWebPageFirefox();
-                assertTrue(DockerCmdClient.isContainerRunning(FIREFOX_CONTAINER_NAME),
-                        String.format(RUNNING_CONTAINER_MESSAGE, FIREFOX_CONTAINER_NAME));
-                return true;
-            }, Optional.empty());
+                return checkSeleniumContainer(FIREFOX_CONTAINER_NAME, "localhost", 4444);
+            });
         } catch (Exception e) {
             log.error(String.format(RUNNING_CONTAINER_MESSAGE, FIREFOX_CONTAINER_NAME));
             throw e;
@@ -55,15 +51,13 @@ public class SeleniumContainers {
         log.info("Deploy chrome container");
         DockerCmdClient.pull("docker.io", CHROME_IMAGE, "latest");
         try {
-            TestUtils.doRequestNTimes(RETRY, () -> {
+            TestUtils.doCommandNTimes(RETRY, () -> {
                 stopAndRemoveChromeContainer();
                 DockerCmdClient.runContainer(CHROME_IMAGE, CHROME_CONTAINER_NAME,
                         generateSeleniumOpts("4443", ":98"));
                 copyRheaWebPageChrome();
-                assertTrue(DockerCmdClient.isContainerRunning(CHROME_CONTAINER_NAME),
-                        String.format(RUNNING_CONTAINER_MESSAGE, CHROME_CONTAINER_NAME));
-                return true;
-            }, Optional.empty());
+                return checkSeleniumContainer(CHROME_CONTAINER_NAME, "localhost", 4443);
+            });
         } catch (Exception e) {
             log.error(String.format(RUNNING_CONTAINER_MESSAGE, CHROME_CONTAINER_NAME));
             throw e;
@@ -94,12 +88,30 @@ public class SeleniumContainers {
         DockerCmdClient.copyToContainer(containerName, rheaJs.getAbsolutePath(), "/opt/rhea.js");
     }
 
-    public static void restartFirefoxContainer() {
-        DockerCmdClient.restartContainer(FIREFOX_CONTAINER_NAME);
+    public static void restartFirefoxContainer() throws Exception {
+        log.info("Restarting container {}", FIREFOX_CONTAINER_NAME);
+        try {
+            TestUtils.doCommandNTimes(RETRY, () -> {
+                DockerCmdClient.restartContainer(FIREFOX_CONTAINER_NAME);
+                return checkSeleniumContainer(FIREFOX_CONTAINER_NAME, "localhost", 4444);
+            });
+        } catch (Exception e) {
+            log.error(String.format(RUNNING_CONTAINER_MESSAGE, FIREFOX_CONTAINER_NAME));
+            throw e;
+        }
     }
 
-    public static void restartChromeContainer() {
-        DockerCmdClient.restartContainer(CHROME_CONTAINER_NAME);
+    public static void restartChromeContainer() throws Exception {
+        log.info("Restarting container {}", CHROME_CONTAINER_NAME);
+        try {
+            TestUtils.doCommandNTimes(RETRY, () -> {
+                DockerCmdClient.restartContainer(CHROME_CONTAINER_NAME);
+                return checkSeleniumContainer(CHROME_CONTAINER_NAME, "localhost", 4443);
+            });
+        } catch (Exception e) {
+            log.error(String.format(RUNNING_CONTAINER_MESSAGE, CHROME_CONTAINER_NAME));
+            throw e;
+        }
     }
 
     public static void copyRheaWebPageChrome() {
@@ -117,5 +129,11 @@ public class SeleniumContainers {
                 "--network", "host",
                 "-e", String.format("DISPLAY=%s", display),
                 "-e", String.format("SE_OPTS=-port %s", port)).toArray(new String[0]);
+    }
+
+    private static boolean checkSeleniumContainer(String containerName, String host, int port) throws Exception {
+        return TestUtils.doCommandNTimes(10, () -> DockerCmdClient.isContainerRunning(containerName) &&
+                TestUtils.pingHost(host, port, 10000) &&
+                TestUtils.isReachable(new URL(String.format("http://%s:%s/wd/hub", host, port))));
     }
 }
