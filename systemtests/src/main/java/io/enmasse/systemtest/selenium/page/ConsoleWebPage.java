@@ -306,6 +306,17 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.name("topic")));
     }
 
+    /**
+     * get alert banner when illegal regex is used in filter box
+     */
+    public WebElement getFilterRegexAlert() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-error-circle-o")));
+    }
+
+    private WebElement getFilterRegexAlertClose() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
+    }
+
     //================================================================================================
     // Operations
     //================================================================================================
@@ -362,6 +373,10 @@ public class ConsoleWebPage implements IWebPage {
 
     public void clickOnRemoveButton() throws Exception {
         selenium.clickOnItem(getRemoveButton());
+    }
+
+    public void clickOnRegexAlertClose() throws Exception {
+        selenium.clickOnItem(getFilterRegexAlertClose(), "Closing regex alert banner");
     }
 
     /**
