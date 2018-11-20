@@ -5,6 +5,7 @@
 package io.enmasse.api.v1;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -57,10 +58,7 @@ public class AddressApiHelper {
     }
 
     private void validateAddress(AddressSpace addressSpace, Address address) {
-        Schema schema = schemaProvider.getSchema();
-        AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getType()));
-
-        AddressResolver addressResolver = new AddressResolver(type);
+        AddressResolver addressResolver = getAddressResolver(addressSpace);
         Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getNamespace());
         addressResolver.validate(address);
         for (Address existing : existingAddresses) {
@@ -68,6 +66,13 @@ public class AddressApiHelper {
                 throw new BadRequestException("Address '" + address.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
             }
         }
+    }
+
+    private AddressResolver getAddressResolver(AddressSpace addressSpace) {
+        Schema schema = schemaProvider.getSchema();
+        AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getType()));
+
+        return new AddressResolver(type);
     }
 
     private AddressSpace getAddressSpace(String namespace, String addressSpaceId) throws Exception {
@@ -94,6 +99,33 @@ public class AddressApiHelper {
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         addressApi.createAddress(address);
         return address;
+    }
+
+    public void createAddresses(String addressSpaceId, Set<Address> address) throws Exception {
+        List<Address> sorted = address.stream()
+                .sorted(Comparator.comparing(Address::getNamespace))
+                .collect(Collectors.toList());
+        AddressSpace addressSpace = null;
+        AddressApi addressApi = null;
+        AddressResolver addressResolver = null;
+        Set<Address> existingAddresses = null;
+        for(Address a : sorted) {
+            if (addressSpace == null || !Objects.equals(addressSpace.getNamespace(), a.getNamespace())) {
+                addressSpace = getAddressSpace(a.getNamespace(), addressSpaceId);
+                addressApi = addressSpaceApi.withAddressSpace(addressSpace);
+                addressResolver = getAddressResolver(addressSpace);
+                existingAddresses = addressApi.listAddresses(a.getNamespace());
+            }
+
+            // Maybe better to do all the validations up front before creating any?
+            addressResolver.validate(a);
+            for (Address existing : existingAddresses) {
+                if (a.getAddress().equals(existing.getAddress()) && !a.getName().equals(existing.getName())) {
+                    throw new BadRequestException("Address '" + a.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
+                }
+            }
+            addressApi.createAddress(a);
+        }
     }
 
     public Address replaceAddress(String addressSpaceId, Address address) throws Exception {

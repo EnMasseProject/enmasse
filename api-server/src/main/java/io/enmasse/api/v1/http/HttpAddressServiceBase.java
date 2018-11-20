@@ -21,7 +21,9 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * HTTP API for operating on addresses within an address space
@@ -86,10 +88,7 @@ public class HttpAddressServiceBase {
         if (payload.isLeft()) {
             return createAddress(securityContext, uriInfo, namespace, addressSpace, payload.getLeft());
         } else {
-            for (Address address : payload.getRight()) {
-                createAddress(securityContext, uriInfo, namespace, addressSpace, address);
-            }
-            return Response.created(uriInfo.getAbsolutePathBuilder().build()).build();
+            return createAddresses(securityContext, uriInfo, namespace, addressSpace, payload.getRight());
         }
     }
 
@@ -102,6 +101,18 @@ public class HttpAddressServiceBase {
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
             builder.path(created.getName());
             return Response.created(builder.build()).entity(created).build();
+        });
+    }
+
+    private Response createAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, AddressList addressList) throws Exception {
+        checkRequestBodyNotNull(addressList);
+        return doRequest("Error creating address", () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.create);
+            Set<Address> finalAddresses = addressList.stream()
+                    .map(a -> setAddressDefaults(namespace, addressSpace, a))
+                    .collect(Collectors.toSet());
+            apiHelper.createAddresses(addressSpace, finalAddresses);
+            return Response.created(uriInfo.getAbsolutePathBuilder().build()).build();
         });
     }
 

@@ -10,15 +10,9 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
@@ -67,6 +61,27 @@ public class AddressApiHelperTest {
 
         Address invalidAddress = createAddress("someOtherName", "q1");
         helper.createAddress("test", invalidAddress);
+        verify(addressApi, never()).createAddress(any(Address.class));
+    }
+
+    @Test
+    public void testCreateAddress() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
+
+        Address addr = createAddress("someOtherName", "q1");
+        helper.createAddress("test", addr);
+        verify(addressApi).createAddress(eq(addr));
+    }
+
+    @Test
+    public void testCreateAddresses() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
+
+        Address addr1 = createAddress("someOtherName", "q1");
+        Address addr2 = createAddress("someOtherName", "q2");
+        helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
+        verify(addressApi).createAddress(eq(addr1));
+        verify(addressApi).createAddress(eq(addr2));
     }
 
     @Test
@@ -84,6 +99,7 @@ public class AddressApiHelperTest {
         expectedException.expectMessage("Address q1 not found");
 
         helper.replaceAddress("test", createAddress("q1"));
+        verify(addressApi, never()).replaceAddress(any(Address.class));
     }
 
     @Test
@@ -98,6 +114,7 @@ public class AddressApiHelperTest {
 
         Address invalidAddress = createAddress("q1", "q2");
         helper.replaceAddress("test", invalidAddress);
+        verify(addressApi, never()).replaceAddress(any(Address.class));
     }
 
     @Test
