@@ -55,7 +55,7 @@ class PlansMarathonTest extends MarathonTestBase {
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
@@ -105,7 +105,7 @@ class PlansMarathonTest extends MarathonTestBase {
                 new AddressSpaceResource("aggregate", 0.0, 5.0));
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
-                "standard-space", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
