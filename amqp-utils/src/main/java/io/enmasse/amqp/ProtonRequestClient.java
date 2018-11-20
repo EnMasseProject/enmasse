@@ -25,6 +25,7 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ProtonRequestClient.class);
     private final Vertx vertx;
     private final int maxRetries;
+    private final String containerId;
     private final BlockingQueue<Message> replies = new LinkedBlockingQueue<>();
     private Context context;
     private ProtonConnection connection;
@@ -32,12 +33,13 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
     private ProtonReceiver receiver;
     private String replyTo;
 
-    public ProtonRequestClient(Vertx vertx) {
-        this(vertx, 0);
+    public ProtonRequestClient(Vertx vertx, String containerId) {
+        this(vertx, containerId, 0);
     }
 
-    public ProtonRequestClient(Vertx vertx, int maxRetries) {
+    public ProtonRequestClient(Vertx vertx, String containerId, int maxRetries) {
         this.vertx = vertx;
+        this.containerId = containerId;
         this.maxRetries = maxRetries;
     }
 
@@ -65,6 +67,7 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
             if (result.succeeded()) {
                 log.info("Connected to {}:{}", host, port);
                 connection = result.result();
+                connection.setContainer(containerId);
                 createSender(vertx, address, promise, 0);
                 connection.open();
             } else {
