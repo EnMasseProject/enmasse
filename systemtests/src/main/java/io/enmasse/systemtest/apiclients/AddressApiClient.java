@@ -341,11 +341,17 @@ public class AddressApiClient extends ApiClient {
             createAddresses(addressSpace, payload, HTTP_CREATED);
         } else {
             int start = 0;
-            while (start < destinations.length) {
-                Destination[] splice = Arrays.copyOfRange(destinations, start,  Math.min(start + batchSize, destinations.length));
-                JsonObject payload = createAddressListPayloadJson(addressSpace, splice);
-                createAddresses(addressSpace, payload, HTTP_CREATED);
-                start += splice.length;
+            try {
+                while (start < destinations.length) {
+                    Destination[] splice = Arrays.copyOfRange(destinations, start,  Math.min(start + batchSize, destinations.length));
+                    JsonObject payload = createAddressListPayloadJson(addressSpace, splice);
+                    createAddresses(addressSpace, payload, HTTP_CREATED);
+                    start += splice.length;
+                }
+            } finally {
+                if (start < destinations.length) {
+                    log.error("Create addresses failed processing destinations at index {}  (size {})", start, destinations.length);
+                }
             }
         }
     }
