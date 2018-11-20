@@ -6,7 +6,6 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -27,8 +26,8 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.marathon;
-import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(marathon)
 abstract class MarathonTestBase extends TestBase {
@@ -58,7 +57,7 @@ abstract class MarathonTestBase extends TestBase {
                 test.run();
                 fails = 0;
             } catch (Exception ex) {
-                log.warn("Test run {} failed with: {}", i, ex.getMessage());
+                ex.printStackTrace();
                 collector.addError(ex);
                 deleteAllAddressSpaces();
                 if (++fails >= limit) {
@@ -124,25 +123,24 @@ abstract class MarathonTestBase extends TestBase {
     void doTestCreateHighAddressCountCheckStatusDeleteLong(AddressSpace addressSpace) throws Exception {
         createAddressSpace(addressSpace);
 
-        AddressApiClient apiClient = new AddressApiClient(kubernetes);
-        JsonObject response = apiClient.getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
-
         UserCredentials user = new UserCredentials("test-user", "test-user");
         createUser(addressSpace, user);
 
         List<Destination> queueList = new ArrayList<>();
-        int queueCount = 1500;
-        for (int i = 0; i < queueCount; i++) {
-            queueList.add(Destination.queue(String.format("test-queue-status-%d", i), getDefaultPlan(AddressType.QUEUE)));
-        }
+        int queueCount = 5;
 
-        runTestInLoop(60, () -> {
+        IntStream.range(0, queueCount).forEach(i ->
+                queueList.add(Destination.queue(String.format("test-queue-status-%d", i), getDefaultPlan(AddressType.QUEUE)))
+        );
+
+        runTestInLoop(10, () -> {
             setAddresses(addressSpace, queueList.toArray(new Destination[0]));
 
-            for (Destination destination : current) {
-                TestUtils.isAddressReady(destination.toJson("v1"));
-            }
+
+            //////this fucking thing needs a json object and Ive tried everything  :(
+            queueList.forEach(destination ->
+                    assertTrue(TestUtils.isAddressReady(JsonObject.mapFrom(destination.getAddress()).getJsonObject("address")))
+            );
 
             deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         });
