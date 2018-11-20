@@ -15,21 +15,6 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 {cmdcli} login -u system:admin
 ----
-
-. Delete the project where {ProductName} is deployed:
-+
-[options="nowrap",subs="+quotes,attributes"]
-----
-{cmdcli} delete project _{ProductNamespace}_
-----
-endif::[]
-ifeval::["{cmdcli}" == "kubectl"]
-. Delete the namespace where {ProductName} is deployed:
-+
-[options="nowrap",subs="+quotes,attributes"]
-----
-{cmdcli} delete namespace _{ProductNamespace}_
-----
 endif::[]
 
 . Delete the rolebinding in the `kube-system` namespace:
@@ -68,5 +53,22 @@ ifeval::["{cmdcli}" == "kubectl"]
 {cmdcli} delete crd -l app=enmasse
 {cmdcli} delete clusterroles -l app=enmasse
 {cmdcli} delete apiservices -l app=enmasse
+----
+endif::[]
+
+ifeval::["{cmdcli}" == "oc"]
+. Delete the project where {ProductName} is deployed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete project _{ProductNamespace}_
+----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Delete the namespace where {ProductName} is deployed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete namespace _{ProductNamespace}_
 ----
 endif::[]
