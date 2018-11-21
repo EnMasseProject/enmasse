@@ -10,15 +10,9 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
@@ -60,13 +54,66 @@ public class AddressApiHelperTest {
     }
 
     @Test
-    public void testCreateAddressWithInvalidAddress() throws Exception {
+    public void testCreateAddressResourceNameAlreadyExists() throws Exception {
         when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("q1", "q1")));
         expectedException.expect(BadRequestException.class);
         expectedException.expectMessage("Address 'q1' already exists with resource name 'q1'");
 
         Address invalidAddress = createAddress("someOtherName", "q1");
         helper.createAddress("test", invalidAddress);
+        verify(addressApi, never()).createAddress(any(Address.class));
+    }
+
+    @Test
+    public void testCreateAddress() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
+
+        Address addr = createAddress("someOtherName", "q1");
+        helper.createAddress("test", addr);
+        verify(addressApi).createAddress(eq(addr));
+    }
+
+    @Test
+    public void testCreateAddresses() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
+
+        Address addr1 = createAddress("test.q1", "q1");
+        Address addr2 = createAddress("test.q2", "q2");
+        helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
+        verify(addressApi).createAddress(eq(addr1));
+        verify(addressApi).createAddress(eq(addr2));
+    }
+
+    @Test
+    public void testCreateAddressesResourceNameAlreadyExists() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("test1.q1", "q1")));
+
+        Address addr1 = createAddress("test.q1", "q1");
+        Address addr2 = createAddress("test.q2", "q2");
+        try {
+            helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
+            fail("Exception not thrown");
+        } catch (BadRequestException e) {
+            // PASS
+        }
+        verify(addressApi, never()).createAddress(any(Address.class));
+    }
+
+    @Test
+    public void testCreateAddressesResourceNameDuplicates() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
+
+        Address addr1 = createAddress("dup", "q1");
+        Address addr2 = createAddress("dup", "q2");
+        Address addr3 = createAddress("test.q3", "q3");
+        try {
+            helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
+            fail("Exception not thrown");
+        } catch (BadRequestException e) {
+            // PASS
+            assertEquals("Address resource names must be unique. Duplicate resource names: [dup]", e.getMessage());
+        }
+        verify(addressApi, never()).createAddress(any(Address.class));
     }
 
     @Test
@@ -84,6 +131,7 @@ public class AddressApiHelperTest {
         expectedException.expectMessage("Address q1 not found");
 
         helper.replaceAddress("test", createAddress("q1"));
+        verify(addressApi, never()).replaceAddress(any(Address.class));
     }
 
     @Test
@@ -98,6 +146,7 @@ public class AddressApiHelperTest {
 
         Address invalidAddress = createAddress("q1", "q2");
         helper.replaceAddress("test", invalidAddress);
+        verify(addressApi, never()).replaceAddress(any(Address.class));
     }
 
     @Test
