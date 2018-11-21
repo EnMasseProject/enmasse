@@ -84,19 +84,7 @@ public class EndpointController implements Controller {
                 continue;
             }
 
-
-            Map<String, Integer> servicePorts = new HashMap<>();
-            Map<String, String> serviceAnnotations = service.getMetadata().getAnnotations();
-            for (Map.Entry<String, String> annotationEntry : serviceAnnotations.entrySet()) {
-                String annotationKey = annotationEntry.getKey();
-                String annotationValue = annotationEntry.getValue();
-                if (annotationKey.startsWith(AnnotationKeys.SERVICE_PORT_PREFIX)) {
-                    String portName = annotationKey.substring(AnnotationKeys.SERVICE_PORT_PREFIX.length());
-                    int portValue = Integer.parseInt(annotationValue);
-                    servicePorts.put(portName, portValue);
-                }
-            }
-            statusBuilder.setServicePorts(servicePorts);
+            statusBuilder.setServicePorts(ServiceHelper.getServicePorts(service));
             endpoints.add(new EndpointInfo(endpoint, statusBuilder.build()));
         }
         return endpoints;

@@ -92,4 +92,8 @@ public class KubeUtil {
             throw new IllegalArgumentException("Illegal characters found in " + name + ". Must not match " + addressPattern);
         }
     }
+
+    public static String getNetworkPolicyName(AddressSpace addressSpace) {
+        return addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
 }

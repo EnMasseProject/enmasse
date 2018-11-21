@@ -1329,8 +1329,22 @@ __required__|enum (BrokeredInfraConfigList)
 __optional__|<<_io_enmasse_admin_v1alpha1_brokeredinfraconfigspecadmin,io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecAdmin>>
 |**broker** +
 __optional__|<<_io_enmasse_admin_v1alpha1_brokeredinfraconfigspecbroker,io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecBroker>>
+|**networkPolicy** +
+__optional__|<<_io_enmasse_admin_v1alpha1_brokeredinfraconfigspec_networkpolicy,networkPolicy>>
 |**version** +
 __required__|string
+|===
+
+[[_io_enmasse_admin_v1alpha1_brokeredinfraconfigspec_networkpolicy]]
+**networkPolicy**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**from** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
+|**to** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
 |===
 
 
@@ -1422,10 +1436,24 @@ __required__|enum (StandardInfraConfigList)
 __optional__|<<_io_enmasse_admin_v1alpha1_standardinfraconfigspecadmin,io.enmasse.admin.v1alpha1.StandardInfraConfigSpecAdmin>>
 |**broker** +
 __optional__|<<_io_enmasse_admin_v1alpha1_standardinfraconfigspecbroker,io.enmasse.admin.v1alpha1.StandardInfraConfigSpecBroker>>
+|**networkPolicy** +
+__optional__|<<_io_enmasse_admin_v1alpha1_standardinfraconfigspec_networkpolicy,networkPolicy>>
 |**router** +
 __optional__|<<_io_enmasse_admin_v1alpha1_standardinfraconfigspecrouter,io.enmasse.admin.v1alpha1.StandardInfraConfigSpecRouter>>
 |**version** +
 __required__|string
+|===
+
+[[_io_enmasse_admin_v1alpha1_standardinfraconfigspec_networkpolicy]]
+**networkPolicy**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**from** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
+|**to** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
 |===
 
 
@@ -1789,6 +1817,74 @@ __optional__|enum (Pending, Configuring, Active, Failed, Terminating)
 Type of address (queue, topic, …). Each address type support different kinds of messaging semantics.
 
 __Type__ : enum (queue, topic, anycast, multicast)
+
+
+[[_io_k8s_api_networking_v1_ipblock]]
+=== io.k8s.api.networking.v1.IPBlock
+IPBlock describes a particular CIDR (Ex. "192.168.1.1/24") that is allowed to the pods matched by a NetworkPolicySpec's podSelector. The except entry describes CIDRs that should not be included within this rule.
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**cidr** +
+__required__|CIDR is a string representing the IP Block Valid examples are "192.168.1.1/24"|string
+|**except** +
+__optional__|Except is a slice of CIDRs that should not be included within an IP Block Valid examples are "192.168.1.1/24" Except values will be rejected if they are outside the CIDR range|< string > array
+|===
+
+
+[[_io_k8s_api_networking_v1_networkpolicypeer]]
+=== io.k8s.api.networking.v1.NetworkPolicyPeer
+NetworkPolicyPeer describes a peer to allow traffic from. Only certain combinations of fields are allowed
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**ipBlock** +
+__optional__|IPBlock defines policy on a particular IPBlock. If this field is set then neither of the other fields can be.|<<_io_k8s_api_networking_v1_ipblock,io.k8s.api.networking.v1.IPBlock>>
+|**namespaceSelector** +
+__optional__|Selects Namespaces using cluster-scoped labels. This field follows standard label selector semantics; if present but empty, it selects all namespaces.
+
+If PodSelector is also set, then the NetworkPolicyPeer as a whole selects the Pods matching PodSelector in the Namespaces selected by NamespaceSelector. Otherwise it selects all Pods in the Namespaces selected by NamespaceSelector.|<<_io_k8s_apimachinery_pkg_apis_meta_v1_labelselector,io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector>>
+|**podSelector** +
+__optional__|This is a label selector which selects Pods. This field follows standard label selector semantics; if present but empty, it selects all pods.
+
+If NamespaceSelector is also set, then the NetworkPolicyPeer as a whole selects the Pods matching PodSelector in the Namespaces selected by NamespaceSelector. Otherwise it selects the Pods matching PodSelector in the policy's own Namespace.|<<_io_k8s_apimachinery_pkg_apis_meta_v1_labelselector,io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector>>
+|===
+
+
+[[_io_k8s_apimachinery_pkg_apis_meta_v1_labelselector]]
+=== io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**matchExpressions** +
+__optional__|matchExpressions is a list of label selector requirements. The requirements are ANDed.|< <<_io_k8s_apimachinery_pkg_apis_meta_v1_labelselectorrequirement,io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement>> > array
+|**matchLabels** +
+__optional__|matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.|< string, string > map
+|===
+
+
+[[_io_k8s_apimachinery_pkg_apis_meta_v1_labelselectorrequirement]]
+=== io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement
+A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**key** +
+__required__|key is the label key that the selector applies to.|string
+|**operator** +
+__required__|operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.|string
+|**values** +
+__optional__|values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.|< string > array
+|===
 
 
 

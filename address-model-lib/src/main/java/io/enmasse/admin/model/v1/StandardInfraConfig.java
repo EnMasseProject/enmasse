@@ -111,4 +111,9 @@ public class StandardInfraConfig implements InfraConfig {
     public String getVersion() {
         return spec.getVersion();
     }
+
+    @Override
+    public NetworkPolicy getNetworkPolicy() {
+        return spec.getNetworkPolicy();
+    }
 }

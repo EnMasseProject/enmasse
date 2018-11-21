@@ -1,0 +1,153 @@
+/*
+ * Copyright 2017-2018, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+package io.enmasse.controller;
+
+import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.NetworkPolicy;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.api.SchemaProvider;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.networking.*;
+import io.fabric8.kubernetes.client.KubernetesClient;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public class NetworkPolicyController implements Controller {
+    private final KubernetesClient kubernetesClient;
+    private final SchemaProvider schemaProvider;
+
+    public NetworkPolicyController(KubernetesClient kubernetesClient, SchemaProvider schemaProvider) {
+        this.kubernetesClient = kubernetesClient;
+        this.schemaProvider = schemaProvider;
+    }
+
+    @Override
+    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+        NetworkPolicy networkPolicy = null;
+        InfraConfig infraConfig = parseCurrentInfraConfig(addressSpace);
+        if (infraConfig != null) {
+            networkPolicy = infraConfig.getNetworkPolicy();
+        }
+
+        if (addressSpace.getNetworkPolicy() != null) {
+            networkPolicy = addressSpace.getNetworkPolicy();
+        }
+
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        List<Service> services = kubernetesClient.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
+
+        io.fabric8.kubernetes.api.model.networking.NetworkPolicy existingPolicy = kubernetesClient.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
+
+        if (networkPolicy != null) {
+            io.fabric8.kubernetes.api.model.networking.NetworkPolicy newPolicy = createNetworkPolicy(networkPolicy, addressSpace, services);
+            if (existingPolicy == null) {
+                kubernetesClient.network().networkPolicies().create(newPolicy);
+            } else if (hasChanged(existingPolicy, newPolicy)) {
+                kubernetesClient.network().networkPolicies().withName(existingPolicy.getMetadata().getName()).replace(newPolicy);
+            }
+        } else if (existingPolicy != null) {
+            kubernetesClient.network().networkPolicies().delete(existingPolicy);
+        }
+
+        return addressSpace;
+    }
+
+    private boolean hasChanged(io.fabric8.kubernetes.api.model.networking.NetworkPolicy existingPolicy, io.fabric8.kubernetes.api.model.networking.NetworkPolicy newPolicy) {
+        if (!Objects.equals(existingPolicy.getSpec().getIngress(), newPolicy.getSpec().getIngress())) {
+            return true;
+        }
+
+        return !Objects.equals(existingPolicy.getSpec().getEgress(), newPolicy.getSpec().getEgress());
+    }
+
+    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
+        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
+            return null;
+        }
+        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getType());
+        return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
+    }
+
+    private io.fabric8.kubernetes.api.model.networking.NetworkPolicy createNetworkPolicy(NetworkPolicy networkPolicy, AddressSpace addressSpace, List<Service> items) {
+        NetworkPolicyBuilder builder = new NetworkPolicyBuilder()
+                .editOrNewMetadata()
+                .withName(KubeUtil.getNetworkPolicyName(addressSpace))
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID))
+                .addToLabels(LabelKeys.APP, "enmasse")
+                .endMetadata();
+        builder.editOrNewSpec()
+            .editOrNewPodSelector()
+            .addToMatchLabels(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID))
+            .endPodSelector()
+            .endSpec();
+
+        if (networkPolicy.getIngress() != null) {
+            NetworkPolicyIngressRule ingressRule = networkPolicy.getIngress();
+
+            if (ingressRule.getPorts() == null || ingressRule.getPorts().isEmpty()) {
+                ingressRule = new NetworkPolicyIngressRuleBuilder(networkPolicy.getIngress())
+                        .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
+                        .build();
+            }
+            builder.editOrNewSpec()
+                    .addToPolicyTypes("Ingress")
+                    .withIngress(ingressRule)
+                    .endSpec();
+        }
+
+        if (networkPolicy.getEgress() != null) {
+            NetworkPolicyEgressRule egressRule = networkPolicy.getEgress();
+
+            if (egressRule.getPorts() == null || egressRule.getPorts().isEmpty()) {
+                egressRule = new NetworkPolicyEgressRuleBuilder(networkPolicy.getEgress())
+                        .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
+                        .build();
+            }
+            builder.editOrNewSpec()
+                    .addToPolicyTypes("Egress")
+                    .withEgress(egressRule)
+                    .endSpec();
+        }
+
+        return builder.build();
+    }
+
+    private List<NetworkPolicyPort> getPortsForAddressSpace(AddressSpace addressSpace, List<Service> items) {
+        List<NetworkPolicyPort> networkPolicyPorts = new ArrayList<>();
+        for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
+            Service service = findService(items, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace));
+            if (service != null) {
+                for (int port : ServiceHelper.getServicePorts(service).values()) {
+                    networkPolicyPorts.add(new NetworkPolicyPortBuilder()
+                            .withProtocol("TCP")
+                            .withNewPort(port)
+                            .build());
+                }
+            }
+        }
+        return networkPolicyPorts;
+    }
+
+    private Service findService(List<Service> items, String serviceName) {
+        for (Service item : items) {
+            if (serviceName.equals(item.getMetadata().getName()) && item instanceof Service) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkPolicyController";
+    }
+}

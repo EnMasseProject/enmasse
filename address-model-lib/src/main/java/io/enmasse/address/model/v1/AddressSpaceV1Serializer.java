@@ -26,7 +26,7 @@ import java.util.function.Function;
 class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
 
     @Override
-    public void serialize(AddressSpace addressSpace, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+    public void serialize(AddressSpace addressSpace, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
         root.put(Fields.API_VERSION, "enmasse.io/v1alpha1");
         root.put(Fields.KIND, "AddressSpace");
@@ -127,6 +127,10 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                     }
                 });
             }
+        }
+
+        if (addressSpace.getNetworkPolicy() != null) {
+            spec.putPOJO(Fields.NETWORK_POLICY, addressSpace.getNetworkPolicy());
         }
 
         ObjectNode authenticationService = spec.putObject(Fields.AUTHENTICATION_SERVICE);

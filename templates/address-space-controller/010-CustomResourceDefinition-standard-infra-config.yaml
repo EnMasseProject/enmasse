@@ -23,6 +23,13 @@ spec:
           properties:
             version:
               type: string
+            networkPolicy:
+              type: object
+              properties:
+                from:
+                  type: array
+                to:
+                  type: array
             admin:
               type: object
               properties:

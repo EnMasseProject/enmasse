@@ -144,7 +144,7 @@ public class StandardControllerSchema implements SchemaProvider {
                 .setInfraConfigs(Arrays.asList(new StandardInfraConfig(new ObjectMetaBuilder()
                         .withName("cfg1")
                         .addToAnnotations(AnnotationKeys.QUEUE_TEMPLATE_NAME, "queuetemplate")
-                        .build(), new StandardInfraConfigSpec("latest",
+                        .build(), new StandardInfraConfigSpec("latest", null,
                         new StandardInfraConfigSpecAdmin(
                                 new StandardInfraConfigSpecAdminResources("512Mi")),
                         new StandardInfraConfigSpecBroker(
