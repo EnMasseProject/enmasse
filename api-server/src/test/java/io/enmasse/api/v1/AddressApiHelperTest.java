@@ -54,7 +54,7 @@ public class AddressApiHelperTest {
     }
 
     @Test
-    public void testCreateAddressWithInvalidAddress() throws Exception {
+    public void testCreateAddressResourceNameAlreadyExists() throws Exception {
         when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("q1", "q1")));
         expectedException.expect(BadRequestException.class);
         expectedException.expectMessage("Address 'q1' already exists with resource name 'q1'");
@@ -77,11 +77,43 @@ public class AddressApiHelperTest {
     public void testCreateAddresses() throws Exception {
         when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
 
-        Address addr1 = createAddress("someOtherName", "q1");
-        Address addr2 = createAddress("someOtherName", "q2");
+        Address addr1 = createAddress("test.q1", "q1");
+        Address addr2 = createAddress("test.q2", "q2");
         helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
         verify(addressApi).createAddress(eq(addr1));
         verify(addressApi).createAddress(eq(addr2));
+    }
+
+    @Test
+    public void testCreateAddressesResourceNameAlreadyExists() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("test1.q1", "q1")));
+
+        Address addr1 = createAddress("test.q1", "q1");
+        Address addr2 = createAddress("test.q2", "q2");
+        try {
+            helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
+            fail("Exception not thrown");
+        } catch (BadRequestException e) {
+            // PASS
+        }
+        verify(addressApi, never()).createAddress(any(Address.class));
+    }
+
+    @Test
+    public void testCreateAddressesResourceNameDuplicates() throws Exception {
+        when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
+
+        Address addr1 = createAddress("dup", "q1");
+        Address addr2 = createAddress("dup", "q2");
+        Address addr3 = createAddress("test.q3", "q3");
+        try {
+            helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
+            fail("Exception not thrown");
+        } catch (BadRequestException e) {
+            // PASS
+            assertEquals("Address resource names must be unique. Duplicate resource names: [dup]", e.getMessage());
+        }
+        verify(addressApi, never()).createAddress(any(Address.class));
     }
 
     @Test

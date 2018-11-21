@@ -102,9 +102,20 @@ public class AddressApiHelper {
     }
 
     public void createAddresses(String addressSpaceId, Set<Address> address) throws Exception {
+
+        List<String> allResourceNames = address.stream().map(Address::getName).collect(Collectors.toList());
+        Set<String> resourceNameSet = new HashSet<>(allResourceNames);
+        if (resourceNameSet.size() != allResourceNames.size()) {
+            List<String> duplicates = new ArrayList<>(allResourceNames);
+            resourceNameSet.forEach(duplicates::remove);  // removes first
+            throw new BadRequestException("Address resource names must be unique. Duplicate resource names: " + duplicates);
+        }
+
         List<Address> sorted = address.stream()
                 .sorted(Comparator.comparing(Address::getNamespace))
                 .collect(Collectors.toList());
+
+        Map<Address, AddressApi> apiMap = new HashMap<>();
         AddressSpace addressSpace = null;
         AddressApi addressApi = null;
         AddressResolver addressResolver = null;
@@ -117,15 +128,16 @@ public class AddressApiHelper {
                 existingAddresses = addressApi.listAddresses(a.getNamespace());
             }
 
-            // Maybe better to do all the validations up front before creating any?
             addressResolver.validate(a);
             for (Address existing : existingAddresses) {
                 if (a.getAddress().equals(existing.getAddress()) && !a.getName().equals(existing.getName())) {
                     throw new BadRequestException("Address '" + a.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
                 }
             }
-            addressApi.createAddress(a);
+            apiMap.put(a, addressApi);
         }
+
+        apiMap.forEach((addr, api) -> api.createAddress(addr));
     }
 
     public Address replaceAddress(String addressSpaceId, Address address) throws Exception {
