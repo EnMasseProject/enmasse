@@ -58,7 +58,7 @@ class RouterStatusCollector {
                     .setPemKeyCertOptions(new PemKeyCertOptions()
                             .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
                             .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-            try (ProtonRequestClient client = new ProtonRequestClient(vertx)) {
+            try (ProtonRequestClient client = new ProtonRequestClient(vertx, "standard-controller")) {
                 CompletableFuture<Void> promise = new CompletableFuture<>();
                 client.connect(router.getStatus().getPodIP(), port, clientOptions, "$management", promise);
 

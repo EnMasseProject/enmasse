@@ -24,7 +24,7 @@ public class ArtemisBrokerFactory implements BrokerFactory {
 
     @Override
     public Artemis createClient(Vertx vertx, ProtonClientOptions protonClientOptions, Endpoint endpoint) throws InterruptedException, TimeoutException, ExecutionException {
-        SyncRequestClient requestClient = new ProtonRequestClient(vertx, 10);
+        SyncRequestClient requestClient = new ProtonRequestClient(vertx, "shutdown-hook", 10);
         CompletableFuture<Void> promise = new CompletableFuture<>();
         requestClient.connect(endpoint.hostname(), endpoint.port(), protonClientOptions, "activemq.management", promise);
         Artemis artemis = new Artemis(requestClient);
