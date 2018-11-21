@@ -79,46 +79,46 @@ data:
           value: "{{ $value }}"
           severity: warning
         expr: health == 1
-        for: 10s
+        for: 60s
       - alert: Component_Health
         annotations:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
           severity: critical
         expr: health == 2
-        for: 10s
+        for: 60s
       - alert: Component_Health
         annotations:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
           severity: unknown
         expr: health == 3
-        for: 10s
+        for: 60s
       - alert: Component_Ping
         annotations:
           description: "Component unreachable"
           value: "{{ $value }}"
           severity: critical
         expr: up != 1
-        for: 10s
+        for: 60s
       - alert: Address_Space_Health
         annotations:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
           severity: warning
         expr: address_spaces_ready == 0
-        for: 60s
+        for: 300s
       - alert: Terminating_Pods
         annotations:
           description: '{{ $labels.pod }}'
           value: "{{ $value }}"
           severity: warning
         expr: kube_pod_container_status_terminated == 1
-        for: 10s
+        for: 60s
       - alert: Restarting Pods
         annotations:
           description: '{{ $labels.pod }}'
           value: "{{ $value }}"
           severity: warning
         expr: rate(kube_pod_container_status_restarts_total[10m]) * 600 > 5
-        for: 10s
+        for: 60s
