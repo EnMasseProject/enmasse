@@ -6,7 +6,6 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.AuthService;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import org.junit.jupiter.api.Test;
