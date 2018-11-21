@@ -336,22 +336,22 @@ public class AddressApiClient extends ApiClient {
                     "Size of batches cannot be greater then count of addresses! got %s; expected <= %s",
                     batchSize, destinations.length));
         }
-        int start = 0;
-        int end = batchSize - 1;
         if (batchSize == -1) {
             JsonObject payload = createAddressListPayloadJson(addressSpace, destinations);
             createAddresses(addressSpace, payload, HTTP_CREATED);
         } else {
-            while (end < destinations.length) {
-                JsonObject payload = createAddressListPayloadJson(addressSpace, Arrays.copyOfRange(destinations, start, end));
-                createAddresses(addressSpace, payload, HTTP_CREATED);
-                start += batchSize;
-                end += batchSize;
-            }
-            start -= batchSize;
-            if (start < destinations.length) {
-                JsonObject payload = createAddressListPayloadJson(addressSpace, Arrays.copyOfRange(destinations, start, destinations.length - 1));
-                createAddresses(addressSpace, payload, HTTP_CREATED);
+            int start = 0;
+            try {
+                while (start < destinations.length) {
+                    Destination[] splice = Arrays.copyOfRange(destinations, start,  Math.min(start + batchSize, destinations.length));
+                    JsonObject payload = createAddressListPayloadJson(addressSpace, splice);
+                    createAddresses(addressSpace, payload, HTTP_CREATED);
+                    start += splice.length;
+                }
+            } finally {
+                if (start < destinations.length) {
+                    log.error("Create addresses failed processing destinations at index {}  (size {})", start, destinations.length);
+                }
             }
         }
     }
