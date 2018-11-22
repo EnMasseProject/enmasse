@@ -38,6 +38,7 @@ spec:
         - name: LISTEN_PORT
           value: '8443'
         image: ${SERVICE_BROKER_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         livenessProbe:
           httpGet:
             path: /healthz

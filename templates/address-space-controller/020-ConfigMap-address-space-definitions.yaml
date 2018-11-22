@@ -236,6 +236,7 @@ data:
               - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
                 value: "qdrouterd-headless-${INFRA_UUID}"
               image: ${ROUTER_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 initialDelaySeconds: 60
                 tcpSocket:
@@ -282,6 +283,7 @@ data:
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               image: ${ROUTER_METRICS_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 initialDelaySeconds: 60
                 tcpSocket:
@@ -398,6 +400,7 @@ data:
               - name: MESSAGING_SECRET
                 value: ${MESSAGING_SECRET}
               image: ${STANDARD_CONTROLLER_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
                   path: /health
@@ -460,6 +463,7 @@ data:
               - name: MESSAGING_CERT
                 value: /opt/agent/messaging-cert/tls.crt
               image: ${AGENT_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
                   path: /probe
@@ -726,6 +730,7 @@ data:
               - /opt/app-root/src/bin/launch_node.sh
               - /opt/app-root/src/bin/subserv.js
               image: ${AGENT_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 initialDelaySeconds: 60
                 tcpSocket:
@@ -820,6 +825,7 @@ data:
               - name: ENMASSE_MQTT_MAXMESSAGESIZE
                 value: ${MQTT_MAXMESSAGESIZE}
               image: ${MQTT_GATEWAY_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 initialDelaySeconds: 60
                 tcpSocket:
@@ -834,6 +840,7 @@ data:
                 name: ssl-certs
                 readOnly: true
             - image: ${MQTT_GATEWAY_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               env:
               - name: MESSAGING_SERVICE_HOST
                 value: messaging-${INFRA_UUID}
@@ -893,6 +900,7 @@ data:
               - name: MESSAGING_SERVICE_ROUTE_CONTAINER_PORT
                 value: 56671
               image: ${MQTT_LWT_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               name: mqtt-lwt
               volumeMounts:
               - mountPath: /etc/enmasse-certs
@@ -1007,6 +1015,7 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ARTEMIS_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 exec:
                   command:
@@ -1181,6 +1190,7 @@ data:
               - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
                 value: ${AUTHENTICATION_SERVICE_KC_IDP_HINT}
               image: ${AGENT_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
                   path: /probe

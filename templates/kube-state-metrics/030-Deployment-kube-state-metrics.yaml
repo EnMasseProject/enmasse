@@ -19,6 +19,7 @@ spec:
       containers:
       - name: kube-metrics
         image: ${KUBE_STATE_METRICS_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         ports:
         - containerPort: 8080
           name: kube-metrics

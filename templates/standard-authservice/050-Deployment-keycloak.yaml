@@ -41,6 +41,7 @@ spec:
               name: keycloak-config
               optional: true
         image: ${KEYCLOAK_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         livenessProbe:
           httpGet:
             path: /auth
@@ -82,6 +83,7 @@ spec:
         - name: KEYCLOAK_DIR
           value: /opt/jboss/keycloak
         image: ${KEYCLOAK_PLUGIN_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: keycloak-plugin
         volumeMounts:
         - mountPath: /opt/jboss/keycloak/providers

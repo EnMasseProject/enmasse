@@ -18,6 +18,7 @@ spec:
     spec:
       containers:
       - image: ${ALERTMANAGER_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: alertmanager
         ports:
         - containerPort: 9093

@@ -107,6 +107,7 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ARTEMIS_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               lifecycle:
                 preStop:
                   exec:
@@ -326,6 +327,7 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ARTEMIS_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               lifecycle:
                 preStop:
                   exec:
@@ -381,6 +383,7 @@ data:
               - name: CERT_DIR
                 value: /etc/enmasse-certs
               image: ${TOPIC_FORWARDER_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
                   path: /health
