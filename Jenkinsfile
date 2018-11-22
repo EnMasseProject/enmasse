@@ -18,7 +18,6 @@ pipeline {
     parameters {
         string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
         string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
-        string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -84,7 +83,6 @@ pipeline {
             steps {
                 build job: env.BROKERED_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
-                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'brokered.**'],
                                 [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
@@ -97,7 +95,6 @@ pipeline {
             steps {
                 build job: env.STANDARD_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
-                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'standard.**'],
                                 [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
@@ -110,7 +107,6 @@ pipeline {
             steps {
                 build job: env.PLANS_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
-                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.**'],
                                 [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
@@ -137,11 +133,11 @@ pipeline {
             //archive test results and openshift lofs
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
-            archive 'templates/install/**'
+            archive 'templates/build/**'
         }
         failure {
             echo "build failed"
-            mail to: "$MAILING_LIST", subject: "EnMasse master build has finished with ${result}", body: "See ${env.BUILD_URL}"
+            mail to:"${env.MAILING_LIST}", subject:"EnMasse build has finished with ${result}", body:"See ${env.BUILD_URL}"
         }
     }
 }

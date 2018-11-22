@@ -10,7 +10,6 @@ pipeline {
     }
     parameters {
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-        string(name: 'MAILING_LIST', defaultValue: '', description: '')
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
     }
@@ -19,6 +18,7 @@ pipeline {
         ansiColor('xterm')
     }
     environment {
+        MAILING_LIST = credentials('MAILING_LIST')
         CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
@@ -95,7 +95,7 @@ pipeline {
         }
         failure {
             echo "build failed"
-            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+            mail to:"${env.MAILING_LIST}", subject:"EnMasse build has finished with ${result}", body:"See ${env.BUILD_URL}"
         }
     }
 }
