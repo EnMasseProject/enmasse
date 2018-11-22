@@ -224,10 +224,6 @@ public class ConsoleWebPage implements IWebPage {
         return getSortGroup().findElement(By.className("btn-link"));
     }
 
-    public WebElement getCreateAddressModalWindow() throws Exception {
-        return selenium.getDriver().findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
-    }
-
     private WebElement getRightDropDownMenus() throws Exception {
         return selenium.getDriver().findElement(By.className("navbar-right"));
     }
@@ -317,6 +313,54 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
     }
 
+    //
+    //Create address modal window getters
+    //
+
+    public WebElement getAddressModalNextButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
+    }
+
+    /**
+     * get Address Modal window Back button
+     */
+    private WebElement getAddressModalBackButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("backButton")));
+    }
+
+    /**
+     * get Address Modal window Cancel button
+     */
+    private WebElement getAddressModalCancelButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("btn-cancel")));
+    }
+
+    /**
+     * get the radio button for the destination
+     */
+    public WebElement getRadioButtonForAddressType(Destination destination) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getType().toLowerCase())));
+    }
+
+    /**
+     * get Address Modal window page by selecting numbered circle
+     */
+    private WebElement getAddressModalPageNumbers() throws Exception {
+        return selenium.getDriver().findElement(By.className("wizard-pf-steps-indicator"));
+    }
+
+    public WebElement getAddressModalPageByNumber(Integer pageNumber) throws Exception {
+        return getAddressModalPageNumbers().findElements(By.className("wizard-pf-step-number")).get(pageNumber - 1);  //zero indexed
+    }
+
+    public WebElement getCreateAddressModalWindow() throws Exception {
+        return selenium.getDriver().findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
+    }
+
+    public WebElement getAddressNameInputBox() throws Exception {
+        return selenium.getDriver().findElement(By.className("modal-dialog")).findElement(By.id("new-name"));
+    }
+
     //================================================================================================
     // Operations
     //================================================================================================
@@ -373,6 +417,22 @@ public class ConsoleWebPage implements IWebPage {
 
     public void clickOnRemoveButton() throws Exception {
         selenium.clickOnItem(getRemoveButton());
+    }
+
+    public void clickOnAddressModalNextButton() throws Exception {
+        selenium.clickOnItem(getAddressModalNextButton());
+    }
+
+    public void clickOnAddressModalBackButton() throws Exception {
+        selenium.clickOnItem(getAddressModalBackButton());
+    }
+
+    public void clickOnAddressModalCancelButton() throws Exception {
+        selenium.clickOnItem(getAddressModalCancelButton());
+    }
+
+    public void clickOnAddressModalPageByNumber(Integer pageNumber) throws Exception {
+        selenium.clickOnItem(getAddressModalPageByNumber(pageNumber));
     }
 
     public void clickOnRegexAlertClose() throws Exception {
