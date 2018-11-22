@@ -86,6 +86,8 @@ public class TestUtils {
      */
     public static void waitForNBrokerReplicas(Kubernetes kubernetes, String infraUuid, int expectedReplicas, boolean readyRequired,
                                               Destination destination, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        String statefulsetName = destination.getDeployment().startsWith("broker") ?
+                String.format("broker-pooled-%s", infraUuid) : destination.getDeployment();
         Map<String, String> labels = new HashMap<>();
         labels.put("role", "broker");
         labels.put("infraUuid", infraUuid);
@@ -93,7 +95,7 @@ public class TestUtils {
                 expectedReplicas,
                 readyRequired,
                 labels,
-                Collections.singletonMap("cluster_id", destination.getDeployment()),
+                Collections.singletonMap("cluster_id", statefulsetName),
                 budget,
                 checkInterval);
     }

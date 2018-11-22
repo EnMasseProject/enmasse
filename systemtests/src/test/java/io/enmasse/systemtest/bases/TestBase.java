@@ -592,21 +592,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), expectedReplicas, readyRequired, destination, budget, checkInterval);
+    private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget, long checkInterval) throws Exception {
+        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getInfraUuid(), expectedReplicas, readyRequired, destination, budget, checkInterval);
     }
 
-    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget) throws InterruptedException {
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget) throws Exception {
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, readyRequired, budget, 5000);
     }
 
     private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination,
-                                       int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+                                       int expectedReplicas, TimeoutBudget budget) throws Exception {
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, true, budget, 5000);
     }
 
     protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
-            InterruptedException {
+            Exception {
         TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
     }
@@ -626,7 +626,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             try {
                 waitForBrokerReplicas(addressSpace, dest, setValue, false, new TimeoutBudget(3, TimeUnit.MINUTES), 1);
                 log.info("Waiting for expected replicas {} finished!", setValue);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
