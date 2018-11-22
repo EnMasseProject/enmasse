@@ -27,6 +27,13 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
     }
 
     @Test
+    void testCreateHighAddressCountCheckStatusDeleteLong() throws Exception {
+        doTestCreateHighAddressCountCheckStatusDeleteLong(
+                new AddressSpace("test-create-addresses-check-status-delete",
+                        AddressSpaceType.STANDARD, AuthService.STANDARD));
+    }
+
+    @Test
     void testQueueSendReceiveLong() throws Exception {
         doTestQueueSendReceiveLong(
                 new AddressSpace("test-queue-sendreceive-standard", AddressSpaceType.STANDARD, AuthService.STANDARD));
