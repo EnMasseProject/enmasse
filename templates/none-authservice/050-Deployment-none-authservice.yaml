@@ -21,6 +21,7 @@ spec:
         - name: LISTENPORT
           value: '5671'
         image: ${NONE_AUTHSERVICE_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         livenessProbe:
           initialDelaySeconds: 60
           tcpSocket:

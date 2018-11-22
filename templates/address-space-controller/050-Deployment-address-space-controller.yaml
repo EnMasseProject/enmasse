@@ -70,6 +70,7 @@ spec:
               name: address-space-controller-config
               optional: true
         image: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         livenessProbe:
           httpGet:
             path: /healthz

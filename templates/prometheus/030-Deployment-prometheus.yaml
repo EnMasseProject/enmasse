@@ -18,6 +18,7 @@ spec:
     spec:
       containers:
       - image: ${PROMETHEUS_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: prometheus
         ports:
         - containerPort: 9090

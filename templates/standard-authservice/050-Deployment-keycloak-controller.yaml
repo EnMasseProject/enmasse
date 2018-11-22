@@ -29,6 +29,7 @@ spec:
         - name: KEYCLOAK_CERT_SECRET_NAME
           value: "standard-authservice-cert"
         image: ${KEYCLOAK_CONTROLLER_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: keycloak-controller
         resources:
           limits:
