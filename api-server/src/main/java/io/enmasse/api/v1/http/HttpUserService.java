@@ -191,7 +191,7 @@ public class HttpUserService {
             log.debug("Deleting user {} in realm {} namespace {}", userName, realm, namespace);
             User user = userApi.getUserWithName(realm, userName).orElse(null);
             if (user == null) {
-                return Response.status(404).entity(Status.notFound("MessagingUser", user.getMetadata().getName())).build();
+                return Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build();
             }
             userApi.deleteUser(realm, user);
             return Response.ok(Status.successStatus(200)).build();
