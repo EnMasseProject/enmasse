@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("../lib/log.js").logger();
 var AddressSource = require('../lib/internal_address_source.js');
 var BrokerAddressSettings = require('../lib/broker_address_settings.js');
 var ConsoleServer = require('../lib/console_server.js');
@@ -58,6 +59,20 @@ function start(env) {
             ragent.start_listening(env);
             ragent.listen_probe({PROBE_PORT:8888});
         }
+
+        process.on('SIGTERM', function () {
+            log.info('Shutdown started');
+            var exitHandler = function () {
+                process.exit(0);
+            };
+            var timeout = setTimeout(exitHandler, 2000);
+
+            console_server.close(function() {
+                log.info("Console server closed");
+                clearTimeout(timeout);
+                exitHandler();
+            });
+        });
     });
 }
 
