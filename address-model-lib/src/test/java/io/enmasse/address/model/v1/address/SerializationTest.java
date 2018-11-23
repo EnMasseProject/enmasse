@@ -138,6 +138,7 @@ public class SerializationTest {
                         .setCertSpec(new CertSpec.Builder().setProvider("provider").setSecretName("mysecret").build())
                         .setExposeSpec(new ExposeSpec.Builder()
                                 .setType(route)
+                                .setRouteHost("example.com")
                                 .setRouteTlsTermination(passthrough)
                                 .setRouteServicePort("amqp")
                                 .build())
