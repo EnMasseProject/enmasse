@@ -5,8 +5,6 @@
 package io.enmasse.address.model;
 
 import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
 
 import java.util.Optional;
 

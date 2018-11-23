@@ -6,7 +6,6 @@ package io.enmasse.address.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Type for address space list

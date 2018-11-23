@@ -10,7 +10,6 @@ import io.vertx.core.http.HttpServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.function.Predicate;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.ws.rs.container.ContainerRequestContext;

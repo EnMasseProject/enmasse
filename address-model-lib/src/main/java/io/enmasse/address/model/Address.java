@@ -4,12 +4,8 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.config.AnnotationKeys;
-
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
-import static io.enmasse.address.model.KubeUtil.sanitizeName;
 
 /**
  * An EnMasse Address addressspace.

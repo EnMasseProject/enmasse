@@ -7,9 +7,6 @@ package io.enmasse.address.model.v1.address;
 import io.enmasse.address.model.KubeUtil;
 import org.junit.Test;
 
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 

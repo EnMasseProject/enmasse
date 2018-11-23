@@ -6,7 +6,6 @@ package io.enmasse.api.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 
 import java.util.HashMap;
 import java.util.Map;

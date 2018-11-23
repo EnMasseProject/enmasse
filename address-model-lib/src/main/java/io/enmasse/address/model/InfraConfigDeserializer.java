@@ -7,7 +7,6 @@ package io.enmasse.address.model;
 import io.enmasse.admin.model.v1.InfraConfig;
 
 import java.io.IOException;
-import java.util.Map;
 
 public interface InfraConfigDeserializer {
    InfraConfig fromJson(String json) throws IOException;

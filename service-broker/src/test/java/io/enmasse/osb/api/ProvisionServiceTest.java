@@ -5,9 +5,7 @@
 
 package io.enmasse.osb.api;
 
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,8 +23,6 @@ import org.jboss.resteasy.util.HttpResponseCodes;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
