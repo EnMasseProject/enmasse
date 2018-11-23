@@ -110,11 +110,13 @@ public class BrokeredInfraConfig implements InfraConfig {
     }
 
     @Override
+    @JsonIgnore
     public String getVersion() {
         return spec.getVersion();
     }
 
     @Override
+    @JsonIgnore
     public NetworkPolicy getNetworkPolicy() {
         return spec.getNetworkPolicy();
     }
