@@ -128,7 +128,6 @@ The following deployment names are available depending on their types and EnMass
    * `topic-forwarder`
    * `mqtt-gateway`
    * `mqtt-lwt`
-   * `queue-scheduler`
 
 For forwarding port from the remote pod to the local host invoke following command (it will lock terminal) and then
 connect with development tool to the forwarded port on localhost
