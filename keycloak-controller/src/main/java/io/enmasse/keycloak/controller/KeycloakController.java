@@ -361,7 +361,7 @@ public class KeycloakController {
             try (ResponseBody responseBody = response.body()) {
                 String responseString = responseBody != null ? responseBody.string() : "{}";
                 if (response.isSuccessful()) {
-                    Map values = mapper.readValue(responseString, Map.class);
+                    Map<?,?> values = mapper.readValue(responseString, Map.class);
                     return (String) values.get("issuer");
                 } else {
                     String errorMessage = String.format("Error retrieving OpenShift OAUTH URL: %d, %s", response.code(), responseString);

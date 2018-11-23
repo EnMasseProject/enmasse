@@ -361,7 +361,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
     }
 
     static class TypeConverter {
-        private static final Map<Class, Function<JsonNode, Object>> converterMap = new HashMap<>();
+        private static final Map<Class<?>, Function<JsonNode, Object>> converterMap = new HashMap<>();
 
         static {
             converterMap.put(TextNode.class, JsonNode::textValue);
@@ -370,7 +370,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             converterMap.put(BooleanNode.class, JsonNode::booleanValue);
         }
 
-        public static Object getValue(Class type, JsonNode node) {
+        public static Object getValue(Class<?> type, JsonNode node) {
             Object value = converterMap.get(node.getClass()).apply(node);
             if (!type.equals(value.getClass())) {
                 throw new RuntimeException("Expected value of type " + type + ", but was " + value.getClass());
