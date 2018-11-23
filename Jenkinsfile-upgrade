@@ -19,6 +19,7 @@ pipeline {
         ansiColor('xterm')
     }
     environment {
+        MAILING_LIST = credentials('MAILING_LIST')
         CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
@@ -66,7 +67,7 @@ pipeline {
         stage('download released version') {
             steps {
                 sh "git checkout tags/${params.START_VERSION}"
-                sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+                sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
             }
         }
         stage('deploy enmasse') {
@@ -164,6 +165,7 @@ pipeline {
         }
         failure {
             echo "build failed"
+            mail to:"${env.MAILING_LIST}", subject:"EnMasse build has finished with ${result}", body:"See ${env.BUILD_URL}"
         }
     }
 }
