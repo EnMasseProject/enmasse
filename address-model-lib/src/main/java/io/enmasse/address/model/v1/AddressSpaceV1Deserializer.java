@@ -309,7 +309,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             case route:
             {
                 if (exposeSpec.hasNonNull(Fields.ROUTE_HOST)) {
-                    builder.setRouteHost(exposeSpec.get(Fields.HOST).asText());
+                    builder.setRouteHost(exposeSpec.get(Fields.ROUTE_HOST).asText());
                 }
 
                 if (exposeSpec.hasNonNull(Fields.ROUTE_TLS_TERMINATION)) {
