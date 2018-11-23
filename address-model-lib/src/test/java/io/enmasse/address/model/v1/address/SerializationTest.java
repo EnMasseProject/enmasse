@@ -170,7 +170,7 @@ public class SerializationTest {
         assertThat(deserialized.getStatus().getEndpointStatuses().size(), is(addressSpace.getEndpoints().size()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getName(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getName()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalHost()));
-        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalPorts().get(0), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalPorts().get(0)));
+        assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalPorts().values().iterator().next(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalPorts().values().iterator().next()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServiceHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServiceHost()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServicePorts(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServicePorts()));
         assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
