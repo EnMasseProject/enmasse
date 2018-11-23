@@ -56,7 +56,7 @@ public class HttpAddressService extends HttpAddressServiceBase {
             throw new UnprocessableEntityException("Required value: name is required");
         }
         String addressSpace = parseAddressSpace(payload.getName());
-        return super.createAddress(securityContext, uriInfo, namespace, addressSpace, Either.<Address, AddressList>createLeft(payload));
+        return super.createAddress(securityContext, uriInfo, namespace, addressSpace, Either.createLeft(payload));
     }
 
     @PUT

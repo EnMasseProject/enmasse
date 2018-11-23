@@ -45,7 +45,7 @@ public class AmqpServerSpi implements Spi {
     }
 
     @Override
-    public Class<? extends ProviderFactory> getProviderFactoryClass()
+    public Class<? extends ProviderFactory<?>> getProviderFactoryClass()
     {
         return AmqpServerProviderFactory.class;
     }

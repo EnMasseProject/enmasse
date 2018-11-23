@@ -167,6 +167,7 @@ public class MqttGateway extends AbstractVerticle {
         });
 
         if (this.server != null) {
+            @SuppressWarnings("rawtypes")
             List<Future> closeFutures = this.bridges.entrySet()
                                                     .stream()
                                                     .map(entry -> entry.getValue().close())

@@ -4,8 +4,6 @@
  */
 package io.enmasse.address.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;

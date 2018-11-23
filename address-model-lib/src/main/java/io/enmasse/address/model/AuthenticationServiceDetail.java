@@ -6,10 +6,10 @@ package io.enmasse.address.model;
 
 public class AuthenticationServiceDetail {
     private final String name;
-    private final Class type;
+    private final Class<?> type;
     private final boolean mandatory;
 
-    public AuthenticationServiceDetail(String name, Class type, boolean mandatory) {
+    public AuthenticationServiceDetail(String name, Class<?> type, boolean mandatory) {
         this.name = name;
         this.type = type;
         this.mandatory = mandatory;
@@ -19,7 +19,7 @@ public class AuthenticationServiceDetail {
         return name;
     }
 
-    public Class getType() {
+    public Class<?> getType() {
         return type;
     }
 

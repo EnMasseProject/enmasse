@@ -55,37 +55,39 @@ public class ArtemisTest {
     @Test
     public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
         TestClient testClient = new TestClient();
-        Artemis artemis = new Artemis(testClient);
+        try (Artemis artemis = new Artemis(testClient)) {
 
-        testClient.response = Proton.message();
-        artemis.deployQueue("queue1", "queue1");
-        String body = (String)((AmqpValue)testClient.request.getBody()).getValue();
-        assertEquals("[\"queue1\",\"queue1\",null,false]", body);
-        assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
-        assertEquals("deployQueue", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
+            testClient.response = Proton.message();
+            artemis.deployQueue("queue1", "queue1");
+            String body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+            assertEquals("[\"queue1\",\"queue1\",null,false]", body);
+            assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+            assertEquals("deployQueue", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
 
-        artemis.deployQueue("queue2", "queue2");
-        body = (String)((AmqpValue)testClient.request.getBody()).getValue();
-        assertEquals("[\"queue2\",\"queue2\",null,false]", body);
-        assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
-        assertEquals("deployQueue", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
+            artemis.deployQueue("queue2", "queue2");
+            body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+            assertEquals("[\"queue2\",\"queue2\",null,false]", body);
+            assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+            assertEquals("deployQueue", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
 
-        testClient.response = Proton.message();
-        testClient.response.setBody(new AmqpValue("[[\"q1\"],[\"q2\"],[\"tome\"]]"));
-        long numQueues = artemis.getNumQueues();
-        assertEquals(2, numQueues);
-        body = (String)((AmqpValue)testClient.request.getBody()).getValue();
-        assertEquals("[]", body);
-        assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
-        assertEquals("getQueueNames", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
+            testClient.response = Proton.message();
+            testClient.response.setBody(new AmqpValue("[[\"q1\"],[\"q2\"],[\"tome\"]]"));
+            long numQueues = artemis.getNumQueues();
+            assertEquals(2, numQueues);
+            body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+            assertEquals("[]", body);
+            assertEquals("broker", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+            assertEquals("getQueueNames", testClient.request.getApplicationProperties().getValue().get("_AMQ_OperationName"));
 
-        testClient.response = Proton.message();
-        testClient.response.setBody(new AmqpValue("[42]"));
-        long messageCount = artemis.getQueueMessageCount("q1");
-        assertEquals(42, messageCount);
-        body = (String)((AmqpValue)testClient.request.getBody()).getValue();
-        assertEquals("[]", body);
-        assertEquals("queue.q1", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
-        assertEquals("messageCount", testClient.request.getApplicationProperties().getValue().get("_AMQ_Attribute"));
+            testClient.response = Proton.message();
+            testClient.response.setBody(new AmqpValue("[42]"));
+            long messageCount = artemis.getQueueMessageCount("q1");
+            assertEquals(42, messageCount);
+            body = (String)((AmqpValue)testClient.request.getBody()).getValue();
+            assertEquals("[]", body);
+            assertEquals("queue.q1", testClient.request.getApplicationProperties().getValue().get("_AMQ_ResourceName"));
+            assertEquals("messageCount", testClient.request.getApplicationProperties().getValue().get("_AMQ_Attribute"));
+
+        }
     }
 }

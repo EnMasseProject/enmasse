@@ -14,7 +14,7 @@ import io.enmasse.address.model.AddressList;
 
 import java.io.IOException;
 
-public class AddressAndAddressListDeserializer extends JsonDeserializer<Either> {
+public class AddressAndAddressListDeserializer extends JsonDeserializer<Either<?,?>> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private final AddressV1Deserializer addressV1Deserializer;
@@ -26,7 +26,7 @@ public class AddressAndAddressListDeserializer extends JsonDeserializer<Either> 
     }
 
     @Override
-    public Either deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+    public Either<?,?> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
         String kind = root.get(Fields.KIND).asText();
         if ("AddressList".equals(kind)) {

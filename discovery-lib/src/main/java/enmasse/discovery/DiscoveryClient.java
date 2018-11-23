@@ -5,7 +5,6 @@
 
 package enmasse.discovery;
 
-import io.enmasse.k8s.api.Watcher;
 import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class DiscoveryClient implements ListerWatcher<io.fabric8.kubernetes.api.model.Pod, PodList> {

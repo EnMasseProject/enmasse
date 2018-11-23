@@ -5,7 +5,6 @@
 package io.enmasse.address.model.v1;
 
 import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.Schema;
 
 /**
  * An interface for decoding address space types names

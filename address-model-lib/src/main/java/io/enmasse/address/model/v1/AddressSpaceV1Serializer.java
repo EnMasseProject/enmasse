@@ -134,7 +134,7 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
         ObjectNode authDetails = authenticationService.putObject(Fields.DETAILS);
         Map<String, Object> details = addressSpace.getAuthenticationService().getDetails();
 
-        for (Map.Entry<String, Class> detailsFields : addressSpace.getAuthenticationService().getType().getDetailsFields().entrySet()) {
+        for (Map.Entry<String, Class<?>> detailsFields : addressSpace.getAuthenticationService().getType().getDetailsFields().entrySet()) {
             if (details.containsKey(detailsFields.getKey())) {
                 authDetails.set(detailsFields.getKey(), TypeConverter.getJsonNode(detailsFields.getValue(), details.get(detailsFields.getKey())));
             }
@@ -184,7 +184,7 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
     }
 
     static class TypeConverter {
-        private static final Map<Class, Function<Object, JsonNode>> converterMap = new HashMap<>();
+        private static final Map<Class<?>, Function<Object, JsonNode>> converterMap = new HashMap<>();
 
         static {
             converterMap.put(String.class, o -> new TextNode((String) o));
@@ -193,7 +193,7 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
             converterMap.put(Boolean.class, o -> BooleanNode.valueOf((Boolean) o));
         }
 
-        public static JsonNode getJsonNode(Class type, Object value) {
+        public static JsonNode getJsonNode(Class<?> type, Object value) {
             return converterMap.get(type).apply(value);
         }
     }

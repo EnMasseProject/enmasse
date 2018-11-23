@@ -95,7 +95,7 @@ public class SaslDelegatingLogin implements LoginModule {
 
     static {
         try {
-            Class jassCallbackHandlerClass = Class.forName("org.apache.activemq.artemis.spi.core.security.jaas.JaasCallbackHandler");
+            Class<?> jassCallbackHandlerClass = Class.forName("org.apache.activemq.artemis.spi.core.security.jaas.JaasCallbackHandler");
             REMOTING_CONNECTION_FIELD = jassCallbackHandlerClass.getField("remotingConnection");
             REMOTING_CONNECTION_FIELD.setAccessible(true);
         } catch (ClassNotFoundException | NoSuchFieldException ignored) {
@@ -343,7 +343,7 @@ public class SaslDelegatingLogin implements LoginModule {
         Symbol[] supportedCapabilities = connection.getRemoteOfferedCapabilities();
         boolean supportsAuthz = supportedCapabilities != null && Arrays.asList(supportedCapabilities).contains(CAPABILITY_ADDRESS_AUTHZ);
         if (remoteProperties != null && remoteProperties.get(AUTHENTICATED_IDENTITY) instanceof Map) {
-            Map identity = (Map) remoteProperties.get(AUTHENTICATED_IDENTITY);
+            Map<?,?> identity = (Map<?,?>) remoteProperties.get(AUTHENTICATED_IDENTITY);
             if (identity.containsKey(PREFERRED_USERNAME)) {
                 user = String.valueOf(identity.get(PREFERRED_USERNAME)).trim();
             } else {

@@ -28,7 +28,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
     private final Duration resyncInterval;
     private final ListerWatcher<T, LT> listerWatcher;
     private final Processor<T> processor;
-    private final Class expectedType;
+    private final Class<?> expectedType;
     private final WorkQueue<T> queue;
     private final Clock clock;
     private volatile Watch watch;
@@ -155,7 +155,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
         private ListerWatcher<T, LT> listerWatcher;
         private Processor<T> processor;
         private WorkQueue<T> queue;
-        private Class expectedType;
+        private Class<?> expectedType;
 
         public Config<T, LT> setClock(Clock clock) {
             this.clock = clock;
@@ -182,7 +182,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
             return this;
         }
 
-        public Config<T, LT> setExpectedType(Class expectedType) {
+        public Config<T, LT> setExpectedType(Class<?> expectedType) {
             this.expectedType = expectedType;
             return this;
         }

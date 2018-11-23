@@ -97,7 +97,7 @@ class RouterStatusCollector {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("operation", "QUERY");
         properties.put("entityType", entityType);
-        Map body = new LinkedHashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
 
         body.put("attributeNames", attributeNames);
 
@@ -107,7 +107,9 @@ class RouterStatusCollector {
 
         Message response = client.request(message, 10, TimeUnit.SECONDS);
         AmqpValue value = (AmqpValue) response.getBody();
-        Map values = (Map) value.getValue();
+        Map<?,?> values = (Map<?,?>) value.getValue();
+
+        @SuppressWarnings("unchecked")
         List<List<String>> results = (List<List<String>>) values.get("results");
         return results;
     }

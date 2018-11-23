@@ -56,10 +56,10 @@ public class AddressSpaceType {
         return Optional.empty();
     }
 
-    public <T extends InfraConfig> Optional<T> findInfraConfig(String name) {
+    public Optional<InfraConfig> findInfraConfig(String name) {
         for (InfraConfig infraConfig : infraConfigs) {
             if (name.equals(infraConfig.getMetadata().getName())) {
-                return Optional.of((T) infraConfig);
+                return Optional.of(infraConfig);
             }
         }
         return Optional.empty();

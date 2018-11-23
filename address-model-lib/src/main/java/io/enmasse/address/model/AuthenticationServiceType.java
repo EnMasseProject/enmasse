@@ -18,7 +18,7 @@ public enum AuthenticationServiceType {
             new AuthenticationServiceDetail("clientCertSecretName", String.class, false),
             new AuthenticationServiceDetail("saslInitHost", String.class, true));
 
-    private final Map<String, Class> detailsFields = new HashMap<>();
+    private final Map<String, Class<?>> detailsFields = new HashMap<>();
     private final Set<String> mandatoryFields = new HashSet<>();
 
     AuthenticationServiceType(AuthenticationServiceDetail ... details) {
@@ -31,7 +31,7 @@ public enum AuthenticationServiceType {
         }
     }
 
-    public Map<String, Class> getDetailsFields() {
+    public Map<String, Class<?>> getDetailsFields() {
         return Collections.unmodifiableMap(detailsFields);
     }
 
