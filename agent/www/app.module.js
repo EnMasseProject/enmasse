@@ -1,6 +1,6 @@
 angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.views', 'ui.grid', 'ui.grid.autoResize',
         'ui.grid.resizeColumns', 'ui.bootstrap', 'patternfly.toolbars', 'patternfly.charts', 'patternfly.wizard',
-        'patternfly.validation', 'address_service']).config(
+        'patternfly.validation', 'patternfly.modals', 'address_service']).config(
     function ($stateProvider, $urlRouterProvider) {
         $urlRouterProvider.otherwise('/addresses');
         $stateProvider.state('addresses',

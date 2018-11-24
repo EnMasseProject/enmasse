@@ -394,6 +394,39 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
       }
     ]);
 
+angular.module('patternfly.modals').controller('PeerLostController', ['$scope', '$uibModal', 'address_service',
+    function ($scope, $uibModal, address_service) {
+
+        $scope.openWizardModel = function () {
+            $scope.modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: 'static',
+                templateUrl: '/peer_lost.html',
+                controller: function ($scope, $uibModalInstance) {
+                },
+                size: 'lg'
+            });
+            console.log("modalInstance %s", modalInstance);
+        };
+
+        address_service.add_additional_listener(function(reason) {
+            console.log('callback %s', reason);
+            if (reason === 'peer_disconnected') {
+                if (!$scope.modalInstance) {
+                    console.log("disconnected");
+                    $scope.openWizardModel();
+                }
+            } else if (reason === 'peer_connected') {
+                if ($scope.modalInstance) {
+                    console.log("connected");
+                    $scope.modalInstance.close();
+                    $scope.modalInstance = null;
+                }
+            }
+        });
+    }
+    ]);
+
 angular.module('patternfly.wizard').controller('WizardModalController', ['$scope', '$timeout', '$uibModal', '$rootScope',
    function ($scope, $timeout, $uibModal, $rootScope) {
         $scope.openWizardModel = function () {

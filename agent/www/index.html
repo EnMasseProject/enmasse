@@ -51,6 +51,37 @@
     <script src="components/connections/connections_ctrl.js"></script>
   </head>
   <body>
+
+  <script type="text/ng-template" id="/peer_lost.html">
+    <div class="message-dialog-pf">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myErrorDialogLabel">Server Connection Lost</h4>
+      </div>
+      <div class="modal-body">
+        <div>
+          <p class="lead pficon pficon-error-circle-o">
+            Server Connection Lost
+          </p>
+          <p>
+            This may mean that a server component is being restarted. If this is the case, the console
+            will reconnect automatically. <!--Alternatively, the address space to which the console was connected
+            has been deleted, if this is the case, click the Logout button to end the session.-->
+          </p>
+        </div>
+      </div>
+      <!--
+      TODO: if the address space is deleted we have no server to handle the logout and no location to direct the browser to.
+      <div class="modal-footer">
+        <a href="logout" class="btn btn-default">Logout</a>
+      </div>
+      -->
+    </div>
+  </script>
+
+
+  <div ng-controller="PeerLostController" class="example-container">
+  </div>
+
   <div id="verticalNavLayout" class="layout-pf layout-pf-fixed faux-layout" ng-controller="NavCtrl">
     <div pf-vertical-navigation items="navigationItems" brand-alt="${application.display.name}"
           pinnable-menus="true" update-active-items-on-click="true"
