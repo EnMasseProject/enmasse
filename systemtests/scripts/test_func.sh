@@ -424,7 +424,7 @@ function wait_until_file_close() {
             err "Timed out waiting for closing files!"
             err_and_exit "Files in folder ${FOLDER} are still opened"
         fi
-        if [[ -n "$(lsof +D "${FOLDER}")" ]]; then
+        if [[ -n "$(lsof +D ${FOLDER})" ]]; then
             lsof +D "${FOLDER}" || true
             info "Files in ${FOLDER} are still opened"
         else

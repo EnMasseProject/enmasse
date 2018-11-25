@@ -55,11 +55,11 @@ fi
 
 #stop system resources logging
 info "process for checking system resources with PID: ${STATS_PID} will be killed"
-kill ${STATS_PID}
+kill -9 ${STATS_PID}
 
 #stop docker logging
 info "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
-kill ${LOGS_PID}
+kill -9 ${LOGS_PID}
 categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
 if [ $failure -gt 0 ]

@@ -160,12 +160,13 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, ARTIFACTS_DIR)
+                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
             }
         }
         failure {
-            echo "build failed"
-            mail to:"${env.MAILING_LIST}", subject:"EnMasse build has finished with ${result}", body:"See ${env.BUILD_URL}"
+            script {
+                lib.sendMail(env.MAILING_LIST, env.JOB_NAME, env.BUILD_URL)
+            }
         }
     }
 }

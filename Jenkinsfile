@@ -136,8 +136,9 @@ pipeline {
             archive 'templates/build/**'
         }
         failure {
-            echo "build failed"
-            mail to:"${env.MAILING_LIST}", subject:"EnMasse build has finished with ${result}", body:"See ${env.BUILD_URL}"
+            script {
+                lib.sendMail(env.MAILING_LIST, env.JOB_NAME, env.BUILD_URL)
+            }
         }
     }
 }
