@@ -40,12 +40,12 @@ public class NetworkPolicyController implements Controller {
             networkPolicy = addressSpace.getNetworkPolicy();
         }
 
-        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        List<Service> services = kubernetesClient.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
 
         io.fabric8.kubernetes.api.model.networking.NetworkPolicy existingPolicy = kubernetesClient.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
 
         if (networkPolicy != null) {
+            String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+            List<Service> services = kubernetesClient.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
             io.fabric8.kubernetes.api.model.networking.NetworkPolicy newPolicy = createNetworkPolicy(networkPolicy, addressSpace, services);
             if (existingPolicy == null) {
                 kubernetesClient.network().networkPolicies().create(newPolicy);
