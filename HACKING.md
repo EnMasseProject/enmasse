@@ -9,6 +9,8 @@ To build EnMasse, you need
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
    * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7
+   
+*Note*: On OSX, make sure you have [Coreutils](https://www.gnu.org/software/coreutils/) installed, e.g. `brew install coreutils`
 
 The EnMasse java and node modules are built using maven. All docker images are built using make.
 
