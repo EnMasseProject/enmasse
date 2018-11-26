@@ -64,6 +64,14 @@ public class NetworkPolicy {
         return egress;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{ingress=").append(ingress).append(",")
+                .append("egress=").append(egress).append("}");
+        return sb.toString();
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;

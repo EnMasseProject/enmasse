@@ -124,6 +124,7 @@ public class AddressSpace {
                 .append("type=").append(typeName).append(",")
                 .append("plan=").append(planName).append(",")
                 .append("endpoints=").append(endpointList).append(",")
+                .append("networkPolicy=").append(networkPolicy).append(",")
                 .append("status=").append(status).append("}");
         return sb.toString();
     }

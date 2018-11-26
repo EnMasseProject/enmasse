@@ -26,9 +26,9 @@ spec:
             networkPolicy:
               type: object
               properties:
-                from:
+                ingress:
                   type: array
-                to:
+                egress:
                   type: array
             admin:
               type: object

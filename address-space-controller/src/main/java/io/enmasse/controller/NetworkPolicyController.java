@@ -139,7 +139,7 @@ public class NetworkPolicyController implements Controller {
 
     private Service findService(List<Service> items, String serviceName) {
         for (Service item : items) {
-            if (serviceName.equals(item.getMetadata().getName()) && item instanceof Service) {
+            if (serviceName.equals(item.getMetadata().getName())) {
                 return item;
             }
         }
