@@ -27,11 +27,14 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
         <fileSet>
-          <directory>${project.basedir}/src/main/resources</directory>
+          <directory>${project.basedir}/target/classes</directory>
           <outputDirectory>/</outputDirectory>
-            <includes>
-              <include>**</include>
-            </includes>
+          <includes>
+            <include>brokeredinfraconfigs/*</include>
+            <include>standardinfraconfigs/*</include>
+            <include>addressspaceplans/*</include>
+            <include>addressplans/*</include>
+          </includes>
         </fileSet>
     </fileSets>
     <files>
