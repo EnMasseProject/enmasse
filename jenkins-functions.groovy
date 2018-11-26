@@ -6,7 +6,7 @@ def storeArtifacts(String artifactDir) {
 
 def tearDownOpenshift() {
     echo "tear down openshift"
-    sh './systemtests/scripts/teardown-openshift.sh'
+    sh 'sudo ./systemtests/scripts/teardown-openshift.sh'
 }
 
 def makePlot() {
@@ -70,6 +70,10 @@ def installEnmasse(String tag, Boolean skipDependencies, Boolean upgrade, Boolea
         sh 'make templates || true'
     }
     sh "./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' true ${skipDependencies} ${upgrade}"
+}
+
+def sendMail(address, jobName, buildUrl) {
+    mail to:"${address}", subject:"EnMasse build of job ${jobName} has failed", body:"See ${buildUrl}"
 }
 
 return this
