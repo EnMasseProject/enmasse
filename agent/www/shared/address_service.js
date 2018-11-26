@@ -149,7 +149,7 @@ function get_items_from_index(index) {
 }
 
 function AddressService($http) {
-    var self = this;  // 'this' is not available in the success funtion of $http.get
+    var self = this;  // 'this' is not available in the success function of $http.get
     this.admin_disabled = true;
     this.address_index = {};
     this.connection_index = {};
@@ -157,13 +157,33 @@ function AddressService($http) {
     Object.defineProperty(this, 'connections', { get: function () { return get_items_from_index(self.connection_index); } });
     this.address_types = [];
     this.address_space_type = '';
+    this._additional_listeners = [];
     var ws = rhea.websocket_connect(WebSocket);
     this.connection = rhea.connect({"connection_details":ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]), "reconnect":true, rejectUnauthorized:true});
     this.connection.on('message', this.on_message.bind(this));
+    this.connection.on('connection_open', function (context) {
+        self.update_periodic_deltas_interval = setInterval(self.update_periodic_deltas.bind(self), 5000);
+        self.update_depth_series_interval = setInterval(self.update_depth_series.bind(self), 30000);
+        if (self.callback) {
+            self.callback("peer_connected");
+        }
+    });
+    this.connection.on('disconnected', function (context) {
+        if (self.update_periodic_deltas_interval) {
+            clearInterval(self.update_periodic_deltas_interval);
+            self.update_periodic_deltas_interval = null;
+        }
+        if (self.update_depth_series_interval) {
+            clearInterval(self.update_depth_series_interval);
+            self.update_depth_series_interval = null;
+        }
+        if (self.callback) {
+            self.callback("peer_disconnected");
+        }
+    });
+
     this.sender = this.connection.open_sender();
     this.connection.open_receiver();
-    setInterval(this.update_periodic_deltas.bind(this), 5000);
-    setInterval(this.update_depth_series.bind(this), 30000);
 
     this.tooltip = {}
     $http.get('tooltips.json')
@@ -294,6 +314,10 @@ AddressService.prototype.on_message = function (context) {
 AddressService.prototype._notify = function () {
     for (var reason in this._reasons) {
         this._callback(reason);
+        for (var i = 0; i < this._additional_listeners.length; i++) {
+            var additionalListener = this._additional_listeners[i];
+            additionalListener(reason);
+        }
     }
     this._reasons = {};
 }
@@ -307,6 +331,14 @@ AddressService.prototype.on_update = function (callback) {
         self._reasons[reason] = true;
         this.notify();
     }
+}
+
+AddressService.prototype.add_additional_listener = function (callback) {
+    this._additional_listeners.push(callback);
+}
+
+AddressService.prototype.remove_additional_listener = function (callback) {
+    this._additional_listeners = this._additional_listeners.filter(function (e) { return e !== callback});
 }
 
 angular.module('address_service', []).factory('address_service', function($http) {
