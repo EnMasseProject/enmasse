@@ -1,16 +1,23 @@
-TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
+TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(TOPDIR)/Makefile.env.mk
-BUILD_DIRS       = none-authservice
-DOCKER_DIRS	     = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
-FULL_BUILD 	     = true
 
-DOCKER_TARGETS = docker_build docker_tag docker_push clean
-BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
-INSTALLDIR=$(CURDIR)/templates/install
+BUILD_DIRS       = none-authservice
+DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker $(IOT_DOCKER_DIRS)
+IOT_DOCKER_DIRS  = iot/qdr-proxy-configurator iot/iot-operator iot/iot-gc
+FULL_BUILD       = true
+
+GO_TARGETS       = iot/qdr-proxy-configurator/qdr-proxy-configurator iot/iot-operator/iot-operator iot/iot-gc/iot-gc
+GOPATH          := $(TOPDIR)/go
+GOPRJ           := $(GOPATH)/src/github.com/enmasseproject/enmasse
+export GOPATH
+
+DOCKER_TARGETS   = docker_build docker_tag docker_push clean
+BUILD_TARGETS    = init build test package $(DOCKER_TARGETS) coverage
+INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
 
-ASCIIDOCTOR_EXTRA_FLAGS=--failure-level WARN
-ASCIIDOCTOR_FLAGS=-v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
+ASCIIDOCTOR_EXTRA_FLAGS = --failure-level WARN
+ASCIIDOCTOR_FLAGS       = -v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
 
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS="-DskipTests"
@@ -19,11 +26,12 @@ ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
 endif
 
-
-all: init build_java docker_build templates
+all: init build_java build_go docker_build templates
 
 templates: docu_html
 	$(MAKE) -C templates
+
+build_go: $(GO_TARGETS)
 
 build_java:
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
@@ -33,15 +41,31 @@ buildpush:
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
 
+$(GOPRJ):
+	mkdir -p $(dir $(GOPRJ))
+	ln -s $(TOPDIR) $(GOPRJ)
+
+iot/qdr-proxy-configurator/qdr-proxy-configurator: $(GOPRJ)
+	cd $(GOPRJ)/cmd/qdr-proxy-configurator && go build -o $(TOPDIR)/$@ .
+
+iot/iot-operator/iot-operator: $(GOPRJ)
+	cd $(GOPRJ)/cmd/iot-operator && go build -o $(TOPDIR)/$@ .
+
+iot/iot-gc/iot-gc: $(GOPRJ)
+	cd $(GOPRJ)/cmd/iot-gc && go build -o $(TOPDIR)/$@ .
+
+clean_go:
+	@rm -Rf $(GOPATH)
+
 clean_java:
 	mvn -B -q clean
 
 template_clean:
 	$(MAKE) -C templates clean
 
-clean: clean_java docu_htmlclean template_clean
+clean: clean_java clean_go docu_htmlclean template_clean
 
-docker_build: build_java
+docker_build: build_java build_go
 
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
@@ -86,5 +110,4 @@ docu_check:
 docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
-
-.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: $(BUILD_TARGETS) $(GO_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java build_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check

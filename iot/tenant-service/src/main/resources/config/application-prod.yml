@@ -1,0 +1,28 @@
+enmasse:
+  iot:
+
+    auth:
+      name: 'EnMasse IoT Tenant Service'
+      port: 5671
+      keyFormat: PEM
+      trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+      trustStoreFormat: PEM
+
+      validation:
+        certPath: /etc/tls-auth-service/tls.crt
+
+    tenant:
+
+      endpoint:
+
+        amqp:
+          bindAddress: 0.0.0.0
+          keyPath: /etc/tls/tls.key
+          certPath: /etc/tls/tls.crt
+          keyFormat: PEM
+          nativeTlsRequired: true
+
+        http:
+          insecurePortBindAddress: 0.0.0.0
+          insecurePortEnabled: true
+          insecurePort: 8080

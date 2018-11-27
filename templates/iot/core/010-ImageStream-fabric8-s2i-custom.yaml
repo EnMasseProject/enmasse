@@ -1,0 +1,6 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: fabric8-s2i-java-custom
+  labels:
+    enmasse-component: iot

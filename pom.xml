@@ -124,6 +124,7 @@
         <module>broker-plugin</module>
         <module>service-broker</module>
         <module>bundle</module>
+        <module>iot</module>
     </modules>
 
     <dependencyManagement>

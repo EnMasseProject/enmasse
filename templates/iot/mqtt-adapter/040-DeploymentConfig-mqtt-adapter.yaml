@@ -1,0 +1,167 @@
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: iot-mqtt-adapter
+  labels:
+    app: iot-mqtt-adapter
+    deploymentconfig: iot-mqtt-adapter
+    enmasse-component: iot
+spec:
+  replicas: 1
+
+  selector:
+    app: iot-mqtt-adapter
+    deploymentconfig: iot-mqtt-adapter
+
+  strategy:
+    type: Rolling
+
+  triggers:
+
+    - type: ConfigChange
+
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - mqtt-adapter
+        from:
+          kind: ImageStreamTag
+          name: iot-mqtt-adapter:latest
+
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - qdr-proxy
+        from:
+          kind: ImageStreamTag
+          name: qdrouterd-base:1.4.1
+
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - qdr-cfg
+        from:
+          kind: ImageStreamTag
+          name: qdr-proxy-configurator:latest
+
+  template:
+    metadata:
+      labels:
+        app: iot-mqtt-adapter
+        deploymentconfig: iot-mqtt-adapter
+    spec:
+      containers:
+
+# Main protocol adapter container
+
+      - name: mqtt-adapter
+        imagePullPolicy: Always
+        env:
+        - name: SPRING_CONFIG_LOCATION
+          value: file:///etc/config/
+        - name: SPRING_PROFILES_ACTIVE
+          value: prometheus
+        - name: LOGGING_CONFIG
+          value: file:///etc/config/logback-spring.xml
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: HONO_MESSAGING_HOST
+          value: localhost
+        - name: HONO_MESSAGING_PORT
+          value: "5672"
+        - name: HONO_COMMAND_HOST
+          value: localhost
+        - name: HONO_COMMAND_PORT
+          value: "5672"
+        - name: HONO_REGISTRATION_HOST
+          value: hono-service-device-registry.$(KUBERNETES_NAMESPACE).svc
+        - name: HONO_CREDENTIALS_HOST
+          value: hono-service-device-registry.$(KUBERNETES_NAMESPACE).svc
+        - name: HONO_TENANT_HOST
+          value: iot-tenant-service.$(KUBERNETES_NAMESPACE).svc
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8088
+            scheme: HTTP
+          initialDelaySeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8088
+            scheme: HTTP
+          initialDelaySeconds: 180
+        resources:
+          limits:
+            memory: 512Mi
+        ports:
+        - containerPort: 8778
+          name: jolokia
+        - containerPort: 8081
+          name: actuator
+          protocol: TCP
+        - containerPort: 8088
+          name: radan-http
+          protocol: TCP
+        - containerPort: 8883
+          name: secure-mqtt
+          protocol: TCP
+        - containerPort: 1883
+          name: mqtt
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config
+          readOnly: true
+        - mountPath: /etc/secrets
+          name: secrets
+          readOnly: true
+        - mountPath: /etc/tls
+          name: tls
+          readOnly: true
+
+# Qpid dispatch router configurator
+
+      - name: qdr-cfg
+        volumeMounts:
+        - mountPath: /var/qdr-certs
+          name: qdr-tmp-certs
+        resources:
+          limits:
+            memory: 64Mi
+
+# Proxy Qpid dispatch router
+
+      - name: qdr-proxy
+        args: ["/sbin/qdrouterd", "-c", "/etc/config/qdrouterd.conf" ]
+        volumeMounts:
+        - mountPath: /var/qdr-certs
+          name: qdr-tmp-certs
+          readOnly: true
+        - mountPath: /etc/config
+          name: qdr-proxy-config
+          readOnly: true
+        resources:
+          limits:
+            memory: 128Mi
+
+      volumes:
+      - name: config
+        configMap:
+          name: iot-mqtt-adapter-config
+      - name: secrets
+        secret:
+          secretName: iot-mqtt-adapter-secrets
+      - name: tls
+        secret:
+          secretName: iot-mqtt-adapter-tls
+      - name: qdr-proxy-config
+        configMap:
+          name: qdr-proxy-configurator
+      - name: qdr-tmp-certs
+        emptyDir: {}

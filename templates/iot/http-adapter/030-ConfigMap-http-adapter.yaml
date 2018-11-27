@@ -1,0 +1,70 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: iot-http-adapter-config
+  labels:
+    app: iot-http-adapter
+    enmasse-component: iot
+data:
+  application.yml: |+
+    hono:
+      app:
+        maxInstances: 1
+        healthCheckPort: 8088
+        healthCheckBindAddress: 0.0.0.0
+      http:
+        bindAddress: 0.0.0.0
+        insecurePortBindAddress: 0.0.0.0
+        insecurePortEnabled: true
+        keyPath: /etc/tls/tls.key
+        certPath: /etc/tls/tls.crt
+        keyFormat: PEM
+        nativeTlsRequired: true
+      messaging:
+        name: 'Hono HTTP Adapter'
+      command:
+        name: 'Hono HTTP Adapter'
+      registration:
+        name: 'Hono HTTP Adapter'
+        port: 5671
+        trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+        trustStoreFormat: PEM
+        credentialsPath: /etc/secrets/registry.properties
+      credentials:
+        name: 'Hono HTTP Adapter'
+        port: 5671
+        trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+        trustStoreFormat: PEM
+        credentialsPath: /etc/secrets/registry.properties
+      tenant:
+        name: 'Hono HTTP Adapter'
+        port: 5671
+        trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+        trustStoreFormat: PEM
+        credentialsPath: /etc/secrets/registry.properties
+      metrics:
+        legacy: false
+    management:
+      metrics:
+        enabled: false
+        export:
+          graphite:
+            enabled: false
+
+  logback-spring.xml: |+
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE xml>
+
+      <configuration>
+
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+          <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+          </encoder>
+        </appender>
+
+        <root level="INFO">
+          <appender-ref ref="STDOUT" />
+        </root>
+
+      </configuration>

@@ -1,0 +1,16 @@
+#
+# Copyright 2018, EnMasse authors.
+# License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+#
+
+FROM enmasseproject/qdrouterd-base:1.4.1
+
+ENTRYPOINT /iot-gc
+
+RUN dnf update -y
+RUN dnf install -y golang procps-ng
+
+RUN mkdir -p /root/go/src/github.com/enmasseproject/enmasse
+ADD . /root/go/src/github.com/enmasseproject/enmasse
+
+RUN cd /root/go/src/github.com/enmasseproject/enmasse/cmd/iot-gc && go build -o /iot-gc .

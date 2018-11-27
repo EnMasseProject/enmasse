@@ -1,0 +1,7 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: iot-http-adapter
+  labels:
+    app: iot-http-adapter
+    enmasse-component: iot
