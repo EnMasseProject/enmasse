@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class NetworkPolicyController implements Controller {
     private final KubernetesClient kubernetesClient;
@@ -91,30 +92,34 @@ public class NetworkPolicyController implements Controller {
             .endSpec();
 
         if (networkPolicy.getIngress() != null) {
-            NetworkPolicyIngressRule ingressRule = networkPolicy.getIngress();
-
-            if (ingressRule.getPorts() == null || ingressRule.getPorts().isEmpty()) {
-                ingressRule = new NetworkPolicyIngressRuleBuilder(networkPolicy.getIngress())
-                        .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
-                        .build();
-            }
             builder.editOrNewSpec()
                     .addToPolicyTypes("Ingress")
-                    .withIngress(ingressRule)
+                    .addAllToIngress(networkPolicy.getIngress().stream()
+                            .map(ingressRule -> {
+                                if (ingressRule.getPorts() == null || ingressRule.getPorts().isEmpty()) {
+                                    return new NetworkPolicyIngressRuleBuilder(ingressRule)
+                                            .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
+                                            .build();
+                                } else {
+                                    return ingressRule;
+                                }
+                            }).collect(Collectors.toList()))
                     .endSpec();
         }
 
         if (networkPolicy.getEgress() != null) {
-            NetworkPolicyEgressRule egressRule = networkPolicy.getEgress();
-
-            if (egressRule.getPorts() == null || egressRule.getPorts().isEmpty()) {
-                egressRule = new NetworkPolicyEgressRuleBuilder(networkPolicy.getEgress())
-                        .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
-                        .build();
-            }
             builder.editOrNewSpec()
                     .addToPolicyTypes("Egress")
-                    .withEgress(egressRule)
+                    .addAllToEgress(networkPolicy.getEgress().stream()
+                            .map(egressRule -> {
+                                if (egressRule.getPorts() == null || egressRule.getPorts().isEmpty()) {
+                                    return new NetworkPolicyEgressRuleBuilder(egressRule)
+                                            .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
+                                            .build();
+                                } else {
+                                    return egressRule;
+                                }
+                            }).collect(Collectors.toList()))
                     .endSpec();
         }
 

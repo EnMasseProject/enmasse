@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -147,32 +149,32 @@ public class NetworkPolicyControllerTest {
 
     private NetworkPolicy createTestPolicy(String labelKey, String labelValue) {
         return new NetworkPolicyBuilder()
-                .withIngress(new NetworkPolicyIngressRuleBuilder()
+                .withIngress(Collections.singletonList(new NetworkPolicyIngressRuleBuilder()
                         .addNewFrom()
                         .withNewPodSelector()
                         .addToMatchLabels(labelKey, labelValue)
                         .endPodSelector()
                         .endFrom()
-                        .build())
+                        .build()))
                 .build();
     }
 
     private NetworkPolicy createTestPolicy(String ingressLabelKey, String ingressLabelValue, String egressLabelKey, String egressLabelValue) {
         return new NetworkPolicyBuilder()
-                .withIngress(new NetworkPolicyIngressRuleBuilder()
+                .withIngress(Collections.singletonList(new NetworkPolicyIngressRuleBuilder()
                         .addNewFrom()
                         .withNewPodSelector()
                         .addToMatchLabels(ingressLabelKey, ingressLabelValue)
                         .endPodSelector()
                         .endFrom()
-                        .build())
-                .withEgress(new NetworkPolicyEgressRuleBuilder()
+                        .build()))
+                .withEgress(Collections.singletonList(new NetworkPolicyEgressRuleBuilder()
                         .addNewTo()
                         .withNewPodSelector()
                         .addToMatchLabels(egressLabelKey, egressLabelValue)
                         .endPodSelector()
                         .endTo()
-                        .build())
+                        .build()))
                 .build();
     }
 

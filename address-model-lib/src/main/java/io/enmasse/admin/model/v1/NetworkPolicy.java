@@ -31,13 +31,13 @@ import java.util.Objects;
 @JsonPropertyOrder({"ingress", "egress"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NetworkPolicy {
-    private final NetworkPolicyIngressRule ingress;
-    private final NetworkPolicyEgressRule egress;
+    private final List<NetworkPolicyIngressRule> ingress;
+    private final List<NetworkPolicyEgressRule> egress;
 
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
-    public NetworkPolicy(@JsonProperty("ingress") NetworkPolicyIngressRule ingress,
-                         @JsonProperty("egress") NetworkPolicyEgressRule egress) {
+    public NetworkPolicy(@JsonProperty("ingress") List<NetworkPolicyIngressRule> ingress,
+                         @JsonProperty("egress") List<NetworkPolicyEgressRule> egress) {
         this.ingress = ingress;
         this.egress = egress;
     }
@@ -56,11 +56,11 @@ public class NetworkPolicy {
         return Objects.hash(ingress, egress);
     }
 
-    public NetworkPolicyIngressRule getIngress() {
+    public List<NetworkPolicyIngressRule> getIngress() {
         return ingress;
     }
 
-    public NetworkPolicyEgressRule getEgress() {
+    public List<NetworkPolicyEgressRule> getEgress() {
         return egress;
     }
 

@@ -1341,10 +1341,10 @@ __required__|string
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
-|**from** +
-__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
-|**to** +
-__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
+|**egress** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicyegressrule,io.k8s.api.networking.v1.NetworkPolicyEgressRule>> > array
+|**ingress** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.networking.v1.NetworkPolicyIngressRule>> > array
 |===
 
 
@@ -1450,10 +1450,10 @@ __required__|string
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
-|**from** +
-__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
-|**to** +
-__optional__|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
+|**egress** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicyegressrule,io.k8s.api.networking.v1.NetworkPolicyEgressRule>> > array
+|**ingress** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.networking.v1.NetworkPolicyIngressRule>> > array
 |===
 
 
@@ -1834,6 +1834,36 @@ __optional__|Except is a slice of CIDRs that should not be included within an IP
 |===
 
 
+[[_io_k8s_api_networking_v1_networkpolicyegressrule]]
+=== io.k8s.api.networking.v1.NetworkPolicyEgressRule
+NetworkPolicyEgressRule describes a particular set of traffic that is allowed out of pods matched by a NetworkPolicySpec's podSelector. The traffic must match both ports and to. This type is beta-level in 1.8
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**ports** +
+__optional__|List of destination ports for outgoing traffic. Each item in this list is combined using a logical OR. If this field is empty or missing, this rule matches all ports (traffic not restricted by port). If this field is present and contains at least one item, then this rule allows traffic only if the traffic matches at least one port in the list.|< <<_io_k8s_api_networking_v1_networkpolicyport,io.k8s.api.networking.v1.NetworkPolicyPort>> > array
+|**to** +
+__optional__|List of destinations for outgoing traffic of pods selected for this rule. Items in this list are combined using a logical OR operation. If this field is empty or missing, this rule matches all destinations (traffic not restricted by destination). If this field is present and contains at least one item, this rule allows traffic only if the traffic matches at least one item in the to list.|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
+|===
+
+
+[[_io_k8s_api_networking_v1_networkpolicyingressrule]]
+=== io.k8s.api.networking.v1.NetworkPolicyIngressRule
+NetworkPolicyIngressRule describes a particular set of traffic that is allowed to the pods matched by a NetworkPolicySpec's podSelector. The traffic must match both ports and from.
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**from** +
+__optional__|List of sources which should be able to access the pods selected for this rule. Items in this list are combined using a logical OR operation. If this field is empty or missing, this rule matches all sources (traffic not restricted by source). If this field is present and contains at least on item, this rule allows traffic only if the traffic matches at least one item in the from list.|< <<_io_k8s_api_networking_v1_networkpolicypeer,io.k8s.api.networking.v1.NetworkPolicyPeer>> > array
+|**ports** +
+__optional__|List of ports which should be made accessible on the pods selected for this rule. Each item in this list is combined using a logical OR. If this field is empty or missing, this rule matches all ports (traffic not restricted by port). If this field is present and contains at least one item, then this rule allows traffic only if the traffic matches at least one port in the list.|< <<_io_k8s_api_networking_v1_networkpolicyport,io.k8s.api.networking.v1.NetworkPolicyPort>> > array
+|===
+
+
 [[_io_k8s_api_networking_v1_networkpolicypeer]]
 === io.k8s.api.networking.v1.NetworkPolicyPeer
 NetworkPolicyPeer describes a peer to allow traffic from. Only certain combinations of fields are allowed
@@ -1852,6 +1882,21 @@ If PodSelector is also set, then the NetworkPolicyPeer as a whole selects the Po
 __optional__|This is a label selector which selects Pods. This field follows standard label selector semantics; if present but empty, it selects all pods.
 
 If NamespaceSelector is also set, then the NetworkPolicyPeer as a whole selects the Pods matching PodSelector in the Namespaces selected by NamespaceSelector. Otherwise it selects the Pods matching PodSelector in the policy's own Namespace.|<<_io_k8s_apimachinery_pkg_apis_meta_v1_labelselector,io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector>>
+|===
+
+
+[[_io_k8s_api_networking_v1_networkpolicyport]]
+=== io.k8s.api.networking.v1.NetworkPolicyPort
+NetworkPolicyPort describes a port to allow traffic on
+
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**port** +
+__optional__|The port on the given protocol. This can either be a numerical or named port on a pod. If this field is not provided, this matches all port names and numbers.|<<_io_k8s_apimachinery_pkg_util_intstr_intorstring,io.k8s.apimachinery.pkg.util.intstr.IntOrString>>
+|**protocol** +
+__optional__|The protocol (TCP or UDP) which traffic must match. If not specified, this field defaults to TCP.|string
 |===
 
 
@@ -1885,6 +1930,13 @@ __required__|operator represents a key's relationship to a set of values. Valid 
 |**values** +
 __optional__|values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.|< string > array
 |===
+
+
+[[_io_k8s_apimachinery_pkg_util_intstr_intorstring]]
+=== io.k8s.apimachinery.pkg.util.intstr.IntOrString
+IntOrString is a type that can hold an int32 or a string. When used in JSON or YAML marshalling and unmarshalling, it produces or consumes the inner type. This allows you to have, for example, a JSON field that can accept a name or number.
+
+__Type__ : string (int-or-string)
 
 
 

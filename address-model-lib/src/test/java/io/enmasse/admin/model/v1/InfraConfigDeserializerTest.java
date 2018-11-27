@@ -22,15 +22,17 @@ public class InfraConfigDeserializerTest {
         String str = "{\n" +
                 "  \"spec\": {\n" +
                 "    \"networkPolicy\": {\n" +
-                "      \"ingress\": {\n" +
-                "        \"from\": [\n" +
-                "          {\n" +
-                "            \"podSelector\": {\n" +
-                "              \"my\": \"label\"\n" +
+                "      \"ingress\": [\n" +
+                "        {\n" +
+                "          \"from\": [\n" +
+                "            {\n" +
+                "              \"podSelector\": {\n" +
+                "                \"my\": \"label\"\n" +
+                "              }\n" +
                 "            }\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      }\n" +
+                "          ]\n" +
+                "        }\n" +
+                "      ]\n" +
                 "    }\n" +
                 "  }\n" +
                 "}";
