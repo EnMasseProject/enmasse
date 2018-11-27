@@ -8,6 +8,7 @@ import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AuthService;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
@@ -27,6 +28,7 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
     }
 
     @Test
+    @Disabled("test failing in ci, using all server resources")
     void testCreateHighAddressCountCheckStatusDeleteLong() throws Exception {
         doTestCreateHighAddressCountCheckStatusDeleteLong(
                 new AddressSpace("test-create-addresses-check-status-delete",
