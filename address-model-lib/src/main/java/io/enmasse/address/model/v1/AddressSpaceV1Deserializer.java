@@ -5,12 +5,14 @@
 package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.NetworkPolicy;
 import io.enmasse.config.AnnotationKeys;
 
 import java.io.IOException;
@@ -37,7 +39,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
         return deserialize(root);
     }
 
-    AddressSpace deserialize(ObjectNode root) {
+    AddressSpace deserialize(ObjectNode root) throws JsonProcessingException {
         validate(root);
 
         ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
@@ -173,6 +175,11 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 }
                 builder.appendEndpoint(b.build());
             }
+        }
+
+        if (spec.hasNonNull(Fields.NETWORK_POLICY)) {
+            NetworkPolicy networkPolicy = mapper.treeToValue(spec.get(Fields.NETWORK_POLICY), NetworkPolicy.class);
+            builder.setNetworkPolicy(networkPolicy);
         }
 
         if (spec.hasNonNull(Fields.AUTHENTICATION_SERVICE)) {

@@ -154,6 +154,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         return items;
     }
 
+
     private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
         return Optional.ofNullable(annotations)
                 .flatMap(m -> Optional.ofNullable(m.get(key)))
@@ -171,7 +172,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
 
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
-        return new ArrayList<>(kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
+        return kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems();
     }
 
     @Override

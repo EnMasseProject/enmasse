@@ -13,6 +13,7 @@ import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import okhttp3.*;
@@ -67,6 +68,8 @@ public class KubernetesHelper implements Kubernetes {
                 client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
             } else if (resource instanceof ServiceAccount) {
                 client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+            } else if (resource instanceof NetworkPolicy) {
+                client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
             }
         }
     }

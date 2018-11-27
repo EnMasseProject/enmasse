@@ -149,6 +149,7 @@ public class HttpAddressSpaceService {
 
             addressSpace = new AddressSpace.Builder(existing)
                     .setEndpointList(addressSpace.getEndpoints())
+                    .setNetworkPolicy(addressSpace.getNetworkPolicy())
                     .setAnnotations(annotations)
                     .setLabels(labels)
                     .build();

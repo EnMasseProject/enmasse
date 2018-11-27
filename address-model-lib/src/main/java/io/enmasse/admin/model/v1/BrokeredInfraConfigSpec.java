@@ -24,15 +24,18 @@ import java.util.Objects;
 public class BrokeredInfraConfigSpec {
 
     private final String version;
+    private final NetworkPolicy networkPolicy;
     private final BrokeredInfraConfigSpecAdmin admin;
     private final BrokeredInfraConfigSpecBroker broker;
     private final Map<String, Object> additionalProperties = new HashMap<>(0);
 
     @JsonCreator
     public BrokeredInfraConfigSpec(@JsonProperty("version") String version,
+                                   @JsonProperty("networkPolicy") NetworkPolicy networkPolicy,
                                    @JsonProperty("admin") BrokeredInfraConfigSpecAdmin admin,
                                    @JsonProperty("broker") BrokeredInfraConfigSpecBroker broker) {
         this.version = version;
+        this.networkPolicy = networkPolicy;
         this.admin = admin;
         this.broker = broker;
     }
@@ -43,13 +46,14 @@ public class BrokeredInfraConfigSpec {
         if (o == null || getClass() != o.getClass()) return false;
         BrokeredInfraConfigSpec that = (BrokeredInfraConfigSpec) o;
         return Objects.equals(version, that.version) &&
+                Objects.equals(networkPolicy, that.networkPolicy) &&
                 Objects.equals(admin, that.admin) &&
                 Objects.equals(broker, that.broker);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(version, admin, broker);
+        return Objects.hash(version, networkPolicy, admin, broker);
     }
 
     public BrokeredInfraConfigSpecAdmin getAdmin() {
@@ -72,5 +76,9 @@ public class BrokeredInfraConfigSpec {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    public NetworkPolicy getNetworkPolicy() {
+        return networkPolicy;
     }
 }

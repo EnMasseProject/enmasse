@@ -4,6 +4,8 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.admin.model.v1.NetworkPolicy;
+
 import java.util.*;
 
 /**
@@ -21,11 +23,12 @@ public class AddressSpace {
     private final Map<String, String> annotations;
 
     private final List<EndpointSpec> endpointList;
+    private final NetworkPolicy networkPolicy;
     private final String planName;
     private final AuthenticationService authenticationService;
     private final AddressSpaceStatus status;
 
-    private AddressSpace(String name, String namespace, String typeName, String selfLink, String creationTimestamp, String resourceVersion, List<EndpointSpec> endpointList, String planName, AuthenticationService authenticationService, AddressSpaceStatus status, String uid, Map<String, String> labels, Map<String, String> annotations) {
+    private AddressSpace(String name, String namespace, String typeName, String selfLink, String creationTimestamp, String resourceVersion, List<EndpointSpec> endpointList, String planName, AuthenticationService authenticationService, AddressSpaceStatus status, String uid, NetworkPolicy networkPolicy, Map<String, String> labels, Map<String, String> annotations) {
         this.name = name;
         this.namespace = namespace;
         this.typeName = typeName;
@@ -34,6 +37,7 @@ public class AddressSpace {
         this.resourceVersion = resourceVersion;
         this.endpointList = endpointList;
         this.planName = planName;
+        this.networkPolicy = networkPolicy;
         this.authenticationService = authenticationService;
         this.status = status;
         this.uid = uid;
@@ -93,6 +97,10 @@ public class AddressSpace {
         return labels;
     }
 
+    public NetworkPolicy getNetworkPolicy() {
+        return networkPolicy;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -116,6 +124,7 @@ public class AddressSpace {
                 .append("type=").append(typeName).append(",")
                 .append("plan=").append(planName).append(",")
                 .append("endpoints=").append(endpointList).append(",")
+                .append("networkPolicy=").append(networkPolicy).append(",")
                 .append("status=").append(status).append("}");
         return sb.toString();
     }
@@ -158,6 +167,7 @@ public class AddressSpace {
         private AuthenticationService authenticationService = new AuthenticationService.Builder().build();
         private AddressSpaceStatus status = new AddressSpaceStatus(false);
         private String uid;
+        private NetworkPolicy networkPolicy;
         private Map<String, String> labels = new HashMap<>();
         private Map<String, String> annotations = new HashMap<>();
 
@@ -173,6 +183,7 @@ public class AddressSpace {
             this.status = new AddressSpaceStatus(addressSpace.getStatus());
             this.authenticationService = addressSpace.getAuthenticationService();
             this.uid = addressSpace.getUid();
+            this.networkPolicy = addressSpace.getNetworkPolicy();
             this.labels = new HashMap<>(addressSpace.getLabels());
             this.annotations = new HashMap<>(addressSpace.getAnnotations());
             this.selfLink = addressSpace.getSelfLink();
@@ -264,6 +275,11 @@ public class AddressSpace {
             return this;
         }
 
+        public Builder setNetworkPolicy(NetworkPolicy networkPolicy) {
+            this.networkPolicy = networkPolicy;
+            return this;
+        }
+
         public AddressSpace build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(type, "type not set");
@@ -271,7 +287,7 @@ public class AddressSpace {
             Objects.requireNonNull(authenticationService, "authentication service not set");
             Objects.requireNonNull(status, "status not set");
 
-            return new AddressSpace(name, namespace, type, selfLink, creationTimestamp, resourceVersion, endpointList, plan, authenticationService, status, uid, labels, annotations);
+            return new AddressSpace(name, namespace, type, selfLink, creationTimestamp, resourceVersion, endpointList, plan, authenticationService, status, uid, networkPolicy, labels, annotations);
         }
 
         public String getNamespace() {

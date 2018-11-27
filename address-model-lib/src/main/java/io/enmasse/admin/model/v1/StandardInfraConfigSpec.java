@@ -24,16 +24,19 @@ import java.util.Objects;
 public class StandardInfraConfigSpec {
 
     private final String version;
+    private final NetworkPolicy networkPolicy;
     private final StandardInfraConfigSpecAdmin admin;
     private final StandardInfraConfigSpecBroker broker;
     private final StandardInfraConfigSpecRouter router;
 
     @JsonCreator
     public StandardInfraConfigSpec(@JsonProperty("version") String version,
+                                   @JsonProperty("networkPolicy") NetworkPolicy networkPolicy,
                                    @JsonProperty("admin") StandardInfraConfigSpecAdmin admin,
                                    @JsonProperty("broker") StandardInfraConfigSpecBroker broker,
                                    @JsonProperty("router") StandardInfraConfigSpecRouter router) {
         this.version = version;
+        this.networkPolicy = networkPolicy;
         this.admin = admin;
         this.broker = broker;
         this.router = router;
@@ -63,6 +66,7 @@ public class StandardInfraConfigSpec {
         if (o == null || getClass() != o.getClass()) return false;
         StandardInfraConfigSpec that = (StandardInfraConfigSpec) o;
         return Objects.equals(version, that.version) &&
+                Objects.equals(networkPolicy, that.networkPolicy) &&
                 Objects.equals(admin, that.admin) &&
                 Objects.equals(broker, that.broker) &&
                 Objects.equals(router, that.router);
@@ -70,7 +74,7 @@ public class StandardInfraConfigSpec {
 
     @Override
     public int hashCode() {
-        return Objects.hash(version, admin, broker, router);
+        return Objects.hash(version, networkPolicy, admin, broker, router);
     }
 
     @JsonAnyGetter
@@ -81,5 +85,9 @@ public class StandardInfraConfigSpec {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    public NetworkPolicy getNetworkPolicy() {
+        return networkPolicy;
     }
 }

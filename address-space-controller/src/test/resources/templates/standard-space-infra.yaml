@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: standard-space-infra
+objects:
+  - kind: "ConfigMap"
+    apiVersion: "v1"
+    metadata:
+      name: "mymap"
+    data:
+      key: "${BROKER_ADDRESS_FULL_POLICY}"
+parameters:
+  - name: "BROKER_ADDRESS_FULL_POLICY"
+    description: "desc"
+  - name: "SECONDPARAM"
+    description: "desc"
+
+
+
