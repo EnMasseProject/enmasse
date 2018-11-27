@@ -15,14 +15,23 @@ import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.model.v1beta1.PartialObjectMetadata;
+import io.enmasse.k8s.model.v1beta1.Table;
+import io.enmasse.k8s.model.v1beta1.TableColumnDefinition;
+import io.enmasse.k8s.model.v1beta1.TableRow;
+import io.enmasse.k8s.util.TimeUtil;
+import io.fabric8.kubernetes.api.model.ListMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -36,10 +45,12 @@ public class HttpAddressSpaceService {
 
     private final AddressSpaceApi addressSpaceApi;
     private final UuidGenerator uuidGenerator = new UuidGenerator();
+    private final Clock clock;
 
-    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider) {
+    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
+        this.clock = clock;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -59,14 +70,14 @@ public class HttpAddressSpaceService {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAddressSpaceList(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @QueryParam("labelSelector") String labelSelector) throws Exception {
+    public Response getAddressSpaceList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @QueryParam("labelSelector") String labelSelector) throws Exception {
         return doRequest("Error getting address space list", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                return Response.ok(removeSecrets(new AddressSpaceList(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels)))).build();
+                return Response.ok(formatResponse(acceptHeader, removeSecrets(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels)))).build();
             } else {
-                return Response.ok(removeSecrets(new AddressSpaceList(addressSpaceApi.listAddressSpaces(namespace)))).build();
+                return Response.ok(formatResponse(acceptHeader, removeSecrets(addressSpaceApi.listAddressSpaces(namespace)))).build();
             }
         });
     }
@@ -74,11 +85,11 @@ public class HttpAddressSpaceService {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{addressSpace}")
-    public Response getAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName) throws Exception {
+    public Response getAddressSpace(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName) throws Exception {
         return doRequest("Error getting address space " + addressSpaceName, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.get);
             return addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .map(addressSpace -> Response.ok(removeSecrets(addressSpace)).build())
+                    .map(addressSpace -> Response.ok(formatResponse(acceptHeader, removeSecrets(addressSpace))).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build());
         });
     }
@@ -197,7 +208,7 @@ public class HttpAddressSpaceService {
         }
     }
 
-    private AddressSpaceList removeSecrets(AddressSpaceList addressSpaceList) {
+    private AddressSpaceList removeSecrets(Collection<AddressSpace> addressSpaceList) {
         return addressSpaceList.stream()
                 .map(this::removeSecrets)
                 .collect(Collectors.toCollection(AddressSpaceList::new));
@@ -287,4 +298,81 @@ public class HttpAddressSpaceService {
         });
     }
 
+    private static final List<TableColumnDefinition> tableColumnDefinitions = Arrays.asList(
+            new TableColumnDefinition("Name must be unique within a namespace.",
+                    "name",
+                    "Name",
+                    0,
+                    "string"),
+            new TableColumnDefinition("Type of address space",
+                    "",
+                    "Type",
+                    1,
+                    "string"),
+            new TableColumnDefinition("Plan of address space",
+                    "",
+                    "Plan",
+                    1,
+                    "string"),
+            new TableColumnDefinition("The readiness of this address space.",
+                    "",
+                    "Ready",
+                    0,
+                    "string"),
+            new TableColumnDefinition("The timestamp representing server time when this address space was created.",
+                    "",
+                    "Age",
+                    0,
+                    "string"),
+            new TableColumnDefinition("The status messages reported for the address space.",
+                    "",
+                    "Status",
+                    1,
+                    "string"));
+
+    private Object formatResponse(String headerParam, AddressSpaceList addressSpaceList) {
+        if (isTableFormat(headerParam)) {
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(addressSpaceList));
+        } else {
+            return addressSpaceList;
+        }
+    }
+
+    private Object formatResponse(String headerParam, AddressSpace addressSpace) {
+        if (isTableFormat(headerParam)) {
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(Collections.singletonList(addressSpace)));
+        } else {
+            return addressSpace;
+        }
+    }
+
+    private boolean isTableFormat(String acceptHeader) {
+        return acceptHeader != null && acceptHeader.contains("as=Table") && acceptHeader.contains("g=meta.k8s.io") && acceptHeader.contains("v=v1beta1");
+    }
+
+    private List<TableRow> createRows(List<AddressSpace> addressSpaceList) {
+        Instant now = clock.instant();
+        return addressSpaceList.stream()
+                .map(addressSpace -> new TableRow(
+                        Arrays.asList(
+                                addressSpace.getName(),
+                                addressSpace.getType(),
+                                addressSpace.getPlan(),
+                                addressSpace.getStatus().isReady(),
+                                Optional.ofNullable(addressSpace.getCreationTimestamp())
+                                        .map(s -> TimeUtil.formatHumanReadable(Duration.between(TimeUtil.parseRfc3339(s), now)))
+                                        .orElse(""),
+                                String.join(". ", addressSpace.getStatus().getMessages())),
+                        new PartialObjectMetadata(new ObjectMetaBuilder()
+                                .withNamespace(addressSpace.getNamespace())
+                                .withName(addressSpace.getName())
+                                .withLabels(addressSpace.getLabels())
+                                .withAnnotations(addressSpace.getAnnotations())
+                                .withCreationTimestamp(addressSpace.getCreationTimestamp())
+                                .withSelfLink(addressSpace.getSelfLink())
+                                .withUid(addressSpace.getUid())
+                                .withResourceVersion(addressSpace.getResourceVersion())
+                                .build())))
+                .collect(Collectors.toList());
+    }
 }

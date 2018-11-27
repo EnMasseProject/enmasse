@@ -13,12 +13,16 @@ import io.enmasse.api.common.Status;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.model.v1beta1.Table;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -41,7 +45,7 @@ public class HttpNestedAddressServiceTest {
     @Before
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        this.addressService = new HttpNestedAddressService(addressSpaceApi, new TestSchemaProvider());
+        this.addressService = new HttpNestedAddressService(addressSpaceApi, new TestSchemaProvider(), Clock.fixed(Instant.ofEpochSecond(1234), ZoneId.of("UTC")));
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 
@@ -81,7 +85,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testList() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace", null, null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace", null, null));
 
         assertThat(response.getStatus(), is(200));
         AddressList list = (AddressList) response.getEntity();
@@ -92,8 +96,19 @@ public class HttpNestedAddressServiceTest {
     }
 
     @Test
+    public void testListTableFormat() {
+        Response response = invoke(() -> addressService.getAddressList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "ns", "myspace", null, null));
+
+        assertThat(response.getStatus(), is(200));
+        Table table = (Table) response.getEntity();
+
+        assertThat(table.getColumnDefinitions().size(), is(9));
+        assertThat(table.getRows().size(), is(2));
+    }
+
+    @Test
     public void testGetByAddress() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace", "A1", null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace", "A1", null));
 
         assertThat(response.getStatus(), is(200));
         Address address = (Address) response.getEntity();
@@ -103,7 +118,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testGetByAddressNotFound() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace","b1", null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace","b1", null));
 
         assertThat(response.getStatus(), is(404));
     }
@@ -111,13 +126,13 @@ public class HttpNestedAddressServiceTest {
     @Test
     public void testListException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.getAddressList(securityContext, "ns", "myspace", null, null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace", null, null));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGet() {
-        Response response = invoke(() -> addressService.getAddress(securityContext, "ns", "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "q1"));
         assertThat(response.getStatus(), is(200));
         Address address = (Address) response.getEntity();
 
@@ -125,15 +140,25 @@ public class HttpNestedAddressServiceTest {
     }
 
     @Test
+    public void testGetTableFormat() {
+        Response response = invoke(() -> addressService.getAddress(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "ns", "myspace", "q1"));
+        assertThat(response.getStatus(), is(200));
+        Table table = (Table) response.getEntity();
+
+        assertThat(table.getColumnDefinitions().size(), is(9));
+        assertThat(table.getRows().get(0).getObject().getMetadata().getName(), is(q1.getName()));
+    }
+
+    @Test
     public void testGetException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.getAddress(securityContext, "ns", "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "q1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGetUnknown() {
-        Response response = invoke(() -> addressService.getAddress(securityContext, "ns", "myspace", "doesnotexist"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 

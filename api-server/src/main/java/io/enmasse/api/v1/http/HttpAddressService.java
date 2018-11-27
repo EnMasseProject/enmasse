@@ -5,7 +5,6 @@
 package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.v1.Either;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.UnprocessableEntityException;
@@ -14,14 +13,15 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.time.Clock;
 
 /**
  * HTTP API for operating on addresses within an address space
  */
 @Path("/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses")
 public class HttpAddressService extends HttpAddressServiceBase {
-    public HttpAddressService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider) {
-        super(addressSpaceApi, schemaProvider);
+    public HttpAddressService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
+        super(addressSpaceApi, schemaProvider, clock);
     }
 
     private static String parseAddressSpace(String addressName) {
@@ -35,17 +35,17 @@ public class HttpAddressService extends HttpAddressServiceBase {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response getAddressList(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @QueryParam("address") String address, @QueryParam("labelSelector") String labelSelector) throws Exception {
-        return super.getAddressList(securityContext, namespace, null, address, labelSelector);
+    public Response getAddressList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @QueryParam("address") String address, @QueryParam("labelSelector") String labelSelector) throws Exception {
+        return super.getAddressList(securityContext, acceptHeader, namespace, null, address, labelSelector);
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
-    public Response getAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName) throws Exception {
+    public Response getAddress(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName) throws Exception {
         String addressSpace = parseAddressSpace(addressName);
-        return super.getAddress(securityContext, namespace, addressSpace, addressName);
+        return super.getAddress(securityContext, acceptHeader, namespace, addressSpace, addressName);
     }
 
     @POST

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.time.Clock;
 
 /**
  * HTTP server for deploying address config
@@ -50,6 +51,7 @@ public class HTTPServer extends AbstractVerticle {
     private final Metrics metrics;
     private final boolean isRbacEnabled;
     private final String version;
+    private final Clock clock;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
@@ -61,7 +63,8 @@ public class HTTPServer extends AbstractVerticle {
                       Metrics metrics,
                       ApiServerOptions options,
                       String clientCa,
-                      String requestHeaderClientCa) {
+                      String requestHeaderClientCa,
+                      Clock clock) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.metrics = metrics;
@@ -72,6 +75,7 @@ public class HTTPServer extends AbstractVerticle {
         this.userApi = userApi;
         this.isRbacEnabled = options.isEnableRbac();
         this.version = options.getVersion();
+        this.clock = clock;
     }
 
     @Override
@@ -95,12 +99,12 @@ public class HTTPServer extends AbstractVerticle {
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
         deployment.getRegistry().addSingletonResource(new HttpOpenApiService());
-        deployment.getRegistry().addSingletonResource(new HttpNestedAddressService(addressSpaceApi, schemaProvider));
-        deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider));
+        deployment.getRegistry().addSingletonResource(new HttpNestedAddressService(addressSpaceApi, schemaProvider, clock));
+        deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider, clock));
         deployment.getRegistry().addSingletonResource(new HttpSchemaService(schemaProvider));
-        deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider));
+        deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider, clock));
         if (userApi != null) {
-            deployment.getRegistry().addSingletonResource(new HttpUserService(addressSpaceApi, userApi));
+            deployment.getRegistry().addSingletonResource(new HttpUserService(addressSpaceApi, userApi, clock));
         } else {
             log.info("User API not available, disabling");
         }

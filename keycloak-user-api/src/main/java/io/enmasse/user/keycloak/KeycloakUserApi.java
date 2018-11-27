@@ -4,6 +4,7 @@
  */
 package io.enmasse.user.keycloak;
 
+import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -26,6 +27,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class KeycloakUserApi implements UserApi  {
@@ -33,9 +35,6 @@ public class KeycloakUserApi implements UserApi  {
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
 
     private final Clock clock;
-    private static final DateTimeFormatter formatter = DateTimeFormatter
-            .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-            .withZone(ZoneId.of("UTC"));
     private final KeycloakFactory keycloakFactory;
     private final Duration apiTimeout;
     private volatile Keycloak keycloak;
@@ -133,7 +132,7 @@ public class KeycloakUserApi implements UserApi  {
         attributes.put("authenticationType", Collections.singletonList(user.getSpec().getAuthentication().getType().name()));
 
         Instant now = clock.instant();
-        attributes.put("creationTimestamp", Collections.singletonList(formatter.format(now)));
+        attributes.put("creationTimestamp", Collections.singletonList(TimeUtil.formatRfc3339(now)));
 
         userRep.setAttributes(attributes);
 

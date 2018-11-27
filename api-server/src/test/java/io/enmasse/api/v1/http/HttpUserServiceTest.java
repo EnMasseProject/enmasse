@@ -9,6 +9,7 @@ import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.common.Status;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.user.model.v1.*;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.Before;
@@ -16,6 +17,7 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
@@ -41,7 +43,7 @@ public class HttpUserServiceTest {
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         userApi = new TestUserApi();
-        this.userService = new HttpUserService(addressSpaceApi, userApi);
+        this.userService = new HttpUserService(addressSpaceApi, userApi, Clock.systemUTC());
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 
@@ -117,7 +119,7 @@ public class HttpUserServiceTest {
 
     @Test
     public void testList() {
-        Response response = invoke(() -> userService.getUserList(securityContext, "ns1", null));
+        Response response = invoke(() -> userService.getUserList(securityContext, null, "ns1", null));
 
         assertThat(response.getStatus(), is(200));
         UserList list = (UserList) response.getEntity();
@@ -127,8 +129,19 @@ public class HttpUserServiceTest {
     }
 
     @Test
+    public void testListTable() {
+        Response response = invoke(() -> userService.getUserList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "ns1", null));
+
+        assertThat(response.getStatus(), is(200));
+        Table table = (Table) response.getEntity();
+
+        assertThat(table.getColumnDefinitions().size(), is(4));
+        assertThat(table.getRows().size(), is(1));
+    }
+
+    @Test
     public void testGetByUser() {
-        Response response = invoke(() -> userService.getUser(securityContext, "ns1", "myspace.user1"));
+        Response response = invoke(() -> userService.getUser(securityContext, null, "ns1", "myspace.user1"));
 
         assertThat(response.getStatus(), is(200));
         User user = (User) response.getEntity();
@@ -137,8 +150,19 @@ public class HttpUserServiceTest {
     }
 
     @Test
+    public void testGetByUserTable() {
+        Response response = invoke(() -> userService.getUser(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "ns1", "myspace.user1"));
+
+        Table table = (Table) response.getEntity();
+
+        assertThat(response.getStatus(), is(200));
+        assertThat(table.getColumnDefinitions().size(), is(4));
+        assertThat(table.getRows().get(0).getObject().getMetadata().getName(), is(u1.getMetadata().getName()));
+    }
+
+    @Test
     public void testGetByUserNotFound() {
-        Response response = invoke(() -> userService.getUser(securityContext, "ns1", "myspace.user2"));
+        Response response = invoke(() -> userService.getUser(securityContext, null, "ns1", "myspace.user2"));
 
         assertThat(response.getStatus(), is(404));
     }
@@ -146,14 +170,14 @@ public class HttpUserServiceTest {
     @Test
     public void testListException() {
         userApi.throwException = true;
-        Response response = invoke(() -> userService.getUserList(securityContext, "ns1", null));
+        Response response = invoke(() -> userService.getUserList(securityContext, null, "ns1", null));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGetException() {
         userApi.throwException = true;
-        Response response = invoke(() -> userService.getUser(securityContext, "ns1", "myspace.user1"));
+        Response response = invoke(() -> userService.getUser(securityContext, null, "ns1", "myspace.user1"));
         assertThat(response.getStatus(), is(500));
     }
 
