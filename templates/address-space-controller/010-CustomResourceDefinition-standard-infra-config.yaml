@@ -62,5 +62,7 @@ spec:
                   properties:
                     memory:
                       type: string
+                minReplicas:
+                  type: integer
                 linkCapacity:
                   type: integer

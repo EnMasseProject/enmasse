@@ -90,7 +90,6 @@ public class TestSchemaApi implements SchemaApi {
                                                 .withAddressSpaceType("type1")
                                                 .withResources(Arrays.asList(new ResourceAllowanceBuilder()
                                                         .withName("broker")
-                                                        .withMin(0.0)
                                                         .withMax(1.0)
                                                         .build()))
                                                 .withAddressPlans(Arrays.asList("plan1"))

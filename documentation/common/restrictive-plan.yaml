@@ -17,11 +17,8 @@ addressPlans:
 - small-anycast
 resources:
 - name: router
-  min: 0.0
   max: 2.0
 - name: broker
-  min: 0.0
   max: 2.0
 - name: aggregate
-  min: 0.0
   max: 2.0

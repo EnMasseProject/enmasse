@@ -16,3 +16,4 @@ spec:
     resources:
       memory: 256Mi
     linkCapcity: 1000
+    minReplicas: 1

@@ -5,11 +5,13 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -34,4 +36,13 @@ public interface Kubernetes {
     void ensureServiceAccountExists(AddressSpace addressSpace);
 
     boolean existsAddressSpace(AddressSpace addressSpace);
+
+    static void addObjectAnnotation(HasMetadata item, String annotationKey, String annotationValue) {
+        Map<String, String> annotations = item.getMetadata().getAnnotations();
+        if (annotations == null) {
+            annotations = new LinkedHashMap<>();
+        }
+        annotations.put(annotationKey, annotationValue);
+        item.getMetadata().setAnnotations(annotations);
+    }
 }

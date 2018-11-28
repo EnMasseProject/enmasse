@@ -4,6 +4,8 @@
  */
 package io.enmasse.controller.standard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final File templateDir;
     private static final String TEMPLATE_SUFFIX = ".yaml";
     private final OpenShiftClient client;
@@ -73,9 +77,13 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public RouterCluster getRouterCluster() {
-        StatefulSet d = client.apps().statefulSets().withName("qdrouterd-" + infraUuid).get();
-        return new RouterCluster(d.getMetadata().getName(), d.getSpec().getReplicas());
+    public RouterCluster getRouterCluster() throws IOException {
+        StatefulSet s = client.apps().statefulSets().withName("qdrouterd-" + infraUuid).get();
+        StandardInfraConfig infraConfig = null;
+        if (s.getMetadata().getAnnotations() != null && s.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG) != null) {
+            infraConfig = mapper.readValue(s.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG), StandardInfraConfig.class);
+        }
+        return new RouterCluster(s.getMetadata().getName(), s.getSpec().getReplicas(), infraConfig);
     }
 
     @Override

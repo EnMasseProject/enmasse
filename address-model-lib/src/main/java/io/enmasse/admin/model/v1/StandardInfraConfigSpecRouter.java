@@ -23,13 +23,16 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter {
     private final StandardInfraConfigSpecRouterResources resources;
+    private final int minReplicas;
     private final int linkCapacity;
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     @JsonCreator
     public StandardInfraConfigSpecRouter(@JsonProperty("resources") StandardInfraConfigSpecRouterResources resources,
+                                         @JsonProperty("minReplicas") int minReplicas,
                                          @JsonProperty("linkCapacity") int linkCapacity) {
         this.resources = resources;
+        this.minReplicas = minReplicas;
         this.linkCapacity = linkCapacity;
     }
 
@@ -63,5 +66,9 @@ public class StandardInfraConfigSpecRouter {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    public int getMinReplicas() {
+        return minReplicas;
     }
 }

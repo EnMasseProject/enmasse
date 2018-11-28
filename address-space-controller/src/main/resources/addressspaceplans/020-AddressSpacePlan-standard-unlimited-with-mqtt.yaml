@@ -14,13 +14,10 @@ uuid: b10bce7c-db6e-11e8-a6b8-d45ddf138840
 addressSpaceType: standard
 resources:
 - name: router
-  min: 2.0
   max: 10000.0
 - name: broker
-  min: 1.0
   max: 10000.0
 - name: aggregate
-  min: 1.0
   max: 10000.0
 addressPlans:
 - standard-small-anycast

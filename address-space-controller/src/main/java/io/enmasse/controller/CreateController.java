@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -12,8 +13,10 @@ import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaProvider;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,6 +108,7 @@ public class CreateController implements Controller {
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
+            addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
 
             log.info("Creating address space {}", addressSpace);
 
@@ -119,6 +123,7 @@ public class CreateController implements Controller {
                 KubernetesList resourceList = new KubernetesListBuilder()
                         .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                         .build();
+                addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
 
                 log.info("Upgrading address space {}", addressSpace);
 
@@ -130,6 +135,14 @@ public class CreateController implements Controller {
             }
         }
         return addressSpace;
+    }
+
+    private void addAppliedInfraConfigAnnotation(KubernetesList resourceList, InfraConfig infraConfig) throws JsonProcessingException {
+        for (HasMetadata item : resourceList.getItems()) {
+            if (item instanceof StatefulSet) {
+                Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig));
+            }
+        }
     }
 
     private InfraConfig getInfraConfig(AddressSpace addressSpace) {
