@@ -45,13 +45,17 @@ public class GlobalLogCollector {
     }
 
     public void collectConfigMaps() {
+        collectConfigMaps("global");
+    }
+
+    public void collectConfigMaps(String operation) {
         log.info("Collecting configmaps for namespace {}", namespace);
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
                 Path path = Paths.get(logDir.getPath(), namespace);
                 File confMapFile = new File(
                         Files.createDirectories(path).toFile(),
-                        configMap.getMetadata().getName() + ".configmap");
+                        configMap.getMetadata().getName() + "." + operation + ".configmap");
                 if (!confMapFile.exists()) {
                     try (BufferedWriter bf = Files.newBufferedWriter(confMapFile.toPath())) {
                         bf.write(configMap.toString());
