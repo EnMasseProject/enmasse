@@ -74,9 +74,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 0.0, 3.0),
-                new AddressSpaceResource("router", 1.0, 5.0),
-                new AddressSpaceResource("aggregate", 0.0, 8.0));
+                new AddressSpaceResource("broker", 3.0),
+                new AddressSpaceResource("router", 5.0),
+                new AddressSpaceResource("aggregate", 8.0));
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = new AddressSpacePlan("console-plan",
                 "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);

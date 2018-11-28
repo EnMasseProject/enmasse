@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 class PlansMarathonTest extends MarathonTestBase {
 
@@ -47,9 +46,9 @@ class PlansMarathonTest extends MarathonTestBase {
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 0.0, 10.0),
-                new AddressSpaceResource("router", 2.0, 2.0),
-                new AddressSpaceResource("aggregate", 0.0, 12.0));
+                new AddressSpaceResource("broker", 10.0),
+                new AddressSpaceResource("router", 2.0),
+                new AddressSpaceResource("aggregate", 12.0));
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
@@ -96,9 +95,9 @@ class PlansMarathonTest extends MarathonTestBase {
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 0.0, 10.0),
-                new AddressSpaceResource("router", 2.0, 2.0),
-                new AddressSpaceResource("aggregate", 0.0, 12.0));
+                new AddressSpaceResource("broker", 10.0),
+                new AddressSpaceResource("router", 2.0),
+                new AddressSpaceResource("aggregate", 12.0));
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);

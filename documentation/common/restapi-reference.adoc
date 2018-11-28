@@ -1265,8 +1265,6 @@ __required__|string
 |Name|Schema
 |**max** +
 __required__|number
-|**min** +
-__required__|number
 |**name** +
 __required__|string
 |===
@@ -1510,7 +1508,9 @@ __optional__|string
 |===
 |Name|Schema
 |**linkCapacity** +
-__optional__|string
+__optional__|integer
+|**minReplicas** +
+__optional__|integer
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1alpha1_standardinfraconfigspecrouter_resources,resources>>
 |===

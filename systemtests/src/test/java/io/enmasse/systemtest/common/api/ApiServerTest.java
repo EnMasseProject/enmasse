@@ -65,9 +65,9 @@ class ApiServerTest extends TestBase {
 
         //define and create address space plan
         List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 0.0, 2.0),
-                new AddressSpaceResource("router", 1.0, 1.0),
-                new AddressSpaceResource("aggregate", 0.0, 2.0));
+                new AddressSpaceResource("broker", 2.0),
+                new AddressSpaceResource("router", 1.0),
+                new AddressSpaceResource("aggregate", 2.0));
         List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
         AddressSpacePlan addressSpacePlan = new AddressSpacePlan("schema-rest-api-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
