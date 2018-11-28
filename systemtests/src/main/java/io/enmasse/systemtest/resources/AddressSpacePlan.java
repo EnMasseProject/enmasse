@@ -83,7 +83,6 @@ public class AddressSpacePlan {
         for (AddressSpaceResource res : this.getResources()) {
             brokerResource = new JsonObject();
             brokerResource.put("name", res.getName());
-            brokerResource.put("min", res.getMin());
             brokerResource.put("max", res.getMax());
             defResources.add(brokerResource);
         }
@@ -112,7 +111,6 @@ public class AddressSpacePlan {
             JsonObject resourceDef = resourcesDef.getJsonObject(i);
             AddressSpaceResource resource = new AddressSpaceResource(
                     resourceDef.getString("name"),
-                    resourceDef.getDouble("min"),
                     resourceDef.getDouble("max"));
             resources.add(resource);
         }
