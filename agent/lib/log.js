@@ -27,6 +27,7 @@ var levels = {
 function Logger (name) {
     this.logger = require('debug')(name);
     this.level = 2;
+    this.name = name;
 
     if (process.env.LOGLEVEL) {
         var desired_level = levels[process.env.LOGLEVEL];
@@ -36,10 +37,19 @@ function Logger (name) {
     }
 }
 
+function formatLevel(level, spaces) {
+    var nchars = level.length;
+    while (nchars < spaces) {
+        level += " ";
+        nchars++;
+    }
+    return level.toUpperCase();
+}
+
 Logger.prototype.log = function (level, str) {
     var args = Array.prototype.slice.call(arguments, 2);
     if (levels[level] !== undefined && levels[level] <= this.level) {
-        this.logger.apply(this.logger, [level + " " + str].concat(args));
+        this.logger.apply(this.logger, [formatLevel(level, 5) + " " + str].concat(args));
     }
 }
 
