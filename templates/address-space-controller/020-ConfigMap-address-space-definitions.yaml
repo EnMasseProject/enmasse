@@ -373,6 +373,8 @@ data:
                 value: ${STANDARD_INFRA_CONFIG_NAME}
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
+              - name: ADDRESS_SPACE_NAMESPACE
+                value: ${ADDRESS_SPACE_NAMESPACE}
               - name: INFRA_UUID
                 value: ${INFRA_UUID}
               - name: ADDRESS_SPACE_PLAN
@@ -555,6 +557,25 @@ data:
         - name: amqp
           port: 5671
           targetPort: 55671
+        selector:
+          name: admin
+          infraUuid: ${INFRA_UUID}
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: standard-controller-${INFRA_UUID}
+      spec:
+        ports:
+        - name: health
+          port: 8080
+          protocol: TCP
+          targetPort: 8889
         selector:
           name: admin
           infraUuid: ${INFRA_UUID}

@@ -20,6 +20,11 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>metrics-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
       <scope>compile</scope>

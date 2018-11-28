@@ -6,6 +6,8 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.api.*;
+import io.enmasse.metrics.api.Metric;
+import io.enmasse.metrics.api.Metrics;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import okhttp3.HttpUrl;
@@ -81,6 +83,8 @@ public class StandardController {
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
                 : new LogEventLogger();
 
+        Metrics metrics = new Metrics();
+
 
         addressController = new AddressController(
                 options,
@@ -88,12 +92,13 @@ public class StandardController {
                 kubernetes,
                 clusterGenerator,
                 eventLogger,
-                schemaProvider);
+                schemaProvider,
+                metrics);
 
         log.info("Starting standard controller for " + options.getAddressSpace());
         addressController.start();
 
-        httpServer = new HTTPServer(8889);
+        httpServer = new HTTPServer( 8889, metrics);
         httpServer.start();
     }
 
