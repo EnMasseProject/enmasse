@@ -403,7 +403,7 @@ data:
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
-                  path: /health
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 initialDelaySeconds: 30
@@ -413,7 +413,7 @@ data:
                 name: http
               readinessProbe:
                 httpGet:
-                  path: /health
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 initialDelaySeconds: 30
