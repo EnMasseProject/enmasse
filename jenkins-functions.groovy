@@ -59,7 +59,11 @@ def postAction(String coresDir, String artifactDir) {
     archiveArtifacts artifacts: 'templates/build/**', allowEmptyArchive: true
     sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
     sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
-    archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
+    try {
+        archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
+    } finally {
+        echo "Artifact are stored"
+    }
     tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 }
