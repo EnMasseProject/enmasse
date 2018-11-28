@@ -110,9 +110,7 @@ function configure() {
 
     envsubst < $CONFIG_TEMPLATES/artemis.profile > $instanceDir/etc/artemis.profile
 
-    if [ "$DEBUG_LOGGING" == "true" ]; then
-        cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
-    fi
+    cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
 }
 
 function init_data_dir() {

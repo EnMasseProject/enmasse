@@ -22,7 +22,7 @@ spec:
       containers:
       - env:
         - name: JAVA_OPTS
-          value: -Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true
+          value: -Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Duser.timezone=UTC
             -Xms512m -Xmx1024m
         - name: KEYCLOAK_USER
           valueFrom:
