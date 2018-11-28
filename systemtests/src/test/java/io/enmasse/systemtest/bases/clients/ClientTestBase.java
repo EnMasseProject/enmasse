@@ -80,6 +80,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.ADDRESS, dest.getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.TIMEOUT, "30");
         if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
             if (sharedAddressSpace.getType() == AddressSpaceType.STANDARD) {
