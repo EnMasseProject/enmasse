@@ -7,8 +7,13 @@ package io.enmasse.systemtest.common;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CRDCmdClient;
+import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -96,6 +101,46 @@ class CommonTest extends TestBase {
         assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-c").getRetCode());
         assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-a").getRetCode());
         assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-l").getRetCode());
+    }
+
+    @Test
+    void testConsoleErrorOnDeleteAddressSpace() throws Exception {
+        //creating address space as it will be deleted during test, using shared would destroy other tests.
+        AddressSpace addressSpace = new AddressSpace("test-addr-space", AuthService.STANDARD);
+        createAddressSpace(addressSpace, addressApiClient);
+
+        //set up selenium for test
+        SeleniumContainers.deployFirefoxContainer();
+        SeleniumProvider selenium = new SeleniumProvider();
+        selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
+
+        //create user cred
+        UserCredentials cred = new UserCredentials("developer", "developer");
+        createUser(addressSpace, cred);
+
+        //create and open web console and ensure its working correctly
+        ConsoleWebPage consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient,
+                addressSpace, cred);
+        consoleWebPage.openWebConsolePage(cred, true);
+        consoleWebPage.openAddressesPageWebConsole();
+        consoleWebPage.createAddressWebConsole(
+                Destination.queue("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
+                false,false
+        );
+
+        deleteAddressSpace(addressSpace);
+
+        WebElement errorLog = selenium.getWebElement(() ->
+                selenium.getDriver().findElement(By.id("myErrorDialogLabel")));
+        assertTrue(errorLog.isDisplayed());
+        log.info("error banner is displayed showing addr space is deleted");
+
+        //refresh page, console is no longer available
+        selenium.refreshPage();
+        WebElement errorPageText = selenium.getWebElement(() ->
+                selenium.getDriver().findElement(By.className("alert-info")));
+        assertTrue(errorPageText.isDisplayed());
+        log.info("application is not available page is displayed");
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
