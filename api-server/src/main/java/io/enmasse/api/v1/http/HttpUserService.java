@@ -12,18 +12,29 @@ import io.enmasse.api.common.Status;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.model.v1beta1.PartialObjectMetadata;
+import io.enmasse.k8s.model.v1beta1.Table;
+import io.enmasse.k8s.model.v1beta1.TableColumnDefinition;
+import io.enmasse.k8s.model.v1beta1.TableRow;
+import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
 import io.enmasse.user.model.v1.UserMetadata;
+import io.fabric8.kubernetes.api.model.ListMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.Map;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 @Path(HttpUserService.BASE_URI)
 public class HttpUserService {
@@ -34,10 +45,12 @@ public class HttpUserService {
 
     private final AddressSpaceApi addressSpaceApi;
     private final UserApi userApi;
+    private final Clock clock;
 
-    public HttpUserService(AddressSpaceApi addressSpaceApi, UserApi userApi) {
+    public HttpUserService(AddressSpaceApi addressSpaceApi, UserApi userApi, Clock clock) {
         this.addressSpaceApi = addressSpaceApi;
         this.userApi = userApi;
+        this.clock = clock;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -57,7 +70,7 @@ public class HttpUserService {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getUserList(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @QueryParam("labelSelector") String labelSelector) throws Exception {
+    public Response getUserList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @QueryParam("labelSelector") String labelSelector) throws Exception {
         return doRequest("Error getting user list", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
 
@@ -68,14 +81,14 @@ public class HttpUserService {
             } else {
                 userList.addAll(userApi.listUsers(namespace));
             }
-            return Response.ok(userList).build();
+            return Response.ok(formatResponse(acceptHeader, userList)).build();
         });
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{userName}")
-    public Response getUser(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("userName") String userNameWithAddressSpace) throws Exception {
+    public Response getUser(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("userName") String userNameWithAddressSpace) throws Exception {
         return doRequest("Error getting user " + userNameWithAddressSpace, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.get);
 
@@ -90,7 +103,7 @@ public class HttpUserService {
             String userName = parseUserName(userNameWithAddressSpace);
             log.debug("Retrieving user {} in realm {} namespace {}", userName, realm, namespace);
             return userApi.getUserWithName(realm, userName)
-                    .map(user -> Response.ok(user).build())
+                    .map(user -> Response.ok(formatResponse(acceptHeader, user)).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build());
         });
     }
@@ -220,4 +233,68 @@ public class HttpUserService {
         }
     }
 
+    private static final List<TableColumnDefinition> tableColumnDefinitions = Arrays.asList(
+            new TableColumnDefinition("Name must be unique within a namespace.",
+                    "name",
+                    "Name",
+                    0,
+                    "string"),
+            new TableColumnDefinition("User name used by clients.",
+                    "",
+                    "Username",
+                    0,
+                    "string"),
+            new TableColumnDefinition("Authentication type.",
+                    "",
+                    "Type",
+                    1,
+                    "string"),
+            new TableColumnDefinition("The timestamp representing server time when this user was created.",
+                    "",
+                    "Age",
+                    0,
+                    "string"));
+
+    private Object formatResponse(String headerParam, UserList userList) {
+        if (isTableFormat(headerParam)) {
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(userList));
+        } else {
+            return userList;
+        }
+    }
+
+    private Object formatResponse(String headerParam, User user) {
+        if (isTableFormat(headerParam)) {
+            UserList list = new UserList();
+            list.add(user);
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(list));
+        } else {
+            return user;
+        }
+    }
+
+    private boolean isTableFormat(String acceptHeader) {
+        return acceptHeader != null && acceptHeader.contains("as=Table") && acceptHeader.contains("g=meta.k8s.io") && acceptHeader.contains("v=v1beta1");
+    }
+
+    private List<TableRow> createRows(UserList userList) {
+        Instant now = clock.instant();
+        return userList.getItems().stream()
+                .map(user -> new TableRow(
+                        Arrays.asList(
+                                user.getMetadata().getName(),
+                                user.getSpec().getUsername(),
+                                user.getSpec().getAuthentication().getType().name(),
+                                Optional.ofNullable(user.getMetadata().getCreationTimestamp())
+                                        .map(s -> TimeUtil.formatHumanReadable(Duration.between(TimeUtil.parseRfc3339(s), now)))
+                                        .orElse("")),
+                        new PartialObjectMetadata(new ObjectMetaBuilder()
+                                .withNamespace(user.getMetadata().getNamespace())
+                                .withName(user.getMetadata().getName())
+                                .withCreationTimestamp(user.getMetadata().getCreationTimestamp())
+                                .withSelfLink(user.getMetadata().getSelfLink())
+                                .withResourceVersion(user.getMetadata().getResourceVersion())
+                                .build())))
+                .collect(Collectors.toList());
+    }
 }

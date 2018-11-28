@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.time.Clock;
 import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -80,7 +81,7 @@ public class HTTPServerTest {
         ApiServerOptions options = new ApiServerOptions();
         options.setVersion("1.0");
         options.setCertDir("/doesnotexist");
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, userApi, new Metrics(), options, null, null), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(),authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC()), context.asyncAssertSuccess());
     }
 
     @After

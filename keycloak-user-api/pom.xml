@@ -16,6 +16,11 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>k8s-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-admin-client</artifactId>
       <scope>compile</scope>
