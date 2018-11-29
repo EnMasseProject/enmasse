@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -295,6 +296,28 @@ public class ConsoleWebPage implements IWebPage {
                 ConnectionWebItem item = new ConnectionWebItem(element);
                 log.info(String.format("Got connection: %s", item.toString()));
                 connectionItems.add(item);
+            }
+        }
+        return connectionItems;
+    }
+
+    /**
+     * get all connections
+     */
+    public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
+        List<ConnectionWebItem> connectionItems = new ArrayList<>();
+        long endTime = System.currentTimeMillis() + 30000;
+        while(connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
+            log.info("First iteration waiting for {} connections items", expectedCount);
+            WebElement content = getContentContainer();
+            List<WebElement> elements = content.findElements(By.className("list-group-item"));
+            connectionItems.clear();
+            for (WebElement element : elements) {
+                if (!element.getAttribute("class").contains("disabled")) {
+                    ConnectionWebItem item = new ConnectionWebItem(element);
+                    log.info(String.format("Got connection: %s", item.toString()));
+                    connectionItems.add(item);
+                }
             }
         }
         return connectionItems;
