@@ -66,7 +66,7 @@ public class ControllerChainTest {
         verify(mockController).handle(eq(a2));
 
         List<Metric> metricList = metrics.snapshot();
-        assertThat(metricList.size(), is(4));
+        assertThat(metricList.size(), is(5));
     }
 }
 
