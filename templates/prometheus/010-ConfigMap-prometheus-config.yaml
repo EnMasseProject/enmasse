@@ -106,7 +106,7 @@ data:
           description: '{{ $labels.summary }}'
           value: "{{ $value }}"
           severity: warning
-        expr: address_spaces_ready == 0
+        expr: address_spaces_not_ready_total > 0
         for: 300s
       - alert: Terminating_Pods
         annotations:

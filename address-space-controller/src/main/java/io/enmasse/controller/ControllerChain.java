@@ -115,24 +115,20 @@ public class ControllerChain implements Watcher<AddressSpace> {
         metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", "address-space-controller is healthy"))));
 
         List<MetricValue> readyValues = new ArrayList<>();
-        for (AddressSpace addressSpace : resources) {
-            readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, new MetricLabel("name", addressSpace.getName())));
-        }
-
-
         List<MetricValue> notReadyValues = new ArrayList<>();
         for (AddressSpace addressSpace : resources) {
+            readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, new MetricLabel("name", addressSpace.getName())));
             notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, now, new MetricLabel("name", addressSpace.getName())));
         }
         
         metrics.reportMetric(new Metric(
-                "address_spaces_ready",
-                "Address Spaces Ready",
+                "address_spaces_ready_total",
+                "Total number of address spaces in ready state",
                 MetricType.gauge,
                 readyValues));
         metrics.reportMetric(new Metric(
-                "address_spaces_not_ready",
-                "Address Spaces not_ready",
+                "address_spaces_not_ready_total",
+                "Total number of address spaces in a not ready state",
                 MetricType.gauge,
                 notReadyValues));
         metrics.reportMetric(new Metric(

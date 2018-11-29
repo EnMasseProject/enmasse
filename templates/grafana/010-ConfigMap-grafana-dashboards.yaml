@@ -518,7 +518,7 @@ data:
           ],
           "targets": [
             {
-              "expr": "address_spaces_ready",
+              "expr": "address_spaces_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -607,7 +607,7 @@ data:
           ],
           "targets": [
             {
-              "expr": "address_spaces_total - sum(address_spaces_ready{job=\"component-health\"})  without (name)",
+              "expr": "address_spaces_total - sum(address_spaces_ready_total{job=\"component-health\"})  without (name)",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
