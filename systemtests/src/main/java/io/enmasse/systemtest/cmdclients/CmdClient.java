@@ -24,8 +24,8 @@ public class CmdClient {
             synchronized (lock) {
                 if (logToOutput) {
                     log.info("Return code: {}", ret);
-                    log.info("stdout: {}", executor.getStdOut());
-                    log.info("stderr: {}", executor.getStdErr());
+                    log.info("stdout: \n{}", executor.getStdOut());
+                    log.info("stderr: \n{}", executor.getStdErr());
                 }
             }
             return new ExecutionResultData(ret, executor.getStdOut(), executor.getStdErr());
