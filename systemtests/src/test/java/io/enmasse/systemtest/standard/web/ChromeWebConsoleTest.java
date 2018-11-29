@@ -201,6 +201,11 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
                         getDefaultPlan(AddressType.QUEUE)));
     }
 
+    @Test
+    @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
+    void testAddressWithValidPlanOnly() throws Exception {
+        doTestAddressWithValidPlanOnly();
+    }
 
     @Override
     public boolean skipDummyAddress() {

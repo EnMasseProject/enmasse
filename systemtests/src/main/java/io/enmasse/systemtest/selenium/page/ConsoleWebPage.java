@@ -8,6 +8,7 @@ package io.enmasse.systemtest.selenium.page;
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import org.openqa.selenium.By;
@@ -35,6 +36,7 @@ public class ConsoleWebPage implements IWebPage {
     private ToolbarType toolbarType;
     private ConsoleLoginWebPage consoleLoginWebPage;
     private UserCredentials credentials;
+    private OpenshiftWebPage openshiftWebPage;
 
 
     public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
@@ -224,10 +226,6 @@ public class ConsoleWebPage implements IWebPage {
         return getSortGroup().findElement(By.className("btn-link"));
     }
 
-    public WebElement getCreateAddressModalWindow() throws Exception {
-        return selenium.getDriver().findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
-    }
-
     private WebElement getRightDropDownMenus() throws Exception {
         return selenium.getDriver().findElement(By.className("navbar-right"));
     }
@@ -317,6 +315,32 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
     }
 
+    private WebElement getNextButton() {
+        return getModalWindow().findElement(By.id("nextButton"));
+    }
+
+    private WebElement getModalWindow() {
+        return selenium.getDriver().findElement(By.className("modal-content"));
+    }
+
+    /**
+     * get the radio button for the destination
+     */
+    public WebElement getRadioButtonForAddressType(Destination destination) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getType().toLowerCase())));
+    }
+
+    /**
+     * get Address Modal window page by selecting numbered circle
+     */
+    private WebElement getAddressModalPageNumbers() throws Exception {
+        return selenium.getDriver().findElement(By.className("wizard-pf-steps-indicator"));
+    }
+
+    public WebElement getAddressModalPageByNumber(Integer pageNumber) throws Exception {
+        return getAddressModalPageNumbers().findElements(By.className("wizard-pf-step-number")).get(pageNumber - 1);  //zero indexed
+    }
+
     //================================================================================================
     // Operations
     //================================================================================================
@@ -373,6 +397,14 @@ public class ConsoleWebPage implements IWebPage {
 
     public void clickOnRemoveButton() throws Exception {
         selenium.clickOnItem(getRemoveButton());
+    }
+
+    public void next() throws Exception {
+        selenium.clickOnItem(getNextButton());
+    }
+
+    public void clickOnAddressModalPageByNumber(Integer pageNumber) throws Exception {
+        selenium.clickOnItem(getAddressModalPageByNumber(pageNumber));
     }
 
     public void clickOnRegexAlertClose() throws Exception {

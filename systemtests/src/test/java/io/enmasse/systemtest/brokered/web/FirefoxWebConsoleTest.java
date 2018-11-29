@@ -174,4 +174,8 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
                         getDefaultPlan(AddressType.QUEUE)));
     }
 
+    @Test
+    void testAddressWithValidPlanOnly() throws Exception {
+        doTestAddressWithValidPlanOnly();
+    }
 }

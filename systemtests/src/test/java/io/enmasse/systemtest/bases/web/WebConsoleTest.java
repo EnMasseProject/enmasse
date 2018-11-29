@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -766,6 +767,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCreateAddressWithSpecialCharsShowsErrorMessage() throws Exception {
+        final Supplier<WebElement> webElementSupplier = () -> selenium.getDriver().findElement(By.id("new-name"));
         String testString = "addressName";
         Destination destValid = Destination.destination(AddressType.QUEUE, testString, getDefaultPlan(AddressType.QUEUE), Optional.empty());
         Destination destInvalid;
@@ -775,21 +777,18 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
         consoleWebPage.clickOnCreateButton();
-        consoleWebPage.getCreateAddressModalWindow();
 
         for (char special_char : "#*/.:".toCharArray()) { //   <!@>&% not needed to be tested
             destInvalid = Destination.destination(AddressType.QUEUE, testString + special_char,
                     getDefaultPlan(AddressType.QUEUE), Optional.empty());
 
             //fill with valid name first
-            selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))),
-                    destValid.getAddress());
+            selenium.fillInputItem(selenium.getWebElement(webElementSupplier), destValid.getAddress());
             WebElement helpBlock = selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("help-block")));
             assertTrue(helpBlock.getText().isEmpty());
 
             //fill with invalid name (including spec_char)
-            selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))),
-                    destInvalid.getAddress());
+            selenium.fillInputItem(selenium.getWebElement(webElementSupplier), destInvalid.getAddress());
             assertTrue(helpBlock.isDisplayed());
         }
     }
@@ -806,6 +805,47 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
         assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
     }
+
+    protected void doTestAddressWithValidPlanOnly() throws Exception {
+        Destination destQueue = Destination.destination(AddressType.QUEUE, "test-addr-queue",
+                getDefaultPlan(AddressType.QUEUE), Optional.empty());
+
+        Destination destTopic = Destination.destination(AddressType.TOPIC, "test-addr-topic",
+                getDefaultPlan(AddressType.TOPIC), Optional.empty());
+
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+                sharedAddressSpace, defaultCredentials);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.openAddressesPageWebConsole();
+
+        // create Queue with default Plan and move to confirmation page
+        selenium.clickOnItem(consoleWebPage.getCreateButton(), "clicking on create button");
+        final Supplier<WebElement> webElementSupplier = () -> selenium.getDriver().findElement(By.id("new-name"));
+        selenium.fillInputItem(selenium.getWebElement(webElementSupplier), destQueue.getAddress());
+        selenium.clickOnItem(consoleWebPage.getRadioButtonForAddressType(destQueue), "clicking on radio button");
+        consoleWebPage.next();
+        consoleWebPage.next();
+
+        // go back to page 1 by clicking "number 1"
+        consoleWebPage.clickOnAddressModalPageByNumber(1);
+
+        // change details to Topic
+        selenium.fillInputItem(selenium.getWebElement(webElementSupplier), destTopic.getAddress());
+        selenium.clickOnItem(consoleWebPage.getRadioButtonForAddressType(destTopic), "clicking on radio button");
+
+        // skip straight back to page 3 and create address
+        consoleWebPage.clickOnAddressModalPageByNumber(3);
+        consoleWebPage.next();
+
+        // assert new address is Topic
+        assertEquals(AddressType.TOPIC.toString(), consoleWebPage.getAddressItem(destTopic).getType(),
+                "Console failed, expected TOPIC type");
+
+        waitForDestinationsReady(sharedAddressSpace, destTopic);
+
+        assertCanConnect(sharedAddressSpace, defaultCredentials, Collections.singletonList(destTopic));
+    }
+
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================

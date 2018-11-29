@@ -208,6 +208,11 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
                         getDefaultPlan(AddressType.QUEUE)));
     }
 
+    @Test
+    void testAddressWithValidPlanOnly() throws Exception {
+        doTestAddressWithValidPlanOnly();
+    }
+
     @Override
     public boolean skipDummyAddress() {
         return true;
