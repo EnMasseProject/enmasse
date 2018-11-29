@@ -31,14 +31,14 @@ function bind_event(source, event, target, method) {
 function start(env) {
     kubernetes.get_messaging_route_hostname(env).then(function (result) {
         if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
-        var source_env = { address_space: env.ADDRESS_SPACE, namespace: env.ADDRESS_SPACE_NAMESPACE, uuid: env.INFRA_UUID, plan: env.ADDRESS_SPACE_PLAN };
         var address_source = new AddressSource(env);
-        var console_server = new ConsoleServer(address_source);
+        var console_server = new ConsoleServer(address_source, env);
         bind_event(address_source, 'addresses_defined', console_server.addresses);
 
         console_server.listen(env);
 
         if (env.ADDRESS_SPACE_TYPE === 'brokered') {
+            bind_event(address_source, 'addresses_defined', console_server.metrics);
             console_server.listen_health(env);
             var event_logger = env.ENABLE_EVENT_LOGGER == 'true' ? kubernetes.post_event : undefined;
             var bc = require('../lib/broker_controller.js').create_agent(event_logger);

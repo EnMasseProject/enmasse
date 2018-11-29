@@ -1277,6 +1277,9 @@ data:
         - name: https
           port: 8081
           targetPort: 8080
+        - name: health
+          port: 8088
+          targetPort: 8088
         selector:
           role: agent
           infraUuid: ${INFRA_UUID}

@@ -69,6 +69,11 @@ var tls_env = {
     CONSOLE_KEY_PATH: localpath('server-key.pem')
 };
 
+var env = {
+    ADDRESS_SPACE: 'myspace',
+    ADDRESS_SPACE_NAMESPACE: 'ns'
+}
+
 function define_tests(v, client) {
     describe('console server ' + v, function() {
         var console_server;
@@ -94,7 +99,7 @@ function define_tests(v, client) {
             auth_service = new MockAuthService(undefined , ['manage']);
             auth_service.listen().on('listening', function () {
                 var options = myutils.merge({port:0, AUTHENTICATION_SERVICE_PORT: auth_service.port}, v === 'https' ? tls_env : {ALLOW_HTTP:true});
-                console_server = new ConsoleServer(new AddressCtrl());
+                console_server = new ConsoleServer(new AddressCtrl(), env);
                 console_server.listen(options, done);
             });
         });
@@ -364,7 +369,7 @@ function define_authz_tests(v, client) {
             auth_service = new MockAuthService(undefined , ['manage']);
             auth_service.listen().on('listening', function () {
                 var options = myutils.merge({port:0, KEYCLOAK_GROUP_PERMISSIONS: true, AUTHENTICATION_SERVICE_PORT: auth_service.port}, v === 'https' ? tls_env : {ALLOW_HTTP:true});
-                console_server = new ConsoleServer(new AddressCtrl());
+                console_server = new ConsoleServer(new AddressCtrl(), env);
                 console_server.listen(options, done);
             });
         });
@@ -508,6 +513,55 @@ for (var v in configs) {
     define_authz_tests(v, configs[v]);
 }
 
+describe('metrics support', function() {
+    var console_server;
+    var health_server;
+
+    beforeEach(function(done) {
+        console_server = new ConsoleServer(new AddressCtrl(), env);
+        health_server = console_server.listen_health({HEALTH_PORT: 0}, done);
+    });
+
+    afterEach(function(done) {
+        Promise.all([
+            new Promise(function (resolve, reject) {
+                health_server.close(resolve);
+            })
+        ]).then(function () {
+            done();
+        });
+    });
+
+    it('responds to health request', function (done) {
+        http.get({port:health_server.address().port, hostname:'localhost',path:'/healthz'}, function (response) {
+            var body = "";
+            response.on('data', function(chunk) {
+                body += chunk;
+            });
+            response.on('end', function() {
+                assert.equal(response.statusCode, 200);
+                assert.equal(body, "OK");
+                done();
+            });
+        });
+    });
+
+    it('responds to metrics request', function (done) {
+        console_server.metrics.addresses_defined([{address:'foo', status: {isReady: true, phase: 'Active'}}]);
+        http.get({port:health_server.address().port, hostname:'localhost',path:'/metrics'}, function (response) {
+            var body = "";
+            response.on('data', function(chunk) {
+                body += chunk;
+            });
+            response.on('end', function() {
+                assert.equal(response.statusCode, 200);
+                assert(body.indexOf("addresses_active_total{addressspace=\"myspace\",namespace=\"ns\"} 1") > 0);
+                done();
+            });
+        });
+    });
+});
+
 describe('online help', function() {
     var console_server;
     var auth_service;
@@ -516,7 +570,7 @@ describe('online help', function() {
         auth_service = new MockAuthService(undefined , ['monitor']);
         auth_service.listen().on('listening', function () {
             var options = {port:0, AUTHENTICATION_SERVICE_PORT: auth_service.port, MESSAGING_ROUTE_HOSTNAME:'my-messaging-route-test', ALLOW_HTTP:1};
-            console_server = new ConsoleServer(new AddressCtrl());
+            console_server = new ConsoleServer(new AddressCtrl(), env);
             console_server.listen(options, done);
         });
     });
