@@ -226,13 +226,13 @@ ConsoleServer.prototype.listen = function (env, callback) {
     return this.server;
 };
 
-ConsoleServer.prototype.listen_probe = function (env) {
-    if (env.PROBE_PORT !== undefined) {
-        var probe = http.createServer(function (req, res) {
+ConsoleServer.prototype.listen_health = function (env) {
+    if (env.HEALTH_PORT !== undefined) {
+        var health = http.createServer(function (req, res) {
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end('OK');
         });
-        return probe.listen(env.PROBE_PORT);
+        return health.listen(env.HEALTH_PORT);
     }
 };
 

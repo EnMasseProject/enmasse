@@ -39,7 +39,7 @@ function start(env) {
         console_server.listen(env);
 
         if (env.ADDRESS_SPACE_TYPE === 'brokered') {
-            console_server.listen_probe(env);
+            console_server.listen_health(env);
             var event_logger = env.ENABLE_EVENT_LOGGER == 'true' ? kubernetes.post_event : undefined;
             var bc = require('../lib/broker_controller.js').create_agent(event_logger);
             bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
@@ -57,7 +57,7 @@ function start(env) {
             ragent.disable_connectivity = true;
             bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses')
             ragent.start_listening(env);
-            ragent.listen_probe({PROBE_PORT:8888});
+            ragent.listen_health({HEALTH_PORT:8888});
         }
 
         process.on('SIGTERM', function () {

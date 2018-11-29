@@ -468,7 +468,7 @@ data:
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 periodSeconds: 30
@@ -483,7 +483,7 @@ data:
                 name: amqp-ws
               readinessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 periodSeconds: 30
@@ -1196,7 +1196,7 @@ data:
                 value: /etc/console-certs
               - name: MESSAGING_CERT
                 value: /opt/agent/messaging-cert/tls.crt
-              - name: PROBE_PORT
+              - name: HEALTH_PORT
                 value: '8088'
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
@@ -1214,7 +1214,7 @@ data:
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
               name: agent
@@ -1230,7 +1230,7 @@ data:
                 name: http
               readinessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
               volumeMounts:

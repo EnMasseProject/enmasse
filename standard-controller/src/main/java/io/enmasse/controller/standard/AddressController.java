@@ -170,11 +170,12 @@ public class AddressController implements Watcher<Address> {
         int notReady = addressList.size() - ready;
 
         long now = System.currentTimeMillis();
-        MetricLabel [] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
 
         String componentName = "standard-controller-" + options.getInfraUuid();
         metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion()))));
         metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", componentName + " is healthy"))));
+
+        MetricLabel [] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
         metrics.reportMetric(new Metric("addresses_ready_total", "Total number of addresses in ready state", MetricType.gauge, new MetricValue(ready, now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_not_ready_total", "Total number of address in a not ready state", MetricType.gauge, new MetricValue(notReady, now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_total", "Total number of addresses", MetricType.gauge, new MetricValue(addressList.size(), now, metricLabels)));

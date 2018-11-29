@@ -88,7 +88,7 @@ public class StandardController {
 
         addressController = new AddressController(
                 options,
-                new ConfigMapAddressApi(openShiftClient, openShiftClient.getNamespace(), options.getInfraUuid()),
+                new ConfigMapAddressApi(openShiftClient, options.getInfraUuid()),
                 kubernetes,
                 clusterGenerator,
                 eventLogger,

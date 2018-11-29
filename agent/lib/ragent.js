@@ -394,13 +394,13 @@ Ragent.prototype.subscribe_to_addresses = function (env) {
     return address_source.watcher;
 };
 
-Ragent.prototype.listen_probe = function (env) {
-    if (env.PROBE_PORT !== undefined) {
-        var probe = http.createServer(function (req, res) {
+Ragent.prototype.listen_health = function (env) {
+    if (env.HEALTH_PORT !== undefined) {
+        var health = http.createServer(function (req, res) {
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end('OK');
         });
-        return probe.listen(env.PROBE_PORT);
+        return health.listen(env.HEALTH_PORT);
     }
 };
 
@@ -423,7 +423,7 @@ Ragent.prototype.start_listening = function (env, callback) {
 Ragent.prototype.run = function (env, callback) {
     this.start_listening(env, callback);
     var watcher = this.subscribe_to_addresses(env);
-    this.listen_probe(env);
+    this.listen_health(env);
     return watcher;
 };
 
