@@ -30,7 +30,7 @@ public class ConfigMapAddressApiTest {
     @Before
     public void setUp() {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        api = new ConfigMapAddressApi(client, ADDRESS_SPACE_NAMESPACE, UUID.randomUUID().toString());
+        api = new ConfigMapAddressApi(client, UUID.randomUUID().toString());
     }
 
     @Test

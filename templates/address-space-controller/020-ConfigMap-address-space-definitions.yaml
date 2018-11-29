@@ -373,6 +373,8 @@ data:
                 value: ${STANDARD_INFRA_CONFIG_NAME}
               - name: ADDRESS_SPACE
                 value: ${ADDRESS_SPACE}
+              - name: ADDRESS_SPACE_NAMESPACE
+                value: ${ADDRESS_SPACE_NAMESPACE}
               - name: INFRA_UUID
                 value: ${INFRA_UUID}
               - name: ADDRESS_SPACE_PLAN
@@ -466,7 +468,7 @@ data:
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 periodSeconds: 30
@@ -481,7 +483,7 @@ data:
                 name: amqp-ws
               readinessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
                 periodSeconds: 30
@@ -555,6 +557,25 @@ data:
         - name: amqp
           port: 5671
           targetPort: 55671
+        selector:
+          name: admin
+          infraUuid: ${INFRA_UUID}
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+        name: standard-controller-${INFRA_UUID}
+      spec:
+        ports:
+        - name: health
+          port: 8080
+          protocol: TCP
+          targetPort: 8889
         selector:
           name: admin
           infraUuid: ${INFRA_UUID}
@@ -1175,7 +1196,7 @@ data:
                 value: /etc/console-certs
               - name: MESSAGING_CERT
                 value: /opt/agent/messaging-cert/tls.crt
-              - name: PROBE_PORT
+              - name: HEALTH_PORT
                 value: '8088'
               - name: AUTHENTICATION_SERVICE_HOST
                 value: ${AUTHENTICATION_SERVICE_HOST}
@@ -1193,7 +1214,7 @@ data:
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
               name: agent
@@ -1209,7 +1230,7 @@ data:
                 name: http
               readinessProbe:
                 httpGet:
-                  path: /probe
+                  path: /healthz
                   port: http
                   scheme: HTTP
               volumeMounts:
@@ -1256,6 +1277,9 @@ data:
         - name: https
           port: 8081
           targetPort: 8080
+        - name: health
+          port: 8088
+          targetPort: 8088
         selector:
           role: agent
           infraUuid: ${INFRA_UUID}

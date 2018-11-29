@@ -108,6 +108,13 @@ data:
           severity: warning
         expr: address_spaces_not_ready_total > 0
         for: 300s
+      - alert: Address_Health
+        annotations:
+          description: '{{ $labels.summary }}'
+          value: "{{ $value }}"
+          severity: warning
+        expr: addresses_not_ready_total > 0
+        for: 300s
       - alert: Terminating_Pods
         annotations:
           description: '{{ $labels.pod }}'

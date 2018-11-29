@@ -87,9 +87,9 @@ spec:
             scheme: HTTP
         resources:
           limits:
-            memory: 256Mi
+            memory: 512Mi
           requests:
-            memory: 128Mi
+            memory: 256Mi
         volumeMounts:
         - mountPath: /address-space-definitions
           name: address-space-definitions

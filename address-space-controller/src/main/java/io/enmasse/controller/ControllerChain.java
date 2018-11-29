@@ -117,10 +117,11 @@ public class ControllerChain implements Watcher<AddressSpace> {
         List<MetricValue> readyValues = new ArrayList<>();
         List<MetricValue> notReadyValues = new ArrayList<>();
         for (AddressSpace addressSpace : resources) {
-            readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, new MetricLabel("name", addressSpace.getName())));
-            notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, now, new MetricLabel("name", addressSpace.getName())));
+            MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getName()), new MetricLabel("namespace", addressSpace.getNamespace())};
+            readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, labels));
+            notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, now, labels));
         }
-        
+
         metrics.reportMetric(new Metric(
                 "address_spaces_ready_total",
                 "Total number of address spaces in ready state",

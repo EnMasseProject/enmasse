@@ -23,4 +23,27 @@ public class PrometheusMetricsFormatterTest {
         String expected = "# HELP m1 mdesc\n# TYPE m1 gauge\nm1{key1=\"value1\",key2=\"\\\\this\\\"is\\nescaped\\\\\"} 2 3\n";
         assertEquals(expected, value);
     }
+
+    @Test
+    public void testEmpty() {
+        Metrics metrics = new Metrics();
+        metrics.reportMetric(new Metric(
+                "address_spaces_ready_total",
+                "Total number of address spaces in ready state",
+                MetricType.gauge,
+                Collections.emptyList()));
+        metrics.reportMetric(new Metric(
+                "address_spaces_not_ready_total",
+                "Total number of address spaces in a not ready state",
+                MetricType.gauge,
+                Collections.emptyList()));
+        metrics.reportMetric(new Metric(
+                "address_spaces_total",
+                "Total number of address spaces",
+                MetricType.gauge,
+                new MetricValue(0, 0)));
+
+        PrometheusMetricsFormatter formatter = new PrometheusMetricsFormatter();
+        System.out.print(formatter.format(metrics.snapshot()));
+    }
 }

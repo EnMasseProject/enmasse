@@ -13,6 +13,7 @@ public class StandardControllerOptions {
     private File templateDir;
     private String certDir;
     private String addressSpace;
+    private String addressSpaceNamespace;
     private String addressSpacePlanName;
     private String infraUuid;
     private Duration resyncInterval;
@@ -147,6 +148,7 @@ public class StandardControllerOptions {
 
         options.setCertDir(getEnvOrThrow(env, "CERT_DIR"));
         options.setAddressSpace(getEnvOrThrow(env, "ADDRESS_SPACE"));
+        options.setAddressSpaceNamespace(getEnvOrThrow(env, "ADDRESS_SPACE_NAMESPACE"));
         options.setAddressSpacePlanName(getEnvOrThrow(env, "ADDRESS_SPACE_PLAN"));
         options.setInfraUuid(getEnvOrThrow(env, "INFRA_UUID"));
 
@@ -184,12 +186,17 @@ public class StandardControllerOptions {
         this.templateDir = templateDir;
     }
 
+    public String getAddressSpaceNamespace() {
+        return addressSpaceNamespace;
+    }
+
     @Override
     public String toString() {
         return "StandardControllerOptions{" +
                 "templateDir=" + templateDir +
                 ", certDir='" + certDir + '\'' +
                 ", addressSpace='" + addressSpace + '\'' +
+                ", addressSpaceNamespace='" + addressSpaceNamespace + '\'' +
                 ", addressSpacePlanName='" + addressSpacePlanName + '\'' +
                 ", infraUuid='" + infraUuid + '\'' +
                 ", resyncInterval=" + resyncInterval +
@@ -202,5 +209,9 @@ public class StandardControllerOptions {
                 ", authenticationServiceClientSecret='" + authenticationServiceClientSecret + '\'' +
                 ", authenticationServiceSaslInitHost='" + authenticationServiceSaslInitHost + '\'' +
                 '}';
+    }
+
+    public void setAddressSpaceNamespace(String addressSpaceNamespace) {
+        this.addressSpaceNamespace = addressSpaceNamespace;
     }
 }

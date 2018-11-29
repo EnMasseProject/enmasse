@@ -20,4 +20,4 @@ var Ragent = require('../lib/ragent.js');
 
 var ragent = new Ragent();
 ragent.start_listening(process.env);
-ragent.listen_probe(process.env);
+ragent.listen_health(process.env);

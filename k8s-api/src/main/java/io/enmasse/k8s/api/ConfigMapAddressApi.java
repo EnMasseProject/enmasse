@@ -34,14 +34,12 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
     private final NamespacedOpenShiftClient client;
-    private final String namespace;
     private final String infraUuid;
 
     private final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String namespace, String infraUuid) {
+    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String infraUuid) {
         this.client = client;
-        this.namespace = namespace;
         this.infraUuid = infraUuid;
     }
 
