@@ -49,24 +49,26 @@ Metrics.prototype.addresses_defined = function (addresses) {
 
     for (var i = 0; i < addresses.length; i++) {
         var address = addresses[i];
-        var phase = address.status.phase;
-        if (phase == 'Pending') {
-            this.addresses_pending_total++;
-        } else if (phase == 'Configuring') {
-           this.addresses_configuring_total++;
-        } else if (phase == 'Active') {
-            this.addresses_active_total++;
-        } else if (phase == 'Failed') {
-            this.addresses_failed_total++;
-        } else if (phase == 'Terminating') {
-            this.addresses_terminating_total++;
+        if (address.status !== undefined) {
+            var phase = address.status.phase;
+            if (phase == 'Pending') {
+                this.addresses_pending_total++;
+            } else if (phase == 'Configuring') {
+               this.addresses_configuring_total++;
+            } else if (phase == 'Active') {
+                this.addresses_active_total++;
+            } else if (phase == 'Failed') {
+                this.addresses_failed_total++;
+            } else if (phase == 'Terminating') {
+                this.addresses_terminating_total++;
+            }
+            if (address.status.isReady) {
+                this.addresses_ready_total++;
+            } else {
+                this.addresses_not_ready_total++;
+            }
         }
         this.addresses_total++;
-        if (address.status.isReady == true) {
-            this.addresses_ready_total++;
-        } else {
-            this.addresses_not_ready_total++;
-        }
     }
 
 }
