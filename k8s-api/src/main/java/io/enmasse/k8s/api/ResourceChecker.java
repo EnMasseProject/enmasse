@@ -15,7 +15,7 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
     private final Watcher<T> watcher;
     private final Duration recheckInterval;
     private final Object monitor = new Object();
-    private List<T> items = new ArrayList<>();
+    private List<T> items = null;
     private volatile boolean running = false;
 
     private Thread thread;
@@ -44,7 +44,9 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
             try {
                 monitor.wait(recheckInterval.toMillis());
                 log.debug("Woke up from monitor");
-                watcher.onUpdate(items);
+                if (items != null) {
+                    watcher.onUpdate(items);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
