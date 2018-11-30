@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import okhttp3.*;
@@ -56,20 +57,29 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void apply(KubernetesList resources) {
         for (HasMetadata resource : resources.getItems()) {
-            if (resource instanceof ConfigMap) {
-                client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
-            } else if (resource instanceof Secret) {
-                client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
-            } else if (resource instanceof Deployment) {
-                client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
-            } else if (resource instanceof StatefulSet) {
-                client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
-            } else if (resource instanceof Service) {
-                client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
-            } else if (resource instanceof ServiceAccount) {
-                client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
-            } else if (resource instanceof NetworkPolicy) {
-                client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
+            try {
+                if (resource instanceof ConfigMap) {
+                    client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
+                } else if (resource instanceof Secret) {
+                    client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
+                } else if (resource instanceof Deployment) {
+                    client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
+                } else if (resource instanceof StatefulSet) {
+                    client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
+                } else if (resource instanceof Service) {
+                    client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
+                } else if (resource instanceof ServiceAccount) {
+                    client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+                } else if (resource instanceof NetworkPolicy) {
+                    client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
+                }
+            } catch (KubernetesClientException e) {
+                if (e.getCode() == 404) {
+                    // Create it if it does not exist
+                    client.resource(resource).createOrReplace();
+                } else {
+                    throw e;
+                }
             }
         }
     }
