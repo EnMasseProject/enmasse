@@ -113,6 +113,35 @@ pipeline {
         stage('run systemtests after upgrade') {
             environment {
                 USE_DUMMY_ADDRESS = true
+                SKIP_CLEANUP = true
+                SYSTEMTESTS_UPGRADED = true
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
+                    }
+                }
+            }
+        }
+        stage('download released version') {
+            steps {
+                sh "git checkout tags/${params.START_VERSION}"
+                sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+            }
+        }
+        stage('downgrade enmasse') {
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    script {
+                        lib.installEnmasse(params.START_VERSION, true, true, false)
+                    }
+                }
+            }
+        }
+        stage('run systemtests after downgrade') {
+            environment {
+                USE_DUMMY_ADDRESS = true
                 SKIP_CLEANUP = false
                 SYSTEMTESTS_UPGRADED = true
             }
@@ -124,38 +153,6 @@ pipeline {
                 }
             }
         }
-//        stage('run again systemtests on upgraded version') {
-//            environment {
-//                USE_DUMMY_ADDRESS = true
-//                SKIP_CLEANUP = true
-//                SYSTEMTESTS_UPGRADED = false
-//                TAG = "${params.BUILD_TAG}"
-//            }
-//            steps {
-//                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-//                    script {
-//                        lib.runSystemtests(env.CORES_DIR, env.TAG, 'systemtests-upgrade', params.TEST_CASE, true)
-//                    }
-//                }
-//            }
-//        }
-//        stage('downgrade and run systemtests after downgrade') {
-//            environment {
-//                USE_DUMMY_ADDRESS = true
-//                SKIP_CLEANUP = false
-//                SYSTEMTESTS_UPGRADED = true
-//                TAG = "${params.START_VERSION}"
-//            }
-//            steps {
-//                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-//                    script {
-//                        sh "make -C templates clean"
-//                        sh "./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
-//                        lib.runSystemtests(env.CORES_DIR, params.START_VERSION, 'systemtests-upgrade', params.TEST_CASE, true)
-//                    }
-//                }
-//            }
-//        }
     }
     post {
         always {
