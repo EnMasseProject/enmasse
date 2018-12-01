@@ -93,6 +93,11 @@ public class CRDCmdClient extends CmdClient {
         return getAddress(namespace, addressName, Optional.empty());
     }
 
+    public static ExecutionResultData getAddress(String namespace) {
+        List<String> getCmd = getRessourcesCmd("get", "addresses", namespace, Optional.of("wide"));
+        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
     /**
      * Use CRD for delete address by addressName in 'namespace'
      *
@@ -123,6 +128,11 @@ public class CRDCmdClient extends CmdClient {
         return getAddressSpace(namespace, addressSpaceName, Optional.empty());
     }
 
+    public static ExecutionResultData getAddressSpace(String namespace, Optional<String> format) {
+        List<String> getCmd = getRessourcesCmd("get", "addressspaces", namespace, format);
+        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
 
     /**
      * Use CRD for delete addressspace by addressspace name in 'namespace'
@@ -137,7 +147,16 @@ public class CRDCmdClient extends CmdClient {
     }
 
     private static List<String> getRessourcesCmd(String operation, String kind, String namespace, String resourceName, Optional<String> format) {
-        List<String> cmd = Arrays.asList(CMD, operation, kind, resourceName, "-n", namespace);
+        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, operation, kind, resourceName, "-n", namespace));
+        format.ifPresent(s -> {
+            cmd.add("-o");
+            cmd.add(s);
+        });
+        return cmd;
+    }
+
+    private static List<String> getRessourcesCmd(String operation, String kind, String namespace, Optional<String> format) {
+        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, operation, kind, "-n", namespace));
         format.ifPresent(s -> {
             cmd.add("-o");
             cmd.add(s);
@@ -161,6 +180,11 @@ public class CRDCmdClient extends CmdClient {
     public static void switchProject(String namespace) {
         List<String> cmd = Arrays.asList(CMD, "project", namespace);
         execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData getUser(String namespace) {
+        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, Optional.of("wide"));
+        return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData getUser(String namespace, String addressSpace, String username) {
