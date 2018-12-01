@@ -27,6 +27,9 @@ public class ResourceCheckerTest {
 
     @Test
     public void testResourcesUpdated() throws Exception {
+        controller.doWork();
+        verify(watcher, never()).onUpdate(any());
+
         List<String> items = Arrays.asList("hello", "there");
         controller.onUpdate(items);
         controller.doWork();
