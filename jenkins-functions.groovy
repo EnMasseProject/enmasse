@@ -61,8 +61,10 @@ def postAction(String coresDir, String artifactDir) {
     sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
     try {
         archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
+    } catch(all) {
+        echo "Archive failed"
     } finally {
-        echo "Artifact are stored"
+        echo "Artifacts are stored"
     }
     tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
