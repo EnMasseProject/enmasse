@@ -10,7 +10,7 @@ def tearDownOpenshift() {
     sh 'sudo ./systemtests/scripts/teardown-openshift.sh'
 }
 
-def makePlot() {
+def makeLinePlot() {
     plot csvFileName: 'duration_sum_report.csv',
             csvSeries: [[
                                 file: 'artifacts/openshift-logs/logs/timeMeasuring/duration_sum_report.csv',
@@ -21,6 +21,27 @@ def makePlot() {
             group: 'TimeReport',
             title: 'Sum of test operations',
             style: 'line',
+            exclZero: false,
+            keepRecords: false,
+            logarithmic: false,
+            numBuilds: '',
+            useDescr: false,
+            yaxis: '',
+            yaxisMaximum: '',
+            yaxisMinimum: ''
+}
+
+def makeStackedPlot() {
+    plot csvFileName: 'duration_sum_report.csv',
+            csvSeries: [[
+                                file: 'artifacts/openshift-logs/logs/timeMeasuring/duration_sum_report.csv',
+                                exclusionValues: '',
+                                displayTableFlag: false,
+                                inclusionFlag: 'OFF',
+                                url: '']],
+            group: 'TimeReport',
+            title: 'Sum of test operations (stacked)',
+            style: 'stackedArea',
             exclZero: false,
             keepRecords: false,
             logarithmic: false,
@@ -52,7 +73,8 @@ def buildEnmasse() {
 
 def postAction(String coresDir, String artifactDir) {
     storeArtifacts(artifactDir)
-    makePlot()
+    makeLinePlot()
+    makeStackedPlot()
     //store test results from build and system tests
     junit testResults: '**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
