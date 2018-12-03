@@ -335,22 +335,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
-    /**
-     * scale up/down destination (StatefulSet) to count of replicas, includes waiting for expected replicas
-     */
-    private void scale(AddressSpace addressSpace, Destination destination, int numReplicas, long checkInterval) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas, budget, checkInterval);
-    }
-
-    private void scaleWithoutWait(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
-        TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas);
-    }
-
-    void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
-        scale(addressSpace, destination, numReplicas, 5000);
-    }
-
     protected void scaleKeycloak(int numReplicas) throws Exception {
         scaleInGlobal("keycloak", numReplicas);
     }
@@ -593,11 +577,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget, long checkInterval) throws Exception {
-        TestUtils.waitForNBrokerReplicas(kubernetes, addressSpace.getInfraUuid(), expectedReplicas, readyRequired, destination, budget, checkInterval);
-    }
-
-    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget) throws Exception {
-        waitForBrokerReplicas(addressSpace, destination, expectedReplicas, readyRequired, budget, 5000);
+        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, addressSpace, expectedReplicas, readyRequired, destination, budget, checkInterval);
     }
 
     private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination,
@@ -607,7 +587,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
             Exception {
-        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
     }
 
@@ -618,21 +598,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         labels.put("name", "qdrouterd");
         labels.put("infraUuid", addressSpace.getInfraUuid());
         TestUtils.waitForNReplicas(kubernetes, expectedReplicas, labels, budget);
-    }
-
-    protected void waitForAutoScale(AddressSpace addressSpace, Destination dest, int setValue, int expectedValue) throws Exception {
-        log.info("Set '{}' replicas and wait for autoscale to '{}'", setValue, expectedValue);
-        CompletableFuture<Void> scaleCheckerDown = CompletableFuture.runAsync(() -> {
-            try {
-                waitForBrokerReplicas(addressSpace, dest, setValue, false, new TimeoutBudget(3, TimeUnit.MINUTES), 1);
-                log.info("Waiting for expected replicas {} finished!", setValue);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        scaleWithoutWait(addressSpace, dest, setValue);
-        scaleCheckerDown.get(3, TimeUnit.MINUTES);
-        waitForBrokerReplicas(addressSpace, dest, expectedValue, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     /**

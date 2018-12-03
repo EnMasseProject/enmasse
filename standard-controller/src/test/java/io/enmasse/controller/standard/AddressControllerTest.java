@@ -30,9 +30,12 @@ public class AddressControllerTest {
     private AddressController controller;
     private OpenShiftClient mockClient;
     private BrokerSetGenerator mockGenerator;
+    private int id = 0;
+    private BrokerIdGenerator idGenerator = () -> String.valueOf(id++);
 
     @Before
     public void setUp() throws IOException {
+        id = 0;
         mockHelper = mock(Kubernetes.class);
         mockGenerator = mock(BrokerSetGenerator.class);
         mockApi = mock(AddressApi.class);
@@ -45,7 +48,7 @@ public class AddressControllerTest {
         options.setAddressSpacePlanName("plan1");
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
-        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, new Metrics());
+        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, new Metrics(), idGenerator);
     }
 
     @Test
