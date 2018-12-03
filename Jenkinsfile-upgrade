@@ -124,7 +124,7 @@ pipeline {
                 }
             }
         }
-        stage('download released version') {
+        stage('download released version again') {
             steps {
                 sh "git checkout tags/${params.START_VERSION}"
                 sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
