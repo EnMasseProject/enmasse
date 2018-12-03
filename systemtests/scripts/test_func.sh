@@ -66,7 +66,7 @@ function wait_until_enmasse_up() {
     wait_until_up ${expected_pods} ${NAMESPACE} ${UPGRADE}
     wait_code=$?
     if [ $wait_code -ne 0 ]; then
-        error_and_exit 1
+        err_and_exit 1
     fi
 
 }
