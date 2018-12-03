@@ -173,7 +173,6 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             data = new CliOutputData(CRDCmdClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertFalse(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
