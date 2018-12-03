@@ -120,7 +120,12 @@ public abstract class AbstractClient {
             if (validateArgument(arg)) {
                 for (String value : args.getValues(arg)) {
                     arguments.add(arg.command());
-                    arguments.add(value);
+                    try {
+                        Integer.parseInt(value);
+                        arguments.add(value);
+                    } catch (Exception ex) {
+                        arguments.add(String.format("\"%s\"", value));
+                    }
                 }
             } else {
                 log.warn(String.format("Argument '%s' is not allowed for '%s'",
