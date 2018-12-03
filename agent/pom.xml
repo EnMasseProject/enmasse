@@ -185,7 +185,7 @@
             <phase>test</phase>
             <configuration>
                <installDirectory>${agent-node-install-directory}</installDirectory>
-               <arguments>run test --quiet</arguments>
+               <arguments>run test</arguments>
             </configuration>
           </execution>
           <execution>

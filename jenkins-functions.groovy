@@ -1,6 +1,7 @@
 def storeArtifacts(String artifactDir) {
     sh "./systemtests/scripts/store_kubernetes_info.sh '${artifactDir}/openshift-info/'"
     sh "./systemtests/scripts/collect_logs.sh '/tmp/testlogs' '${artifactDir}/openshift-logs'"
+    sh "cp -rf ${HOME}/.npm/_logs ${artifactDir}/npm-logs || true"
     sh 'rm -rf /tmp/testlogs'
 }
 
