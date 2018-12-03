@@ -84,6 +84,15 @@ class UpgradeTest extends TestBase {
             assertCanConnect(standard, cred, standardAddresses);
 
             log.info("End of after upgrade phase");
+
+            log.info("Send durable messages to brokered queue");
+            for (Destination dest : brokeredQueues) {
+                sendDurableMessages(brokered, dest, cred, msgCount);
+            }
+            log.info("Send durable messages to standard queues");
+            for (Destination dest : standardQueues) {
+                sendDurableMessages(standard, dest, cred, msgCount);
+            }
         }
     }
 

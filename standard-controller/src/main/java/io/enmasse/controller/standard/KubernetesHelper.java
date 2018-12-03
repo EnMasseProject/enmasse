@@ -11,6 +11,7 @@ import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -48,8 +49,8 @@ public class KubernetesHelper implements Kubernetes {
         objects.addAll(client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
-        objects.addAll(client.configMaps().withLabel(LabelKeys.INFRA_UUID).withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
-        objects.addAll(client.services().withLabel(LabelKeys.INFRA_UUID).list().getItems());
+        objects.addAll(client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
+        objects.addAll(client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
 
         for (HasMetadata config : objects) {
             Map<String, String> annotations = config.getMetadata().getAnnotations();
@@ -114,19 +115,30 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void apply(KubernetesList resources) {
         for (HasMetadata resource : resources.getItems()) {
-            if (resource instanceof ConfigMap) {
-                client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
-            } else if (resource instanceof Secret) {
-                client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
-            } else if (resource instanceof Deployment) {
-                client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
-            } else if (resource instanceof StatefulSet) {
-                client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
-            } else if (resource instanceof Service) {
-                client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
-            } else if (resource instanceof ServiceAccount) {
-                client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+            try {
+                if (resource instanceof ConfigMap) {
+                    client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
+                } else if (resource instanceof Secret) {
+                    client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
+                } else if (resource instanceof Deployment) {
+                    client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
+                } else if (resource instanceof StatefulSet) {
+                    client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
+                } else if (resource instanceof Service) {
+                    client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
+                } else if (resource instanceof ServiceAccount) {
+                    client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+                }
+            } catch (KubernetesClientException e) {
+                if (e.getCode() == 404) {
+                    // Create it if it does not exist
+                    client.resource(resource).createOrReplace();
+                } else {
+                    throw e;
+                }
             }
+
+
         }
     }
 
