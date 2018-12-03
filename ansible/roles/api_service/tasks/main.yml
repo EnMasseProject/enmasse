@@ -17,6 +17,8 @@
       kind: APIService
       metadata:
         name: v1alpha1.enmasse.io
+        labels:
+          app: enmasse
       spec:
         group: enmasse.io
         groupPriorityMinimum: 1000
@@ -37,6 +39,8 @@
       kind: APIService
       metadata:
         name: v1alpha1.user.enmasse.io
+        labels:
+          app: enmasse
       spec:
         group: user.enmasse.io
         groupPriorityMinimum: 1000

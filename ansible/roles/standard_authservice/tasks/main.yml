@@ -3,5 +3,8 @@
   shell: oc create secret generic -n {{ namespace }} keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password={{ keycloak_admin_password }}
   register: secret_exists
   failed_when: secret_exists.stderr != '' and 'already exists' not in secret_exists.stderr
+- name: Label secret
+  shell: oc label secret keycloak-credentials -n {{ namespace }} app=enmasse
+  when: secret_exists.rc == 0
 - name: Apply the Standard Authentication Service configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/standard-authservice

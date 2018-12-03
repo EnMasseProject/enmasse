@@ -3,5 +3,8 @@
   shell: oc create -n {{ namespace }} configmap api-server-config --from-literal=enableRbac={{ enable_rbac }}
   register: config_exists
   failed_when: config_exists.stderr != '' and 'already exists' not in config_exists.stderr
+- name: Label spi server configmap
+  shell: oc label configmap api-server-config -n {{ namespace }} app=enmasse
+  when: config_exists.rc == 0
 - name: Apply the API Server configuration
   shell: oc apply -f "{{ playbook_dir }}/install/api-server"

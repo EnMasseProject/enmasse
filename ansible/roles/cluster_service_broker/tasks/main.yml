@@ -20,6 +20,8 @@
       kind: ClusterServiceBroker
       metadata:
         name: enmasse
+        labels:
+          app: enmasse
       spec:
         url: "https://service-broker.{{ namespace }}.svc:8443/osbapi/"
         authInfo:
