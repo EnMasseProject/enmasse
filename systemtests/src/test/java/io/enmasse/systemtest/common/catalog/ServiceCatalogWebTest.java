@@ -21,6 +21,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import static io.enmasse.systemtest.Environment.useMinikubeEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
@@ -232,5 +235,38 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         assertThat(response.getInteger("ecode"), is(0));
         TestUtils.deleteMessagingClientApp(namespace, kubernetes);
+    }
+
+    @Test
+    void testConsoleErrorOnDeleteAddressSpace() throws Exception {
+        AddressSpace addressSpace = new AddressSpace("test-addr-space", AuthService.STANDARD);
+
+        String namespace = getUserProjectName(addressSpace);
+
+        provisionedServices.put(namespace, addressSpace);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
+        ocPage.openOpenshiftPage();
+        ocPage.provisionAddressSpaceViaSC(addressSpace, namespace);
+        reloadAddressSpaceEndpoints(addressSpace);
+
+        ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
+        consolePage.login(ocTestUser, true);
+        consolePage.createAddressWebConsole(Destination.queue("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
+                false, true);
+
+        deleteAddressSpaceCreatedBySC(namespace, addressSpace);
+
+        WebElement errorLog = selenium.getWebElement(() ->
+                selenium.getDriver().findElement(By.id("myErrorDialogLabel")));
+        assertTrue(errorLog.isDisplayed());
+        log.info("error banner is displayed showing addr space is deleted");
+
+        //refresh page, console is no longer available
+        selenium.refreshPage();
+        WebElement errorPageText = selenium.getWebElement(() ->
+                selenium.getDriver().findElement(By.className("alert-info")));
+        assertTrue(errorPageText.isDisplayed());
+        log.info("application is not available page is displayed");
+
     }
 }
