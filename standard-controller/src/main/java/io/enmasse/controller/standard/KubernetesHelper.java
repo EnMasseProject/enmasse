@@ -49,8 +49,8 @@ public class KubernetesHelper implements Kubernetes {
         objects.addAll(client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         objects.addAll(client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
-        objects.addAll(client.configMaps().withLabel(LabelKeys.INFRA_UUID).withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
-        objects.addAll(client.services().withLabel(LabelKeys.INFRA_UUID).list().getItems());
+        objects.addAll(client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withLabelNotIn("type", "address-config", "address-space", "address-space-plan", "address-plan").list().getItems());
+        objects.addAll(client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
 
         for (HasMetadata config : objects) {
             Map<String, String> annotations = config.getMetadata().getAnnotations();
