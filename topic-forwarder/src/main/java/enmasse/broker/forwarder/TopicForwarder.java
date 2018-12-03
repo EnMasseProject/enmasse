@@ -7,11 +7,17 @@ package enmasse.broker.forwarder;
 
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Host;
+import io.enmasse.k8s.api.ConfigMapAddressApi;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.Vertx;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,17 +27,21 @@ import java.util.Map;
  */
 public class TopicForwarder {
 
-    public static void main(String [] args) throws IOException, InterruptedException {
+    public static void main(String [] args) throws IOException {
         Map<String, String> env = System.getenv();
         Map<String, String> labelFilter = getLabelFilter(env);
         Map<String, String> annotationFilter = getAnnotationFilter(env);
         Host localHost = getLocalHost();
-        String address = getAddress(env);
 
-        String certDir = System.getenv("CERT_DIR");
+        String certDir = env.get("CERT_DIR");
+        String infraUuid = getEnvOrThrow(env, "INFRA_UUID");
 
-        DiscoveryClient discoveryClient = new DiscoveryClient( labelFilter, annotationFilter, "broker");
-        ForwarderController replicator = new ForwarderController(localHost, address, certDir);
+        NamespacedOpenShiftClient openShiftClient = new DefaultOpenShiftClient();
+        DiscoveryClient discoveryClient = new DiscoveryClient(openShiftClient, labelFilter, annotationFilter, "broker");
+        ForwarderController replicator = new ForwarderController(localHost, certDir);
+        ConfigMapAddressApi addressApi = new ConfigMapAddressApi(openShiftClient, infraUuid);
+
+        addressApi.watchAddresses(replicator, Duration.ofSeconds(300));
         discoveryClient.addListener(replicator);
 
         Vertx vertx = Vertx.vertx();
@@ -40,10 +50,6 @@ public class TopicForwarder {
                 discoveryClient.start();
             }
         });
-    }
-
-    private static String getAddress(Map<String, String> env) {
-        return getEnvOrThrow(env, "TOPIC_NAME");
     }
 
     private static Host getLocalHost() throws UnknownHostException {
@@ -63,8 +69,7 @@ public class TopicForwarder {
         return labelMap;
     }
 
-    private static String
-    getEnvOrThrow(Map<String, String> env, String envVar) {
+    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
         String var = env.get(envVar);
         if (var == null) {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));

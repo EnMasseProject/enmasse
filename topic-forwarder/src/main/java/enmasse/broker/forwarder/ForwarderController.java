@@ -7,32 +7,31 @@ package enmasse.broker.forwarder;
 
 import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Host;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.k8s.api.Watcher;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Maintains a set of {@link Forwarder} instances from a given host based on discovered hosts.
  */
-public class ForwarderController extends AbstractVerticle implements DiscoveryListener {
+public class ForwarderController extends AbstractVerticle implements DiscoveryListener, Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(ForwarderController.class.getName());
 
     private final Map<Host, String> replicatedHosts = new HashMap<>();
+    private final Map<Host, Forwarder> forwarderMap = new HashMap<>();
 
     private final Host localHost;
-    private final String address;
     private final long connectionRetryInterval = 5000;
     private final String certDir;
 
-    public ForwarderController(Host localHost, String address, String certDir) {
+    public ForwarderController(Host localHost, String certDir) {
         this.localHost = localHost;
-        this.address = address;
         this.certDir = certDir;
     }
 
@@ -67,18 +66,34 @@ public class ForwarderController extends AbstractVerticle implements DiscoveryLi
 
     private void deleteForwarder(Host host) {
         String forwarder = replicatedHosts.remove(host);
+        forwarderMap.remove(host);
         log.info("Deleting forwarder " + forwarder);
         assert (forwarder != null);
         vertx.undeploy(forwarder);
     }
 
     private void createForwarder(Host host) {
-        Forwarder forwarder = new Forwarder(localHost.amqpEndpoint(), host.amqpEndpoint(), address, connectionRetryInterval, certDir);
+        Forwarder forwarder = new Forwarder(localHost.amqpEndpoint(), host.amqpEndpoint(), connectionRetryInterval, certDir);
         log.info("Creating forwarder " + forwarder);
         vertx.deployVerticle(forwarder, result -> {
             if (result.succeeded()) {
                 replicatedHosts.put(host, result.result());
+                forwarderMap.put(host, forwarder);
             }
         });
+    }
+
+    @Override
+    public synchronized void onUpdate(List<Address> items) throws Exception {
+        Set<String> topics = new HashSet<>();
+        for (Address address : items) {
+            if (address.getType().equals("topic")) {
+                topics.add(address.getAddress());
+            }
+        }
+
+        for (Forwarder forwarder : forwarderMap.values()) {
+            forwarder.onAddressesUpdated(topics);
+        }
     }
 }

@@ -53,10 +53,6 @@ public class DiscoveryClient implements ListerWatcher<io.fabric8.kubernetes.api.
         controller = new Controller(reflector);
     }
 
-    public DiscoveryClient(Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName) {
-        this(new DefaultKubernetesClient(), labelFilter, annotationFilter, containerName);
-    }
-
     public void addListener(DiscoveryListener listener) {
         this.listeners.add(listener);
     }
