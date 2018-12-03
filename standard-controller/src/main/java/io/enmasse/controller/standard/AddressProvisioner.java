@@ -40,6 +40,7 @@ public class AddressProvisioner {
     private final Kubernetes kubernetes;
     private final EventLogger eventLogger;
     private final String infraUuid;
+    private final String pooledClusterIdPrefix;
 
     public AddressProvisioner(AddressSpaceResolver addressSpaceResolver, AddressResolver addressResolver, AddressSpacePlan addressSpacePlan, BrokerSetGenerator clusterGenerator, Kubernetes kubernetes, EventLogger eventLogger, String infraUuid) {
         this.addressSpaceResolver = addressSpaceResolver;
@@ -49,7 +50,8 @@ public class AddressProvisioner {
         this.kubernetes = kubernetes;
         this.eventLogger = eventLogger;
         this.infraUuid = infraUuid;
-        this.pooledPattern = Pattern.compile("^broker-pooled-" + infraUuid + "-\\d+");
+        this.pooledPattern = Pattern.compile("^broker-" + infraUuid + "-\\d+");
+        this.pooledClusterIdPrefix = "broker-" + infraUuid + "-";
     }
 
     /**
@@ -244,7 +246,7 @@ public class AddressProvisioner {
                 } else if (resourceRequest.getCredit() < 1) {
                     boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getCredit());
                     if (!scheduled) {
-                        allocateBroker(resourceUsage, "broker-pooled-" + infraUuid + "-");
+                        allocateBroker(resourceUsage, pooledClusterIdPrefix);
                         if (!scheduleAddress(resourceUsage, address, resourceRequest.getCredit())) {
                             log.warn("Unable to find broker for scheduling {}", address);
                             return null;
@@ -379,7 +381,11 @@ public class AddressProvisioner {
                 // Provision pooled broker
                 int needPooled = sumNeededMatching(entry.getValue(), pooledPattern);
                 if (needPooled > 0) {
-                    provisionBroker(existingClusters, "broker-pooled-" + infraUuid, needPooled, null, null);
+                    for (String id : entry.getValue().keySet()) {
+                        if (pooledPattern.matcher(id).matches()) {
+                            provisionBroker(existingClusters, id, 1, null, null);
+                        }
+                    }
                 }
 
                 // Collect all sharded brokers
@@ -406,18 +412,10 @@ public class AddressProvisioner {
             log.info("Scaling router to {} replicas", router.getNewReplicas());
             kubernetes.scaleStatefulSet(router.getName(), router.getNewReplicas());
         }
-        for (BrokerCluster cluster : existingClusters) {
-            if (cluster.hasChanged()) {
-                log.info("Scaling broker cluster {} to {} replicas", cluster.getClusterId(), cluster.getNewReplicas());
-                kubernetes.scaleStatefulSet(cluster.getClusterId(), cluster.getNewReplicas());
-            }
-        }
     }
 
     private final Pattern pooledPattern;
     private boolean scheduleAddress(Map<String, UsageInfo> usageMap, Address address, double credit) {
-
-        address.putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-pooled-" + infraUuid);
 
         List<BrokerInfo> brokers = new ArrayList<>();
         for (String host : usageMap.keySet()) {
@@ -431,6 +429,7 @@ public class AddressProvisioner {
         for (BrokerInfo brokerInfo : brokers) {
             if (brokerInfo.getCredit() + credit < 1) {
                 address.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
+                address.putAnnotation(AnnotationKeys.CLUSTER_ID, brokerInfo.getBrokerId());
                 UsageInfo used = usageMap.get(brokerInfo.getBrokerId());
                 used.addUsed(credit);
                 return true;
@@ -439,7 +438,7 @@ public class AddressProvisioner {
         return false;
     }
 
-    private void allocateBroker(Map<String, UsageInfo> resourceNeeded, String clusterId) {
+    private String allocateBroker(Map<String, UsageInfo> resourceNeeded, String clusterIdPrefix) {
         int numPooled = 0;
         for (String id : resourceNeeded.keySet()) {
             if (pooledPattern.matcher(id).matches()) {
@@ -447,14 +446,15 @@ public class AddressProvisioner {
             }
         }
 
-        resourceNeeded.put(clusterId + numPooled, new UsageInfo());
+        String clusterId = clusterIdPrefix + numPooled;
+        resourceNeeded.put(clusterId, new UsageInfo());
+        return clusterId;
     }
 
     private void provisionBroker(List<BrokerCluster> clusterList, String clusterId, int numReplicas, Address address, AddressPlan addressPlan) {
         try {
             for (BrokerCluster cluster : clusterList) {
                 if (cluster.getClusterId().equals(clusterId)) {
-                    cluster.setNewReplicas(numReplicas);
                     return;
                 }
             }

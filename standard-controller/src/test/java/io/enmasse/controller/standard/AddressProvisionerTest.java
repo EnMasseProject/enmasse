@@ -112,9 +112,9 @@ public class AddressProvisionerTest {
     @Test
     public void testQuotaCheck() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(createQueue("q1", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-pooled-1234-0"));
-        addresses.add(createQueue("q2", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-pooled-1234-0"));
-        addresses.add(createQueue("q3", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-pooled-1234-1"));
+        addresses.add(createQueue("q1", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0"));
+        addresses.add(createQueue("q2", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0"));
+        addresses.add(createQueue("q3", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-1"));
 
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
@@ -158,7 +158,7 @@ public class AddressProvisionerTest {
     public void testProvisioningColocated() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
-        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-0"));
+        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0"));
 
 
         AddressProvisioner provisioner = createProvisioner();
@@ -167,13 +167,13 @@ public class AddressProvisionerTest {
         Address queue = createAddress("q2", "queue", "small-queue");
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(queue), Sets.newSet(queue));
 
-        List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker-pooled-1234", new KubernetesList()));
+        List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker-1234-0", new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), clusterList, neededMap, Sets.newSet(queue));
 
         assertThat(clusterList.get(0).getResources().getItems().size(), is(0));
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-pooled-1234-0"));
+        assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-0"));
     }
 
     private static RouterCluster createDeployment(int replicas) {
@@ -181,11 +181,11 @@ public class AddressProvisionerTest {
     }
 
     @Test
-    public void testScalingColocated() {
+    public void testScalingColocated() throws Exception {
         Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
-        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-pooled-1234-0"));
-        addresses.add(createAddress("q2", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-pooled-1234-0"));
+        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0"));
+        addresses.add(createAddress("q2", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0"));
 
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
@@ -193,13 +193,14 @@ public class AddressProvisionerTest {
         Address queue = createAddress("q3", "queue", "small-queue");
         Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, Sets.newSet(queue), Sets.newSet(queue));
 
-        List<BrokerCluster> clusterList = Arrays.asList(new BrokerCluster("broker-pooled-1234", new KubernetesList()));
+        List<BrokerCluster> clusterList = new ArrayList<>();
+        clusterList.add(new BrokerCluster("broker-1234-0", new KubernetesList()));
+        when(generator.generateCluster(eq("broker-1234-1"), anyInt(), any(), any(), any())).thenReturn(new BrokerCluster("broker-1234-1", new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), clusterList, provisionMap, Sets.newSet(queue));
-        verify(kubernetes).scaleStatefulSet(eq("broker-pooled-1234"), eq(2));
 
         assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-pooled-1234-1"));
+        assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-1"));
     }
 
     @Test
@@ -230,7 +231,8 @@ public class AddressProvisionerTest {
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
 
         List<BrokerCluster> brokerClusters = Arrays.asList(
-                createCluster("broker-pooled-1234", 2));
+                createCluster("broker-1234-0", 1),
+                createCluster("broker-1234-1", 1));
 
         provisioner.provisionResources(new RouterCluster("router", 1, null), brokerClusters, neededMap, addressSet);
 

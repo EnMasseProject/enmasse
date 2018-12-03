@@ -241,8 +241,8 @@ public class AddressController implements Watcher<Address> {
                                 .build();
                     }
                     BrokerCluster upgradedCluster = null;
-                    if (cluster.getClusterId().startsWith("broker-pooled")) {
-                        upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), cluster.getNewReplicas(), null, null, desiredConfig);
+                    if (!cluster.getClusterId().startsWith("broker-sharded")) {
+                        upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), 1, null, null, desiredConfig);
                     } else {
                         Address address = addresses.stream()
                                 .filter(a -> cluster.getClusterId().equals(a.getAnnotation(AnnotationKeys.CLUSTER_ID)))
@@ -250,7 +250,13 @@ public class AddressController implements Watcher<Address> {
                                 .orElse(null);
                         if (address != null) {
                             AddressPlan plan = addressResolver.getPlan(address);
-                            upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), cluster.getNewReplicas(), address, plan, desiredConfig);
+                            int brokerNeeded = 0;
+                            for (ResourceRequest resourceRequest : plan.getRequiredResources()) {
+                                if (resourceRequest.equals("broker")) {
+                                    brokerNeeded = (int) resourceRequest.getCredit();
+                                }
+                            }
+                            upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), brokerNeeded, address, plan, desiredConfig);
                         }
                     }
                     log.info("Upgrading broker {}", cluster.getClusterId());
