@@ -126,19 +126,31 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public Set<AddressSpace> listAddressSpaces(String namespace) {
-        Set<AddressSpace> instances = new LinkedHashSet<>();
-        for (ConfigMap map : list(namespace).getItems()) {
-            instances.add(getAddressSpaceFromConfig(map));
-        }
-        return instances;
+        return listAddressSpacesMatching(Collections.emptyMap());
     }
 
     @Override
     public Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels) {
-        Set<AddressSpace> instances = new LinkedHashSet<>();
         labels = new LinkedHashMap<>(labels);
         labels.put(LabelKeys.TYPE, "address-space");
         labels.put(LabelKeys.NAMESPACE, namespace);
+        return listAddressSpacesMatching(labels);
+    }
+
+    @Override
+    public Set<AddressSpace> listAllAddressSpaces() {
+        return listAllAddressSpacesWithLabels(Collections.emptyMap());
+    }
+
+    @Override
+    public Set<AddressSpace> listAllAddressSpacesWithLabels(Map<String, String> labels) {
+        labels = new LinkedHashMap<>(labels);
+        labels.put(LabelKeys.TYPE, "address-space");
+        return listAddressSpacesMatching(labels);
+    }
+
+    private Set<AddressSpace> listAddressSpacesMatching(Map<String, String> labels) {
+        Set<AddressSpace> instances = new LinkedHashSet<>();
         ConfigMapList list = client.configMaps().withLabels(labels).list();
         for (ConfigMap map : list.getItems()) {
             instances.add(getAddressSpaceFromConfig(map));
