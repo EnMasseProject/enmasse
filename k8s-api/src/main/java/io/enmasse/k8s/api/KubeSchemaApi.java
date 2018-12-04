@@ -270,21 +270,33 @@ public class KubeSchemaApi implements SchemaApi {
             return null;
         }
 
-        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-            if (addressSpacePlan.getAddressSpaceType().equals("brokered")) {
-                validateAddressSpacePlan(addressSpacePlan, addressPlans, brokeredInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
-            } else {
-                validateAddressSpacePlan(addressSpacePlan, addressPlans, standardInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
+        List<AddressPlan> validAddressPlans = new ArrayList<>();
+        for (AddressPlan addressPlan : addressPlans) {
+            try {
+                validateAddressPlan(addressPlan);
+                validAddressPlans.add(addressPlan);
+            } catch (SchemaValidationException e) {
+                log.error("Error validating address plan {}, skipping", addressPlan.getMetadata().getName(), e);
             }
         }
 
-        for (AddressPlan addressPlan : addressPlans) {
-            validateAddressPlan(addressPlan);
+        List<AddressSpacePlan> validAddressSpacePlans = new ArrayList<>();
+        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+            try {
+                if (addressSpacePlan.getAddressSpaceType().equals("brokered")) {
+                    validateAddressSpacePlan(addressSpacePlan, validAddressPlans, brokeredInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
+                } else {
+                    validateAddressSpacePlan(addressSpacePlan, validAddressPlans, standardInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
+                }
+                validAddressSpacePlans.add(addressSpacePlan);
+            } catch (SchemaValidationException e) {
+                log.error("Error validating address space plan {}, skipping", addressSpacePlan.getMetadata().getName(), e);
+            }
         }
 
         List<AddressSpaceType> types = new ArrayList<>();
-        types.add(createBrokeredType(addressSpacePlans, addressPlans, new ArrayList<>(brokeredInfraConfigs)));
-        types.add(createStandardType(addressSpacePlans, addressPlans, new ArrayList<>(standardInfraConfigs)));
+        types.add(createBrokeredType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(brokeredInfraConfigs)));
+        types.add(createStandardType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(standardInfraConfigs)));
         return new Schema.Builder()
                 .setAddressSpaceTypes(types)
                 .setCreationTimestamp(formatter.format(clock.instant()))

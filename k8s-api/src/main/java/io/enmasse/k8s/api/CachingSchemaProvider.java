@@ -21,7 +21,7 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
 
     @Override
     public void onUpdate(List<Schema> items) {
-        if (items.isEmpty()) {
+        if (items == null || items.isEmpty()) {
             return;
         }
         log.info("Schema updated");
