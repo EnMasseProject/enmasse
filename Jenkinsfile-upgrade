@@ -25,7 +25,6 @@ pipeline {
         ANSIBLE_FORCE_COLOR = true
         JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
         OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
-        ENABLE_RBAC = false
     }
     stages {
         stage('wait for agent ready') {
@@ -126,7 +125,6 @@ pipeline {
         }
         stage('download released version again') {
             steps {
-                sh "git checkout tags/${params.START_VERSION}"
                 sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
             }
         }
