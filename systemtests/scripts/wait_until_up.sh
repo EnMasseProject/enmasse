@@ -16,6 +16,7 @@ else
 fi
 
 if [[ "${UPGRADED}" == "true" ]]; then
+    info "Enmasse was upgraded/downgraded"
     sleep 300
     EXPECTED_PODS=$(($($CMD get pods -n ${NAMESPACE} | grep -v deploy | wc -l) - 1))
 fi

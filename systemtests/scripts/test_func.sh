@@ -19,7 +19,7 @@ function setup_test() {
     export_required_env
     export REGISTER_API_SERVER=${REG_API_SERVER}
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}"
 
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
