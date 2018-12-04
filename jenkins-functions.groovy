@@ -72,6 +72,7 @@ def buildEnmasse() {
 }
 
 def postAction(String coresDir, String artifactDir) {
+    def status = currentBuild.result
     storeArtifacts(artifactDir)
     makeLinePlot()
     makeStackedPlot()
@@ -88,6 +89,9 @@ def postAction(String coresDir, String artifactDir) {
         echo "Archive failed"
     } finally {
         echo "Artifacts are stored"
+    }
+    if (status == null) {
+        currentBuild.result = 'SUCCESS'
     }
     tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
