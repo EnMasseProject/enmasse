@@ -129,10 +129,10 @@ pipeline {
             }
         }
         stage('downgrade enmasse') {
+            environment {
+                TAG = "${params.START_VERSION}"
+            }
             steps {
-                environment {
-                    TAG = "${params.START_VERSION}"
-                }
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         lib.installEnmasse(params.START_VERSION, true, true, false)
