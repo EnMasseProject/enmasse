@@ -126,7 +126,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public Set<AddressSpace> listAddressSpaces(String namespace) {
-        return listAddressSpacesMatching(Collections.emptyMap());
+        return listAddressSpacesWithLabels(namespace, Collections.emptyMap());
     }
 
     @Override
