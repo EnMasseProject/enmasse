@@ -4,6 +4,7 @@
  */
 package io.enmasse.k8s.api.cache;
 
-public interface KeyExtractor<T> {
+public interface FieldExtractor<T> {
     String getKey(T obj);
+    String getResourceVersion(T obj);
 }

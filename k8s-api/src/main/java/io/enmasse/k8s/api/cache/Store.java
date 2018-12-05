@@ -13,4 +13,5 @@ public interface Store<T> {
     List<T> list();
     List<String> listKeys();
     void replace(List<T> list, String resourceVersion) throws InterruptedException;
+    void replace(T item);
 }

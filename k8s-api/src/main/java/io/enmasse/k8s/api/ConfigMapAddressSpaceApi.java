@@ -6,7 +6,6 @@ package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
@@ -44,6 +43,8 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         return namespace + "." + name;
     }
 
+    private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
+
     @Override
     public Optional<AddressSpace> getAddressSpaceWithName(String namespace, String name) {
 
@@ -79,6 +80,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
                         .withName(name)
                         .replace(newMap);
             }
+            cache.replace(newMap);
             return result != null;
         } catch (KubernetesClientException e) {
             if (e.getStatus().getCode() == 404) {
@@ -181,16 +183,15 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) {
-        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(ConfigMap.class);
         config.setListerWatcher(this);
         config.setResyncInterval(resyncInterval);
-        config.setWorkQueue(queue);
+        config.setWorkQueue(cache);
         config.setProcessor(map -> {
-            if (queue.hasSynced()) {
-                watcher.onUpdate(queue.list().stream()
+            if (cache.hasSynced()) {
+                watcher.onUpdate(cache.list().stream()
                         .map(this::getAddressSpaceFromConfig)
                         .collect(Collectors.toList()));
             }

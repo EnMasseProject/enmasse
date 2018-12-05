@@ -79,4 +79,5 @@ interface Fields {
     String TLS_CERT = "tlsCert";
     String TLS_KEY = "tlsKey";
     String NETWORK_POLICY = "networkPolicy";
+    String GENERATION = "generation";
 }
