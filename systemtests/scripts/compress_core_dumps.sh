@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+CURDIR=`readlink -f \`dirname $0\``
+source ${CURDIR}/test_func.sh
+
 CORE_DUMPS_LOCATION=${1}
 ARTIFACTS_DIR=${2}
 if [[ $(ls -A "${CORE_DUMPS_LOCATION}") ]]; then
