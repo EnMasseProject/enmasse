@@ -666,34 +666,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 "view_test-view-queue", consoleWebPage.getAddressItems());
     }
 
-    protected void doTestViewConnections() throws Exception {
-        Destination destination = Destination.queue("test-queue-view-connections", getDefaultPlan(AddressType.QUEUE));
-        UserCredentials viewUser = new UserCredentials("view-user-connections", "viewPa55");
-        prepareViewItemTest(viewUser, destination, null);
-
-        consoleWebPage.openWebConsolePage();
-        consoleWebPage.openConnectionsPageWebConsole();
-
-        int connections = 5;
-        AbstractClient noUsersConnections = attachConnector(destination, connections, 1, 0);
-        AbstractClient usersConnections = attachConnector(sharedAddressSpace, destination,
-                connections, 1, 0, viewUser);
-        selenium.waitUntilPropertyPresent(60, 5, () -> consoleWebPage.getConnectionItems().size());
-
-        assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
-        selenium.refreshPage();
-        assertWaitForValue(connections, () -> consoleWebPage.getResultsCount());
-
-        log.info("Check if connection count is {}", connections);
-        assertEquals(connections, consoleWebPage.getConnectionItems().size(),
-                String.format("Console failed, does not contain %d connections", connections));
-        assertViewOnlyUsersConnections(String.format("Console failed, user %s see not only his connections", viewUser),
-                "view-user-connections", consoleWebPage.getConnectionItems());
-
-        noUsersConnections.stop();
-        usersConnections.stop();
-    }
-
     protected void doTestViewAddressesWildcards() throws Exception {
         List<Destination> addresses = getAddressesWildcard();
         setAddresses(addresses.toArray(new Destination[0]));
