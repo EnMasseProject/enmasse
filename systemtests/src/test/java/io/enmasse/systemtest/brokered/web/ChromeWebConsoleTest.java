@@ -143,12 +143,6 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
-    void testViewConnections() throws Exception {
-        doTestViewConnections();
-    }
-
-    @Test
-    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();
     }

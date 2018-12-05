@@ -132,11 +132,6 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
-    void testViewConnections() throws Exception {
-        doTestViewConnections();
-    }
-
-    @Test
     @Disabled("not implemented yet")
     void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();
