@@ -113,7 +113,7 @@ class UpgradeTest extends TestBase {
             listOfMessages.add(msg);
         });
         Future<Integer> sent = client.sendMessages(destination.getAddress(), listOfMessages.toArray(new Message[0]));
-        assertThat("Cannot sent durable messages", sent.get(10, TimeUnit.SECONDS), is(count));
+        assertThat("Cannot send durable messages to " + destination, sent.get(10, TimeUnit.SECONDS), is(count));
         client.close();
     }
 
@@ -122,7 +122,7 @@ class UpgradeTest extends TestBase {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
         Future<List<Message>> received = client.recvMessages(dest.getAddress(), count);
-        assertThat("Cannot receive durable messages", received.get(10, TimeUnit.SECONDS).size(), is(count));
+        assertThat("Cannot receive durable messages from " + dest, received.get(10, TimeUnit.SECONDS).size(), is(count));
         client.close();
     }
 }
