@@ -108,11 +108,6 @@ data:
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
-              lifecycle:
-                preStop:
-                  exec:
-                    command:
-                    - /opt/shutdown-hook/bin/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:
@@ -328,11 +323,6 @@ data:
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
-              lifecycle:
-                preStop:
-                  exec:
-                    command:
-                    - /opt/shutdown-hook/bin/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:

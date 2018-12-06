@@ -71,11 +71,14 @@ class UpgradeTest extends TestBase {
             brokered = getAddressSpace(brokered.getName());
             standard = getAddressSpace(standard.getName());
 
-            log.info("Receive durable messages to brokered queue");
+            waitForAddressSpaceReady(brokered);
+            waitForAddressSpaceReady(standard);
+
+            log.info("Receive durable messages from brokered queue");
             for (Destination dest : brokeredQueues) {
                 receiveDurableMessages(brokered, dest, cred, msgCount);
             }
-            log.info("Receive durable messages to standard queues");
+            log.info("Receive durable messages from standard queues");
             for (Destination dest : standardQueues) {
                 receiveDurableMessages(standard, dest, cred, msgCount);
             }
