@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
