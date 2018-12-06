@@ -425,7 +425,8 @@ public class TestUtils {
             log.info("Waiting until Address space: '{}' will be in ready state", addressSpace);
         }
         if (!isReady) {
-            throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
+            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getJsonObject("status").toString() : "";
+            throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout: " + jsonStatus);
         }
         waitUntilEndpointsPresent(apiClient, addressSpace);
         return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
