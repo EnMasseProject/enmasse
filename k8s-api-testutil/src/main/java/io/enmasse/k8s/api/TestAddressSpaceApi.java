@@ -62,6 +62,22 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
+    public Set<AddressSpace> listAllAddressSpaces() {
+        if (throwException) {
+            throw new RuntimeException("foo");
+        }
+        return new LinkedHashSet<>(addressSpaces.values());
+    }
+
+    @Override
+    public Set<AddressSpace> listAllAddressSpacesWithLabels(Map<String, String> labels) {
+        if (throwException) {
+            throw new RuntimeException("foo");
+        }
+        return new LinkedHashSet<>(addressSpaces.values());
+    }
+
+    @Override
     public void deleteAddressSpaces(String namespace) {
         for (AddressSpace addressSpace : new HashSet<>(addressSpaces.values())) {
             if (namespace.equals(addressSpace.getNamespace())) {

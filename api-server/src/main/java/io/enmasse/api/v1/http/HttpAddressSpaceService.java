@@ -73,11 +73,12 @@ public class HttpAddressSpaceService {
     public Response getAddressSpaceList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @QueryParam("labelSelector") String labelSelector) throws Exception {
         return doRequest("Error getting address space list", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
+            Instant now = clock.instant();
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                return Response.ok(formatResponse(acceptHeader, removeSecrets(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels)))).build();
+                return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels)))).build();
             } else {
-                return Response.ok(formatResponse(acceptHeader, removeSecrets(addressSpaceApi.listAddressSpaces(namespace)))).build();
+                return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAddressSpaces(namespace)))).build();
             }
         });
     }
@@ -88,8 +89,9 @@ public class HttpAddressSpaceService {
     public Response getAddressSpace(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName) throws Exception {
         return doRequest("Error getting address space " + addressSpaceName, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.get);
+            Instant now = clock.instant();
             return addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName)
-                    .map(addressSpace -> Response.ok(formatResponse(acceptHeader, removeSecrets(addressSpace))).build())
+                    .map(addressSpace -> Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpace))).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build());
         });
     }
@@ -208,13 +210,13 @@ public class HttpAddressSpaceService {
         }
     }
 
-    private AddressSpaceList removeSecrets(Collection<AddressSpace> addressSpaceList) {
+    static AddressSpaceList removeSecrets(Collection<AddressSpace> addressSpaceList) {
         return addressSpaceList.stream()
-                .map(this::removeSecrets)
+                .map(HttpAddressSpaceService::removeSecrets)
                 .collect(Collectors.toCollection(AddressSpaceList::new));
     }
 
-    private AddressSpace removeSecrets(AddressSpace addressSpace) {
+    static AddressSpace removeSecrets(AddressSpace addressSpace) {
         return new AddressSpace.Builder(addressSpace)
                 .setEndpointList(addressSpace.getEndpoints().stream()
                         .map(e -> {
@@ -330,28 +332,27 @@ public class HttpAddressSpaceService {
                     1,
                     "string"));
 
-    private Object formatResponse(String headerParam, AddressSpaceList addressSpaceList) {
+    static Object formatResponse(String headerParam, Instant now, AddressSpaceList addressSpaceList) {
         if (isTableFormat(headerParam)) {
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(addressSpaceList));
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(now, addressSpaceList));
         } else {
             return addressSpaceList;
         }
     }
 
-    private Object formatResponse(String headerParam, AddressSpace addressSpace) {
+    static Object formatResponse(String headerParam, Instant now, AddressSpace addressSpace) {
         if (isTableFormat(headerParam)) {
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(Collections.singletonList(addressSpace)));
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(now, Collections.singletonList(addressSpace)));
         } else {
             return addressSpace;
         }
     }
 
-    private boolean isTableFormat(String acceptHeader) {
+    private static boolean isTableFormat(String acceptHeader) {
         return acceptHeader != null && acceptHeader.contains("as=Table") && acceptHeader.contains("g=meta.k8s.io") && acceptHeader.contains("v=v1beta1");
     }
 
-    private List<TableRow> createRows(List<AddressSpace> addressSpaceList) {
-        Instant now = clock.instant();
+    private static List<TableRow> createRows(Instant now, List<AddressSpace> addressSpaceList) {
         return addressSpaceList.stream()
                 .map(addressSpace -> new TableRow(
                         Arrays.asList(
