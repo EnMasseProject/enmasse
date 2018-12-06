@@ -15,7 +15,7 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
     private final Watcher<T> watcher;
     private final Duration recheckInterval;
     private final Object monitor = new Object();
-    private List<T> items = null;
+    private volatile List<T> items = null;
     private volatile boolean running = false;
 
     private Thread thread;
