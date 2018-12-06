@@ -1,7 +1,5 @@
 # Systemtests
 
-[![Build Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
-
 This repository contains the EnMasse system tests. The tests can be run against an EnMasse instance
 running on OpenShift.
 
@@ -19,8 +17,13 @@ Replace `localhost` `myproject` and `developer` with the desired values for your
 
 ## Running all tests
 
-    mvn test -Psystemtests
+    mvn test -pl systemtests -P${PROFILE}
 
 ##  Running a single test class
 
-    mvn test -Psystemtests -Dtest=SmokeTest
+    mvn test -pl systemtests -P${PROFILE} -Dtest=**.SmokeTest
+
+Where $PROFILE can be:
+* systemtests
+* systemtests-marathon
+* systemtests-upgrade
