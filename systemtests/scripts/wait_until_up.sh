@@ -40,6 +40,7 @@ function waitingContainersReady {
             fi
         else
             imageUpgraded="true"
+            initImageUpgraded="true"
         fi
         if [[ "${ready}" == "false" ]] || [[ "${imageUpgraded}" == "false" ]] || [[ "${initImageUpgraded}" == "false" ]]
         then
