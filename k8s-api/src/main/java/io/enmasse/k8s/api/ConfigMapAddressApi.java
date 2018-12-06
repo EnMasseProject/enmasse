@@ -194,7 +194,11 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) {
+    public Watch watchAddresses(CacheWatcher<Address> watcher, Duration resyncInterval) {
+        watcher.onInit(() -> cache.list().stream()
+                .map(ConfigMapAddressApi.this::getAddressFromConfig)
+                .collect(Collectors.toList()));
+
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(ConfigMap.class);
@@ -203,9 +207,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         config.setWorkQueue(cache);
         config.setProcessor(map -> {
                     if (cache.hasSynced()) {
-                        watcher.onUpdate(cache.list().stream()
-                                .map(this::getAddressFromConfig)
-                                .collect(Collectors.toList()));
+                        watcher.onUpdate();
                     }
                 });
 

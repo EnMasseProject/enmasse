@@ -4,18 +4,19 @@
  */
 package io.enmasse.k8s.api;
 
+import io.enmasse.k8s.api.cache.CacheWatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.*;
 
-public class ResourceChecker<T> implements Watcher<T>, Runnable {
+public class ResourceChecker<T> implements CacheWatcher<T>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ResourceChecker.class.getName());
     private final Watcher<T> watcher;
+    private volatile ResourceCache<T> resourceCache;
     private final Duration recheckInterval;
     private final Object monitor = new Object();
-    private volatile List<T> items = null;
+    private volatile boolean synced = false;
     private volatile boolean running = false;
 
     private Thread thread;
@@ -44,8 +45,8 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
             try {
                 monitor.wait(recheckInterval.toMillis());
                 log.debug("Woke up from monitor");
-                if (items != null) {
-                    watcher.onUpdate(items);
+                if (synced) {
+                    watcher.onUpdate(resourceCache.getItems());
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -66,8 +67,13 @@ public class ResourceChecker<T> implements Watcher<T>, Runnable {
     }
 
     @Override
-    public void onUpdate(List<T> items) {
-        this.items = Collections.unmodifiableList(items);
+    public void onInit(ResourceCache<T> cache) {
+        this.resourceCache = cache;
+    }
+
+    @Override
+    public void onUpdate() {
+        synced = true;
         synchronized (monitor) {
             monitor.notifyAll();
         }

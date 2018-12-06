@@ -31,7 +31,8 @@ public class ResourceCheckerTest {
         verify(watcher, never()).onUpdate(any());
 
         List<String> items = Arrays.asList("hello", "there");
-        controller.onUpdate(items);
+        controller.onInit(() -> items);
+        controller.onUpdate();
         controller.doWork();
         verify(watcher).onUpdate(eq(items));
     }

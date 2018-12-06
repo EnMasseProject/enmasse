@@ -187,8 +187,11 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) {
+    public Watch watchAddressSpaces(CacheWatcher<AddressSpace> watcher, Duration resyncInterval) {
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
+        watcher.onInit(() -> cache.list().stream()
+                .map(ConfigMapAddressSpaceApi.this::getAddressSpaceFromConfig)
+                .collect(Collectors.toList()));
         config.setClock(Clock.systemUTC());
         config.setExpectedType(ConfigMap.class);
         config.setListerWatcher(this);
@@ -196,9 +199,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         config.setWorkQueue(cache);
         config.setProcessor(map -> {
             if (cache.hasSynced()) {
-                watcher.onUpdate(cache.list().stream()
-                        .map(this::getAddressSpaceFromConfig)
-                        .collect(Collectors.toList()));
+                watcher.onUpdate();
             }
         });
 
