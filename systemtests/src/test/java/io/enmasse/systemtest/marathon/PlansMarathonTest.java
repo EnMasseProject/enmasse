@@ -69,7 +69,7 @@ class PlansMarathonTest extends MarathonTestBase {
         }
         setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
 
-        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 6);
+        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(manyAddressesSpace);
         queueClient.getConnectOptions().setCredentials(cred);
@@ -78,7 +78,7 @@ class PlansMarathonTest extends MarathonTestBase {
         }
 
         deleteAddresses(manyAddressesSpace, dest.subList(0, destCount / 2).toArray(new Destination[0]));
-        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
+        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 2);
 
         for (int i = destCount / 2; i < destCount; i += 50) {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
