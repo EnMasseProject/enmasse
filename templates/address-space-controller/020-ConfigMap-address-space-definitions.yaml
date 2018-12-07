@@ -207,6 +207,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: qdrouterd-${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         serviceName: qdrouterd-headless-${INFRA_UUID}
         replicas: 1
         selector:
@@ -338,6 +348,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: admin.${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - operator-infra
         replicas: 1
         strategy:
           type: Recreate
@@ -722,6 +742,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: subserv.${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         replicas: 1
         selector:
           matchLabels:
@@ -812,6 +842,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: mqtt-gateway.${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         replicas: 1
         selector:
           matchLabels:
@@ -893,6 +933,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: mqtt-lwt.${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         replicas: 1
         selector:
           matchLabels:
@@ -991,6 +1041,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: broker.${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         replicas: 1
         strategy:
           type: Recreate
@@ -1152,6 +1212,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: agent.${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - operator-infra
         replicas: 1
         strategy:
           type: Recreate

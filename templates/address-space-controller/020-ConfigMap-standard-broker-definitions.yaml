@@ -45,6 +45,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: ${NAME}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         replicas: 1
         serviceName: ${NAME}
         selector:
@@ -260,6 +270,16 @@ data:
           infraUuid: ${INFRA_UUID}
         name: ${NAME}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExcpressions:
+                    - key: enmasse-role
+                      operator: In
+                      values:
+                        - messaging-infra
         replicas: 1
         serviceName: ${NAME}
         selector:

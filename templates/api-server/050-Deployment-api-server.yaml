@@ -17,6 +17,16 @@ spec:
         app: enmasse
         component: api-server
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExcpressions:
+                  - key: enmasse-role
+                    operator: In
+                    values:
+                      - operator-infra
       containers:
       - env:
         - name: JAVA_OPTS
