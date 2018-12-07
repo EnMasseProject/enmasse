@@ -45,7 +45,7 @@ public class KubeStandardInfraConfigApi implements StandardInfraConfigApi, Liste
 
     @Override
     public Watch watchStandardInfraConfigs(Watcher<StandardInfraConfig> watcher, Duration resyncInterval) {
-        WorkQueue<StandardInfraConfig> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        WorkQueue<StandardInfraConfig> queue = new EventCache<>(new HasMetadataFieldExtractor<>());
         Reflector.Config<StandardInfraConfig, StandardInfraConfigList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(StandardInfraConfig.class);

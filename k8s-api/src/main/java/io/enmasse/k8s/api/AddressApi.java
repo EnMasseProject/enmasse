@@ -5,6 +5,7 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.k8s.api.cache.CacheWatcher;
 
 import java.time.Duration;
 import java.util.Map;
@@ -24,5 +25,5 @@ public interface AddressApi {
     boolean replaceAddress(Address address);
     boolean deleteAddress(Address address);
 
-    Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) throws Exception;
+    Watch watchAddresses(CacheWatcher<Address> watcher, Duration resyncInterval) throws Exception;
 }

@@ -406,7 +406,6 @@ public class AddressController implements Watcher<Address> {
         return false;
     }
 
-
     private class ProvisionState {
         private final Status status;
         private final String brokerId;

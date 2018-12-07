@@ -5,6 +5,7 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.k8s.api.cache.CacheWatcher;
 
 import java.util.Map;
 import java.time.Duration;
@@ -28,7 +29,7 @@ public interface AddressSpaceApi {
 
     void deleteAddressSpaces(String namespace);
 
-    Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception;
+    Watch watchAddressSpaces(CacheWatcher<AddressSpace> watcher, Duration resyncInterval) throws Exception;
 
     AddressApi withAddressSpace(AddressSpace addressSpace);
 }

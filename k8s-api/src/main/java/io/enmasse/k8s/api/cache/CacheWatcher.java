@@ -4,6 +4,9 @@
  */
 package io.enmasse.k8s.api.cache;
 
-public interface KeyExtractor<T> {
-    String getKey(T obj);
+import io.enmasse.k8s.api.ResourceCache;
+
+public interface CacheWatcher<T> {
+    void onInit(ResourceCache<T> cache);
+    void onUpdate() throws Exception;
 }

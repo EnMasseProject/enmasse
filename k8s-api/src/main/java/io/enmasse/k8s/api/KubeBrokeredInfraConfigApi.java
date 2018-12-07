@@ -45,7 +45,7 @@ public class KubeBrokeredInfraConfigApi implements BrokeredInfraConfigApi, Liste
 
     @Override
     public Watch watchBrokeredInfraConfigs(Watcher<BrokeredInfraConfig> watcher, Duration resyncInterval) {
-        WorkQueue<BrokeredInfraConfig> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        WorkQueue<BrokeredInfraConfig> queue = new EventCache<>(new HasMetadataFieldExtractor<>());
         Reflector.Config<BrokeredInfraConfig, BrokeredInfraConfigList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(BrokeredInfraConfig.class);

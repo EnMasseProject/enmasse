@@ -45,7 +45,7 @@ public class KubeAddressPlanApi implements AddressPlanApi, ListerWatcher<Address
 
     @Override
     public Watch watchAddressPlans(Watcher<AddressPlan> watcher, Duration resyncInterval) {
-        WorkQueue<AddressPlan> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+        WorkQueue<AddressPlan> queue = new EventCache<>(new HasMetadataFieldExtractor<>());
         Reflector.Config<AddressPlan, AddressPlanList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(AddressPlan.class);

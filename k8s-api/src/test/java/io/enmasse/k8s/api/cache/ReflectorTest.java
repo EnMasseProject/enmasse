@@ -34,7 +34,7 @@ public class ReflectorTest {
     public void setup() {
         testLister = mock(ListerWatcher.class);
         testProc = mock(Processor.class);
-        testStore = new FifoQueue<>(m -> m.getMetadata().getName());
+        testStore = new EventCache<>(new HasMetadataFieldExtractor<>());
 
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
         config.setClock(Clock.fixed(Instant.now(), ZoneId.systemDefault()));

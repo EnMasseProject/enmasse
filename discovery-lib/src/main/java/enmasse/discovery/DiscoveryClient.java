@@ -33,7 +33,7 @@ public class DiscoveryClient implements ListerWatcher<io.fabric8.kubernetes.api.
         this.labelFilter = labelFilter;
         this.annotationFilter = annotationFilter;
         this.containerName = containerName;
-        WorkQueue<io.fabric8.kubernetes.api.model.Pod> queue = new FifoQueue<>(pod -> pod.getMetadata().getName());
+        WorkQueue<io.fabric8.kubernetes.api.model.Pod> queue = new EventCache<>(new HasMetadataFieldExtractor<>());
         Reflector.Config<io.fabric8.kubernetes.api.model.Pod, PodList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(io.fabric8.kubernetes.api.model.Pod.class);

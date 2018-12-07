@@ -6,6 +6,7 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
+import io.enmasse.k8s.api.cache.CacheWatcher;
 
 import java.time.Duration;
 import java.util.*;
@@ -88,7 +89,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) throws Exception {
+    public Watch watchAddressSpaces(CacheWatcher<AddressSpace> watcher, Duration resyncInterval) throws Exception {
         return null;
     }
 
