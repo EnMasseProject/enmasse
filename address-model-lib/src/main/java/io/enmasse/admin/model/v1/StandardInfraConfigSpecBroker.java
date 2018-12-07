@@ -24,13 +24,16 @@ import java.util.Objects;
 public class StandardInfraConfigSpecBroker {
     private final StandardInfraConfigSpecBrokerResources resources;
     private final String addressFullPolicy;
+    private final String storageClassName;
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     @JsonCreator
     public StandardInfraConfigSpecBroker(@JsonProperty("resources") StandardInfraConfigSpecBrokerResources resources,
-                                         @JsonProperty("addressFullPolicy") String addressFullPolicy) {
+                                         @JsonProperty("addressFullPolicy") String addressFullPolicy,
+                                         @JsonProperty("storageClassName") String storageClassName) {
         this.resources = resources;
         this.addressFullPolicy = addressFullPolicy;
+        this.storageClassName = storageClassName;
     }
 
     public StandardInfraConfigSpecBrokerResources getResources() {
@@ -41,18 +44,23 @@ public class StandardInfraConfigSpecBroker {
         return addressFullPolicy;
     }
 
+    public String getStorageClassName() {
+        return storageClassName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StandardInfraConfigSpecBroker that = (StandardInfraConfigSpecBroker) o;
         return Objects.equals(resources, that.resources) &&
-                Objects.equals(addressFullPolicy, that.addressFullPolicy);
+                Objects.equals(addressFullPolicy, that.addressFullPolicy) &&
+                Objects.equals(storageClassName, that.storageClassName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy);
+        return Objects.hash(resources, addressFullPolicy, storageClassName);
     }
 
     @JsonAnyGetter

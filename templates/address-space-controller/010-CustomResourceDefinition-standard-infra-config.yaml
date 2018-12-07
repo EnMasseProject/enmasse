@@ -54,6 +54,8 @@ spec:
                   - PAGE
                   - BLOCK
                   - FAIL
+                storageClassName:
+                  type: string
             router:
               type: object
               properties:

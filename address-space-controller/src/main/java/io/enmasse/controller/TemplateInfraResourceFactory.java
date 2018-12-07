@@ -140,6 +140,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
         parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
+        if (standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
+            parameters.put(TemplateParameter.BROKER_STORAGE_CLASS_NAME, standardInfraConfig.getSpec().getBroker().getStorageClassName());
+        }
 
         List<ParameterValue> parameterValues = new ArrayList<>();
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
@@ -174,6 +177,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         Map<String, String> parameters = new HashMap<>();
 
         prepareParameters(brokeredInfraConfig, addressSpace, parameters);
+
+        parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
+        parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+        parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        if (brokeredInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
+            parameters.put(TemplateParameter.BROKER_STORAGE_CLASS_NAME, brokeredInfraConfig.getSpec().getBroker().getStorageClassName());
+        }
 
         List<ParameterValue> parameterValues = new ArrayList<>();
         for (Map.Entry<String, String> entry : parameters.entrySet()) {

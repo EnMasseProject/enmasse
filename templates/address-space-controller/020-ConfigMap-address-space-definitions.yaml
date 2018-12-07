@@ -975,6 +975,7 @@ data:
       spec:
         accessModes:
         - ReadWriteOnce
+        storageClassName: ${BROKER_STORAGE_CLASS_NAME}
         resources:
           requests:
             storage: ${BROKER_STORAGE_CAPACITY}
@@ -1345,3 +1346,6 @@ data:
     - description: Broker address full policy
       name: BROKER_ADDRESS_FULL_POLICY
       value: FAIL
+    - description: Storage class to use for broker volume claims
+      name: BROKER_STORAGE_CLASS_NAME
+      value: null
