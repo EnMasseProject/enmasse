@@ -12,15 +12,13 @@ be managed using the {KubePlatform} command-line tools.
 
 .Prerequisites
 
-* You must have already created an xref:con-address-space-messaging[address space].
+* You must have already created an link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space].
 
 include::../modules/proc-creating-users-cli.adoc[leveloffset=+1]
+
 include::../modules/proc-deleting-users-cli.adoc[leveloffset=+1]
+
 include::../modules/proc-managing-user-permissions-cli.adoc[leveloffset=+1]
-
-.Additional resources
-
-* xref:enmasse_rest_api[]
 
 :context: {parent-context}
 

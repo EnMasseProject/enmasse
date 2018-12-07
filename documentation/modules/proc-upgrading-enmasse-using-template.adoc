@@ -3,11 +3,11 @@
 // assembly-upgrading-enmasse.adoc
 
 [id='upgrading-enmasse-using-template-{context}']
-= Upgrading {ProductName} using Template
+= Upgrading {ProductName} using the release template
 
 .Prerequisites
 
-* A new release of {ProductName}. For more information, see xref:downloading-messaging[].
+* A new release of {ProductName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#downloading-messaging[Downloading {ProductName}].
 
 .Procedure
 
@@ -32,7 +32,7 @@ oc project _{ProductNamespace}_
 oc process -f install/templates/{ProductTemplateName} NAMESPACE=_{ProductNamespace}_ | oc apply -f -
 ----
 
-. Monitor pods while they are restarted:
+. Monitor the pods while they are restarted:
 +
 [subs="attributes",options="nowrap"]
 ----
@@ -40,3 +40,4 @@ oc get pods -w
 ----
 +
 The upgrade should cause all pods to be restarted within a couple of minutes.
+

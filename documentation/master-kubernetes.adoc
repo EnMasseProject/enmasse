@@ -1,9 +1,12 @@
+
+include::common/attributes.adoc[]
+
+:BookNameUrl: /kubernetes/
+
 :parent-context: messaging
 :context: messaging
 :cmdcli: kubectl
 :KubePlatform: Kubernetes
-
-include::common/attributes.adoc[]
 
 = Documentation for {ProductName} on Kubernetes
 

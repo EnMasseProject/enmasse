@@ -1,13 +1,13 @@
 // Module included in the following assemblies:
 //
-// assembly-plans.adoc
+// assembly-infrastructure-configuration.adoc
 
 [id='con-brokered-infra-config-{context}']
 = Brokered infrastructure configuration
 
 `BrokeredInfraConfig` resources is used to configure infrastructure deployed by `brokered` address
-spaces. The brokered infra configuration is referenced by address space plans using a `enmasse.io/defined-by`
-annotation. For more information, see xref:con-address-space-plans-{context}[].
+spaces. The brokered infrastructure configuration is referenced by address space plans using a `enmasse.io/defined-by`
+annotation. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans].
 
 [source,yaml,options="nowrap"]
 ----
@@ -15,10 +15,10 @@ include::../common/brokered-infra-config-example.yaml[]
 ----
 
 The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
-this field whether to upgrade the infrastructure to the requested version.
+this field to determine whether to upgrade the infrastructure to the requested version.
 
 The `admin` object specifies the settings you can configure for the `admin` components.
 
 The `broker` object specifies the settings you can configure for the `broker` components. Changing
-the `.broker.resources.storage` setting does not configure existing broker storage size.
+the `.broker.resources.storage` setting does not configure the existing broker storage size.
 

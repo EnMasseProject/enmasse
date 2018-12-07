@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// master.adoc
+// assembly-tenant-guide.adoc
 
 [id='con-address-space-{context}']
 = Address space
@@ -9,5 +9,6 @@ An address space is a group of addresses that can be accessed through a single c
 
 {ProductName} has two types of address spaces:
 
-* Standard
-* Brokered
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-standard-address-space-messaging[Standard]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-brokered-address-space-messaging[Brokered]
+

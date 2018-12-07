@@ -1,6 +1,6 @@
-[id='overview-{context}']
+[id='enmasse-overview-{context}']
 = Overview
-EnMasse is an open source project for managed, self-service messaging on link:https://kubernetes.io[Kubernetes] and link:https://openshift.com[OpenShift]. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization.
+EnMasse is an open source project for managed, self-service messaging on link:https://kubernetes.io[Kubernetes^] and link:https://openshift.com[OpenShift^]. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization.
 
 The service admin can deploy and manage messaging infrastructure, while messaging tenants can request messaging resources, both using both cloud-native APIs and tools.
 
@@ -13,7 +13,7 @@ The service admin can deploy and manage messaging infrastructure, while messagin
 
 EnMasse can be used for many purposes, such as moving your messaging infrastructure to the cloud without depending on a specific cloud provider, building a scalable messaging backbone for IoT, or just as a cloud-ready version of a message broker.
 
-EnMasse can provision different types of messaging depending on your use case. A user can request messaging resources by creating an xref:con-address-space-messaging[address space].
+EnMasse can provision different types of messaging depending on your use case. A user can request messaging resources by creating an link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space].
 
 EnMasse currently supports a `standard` and a `brokered` address space type, each with different semantics. 
 

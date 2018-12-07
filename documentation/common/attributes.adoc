@@ -31,6 +31,7 @@
 :OnlineBookURL: http://enmasse.io/documentation/
 :Title: Using {ProductName}
 :cpp: C++
+:BaseProductVersion: master
 
 // Component attributes
 
@@ -49,8 +50,12 @@
 :ClientAmqpPythonBook: Using the {ClientAmqpPythonName} Client
 :ClientCoreJmsBook: Using the {ClientCoreJmsName}
 
+:OpenShiftBook: Documentation for {ProductName} on OpenShift
+:KubernetesBook: Documentation for {ProductName} on Kubernetes
 
 // Book links
+
+:BookUrlBase: http://enmasse.io/documentation/
 
 
 // Other links
