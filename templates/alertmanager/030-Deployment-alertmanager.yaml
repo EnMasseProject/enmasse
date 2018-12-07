@@ -16,6 +16,16 @@ spec:
         app: enmasse
         name: alertmanager
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: enmasse-role
+                    operator: In
+                    values:
+                      - operator-infra
       containers:
       - image: ${ALERTMANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}

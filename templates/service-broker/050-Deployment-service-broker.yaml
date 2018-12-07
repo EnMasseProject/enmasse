@@ -19,6 +19,16 @@ spec:
         app: enmasse
         component: service-broker
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: enmasse-role
+                    operator: In
+                    values:
+                      - operator-infra
       containers:
       - env:
         - name: ENABLE_RBAC

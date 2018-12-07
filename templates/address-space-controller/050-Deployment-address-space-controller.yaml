@@ -19,6 +19,16 @@ spec:
         app: enmasse
         name: address-space-controller
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: enmasse-role
+                    operator: In
+                    values:
+                      - operator-infra
       containers:
       - env:
         - name: JAVA_OPTS
