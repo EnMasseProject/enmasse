@@ -21,7 +21,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 1
               preference:
-                matchExcpressions:
+                matchExpressions:
                   - key: enmasse-role
                     operator: In
                     values:
