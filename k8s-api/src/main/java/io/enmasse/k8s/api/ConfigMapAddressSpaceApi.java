@@ -86,10 +86,6 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         } catch (KubernetesClientException e) {
             if (e.getStatus().getCode() == 404) {
                 return false;
-            } else if (e.getStatus().getCode() == 409) {
-                // Replace locally cached even if there is a conflict to prevent stale address space
-                cache.replace(newMap);
-                throw e;
             } else {
                 throw e;
             }
