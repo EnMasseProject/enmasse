@@ -1,9 +1,12 @@
+
+include::common/attributes.adoc[]
+
+:BookNameUrl: /openshift/
+
 :parent-context: messaging
 :context: messaging
 :cmdcli: oc
 :KubePlatform: OpenShift
-
-include::common/attributes.adoc[]
 
 = Documentation for {ProductName} on OpenShift
 

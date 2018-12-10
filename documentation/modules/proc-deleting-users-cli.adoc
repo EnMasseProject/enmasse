@@ -1,7 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-users-oc.adoc
-// assembly-managing-users-kube.adoc
+// assembly-managing-users.adoc
 
 [id='proc-deleting-users-cli-{context}']
 = Deleting users using the command line
@@ -29,6 +28,3 @@ Users can be deleted using standard command-line tools.
 {cmdcli} delete messaginguser _myspace.user1_
 ----
 
-.Additional resources
-
-* xref:_overview[Rest API Reference]

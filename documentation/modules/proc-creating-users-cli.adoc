@@ -1,7 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-users-oc.adoc
-// assembly-managing-users-kube.adoc
+// assembly-managing-users.adoc
 
 [id='proc-creating-users-cli-{context}']
 = Creating users using the command line
@@ -10,7 +9,7 @@ In {ProductName} users can be created using standard command-line tools.
 
 .Prerequisites
 
-* You must have already created an xref:con-address-space-messaging[address space].
+* You must have already created an link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space].
 
 .Procedure
 
@@ -35,7 +34,4 @@ include::../common/user-example1.yaml[]
 {cmdcli} get messagingusers
 ----
 
-.Additional resources
-
-* xref:_overview[Rest API Reference]
 

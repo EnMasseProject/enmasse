@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-plans.adoc
+// assembly-configuring.adoc
 
 [id='con-address-plans-{context}']
 = Address plans
@@ -11,7 +11,7 @@ Address plans are configured by the {ProductName} service operator and are selec
 
 {ProductName} includes a default set of address plans that are sufficient for most use cases.
 
-In the xref:con-address-space-plans-{context}[] section, the address space plan references two address plans: `small-queue` and `small-anycast`. These address plans are stored as custom resources and are defined as follows:
+In the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans] section, the address space plan references two address plans: `small-queue` and `small-anycast`. These address plans are stored as custom resources and are defined as follows:
 
 [source,yaml,options="nowrap"]
 ----

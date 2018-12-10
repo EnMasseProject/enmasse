@@ -58,5 +58,5 @@ include::../common/address-space-output-example1.yaml[]
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
-include::../modules/con-retrieving-address-space-information.adoc[leveloffset=+1]
+include::../modules/ref-retrieving-address-space-information.adoc[leveloffset=+1]
 
