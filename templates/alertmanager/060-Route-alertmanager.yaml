@@ -6,9 +6,9 @@ metadata:
   name: alertmanager
 spec:
   port:
-    targetPort: alertmanager
+    targetPort: proxy
   tls:
-    termination: edge
+    termination: reencrypt
   to:
     kind: Service
     name: alertmanager

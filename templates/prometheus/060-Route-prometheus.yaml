@@ -6,9 +6,9 @@ metadata:
   name: prometheus
 spec:
   port:
-    targetPort: prometheus
+    targetPort: proxy
   tls:
-    termination: edge
+    termination: reencrypt
   to:
     kind: Service
     name: prometheus
