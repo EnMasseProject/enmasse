@@ -388,12 +388,14 @@ public class AddressApiClient extends ApiClient {
 
     public void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
-        Set<Destination> desired = Sets.newHashSet(destinations);
+        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
-        Set<Destination> toCreate = Sets.difference(desired, current);
-        Set<Destination> toDelete = Sets.difference(current, desired);
+        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
+        List<Destination> toDelete= new ArrayList<>(current);
+
+        toDelete.removeAll(toCreate);
+        toCreate.removeAll(current);
 
         log.info("Creating {}", toCreate);
 
