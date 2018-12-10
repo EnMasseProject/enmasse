@@ -36,8 +36,6 @@ public class StatusController implements Controller {
 
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
-        addressSpace.getStatus().setReady(true);
-        addressSpace.getStatus().clearMessages();
         checkDeploymentsReady(addressSpace);
         checkAuthServiceReady(addressSpace);
         return addressSpace;

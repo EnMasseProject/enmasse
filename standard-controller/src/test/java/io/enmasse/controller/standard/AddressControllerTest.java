@@ -45,7 +45,7 @@ public class AddressControllerTest {
         options.setAddressSpacePlanName("plan1");
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
-        controller = new AddressController(options,  mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, new Metrics());
+        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, new Metrics());
     }
 
     @Test

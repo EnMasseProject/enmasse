@@ -55,7 +55,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void apply(KubernetesList resources) {
+    public void apply(KubernetesList resources, boolean patchPersistentVolumeClaims) {
         for (HasMetadata resource : resources.getItems()) {
             try {
                 if (resource instanceof ConfigMap) {
@@ -72,6 +72,8 @@ public class KubernetesHelper implements Kubernetes {
                     client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
                 } else if (resource instanceof NetworkPolicy) {
                     client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
+                } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
+                    client.persistentVolumeClaims().withName(resource.getMetadata().getName()).patch((PersistentVolumeClaim) resource);
                 }
             } catch (KubernetesClientException e) {
                 if (e.getCode() == 404) {

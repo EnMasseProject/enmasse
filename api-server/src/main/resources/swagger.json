@@ -1711,6 +1711,12 @@
                         "BLOCK",
                         "FAIL"
                     ]
+                },
+                "storageClassName": {
+                    "type": "string"
+                },
+                "updatePersistentVolumeClaim": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1842,6 +1848,12 @@
                         "BLOCK",
                         "FAIL"
                     ]
+                },
+                "storageClassName": {
+                    "type": "string"
+                },
+                "updatePersistentVolumeClaim": {
+                    "type": "boolean"
                 }
             }
         },

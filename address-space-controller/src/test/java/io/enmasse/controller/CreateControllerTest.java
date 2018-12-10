@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaProvider;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.junit.Test;
@@ -48,7 +49,7 @@ public class CreateControllerTest {
                 .build()));
 
         SchemaProvider testSchema = new TestSchemaProvider();
-        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0");
+        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi());
 
         createController.handle(addressSpace);
 

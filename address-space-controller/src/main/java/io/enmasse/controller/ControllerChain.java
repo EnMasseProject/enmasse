@@ -92,6 +92,8 @@ public class ControllerChain implements Watcher<AddressSpace> {
         for (AddressSpace addressSpace : resources) {
             try {
                 log.info("Checking address space {}:{}", addressSpace.getNamespace(), addressSpace.getName());
+                addressSpace.getStatus().setReady(true);
+                addressSpace.getStatus().clearMessages();
                 for (Controller controller : chain) {
                     log.info("Controller {}", controller);
                     log.debug("Address space input: {}", addressSpace);
