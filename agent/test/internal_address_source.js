@@ -25,6 +25,10 @@ var myutils = require('../lib/utils.js');
 var AddressSource = require('../lib/internal_address_source');
 var ConfigMapServer = require('../testlib/mock_resource_server.js').ConfigMapServer;
 
+function broker_state(id) {
+    return {clusterId: id, containerId: id, state: 'Active'};
+}
+
 describe('configmap backed address source', function() {
     var configmaps;
 
@@ -64,13 +68,13 @@ describe('configmap backed address source', function() {
             //relies on sorted order (TODO: avoid relying on any order)
             assert.equal(addresses[0].address, 'bar');
             assert.equal(addresses[0].type, 'topic');
-            assert.equal(addresses[0].allocated_to, 'broker-2');
+            assert.equal(addresses[0].allocated_to[0].containerId, 'broker-2');
             assert.equal(addresses[1].address, 'baz');
             assert.equal(addresses[1].type, 'anycast');
             assert.equal(addresses[1].allocated_to, undefined);
             assert.equal(addresses[2].address, 'foo');
             assert.equal(addresses[2].type, 'queue');
-            assert.equal(addresses[2].allocated_to, 'broker-1');
+            assert.equal(addresses[2].allocated_to[0].containerId, 'broker-1');
             done();
         });
     });

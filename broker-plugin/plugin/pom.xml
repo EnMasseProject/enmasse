@@ -21,10 +21,6 @@
       <groupId>io.enmasse</groupId>
       <artifactId>sasl-delegation</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>shutdown-hook</artifactId>
-    </dependency>
   </dependencies>
   <build>
     <plugins>

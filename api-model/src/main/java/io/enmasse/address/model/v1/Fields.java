@@ -79,4 +79,8 @@ interface Fields {
     String TLS_CERT = "tlsCert";
     String TLS_KEY = "tlsKey";
     String NETWORK_POLICY = "networkPolicy";
+    String BROKER_STATUSES = "brokerStatuses";
+    String CONTAINER_ID = "containerId";
+    String STATE = "state";
+    String CLUSTER_ID = "clusterId";
 }

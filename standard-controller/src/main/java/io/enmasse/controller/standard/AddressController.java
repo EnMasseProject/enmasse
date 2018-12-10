@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Status.Phase.*;
@@ -39,19 +40,22 @@ public class AddressController implements Watcher<Address> {
     private Watch watch;
     private final EventLogger eventLogger;
     private final SchemaProvider schemaProvider;
-    private final Vertx vertx = Vertx.vertx();
+    private final Vertx vertx;
     private final Metrics metrics;
     private final BrokerIdGenerator brokerIdGenerator;
+    private final BrokerClientFactory brokerClientFactory;
 
-    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Metrics metrics, BrokerIdGenerator brokerIdGenerator) {
+    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
         this.options = options;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
+        this.vertx = vertx;
         this.metrics = metrics;
         this.brokerIdGenerator = brokerIdGenerator;
+        this.brokerClientFactory = brokerClientFactory;
     }
 
     public void start() throws Exception {
@@ -101,11 +105,15 @@ public class AddressController implements Watcher<Address> {
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, EnumSet.of(Pending)));
 
+        log.info("Usage: {}", usageMap);
+
         long calculatedUsage = System.nanoTime();
-        Set<Address> pendingAddresses = filterByPhases(addressSet, EnumSet.of(Pending));
+        Set<Address> pendingAddresses = filterBy(addressSet, address -> address.getStatus().getPhase().equals(Pending) ||
+                    AddressProvisioner.hasPlansChanged(address));
+
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
-        log.info("Usage: {}, Needed: {}", usageMap, neededMap);
+        log.info("Needed: {}", neededMap);
 
         long checkedQuota = System.nanoTime();
 
@@ -117,13 +125,16 @@ public class AddressController implements Watcher<Address> {
 
         long provisionResources = System.nanoTime();
 
-        checkStatuses(filterByPhases(addressSet, EnumSet.of(Configuring, Active)), addressResolver);
+        Set<Address> liveAddresses = filterByPhases(addressSet, EnumSet.of(Configuring, Active));
+        checkStatuses(liveAddresses, addressResolver);
         long checkStatuses = System.nanoTime();
-        for (Address address : filterByPhases(addressSet, EnumSet.of(Configuring, Active))) {
+        for (Address address : liveAddresses) {
             if (address.getStatus().isReady()) {
                 address.getStatus().setPhase(Active);
             }
         }
+
+        checkAndRemoveDrainingBrokers(addressSet);
 
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
         long deprovisionUnused = System.nanoTime();
@@ -247,6 +258,11 @@ public class AddressController implements Watcher<Address> {
                 if (cluster.getClusterId().equals(clusterId)) {
                     numFound++;
                 }
+                for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                    if (brokerStatus.getClusterId().equals(cluster.getClusterId())) {
+                        numFound++;
+                    }
+                }
             }
 
             if (numFound == 0) {
@@ -259,6 +275,12 @@ public class AddressController implements Watcher<Address> {
                 }
             }
         }
+    }
+
+    private Set<Address> filterBy(Set<Address> addressSet, Predicate<Address> predicate) {
+        return addressSet.stream()
+                .filter(predicate::test)
+                .collect(Collectors.toSet());
     }
 
     private Set<Address> filterByPhases(Set<Address> addressSet, Set<Status.Phase> phases) {
@@ -294,6 +316,29 @@ public class AddressController implements Watcher<Address> {
         }
     }
 
+    private void checkAndRemoveDrainingBrokers(Set<Address> addresses) throws Exception {
+        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory);
+        for (Address address : addresses) {
+            List<BrokerStatus> brokerStatuses = new ArrayList<>();
+            for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                if (BrokerState.Draining.equals(brokerStatus.getState())) {
+                    try {
+                        long messageCount = brokerStatusCollector.getQueueMessageCount(address.getAddress(), brokerStatus.getClusterId());
+                        if (messageCount > 0) {
+                            brokerStatuses.add(brokerStatus);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error checking status of broker {}:{} in state Draining. Keeping.", brokerStatus.getClusterId(), brokerStatus.getContainerId(), e);
+                        brokerStatuses.add(brokerStatus);
+                    }
+                } else {
+                    brokerStatuses.add(brokerStatus);
+                }
+            }
+            address.getStatus().setBrokerStatuses(brokerStatuses);
+        }
+    }
+
     private Map<Address, Integer> checkStatuses(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
         Map<Address, Integer> numOk = new HashMap<>();
         if (addresses.isEmpty()) {
@@ -302,8 +347,6 @@ public class AddressController implements Watcher<Address> {
         for (Address address : addresses) {
             address.getStatus().setReady(true).clearMessages();
         }
-        // TODO: Instead of going to the routers directly, list routers, and perform a request against the
-        // router agent to do the check
         RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {

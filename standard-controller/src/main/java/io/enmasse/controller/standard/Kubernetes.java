@@ -57,4 +57,6 @@ public interface Kubernetes {
     RouterCluster getRouterCluster() throws IOException;
 
     void scaleStatefulSet(String name, int numReplicas);
+
+    List<Pod> listBrokers(String clusterId);
 }

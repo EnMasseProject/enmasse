@@ -316,6 +316,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         logCollector.collectConfigMaps();
     }
 
+    protected void replaceAddress(AddressSpace addressSpace, Destination destination) throws Exception {
+        TestUtils.replaceAddress(addressApiClient, addressSpace, destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
+    }
+
     protected JsonObject sendRestApiRequest(HttpMethod method, URL url, int expectedCode, Optional<JsonObject> payload) throws Exception {
         return TestUtils.sendRestApiRequest(addressApiClient, method, url, expectedCode, payload);
     }

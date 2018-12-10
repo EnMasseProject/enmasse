@@ -303,6 +303,24 @@ public class AddressApiClient extends ApiClient {
         doDelete(getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace), expectedCode);
     }
 
+    public void replaceAddress(String addressSpace, Destination destination, int expectedCode) throws Exception {
+        String path = getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace);
+        log.info("UPDATE-address: path {}", path);
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        JsonObject payload = destination.toJson(apiVersion, addressSpace);
+        doRequestNTimes(initRetry, () -> {
+                    client.put(endpoint.getPort(), endpoint.getHost(), path)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(payload, ar -> responseHandler(ar, responsePromise, expectedCode, "Error: delete address"));
+
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
+    }
+
     private void doDelete(String path, int expectedCode) throws Exception {
         log.info("DELETE-address: path {}", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();

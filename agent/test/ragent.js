@@ -47,39 +47,46 @@ function remove(list, predicate) {
     return removed;
 }
 
-function verify_subscription(name, topic, all_linkroutes, containerId) {
+function broker_state(id) {
+    return {clusterId: id, containerId: id + "-0", state: 'Active'};
+}
+
+function verify_subscription(name, topic, all_linkroutes, allocated_to) {
     var prefix = topic + '::' + name;
     var linkroutes = remove(all_linkroutes, function (o) { return o.prefix === prefix; });
     assert.equal(linkroutes.length, 1, 'no link route found for subscription ' + name + ' on ' + topic);
     assert.equal(linkroutes[0].prefix, prefix);
     assert.equal(linkroutes[0].direction, 'out');
-    if (containerId) {
+    if (allocated_to) {
+        var containerId = allocated_to[0].containerId;
         assert.equal(linkroutes[0].containerId, containerId + '-out');
     }
 }
 
-function verify_topic(name, all_linkroutes, containerId) {
+function verify_topic(name, all_linkroutes, allocated_to) {
     var linkroutes = remove(all_linkroutes, function (o) { return o.prefix === name; });
     assert.equal(linkroutes.length, 2, 'no link routes found for topic ' + name);
     assert.equal(linkroutes[0].prefix, name);
     assert.equal(linkroutes[1].prefix, name);
     if (linkroutes[0].direction === 'in') {
         assert.equal(linkroutes[1].direction, 'out');
-        if (containerId) {
+        if (allocated_to) {
+            var containerId = allocated_to[0].containerId;
             assert.equal(linkroutes[0].containerId, containerId + '-in');
             assert.equal(linkroutes[1].containerId, containerId + '-out');
         }
     } else {
         assert.equal(linkroutes[0].direction, 'out');
         assert.equal(linkroutes[1].direction, 'in');
-        if (containerId) {
+        if (allocated_to) {
+            var containerId = allocated_to[0].containerId;
             assert.equal(linkroutes[0].containerId, containerId + '-out');
             assert.equal(linkroutes[1].containerId, containerId + '-in');
         }
     }
 }
 
-function verify_queue(name, all_addresses, all_autolinks, containerId) {
+function verify_queue(name, all_addresses, all_autolinks, allocated_to) {
     var addresses = remove(all_addresses, function (o) { return o.prefix === name; });
     assert.equal(addresses.length, 1, 'did not find queue ' + name);
     assert.equal(addresses[0].prefix, name);
@@ -87,18 +94,40 @@ function verify_queue(name, all_addresses, all_autolinks, containerId) {
     assert.equal(addresses[0].waypoint, true);
 
     var autolinks = remove(all_autolinks, function (o) { return o.addr === name; });
-    assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
-    assert.equal(autolinks[0].addr, name);
-    assert.equal(autolinks[1].addr, name);
-    if (autolinks[0].direction === 'in') {
-        assert.equal(autolinks[1].direction, 'out');
-        assert.equal(autolinks[0].containerId, util.format('%s-in', containerId || name));
-        assert.equal(autolinks[1].containerId, util.format('%s-out', containerId || name));
+    if (allocated_to !== undefined) {
+        if (allocated_to[0].state === 'Active') {
+            assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
+            assert.equal(autolinks[0].addr, name);
+            assert.equal(autolinks[1].addr, name);
+            if (autolinks[0].direction === 'in') {
+                assert.equal(autolinks[1].direction, 'out');
+                assert.equal(autolinks[0].containerId, util.format('%s-in', allocated_to[0].containerId));
+                assert.equal(autolinks[1].containerId, util.format('%s-out', allocated_to[0].containerId));
+            } else {
+                assert.equal(autolinks[0].containerId, util.format('%s-out', allocated_to[0].containerId));
+                assert.equal(autolinks[1].containerId, util.format('%s-in', allocated_to[0].containerId));
+                assert.equal(autolinks[0].direction, 'out');
+                assert.equal(autolinks[1].direction, 'in');
+            }
+        } else {
+            assert.equal(1, autolinks.length);
+            assert.equal(autolinks[0].containerId, util.format('%s-in', allocated_to[0].containerId || name));
+            assert.equal(autolinks[0].direction, 'in');
+        }
     } else {
-        assert.equal(autolinks[0].containerId, util.format('%s-out', containerId || name));
-        assert.equal(autolinks[1].containerId, util.format('%s-in', containerId || name));
-        assert.equal(autolinks[0].direction, 'out');
-        assert.equal(autolinks[1].direction, 'in');
+        assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
+        assert.equal(autolinks[0].addr, name);
+        assert.equal(autolinks[1].addr, name);
+        if (autolinks[0].direction === 'in') {
+            assert.equal(autolinks[1].direction, 'out');
+            assert.equal(autolinks[0].containerId, util.format('%s-in', name));
+            assert.equal(autolinks[1].containerId, util.format('%s-out', name));
+        } else {
+            assert.equal(autolinks[0].containerId, util.format('%s-out', name));
+            assert.equal(autolinks[1].containerId, util.format('%s-in', name));
+            assert.equal(autolinks[0].direction, 'out');
+            assert.equal(autolinks[1].direction, 'in');
+        }
     }
 }
 
@@ -360,31 +389,32 @@ describe('basic router configuration', function() {
     it('configures a single multicast address', simple_address_test([{address:'foo',type:'multicast'}]));
     it('configures a single queue address', simple_address_test([{address:'foo',type:'queue'}]));
     it('configures a single topic address', simple_address_test([{address:'foo',type:'topic'}]));
-    it('configures a topic and subscription', simple_address_test([{address:'foo',type:'topic'}, {address:'sub',type:'subscription',topic:'foo','allocated_to':'broker-0'}]));
+    it('configures a topic and subscription', simple_address_test([{address:'foo',type:'topic'}, {address:'sub',type:'subscription',topic:'foo','allocated_to':[broker_state('broker-0')]}]));
     it('configures multiple anycast addresses', simple_address_test([{address:'a',type:'anycast'}, {address:'b',type:'anycast'}, {address:'c',type:'anycast'}]));
     it('configures multiple multicast addresses', simple_address_test([{address:'a',type:'multicast'}, {address:'b',type:'multicast'}, {address:'c',type:'multicast'}]));
     it('configures multiple topics', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic'}, {address:'c',type:'topic'}]));
     it('configures multiple topics and subscriptions', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic'}, {address:'c',type:'topic'},
-                                                                            {address:'sub-a',type:'subscription',topic:'a','allocated_to':'broker-0'},
-                                                                            {address:'sub-b',type:'subscription',topic:'b','allocated_to':'broker-1'},
-                                                                            {address:'sub-b2',type:'subscription',topic:'b','allocated_to':'broker-2'},
-                                                                            {address:'sub-c',type:'subscription',topic:'c','allocated_to':'broker-3'}]));
+                                                                            {address:'sub-a',type:'subscription',topic:'a','allocated_to':[broker_state('broker-0')]},
+                                                                            {address:'sub-b',type:'subscription',topic:'b','allocated_to':[broker_state('broker-1')]},
+                                                                            {address:'sub-b2',type:'subscription',topic:'b','allocated_to':[broker_state('broker-2')]},
+                                                                            {address:'sub-c',type:'subscription',topic:'c','allocated_to':[broker_state('broker-3')]}]));
     it('configures multiple queues', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'queue'}]));
-    it('configures queues based on allocation', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue', allocated_to:'broker-1'}, {address:'c',type:'queue', allocated_to:'broker-1'}]));
-    it('configures topic based on allocation', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic', allocated_to:'broker-1'}, {address:'c',type:'topic', allocated_to:'broker-1'}]));
+    it('configures autolinks based on drain state', simple_address_test([{address:'c',type:'queue', allocated_to:[{clusterId: 'broker-1', containerId: 'broker-1-0', state: 'Draining'}]}]));
+    it('configures queues based on allocation', simple_address_test([{address:'a',type:'queue'}, {address:'b',type:'queue', allocated_to:[broker_state('broker-1')]}, {address:'c',type:'queue', allocated_to:[broker_state('broker-1')]}]));
+    it('configures topic based on allocation', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'topic', allocated_to:[broker_state('broker-1')]}, {address:'c',type:'topic', allocated_to:[broker_state('broker-1')]}]));
     it('configures multiple different types of address', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('removes unwanted address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', direction:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out', containerId: 'baz'});
        }));
     it('removes or updates address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-a', {prefix:'a', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', direction:'in'});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', direction:'out'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out', containerId: 'baz'});
        }));
     it('configures addresses on multiple routers', multi_router_address_test(3, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
@@ -1048,13 +1078,13 @@ describe('broker configuration', function() {
 
     it('creates queues on associated brokers', function (done) {
         var router = routers.new_router();
-        var broker_a = new MockBroker('broker_a');
-        var broker_b = new MockBroker('broker_b');
+        var broker_a = new MockBroker('broker_a-0');
+        var broker_b = new MockBroker('broker_b-0');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'a', type:'queue'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'a', type:'queue'}, undefined, '1234', {'cluster_id': 'broker_a', 'enmasse.io/broker-id':'broker_a-0'});
+            address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234', {'cluster_id': 'broker_b', 'enmasse.io/broker-id':'broker_b-0'});
             ragent.wait_for_stable(2, 1, 2).then(function () {
-                verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}], router);
+                verify_addresses([{address:'a', type:'queue', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}], router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
@@ -1065,21 +1095,21 @@ describe('broker configuration', function() {
 
     it('deletes queues from associated brokers', function (done) {
         var router = routers.new_router();
-        var broker_a = new MockBroker('broker_a');
-        var broker_b = new MockBroker('broker_b');
+        var broker_a = new MockBroker('broker_a-0');
+        var broker_b = new MockBroker('broker_b-0');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'a', type:'queue'}, 'address-config-a', '1234', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', '1234', {'enmasse.io/broker-id':'broker_b'});
-            address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', '1234', {'enmasse.io/broker-id':'broker_a'});
+            address_source.add_address_definition({address:'a', type:'queue'}, 'address-config-a', '1234', {'cluster_id': 'broker_a', 'enmasse.io/broker-id':'broker_a-0'});
+            address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', '1234', {'cluster_id': 'broker_b', 'enmasse.io/broker-id':'broker_b-0'});
+            address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', '1234', {'cluster_id': 'broker_a', 'enmasse.io/broker-id':'broker_a-0'});
             ragent.wait_for_stable(3, 1, 2).then(function () {
-                verify_addresses([{address:'a', type:'queue', allocated_to:'broker_a'}, {address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
+                verify_addresses([{address:'a', type:'queue', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 //delete configmap
                 address_source.remove_resource_by_name('configmaps', 'address-config-a');
                 ragent.wait_for_stable(2, 1, 2).then(function () {
-                    verify_addresses([{address:'b', type:'queue', allocated_to:'broker_b'}, {address:'c', type:'queue', allocated_to:'broker_a'}], router);
+                    verify_addresses([{address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router);
                     broker_a.verify_addresses([{address:'c', type:'queue'}]);
                     broker_b.verify_addresses([{address:'b', type:'queue'}]);
                     done();
@@ -1090,17 +1120,17 @@ describe('broker configuration', function() {
 
     it('creates subscriptions on associated brokers', function (done) {
         var router = routers.new_router();
-        var broker_a = new MockBroker('broker_a');
-        var broker_b = new MockBroker('broker_b');
+        var broker_a = new MockBroker('broker_a-0');
+        var broker_b = new MockBroker('broker_b-0');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'a', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'b', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
-            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'a'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'b'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'a', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a-0'});
+            address_source.add_address_definition({address:'b', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b-0'});
+            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'a'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a-0'});
+            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'b'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b-0'});
             ragent.wait_for_stable(4, 1, 2).then(function () {
-                verify_addresses([{address:'a', type:'topic', allocated_to:'broker_a'}, {address:'b', type:'topic', allocated_to:'broker_b'},
-                                  {address:'sub-a', type:'subscription', topic:'a', allocated_to:'broker_a'},
-                                  {address:'sub-b', type:'subscription', topic:'b', allocated_to:'broker_b'}], router);
+                verify_addresses([{address:'a', type:'topic', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'topic', allocated_to:[broker_state('broker_b')]},
+                                  {address:'sub-a', type:'subscription', topic:'a', allocated_to:[broker_state('broker_a')]},
+                                  {address:'sub-b', type:'subscription', topic:'b', allocated_to:[broker_state('broker_b')]}], router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'a'}]);
                 broker_b.verify_addresses([{address:'b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'b'}]);
@@ -1111,17 +1141,17 @@ describe('broker configuration', function() {
 
     it('handles subscriptions and topics in correct order', function (done) {
         var router = routers.new_router();
-        var broker_a = new MockBroker('broker_a');
-        var broker_b = new MockBroker('broker_b');
+        var broker_a = new MockBroker('broker_a-0');
+        var broker_b = new MockBroker('broker_b-0');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'topic-a'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'topic-b'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
-            address_source.add_address_definition({address:'topic-a', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a'});
-            address_source.add_address_definition({address:'topic-b', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b'});
+            address_source.add_address_definition({address:'sub-a', type:'subscription', topic:'topic-a'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a-0'});
+            address_source.add_address_definition({address:'sub-b', type:'subscription', topic:'topic-b'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b-0'});
+            address_source.add_address_definition({address:'topic-a', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_a-0'});
+            address_source.add_address_definition({address:'topic-b', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker_b-0'});
             ragent.wait_for_stable(4, 1, 2).then(function () {
-                verify_addresses([{address:'topic-a', type:'topic', allocated_to:'broker_a'}, {address:'topic-b', type:'topic', allocated_to:'broker_b'},
-                                  {address:'sub-a', type:'subscription', topic:'topic-a', allocated_to:'broker_a'},
-                                  {address:'sub-b', type:'subscription', topic:'topic-b', allocated_to:'broker_b'}], router);
+                verify_addresses([{address:'topic-a', type:'topic', allocated_to:[broker_state('broker_a')]}, {address:'topic-b', type:'topic', allocated_to:[broker_state('broker_b')]},
+                                  {address:'sub-a', type:'subscription', topic:'topic-a', allocated_to:[broker_state('broker_a')]},
+                                  {address:'sub-b', type:'subscription', topic:'topic-b', allocated_to:[broker_state('broker_b')]}], router);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'topic-a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'topic-a'}]);
                 broker_b.verify_addresses([{address:'topic-b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'topic-b'}]);
@@ -1151,19 +1181,20 @@ describe('broker configuration', function() {
     it('creates lots of queues on associated brokers', function (done) {
         this.timeout(60000);
         var router = routers.new_router();
-        var broker_a = new MockBroker('broker_a');
-        var broker_b = new MockBroker('broker_b');
+        var broker_a = new MockBroker('broker_a-0');
+        var broker_b = new MockBroker('broker_b-0');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
             var desired = generate_address_list(2000, ['queue']);
             desired.forEach(function (a, i) {
-                a.allocated_to = i % 2 ? 'broker_a' : 'broker_b';
-                address_source.add_address_definition(a, undefined, '1234', {'enmasse.io/broker-id': a.allocated_to});
+                var allocated_to = i % 2 ? 'broker_a' : 'broker_b';
+                a.allocated_to = [broker_state(allocated_to)];
+                address_source.add_address_definition(a, undefined, '1234', {'cluster_id': allocated_to, 'enmasse.io/broker-id': allocated_to + "-0"});
             });
             ragent.wait_for_stable(2000, 1, 2).then(function () {
                 verify_addresses(desired, router);
                 //verify queues on respective brokers:
-                broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_a'; }));
-                broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to === 'broker_b'; }));
+                broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to[0].containerId === 'broker_a-0'; }));
+                broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to[0].containerId === 'broker_b-0'; }));
                 done();
             }).catch(done);
         }).catch(done);

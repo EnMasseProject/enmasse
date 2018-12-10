@@ -33,9 +33,13 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -296,6 +300,18 @@ public class TestUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
+
+    public static void replaceAddress(AddressApiClient addressApiClient, AddressSpace addressSpace, Destination destination, boolean wait, TimeoutBudget timeoutBudget) throws Exception {
+        log.info("Address {} in address space {} will be replaced", destination, addressSpace.getName());
+        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_ADDRESS);
+        addressApiClient.replaceAddress(addressSpace.getName(), destination, 200);
+        if (wait) {
+            waitForDestinationsReady(addressApiClient, addressSpace, timeoutBudget, destination);
+            waitForDestinationPlanApplied(addressApiClient, addressSpace, timeoutBudget, destination);
+        }
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
         log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getName());
         String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
@@ -530,6 +546,30 @@ public class TestUtils {
         return isReady;
     }
 
+    public static boolean isPlanSynced(JsonObject address) {
+        boolean isReady = false;
+        JsonObject annotations = address.getJsonObject("metadata").getJsonObject("annotations");
+        if (annotations != null) {
+            String appliedPlan = annotations.getString("enmasse.io/applied-plan");
+            String actualPlan = address.getJsonObject("spec").getString("plan");
+            isReady = actualPlan.equals(appliedPlan);
+        }
+        return isReady;
+    }
+
+    public static boolean areBrokersDrained(JsonObject address) {
+        boolean isReady = true;
+        JsonArray brokerStatuses = address.getJsonObject("status").getJsonArray("brokerStatuses");
+        for (int i = 0; i < brokerStatuses.size(); i++) {
+            JsonObject brokerStatus = brokerStatuses.getJsonObject(i);
+            if ("Draining".equals(brokerStatus.getString("state"))) {
+                isReady = false;
+                break;
+            }
+        }
+        return isReady;
+    }
+
     /**
      * Pulling out name,type and plan of addresses from json object
      *
@@ -746,6 +786,10 @@ public class TestUtils {
         return new Destination(name, uid, addressSpace, address, type, plan);
     }
 
+    interface AddressListMatcher {
+        Map<String, JsonObject> matchAddresses(JsonObject addressList);
+    }
+
     /**
      * Wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
      *
@@ -756,45 +800,49 @@ public class TestUtils {
      * @throws Exception IllegalStateException if destinations are not ready within timeout
      */
     public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
-        Map<String, JsonObject> notReadyAddresses = new HashMap<>();
+        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isAddressReady, destinations));
+    }
 
-        while (budget.timeLeft() >= 0) {
+    public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
+        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isPlanSynced, destinations));
+    }
+
+    public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
+        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::areBrokersDrained, destinations));
+    }
+
+    private static void waitForAddressesMatched(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget timeoutBudget, int totalDestinations, AddressListMatcher addressListMatcher) throws Exception {
+        Map<String, JsonObject> notMatched = new HashMap<>();
+
+        while (timeoutBudget.timeLeft() >= 0) {
             JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
-            notReadyAddresses = checkAddressesReady(addressList, destinations);
-            if (notReadyAddresses.isEmpty()) {
+            notMatched = addressListMatcher.matchAddresses(addressList);
+            if (notMatched.isEmpty()) {
                 Thread.sleep(5000); //TODO: remove this sleep after fix for ready check will be available
                 break;
             }
             Thread.sleep(5000);
         }
 
-        if (!notReadyAddresses.isEmpty()) {
+        if (!notMatched.isEmpty()) {
             JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
-            notReadyAddresses = checkAddressesReady(addressList, destinations);
-            throw new IllegalStateException(notReadyAddresses.size() + " out of " + destinations.length
-                    + " addresses are not ready: " + notReadyAddresses.values());
+            notMatched = addressListMatcher.matchAddresses(addressList);
+            throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations
+                    + " addresses are not matched: " + notMatched.values());
         }
     }
 
-    /**
-     * Go through all addresses in AddressList in JsonObject and check if all of them are in ready state
-     *
-     * @param addressList  received from AddressApiClient
-     * @param destinations required destinations which should be ready
-     * @return
-     */
-    private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination... destinations) {
-        log.info("Checking {} for ready state", destinations);
-        Map<String, JsonObject> notReadyAddresses = new HashMap<>();
+    private static Map<String, JsonObject> checkAddressesMatching(JsonObject addressList, Predicate<JsonObject> predicate, Destination ... destinations) {
+        Map<String, JsonObject> notMatchingAddresses = new HashMap<>();
         for (Destination destination : destinations) {
             JsonObject addressObject = lookupAddress(addressList, destination.getAddress());
             if (addressObject == null) {
-                notReadyAddresses.put(destination.getAddress(), null);
-            } else if (!isAddressReady(addressObject)) {
-                notReadyAddresses.put(destination.getAddress(), addressObject);
+                notMatchingAddresses.put(destination.getAddress(), null);
+            } else if (!predicate.test(addressObject)) {
+                notMatchingAddresses.put(destination.getAddress(), addressObject);
             }
         }
-        return notReadyAddresses;
+        return notMatchingAddresses;
     }
 
     /**
