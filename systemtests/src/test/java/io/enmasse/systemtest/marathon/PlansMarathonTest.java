@@ -116,7 +116,7 @@ class PlansMarathonTest extends MarathonTestBase {
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
-        setAddresses(manyAddressesSpace);
+
         appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Destination[0]));
 
         waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
