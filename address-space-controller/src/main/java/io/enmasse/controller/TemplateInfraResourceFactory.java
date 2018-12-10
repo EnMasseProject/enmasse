@@ -14,6 +14,7 @@ import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -140,9 +141,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
         parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
-        if (standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
-            parameters.put(TemplateParameter.BROKER_STORAGE_CLASS_NAME, standardInfraConfig.getSpec().getBroker().getStorageClassName());
-        }
 
         List<ParameterValue> parameterValues = new ArrayList<>();
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
@@ -163,7 +161,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
             items.addAll(createStandardInfraMqtt(addressSpace, mqttTemplateName));
         }
-        return items;
+        return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
     }
 
 
@@ -181,9 +179,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
         parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
         parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
-        if (brokeredInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
-            parameters.put(TemplateParameter.BROKER_STORAGE_CLASS_NAME, brokeredInfraConfig.getSpec().getBroker().getStorageClassName());
-        }
 
         List<ParameterValue> parameterValues = new ArrayList<>();
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
@@ -191,7 +186,18 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
 
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
-        return kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems();
+        return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
+    }
+
+    private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {
+        if (storageClassName != null) {
+            for (HasMetadata item : items) {
+                if (item instanceof PersistentVolumeClaim) {
+                    ((PersistentVolumeClaim) item).getSpec().setStorageClassName(storageClassName);
+                }
+            }
+        }
+        return items;
     }
 
     @Override

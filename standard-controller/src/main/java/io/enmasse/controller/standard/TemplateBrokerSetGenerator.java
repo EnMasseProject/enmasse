@@ -14,6 +14,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.openshift.client.ParameterValue;
@@ -104,9 +105,6 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
         paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
         paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
-        if (standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
-            paramMap.put(TemplateParameter.BROKER_STORAGE_CLASS_NAME, standardInfraConfig.getSpec().getBroker().getStorageClassName());
-        }
 
         ParameterValue parameters[] = paramMap.entrySet().stream()
                 .map(entry -> new ParameterValue(entry.getKey(), entry.getValue())).toArray(ParameterValue[]::new);
@@ -131,6 +129,18 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         if (address != null) {
             Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getAddress());
         }
+        return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
+    }
+
+    private KubernetesList applyStorageClassName(String storageClassName, KubernetesList items) {
+        if (storageClassName != null) {
+            for (HasMetadata item : items.getItems()) {
+                if (item instanceof PersistentVolumeClaim) {
+                    ((PersistentVolumeClaim) item).getSpec().setStorageClassName(storageClassName);
+                }
+            }
+        }
         return items;
     }
+
 }

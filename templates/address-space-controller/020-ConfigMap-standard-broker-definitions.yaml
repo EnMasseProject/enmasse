@@ -173,7 +173,6 @@ data:
           spec:
             accessModes:
             - ReadWriteOnce
-            storageClassName: ${BROKER_STORAGE_CLASS_NAME}
             resources:
               requests:
                 storage: ${BROKER_STORAGE_CAPACITY}
@@ -220,9 +219,6 @@ data:
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
       value: "-1"
-    - description: Storage class to use for broker volume claims
-      name: BROKER_STORAGE_CLASS_NAME
-      value: null
   topic-persisted.yaml: |-
     apiVersion: v1
     kind: Template
@@ -421,7 +417,6 @@ data:
           spec:
             accessModes:
             - ReadWriteOnce
-            storageClassName: ${BROKER_STORAGE_CLASS_NAME}
             resources:
               requests:
                 storage: ${BROKER_STORAGE_CAPACITY}
@@ -468,6 +463,3 @@ data:
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
       value: "-1"
-    - description: Storage class to use for broker volume claims
-      name: BROKER_STORAGE_CLASS_NAME
-      value: null
