@@ -11,28 +11,22 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.common.api.model.ApiVersion;
-import io.enmasse.common.api.model.CustomResource;
-import io.enmasse.common.api.model.CustomResources;
 import io.enmasse.common.api.model.CustomResource.Plural;
 import io.enmasse.common.api.model.CustomResource.Singular;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 
 public class CustomResourceTest {
 
-    @ApiVersion("v1alpha1")
-    @CustomResource(group = "iot.enmasse.io")
+    @CustomResource(version="v1alpha1", group = "iot.enmasse.io")
     private static class Foo {
     }
 
-    @ApiVersion("v1alpha1")
-    @CustomResource(group = "iot.enmasse.io", shortNames = { "b", "ba" })
+    @CustomResource(version="v1alpha1",group = "iot.enmasse.io", shortNames = { "b", "ba" })
     @Singular("baa")
     private static class Bar {
     }
 
-    @ApiVersion("v1alpha1")
-    @CustomResource(group = "iot.enmasse.io")
+    @CustomResource(version="v1alpha1",group = "iot.enmasse.io")
     @Singular
     @Plural("bazzes")
     private static class Baz {

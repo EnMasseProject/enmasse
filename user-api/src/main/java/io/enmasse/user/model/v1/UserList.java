@@ -7,11 +7,9 @@ package io.enmasse.user.model.v1;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.enmasse.common.api.model.AbstractList;
-import io.enmasse.common.api.model.ApiVersion;
 import io.enmasse.common.api.model.CustomResource;
 
-@ApiVersion("v1alpha1")
-@CustomResource(group = "user.enmasse.io", kind="MessagingUserList")
+@CustomResource(version="v1alpha1", group = "user.enmasse.io", kind="MessagingUserList")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserList extends AbstractList<User>{
 }

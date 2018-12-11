@@ -28,7 +28,7 @@ public class ApiVersionWriter extends VirtualBeanPropertyWriter {
 
     @Override
     protected Object value(final Object bean, final JsonGenerator gen, final SerializerProvider prov) throws Exception {
-        return bean.getClass().getAnnotation(ApiVersion.class).value();
+        return CustomResources.getApiVersion(bean.getClass());
     }
 
     @Override

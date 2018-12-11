@@ -30,7 +30,7 @@ public abstract class AbstractHasMetadata<T> implements HasMetadata {
     private ObjectMeta metadata;
 
     private final String kind = CustomResources.getKind(this.getClass());
-    private String apiVersion = this.getClass().getAnnotation(ApiVersion.class).value();
+    private String apiVersion = CustomResources.getApiVersion(this.getClass());
 
     @Override
     public ObjectMeta getMetadata() {

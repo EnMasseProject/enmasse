@@ -25,11 +25,15 @@ public final class CustomResources {
         }
     }
 
+    public static String getApiVersion(Class<?> clazz) {
+        final CustomResource custom = clazz.getAnnotation(CustomResource.class);
+        return custom.group() + "/" + custom.version();
+    }
+
     public static CustomResourceDefinition createFromClass(final Class<?> clazz) {
 
         final String kind = getKind(clazz);
         final CustomResource customResource = clazz.getAnnotation(CustomResource.class);
-        final String apiVersion = clazz.getAnnotation(ApiVersion.class).value();
 
         // get singular, default to variation of "kind"
 
@@ -80,7 +84,7 @@ public final class CustomResources {
 
                 .withNewSpec()
                 .withGroup(customResource.group())
-                .withVersion(apiVersion)
+                .withVersion(customResource.version())
                 .withScope(customResource.scope().name())
 
                 .withNewNames()
@@ -106,4 +110,5 @@ public final class CustomResources {
 
         return result;
     }
+
 }

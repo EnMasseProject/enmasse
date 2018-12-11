@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.enmasse.common.api.model.AbstractHasMetadata;
-import io.enmasse.common.api.model.ApiVersion;
 import io.enmasse.common.api.model.CustomResource;
 import io.enmasse.common.api.model.CustomResources;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -30,8 +29,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@ApiVersion("v1alpha1")
-@CustomResource(group = "user.enmasse.io", kind="MessagingUser")
+@CustomResource(version="v1alpha1", group = "user.enmasse.io", kind="MessagingUser")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User extends AbstractHasMetadata<User> {
 

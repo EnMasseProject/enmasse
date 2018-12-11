@@ -22,7 +22,7 @@ public abstract class AbstractList<T extends HasMetadata>
     private static final long serialVersionUID = 1L;
 
     private final String kind = CustomResources.getKind(this.getClass());
-    private String apiVersion = this.getClass().getAnnotation(ApiVersion.class).value();
+    private String apiVersion = CustomResources.getApiVersion(this.getClass());
 
     private ListMeta metadata;
 

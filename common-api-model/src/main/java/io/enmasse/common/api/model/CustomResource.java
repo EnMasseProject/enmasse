@@ -51,8 +51,9 @@ public @interface CustomResource {
      * Allows to override the kind, defaults to the class simple name.
      */
     String kind() default "";
-    
+
     String group();
+    String version();
 
     Scope scope() default Scope.Namespaced;
 
