@@ -56,3 +56,5 @@ spec:
                   - FAIL
                 storageClassName:
                   type: string
+                updatePersistentVolumeClaim:
+                  type: boolean

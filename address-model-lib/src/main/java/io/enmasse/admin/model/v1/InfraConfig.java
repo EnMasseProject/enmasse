@@ -9,4 +9,5 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 public interface InfraConfig extends HasMetadata {
     String getVersion();
     NetworkPolicy getNetworkPolicy();
+    boolean getUpdatePersistentVolumeClaim();
 }

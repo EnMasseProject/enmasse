@@ -164,6 +164,7 @@ public class HttpAddressSpaceService {
                     .setEndpointList(addressSpace.getEndpoints())
                     .setNetworkPolicy(addressSpace.getNetworkPolicy())
                     .setAnnotations(annotations)
+                    .setPlan(addressSpace.getPlan())
                     .setLabels(labels)
                     .build();
         }
@@ -174,10 +175,6 @@ public class HttpAddressSpaceService {
     private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {
         if (!existing.getType().equals(addressSpace.getType())) {
             throw new BadRequestException("Cannot change type of address space " + addressSpace.getName() + " from " + existing.getType() + " to " + addressSpace.getType());
-        }
-
-        if (!existing.getPlan().equals(addressSpace.getPlan())) {
-            throw new BadRequestException("Cannot change plan of address space " + addressSpace.getName() + " from " + existing.getPlan() + " to " + addressSpace.getPlan());
         }
 
         if (!existing.getAuthenticationService().equals(addressSpace.getAuthenticationService())) {

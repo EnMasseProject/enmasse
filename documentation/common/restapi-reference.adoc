@@ -1377,6 +1377,10 @@ __optional__|string
 __optional__|enum (PAGE, BLOCK, FAIL)
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1alpha1_brokeredinfraconfigspecbroker_resources,resources>>
+|**storageClassName** +
+__optional__|string
+|**updatePersistentVolumeClaim** +
+__optional__|boolean
 |===
 
 [[_io_enmasse_admin_v1alpha1_brokeredinfraconfigspecbroker_resources]]
@@ -1486,6 +1490,10 @@ __optional__|string
 __optional__|enum (PAGE, BLOCK, FAIL)
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1alpha1_standardinfraconfigspecbroker_resources,resources>>
+|**storageClassName** +
+__optional__|string
+|**updatePersistentVolumeClaim** +
+__optional__|boolean
 |===
 
 [[_io_enmasse_admin_v1alpha1_standardinfraconfigspecbroker_resources]]

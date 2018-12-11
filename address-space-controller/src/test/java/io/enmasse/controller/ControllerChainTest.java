@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class ControllerChainTest {
@@ -67,6 +68,8 @@ public class ControllerChainTest {
 
         List<Metric> metricList = metrics.snapshot();
         assertThat(metricList.size(), is(5));
+        assertTrue(a1.getStatus().isReady());
+        assertTrue(a2.getStatus().isReady());
     }
 }
 

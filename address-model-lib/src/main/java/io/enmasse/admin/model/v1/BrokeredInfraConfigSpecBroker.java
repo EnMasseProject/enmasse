@@ -5,7 +5,6 @@
 package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -20,21 +19,24 @@ import java.util.Objects;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "storageClassName", "updatePersistentVolumeClaim"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfigSpecBroker {
     private final BrokeredInfraConfigSpecBrokerResources resources;
     private final String addressFullPolicy;
     private final String storageClassName;
+    private final Boolean updatePersistentVolumeClaim;
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     @JsonCreator
     public BrokeredInfraConfigSpecBroker(@JsonProperty("resources") BrokeredInfraConfigSpecBrokerResources resources,
                                          @JsonProperty("addressFullPolicy") String addressFullPolicy,
-                                         @JsonProperty("storageClassName") String storageClassName) {
+                                         @JsonProperty("storageClassName") String storageClassName,
+                                         @JsonProperty("updatePersistentVolumeClaim") Boolean updatePersistentVolumeClaim) {
         this.resources = resources;
         this.addressFullPolicy = addressFullPolicy;
         this.storageClassName = storageClassName;
+        this.updatePersistentVolumeClaim = updatePersistentVolumeClaim;
     }
 
     @Override
@@ -44,12 +46,13 @@ public class BrokeredInfraConfigSpecBroker {
         BrokeredInfraConfigSpecBroker that = (BrokeredInfraConfigSpecBroker) o;
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(addressFullPolicy, that.addressFullPolicy) &&
-                Objects.equals(storageClassName, that.storageClassName);
+                Objects.equals(storageClassName, that.storageClassName) &&
+                Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, storageClassName);
+        return Objects.hash(resources, addressFullPolicy, storageClassName, updatePersistentVolumeClaim);
     }
 
     public BrokeredInfraConfigSpecBrokerResources getResources() {
@@ -62,6 +65,10 @@ public class BrokeredInfraConfigSpecBroker {
 
     public String getStorageClassName() {
         return storageClassName;
+    }
+
+    public Boolean getUpdatePersistentVolumeClaim() {
+        return updatePersistentVolumeClaim;
     }
 
     @JsonAnyGetter

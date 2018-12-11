@@ -80,7 +80,7 @@ public class AddressController implements Watcher<Address> {
         }
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
-        Set<Address> addressSet = migratePlanNames(addressList, addressResolver);
+        Set<Address> addressSet = new LinkedHashSet<>(addressList);
 
         final Map<String, ProvisionState> previousStatus = addressSet.stream()
                 .collect(Collectors.toMap(Address::getAddress,
@@ -190,46 +190,12 @@ public class AddressController implements Watcher<Address> {
         metrics.reportMetric(new Metric("standard_controller_loop_duration_seconds", "Time spent in controller loop", MetricType.gauge, new MetricValue((double) totalTime / 1_000_000_000.0, now, metricLabels)));
     }
 
-    private Set<Address> migratePlanNames(List<Address> addressList, AddressResolver addressResolver) {
-        // Migrate plan names
-        Set<Address> addressSet = new HashSet<>();
-        if (options.getVersion().startsWith("0.24")) {
-            for (Address address : addressList) {
-                if (addressResolver.findPlan(address).isPresent()) {
-                    addressSet.add(address);
-                } else {
-                    Address.Builder builder = new Address.Builder(address);
-                    String planName = address.getPlan();
-                    if ("pooled-queue".equals(planName)) {
-                        builder.setPlan("standard-small-queue");
-                    } else if ("pooled-topic".equals(planName)) {
-                        builder.setPlan("standard-small-topic");
-                    } else if ("standard-anycast".equals(planName)) {
-                        builder.setPlan("standard-small-anycast");
-                    } else if ("standard-multicast".equals(planName)) {
-                        builder.setPlan("standard-small-multicast");
-                    } else if ("standard-subscription".equals(planName)) {
-                        builder.setPlan("standard-small-subscription");
-                    } else if ("sharded-queue".equals(planName)) {
-                        builder.setPlan("standard-large-queue");
-                    } else if ("sharded-topic".equals(planName)) {
-                        builder.setPlan("standard-large-topic");
-                    }
-                    addressSet.add(builder.build());
-                }
-            }
-        } else {
-            addressSet = new HashSet<>(addressList);
-        }
-        return addressSet;
-    }
-
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
         for (BrokerCluster cluster : clusterList) {
             StandardInfraConfig currentConfig = cluster.getInfraConfig();
             if (!desiredConfig.equals(currentConfig)) {
                 if (options.getVersion().equals(desiredConfig.getSpec().getVersion())) {
-                    if (currentConfig != null && currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
+                    if (!desiredConfig.getUpdatePersistentVolumeClaim() && currentConfig != null && !currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
                         desiredConfig = new StandardInfraConfigBuilder(desiredConfig)
                                 .editSpec()
                                 .editBroker()
@@ -255,7 +221,7 @@ public class AddressController implements Watcher<Address> {
                     }
                     log.info("Upgrading broker {}", cluster.getClusterId());
                     cluster.updateResources(upgradedCluster, desiredConfig);
-                    kubernetes.apply(cluster.getResources());
+                    kubernetes.apply(cluster.getResources(), desiredConfig.getUpdatePersistentVolumeClaim());
                     eventLogger.log(BrokerUpgraded, "Upgraded broker", Normal, Broker, cluster.getClusterId());
                 } else {
                     log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredConfig.getSpec().getVersion(), options.getVersion());

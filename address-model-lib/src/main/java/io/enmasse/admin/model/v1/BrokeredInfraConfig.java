@@ -117,4 +117,10 @@ public class BrokeredInfraConfig implements InfraConfig {
     public NetworkPolicy getNetworkPolicy() {
         return spec.getNetworkPolicy();
     }
+
+    @Override
+    @JsonIgnore
+    public boolean getUpdatePersistentVolumeClaim() {
+        return spec.getBroker().getUpdatePersistentVolumeClaim() != null ? spec.getBroker().getUpdatePersistentVolumeClaim() : false;
+    }
 }
