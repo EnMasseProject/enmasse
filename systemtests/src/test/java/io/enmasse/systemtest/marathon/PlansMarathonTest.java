@@ -64,6 +64,7 @@ class PlansMarathonTest extends MarathonTestBase {
 
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 3900;
+        int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
@@ -77,10 +78,10 @@ class PlansMarathonTest extends MarathonTestBase {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, destCount / 2).toArray(new Destination[0]));
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
         waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 2);
 
-        for (int i = destCount / 2; i < destCount; i += 50) {
+        for (int i = toDeleteCount; i < destCount; i += 50) {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
         queueClient.close();
@@ -113,10 +114,11 @@ class PlansMarathonTest extends MarathonTestBase {
 
         ArrayList<Destination> dest = new ArrayList<>();
         int destCount = 3900;
+        int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
             dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
-        setAddresses(manyAddressesSpace);
+
         appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Destination[0]));
 
         waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
@@ -127,10 +129,10 @@ class PlansMarathonTest extends MarathonTestBase {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, destCount / 2).toArray(new Destination[0]));
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
         waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 2);
 
-        for (int i = destCount / 2; i < destCount; i += 50) {
+        for (int i = toDeleteCount; i < destCount; i += 50) {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
         queueClient.close();
