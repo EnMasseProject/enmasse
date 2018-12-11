@@ -79,12 +79,12 @@ def postAction(String coresDir, String artifactDir) {
     //store test results from build and system tests
     junit testResults: '**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
-    archiveArtifacts artifacts: '**/TEST-*.xml', allowEmptyArchive: true
-    archiveArtifacts artifacts: 'templates/build/**', allowEmptyArchive: true
+    archive '**/TEST-*.xml'
+    archive 'templates/build/**'
     sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
     sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
     try {
-        archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
+        archive "${artifactDir}/**"
     } catch(all) {
         echo "Archive failed"
     } finally {
