@@ -11,7 +11,7 @@ import io.enmasse.common.api.model.ApiVersion;
 import io.enmasse.common.api.model.CustomResource;
 
 @ApiVersion("v1alpha1")
-@CustomResource(group = "user.enmasse.io", kind="MessagingUser")
+@CustomResource(group = "user.enmasse.io", kind="MessagingUserList")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserList extends AbstractList<User>{
 }

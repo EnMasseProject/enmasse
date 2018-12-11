@@ -97,9 +97,9 @@ public class HttpUserService {
             UserList userList = new UserList();
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                userList.addAll(userApi.listUsersWithLabels(namespace, labels));
+                userList.getItems().addAll(userApi.listUsersWithLabels(namespace, labels).getItems());
             } else {
-                userList.addAll(userApi.listUsers(namespace));
+                userList.getItems().addAll(userApi.listUsers(namespace).getItems());
             }
             return Response.ok(formatResponse(acceptHeader, userList)).build();
         });
@@ -286,7 +286,7 @@ public class HttpUserService {
     private Object formatResponse(String headerParam, User user) {
         if (isTableFormat(headerParam)) {
             UserList list = new UserList();
-            list.add(user);
+            list.getItems().add(user);
             return new Table(new ListMeta(), tableColumnDefinitions, createRows(list));
         } else {
             return user;

@@ -412,7 +412,7 @@ public class KeycloakUserApi implements UserApi {
                     List<UserRepresentation> userReps = keycloak.realm(realm).users().list();
                     for (UserRepresentation userRep : userReps) {
                         List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                        userList.add(buildUser(userRep, groupReps));
+                        userList.getItems().add(buildUser(userRep, groupReps));
                     }
                 }
             }
@@ -503,7 +503,7 @@ public class KeycloakUserApi implements UserApi {
 
                     for (UserRepresentation userRep : userReps) {
                         List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                        userList.add(buildUser(userRep, groupReps));
+                        userList.getItems().add(buildUser(userRep, groupReps));
                     }
                 }
             }

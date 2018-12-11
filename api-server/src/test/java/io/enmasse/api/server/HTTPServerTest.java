@@ -60,7 +60,7 @@ public class HTTPServerTest {
 
         UserApi userApi = mock(UserApi.class);
         UserList users = new UserList();
-        users.add(new UserBuilder()
+        users.getItems().add(new UserBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName("myinstance.user1")
                         .withNamespace("myinstance")

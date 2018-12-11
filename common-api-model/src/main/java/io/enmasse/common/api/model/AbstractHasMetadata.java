@@ -5,6 +5,8 @@
 
 package io.enmasse.common.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -40,11 +42,13 @@ public abstract class AbstractHasMetadata<T> implements HasMetadata {
         this.metadata = metadata;
     }
 
+    @JsonIgnore
     @Override
     public String getKind() {
         return this.kind;
     }
 
+    @JsonIgnore
     @Override
     public String getApiVersion() {
         return apiVersion;

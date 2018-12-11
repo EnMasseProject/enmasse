@@ -60,7 +60,7 @@ public class UserModelTest {
         assertAuthorization(deserialized, Arrays.asList("queue1", "topic1"), Arrays.asList(Operation.send, Operation.recv));
 
         UserList list = new UserList();
-        list.add(user);
+        list.getItems().add(user);
 
         serialized = mapper.writeValueAsBytes(list);
         UserList deserializedList = mapper.readValue(serialized, UserList.class);
@@ -121,7 +121,7 @@ public class UserModelTest {
         assertAuthorization(deserialized, Arrays.asList("queue1", "topic1"), Arrays.asList(Operation.send, Operation.recv));
 
         UserList list = new UserList();
-        list.add(user);
+        list.getItems().add(user);
 
         serialized = mapper.writeValueAsBytes(list);
         UserList deserializedList = mapper.readValue(serialized, UserList.class);

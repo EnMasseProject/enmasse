@@ -75,7 +75,7 @@ public class TestUserApi implements UserApi  {
         for (Map<String, User> users : userMap.values()) {
             for (User user : users.values()) {
                 if (user.getMetadata().getNamespace().equals(namespace)) {
-                    list.add(user);
+                    list.getItems().add(user);
                 }
             }
         }

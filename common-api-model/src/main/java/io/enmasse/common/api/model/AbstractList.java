@@ -9,14 +9,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 
 public abstract class AbstractList<T extends HasMetadata>
-        extends ArrayList<T>
-        implements KubernetesResource<T>, KubernetesResourceList<T>, Iterable<T> {
+        implements KubernetesResource<T>, KubernetesResourceList<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -25,10 +26,14 @@ public abstract class AbstractList<T extends HasMetadata>
 
     private ListMeta metadata;
 
+    private List<T> items = new ArrayList<>();
+
+    @JsonIgnore
     public String getKind() {
         return this.kind;
     }
 
+    @JsonIgnore
     public String getApiVersion() {
         return apiVersion;
     }
@@ -38,12 +43,11 @@ public abstract class AbstractList<T extends HasMetadata>
     }
 
     public void setItems(final Collection<? extends T> items) {
-        super.clear();
-        super.addAll(items);
+        this.items = new ArrayList<>(items);
     }
 
     public List<T> getItems() {
-        return this;
+        return this.items;
     }
 
     public void setMetadata(final ListMeta metadata) {
