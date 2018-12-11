@@ -4,31 +4,51 @@
  */
 package io.enmasse.user.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Objects;
+import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.enmasse.common.api.model.AbstractHasMetadata;
+import io.enmasse.common.api.model.ApiVersion;
+import io.enmasse.common.api.model.CustomResource;
+import io.enmasse.common.api.model.CustomResources;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@ApiVersion("v1alpha1")
+@CustomResource(group = "user.enmasse.io", kind="MessagingUser")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class User {
-    @JsonProperty("apiVersion")
-    private final String apiVersion = "user.enmasse.io/v1alpha1";
-    @JsonProperty("kind")
-    private final String kind = "MessagingUser";
+public class User extends AbstractHasMetadata<User> {
 
-    private final UserMetadata metadata;
-    private final UserSpec spec;
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
-    @JsonCreator
-    public User(@JsonProperty("metadata") UserMetadata metadata,
-                @JsonProperty("spec") UserSpec spec) {
-        this.metadata = metadata;
-        this.spec = spec;
+    private static final long serialVersionUID = 1L;
+
+    public static final CustomResourceDefinition CRD;
+
+    static {
+        CRD = CustomResources.fromClass(User.class);
     }
 
-    public UserMetadata getMetadata() {
-        return metadata;
+    private UserSpec spec;
+
+    public void setSpec(final UserSpec spec) {
+        this.spec = spec;
     }
 
     public UserSpec getSpec() {
@@ -40,53 +60,40 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(apiVersion, user.apiVersion) &&
-                Objects.equals(kind, user.kind) &&
-                Objects.equals(metadata, user.metadata);
+        return Objects.equals(getApiVersion(), user.getApiVersion()) &&
+                Objects.equals(getKind(), user.getKind()) &&
+                Objects.equals(getMetadata(), user.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(apiVersion, kind, metadata);
+        return Objects.hash(getApiVersion(), getKind(), getMetadata(), spec);
     }
 
     public void validate() {
         try {
-            Objects.requireNonNull(metadata, "'metadata' must be set");
-            Objects.requireNonNull(spec, "'spec' must be set");
 
-            metadata.validate();
+            validateMetadata();
+
+            Objects.requireNonNull(spec, "'spec' must be set");
             spec.validate();
+
         } catch (Exception e) {
             throw new UserValidationFailedException(e);
         }
     }
 
-    public static class Builder {
-        private UserMetadata metadata;
-        private UserSpec spec;
+    private void validateMetadata() {
+        Objects.requireNonNull(getMetadata(), "'metadata' must be set");
 
-        public Builder() { }
+        final String name = getMetadata().getName();
+        final String namespace = getMetadata().getNamespace();
 
-        public Builder(User user) {
-            this.metadata = user.getMetadata();
-            this.spec = user.getSpec();
+        Objects.requireNonNull(name, "'name' must be set");
+        if (!NAME_PATTERN.matcher(name).matches()) {
+            throw new UserValidationFailedException("Invalid resource name '" + name + "', must match " + NAME_PATTERN);
         }
+        Objects.requireNonNull(namespace, "'namespace' must be set");
 
-        public Builder setMetadata(UserMetadata metadata) {
-            this.metadata = metadata;
-            return this;
-        }
-
-        public Builder setSpec(UserSpec spec) {
-            this.spec = spec;
-            return this;
-        }
-
-        public User build() {
-            Objects.requireNonNull(metadata);
-            Objects.requireNonNull(spec);
-            return new User(metadata, spec);
-        }
     }
 }

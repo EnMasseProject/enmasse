@@ -8,16 +8,32 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserSpec {
+    private final static Pattern USERNAME_PATTERN = Pattern.compile("^[a-z0-9]+([a-z0-9_@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
+
     private final String username;
     private final UserAuthentication authentication;
     private final List<UserAuthorization> authorization;
-    private final Pattern usernamePattern = Pattern.compile("^[a-z0-9]+([a-z0-9_@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
+    
 
     @JsonCreator
     public UserSpec(@JsonProperty("username") String username,
@@ -42,8 +58,8 @@ public class UserSpec {
 
     public void validate() {
         Objects.requireNonNull(username, "'username' must be set");
-        if (!usernamePattern.matcher(username).matches()) {
-            throw new UserValidationFailedException("Invalid username '" + username + "', must match " + usernamePattern.toString());
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
+            throw new UserValidationFailedException("Invalid username '" + username + "', must match " + USERNAME_PATTERN.toString());
         }
 
         if (authentication != null) {
@@ -54,34 +70,6 @@ public class UserSpec {
             for (UserAuthorization authz : authorization) {
                 authz.validate();
             }
-        }
-    }
-
-    public static class Builder {
-        private String username;
-        private UserAuthentication authentication;
-        private List<UserAuthorization> authorization;
-
-
-        public Builder setUsername(String username) {
-            this.username = username;
-            return this;
-        }
-
-        public Builder setAuthentication(UserAuthentication authentication) {
-            this.authentication = authentication;
-            return this;
-        }
-
-        public Builder setAuthorization(List<UserAuthorization> authorization) {
-            this.authorization = authorization;
-            return this;
-        }
-
-        public UserSpec build() {
-            Objects.requireNonNull(username);
-            Objects.requireNonNull(authentication);
-            return new UserSpec(username, authentication, authorization);
         }
     }
 }

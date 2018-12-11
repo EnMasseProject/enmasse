@@ -4,20 +4,6 @@
  */
 package io.enmasse.user.keycloak;
 
-import org.keycloak.admin.client.CreatedResponseUtil;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.FederatedIdentityRepresentation;
-import org.keycloak.representations.idm.GroupRepresentation;
-import org.keycloak.representations.idm.RealmRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -36,16 +22,34 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
+import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.FederatedIdentityRepresentation;
+import org.keycloak.representations.idm.GroupRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthentication;
+import io.enmasse.user.model.v1.UserAuthenticationBuilder;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorization;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
 import io.enmasse.user.model.v1.UserList;
-import io.enmasse.user.model.v1.UserMetadata;
-import io.enmasse.user.model.v1.UserSpec;
+import io.enmasse.user.model.v1.UserSpecBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 public class KeycloakUserApi implements UserApi {
 
@@ -451,28 +455,28 @@ public class KeycloakUserApi implements UserApi {
 
         List<UserAuthorization> authorizations = new ArrayList<>();
         for (Map.Entry<Set<Operation>, Set<String>> operationsEntry : operations.entrySet()) {
-            authorizations.add(new UserAuthorization.Builder()
-                    .setAddresses(new ArrayList<>(operationsEntry.getValue()))
-                    .setOperations(new ArrayList<>(operationsEntry.getKey()))
+            authorizations.add(new UserAuthorizationBuilder()
+                    .withAddresses(new ArrayList<>(operationsEntry.getValue()))
+                    .withOperations(new ArrayList<>(operationsEntry.getKey()))
                     .build());
         }
 
         String name = userRep.getAttributes().get("resourceName").get(0);
         String namespace = userRep.getAttributes().get("resourceNamespace").get(0);
 
-        return new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName(name)
-                        .setNamespace(namespace)
-                        .setSelfLink("/apis/user.enmasse.io/v1alpha1/namespaces/" + namespace + "/messagingusers/" + name)
-                        .setCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
+        return new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(name)
+                        .withNamespace(namespace)
+                        .withSelfLink("/apis/user.enmasse.io/v1alpha1/namespaces/" + namespace + "/messagingusers/" + name)
+                        .withCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername(userRep.getUsername())
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.valueOf(userRep.getAttributes().get("authenticationType").get(0)))
+                .withSpec(new UserSpecBuilder()
+                        .withUsername(userRep.getUsername())
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.valueOf(userRep.getAttributes().get("authenticationType").get(0)))
                                 .build())
-                        .setAuthorization(authorizations)
+                        .withAuthorization(authorizations)
                         .build())
                 .build();
     }

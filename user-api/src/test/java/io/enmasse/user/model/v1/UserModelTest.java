@@ -5,6 +5,9 @@
 package io.enmasse.user.model.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -19,25 +22,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UserModelTest {
     @Test
     public void testSerializeUserPassword() throws IOException {
-        User user = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user1")
-                        .setNamespace("ns1")
+        User user = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user1")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user1")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build(),
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("direct*"))
-                                        .setOperations(Arrays.asList(Operation.view))
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("direct*"))
+                                        .withOperations(Arrays.asList(Operation.view))
                                         .build()))
                         .build())
                 .build();
@@ -78,27 +81,27 @@ public class UserModelTest {
 
     @Test
     public void testSerializeUserFederated() throws IOException {
-        User user = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user1")
-                        .setNamespace("ns1")
+        User user = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user1")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.federated)
-                                .setProvider("openshift")
-                                .setFederatedUserid("uuid")
-                                .setFederatedUsername("user1")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user1")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.federated)
+                                .withProvider("openshift")
+                                .withFederatedUserid("uuid")
+                                .withFederatedUsername("user1")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build(),
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("direct*"))
-                                        .setOperations(Arrays.asList(Operation.view))
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("direct*"))
+                                        .withOperations(Arrays.asList(Operation.view))
                                         .build()))
                         .build())
                 .build();
@@ -178,27 +181,27 @@ public class UserModelTest {
     }
 
     private void createAndValidate(String name, String username, boolean shouldValidate) {
-        User u1 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName(name)
-                        .setNamespace("ns1")
+        User u1 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(name)
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername(username)
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.federated)
-                                .setProvider("openshift")
-                                .setFederatedUserid("uuid")
-                                .setFederatedUsername("user1")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername(username)
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.federated)
+                                .withProvider("openshift")
+                                .withFederatedUserid("uuid")
+                                .withFederatedUsername("user1")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build(),
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("direct*"))
-                                        .setOperations(Arrays.asList(Operation.view))
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("direct*"))
+                                        .withOperations(Arrays.asList(Operation.view))
                                         .build()))
                         .build())
                 .build();

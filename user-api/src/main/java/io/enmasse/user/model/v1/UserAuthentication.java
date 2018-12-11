@@ -4,13 +4,25 @@
  */
 package io.enmasse.user.model.v1;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
 
-import static io.enmasse.user.model.v1.UserAuthenticationType.federated;
-
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAuthentication {
     private final UserAuthenticationType type;
@@ -68,44 +80,6 @@ public class UserAuthentication {
                 Objects.requireNonNull(federatedUserid, "'federatedUserid' must be set for 'federated' type");
                 Objects.requireNonNull(federatedUsername, "'federatedUsername' must be set for 'federated' type");
                 break;
-        }
-    }
-
-    public static class Builder {
-        private UserAuthenticationType type;
-        private String password;
-        private String provider;
-        private String federatedUserid;
-        private String federatedUsername;
-
-        public Builder setType(UserAuthenticationType type) {
-            this.type = type;
-            return this;
-        }
-
-        public Builder setPassword(String password) {
-            this.password = password;
-            return this;
-        }
-
-        public Builder setProvider(String provider) {
-            this.provider = provider;
-            return this;
-        }
-
-        public Builder setFederatedUserid(String federatedUserid) {
-            this.federatedUserid = federatedUserid;
-            return this;
-        }
-
-        public Builder setFederatedUsername(String federatedUsername) {
-            this.federatedUsername = federatedUsername;
-            return this;
-        }
-
-        public UserAuthentication build() {
-            Objects.requireNonNull(type);
-            return new UserAuthentication(type, password, provider, federatedUserid, federatedUsername);
         }
     }
 }

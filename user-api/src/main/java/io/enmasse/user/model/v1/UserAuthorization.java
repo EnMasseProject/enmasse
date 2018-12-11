@@ -4,15 +4,27 @@
  */
 package io.enmasse.user.model.v1;
 
+import java.util.List;
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
 
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAuthorization {
     private final List<String> addresses;
@@ -37,25 +49,6 @@ public class UserAuthorization {
         Objects.requireNonNull(operations, "'operations' field must be set");
         if (operations.contains(Operation.send) || operations.contains(Operation.view) || operations.contains(Operation.recv)) {
             Objects.requireNonNull(addresses, "'addresses' field must be set for operations '" + operations + "'");
-        }
-    }
-
-    public static class Builder {
-        private List<String> addresses;
-        private List<Operation> operations;
-
-        public Builder setAddresses(Collection<String> addresses) {
-            this.addresses = new ArrayList<>(addresses);
-            return this;
-        }
-
-        public Builder setOperations(List<Operation> operations) {
-            this.operations = operations;
-            return this;
-        }
-
-        public UserAuthorization build() {
-            return new UserAuthorization(addresses, operations);
         }
     }
 }

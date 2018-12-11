@@ -11,6 +11,10 @@
   <artifactId>address-model-lib</artifactId>
   <dependencies>
     <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>common-api-model</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-model</artifactId>
     </dependency>
