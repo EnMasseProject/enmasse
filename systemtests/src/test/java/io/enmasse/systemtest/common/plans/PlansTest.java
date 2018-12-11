@@ -249,6 +249,48 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @Test
+    void testScalePooledBrokers() throws Exception {
+        //define and create address plans
+        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.99));
+        AddressPlan xlQueuePlan = new AddressPlan("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
+        plansProvider.createAddressPlan(xlQueuePlan);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 10.0),
+                new AddressSpaceResource("router", 2.0),
+                new AddressSpaceResource("aggregate", 12.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(xlQueuePlan);
+        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(manyAddressesPlan);
+
+        //create address space plan with new plan
+        AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
+                manyAddressesPlan.getName(), AuthService.STANDARD);
+        createAddressSpace(manyAddressesSpace);
+
+        UserCredentials cred = new UserCredentials("testus", "papyrus");
+        createUser(manyAddressesSpace, cred);
+
+        ArrayList<Destination> dest = new ArrayList<>();
+        int destCount = 4;
+        int toDeleteCount = 2;
+        for (int i = 0; i < destCount; i++) {
+            dest.add(Destination.queue("xl-queue-" + i, xlQueuePlan.getName()));
+        }
+        setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
+        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 4);
+
+        assertCanConnect(manyAddressesSpace, cred, dest);
+
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
+        waitForBrokerReplicas(manyAddressesSpace, dest.get(0), 2);
+
+        assertCanConnect(manyAddressesSpace, cred, dest.subList(toDeleteCount, destCount));
+    }
+
+    @Test
     @Tag(nonPR)
     @Disabled("test disabled as per-address limit enforcement has been removed")
     void testGlobalSizeLimitations() throws Exception {

@@ -607,7 +607,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
             Exception {
-        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
     }
 
