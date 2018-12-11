@@ -29,6 +29,29 @@ public class AuthenticationService {
         return Collections.unmodifiableMap(details);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final AuthenticationService status = (AuthenticationService) o;
+        return type == status.type &&
+                Objects.equals(details, status.details);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, details);
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("{type=").append(type)
+                .append(",").append("details=").append(details)
+                .append("}")
+                .toString();
+    }
+
     public static class Builder {
         private AuthenticationServiceType type = AuthenticationServiceType.NONE;
         private Map<String, Object> details = new HashMap<>();
