@@ -5,6 +5,7 @@
 package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -24,13 +25,16 @@ import java.util.Objects;
 public class BrokeredInfraConfigSpecBroker {
     private final BrokeredInfraConfigSpecBrokerResources resources;
     private final String addressFullPolicy;
+    private final String storageClassName;
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     @JsonCreator
     public BrokeredInfraConfigSpecBroker(@JsonProperty("resources") BrokeredInfraConfigSpecBrokerResources resources,
-                                         @JsonProperty("addressFullPolicy") String addressFullPolicy) {
+                                         @JsonProperty("addressFullPolicy") String addressFullPolicy,
+                                         @JsonProperty("storageClassName") String storageClassName) {
         this.resources = resources;
         this.addressFullPolicy = addressFullPolicy;
+        this.storageClassName = storageClassName;
     }
 
     @Override
@@ -39,12 +43,13 @@ public class BrokeredInfraConfigSpecBroker {
         if (o == null || getClass() != o.getClass()) return false;
         BrokeredInfraConfigSpecBroker that = (BrokeredInfraConfigSpecBroker) o;
         return Objects.equals(resources, that.resources) &&
-                Objects.equals(addressFullPolicy, that.addressFullPolicy);
+                Objects.equals(addressFullPolicy, that.addressFullPolicy) &&
+                Objects.equals(storageClassName, that.storageClassName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy);
+        return Objects.hash(resources, addressFullPolicy, storageClassName);
     }
 
     public BrokeredInfraConfigSpecBrokerResources getResources() {
@@ -53,6 +58,10 @@ public class BrokeredInfraConfigSpecBroker {
 
     public String getAddressFullPolicy() {
         return addressFullPolicy;
+    }
+
+    public String getStorageClassName() {
+        return storageClassName;
     }
 
     @JsonAnyGetter

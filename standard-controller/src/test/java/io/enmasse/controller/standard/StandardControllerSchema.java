@@ -149,7 +149,7 @@ public class StandardControllerSchema implements SchemaProvider {
                                 new StandardInfraConfigSpecAdminResources("512Mi")),
                         new StandardInfraConfigSpecBroker(
                                 new StandardInfraConfigSpecBrokerResources("512Mi", "2Gi"),
-                                "FAIL"),
+                                "FAIL", "default"),
                         new StandardInfraConfigSpecRouter(
                                 new StandardInfraConfigSpecRouterResources("512Mi"),
                                 1,
