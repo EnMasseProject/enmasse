@@ -25,7 +25,7 @@ spec:
                   - key: node-role.enmasse.io/operator-infra
                     operator: In
                     values:
-                      - true
+                      - "true"
       containers:
       - image: ${ALERTMANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}

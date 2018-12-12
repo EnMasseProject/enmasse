@@ -216,7 +216,7 @@ data:
                     - key: node-role.enmasse.io/operator-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         serviceName: qdrouterd-headless-${INFRA_UUID}
         replicas: 1
         selector:
@@ -357,7 +357,7 @@ data:
                     - key: node-role.enmasse.io/operator-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         strategy:
           type: Recreate
@@ -751,7 +751,7 @@ data:
                     - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         selector:
           matchLabels:
@@ -851,7 +851,7 @@ data:
                     - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         selector:
           matchLabels:
@@ -942,7 +942,7 @@ data:
                     - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         selector:
           matchLabels:
@@ -1050,7 +1050,7 @@ data:
                     - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         strategy:
           type: Recreate
@@ -1221,7 +1221,7 @@ data:
                     - key: node-role.enmasse.io/operator-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         strategy:
           type: Recreate

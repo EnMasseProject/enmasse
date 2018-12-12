@@ -25,7 +25,7 @@ spec:
                   - key: node-role.enmasse.io/operator-infra
                     operator: In
                     values:
-                      - true
+                      - "true"
       containers:
       - name: kube-metrics
         image: ${KUBE_STATE_METRICS_IMAGE}

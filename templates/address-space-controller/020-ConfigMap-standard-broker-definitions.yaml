@@ -54,7 +54,7 @@ data:
                     - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         serviceName: ${NAME}
         selector:
@@ -279,7 +279,7 @@ data:
                     - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - true
+                        - "true"
         replicas: 1
         serviceName: ${NAME}
         selector:

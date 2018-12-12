@@ -26,7 +26,7 @@ spec:
                   - key: node-role.enmasse.io/operator-infra
                     operator: In
                     values:
-                      - true
+                      - "true"
       containers:
       - env:
         - name: JAVA_OPTS
