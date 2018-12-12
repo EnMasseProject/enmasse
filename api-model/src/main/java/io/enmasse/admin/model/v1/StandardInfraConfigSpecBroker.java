@@ -4,14 +4,14 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -21,34 +21,54 @@ import java.util.Objects;
 )
 @JsonPropertyOrder({"resources", "addressFullPolicy", "storageClassName", "updatePersistentVolumeClaim"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StandardInfraConfigSpecBroker {
-    private final StandardInfraConfigSpecBrokerResources resources;
-    private final String addressFullPolicy;
-    private final String storageClassName;
-    private final Boolean updatePersistentVolumeClaim;
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
+    private StandardInfraConfigSpecBrokerResources resources;
+    private String addressFullPolicy;
+    private String storageClassName;
+    private Boolean updatePersistentVolumeClaim;
 
-    @JsonCreator
-    public StandardInfraConfigSpecBroker(@JsonProperty("resources") StandardInfraConfigSpecBrokerResources resources,
-                                         @JsonProperty("addressFullPolicy") String addressFullPolicy,
-                                         @JsonProperty("storageClassName") String storageClassName,
-                                         @JsonProperty("updatePersistentVolumeClaim") Boolean updatePersistentVolumeClaim) {
+    public StandardInfraConfigSpecBroker() {
+    }
+
+    public StandardInfraConfigSpecBroker(final StandardInfraConfigSpecBrokerResources resources) {
+        setResources(resources);
+    }
+
+    public void setResources(StandardInfraConfigSpecBrokerResources resources) {
         this.resources = resources;
-        this.addressFullPolicy = addressFullPolicy;
-        this.storageClassName = storageClassName;
-        this.updatePersistentVolumeClaim = updatePersistentVolumeClaim;
     }
 
     public StandardInfraConfigSpecBrokerResources getResources() {
         return resources;
     }
 
+    public void setAddressFullPolicy(String addressFullPolicy) {
+        this.addressFullPolicy = addressFullPolicy;
+    }
+
     public String getAddressFullPolicy() {
         return addressFullPolicy;
     }
 
+    public void setStorageClassName(String storageClassName) {
+        this.storageClassName = storageClassName;
+    }
+
     public String getStorageClassName() {
         return storageClassName;
+    }
+
+    public void setUpdatePersistentVolumeClaim(Boolean updatePersistentVolumeClaim) {
+        this.updatePersistentVolumeClaim = updatePersistentVolumeClaim;
+    }
+
+    /*
+     * NOTE: This is required due to a bug in the builder generator. For a boolean object
+     * type it requires an "is" type of the getter. Luckily we can hide this behind the "default"
+     * visibility. Also the "is" variant must appear before the "get" variant.
+     */
+    Boolean isUpdatePersistentVolumeClaim() {
+        return updatePersistentVolumeClaim;
     }
 
     public Boolean getUpdatePersistentVolumeClaim() {
@@ -71,13 +91,4 @@ public class StandardInfraConfigSpecBroker {
         return Objects.hash(resources, addressFullPolicy, storageClassName, updatePersistentVolumeClaim);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }

@@ -7,11 +7,8 @@ package io.enmasse.user.model.v1;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import io.enmasse.common.api.model.AbstractHasMetadata;
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
@@ -28,9 +25,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@DefaultCustomResource
 public class User extends AbstractHasMetadata<User> {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");

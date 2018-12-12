@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.common.api.model;
+package io.enmasse.common.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,4 +44,9 @@ public abstract class AbstractList<T extends HasMetadata> extends AbstractResour
         return this.metadata;
     }
 
+    @Override
+    public String toString() {
+        return "{metadata=" + this.metadata + "," +
+                "items=" + this.items + "}";
+    }
 }

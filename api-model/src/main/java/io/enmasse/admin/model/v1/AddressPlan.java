@@ -2,95 +2,72 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.fabric8.kubernetes.api.model.Doneable;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.Inline;
-
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressPlan implements HasMetadata {
+@DefaultCustomResource
+public class AddressPlan extends AbstractHasMetadata<AddressPlan> {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String ADDRESS_PLAN = "AddressPlan";
-    @JsonProperty("apiVersion")
-    private String apiVersion = "admin.enmasse.io/v1alpha1";
+    public static final String KIND = "AddressPlan";
+    public static final String VERSION = "v1alpha1";
+    public static final String GROUP = "admin.enmasse.io";
+    public static final String API_VERSION = GROUP + "/" + VERSION;
 
-    @JsonProperty("kind")
-    private String kind = ADDRESS_PLAN;
+    private String shortDescription;
+    private String uuid;
+    private String addressType;
 
-    private ObjectMeta metadata;
-
-    private final String shortDescription;
-    private final String uuid;
-    private final String addressType;
-
-    private final List<ResourceRequest> requiredResources;
+    private List<ResourceRequest> requiredResources = new LinkedList<>();
 
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
-    @JsonCreator
-    public AddressPlan(@JsonProperty("shortDescription") String shortDescription,
-                       @JsonProperty("uuid") String uuid,
-                       @JsonProperty("addressType") String addressType,
-                       @JsonProperty("requiredResources") List<ResourceRequest> requiredResources) {
-        this.shortDescription = shortDescription;
-        this.uuid = uuid;
-        this.addressType = addressType;
-        this.requiredResources = requiredResources;
+    public AddressPlan() {
+        super(KIND, API_VERSION);
     }
 
+    public void setRequiredResources(List<ResourceRequest> requiredResources) {
+        this.requiredResources = requiredResources;
+    }
+    
     public List<ResourceRequest> getRequiredResources() {
         return requiredResources;
     }
 
-    public ObjectMeta getMetadata() {
-        return metadata;
-    }
-
-    @Override
-    public void setMetadata(ObjectMeta metadata) {
-        this.metadata = metadata;
-    }
-
-    @Override
-    public String getKind() {
-        return kind;
-    }
-
-    @Override
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    @Override
-    public void setApiVersion(String s) {
-        this.apiVersion = s;
+    public void setAddressType(String addressType) {
+        this.addressType = addressType;
     }
 
     public String getAddressType() {
         return addressType;
+    }
+
+    public void setShortDescription(String shortDescription) {
+        this.shortDescription = shortDescription;
     }
 
     public String getShortDescription() {
@@ -107,24 +84,28 @@ public class AddressPlan implements HasMetadata {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AddressPlan that = (AddressPlan) o;
-        return Objects.equals(metadata, that.metadata) &&
+        return Objects.equals(getMetadata(), that.getMetadata()) &&
                 Objects.equals(uuid, that.uuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(metadata, uuid);
+        return Objects.hash(getMetadata(), uuid);
     }
 
     @Override
     public String toString() {
         return "AddressPlan{" +
-                "metadata='" + metadata+ '\'' +
+                "metadata='" + getMetadata() + '\'' +
                 ", uuid='" + uuid + '\'' +
                 ", requiredResources=" + requiredResources +
                 '}';
     }
 
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+    
     public String getUuid() {
         return uuid;
     }
@@ -132,6 +113,10 @@ public class AddressPlan implements HasMetadata {
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
+    }
+
+    public void setAdditionalProperties(Map<String, Object> additionalProperties) {
+        this.additionalProperties = additionalProperties;
     }
 
     @JsonAnySetter

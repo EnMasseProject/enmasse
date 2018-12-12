@@ -4,46 +4,41 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.fabric8.kubernetes.api.model.Doneable;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {
+                @BuildableReference(AbstractInfraConfig.class),
+                @BuildableReference(AbstractHasMetadata.class)
+        },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class BrokeredInfraConfig implements InfraConfig {
+@DefaultCustomResource
+public class BrokeredInfraConfig extends AbstractInfraConfig<BrokeredInfraConfig> {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String BROKERED_INFRA_CONFIG = "BrokeredInfraConfig";
-    private String apiVersion = "admin.enmasse.io/v1alpha1";
-    private String kind = BROKERED_INFRA_CONFIG;
-    private ObjectMeta metadata;
-    private final BrokeredInfraConfigSpec spec;
+    public static final String KIND = "BrokeredInfraConfig";
+    public static final String VERSION = "v1alpha1";
+    public static final String GROUP = "admin.enmasse.io";
+    public static final String API_VERSION = GROUP + "/" + VERSION;
 
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+    private BrokeredInfraConfigSpec spec;
 
-    @JsonCreator
-    public BrokeredInfraConfig(@JsonProperty("metadata") ObjectMeta metadata,
-                               @JsonProperty("spec") BrokeredInfraConfigSpec spec) {
-        this.metadata = metadata;
-        this.spec = spec;
+    public BrokeredInfraConfig() {
+        super(KIND, API_VERSION);
     }
 
     @Override
@@ -51,61 +46,28 @@ public class BrokeredInfraConfig implements InfraConfig {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BrokeredInfraConfig that = (BrokeredInfraConfig) o;
-        return Objects.equals(metadata, that.metadata) &&
+        return Objects.equals(getMetadata(), that.getMetadata()) &&
                 Objects.equals(spec, that.spec);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(metadata, spec);
+        return Objects.hash(getMetadata(), spec);
     }
 
     @Override
     public String toString() {
         return "BrokeredInfraConfig{" +
-                "metadata=" + metadata +
+                "metadata=" + getMetadata() +
                 ", spec=" + spec + "}";
     }
 
-    public ObjectMeta getMetadata() {
-        return metadata;
+    public void setSpec(BrokeredInfraConfigSpec spec) {
+        this.spec = spec;
     }
 
     public BrokeredInfraConfigSpec getSpec() {
         return spec;
-    }
-
-    public void setMetadata(ObjectMeta metadata) {
-        this.metadata = metadata;
-    }
-
-    @Override
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    @Override
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
-    @Override
-    public String getKind() {
-        return kind;
-    }
-
-    public void setKind(String kind) {
-        this.kind = kind;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
     @Override
@@ -125,4 +87,5 @@ public class BrokeredInfraConfig implements InfraConfig {
     public boolean getUpdatePersistentVolumeClaim() {
         return spec.getBroker().getUpdatePersistentVolumeClaim() != null ? spec.getBroker().getUpdatePersistentVolumeClaim() : false;
     }
+
 }

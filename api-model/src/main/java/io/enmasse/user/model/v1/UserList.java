@@ -4,15 +4,10 @@
  */
 package io.enmasse.user.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.enmasse.common.model.AbstractList;
+import io.enmasse.common.model.DefaultCustomResource;
 
-import io.enmasse.common.api.model.AbstractList;
-
-@JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@DefaultCustomResource
 public class UserList extends AbstractList<User> {
 
     private static final long serialVersionUID = 1L;

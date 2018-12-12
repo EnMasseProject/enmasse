@@ -4,7 +4,7 @@
  */
 package io.enmasse.user.model.v1;
 
-import io.enmasse.common.api.model.CustomResources;
+import io.enmasse.common.model.CustomResources;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 

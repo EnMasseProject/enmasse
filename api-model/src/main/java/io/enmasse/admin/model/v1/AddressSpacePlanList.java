@@ -5,65 +5,22 @@
 package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.fabric8.kubernetes.api.model.*;
 
-import java.util.Collections;
-import java.util.List;
+import io.enmasse.common.model.AbstractList;
+import io.enmasse.common.model.DefaultCustomResource;
 
-@JsonDeserialize(
-    using = JsonDeserializer.None.class
-)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressSpacePlanList implements KubernetesResource<AddressSpacePlan>, KubernetesResourceList<AddressSpacePlan> {
+@DefaultCustomResource
+public class AddressSpacePlanList extends AbstractList<AddressSpacePlan> {
+
     private static final long serialVersionUID = 1L;
 
-    private String apiVersion;
-    private String kind;
-    private ListMeta metadata;
-    private final List<AddressSpacePlan> items;
+    public static final String KIND = "AddressSpacePlanList";
+    public static final String VERSION = "v1alpha1";
+    public static final String GROUP = "admin.enmasse.io";
+    public static final String API_VERSION = GROUP + "/" + VERSION;
 
     @JsonCreator
-    public AddressSpacePlanList(@JsonProperty("items") List<AddressSpacePlan> items) {
-        this.items = items;
-    }
-
-    @Override
-    public ListMeta getMetadata() {
-        return metadata;
-    }
-
-    @Override
-    public List<AddressSpacePlan> getItems() {
-        return Collections.unmodifiableList(items);
-    }
-
-    public void setMetadata(ListMeta metadata) {
-        this.metadata = metadata;
-    }
-
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
-    public String getKind() {
-        return kind;
-    }
-
-    public void setKind(String kind) {
-        this.kind = kind;
-    }
-
-    @Override
-    public String toString() {
-        return "{metadata=" + metadata + "," +
-                "items=" + items + "}";
+    public AddressSpacePlanList() {
+        super(KIND, API_VERSION);
     }
 }

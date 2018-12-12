@@ -4,15 +4,14 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @JsonDeserialize(
         using = JsonDeserializer.None.class
@@ -25,34 +24,33 @@ import java.util.Map;
 )
 @JsonPropertyOrder({"name", "max"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResourceAllowance {
-    private final String name;
-    private final double max;
+public class ResourceAllowance extends AbstractWithAdditionalProperties {
 
-    @JsonCreator
-    public ResourceAllowance(@JsonProperty("name") String name,
-                             @JsonProperty("max") double max) {
-        this.name = name;
-        this.max = max;
+    private String name;
+    private double max;
+
+    public ResourceAllowance() {
     }
 
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+    public ResourceAllowance(final String name, final double max) {
+        setName(name);
+        setMax(max);
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getName() {
         return name;
+    }
+
+    public void setMax(double max) {
+        this.max = max;
     }
 
     public double getMax() {
         return max;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }

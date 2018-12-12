@@ -3,11 +3,9 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.common.api.model;
+package io.enmasse.common.model;
 
 import io.fabric8.kubernetes.api.model.Doneable;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
 
@@ -21,24 +19,27 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-public abstract class AbstractHasMetadata<T> extends AbstractResource<T> implements HasMetadata {
+public abstract class AbstractResource<T> {
 
-    private static final long serialVersionUID = 1L;
+    private final String kind;
 
-    private ObjectMeta metadata;
+    private String apiVersion;
 
-    protected AbstractHasMetadata(final String kind, String apiVersion) {
-        super(kind, apiVersion);
+    protected AbstractResource(final String kind, final String apiVersion) {
+        this.kind = kind;
+        this.apiVersion = apiVersion;
     }
 
-    @Override
-    public ObjectMeta getMetadata() {
-        return this.metadata;
+    public String getKind() {
+        return this.kind;
     }
 
-    @Override
-    public void setMetadata(final ObjectMeta metadata) {
-        this.metadata = metadata;
+    public String getApiVersion() {
+        return this.apiVersion;
+    }
+
+    public void setApiVersion(final String apiVersion) {
+        this.apiVersion = apiVersion;
     }
 
 }

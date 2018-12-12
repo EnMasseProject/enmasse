@@ -4,14 +4,14 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -21,13 +21,15 @@ import java.util.Objects;
 )
 @JsonPropertyOrder({"memory"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class BrokeredInfraConfigSpecAdminResources {
-    private final String memory;
+public class BrokeredInfraConfigSpecAdminResources extends AbstractWithAdditionalProperties {
+    private String memory;
 
-    public BrokeredInfraConfigSpecAdminResources(@JsonProperty("memory") String memory) {
-        this.memory = memory;
+    public BrokeredInfraConfigSpecAdminResources() {
     }
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+
+    public BrokeredInfraConfigSpecAdminResources(final String memory) {
+        setMemory(memory);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -42,17 +44,12 @@ public class BrokeredInfraConfigSpecAdminResources {
         return Objects.hash(memory);
     }
 
+    public void setMemory(String memory) {
+        this.memory = memory;
+    }
+
     public String getMemory() {
         return memory;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }

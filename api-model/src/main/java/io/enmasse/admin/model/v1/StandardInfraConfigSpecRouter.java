@@ -4,14 +4,14 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -21,23 +21,30 @@ import java.util.Objects;
 )
 @JsonPropertyOrder({"resources", "linkCapacity"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StandardInfraConfigSpecRouter {
-    private final StandardInfraConfigSpecRouterResources resources;
-    private final int minReplicas;
-    private final int linkCapacity;
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
+    private StandardInfraConfigSpecRouterResources resources;
+    private int minReplicas;
+    private int linkCapacity;
 
-    @JsonCreator
-    public StandardInfraConfigSpecRouter(@JsonProperty("resources") StandardInfraConfigSpecRouterResources resources,
-                                         @JsonProperty("minReplicas") int minReplicas,
-                                         @JsonProperty("linkCapacity") int linkCapacity) {
+    public StandardInfraConfigSpecRouter() {
+    }
+
+    public StandardInfraConfigSpecRouter(final StandardInfraConfigSpecRouterResources resources, final int minReplicas, final int linkCapacity) {
+        setResources(resources);
+        setMinReplicas(minReplicas);
+        setLinkCapacity(linkCapacity);
+    }
+
+    public void setResources(StandardInfraConfigSpecRouterResources resources) {
         this.resources = resources;
-        this.minReplicas = minReplicas;
-        this.linkCapacity = linkCapacity;
     }
 
     public StandardInfraConfigSpecRouterResources getResources() {
         return resources;
+    }
+
+    public void setLinkCapacity(int linkCapacity) {
+        this.linkCapacity = linkCapacity;
     }
 
     public int getLinkCapacity() {
@@ -58,14 +65,8 @@ public class StandardInfraConfigSpecRouter {
         return Objects.hash(resources, linkCapacity);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
+    public void setMinReplicas(int minReplicas) {
+        this.minReplicas = minReplicas;
     }
 
     public int getMinReplicas() {

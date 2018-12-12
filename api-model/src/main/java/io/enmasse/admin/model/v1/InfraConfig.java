@@ -6,7 +6,7 @@ package io.enmasse.admin.model.v1;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 
-public interface InfraConfig extends HasMetadata {
+public interface InfraConfig extends HasMetadata, WithAdditionalProperties {
     String getVersion();
     NetworkPolicy getNetworkPolicy();
     boolean getUpdatePersistentVolumeClaim();

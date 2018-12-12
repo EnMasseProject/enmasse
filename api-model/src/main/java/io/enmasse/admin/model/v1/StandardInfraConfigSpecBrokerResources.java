@@ -4,14 +4,14 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -21,20 +21,28 @@ import java.util.Objects;
 )
 @JsonPropertyOrder({"memory", "storage"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StandardInfraConfigSpecBrokerResources {
-    private final String memory;
-    private final String storage;
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+public class StandardInfraConfigSpecBrokerResources extends AbstractWithAdditionalProperties {
+    private String memory;
+    private String storage;
 
-    @JsonCreator
-    public StandardInfraConfigSpecBrokerResources(@JsonProperty("memory") String memory,
-                                                  @JsonProperty("storage") String storage) {
+    public StandardInfraConfigSpecBrokerResources() {
+    }
+
+    public StandardInfraConfigSpecBrokerResources(final String memory, final String storage ) {
+        setMemory(memory);
+        setStorage(storage);
+    }
+
+    public void setMemory(String memory) {
         this.memory = memory;
-        this.storage = storage;
     }
 
     public String getMemory() {
         return memory;
+    }
+
+    public void setStorage(String storage) {
+        this.storage = storage;
     }
 
     public String getStorage() {
@@ -55,13 +63,4 @@ public class StandardInfraConfigSpecBrokerResources {
         return Objects.hash(memory, storage);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }

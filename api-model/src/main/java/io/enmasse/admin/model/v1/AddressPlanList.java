@@ -4,62 +4,21 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.fabric8.kubernetes.api.model.KubernetesResource;
-import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.ListMeta;
+import io.enmasse.common.model.AbstractList;
+import io.enmasse.common.model.DefaultCustomResource;
 
-import java.util.Collections;
-import java.util.List;
+@DefaultCustomResource
+public class AddressPlanList extends AbstractList<AddressPlan> {
 
-@JsonDeserialize(
-    using = JsonDeserializer.None.class
-)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressPlanList implements KubernetesResource<AddressPlan>, KubernetesResourceList<AddressPlan> {
     private static final long serialVersionUID = 1L;
 
-    private String apiVersion;
-    private String kind;
-    private ListMeta metadata;
-    private final List<AddressPlan> items;
+    public static final String KIND = "AddressPlanList";
+    public static final String VERSION = "v1alpha1";
+    public static final String GROUP = "admin.enmasse.io";
+    public static final String API_VERSION = GROUP + "/" + VERSION;
 
-    @JsonCreator
-    public AddressPlanList(@JsonProperty("items") List<AddressPlan> items) {
-        this.items = items;
+    public AddressPlanList() {
+        super(KIND, API_VERSION);
     }
 
-    @Override
-    public ListMeta getMetadata() {
-        return metadata;
-    }
-
-    @Override
-    public List<AddressPlan> getItems() {
-        return Collections.unmodifiableList(items);
-    }
-
-    public void setMetadata(ListMeta metadata) {
-        this.metadata = metadata;
-    }
-
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
-    public String getKind() {
-        return kind;
-    }
-
-    public void setKind(String kind) {
-        this.kind = kind;
-    }
 }

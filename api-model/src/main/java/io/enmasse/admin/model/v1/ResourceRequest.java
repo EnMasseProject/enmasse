@@ -4,13 +4,12 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Buildable(
         editableEnabled = false,
@@ -20,33 +19,33 @@ import java.util.Map;
 )
 @JsonPropertyOrder({"name", "credit"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResourceRequest {
-    private final String name;
-    private final double credit;
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+public class ResourceRequest extends AbstractWithAdditionalProperties {
 
-    @JsonCreator
-    public ResourceRequest(@JsonProperty("name") String name,
-                           @JsonProperty("credit") double credit) {
+    private String name;
+    private double credit;
+
+    public ResourceRequest() {
+    }
+
+    public ResourceRequest(final String name, final double credit) {
+        setName(name);
+        setCredit(credit);
+    }
+
+    public void setName(String name) {
         this.name = name;
-        this.credit = credit;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setCredit(double credit) {
+        this.credit = credit;
+    }
+
     public double getCredit() {
         return credit;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }

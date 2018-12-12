@@ -4,55 +4,54 @@
  */
 package io.enmasse.admin.model.v1;
 
+import io.enmasse.common.model.CustomResources;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBuilder;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class AdminCrd {
 
+    private static final CustomResourceDefinition ADDRESS_PLAN_CRD;
+    private static final CustomResourceDefinition ADDRESS_SPACE_PLAN_CRD;
+    private static final CustomResourceDefinition BROKERED_INFRA_CONFIG_CRD;
+    private static final CustomResourceDefinition STANDARD_INFRA_CONFIG_CRD;
+
+    static {
+        ADDRESS_PLAN_CRD = CustomResources.createCustomResource(AddressPlan.GROUP, AddressPlan.VERSION, AddressPlan.KIND);
+        ADDRESS_SPACE_PLAN_CRD = CustomResources.createCustomResource(AddressSpacePlan.GROUP, AddressSpacePlan.VERSION, AddressSpacePlan.KIND);
+        BROKERED_INFRA_CONFIG_CRD = CustomResources.createCustomResource(BrokeredInfraConfig.GROUP, BrokeredInfraConfig.VERSION, BrokeredInfraConfig.KIND);
+        STANDARD_INFRA_CONFIG_CRD = CustomResources.createCustomResource(StandardInfraConfig.GROUP, StandardInfraConfig.VERSION, StandardInfraConfig.KIND);
+    }
+
     public static void registerCustomCrds() {
-        KubernetesDeserializer.registerCustomKind("admin.enmasse.io/v1alpha1", AddressSpacePlan.ADDRESS_SPACE_PLAN, AddressSpacePlan.class);
-        KubernetesDeserializer.registerCustomKind("admin.enmasse.io/v1alpha1", AddressPlan.ADDRESS_PLAN, AddressPlan.class);
-        KubernetesDeserializer.registerCustomKind("admin.enmasse.io/v1alpha1", StandardInfraConfig.STANDARD_INFRA_CONFIG, StandardInfraConfig.class);
-        KubernetesDeserializer.registerCustomKind("admin.enmasse.io/v1alpha1", BrokeredInfraConfig.BROKERED_INFRA_CONFIG, BrokeredInfraConfig.class);
+
+        KubernetesDeserializer.registerCustomKind(AddressPlan.API_VERSION, AddressPlan.KIND, AddressPlan.class);
+        KubernetesDeserializer.registerCustomKind(AddressPlanList.API_VERSION, AddressPlanList.KIND, AddressPlanList.class);
+
+        KubernetesDeserializer.registerCustomKind(AddressSpacePlan.API_VERSION, AddressSpacePlan.KIND, AddressSpacePlan.class);
+        KubernetesDeserializer.registerCustomKind(AddressSpacePlanList.API_VERSION, AddressSpacePlanList.KIND, AddressSpacePlanList.class);
+
+        KubernetesDeserializer.registerCustomKind(BrokeredInfraConfig.API_VERSION, BrokeredInfraConfig.KIND, BrokeredInfraConfig.class);
+        KubernetesDeserializer.registerCustomKind(BrokeredInfraConfigList.API_VERSION, BrokeredInfraConfigList.KIND, BrokeredInfraConfigList.class);
+
+        KubernetesDeserializer.registerCustomKind(StandardInfraConfig.API_VERSION, StandardInfraConfig.KIND, StandardInfraConfig.class);
+        KubernetesDeserializer.registerCustomKind(StandardInfraConfigList.API_VERSION, StandardInfraConfigList.KIND, StandardInfraConfigList.class);
+
     }
 
-    public static CustomResourceDefinition addressspaceplans() {
-        return createCrd(AddressSpacePlan.ADDRESS_SPACE_PLAN);
+    public static CustomResourceDefinition addressPlans() {
+        return ADDRESS_PLAN_CRD;
     }
 
-    public static CustomResourceDefinition addressplans() {
-        return createCrd(AddressPlan.ADDRESS_PLAN);
+    public static CustomResourceDefinition addressSpacePlans() {
+        return ADDRESS_SPACE_PLAN_CRD;
     }
 
-    public static CustomResourceDefinition brokeredinfraconfigs() {
-        return createCrd(BrokeredInfraConfig.BROKERED_INFRA_CONFIG);
+    public static CustomResourceDefinition brokeredInfraConfigs() {
+        return BROKERED_INFRA_CONFIG_CRD;
     }
 
-    public static CustomResourceDefinition standardinfraconfigs() {
-        return createCrd(StandardInfraConfig.STANDARD_INFRA_CONFIG);
+    public static CustomResourceDefinition standardInfraConfigs() {
+        return STANDARD_INFRA_CONFIG_CRD;
     }
 
-    private static CustomResourceDefinition createCrd(String kind) {
-        String singular = kind.toLowerCase();
-        String listKind = kind + "List";
-        String plural = singular + "s";
-        return new CustomResourceDefinitionBuilder()
-                .editOrNewMetadata()
-                .withName(plural + ".admin.enmassse.io")
-                .addToLabels("app", "enmasse")
-                .endMetadata()
-                .editOrNewSpec()
-                .withGroup("admin.enmasse.io")
-                .withVersion("v1alpha1")
-                .withScope("Namespaced")
-                .editOrNewNames()
-                .withKind(kind)
-                .withListKind(listKind)
-                .withPlural(plural)
-                .withSingular(singular)
-                .endNames()
-                .endSpec()
-                .build();
-    }
 }

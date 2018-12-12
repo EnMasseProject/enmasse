@@ -4,14 +4,14 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.*;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -21,12 +21,18 @@ import java.util.Objects;
 )
 @JsonPropertyOrder({"resources"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StandardInfraConfigSpecAdmin {
-    private final StandardInfraConfigSpecAdminResources resources;
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
+public class StandardInfraConfigSpecAdmin extends AbstractWithAdditionalProperties {
 
-    @JsonCreator
-    public StandardInfraConfigSpecAdmin(@JsonProperty("resources") StandardInfraConfigSpecAdminResources resources) {
+    private StandardInfraConfigSpecAdminResources resources;
+
+    public StandardInfraConfigSpecAdmin() {
+    }
+
+    public StandardInfraConfigSpecAdmin(StandardInfraConfigSpecAdminResources resources) {
+        setResources(resources);
+    }
+
+    public void setResources(StandardInfraConfigSpecAdminResources resources) {
         this.resources = resources;
     }
 
@@ -47,13 +53,4 @@ public class StandardInfraConfigSpecAdmin {
         return Objects.hash(resources);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 }
