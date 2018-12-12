@@ -11,8 +11,7 @@
   <dependencies>
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>address-model-lib</artifactId>
-      <scope>compile</scope>
+      <artifactId>api-model</artifactId>
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>

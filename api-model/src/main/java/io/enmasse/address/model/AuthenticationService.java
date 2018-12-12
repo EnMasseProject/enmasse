@@ -43,15 +43,6 @@ public class AuthenticationService {
         return Objects.hash(type, details);
     }
 
-    @Override
-    public String toString() {
-        return new StringBuilder()
-                .append("{type=").append(type)
-                .append(",").append("details=").append(details)
-                .append("}")
-                .toString();
-    }
-
     public static class Builder {
         private AuthenticationServiceType type = AuthenticationServiceType.NONE;
         private Map<String, Object> details = new HashMap<>();
