@@ -213,10 +213,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/operator-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         serviceName: qdrouterd-headless-${INFRA_UUID}
         replicas: 1
         selector:
@@ -354,10 +354,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/operator-infra
                       operator: In
                       values:
-                        - operator-infra
+                        - true
         replicas: 1
         strategy:
           type: Recreate
@@ -748,10 +748,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         replicas: 1
         selector:
           matchLabels:
@@ -848,10 +848,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         replicas: 1
         selector:
           matchLabels:
@@ -939,10 +939,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         replicas: 1
         selector:
           matchLabels:
@@ -1047,10 +1047,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         replicas: 1
         strategy:
           type: Recreate
@@ -1218,10 +1218,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/operator-infra
                       operator: In
                       values:
-                        - operator-infra
+                        - true
         replicas: 1
         strategy:
           type: Recreate

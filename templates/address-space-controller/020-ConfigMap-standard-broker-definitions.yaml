@@ -51,10 +51,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         replicas: 1
         serviceName: ${NAME}
         selector:
@@ -276,10 +276,10 @@ data:
               - weight: 1
                 preference:
                   matchExpressions:
-                    - key: enmasse-role
+                    - key: node-role.enmasse.io/messaging-infra
                       operator: In
                       values:
-                        - messaging-infra
+                        - true
         replicas: 1
         serviceName: ${NAME}
         selector:
