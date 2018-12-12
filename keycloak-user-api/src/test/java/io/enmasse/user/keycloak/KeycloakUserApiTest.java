@@ -4,18 +4,30 @@
  */
 package io.enmasse.user.keycloak;
 
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthenticationType;
+import static io.enmasse.user.keycloak.Helpers.assertSorted;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorization;
 
 public class KeycloakUserApiTest {
     @Test
@@ -52,4 +64,257 @@ public class KeycloakUserApiTest {
 
         assertEquals(2, user.getSpec().getAuthorization().size());
     }
+
+    private static UserRepresentation mockUser(String name, String namespace, String addressSpaceName) {
+        final UserRepresentation userRep = new UserRepresentation();
+
+        userRep.setUsername(name);
+
+        final Map<String, List<String>> attributes = new HashMap<>();
+        attributes.put("resourceName", Arrays.asList(addressSpaceName + "." + name));
+        attributes.put("resourceNamespace", Arrays.asList(namespace));
+        attributes.put("authenticationType", Arrays.asList(UserAuthenticationType.password.name()));
+        attributes.put("creationTimestamp", Arrays.asList("12345"));
+        userRep.setAttributes(attributes);
+
+        return userRep;
+    }
+
+    /**
+     * Test un-escaping group names.
+     */
+    @Test
+    public void testGroupConversionWithEscapes1() {
+
+        final User user = runBuildUser(
+                mockUser("user1", "ns1", "as1"),
+                simpleGroups("recv_foo%2Fbar", "send_foo%2Fbar"));
+
+        final List<UserAuthorization> auth = new ArrayList<>();
+        auth.add(new UserAuthorization(Arrays.asList("foo/bar"), Arrays.asList(Operation.recv, Operation.send)));
+
+        assertAuthorizations(auth, user.getSpec().getAuthorization());
+    }
+
+    /**
+     * A more complex example, un-escaping group names.
+     */
+    @Test
+    public void testGroupConversionWithEscapes2() {
+
+        final User user = runBuildUser(
+                mockUser("user1", "ns1", "as1"),
+
+                simpleGroups(
+                        "recv_foo%2Fbar%2F%23",
+                        "send_foo%2Fbar%2F%23",
+
+                        // swap order of send+recv
+
+                        "send_foo%2Fbaz%2F%23",
+                        "recv_foo%2Fbaz%2F%23",
+
+                        // additional entry for the same address, but with a single permission only
+
+                        "view_foo%2Fbar%2F%23"));
+
+        // build expected result
+
+        final List<UserAuthorization> auth = new ArrayList<>();
+        auth.add(new UserAuthorization(
+                asList("foo/bar/#"),
+                asList(Operation.recv, Operation.send, Operation.view)));
+        auth.add(new UserAuthorization(
+                asList("foo/baz/#"),
+                asList(Operation.recv, Operation.send)));
+
+        assertAuthorizations(auth, user.getSpec().getAuthorization());
+    }
+
+    /**
+     * Test conversion back to API object, having only one "manage" group. <br>
+     * This should convert to one single manage operation, for an empty address
+     * list. Normally the user would have two manage groups. See
+     * {@link #testGroupConversionWithManage2()}.
+     */
+    @Test
+    public void testGroupConversionWithManage1() {
+
+        final User user = runBuildUser(
+                mockUser("user1", "ns1", "as1"),
+                simpleGroups("manage"));
+
+        final List<UserAuthorization> auth = new ArrayList<>();
+        auth.add(new UserAuthorization(Arrays.asList(), Arrays.asList(Operation.manage)));
+
+        assertAuthorizations(auth, user.getSpec().getAuthorization());
+    }
+
+    /**
+     * Test conversion back to API object, having only one "manage" group, but also
+     * in the wildcard form. <br>
+     * This should condense to a single "manage" operation, with an empty address
+     * list.
+     */
+    @Test
+    public void testGroupConversionWithManage2() {
+
+        final User user = runBuildUser(
+                mockUser("user1", "ns1", "as1"),
+                simpleGroups("manage", "manage_#"));
+
+        final List<UserAuthorization> auth = new ArrayList<>();
+        auth.add(new UserAuthorization(Arrays.asList(), Arrays.asList(Operation.manage)));
+
+        assertAuthorizations(auth, user.getSpec().getAuthorization());
+    }
+
+    /**
+     * Test a global mapping. <br/>
+     * A global mapping that is not {@code manage}, will be discarded.
+     */
+    @Test
+    public void testGroupConversionWithGlobal() {
+
+        final User user = runBuildUser(
+                mockUser("user1", "ns1", "as1"),
+                simpleGroups("recv"));
+
+        assertAuthorizations(emptyList(), user.getSpec().getAuthorization());
+    }
+
+    private static GroupRepresentation simpleGroup(String id, String name) {
+        final GroupRepresentation group = new GroupRepresentation();
+        group.setId(id);
+        group.setName(name);
+        return group;
+    }
+
+    private static GroupRepresentation[] simpleGroups(String... names) {
+
+        final GroupRepresentation[] result = new GroupRepresentation[names.length];
+
+        int idx = 0;
+        for (int i = 0; i < names.length; i++) {
+            result[i] = simpleGroup("id" + idx++, names[i]);
+        }
+
+        return result;
+    }
+
+    private static User runBuildUser(final UserRepresentation userRep,
+            final GroupRepresentation... groupRepresentations) {
+        final List<GroupRepresentation> groups = Arrays.asList(groupRepresentations);
+        userRep.setGroups(groups.stream().map(GroupRepresentation::getId).collect(toList()));
+
+        return KeycloakUserApi.buildUser(userRep, groups);
+    }
+
+    public void assertAuthorizations(final List<UserAuthorization> expected, final List<UserAuthorization> actual) {
+
+        assertEquals(expected.size(), actual.size());
+
+        // ensure that we have mutable lists
+
+        final List<UserAuthorization> expectedCopy = new ArrayList<>(expected);
+        final List<UserAuthorization> actualCopy = new ArrayList<>(actual);
+
+        // put them in a reproducible order
+
+        expectedCopy.sort(Helpers::compareUserAuthorization);
+        actualCopy.sort(Helpers::compareUserAuthorization);
+
+        // and compare them
+
+        for (int i = 0; i < expected.size(); i++) {
+            final UserAuthorization expectedAuth = expectedCopy.get(i);
+            final UserAuthorization actualAuth = actualCopy.get(i);
+
+            assertSorted(expectedAuth.getAddresses(), actualAuth.getAddresses());
+        }
+    }
+
+    @Test
+    public void testDesiredGroupsTransformationEmpty() {
+
+        final List<UserAuthorization> auth = Collections.emptyList();
+        final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testDesiredGroupsTransformation1() {
+
+        final List<UserAuthorization> auth = Arrays.asList(
+                new UserAuthorization(Arrays.asList("foo"), Arrays.asList(Operation.recv)));
+
+        final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
+
+        assertGroups(result, "recv_foo");
+    }
+
+    @Test
+    public void testDesiredGroupsTransformationManage() {
+
+        final List<UserAuthorization> auth = Arrays.asList(
+                new UserAuthorization(Collections.emptyList(), Arrays.asList(Operation.manage)));
+
+        final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
+
+        assertGroups(result, "manage", "manage_#");
+    }
+
+    @Test
+    public void testDesiredGroupsTransformation2() {
+
+        final List<UserAuthorization> auth = Arrays.asList(
+                new UserAuthorization(Arrays.asList("foo/bar", "bar/baz/#"),
+                        Arrays.asList(Operation.recv, Operation.send)),
+                new UserAuthorization(Arrays.asList("fuu/*"), Arrays.asList(Operation.view)),
+                new UserAuthorization(Arrays.asList("faa/#"), Arrays.asList(Operation.manage)));
+
+        final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
+
+        assertGroups(result,
+                "recv_foo%2Fbar", "send_foo%2Fbar", "recv_bar%2Fbaz%2F%23", "send_bar%2Fbaz%2F%23",
+                "view_fuu%2F*", "view_fuu%2F#",
+                "manage_faa%2F%23");
+    }
+
+    @Test
+    public void testDesiredGroupsTransformationEmptyAddress1() {
+
+        final List<UserAuthorization> auth = Arrays.asList(
+                new UserAuthorization(Collections.emptyList(), Arrays.asList(Operation.recv)));
+
+        final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
+
+        assertGroups(result, "recv");
+    }
+
+    @Test
+    public void testDesiredGroupsTransformationEmptyAddress2() {
+
+        final List<UserAuthorization> auth = Arrays.asList(
+                new UserAuthorization(null,
+                        Arrays.asList(Operation.recv, Operation.send, Operation.manage)));
+
+        final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
+
+        assertGroups(result, "recv", "send", "manage", "manage_#");
+    }
+
+    /**
+     * Assert groups. <br>
+     * A convenience method to assert group information. Compares the groups as
+     * sorted arrays.
+     * 
+     * @param actual   The actual result.
+     * @param expected The expected result.
+     */
+    private static void assertGroups(final Collection<String> actual, final String... expected) {
+        assertSorted(expected, actual.toArray(new String[actual.size()]));
+    }
+
 }
