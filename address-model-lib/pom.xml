@@ -12,7 +12,7 @@
   <dependencies>
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>common-api-model</artifactId>
+      <artifactId>api-model</artifactId>
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>

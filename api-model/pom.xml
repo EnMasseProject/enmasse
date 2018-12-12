@@ -7,17 +7,24 @@
     <version>0.25-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>io.enmasse</groupId>
-  <artifactId>user-api</artifactId>
+  <artifactId>api-model</artifactId>
   <dependencies>
     <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>common-api-model</artifactId>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-model</artifactId>
     </dependency>
     <dependency>
       <groupId>io.sundr</groupId>
       <artifactId>builder-annotations</artifactId>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
