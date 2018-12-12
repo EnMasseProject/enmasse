@@ -40,7 +40,7 @@ public class AddressSpaceTest {
     @Test
     public void testSimpleWithMissingMandatory() {
         try {
-            AddressSpace space = new AddressSpace.Builder()
+            new AddressSpace.Builder()
                     .setType("type")
                     .setPlan("plan")
                     .build();
@@ -50,7 +50,7 @@ public class AddressSpaceTest {
         }
 
         try {
-            AddressSpace space = new AddressSpace.Builder()
+            new AddressSpace.Builder()
                     .setName("name")
                     .setPlan("plan")
                     .build();
@@ -60,7 +60,7 @@ public class AddressSpaceTest {
         }
 
         try {
-            AddressSpace space = new AddressSpace.Builder()
+            new AddressSpace.Builder()
                     .setName("name")
                     .setType("type")
                     .build();

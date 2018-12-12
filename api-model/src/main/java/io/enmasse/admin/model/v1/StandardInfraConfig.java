@@ -28,6 +28,9 @@ import java.util.Objects;
 @JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfig implements InfraConfig {
+
+    private static final long serialVersionUID = 1L;
+
     public static final String STANDARD_INFRA_CONFIG = "StandardInfraConfig";
     private String apiVersion = "admin.enmasse.io/v1alpha1";
     private String kind = STANDARD_INFRA_CONFIG;

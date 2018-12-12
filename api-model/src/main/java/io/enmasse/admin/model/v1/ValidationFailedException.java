@@ -5,6 +5,9 @@
 package io.enmasse.admin.model.v1;
 
 public class ValidationFailedException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     public ValidationFailedException(String message) {
         super(message);
     }

@@ -114,6 +114,7 @@ public class SerializationTest {
         CodecV1.getMapper().readValue(serialized, AddressSpace.class);
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void testSerializeAddressSpace() throws IOException {
         AddressSpace addressSpace = new AddressSpace.Builder()

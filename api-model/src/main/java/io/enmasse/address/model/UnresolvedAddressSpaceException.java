@@ -5,6 +5,9 @@
 package io.enmasse.address.model;
 
 public class UnresolvedAddressSpaceException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     public UnresolvedAddressSpaceException(String s) {
         super(s);
     }

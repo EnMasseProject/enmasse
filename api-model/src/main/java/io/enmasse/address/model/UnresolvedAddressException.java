@@ -5,6 +5,9 @@
 package io.enmasse.address.model;
 
 public class UnresolvedAddressException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     public UnresolvedAddressException(String message) {
         super(message);
     }

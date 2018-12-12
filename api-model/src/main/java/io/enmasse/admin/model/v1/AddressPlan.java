@@ -31,6 +31,8 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressPlan implements HasMetadata {
 
+    private static final long serialVersionUID = 1L;
+
     public static final String ADDRESS_PLAN = "AddressPlan";
     @JsonProperty("apiVersion")
     private String apiVersion = "admin.enmasse.io/v1alpha1";

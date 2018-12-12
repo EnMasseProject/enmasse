@@ -29,6 +29,8 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfig implements InfraConfig {
 
+    private static final long serialVersionUID = 1L;
+
     public static final String BROKERED_INFRA_CONFIG = "BrokeredInfraConfig";
     private String apiVersion = "admin.enmasse.io/v1alpha1";
     private String kind = BROKERED_INFRA_CONFIG;

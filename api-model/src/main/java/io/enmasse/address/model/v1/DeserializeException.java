@@ -5,6 +5,9 @@
 package io.enmasse.address.model.v1;
 
 public class DeserializeException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     public DeserializeException(String s) {
         super(s);
     }

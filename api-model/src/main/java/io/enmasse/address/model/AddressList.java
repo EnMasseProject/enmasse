@@ -12,6 +12,9 @@ import java.util.Set;
  * Type for address lists.
  */
 public class AddressList extends ArrayList<Address> {
+
+    private static final long serialVersionUID = 1L;
+
     public AddressList() {
         super();
     }

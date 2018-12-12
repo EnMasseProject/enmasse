@@ -12,6 +12,8 @@ import java.util.Collection;
  */
 public class AddressSpaceList extends ArrayList<AddressSpace> {
 
+    private static final long serialVersionUID = 1L;
+
     public AddressSpaceList() {
         super();
     }
