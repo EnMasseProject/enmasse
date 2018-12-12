@@ -45,7 +45,7 @@ abstract class MarathonTestBase extends TestBase {
     // Runner tests methods
     //========================================================================================================
 
-    private void runTestInLoop(int durationMinutes, ITestMethod test) throws Exception {
+    protected void runTestInLoop(int durationMinutes, ITestMethod test) throws Exception {
         log.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
         int fails = 0;
@@ -98,7 +98,7 @@ abstract class MarathonTestBase extends TestBase {
 
             log.info("Address space created");
 
-            doAddressTest(addressSpace,"test-topic-createdelete-brokered-%d",
+            doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
                     "test-queue-createdelete-brokered-%d", cred);
 
             deleteAddressSpace(addressSpace);
@@ -145,7 +145,7 @@ abstract class MarathonTestBase extends TestBase {
             //check addresses are in ready state
             assertCanConnect(addressSpace, user, queueList);
             assertFalse(res.toString().contains(notReadyString));
-            
+
             deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         });
     }
