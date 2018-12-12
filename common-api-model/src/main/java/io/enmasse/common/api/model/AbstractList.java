@@ -9,37 +9,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 
-public abstract class AbstractList<T extends HasMetadata>
+public abstract class AbstractList<T extends HasMetadata> extends AbstractResource<T>
         implements KubernetesResource<T>, KubernetesResourceList<T> {
 
     private static final long serialVersionUID = 1L;
-
-    private final String kind = CustomResources.getKind(this.getClass());
-    private String apiVersion = CustomResources.getApiVersion(this.getClass());
 
     private ListMeta metadata;
 
     private List<T> items = new ArrayList<>();
 
-    @JsonIgnore
-    public String getKind() {
-        return this.kind;
-    }
-
-    @JsonIgnore
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    public void setApiVersion(final String version) {
-        this.apiVersion = version;
+    protected AbstractList(final String kind, final String apiVersion) {
+        super(kind, apiVersion);
     }
 
     public void setItems(final Collection<? extends T> items) {

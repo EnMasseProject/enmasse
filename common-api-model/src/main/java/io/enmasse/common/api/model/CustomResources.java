@@ -4,111 +4,35 @@
  */
 package io.enmasse.common.api.model;
 
-import static io.fabric8.kubernetes.internal.KubernetesDeserializer.registerCustomKind;
-
-import java.util.Optional;
-
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBuilder;
 
 public final class CustomResources {
+
     private CustomResources() {
     }
 
-    public static String getKind(Class<?> clazz) {
-        final CustomResource custom = clazz.getAnnotation(CustomResource.class);
-        if (custom != null && custom.kind() != null && !custom.kind().isEmpty()) {
-            return custom.kind();
-        } else {
-            return clazz.getSimpleName();
-        }
-    }
-
-    public static String getApiVersion(Class<?> clazz) {
-        final CustomResource custom = clazz.getAnnotation(CustomResource.class);
-        return custom.group() + "/" + custom.version();
-    }
-
-    public static CustomResourceDefinition createFromClass(final Class<?> clazz) {
-
-        final String kind = getKind(clazz);
-        final CustomResource customResource = clazz.getAnnotation(CustomResource.class);
-
-        // get singular, default to variation of "kind"
-
-        String singular = Optional.ofNullable(clazz.getAnnotation(CustomResource.Singular.class))
-                .map(CustomResource.Singular::value)
-                .orElse(kind.toLowerCase());
-
-        // get plural, default to none
-
-        String plural = Optional.ofNullable(clazz.getAnnotation(CustomResource.Plural.class))
-                .map(CustomResource.Plural::value)
-                .orElse(null);
-
-        // if no explicit plural is specified, and the singular is not set to "none"
-
-        if (plural == null && !singular.isEmpty()) {
-            // then derive the plural from the singular
-            plural = singular + "s";
-        }
-
-        // if the plural is set to "none"
-
-        if (plural != null && plural.isEmpty()) {
-            // then set it to null
-            plural = null;
-        }
-
-        // if the plural is still null
-
-        if (plural == null) {
-            // set it to a variation of "kind"
-            plural = kind.toLowerCase() + "s";
-        }
-
-        // if the singular is set to "none"
-
-        if (singular != null && singular.isEmpty()) {
-            // set it to null
-            singular = null;
-        }
-
+    public static CustomResourceDefinition createCustomResource(final String group, final String version, final String kind) {
+        String singular = kind.toLowerCase();
+        String listKind = kind + "List";
+        String plural = singular + "s";
         return new CustomResourceDefinitionBuilder()
-                .withApiVersion("apiextensions.k8s.io/v1beta1")
-
-                .withNewMetadata()
-                .withName(plural + "." + customResource.group())
+                .editOrNewMetadata()
+                .withName(plural + "." + group)
+                .addToLabels("app", "enmasse")
                 .endMetadata()
-
-                .withNewSpec()
-                .withGroup(customResource.group())
-                .withVersion(customResource.version())
-                .withScope(customResource.scope().name())
-
-                .withNewNames()
+                .editOrNewSpec()
+                .withGroup(group)
+                .withVersion(version)
+                .withScope("Namespaced")
+                .editOrNewNames()
                 .withKind(kind)
-                .withShortNames(customResource.shortNames())
+                .withListKind(listKind)
                 .withPlural(plural)
                 .withSingular(singular)
                 .endNames()
-
                 .endSpec()
-
                 .build();
-    }
-
-    public static CustomResourceDefinition fromClass(final Class<? extends HasMetadata> clazz) {
-
-        final CustomResourceDefinition result = createFromClass(clazz);
-
-        registerCustomKind(
-                result.getSpec().getGroup() + "/" + result.getSpec().getVersion(),
-                result.getSpec().getNames().getKind(),
-                clazz);
-
-        return result;
     }
 
 }

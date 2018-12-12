@@ -8,12 +8,11 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.enmasse.common.api.model.AbstractHasMetadata;
-import io.enmasse.common.api.model.CustomResource;
-import io.enmasse.common.api.model.CustomResources;
 import io.fabric8.kubernetes.api.model.Doneable;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
@@ -29,7 +28,8 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@CustomResource(version="v1alpha1", group = "user.enmasse.io", kind="MessagingUser")
+@JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class)
+@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User extends AbstractHasMetadata<User> {
 
@@ -37,10 +37,13 @@ public class User extends AbstractHasMetadata<User> {
 
     private static final long serialVersionUID = 1L;
 
-    public static final CustomResourceDefinition CRD;
+    public static final String KIND = "User";
+    public static final String VERSION = "v1alpha1";
+    public static final String GROUP = "user.enmasse.io";
+    public static final String API_VERSION = GROUP +"/" + VERSION;
 
-    static {
-        CRD = CustomResources.fromClass(User.class);
+    public User() {
+        super(KIND,API_VERSION);
     }
 
     private UserSpec spec;

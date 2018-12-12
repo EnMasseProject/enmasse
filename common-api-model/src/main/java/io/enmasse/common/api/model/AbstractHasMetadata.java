@@ -5,8 +5,6 @@
 
 package io.enmasse.common.api.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -23,14 +21,15 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-public abstract class AbstractHasMetadata<T> implements HasMetadata {
+public abstract class AbstractHasMetadata<T> extends AbstractResource<T> implements HasMetadata {
 
     private static final long serialVersionUID = 1L;
 
     private ObjectMeta metadata;
 
-    private final String kind = CustomResources.getKind(this.getClass());
-    private String apiVersion = CustomResources.getApiVersion(this.getClass());
+    protected AbstractHasMetadata(final String kind, String apiVersion) {
+        super(kind, apiVersion);
+    }
 
     @Override
     public ObjectMeta getMetadata() {
@@ -40,23 +39,6 @@ public abstract class AbstractHasMetadata<T> implements HasMetadata {
     @Override
     public void setMetadata(final ObjectMeta metadata) {
         this.metadata = metadata;
-    }
-
-    @JsonIgnore
-    @Override
-    public String getKind() {
-        return this.kind;
-    }
-
-    @JsonIgnore
-    @Override
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    @Override
-    public void setApiVersion(final String version) {
-        this.apiVersion = version;
     }
 
 }
