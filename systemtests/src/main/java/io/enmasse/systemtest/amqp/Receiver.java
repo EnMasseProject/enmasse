@@ -43,7 +43,6 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.setPrefetch(0);
         receiver.handler((protonDelivery, message) -> {
             messages.add(message);
-            log.info("Received message number {}", messages.size());
             protonDelivery.disposition(Accepted.getInstance(), true);
             if (done.test(message)) {
                 resultPromise.complete(messages);

@@ -64,6 +64,7 @@ class UpgradeTest extends TestBase {
             for (Destination dest : standardQueues) {
                 sendDurableMessages(standard, dest, cred, msgCount);
             }
+            Thread.sleep(10_000);
             log.info("End of before upgrade phase");
         } else {
             log.info("After upgrade phase");
