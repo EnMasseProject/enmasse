@@ -74,6 +74,8 @@ class UpgradeTest extends TestBase {
             waitForAddressSpaceReady(brokered);
             waitForAddressSpaceReady(standard);
 
+            Thread.sleep(120_000);
+
             log.info("Receive durable messages from brokered queue");
             for (Destination dest : brokeredQueues) {
                 receiveDurableMessages(brokered, dest, cred, msgCount);
