@@ -138,7 +138,7 @@ public class AddressSpaceController {
                 Comparator.comparing(BrokeredInfraConfig::getVersion));
 
         KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "standardinfraconfigs"),
-                client.customResources(AdminCrd.brokeredInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
+                client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
                 StandardInfraConfig.class,
                 Comparator.comparing(StandardInfraConfig::getVersion));
 
