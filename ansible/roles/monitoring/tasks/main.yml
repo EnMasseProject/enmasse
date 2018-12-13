@@ -47,3 +47,25 @@
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana
 - name: Apply the Kube-state-metrics configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/kube-state-metrics
+
+
+- name: Create Nginx password hash
+  shell: htpasswd -nb {{ monitoring_username }} {{ monitoring_password }}
+  register: password_hash
+
+- set_fact:
+    creds: "{{ password_hash.stdout }}"
+
+- name: Create secret with the nginx credentials
+  shell: oc create secret generic -n {{ namespace }} nginx-credentials --from-literal=htpasswd='{{ creds }}'
+  register: secret_exists
+  failed_when: secret_exists.stderr != '' and 'already exists' not in secret_exists.stderr
+  changed_when: secret_exists.rc == 1
+
+- name: Grant permissions to Nginx Service account to run container
+  shell: oc adm policy add-scc-to-user privileged system:serviceaccount:enmasse:nginx
+
+- shell: oc adm policy add-scc-to-user anyuid system:serviceaccount:enmasse:nginx
+
+- name: Apply the Nginx configuration
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/nginx

@@ -37,6 +37,12 @@ spec:
         - mountPath: /etc/alertmanager
           name: alertmanager-config
           readOnly: true
+        command:
+          - /bin/alertmanager
+          - --config.file=/etc/alertmanager/alertmanager.yml
+          - --storage.path=/alertmanager
+          - --web.external-url=http://nginx:8080/alertmanager/
+          - --web.route-prefix=/
       volumes:
       - configMap:
           name: alertmanager-config

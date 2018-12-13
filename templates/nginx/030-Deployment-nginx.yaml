@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: enmasse
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enmasse
+      name: nginx
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        name: nginx
+    spec:
+      containers:
+      - image: ${NGINX_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
+        name: nginx
+        ports:
+        - containerPort: 8080
+          name: nginx
+        volumeMounts:
+        - mountPath: /etc/nginx
+          name: nginx-config
+          readOnly: true
+        - mountPath: /usr/local/etc
+          name: htpasswd
+          readOnly: true
+      serviceAccountName: nginx
+      volumes:
+      - configMap:
+          name: nginx-config
+        name: nginx-config
+      - name: htpasswd
+        secret:
+          secretName: nginx-credentials

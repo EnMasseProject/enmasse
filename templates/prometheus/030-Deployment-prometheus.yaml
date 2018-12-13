@@ -40,6 +40,11 @@ spec:
         - mountPath: /prometheus
           name: prometheus-data
           readOnly: false
+        command:
+          - /bin/prometheus
+          - --config.file=/etc/prometheus/prometheus.yml
+          - --web.external-url=http://nginx:8080/prometheus/
+          - --web.route-prefix=/
       serviceAccountName: prometheus-server
       volumes:
       - configMap:

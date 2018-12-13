@@ -3,12 +3,13 @@ kind: Route
 metadata:
   labels:
     app: enmasse
-  name: prometheus
+  name: alertmanager
 spec:
+  path: /alertmanager/
   port:
-    targetPort: prometheus
+    targetPort: nginx
   tls:
     termination: edge
   to:
     kind: Service
-    name: prometheus
+    name: nginx
