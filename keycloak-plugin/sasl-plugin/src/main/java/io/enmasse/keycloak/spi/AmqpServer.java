@@ -22,6 +22,8 @@
 package io.enmasse.keycloak.spi;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PfxOptions;
@@ -99,10 +101,21 @@ public class AmqpServer extends AbstractVerticle {
             }
             connection.open();
             connection.close();
+            Context connectionContext = Vertx.currentContext();
+            vertx.setTimer(10000, l -> {
+                connectionContext.runOnContext(x -> {
+                    if(!connection.isDisconnected()) {
+                        LOG.info("Closing connection which has not disconnected after 10s" + userData);
+                        connection.disconnect();
+                    }
+                });
+            });
         }).closeHandler(conn -> {
+            LOG.info("Received close - disconnecting");
             connection.close();
             connection.disconnect();
         }).disconnectHandler(protonConnection -> {
+            LOG.info("Disconnecting");
             connection.disconnect();
         });
 
