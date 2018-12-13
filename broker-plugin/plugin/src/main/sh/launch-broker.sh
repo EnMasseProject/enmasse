@@ -27,13 +27,6 @@ function update_ssl_certs() {
     echo "cp -n $BROKER_CUSTOM_DIR/certs/* $instanceDir/etc/"
 }
 
-
-# This needs to be at the toplevel outside any functions
-# For the standard address space, the shutdown hooks need time to run before broker is shut down
-if [ "$ADDRESS_SPACE_TYPE" != "brokered" ]; then
-    trap "" TERM INT
-fi
-
 function startServer() {
 
   instanceDir="${HOME}/${AMQ_NAME}"

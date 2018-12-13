@@ -111,18 +111,13 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}                
               - name: HOME
-                value: ${HOME}
+                value: /home/artemis
               - name: AMQ_NAME
-                value: ${AMQ_NAME}                
+                value: broker
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               command:
               - /opt/apache-artemis/custom/bin/launch-broker.sh
-              lifecycle:
-                preStop:
-                  exec:
-                    command:
-                    - $ARTEMIS_HOME/custom/shutdown-hook/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:
@@ -190,9 +185,9 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: AMQ_NAME
-                value: ${AMQ_NAME}
+                value: broker
               - name: HOME
-                value: ${HOME}
+                value: /home/artemis
               image: ${ARTEMIS_PLUGIN_IMAGE}
               name: broker-plugin
               volumeMounts:
@@ -396,18 +391,13 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}                
               - name: HOME
-                value: ${HOME}
+                value: /home/artemis
               - name: AMQ_NAME
-                value: ${AMQ_NAME}                
+                value: broker
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               command:
               - /opt/apache-artemis/custom/bin/launch-broker.sh
-              lifecycle:
-                preStop:
-                  exec:
-                    command:
-                    -  $ARTEMIS_HOME/custom/shutdown-hook/shutdown-hook.sh
               livenessProbe:
                 exec:
                   command:
@@ -504,9 +494,9 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: AMQ_NAME
-                value: ${AMQ_NAME}
+                value: broker
               - name: HOME
-                value: ${HOME}
+                value: /home/artemis
               image: ${ARTEMIS_PLUGIN_IMAGE}
               name: broker-plugin
               volumeMounts:
@@ -595,11 +585,3 @@ data:
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
       value: "-1"
-    - description: The name of the broker
-      displayName: AMQ Name
-      name: AMQ_NAME
-      value: broker
-    - description: Home directory to for the broker instance
-      displayName: Home
-      name: HOME
-      value: /home/artemis
