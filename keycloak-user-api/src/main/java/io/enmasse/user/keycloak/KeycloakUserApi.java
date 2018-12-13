@@ -6,17 +6,26 @@ package io.enmasse.user.keycloak;
 
 import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.model.v1.*;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthentication;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorization;
+import io.enmasse.user.model.v1.UserList;
+import io.enmasse.user.model.v1.UserMetadata;
+import io.enmasse.user.model.v1.UserSpec;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.representations.idm.*;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.FederatedIdentityRepresentation;
+import org.keycloak.representations.idm.GroupRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -24,11 +33,17 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
 public class KeycloakUserApi implements UserApi  {
 
@@ -181,6 +196,13 @@ public class KeycloakUserApi implements UserApi  {
                 case federated:
                     setFederatedIdentity(realm.users().get(userId), user.getSpec().getAuthentication());
                     break;
+                case serviceaccount:
+//                    setServiceAccountIdentity(realm.users().get(userId), user.getSpec().getAuthentication());
+                    break;
+                default:
+                    log.error("Authentication type {} requested, but not properly implemented", user.getSpec().getAuthentication().getType());
+                    throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+
             }
 
             applyAuthorizationRules(realm, user, realm.users().get(userId));

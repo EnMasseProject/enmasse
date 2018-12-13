@@ -34,6 +34,8 @@ import org.keycloak.models.UserModel;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
+import static io.enmasse.keycloak.spi.K8sServiceAccountCredentialProvider.ENMASSE_SERVICE_ACCOUNT_TYPE;
+
 public class PlainSaslServerMechanism implements SaslServerMechanism {
 
     private static final Logger LOG = Logger.getLogger(PlainSaslServerMechanism.class);
@@ -102,18 +104,22 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                     }
 
                     final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
-                    if (user != null && keycloakSession.userCredentialManager().isValid(realm, user, UserCredentialModel.password(password))) {
-
-                        authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
-                        authenticated = true;
-                        complete = true;
-                        return null;
-                    } else {
-                        LOG.info("Invalid password for " + username + " in realm " + hostname);
-                        authenticated = false;
-                        complete = true;
-                        return null;
+                    if (user != null) {
+                        UserCredentialModel credentialModel = "serviceaccount".equals(user.getFirstAttribute("authenticationType")) ? createServiceAccountUserCredential(password) :  UserCredentialModel.password(password);
+                        if (keycloakSession.userCredentialManager().isValid(realm, user, credentialModel)) {
+                            authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                            authenticated = true;
+                            complete = true;
+                            return null;
+                        }
                     }
+
+
+                    LOG.info("Invalid password for " + username + " in realm " + hostname);
+                    authenticated = false;
+                    complete = true;
+                    return null;
+
                 } finally {
                     transactionManager.commit();
                     keycloakSession.close();
@@ -149,6 +155,13 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
             }
 
         };
+    }
+
+    private UserCredentialModel createServiceAccountUserCredential(String token) {
+        UserCredentialModel userCredentialModel = new UserCredentialModel();
+        userCredentialModel.setType(ENMASSE_SERVICE_ACCOUNT_TYPE);
+        userCredentialModel.setValue(token);
+        return userCredentialModel;
     }
 
 }
