@@ -22,10 +22,10 @@ spec:
             - weight: 1
               preference:
                 matchExpressions:
-                  - key: enmasse-role
+                  - key: node-role.enmasse.io/operator-infra
                     operator: In
                     values:
-                      - operator-infra
+                      - "true"
       containers:
       - name: grafana
         image: ${GRAFANA_IMAGE}
