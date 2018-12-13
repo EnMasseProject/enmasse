@@ -4,33 +4,50 @@
  */
 package io.enmasse.user.keycloak;
 
-import io.enmasse.k8s.util.TimeUtil;
-import io.enmasse.user.api.UserApi;
-import io.enmasse.user.model.v1.*;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.representations.idm.*;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.FederatedIdentityRepresentation;
+import org.keycloak.representations.idm.GroupRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class KeycloakUserApi implements UserApi  {
+import io.enmasse.k8s.util.TimeUtil;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthentication;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorization;
+import io.enmasse.user.model.v1.UserList;
+import io.enmasse.user.model.v1.UserMetadata;
+import io.enmasse.user.model.v1.UserSpec;
+
+public class KeycloakUserApi implements UserApi {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
 
@@ -106,8 +123,6 @@ public class KeycloakUserApi implements UserApi  {
         }
         return null;
     }
-
-
 
     @Override
     public Optional<User> getUserWithName(String realmName, String name) throws Exception {
@@ -191,32 +206,7 @@ public class KeycloakUserApi implements UserApi  {
 
     private void applyAuthorizationRules(RealmResource realm, User user, UserResource userResource) {
 
-        Set<String> desiredGroups = new HashSet<>();
-        for (UserAuthorization userAuthorization : user.getSpec().getAuthorization()) {
-            for (Operation operation : userAuthorization.getOperations()) {
-                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
-                    String groupName = operation.name();
-                    desiredGroups.add(groupName);
-                    if (groupName.equals("manage")) {
-                        desiredGroups.add("manage_#");
-                    }
-                } else {
-                    for (String address : userAuthorization.getAddresses()) {
-                        try {
-                            String groupName = operation.name() + "_" + URLEncoder.encode(address, StandardCharsets.UTF_8.name());
-                            desiredGroups.add(groupName);
-
-                            String brokeredGroupName = groupName.replace("*", "#");
-                            if (!groupName.equals(brokeredGroupName)) {
-                                desiredGroups.add(brokeredGroupName);
-                            }
-                        } catch (UnsupportedEncodingException e) {
-                            // UTF-8 must always be supported
-                        }
-                    }
-                }
-            }
-        }
+        Set<String> desiredGroups = createDesiredGroupsSet(user.getSpec().getAuthorization());
         List<GroupRepresentation> groups = realm.groups().groups();
 
         Set<String> existingGroups = userResource.groups()
@@ -242,6 +232,49 @@ public class KeycloakUserApi implements UserApi  {
             String groupId = createGroupIfNotExists(realm, group);
             userResource.joinGroup(groupId);
         }
+    }
+
+    /**
+     * Create the set of desired groups.
+     * 
+     * @param user The user to create the groups for.
+     * @return A set of groups.
+     */
+    static Set<String> createDesiredGroupsSet(final List<UserAuthorization> authorization) {
+
+        final Set<String> desiredGroups = new HashSet<>();
+
+        for (UserAuthorization userAuthorization : authorization) {
+
+            for (Operation operation : userAuthorization.getOperations()) {
+
+                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
+
+                    switch (operation) {
+                        case manage:
+                            desiredGroups.add("manage_#");
+                            desiredGroups.add("manage");
+                            break;
+                        default:
+                            desiredGroups.add(operation.name());
+                            break;
+                    }
+
+                } else {
+
+                    for (String address : userAuthorization.getAddresses()) {
+                        String groupName = operation.name() + "_" + encodePart(address);
+                        // normal name
+                        desiredGroups.add(groupName);
+                        // brokered name ( the set will remove duplicates for us)
+                        desiredGroups.add(groupName.replace("*", "#"));
+                    }
+
+                }
+            }
+        }
+
+        return desiredGroups;
     }
 
     private Optional<UserRepresentation> getUser(String realmName, String username) throws Exception {
@@ -383,6 +416,7 @@ public class KeycloakUserApi implements UserApi  {
         });
     }
 
+
     static User buildUser(UserRepresentation userRep, List<GroupRepresentation> groupReps) {
         log.debug("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
         Map<String, Set<Operation>> operationsByAddress = new HashMap<>();
@@ -392,7 +426,7 @@ public class KeycloakUserApi implements UserApi  {
             if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
-                String address = parts[1];
+                String address = decodePart(parts[1]);
                 operationsByAddress.computeIfAbsent(address, k -> new HashSet<>())
                         .add(operation);
             } else {
@@ -493,5 +527,22 @@ public class KeycloakUserApi implements UserApi  {
             return null;
         });
 
+    }
+    
+
+    public static String decodePart(final String part) {
+        try {
+            return URLDecoder.decode(part, StandardCharsets.UTF_8.name());
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String encodePart(final String part) {
+        try {
+            return URLEncoder.encode(part, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
