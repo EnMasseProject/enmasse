@@ -158,7 +158,7 @@ public class KubernetesHelper implements Kubernetes {
         return client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get() != null;
     }
 
-    private Map doRawHttpRequest(String path, String method, Map body, boolean errorOk) {
+    private Map<?,?> doRawHttpRequest(String path, String method, Map<?,?> body, boolean errorOk) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
         try {

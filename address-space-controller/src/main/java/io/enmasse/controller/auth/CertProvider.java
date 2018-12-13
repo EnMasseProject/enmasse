@@ -5,11 +5,6 @@
 package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
-import io.fabric8.kubernetes.api.model.Secret;
-
-import java.util.Collection;
-import java.util.Set;
 
 public interface CertProvider {
     void provideCert(AddressSpace addressSpace, EndpointInfo endpointInfo);
