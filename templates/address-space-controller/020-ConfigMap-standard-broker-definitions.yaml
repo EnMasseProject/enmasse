@@ -90,10 +90,6 @@ data:
                 value: 56671
               - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
                 value: 55671
-              - name: QUEUE_SCHEDULER_SERVICE_HOST
-                value: queue-scheduler-${INFRA_UUID}
-              - name: QUEUE_SCHEDULER_SERVICE_PORT
-                value: 5672
               - name: INFRA_UUID
                 value: ${INFRA_UUID}
               - name: QUEUE_NAME
@@ -102,8 +98,6 @@ data:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
-              - name: GLOBAL_MAX_SIZE
-                value: ${GLOBAL_MAX_SIZE}
               - name: ADDRESS_FULL_POLICY
                 value: ${BROKER_ADDRESS_FULL_POLICY}
               - name: AUTHENTICATION_SERVICE_HOST
@@ -115,15 +109,21 @@ data:
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}                
+              - name: HOME
+                value: /home/artemis
+              - name: AMQ_NAME
+                value: broker
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
+              command:
+              - /opt/apache-artemis/custom/bin/launch-broker.sh
               livenessProbe:
                 exec:
                   command:
                   - sh
                   - -c
-                  - /opt/broker-plugin/bin/probe.sh
+                  - $ARTEMIS_HOME/custom/bin/probe.sh
                 initialDelaySeconds: 120
               name: broker
               ports:
@@ -138,7 +138,7 @@ data:
                   command:
                   - sh
                   - -c
-                  - /opt/broker-plugin/bin/probe.sh
+                  - $ARTEMIS_HOME/custom/bin/probe.sh
                 initialDelaySeconds: 10
               resources:
                 limits:
@@ -146,9 +146,51 @@ data:
                 requests:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
-              - mountPath: /var/run/artemis
-                name: data
+              - mountPath: /etc/prometheus-config
+                name: broker-prometheus-config
+                readOnly: true
+              - mountPath: /opt/apache-artemis/custom
+                name: broker-custom
                 readOnly: false
+            initContainers:
+            - env:
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: QUEUE_SCHEDULER_SERVICE_HOST
+                value: queue-scheduler-${INFRA_UUID}
+              - name: QUEUE_SCHEDULER_SERVICE_PORT
+                value: 5672
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
+              - name: QUEUE_NAME
+                value: ${ADDRESS}
+              - name: CLUSTER_ID
+                value: ${CLUSTER_ID}
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
+              - name: ADDRESS_FULL_POLICY
+                value: ${BROKER_ADDRESS_FULL_POLICY}
+              - name: AUTHENTICATION_SERVICE_HOST
+                value: ${AUTHENTICATION_SERVICE_HOST}
+              - name: AUTHENTICATION_SERVICE_PORT
+                value: ${AUTHENTICATION_SERVICE_PORT}
+              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+              - name: AMQ_NAME
+                value: broker
+              - name: HOME
+                value: /home/artemis
+              image: ${ARTEMIS_PLUGIN_IMAGE}
+              name: broker-plugin
+              volumeMounts:
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
                 readOnly: true
@@ -158,7 +200,12 @@ data:
               - mountPath: /etc/prometheus-config
                 name: broker-prometheus-config
                 readOnly: true
+              - mountPath: /opt/apache-artemis/custom
+                name: broker-custom
+                readOnly: false
             volumes:
+            - name: broker-custom
+              emptyDir: {}
             - name: authservice-ca
               secret:
                 secretName: authservice-ca.${INFRA_UUID}
@@ -229,6 +276,14 @@ data:
         a quarter of BROKER_MEMORY_LIMIT
       name: GLOBAL_MAX_SIZE
       value: "-1"
+    - description: The name of the broker
+      displayName: AMQ Name
+      name: AMQ_NAME
+      value: broker
+    - description: Home directory to for the broker instance
+      displayName: Home
+      name: HOME
+      value: /home/artemis
   topic-persisted.yaml: |-
     apiVersion: v1
     kind: Template
@@ -317,18 +372,12 @@ data:
                 value: 56671
               - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
                 value: 55671
-              - name: QUEUE_SCHEDULER_SERVICE_HOST
-                value: queue-scheduler-${INFRA_UUID}
-              - name: QUEUE_SCHEDULER_SERVICE_PORT
-                value: 5672
               - name: TOPIC_NAME
                 value: ${ADDRESS}
               - name: CLUSTER_ID
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
-              - name: GLOBAL_MAX_SIZE
-                value: ${GLOBAL_MAX_SIZE}
               - name: ADDRESS_FULL_POLICY
                 value: ${BROKER_ADDRESS_FULL_POLICY}
               - name: AUTHENTICATION_SERVICE_HOST
@@ -340,15 +389,21 @@ data:
               - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
                 value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
-                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}                
+              - name: HOME
+                value: /home/artemis
+              - name: AMQ_NAME
+                value: broker
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
+              command:
+              - /opt/apache-artemis/custom/bin/launch-broker.sh
               livenessProbe:
                 exec:
                   command:
                   - sh
                   - -c
-                  - /opt/broker-plugin/bin/probe.sh
+                  - $ARTEMIS_HOME/custom/bin/probe.sh
                 initialDelaySeconds: 120
               name: broker
               ports:
@@ -363,7 +418,7 @@ data:
                   command:
                   - sh
                   - -c
-                  - /opt/broker-plugin/bin/probe.sh
+                  - $ARTEMIS_HOME/custom/bin/probe.sh
                 initialDelaySeconds: 10
               resources:
                 limits:
@@ -371,15 +426,9 @@ data:
                 requests:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
-              - mountPath: /var/run/artemis
-                name: data
+              - mountPath: /opt/apache-artemis/custom
+                name: broker-custom
                 readOnly: false
-              - mountPath: /etc/enmasse-certs
-                name: broker-internal-cert
-                readOnly: true
-              - mountPath: /etc/authservice-ca
-                name: authservice-ca
-                readOnly: true
               - mountPath: /etc/prometheus-config
                 name: broker-prometheus-config
                 readOnly: true
@@ -412,7 +461,60 @@ data:
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
                 readOnly: true
+            initContainers:
+            - env:
+              - name: INFRA_UUID
+                value: ${INFRA_UUID}
+              - name: MESSAGING_SERVICE_HOST
+                value: messaging-${INFRA_UUID}
+              - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+                value: 56671
+              - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+                value: 55671
+              - name: QUEUE_SCHEDULER_SERVICE_HOST
+                value: queue-scheduler-${INFRA_UUID}
+              - name: QUEUE_SCHEDULER_SERVICE_PORT
+                value: 5672
+              - name: TOPIC_NAME
+                value: ${ADDRESS}
+              - name: CLUSTER_ID
+                value: ${CLUSTER_ID}
+              - name: GLOBAL_MAX_SIZE
+                value: ${GLOBAL_MAX_SIZE}
+              - name: ADDRESS_FULL_POLICY
+                value: ${BROKER_ADDRESS_FULL_POLICY}
+              - name: AUTHENTICATION_SERVICE_HOST
+                value: ${AUTHENTICATION_SERVICE_HOST}
+              - name: AUTHENTICATION_SERVICE_PORT
+                value: ${AUTHENTICATION_SERVICE_PORT}
+              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+              - name: AUTHENTICATION_SERVICE_OAUTH_URL
+                value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+              - name: AMQ_NAME
+                value: broker
+              - name: HOME
+                value: /home/artemis
+              image: ${ARTEMIS_PLUGIN_IMAGE}
+              name: broker-plugin
+              volumeMounts:
+              - mountPath: /etc/enmasse-certs
+                name: broker-internal-cert
+                readOnly: true
+              - mountPath: /etc/authservice-ca
+                name: authservice-ca
+                readOnly: true
+              - mountPath: /etc/prometheus-config
+                name: broker-prometheus-config
+                readOnly: true
+              - mountPath: /opt/apache-artemis/custom
+                name: broker-custom
+                readOnly: false
             volumes:
+            - name: broker-custom
+              emptyDir: {}
             - name: authservice-ca
               secret:
                 secretName: authservice-ca.${INFRA_UUID}

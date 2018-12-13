@@ -1,0 +1,14 @@
+FROM enmasseproject/java-base:8-9
+
+RUN yum -y install which python gettext hostname iputils openssl && yum clean all -y && mkdir -p /var/run/artemis/
+
+ARG version
+ARG commit
+ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit}
+
+ADD ./build/broker-plugin-${version}-dist.tar.gz /
+
+RUN chgrp -R 0 /opt/broker-plugin && \
+    chmod -R g=u /opt/broker-plugin
+
+CMD ["/opt/broker-plugin/bin/init-broker.sh"]
