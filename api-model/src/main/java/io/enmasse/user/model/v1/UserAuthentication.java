@@ -71,15 +71,5 @@ public class UserAuthentication {
 
     public void validate() {
         Objects.requireNonNull(type, "'type' must be set");
-        switch (type) {
-            case password:
-                Objects.requireNonNull(password, "'password' must be set for 'password' type");
-                break;
-            case federated:
-                Objects.requireNonNull(provider, "'provider' must be set for 'federated' type");
-                Objects.requireNonNull(federatedUserid, "'federatedUserid' must be set for 'federated' type");
-                Objects.requireNonNull(federatedUsername, "'federatedUsername' must be set for 'federated' type");
-                break;
-        }
     }
 }
