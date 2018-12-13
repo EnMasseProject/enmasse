@@ -8,7 +8,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.NetworkPolicy;
+import io.enmasse.admin.model.v1.NetworkPolicyBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -16,18 +19,21 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import java.util.Collections;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@ExtendWith(ExternalResourceSupport.class)
 public class NetworkPolicyControllerTest {
     private static final ObjectMapper mapper = new ObjectMapper();
     private OpenShiftClient client;
@@ -35,7 +41,7 @@ public class NetworkPolicyControllerTest {
     @Rule
     public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 
-    @Before
+    @BeforeEach
     public void setup() {
         client = openShiftServer.getOpenshiftClient();
     }

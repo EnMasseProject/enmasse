@@ -8,13 +8,11 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.api.common.DefaultExceptionMapper;
-import io.enmasse.api.common.Status;
-import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.k8s.util.TimeUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -26,8 +24,7 @@ import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,7 +37,7 @@ public class HttpClusterAddressSpaceServiceTest {
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
 
-    @Before
+    @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceService = new HttpClusterAddressSpaceService(addressSpaceApi, Clock.systemUTC());
@@ -54,13 +51,13 @@ public class HttpClusterAddressSpaceServiceTest {
                 .setCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
                 .setEndpointList(Arrays.asList(
                         new EndpointSpec.Builder()
-                            .setName("messaging")
-                            .setService("messaging")
-                        .build(),
+                                .setName("messaging")
+                                .setService("messaging")
+                                .build(),
                         new EndpointSpec.Builder()
-                            .setName("mqtt")
-                            .setService("mqtt")
-                        .build()))
+                                .setName("mqtt")
+                                .setService("mqtt")
+                                .build()))
                 .build();
 
         a2 = new AddressSpace.Builder()
@@ -84,7 +81,7 @@ public class HttpClusterAddressSpaceServiceTest {
     public void testList() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON,  null));
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null));
         assertThat(response.getStatus(), is(200));
         AddressSpaceList data = (AddressSpaceList) response.getEntity();
 
@@ -97,7 +94,7 @@ public class HttpClusterAddressSpaceServiceTest {
     public void testListTableFormat() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1",  null));
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", null));
         assertThat(response.getStatus(), is(200));
         Table data = (Table) response.getEntity();
 
@@ -108,7 +105,7 @@ public class HttpClusterAddressSpaceServiceTest {
     @Test
     public void testListException() {
         addressSpaceApi.throwException = true;
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON,  null));
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null));
         assertThat(response.getStatus(), is(500));
     }
 }

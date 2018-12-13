@@ -4,14 +4,15 @@
  */
 package io.enmasse.address.model.v1.address;
 
-import io.enmasse.address.model.*;
-import org.junit.Test;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.Status;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AddressTest {
     @Test
@@ -73,7 +74,7 @@ public class AddressTest {
         assertThat(b1.getPlan(), is(b2.getPlan()));
         assertThat(b1.getType(), is(b2.getType()));
     }
-    
+
     @Test
     public void testCopy() {
         Address a = new Address.Builder()
@@ -84,9 +85,9 @@ public class AddressTest {
                 .setAddressSpace("myspace")
                 .setStatus(new Status(true).setPhase(Status.Phase.Active).appendMessage("foo"))
                 .build();
-        
+
         Address b = new Address.Builder(a).build();
-        
+
         assertThat(a, is(b));
         assertTrue(b.getStatus().isReady());
         assertThat(b.getStatus().getPhase(), is(Status.Phase.Active));

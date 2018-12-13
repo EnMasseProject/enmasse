@@ -4,26 +4,12 @@
  */
 package io.enmasse.api.auth;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.vertx.core.http.HttpConnection;
 import io.vertx.core.http.HttpServerRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.function.Predicate;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotAuthorizedException;
@@ -31,6 +17,19 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.function.Predicate;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 public class AuthInterceptorTest {
 
@@ -40,7 +39,7 @@ public class AuthInterceptorTest {
     private UriInfo mockUriInfo;
     private AuthApi mockAuthApi;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         tokenFile = File.createTempFile("token", "");
         mockAuthApi = mock(AuthApi.class);
@@ -82,12 +81,12 @@ public class AuthInterceptorTest {
         assertAuthenticatedAs(mockRequestContext, "system:anonymous");
     }
 
-    @Test(expected = NotAuthorizedException.class)
+    @Test
     public void testInvalidToken() {
         TokenReview returnedTokenReview = new TokenReview(null, null, false);
         when(mockAuthApi.performTokenReview("invalid_token")).thenReturn(returnedTokenReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer invalid_token");
-        handler.filter(mockRequestContext);
+        assertThrows(NotAuthorizedException.class, () -> handler.filter(mockRequestContext));
     }
 
     @Test

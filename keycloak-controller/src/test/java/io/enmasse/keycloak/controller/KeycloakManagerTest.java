@@ -9,12 +9,12 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,7 +27,7 @@ public class KeycloakManagerTest {
     private Map<String, String> realmAdminUsers;
     private KubeApi mockKubeApi;
 
-    @Before
+    @BeforeEach
     public void setup() {
         realms = new HashSet<>();
         updatedRealms = new LinkedList<>();

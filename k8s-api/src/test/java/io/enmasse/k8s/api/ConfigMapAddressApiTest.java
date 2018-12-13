@@ -7,15 +7,18 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.Address;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
 
+@ExtendWith(ExternalResourceSupport.class)
 public class ConfigMapAddressApiTest {
     private static final String ADDRESS = "myaddress";
     private static final String ADDRESS_TYPE = "mytype";
@@ -27,7 +30,7 @@ public class ConfigMapAddressApiTest {
     public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
     private AddressApi api;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
         api = new ConfigMapAddressApi(client, UUID.randomUUID().toString());

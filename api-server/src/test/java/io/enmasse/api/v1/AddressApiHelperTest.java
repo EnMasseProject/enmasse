@@ -5,15 +5,6 @@
 
 package io.enmasse.api.v1;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import java.util.*;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.server.TestSchemaProvider;
@@ -23,13 +14,22 @@ import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.ExpectedExceptionSupport;
 import org.junit.rules.ExpectedException;
 import org.mockito.internal.util.collections.Sets;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
+import java.util.*;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(ExpectedExceptionSupport.class)
 public class AddressApiHelperTest {
 
     @Rule
@@ -197,13 +197,11 @@ public class AddressApiHelperTest {
         assertThat(labels.get("key3"), is("value3"));
     }
 
-    private Address createAddress(String name, String address)
-    {
+    private Address createAddress(String name, String address) {
         return new Address.Builder().setName(name).setNamespace("ns").setAddress(address).setAddressSpace("test").setType("queue").setPlan("plan1").build();
     }
 
-    private Address createAddress(String address)
-    {
+    private Address createAddress(String address) {
         return createAddress(address, address);
     }
 }

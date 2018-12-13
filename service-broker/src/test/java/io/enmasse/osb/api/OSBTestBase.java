@@ -5,15 +5,17 @@
 package io.enmasse.osb.api;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
 import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
 import io.enmasse.osb.api.provision.ProvisionRequest;
-import io.enmasse.k8s.api.TestAddressSpaceApi;
 import org.apache.http.auth.BasicUserPrincipal;
-import org.junit.Before;
 import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.ExpectedExceptionSupport;
 import org.junit.rules.ExpectedException;
 
 import javax.ws.rs.core.SecurityContext;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.when;
 /**
  *
  */
+
+@ExtendWith(ExpectedExceptionSupport.class)
 public class OSBTestBase {
     protected static final UUID QUEUE_SERVICE_ID = ServiceType.QUEUE.uuid();
     protected static final UUID TOPIC_SERVICE_ID = ServiceType.TOPIC.uuid();
@@ -44,7 +48,7 @@ public class OSBTestBase {
     protected OSBBindingService bindingService;
     protected OSBLastOperationService lastOperationService;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         addressSpaceApi = new TestAddressSpaceApi();
         String brokerId = "myspace";

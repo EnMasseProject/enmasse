@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class TestUserApi implements UserApi  {
+public class TestUserApi implements UserApi {
     private final Map<String, Map<String, User>> userMap = new HashMap<>();
     public boolean throwException = false;
 

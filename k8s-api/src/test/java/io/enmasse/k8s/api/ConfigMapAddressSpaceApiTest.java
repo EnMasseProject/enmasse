@@ -7,17 +7,21 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.AddressSpace;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 /**
  * The mock server does not emulate behaviour with respect to resourceVersion.
  */
+@ExtendWith(ExternalResourceSupport.class)
 public class ConfigMapAddressSpaceApiTest {
     private static final String ADDRESS_SPACE_NAME = "myspace";
     private static final String ADDRESS_SPACE_TYPE = "mytype";
@@ -27,7 +31,7 @@ public class ConfigMapAddressSpaceApiTest {
     public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
     private AddressSpaceApi api;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
         api = new ConfigMapAddressSpaceApi(client);
