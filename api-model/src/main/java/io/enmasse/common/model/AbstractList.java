@@ -14,10 +14,9 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 
+@SuppressWarnings("serial")
 public abstract class AbstractList<T extends HasMetadata> extends AbstractResource<T>
                 implements KubernetesResource<T>, KubernetesResourceList<T> {
-
-    private static final long serialVersionUID = 1L;
 
     private ListMeta metadata;
 

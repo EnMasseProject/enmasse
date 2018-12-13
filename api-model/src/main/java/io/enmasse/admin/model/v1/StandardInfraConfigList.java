@@ -8,9 +8,8 @@ import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
 
 @DefaultCustomResource
+@SuppressWarnings("serial")
 public class StandardInfraConfigList extends AbstractList<StandardInfraConfig>{
-
-    private static final long serialVersionUID = 1L;
 
     public static final String KIND = "StandardInfraConfigList";
     public static final String VERSION = "v1alpha1";

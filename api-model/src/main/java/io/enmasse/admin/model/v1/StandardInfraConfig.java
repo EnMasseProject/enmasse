@@ -26,9 +26,8 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @DefaultCustomResource
+@SuppressWarnings("serial")
 public class StandardInfraConfig extends AbstractInfraConfig<StandardInfraConfig> {
-
-    private static final long serialVersionUID = 1L;
 
     public static final String KIND = "StandardInfraConfig";
     public static final String VERSION = "v1alpha1";

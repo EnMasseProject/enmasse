@@ -8,9 +8,8 @@ import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
 
 @DefaultCustomResource
+@SuppressWarnings("serial")
 public class AddressPlanList extends AbstractList<AddressPlan> {
-
-    private static final long serialVersionUID = 1L;
 
     public static final String KIND = "AddressPlanList";
     public static final String VERSION = "v1alpha1";

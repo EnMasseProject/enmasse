@@ -24,9 +24,8 @@ import io.sundr.builder.annotations.Inline;
         refs= {@BuildableReference(AbstractHasMetadata.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
+@SuppressWarnings("serial")
 public abstract class AbstractInfraConfig<T> extends AbstractHasMetadata<T> implements InfraConfig {
-
-    private static final long serialVersionUID = 1L;
 
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 

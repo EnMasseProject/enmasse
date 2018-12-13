@@ -28,9 +28,8 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @DefaultCustomResource
+@SuppressWarnings("serial")
 public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
-
-    private static final long serialVersionUID = 1L;
 
     public static final String KIND = "AddressSpacePlan";
     public static final String VERSION = "v1alpha1";

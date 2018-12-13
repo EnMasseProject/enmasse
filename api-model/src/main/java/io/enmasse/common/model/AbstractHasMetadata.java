@@ -20,9 +20,8 @@ import io.sundr.builder.annotations.Inline;
                                 type = Doneable.class,
                                 prefix = "Doneable",
                                 value = "done"))
+@SuppressWarnings("serial")
 public abstract class AbstractHasMetadata<T> extends AbstractResource<T> implements HasMetadata {
-
-    private static final long serialVersionUID = 1L;
 
     private ObjectMeta metadata;
 

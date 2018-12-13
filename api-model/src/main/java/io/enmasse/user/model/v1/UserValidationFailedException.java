@@ -4,8 +4,8 @@
  */
 package io.enmasse.user.model.v1;
 
+@SuppressWarnings("serial")
 public class UserValidationFailedException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
 
     public UserValidationFailedException(String message) {
         super(message);
@@ -14,4 +14,5 @@ public class UserValidationFailedException extends RuntimeException {
     public UserValidationFailedException(Exception e) {
         super(e);
     }
+
 }

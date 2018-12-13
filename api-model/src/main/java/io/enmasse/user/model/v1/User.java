@@ -26,11 +26,10 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @DefaultCustomResource
+@SuppressWarnings("serial")
 public class User extends AbstractHasMetadata<User> {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
-
-    private static final long serialVersionUID = 1L;
 
     public static final String KIND = "User";
     public static final String VERSION = "v1alpha1";
