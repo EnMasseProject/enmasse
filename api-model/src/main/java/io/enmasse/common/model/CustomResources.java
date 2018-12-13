@@ -9,30 +9,29 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBui
 
 public final class CustomResources {
 
-    private CustomResources() {
-    }
+    private CustomResources() {}
 
     public static CustomResourceDefinition createCustomResource(final String group, final String version, final String kind) {
         String singular = kind.toLowerCase();
         String listKind = kind + "List";
         String plural = singular + "s";
         return new CustomResourceDefinitionBuilder()
-                .editOrNewMetadata()
-                .withName(plural + "." + group)
-                .addToLabels("app", "enmasse")
-                .endMetadata()
-                .editOrNewSpec()
-                .withGroup(group)
-                .withVersion(version)
-                .withScope("Namespaced")
-                .editOrNewNames()
-                .withKind(kind)
-                .withListKind(listKind)
-                .withPlural(plural)
-                .withSingular(singular)
-                .endNames()
-                .endSpec()
-                .build();
+                        .editOrNewMetadata()
+                        .withName(plural + "." + group)
+                        .addToLabels("app", "enmasse")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withGroup(group)
+                        .withVersion(version)
+                        .withScope("Namespaced")
+                        .editOrNewNames()
+                        .withKind(kind)
+                        .withListKind(listKind)
+                        .withPlural(plural)
+                        .withSingular(singular)
+                        .endNames()
+                        .endSpec()
+                        .build();
     }
 
 }

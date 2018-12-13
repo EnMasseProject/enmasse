@@ -10,8 +10,7 @@ import io.enmasse.user.model.v1.UserCrd;
 
 public final class CustomResourceDefinitions {
 
-    private CustomResourceDefinitions() {
-    }
+    private CustomResourceDefinitions() {}
 
     /**
      * Register all custom resource definitions used by EnMasse.

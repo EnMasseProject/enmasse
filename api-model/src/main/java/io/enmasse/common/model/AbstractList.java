@@ -15,7 +15,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 
 public abstract class AbstractList<T extends HasMetadata> extends AbstractResource<T>
-        implements KubernetesResource<T>, KubernetesResourceList<T> {
+                implements KubernetesResource<T>, KubernetesResourceList<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -47,6 +47,6 @@ public abstract class AbstractList<T extends HasMetadata> extends AbstractResour
     @Override
     public String toString() {
         return "{metadata=" + this.metadata + "," +
-                "items=" + this.items + "}";
+                        "items=" + this.items + "}";
     }
 }
