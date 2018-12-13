@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.CustomLogger;
-import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
@@ -19,12 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<Message>> {
 
     private static Logger log = CustomLogger.getLogger();
     private final List<Message> messages = new ArrayList<>();
+    private final AtomicInteger messageCount = new AtomicInteger();
     private final Predicate<Message> done;
 
     public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<List<Message>> resultPromise, String containerId) {
@@ -43,6 +44,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.setPrefetch(0);
         receiver.handler((protonDelivery, message) -> {
             messages.add(message);
+            messageCount.incrementAndGet();
             protonDelivery.disposition(Accepted.getInstance(), true);
             if (done.test(message)) {
                 resultPromise.complete(messages);
@@ -90,5 +92,9 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         conn.close();
         resultPromise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
         connectPromise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
+    }
+
+    int getNumReceived() {
+        return messageCount.get();
     }
 }
