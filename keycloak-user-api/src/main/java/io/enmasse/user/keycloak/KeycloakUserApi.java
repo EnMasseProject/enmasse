@@ -24,10 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class KeycloakUserApi implements UserApi  {
@@ -152,6 +149,7 @@ public class KeycloakUserApi implements UserApi  {
     public void createUser(String realmName, User user) throws Exception {
         log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realmName);
         user.validate();
+        validateForCreation(user);
 
         withRealm(realmName, realm -> {
 
@@ -187,6 +185,24 @@ public class KeycloakUserApi implements UserApi  {
 
             return user;
         });
+    }
+
+    /**
+     * Check if the user is valid for creating a new instance.
+     * @param user The user to check.
+     */
+    private void validateForCreation(final User user) {
+        final UserAuthentication auth = user.getSpec().getAuthentication();
+        switch (auth.getType()) {
+            case password:
+                Objects.requireNonNull(auth.getPassword(), "'password' must be set for 'password' type");
+                break;
+            case federated:
+                Objects.requireNonNull(auth.getProvider(), "'provider' must be set for 'federated' type");
+                Objects.requireNonNull(auth.getFederatedUserid(), "'federatedUserid' must be set for 'federated' type");
+                Objects.requireNonNull(auth.getFederatedUsername(), "'federatedUsername' must be set for 'federated' type");
+                break;
+        }
     }
 
     private void applyAuthorizationRules(RealmResource realm, User user, UserResource userResource) {
