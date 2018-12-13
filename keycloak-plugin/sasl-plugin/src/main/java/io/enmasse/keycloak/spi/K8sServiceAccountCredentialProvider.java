@@ -16,6 +16,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.keycloak.credential.CredentialInput;
+import org.keycloak.credential.CredentialInputUpdater;
 import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.credential.CredentialProvider;
 import org.keycloak.models.KeycloakSession;
@@ -28,8 +29,9 @@ import org.keycloak.models.cache.OnUserCache;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.Set;
 
-public class K8sServiceAccountCredentialProvider implements CredentialProvider, CredentialInputValidator, OnUserCache {
+public class K8sServiceAccountCredentialProvider implements CredentialProvider, CredentialInputValidator, OnUserCache, CredentialInputUpdater {
 
     public static final String ENMASSE_SERVICE_ACCOUNT_TYPE = "enmasse-service-account";
 
@@ -107,4 +109,19 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
     @Override
     public void onCache(RealmModel realmModel, CachedUserModel cachedUserModel, UserModel userModel) {
     }
+
+    @Override
+    public boolean updateCredential(RealmModel realmModel, UserModel userModel, CredentialInput credentialInput) {
+        return false;
+    }
+
+    @Override
+    public void disableCredentialType(RealmModel realmModel, UserModel userModel, String s) {
+    }
+
+    @Override
+    public Set<String> getDisableableCredentialTypes(RealmModel realmModel, UserModel userModel) {
+        return null;
+    }
+
 }
