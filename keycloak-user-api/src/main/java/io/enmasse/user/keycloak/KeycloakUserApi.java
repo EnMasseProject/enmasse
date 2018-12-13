@@ -12,14 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
@@ -36,6 +29,27 @@ import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
@@ -171,6 +185,7 @@ public class KeycloakUserApi implements UserApi {
     public void createUser(String realmName, User user) throws Exception {
         log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realmName);
         user.validate();
+        validateForCreation(user);
 
         withRealm(realmName, realm -> {
 
@@ -206,6 +221,24 @@ public class KeycloakUserApi implements UserApi {
 
             return user;
         });
+    }
+
+    /**
+     * Check if the user is valid for creating a new instance.
+     * @param user The user to check.
+     */
+    private void validateForCreation(final User user) {
+        final UserAuthentication auth = user.getSpec().getAuthentication();
+        switch (auth.getType()) {
+            case password:
+                Objects.requireNonNull(auth.getPassword(), "'password' must be set for 'password' type");
+                break;
+            case federated:
+                Objects.requireNonNull(auth.getProvider(), "'provider' must be set for 'federated' type");
+                Objects.requireNonNull(auth.getFederatedUserid(), "'federatedUserid' must be set for 'federated' type");
+                Objects.requireNonNull(auth.getFederatedUsername(), "'federatedUsername' must be set for 'federated' type");
+                break;
+        }
     }
 
     private void applyAuthorizationRules(RealmResource realm, User user, UserResource userResource) {
