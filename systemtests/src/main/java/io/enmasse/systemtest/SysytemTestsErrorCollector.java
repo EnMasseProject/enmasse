@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.CustomLogger;
 import org.hamcrest.Matcher;
 import org.slf4j.Logger;
 

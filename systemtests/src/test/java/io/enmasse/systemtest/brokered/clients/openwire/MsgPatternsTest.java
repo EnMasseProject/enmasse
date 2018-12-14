@@ -10,7 +10,6 @@ import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.messagingclients.openwire.OpenwireJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.openwire.OpenwireJMSClientSender;
 import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 

@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -143,12 +144,9 @@ public abstract class Kubernetes {
     public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
         return client.pods().withLabels(labelSelector).list().getItems().stream().filter(pod -> {
             for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
-                if (pod.getMetadata().getAnnotations() == null
-                        || pod.getMetadata().getAnnotations().get(entry.getKey()) == null
-                        || !pod.getMetadata().getAnnotations().get(entry.getKey()).equals(entry.getValue())) {
-                    return false;
-                }
-                return true;
+                return pod.getMetadata().getAnnotations() != null
+                        && pod.getMetadata().getAnnotations().get(entry.getKey()) != null
+                        && pod.getMetadata().getAnnotations().get(entry.getKey()).equals(entry.getValue());
             }
             return true;
         }).collect(Collectors.toList());
@@ -191,7 +189,7 @@ public abstract class Kubernetes {
         if (secret == null) {
             throw new IllegalStateException("Unable to find CA cert for keycloak");
         }
-        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), "UTF-8");
+        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
     }
 
     public List<ConfigMap> listConfigMaps(String type) {

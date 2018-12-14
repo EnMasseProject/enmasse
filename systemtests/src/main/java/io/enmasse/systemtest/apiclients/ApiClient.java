@@ -10,7 +10,6 @@ import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -123,17 +122,17 @@ public abstract class ApiClient {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
 
         return doRequestNTimes(initRetry, () -> {
-                client.get(endpoint.getPort(), endpoint.getHost(), path)
-                        .as(BodyCodec.jsonObject())
-                        .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-                        .send(ar -> responseHandler(ar,
-                                responsePromise,
-                                expectedCode,
-                                String.format("Error: get %s %s", type, name)));
-                return responsePromise.get(30, TimeUnit.SECONDS);
-            },
-            Optional.of(endpointSupplier),
-            Optional.empty());
+                    client.get(endpoint.getPort(), endpoint.getHost(), path)
+                            .as(BodyCodec.jsonObject())
+                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+                            .send(ar -> responseHandler(ar,
+                                    responsePromise,
+                                    expectedCode,
+                                    String.format("Error: get %s %s", type, name)));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(endpointSupplier),
+                Optional.empty());
     }
 
     protected void createResource(String type, String basePath, JsonObject data) throws Exception {
@@ -147,7 +146,7 @@ public abstract class ApiClient {
         doRequestNTimes(initRetry, () -> {
                     client.post(endpoint.getPort(), endpoint.getHost(), basePath)
                             .timeout(20_000)
-                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                             .as(BodyCodec.jsonObject())
                             .sendJsonObject(data, ar -> {
                                 responseHandler(ar,
@@ -174,7 +173,7 @@ public abstract class ApiClient {
         doRequestNTimes(initRetry, () -> {
                     client.put(endpoint.getPort(), endpoint.getHost(), path)
                             .timeout(20_000)
-                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                             .as(BodyCodec.jsonObject())
                             .sendJsonObject(data, ar -> responseHandler(ar,
                                     responsePromise,
@@ -197,7 +196,7 @@ public abstract class ApiClient {
         doRequestNTimes(initRetry, () -> {
                     client.delete(endpoint.getPort(), endpoint.getHost(), path)
                             .as(BodyCodec.jsonObject())
-                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                             .timeout(20_000)
                             .send(ar -> responseHandler(ar,
                                     responsePromise,

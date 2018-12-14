@@ -4,13 +4,11 @@
  */
 package io.enmasse.systemtest;
 
-import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.util.concurrent.TimeUnit;
 
 public class Minikube extends Kubernetes {

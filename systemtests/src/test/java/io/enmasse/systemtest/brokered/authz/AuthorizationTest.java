@@ -6,11 +6,7 @@ package io.enmasse.systemtest.brokered.authz;
 
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import static io.enmasse.systemtest.TestTag.nonPR;
 
 class AuthorizationTest extends AuthorizationTestBase implements ITestBaseBrokered {
 

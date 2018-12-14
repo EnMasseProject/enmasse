@@ -6,7 +6,6 @@ package io.enmasse.systemtest.standard.authz;
 
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

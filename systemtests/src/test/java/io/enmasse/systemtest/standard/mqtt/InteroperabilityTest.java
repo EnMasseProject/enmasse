@@ -16,7 +16,8 @@ import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -58,7 +59,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
         Future<List<Message>> recvResultAmqp = amqpClient.recvMessages(mqttTopic.getAddress(), messages.size());
 
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(mqttClient, mqttTopic.getAddress(), messages);;
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(mqttClient, mqttTopic.getAddress(), messages);
 
         int sentCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
         assertThat("Incorrect count of messages sent",

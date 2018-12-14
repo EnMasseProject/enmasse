@@ -25,9 +25,9 @@ public class MqttUtils {
         CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         try {
             future.get(timeout, timeUnit);
-            return (int)futures.stream().filter(CompletableFuture::isDone).count();
+            return (int) futures.stream().filter(CompletableFuture::isDone).count();
         } catch (TimeoutException e) {
-            return (int)futures.stream().filter(CompletableFuture::isDone).count();
+            return (int) futures.stream().filter(CompletableFuture::isDone).count();
         }
     }
 

@@ -16,6 +16,7 @@ public interface ISeleniumProvider {
     SeleniumProvider selenium = new SeleniumProvider();
 
     WebDriver buildDriver() throws Exception;
+
     void restartSeleniumContainer() throws Exception;
 
     @AfterEach

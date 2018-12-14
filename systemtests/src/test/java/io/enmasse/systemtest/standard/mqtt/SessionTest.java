@@ -12,7 +12,8 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import io.enmasse.systemtest.mqtt.MqttMessageArrivedCallback;
-import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -50,8 +51,8 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
 
         // Subscribe on a cleanSession false and disconnect
         IMqttClient subscriber = mqttClientFactory.build().clientId(SUBSCRIBER_ID)
-                                                           .mqttConnectionOptions(persistentSession)
-                                                           .create();
+                .mqttConnectionOptions(persistentSession)
+                .create();
         subscriber.connect();
         subscriber.subscribe(MQTT_TOPIC, 1);
         subscriber.disconnect();
@@ -62,8 +63,8 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
         // Connect the subscriber again, with cleanSession false, expect the message to arrive
         CompletableFuture<Void> messageArrived = new CompletableFuture<>();
         subscriber = mqttClientFactory.build().clientId(SUBSCRIBER_ID)
-                                               .mqttConnectionOptions(persistentSession)
-                                               .create();
+                .mqttConnectionOptions(persistentSession)
+                .create();
         subscriber.setCallback((MqttMessageArrivedCallback) (topic, message) -> messageArrived.complete(null));
         subscriber.connect();
         messageArrived.get();
@@ -77,8 +78,8 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
 
         AtomicInteger receivedMessageCount = new AtomicInteger();
         subscriber = mqttClientFactory.build().clientId(SUBSCRIBER_ID)
-                                               .mqttConnectionOptions(cleanSession)
-                                               .create();
+                .mqttConnectionOptions(cleanSession)
+                .create();
         subscriber.setCallback((MqttMessageArrivedCallback) (topic, message) -> receivedMessageCount.incrementAndGet());
         subscriber.connect();
         // TODO give reasonable time for the message not to arrive
@@ -89,8 +90,8 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
         // Connect the subscriber again, with cleanSession true, publish and check the message does not arrive so
         // proving that the subscription was not persisted.
         subscriber = mqttClientFactory.build().clientId(SUBSCRIBER_ID)
-                                               .mqttConnectionOptions(cleanSession)
-                                               .create();
+                .mqttConnectionOptions(cleanSession)
+                .create();
         subscriber.setCallback((MqttMessageArrivedCallback) (topic, message) -> receivedMessageCount.incrementAndGet());
         subscriber.connect();
         Thread.sleep(2500);

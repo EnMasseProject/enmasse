@@ -7,6 +7,7 @@ package io.enmasse.systemtest.common;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CRDCmdClient;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -64,8 +65,12 @@ class CommonTest extends TestBase {
         assertCanConnect(brokered, user, brokeredAddresses);
         assertCanConnect(standard, user, standardAddresses);
 
-        //number of pods running before restarting any
-        int runningPodsBefore = kubernetes.listPods().size();
+        log.info("------------------------------------------------------------");
+        log.info("------------------- Start with restating -------------------");
+        log.info("------------------------------------------------------------");
+
+        List<Pod> pods = kubernetes.listPods();
+        int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
         for (Label label : labels) {
@@ -78,10 +83,14 @@ class CommonTest extends TestBase {
 
         log.info("Restarting whole enmasse");
         CRDCmdClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
-        Thread.sleep(120_000);
+        Thread.sleep(180_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(120, TimeUnit.SECONDS));
         TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(180, TimeUnit.SECONDS),
                 standardAddresses.toArray(new Destination[0]));
+        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+
+        Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
+        kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
     }
 
@@ -102,12 +111,12 @@ class CommonTest extends TestBase {
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Destination> brAddresses, List<Destination> stAddresses) throws Exception {
         log.info("Check if system works");
-        brokered = getAddressSpace(brokered.getName());
-        standard = getAddressSpace(standard.getName());
+        assertCanConnect(standard, existingUser, stAddresses);
+        assertCanConnect(brokered, existingUser, brAddresses);
+        getAddressSpace(brokered.getName());
+        getAddressSpace(standard.getName());
         createUser(brokered, new UserCredentials("jenda", "cenda"));
         createUser(standard, new UserCredentials("jura", "fura"));
-        assertCanConnect(brokered, existingUser, brAddresses);
-        assertCanConnect(standard, existingUser, stAddresses);
     }
 
     private class Label {

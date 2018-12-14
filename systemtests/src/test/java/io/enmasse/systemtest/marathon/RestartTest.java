@@ -27,7 +27,7 @@ class RestartTest extends MarathonTestBase {
     }
 
     @AfterEach
-    void tearDownRestart() throws InterruptedException {
+    void tearDownRestart() {
         if (deleteService != null) {
             deleteService.shutdownNow();
         }
@@ -76,8 +76,14 @@ class RestartTest extends MarathonTestBase {
         TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getName()));
         TestUtils.runUntilPass(60, () -> createUser(brokered, new UserCredentials("jenda", "cenda")));
         TestUtils.runUntilPass(60, () -> createUser(standard, new UserCredentials("jura", "fura")));
-        TestUtils.runUntilPass(60, () -> { assertCanConnect(brokered, existingUser, brAddresses); return true; });
-        TestUtils.runUntilPass(60, () -> { assertCanConnect(standard, existingUser, stAddresses); return true; });
+        TestUtils.runUntilPass(60, () -> {
+            assertCanConnect(brokered, existingUser, brAddresses);
+            return true;
+        });
+        TestUtils.runUntilPass(60, () -> {
+            assertCanConnect(standard, existingUser, stAddresses);
+            return true;
+        });
     }
 }
 

@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.resources;
 
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.apiclients.AdminApiClient;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -40,6 +39,7 @@ public class AddressSpacePlan {
     public String getName() {
         return name;
     }
+
     public String getInfraConfigName() {
         return infraConfigName;
     }

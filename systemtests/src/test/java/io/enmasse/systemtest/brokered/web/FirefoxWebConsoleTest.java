@@ -160,7 +160,8 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
-    @Disabled("disabled while sdavey changes it with changes to regex in addr names") //TODO(sdavey)
+    @Disabled("disabled while sdavey changes it with changes to regex in addr names")
+        //TODO(sdavey)
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
                 Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",

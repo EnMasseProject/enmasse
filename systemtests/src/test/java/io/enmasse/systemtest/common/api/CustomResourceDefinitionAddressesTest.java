@@ -133,7 +133,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         List<String> dest2Expected = Arrays.asList(
                 String.format(addressString, "address", brokered.getName(), dest2.getName()),
                 String.format(addressString, "address.enmasse.io", brokered.getName(), dest2.getName()),
-        String.format(address2String, "address.enmasse.io", brokered.getName(), dest2.getName()));
+                String.format(address2String, "address.enmasse.io", brokered.getName(), dest2.getName()));
         assertTrue(dest2Expected.contains(output),
                 String.format("Unexpected response on create custom resource '%s': %s", address2, output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address2));
