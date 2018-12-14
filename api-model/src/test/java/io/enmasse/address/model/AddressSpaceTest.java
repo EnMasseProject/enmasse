@@ -5,10 +5,12 @@
 package io.enmasse.address.model;
 
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class AddressSpaceTest {
@@ -44,7 +46,7 @@ public class AddressSpaceTest {
                     .setType("type")
                     .setPlan("plan")
                     .build();
-            fail();
+            fail("");
         } catch (NullPointerException e) {
             // pass
         }
@@ -54,7 +56,7 @@ public class AddressSpaceTest {
                     .setName("name")
                     .setPlan("plan")
                     .build();
-            fail();
+            fail("");
         } catch (NullPointerException e) {
             // pass
         }
@@ -64,7 +66,7 @@ public class AddressSpaceTest {
                     .setName("name")
                     .setType("type")
                     .build();
-            fail();
+            fail("");
         } catch (NullPointerException e) {
             // pass
         }

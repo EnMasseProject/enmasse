@@ -9,9 +9,9 @@ import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +23,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BlockingClientTest {
     private static final Logger log = LoggerFactory.getLogger(BlockingClientTest.class);
@@ -35,7 +35,7 @@ public class BlockingClientTest {
     private BlockingQueue<Message> outbox;
     private int actualPort;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         vertx = Vertx.vertx();
         server = ProtonServer.create(vertx);
@@ -93,7 +93,7 @@ public class BlockingClientTest {
             Message received = inbox.poll(1, TimeUnit.MINUTES);
             assertNotNull(received);
             assertThat(received.getMessageId(), is(m.getMessageId()));
-            assertThat(((AmqpValue)received.getBody()).getValue(), is("hello there"));
+            assertThat(((AmqpValue) received.getBody()).getValue(), is("hello there"));
         }
     }
 
@@ -111,11 +111,11 @@ public class BlockingClientTest {
             Message received = messages.get(0);
             assertNotNull(received);
             assertThat(received.getMessageId(), is(m.getMessageId()));
-            assertThat(((AmqpValue)received.getBody()).getValue(), is("hello there"));
+            assertThat(((AmqpValue) received.getBody()).getValue(), is("hello there"));
         }
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         server.close();
         vertx.close();

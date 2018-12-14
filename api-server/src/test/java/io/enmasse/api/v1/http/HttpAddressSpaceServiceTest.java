@@ -13,9 +13,8 @@ import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.k8s.util.TimeUtil;
-import org.jboss.resteasy.spi.ResteasyUriInfo;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -26,10 +25,9 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,7 +40,7 @@ public class HttpAddressSpaceServiceTest {
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
 
-    @Before
+    @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC());
@@ -56,13 +54,13 @@ public class HttpAddressSpaceServiceTest {
                 .setCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
                 .setEndpointList(Arrays.asList(
                         new EndpointSpec.Builder()
-                            .setName("messaging")
-                            .setService("messaging")
-                        .build(),
+                                .setName("messaging")
+                                .setService("messaging")
+                                .build(),
                         new EndpointSpec.Builder()
-                            .setName("mqtt")
-                            .setService("mqtt")
-                        .build()))
+                                .setName("mqtt")
+                                .setService("mqtt")
+                                .build()))
                 .build();
 
         a2 = new AddressSpace.Builder()
@@ -119,7 +117,7 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceApi.createAddressSpace(a1);
         Response response = invoke(() -> addressSpaceService.getAddressSpace(securityContext, null, null, "a1"));
         assertThat(response.getStatus(), is(200));
-        AddressSpace data = ((AddressSpace)response.getEntity());
+        AddressSpace data = ((AddressSpace) response.getEntity());
 
         assertThat(data, is(a1));
         assertThat(data.getEndpoints().size(), is(a1.getEndpoints().size()));
@@ -130,7 +128,7 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceApi.createAddressSpace(a1);
         Response response = invoke(() -> addressSpaceService.getAddressSpace(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", null, "a1"));
         assertThat(response.getStatus(), is(200));
-        Table data = ((Table)response.getEntity());
+        Table data = ((Table) response.getEntity());
 
         assertThat(data.getColumnDefinitions().size(), is(6));
         assertThat(data.getRows().get(0).getObject().getMetadata().getName(), is(a1.getName()));
@@ -180,9 +178,9 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
 
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null,"a1"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null, "a1"));
         assertThat(response.getStatus(), is(200));
-        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
+        assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
 
         assertThat(addressSpaceApi.listAddressSpaces(null), hasItem(a2));
         assertThat(addressSpaceApi.listAddressSpaces(null).size(), is(1));
@@ -192,14 +190,14 @@ public class HttpAddressSpaceServiceTest {
     public void testDeleteException() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.throwException = true;
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null,"a1"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null, "a1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testDeleteNotFound() {
         addressSpaceApi.createAddressSpace(a1);
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null,"doesnotexist"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null, "doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 
@@ -210,6 +208,6 @@ public class HttpAddressSpaceServiceTest {
 
         Response response = invoke(() -> addressSpaceService.deleteAddressSpaces(securityContext, "myspace"));
         assertThat(response.getStatus(), is(200));
-        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
+        assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
     }
 }

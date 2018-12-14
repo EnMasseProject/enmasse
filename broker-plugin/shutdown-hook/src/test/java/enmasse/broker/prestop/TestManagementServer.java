@@ -8,9 +8,6 @@ import io.enmasse.amqp.SyncRequestClient;
 import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.message.Message;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 

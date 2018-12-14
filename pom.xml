@@ -56,7 +56,6 @@
         <commons-collections.version>3.2.2</commons-collections.version>
         <guava.version>25.0-jre</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <junit.version>4.12</junit.version>
         <junit.jupiter.version>5.1.0</junit.jupiter.version>
         <junit.vintage.version>5.1.0</junit.vintage.version>
         <junit.platform.version>1.1.0</junit.platform.version>
@@ -526,14 +525,8 @@
 
             <dependency>
                 <groupId>io.vertx</groupId>
-                <artifactId>vertx-unit</artifactId>
+                <artifactId>vertx-junit5</artifactId>
                 <version>${vertx.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
             </dependency>
 
             <dependency>
@@ -545,12 +538,6 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${junit.jupiter.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.junit.vintage</groupId>
-                <artifactId>junit-vintage-engine</artifactId>
-                <version>${junit.vintage.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.platform</groupId>
@@ -805,6 +792,13 @@
                         <ENV_VAR_EXISTS_BOOLEAN>true</ENV_VAR_EXISTS_BOOLEAN>
                     </environmentVariables>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.platform</groupId>
+                        <artifactId>junit-platform-surefire-provider</artifactId>
+                        <version>${junit.platform.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>com.mycila</groupId>

@@ -14,8 +14,8 @@ import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 import org.jboss.resteasy.spi.ResteasyUriInfo;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -25,9 +25,9 @@ import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,14 +41,13 @@ public class HttpUserServiceTest {
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
 
-    @Before
+    @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         userApi = new TestUserApi();
         this.userService = new HttpUserService(addressSpaceApi, userApi, Clock.systemUTC());
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
-
 
 
         addressSpaceApi.createAddressSpace(new AddressSpace.Builder()
@@ -335,7 +334,7 @@ public class HttpUserServiceTest {
     public void testDelete() {
         Response response = invoke(() -> userService.deleteUser(securityContext, "ns1", "myspace.user1"));
         assertThat(response.getStatus(), is(200));
-        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
+        assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
 
         assertTrue(userApi.listUsers("ns1").getItems().isEmpty());
         assertFalse(userApi.listUsers("ns2").getItems().isEmpty());

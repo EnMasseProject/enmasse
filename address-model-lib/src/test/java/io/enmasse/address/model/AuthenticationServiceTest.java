@@ -5,13 +5,14 @@
 
 package io.enmasse.address.model;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * Unit tests for {@link AuthenticationService}

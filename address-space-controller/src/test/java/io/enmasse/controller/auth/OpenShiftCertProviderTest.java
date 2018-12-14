@@ -13,25 +13,30 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static junit.framework.TestCase.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class OpenShiftCertProviderTest {
-    @Rule
     public OpenShiftServer server = new OpenShiftServer(true, true);
 
     private OpenShiftClient client;
     private CertProvider certProvider;
 
-    @Before
+    @BeforeEach
     public void setup() {
+        server.before();
         client = server.getOpenshiftClient();
 
         certProvider = new OpenshiftCertProvider(client);
+    }
+
+    @AfterEach
+    void tearDown() {
+        server.after();
     }
 
     @Test

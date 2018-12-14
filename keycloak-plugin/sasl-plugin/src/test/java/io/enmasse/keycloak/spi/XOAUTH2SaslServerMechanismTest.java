@@ -5,8 +5,8 @@
 
 package io.enmasse.keycloak.spi;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.keycloak.Config;
 import org.keycloak.common.VerificationException;
 import org.keycloak.common.util.Time;
@@ -16,8 +16,7 @@ import org.keycloak.representations.AccessToken;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,7 +27,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     private boolean verifyToken;
     private KeycloakSessionFactory keycloakSessionFactory;
 
-    @Before
+    @BeforeEach
     public void setup() {
         keycloakSession = mock(KeycloakSession.class);
         keycloakSessionFactory = mock(KeycloakSessionFactory.class);
@@ -107,11 +106,11 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
     }
 
     // incorrect sasl format
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testBadInitialResponse() {
         final SaslServerMechanism.Instance instance =
                 (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "realm", config);
-        instance.processResponse("potato".getBytes(StandardCharsets.UTF_8));
+        assertThrows(IllegalArgumentException.class, () -> instance.processResponse("potato".getBytes(StandardCharsets.UTF_8)));
     }
 
 

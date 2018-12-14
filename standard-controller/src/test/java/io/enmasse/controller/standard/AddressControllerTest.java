@@ -15,8 +15,8 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -31,7 +31,7 @@ public class AddressControllerTest {
     private OpenShiftClient mockClient;
     private BrokerSetGenerator mockGenerator;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         mockHelper = mock(Kubernetes.class);
         mockGenerator = mock(BrokerSetGenerator.class);

@@ -9,25 +9,29 @@ import io.enmasse.address.model.CertSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CertBundleCertProviderTest {
-    @Rule
+
     public OpenShiftServer server = new OpenShiftServer(true, true);
 
     private OpenShiftClient client;
     private CertProvider certProvider;
 
-    @Before
+    @AfterEach
+    void tearDown() {
+        server.after();
+    }
+
+    @BeforeEach
     public void setup() {
+        server.before();
         client = server.getOpenshiftClient();
 
         certProvider = new CertBundleCertProvider(client);
@@ -78,25 +82,25 @@ public class CertBundleCertProviderTest {
         assertThat(cert.getData().get("tls.crt"), is(spec.getTlsCert()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidateBadKey() {
-        new CertSpec.Builder()
+        assertThrows(IllegalArgumentException.class, () -> new CertSpec.Builder()
                 .setProvider("certBundle")
                 .setSecretName("mycerts")
                 .setTlsKey("/%^$lkg")
                 .setTlsCert("d29ybGQ=")
                 .build()
-                .validate();
+                .validate());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidateBadCert() {
-        new CertSpec.Builder()
+        assertThrows(IllegalArgumentException.class, () -> new CertSpec.Builder()
                 .setProvider("certBundle")
                 .setSecretName("mycerts")
                 .setTlsKey("d29ybGQ=")
                 .setTlsCert("/%^$lkg")
                 .build()
-                .validate();
+                .validate());
     }
 }

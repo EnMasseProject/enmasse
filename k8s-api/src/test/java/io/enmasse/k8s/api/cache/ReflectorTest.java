@@ -8,8 +8,8 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.ConfigMapListBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Clock;
@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class ReflectorTest {
@@ -30,7 +30,7 @@ public class ReflectorTest {
     WorkQueue<ConfigMap> testStore;
     Processor<ConfigMap> testProc;
 
-    @Before
+    @BeforeEach
     public void setup() {
         testLister = mock(ListerWatcher.class);
         testProc = mock(Processor.class);

@@ -6,7 +6,7 @@ package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.InfraConfigDeserializer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

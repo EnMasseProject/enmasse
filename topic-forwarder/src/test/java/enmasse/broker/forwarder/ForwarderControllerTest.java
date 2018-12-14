@@ -8,12 +8,12 @@ package enmasse.broker.forwarder;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,10 +25,11 @@ import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(VertxUnitRunner.class)
+
+@ExtendWith(VertxExtension.class)
 public class ForwarderControllerTest {
     private static final Logger log = LoggerFactory.getLogger(ForwarderControllerTest.class.getName());
     private Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
@@ -38,17 +39,17 @@ public class ForwarderControllerTest {
     private TestBroker serverB;
     private TestBroker serverC;
 
-    @Before
-    public void setup(TestContext testContext) throws Exception {
+    @BeforeEach
+    public void setup(VertxTestContext testContext) throws Exception {
         serverA = new TestBroker(1, address);
         serverB = new TestBroker(2, address);
         serverC = new TestBroker(3, address);
-        vertx.deployVerticle(serverA, testContext.asyncAssertSuccess());
-        vertx.deployVerticle(serverB, testContext.asyncAssertSuccess());
-        vertx.deployVerticle(serverC, testContext.asyncAssertSuccess());
+        vertx.deployVerticle(serverA, testContext.succeeding(arg -> testContext.completeNow()));
+        vertx.deployVerticle(serverB, testContext.succeeding(arg -> testContext.completeNow()));
+        vertx.deployVerticle(serverC, testContext.succeeding(arg -> testContext.completeNow()));
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         vertx.close();
     }
@@ -98,7 +99,7 @@ public class ForwarderControllerTest {
         assertMessages(resultC.get(120, TimeUnit.SECONDS), "Hello 3", "Hello 4");
     }
 
-    private void assertMessages(List<String> result, String...messages) {
+    private void assertMessages(List<String> result, String... messages) {
         assertThat(messages.length, is(2));
         for (String message : messages) {
             assertThat(result, hasItem(message));

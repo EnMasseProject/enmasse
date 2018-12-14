@@ -5,41 +5,34 @@
 
 package io.enmasse.api.v1;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import java.util.*;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.apache.http.auth.BasicUserPrincipal;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
+import java.util.*;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public class AddressApiHelperTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
     private AddressApiHelper helper;
     private AddressApi addressApi;
     private SecurityContext securityContext;
 
-    @Before
+    @BeforeEach
     public void setup() {
         AddressSpace addressSpace = mock(AddressSpace.class);
         when(addressSpace.getType()).thenReturn("type1");
@@ -56,11 +49,9 @@ public class AddressApiHelperTest {
     @Test
     public void testCreateAddressResourceNameAlreadyExists() throws Exception {
         when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("q1", "q1")));
-        expectedException.expect(BadRequestException.class);
-        expectedException.expectMessage("Address 'q1' already exists with resource name 'q1'");
-
         Address invalidAddress = createAddress("someOtherName", "q1");
-        helper.createAddress("test", invalidAddress);
+        Throwable exception = assertThrows(BadRequestException.class, () -> helper.createAddress("test", invalidAddress));
+        assertEquals("Address 'q1' already exists with resource name 'q1'", exception.getMessage());
         verify(addressApi, never()).createAddress(any(Address.class));
     }
 
@@ -127,11 +118,8 @@ public class AddressApiHelperTest {
     @Test
     public void testReplaceAddressNotFound() throws Exception {
         when(addressApi.replaceAddress(any())).thenReturn(false);
-        expectedException.expect(NotFoundException.class);
-        expectedException.expectMessage("Address q1 not found");
-
-        helper.replaceAddress("test", createAddress("q1"));
-        verify(addressApi, never()).replaceAddress(any(Address.class));
+        Throwable exception = assertThrows(NotFoundException.class, () -> helper.replaceAddress("test", createAddress("q1")));
+        assertEquals("Address q1 not found", exception.getMessage());
     }
 
     @Test
@@ -141,11 +129,9 @@ public class AddressApiHelperTest {
         addresses.add(createAddress("q2", "q2"));
         when(addressApi.listAddresses(any())).thenReturn(addresses);
         when(addressApi.replaceAddress(any())).thenReturn(true);
-        expectedException.expect(BadRequestException.class);
-        expectedException.expectMessage("Address 'q2' already exists with resource name 'q2'");
-
         Address invalidAddress = createAddress("q1", "q2");
-        helper.replaceAddress("test", invalidAddress);
+        Throwable exception = assertThrows(BadRequestException.class, () -> helper.replaceAddress("test", invalidAddress));
+        assertEquals("Address 'q2' already exists with resource name 'q2'", exception.getMessage());
         verify(addressApi, never()).replaceAddress(any(Address.class));
     }
 
@@ -197,13 +183,11 @@ public class AddressApiHelperTest {
         assertThat(labels.get("key3"), is("value3"));
     }
 
-    private Address createAddress(String name, String address)
-    {
+    private Address createAddress(String name, String address) {
         return new Address.Builder().setName(name).setNamespace("ns").setAddress(address).setAddressSpace("test").setType("queue").setPlan("plan1").build();
     }
 
-    private Address createAddress(String address)
-    {
+    private Address createAddress(String address) {
         return createAddress(address, address);
     }
 }
