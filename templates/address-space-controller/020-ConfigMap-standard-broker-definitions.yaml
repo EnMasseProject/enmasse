@@ -146,6 +146,8 @@ data:
                 requests:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
+              - mountPath: /var/run/artemis
+                name: data
               - mountPath: /etc/prometheus-config
                 name: broker-prometheus-config
                 readOnly: true
@@ -418,6 +420,8 @@ data:
                 requests:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
+              - mountPath: /var/run/artemis
+                name: data
               - mountPath: /opt/apache-artemis/custom
                 name: broker-custom
                 readOnly: false
