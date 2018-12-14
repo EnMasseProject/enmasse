@@ -1094,9 +1094,9 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: AMQ_NAME
-                value: broker
+                value: serverData
               - name: HOME
-                value: /home/artemis
+                value: /run/artemis/split-1/
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               command:
@@ -1160,9 +1160,9 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: AMQ_NAME
-                value: broker
+                value: serverData
               - name: HOME
-                value: /home/artemis
+                value: /run/artemis/split-1/
               image: ${ARTEMIS_PLUGIN_IMAGE}
               name: broker-plugin
               volumeMounts:

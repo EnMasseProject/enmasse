@@ -5,7 +5,7 @@ RUN yum -y install which libaio python hostname iputils && yum clean all -y && m
 ARG version
 ARG commit
 
-ENV ARTEMIS_HOME=/opt/apache-artemis HOME=/home/artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit}
+ENV ARTEMIS_HOME=/opt/apache-artemis HOME=/run/artemis/split-1/ PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit}
 
 ADD ./build/apache-artemis-bin.tar.gz /opt
 RUN mv /opt/apache-artemis-2.6.3 $ARTEMIS_HOME
