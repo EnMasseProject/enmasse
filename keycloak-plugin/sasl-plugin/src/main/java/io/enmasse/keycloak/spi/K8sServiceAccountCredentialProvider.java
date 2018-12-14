@@ -15,6 +15,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.jboss.logging.Logger;
 import org.keycloak.credential.CredentialInput;
 import org.keycloak.credential.CredentialInputUpdater;
 import org.keycloak.credential.CredentialInputValidator;
@@ -34,9 +35,11 @@ import java.util.Set;
 
 public class K8sServiceAccountCredentialProvider implements CredentialProvider, CredentialInputValidator, OnUserCache, CredentialInputUpdater {
 
+    private static final Logger LOG = Logger.getLogger(AmqpServer.class);
+
     public static final String ENMASSE_SERVICE_ACCOUNT_TYPE = "enmasse-service-account";
 
-    public K8sServiceAccountCredentialProvider(KeycloakSession session) {
+    K8sServiceAccountCredentialProvider(KeycloakSession session) {
     }
 
     @Override
@@ -74,6 +77,12 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
                 userName = user.getString("username");
             }
         }
+        if(!authenticated) {
+            LOG.info("User: " + userModel.getUsername() + " not authenticated for realm " + realmModel.getName());
+        } else if(!Objects.equals(userModel.getUsername(), userName)) {
+            LOG.info("Attempt to log in for user " + userModel.getUsername() + " in realm " + realmModel.getName() + " with token for " + userName);
+        }
+
         return authenticated && Objects.equals(userModel.getUsername(), userName);
     }
 
