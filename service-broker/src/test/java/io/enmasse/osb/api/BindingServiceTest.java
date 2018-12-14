@@ -107,8 +107,7 @@ public class BindingServiceTest extends OSBTestBase {
         String otherServiceId = UUID.randomUUID().toString();
         provisionService(otherServiceId);
 
-        exceptionGrabber.expect(ConflictException.class);
-        bindingService.bindServiceInstance(getSecurityContext(), otherServiceId, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
+        assertThrows(ConflictException.class, () -> bindingService.bindServiceInstance(getSecurityContext(), otherServiceId, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID)));
     }
 
     @Disabled("bindings aren't persisted yet, so we can't do this yet")
@@ -141,8 +140,7 @@ public class BindingServiceTest extends OSBTestBase {
         bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
         bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID);
 
-        exceptionGrabber.expect(GoneException.class);
-        bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID);
+        assertThrows(GoneException.class, () -> bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID));
     }
 
 }

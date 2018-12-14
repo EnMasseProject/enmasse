@@ -119,8 +119,7 @@ public class ProvisionServiceTest extends OSBTestBase {
     @Test
     public void testProvisionTwiceWithDifferentPrameters() throws Exception {
         provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
-        exceptionGrabber.expect(ConflictException.class);
-        provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(ServiceType.TOPIC.uuid(), TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(ConflictException.class, () -> provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(ServiceType.TOPIC.uuid(), TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
     @Test
@@ -162,8 +161,7 @@ public class ProvisionServiceTest extends OSBTestBase {
         provisionService(SERVICE_INSTANCE_ID);
         provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
 
-        exceptionGrabber.expect(GoneException.class);
-        provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
+        assertThrows(GoneException.class, () -> provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING));
     }
 
     @Test

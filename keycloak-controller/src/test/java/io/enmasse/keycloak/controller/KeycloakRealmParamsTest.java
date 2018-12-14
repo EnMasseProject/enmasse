@@ -6,28 +6,31 @@ package io.enmasse.keycloak.controller;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ExtendWith(ExternalResourceSupport.class)
-public class KeycloakRealmParamsTest {
-    @Rule
-    public KubernetesServer server = new KubernetesServer(true, true);
+class KeycloakRealmParamsTest {
+
+    private KubernetesServer server = new KubernetesServer(true, true);
 
     private KubernetesClient client;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
+        server.before();
         client = server.getClient();
     }
 
+    @AfterEach
+    void tearDown() {
+        server.after();
+    }
+
     @Test
-    public void testRequiredEnvironment() {
+    void testRequiredEnvironment() {
         client.configMaps().createNew()
                 .editOrNewMetadata()
                 .withName("myconfig")

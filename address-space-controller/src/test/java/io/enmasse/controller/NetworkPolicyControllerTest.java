@@ -19,11 +19,9 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import java.util.Collections;
 
@@ -33,17 +31,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@ExtendWith(ExternalResourceSupport.class)
 public class NetworkPolicyControllerTest {
     private static final ObjectMapper mapper = new ObjectMapper();
     private OpenShiftClient client;
 
-    @Rule
     public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 
     @BeforeEach
     public void setup() {
+        openShiftServer.before();
         client = openShiftServer.getOpenshiftClient();
+    }
+
+    @AfterEach
+    void tearDown() {
+        openShiftServer.after();
     }
 
     @Test

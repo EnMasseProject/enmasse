@@ -25,9 +25,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests related to publish messages via MQTT
@@ -100,7 +100,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
         CompletableFuture<MqttMessage> messageFuture = new CompletableFuture<>();
         subscriber.subscribe(topic.getAddress(), (topic1, message) -> messageFuture.complete(message));
         MqttMessage receivedMessage = messageFuture.get(1, TimeUnit.MINUTES);
-        assertTrue("Retained message expected", receivedMessage.isRetained());
+        assertTrue(receivedMessage.isRetained(), "Retained message expected");
 
         subscriber.disconnect();
     }

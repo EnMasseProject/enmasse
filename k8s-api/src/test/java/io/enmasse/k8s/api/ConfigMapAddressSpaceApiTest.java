@@ -7,11 +7,9 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.AddressSpace;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import java.util.Optional;
 
@@ -21,24 +19,29 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * The mock server does not emulate behaviour with respect to resourceVersion.
  */
-@ExtendWith(ExternalResourceSupport.class)
-public class ConfigMapAddressSpaceApiTest {
+class ConfigMapAddressSpaceApiTest {
     private static final String ADDRESS_SPACE_NAME = "myspace";
     private static final String ADDRESS_SPACE_TYPE = "mytype";
     private static final String ADDRESS_SPACE_PLAN = "myplan";
     private static final String ADDRESS_SPACE_NAMESPACE = "myproject";
-    @Rule
-    public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+
+    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
     private AddressSpaceApi api;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
+        openShiftServer.before();
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
         api = new ConfigMapAddressSpaceApi(client);
     }
 
+    @AfterEach
+    void tearDown() {
+        openShiftServer.after();
+    }
+
     @Test
-    public void create() throws Exception {
+    void create() throws Exception {
         AddressSpace space = createAddressSpace(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME);
 
         api.createAddressSpace(space);
@@ -53,7 +56,7 @@ public class ConfigMapAddressSpaceApiTest {
     }
 
     @Test
-    public void replace() throws Exception {
+    void replace() throws Exception {
         AddressSpace space = createAddressSpace(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME);
         final String annotationKey = "myannotation";
         String annotationValue = "value";
@@ -72,7 +75,7 @@ public class ConfigMapAddressSpaceApiTest {
     }
 
     @Test
-    public void replaceNotFound() throws Exception {
+    void replaceNotFound() throws Exception {
         AddressSpace space = createAddressSpace(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME);
 
         boolean replaced = api.replaceAddressSpace(space);
@@ -80,7 +83,7 @@ public class ConfigMapAddressSpaceApiTest {
     }
 
     @Test
-    public void delete() throws Exception {
+    void delete() throws Exception {
         AddressSpace space = createAddressSpace(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME);
 
         api.createAddressSpace(space);

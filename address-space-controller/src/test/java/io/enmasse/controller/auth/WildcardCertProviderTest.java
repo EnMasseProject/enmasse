@@ -10,20 +10,16 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
-@ExtendWith(ExternalResourceSupport.class)
 public class WildcardCertProviderTest {
-    @Rule
     public KubernetesServer server = new KubernetesServer(true, true);
 
     private KubernetesClient client;
@@ -31,10 +27,16 @@ public class WildcardCertProviderTest {
 
     @BeforeEach
     public void setup() {
+        server.before();
         client = server.getClient();
         String wildcardCert = "wildcardcert";
 
         certProvider = new WildcardCertProvider(client, wildcardCert);
+    }
+
+    @AfterEach
+    void tearDown() {
+        server.after();
     }
 
     @Test
