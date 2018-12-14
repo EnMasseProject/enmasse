@@ -4,6 +4,38 @@
  */
 package io.enmasse.api.v1.http;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
+
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
@@ -19,22 +51,10 @@ import io.enmasse.k8s.model.v1beta1.TableRow;
 import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserBuilder;
 import io.enmasse.user.model.v1.UserList;
-import io.enmasse.user.model.v1.UserMetadata;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 @Path(HttpUserService.BASE_URI)
 public class HttpUserService {
@@ -77,9 +97,9 @@ public class HttpUserService {
             UserList userList = new UserList();
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                userList.addAll(userApi.listUsersWithLabels(namespace, labels));
+                userList.getItems().addAll(userApi.listUsersWithLabels(namespace, labels).getItems());
             } else {
-                userList.addAll(userApi.listUsers(namespace));
+                userList.getItems().addAll(userApi.listUsers(namespace).getItems());
             }
             return Response.ok(formatResponse(acceptHeader, userList)).build();
         });
@@ -150,9 +170,9 @@ public class HttpUserService {
 
     private User setUserDefaults(User user, String namespace) {
         if (user.getMetadata().getNamespace() == null) {
-            user = new User.Builder(user)
-                    .setMetadata(new UserMetadata.Builder(user.getMetadata())
-                            .setNamespace(namespace)
+            user = new UserBuilder(user)
+                    .withMetadata(new ObjectMetaBuilder(user.getMetadata())
+                            .withNamespace(namespace)
                             .build())
                     .build();
         }
@@ -266,7 +286,7 @@ public class HttpUserService {
     private Object formatResponse(String headerParam, User user) {
         if (isTableFormat(headerParam)) {
             UserList list = new UserList();
-            list.add(user);
+            list.getItems().add(user);
             return new Table(new ListMeta(), tableColumnDefinitions, createRows(list));
         } else {
             return user;

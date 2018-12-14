@@ -32,7 +32,7 @@ public class AddressSpacePlanApiTest {
     @Test
     public void testNotifiesExisting() throws Exception {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        CustomResourceDefinition crd = AdminCrd.addressspaceplans();
+        CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
         AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(client, client.getNamespace(), crd);
 
         client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class)
@@ -60,7 +60,7 @@ public class AddressSpacePlanApiTest {
     @Test
     public void testNotifiesCreated() throws Exception {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        CustomResourceDefinition crd = AdminCrd.addressspaceplans();
+        CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
         AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(client, client.getNamespace(), crd);
 
         CompletableFuture<List<AddressSpacePlan>> promise = new CompletableFuture<>();

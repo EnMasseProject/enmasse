@@ -13,6 +13,7 @@ import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -59,20 +60,20 @@ public class HTTPServerTest {
 
         UserApi userApi = mock(UserApi.class);
         UserList users = new UserList();
-        users.add(new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myinstance.user1")
-                        .setNamespace("myinstance")
+        users.getItems().add(new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myinstance.user1")
+                        .withNamespace("myinstance")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("admin")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user1")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("admin")
                                 .build())
-                        .setAuthorization(Arrays.asList(new UserAuthorization.Builder()
-                                .setAddresses(Arrays.asList("queue1"))
-                                .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(new UserAuthorizationBuilder()
+                                .withAddresses(Arrays.asList("queue1"))
+                                .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                 .build()))
                         .build())
                 .build());

@@ -11,6 +11,8 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.user.model.v1.*;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,43 +66,43 @@ public class HttpUserServiceTest {
                 .setType("type1")
                 .setPlan("myplan")
                 .build());
-        u1 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user1")
-                        .setNamespace("ns1")
+        u1 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user1")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user1")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build(),
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("direct*"))
-                                        .setOperations(Arrays.asList(Operation.view))
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("direct*"))
+                                        .withOperations(Arrays.asList(Operation.view))
                                         .build()))
                         .build())
                 .build();
 
-        u2 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("otherspace.user2")
-                        .setNamespace("ns2")
+        u2 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("otherspace.user2")
+                        .withNamespace("ns2")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user2")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("pswd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user2")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("pswd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setOperations(Arrays.asList(Operation.manage))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withOperations(Arrays.asList(Operation.manage))
                                         .build()))
                         .build())
                 .build();
@@ -183,21 +185,21 @@ public class HttpUserServiceTest {
 
     @Test
     public void testCreate() {
-        User u3 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user3")
-                        .setNamespace("ns1")
+        User u3 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user3")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user3")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user3")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build()))
                         .build())
                 .build();
@@ -210,21 +212,21 @@ public class HttpUserServiceTest {
     @Test
     public void testCreateException() {
         userApi.throwException = true;
-        User u3 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user3")
-                        .setNamespace("ns1")
+        User u3 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user3")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user3")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user3")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build()))
                         .build())
                 .build();
@@ -235,21 +237,21 @@ public class HttpUserServiceTest {
     @Test
     public void testPutException() {
         userApi.throwException = true;
-        User u3 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user1")
-                        .setNamespace("ns1")
+        User u3 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user1")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user1")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build()))
                         .build())
                 .build();
@@ -259,21 +261,21 @@ public class HttpUserServiceTest {
 
     @Test
     public void testPutNotMatchingName() {
-        User u3 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user3")
-                        .setNamespace("ns1")
+        User u3 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user3")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user3")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user3")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build()))
                         .build())
                 .build();
@@ -283,21 +285,21 @@ public class HttpUserServiceTest {
 
     @Test
     public void testPutNotExists() {
-        User u3 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user3")
-                        .setNamespace("ns1")
+        User u3 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user3")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user3")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user3")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue1", "topic1"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue1", "topic1"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build()))
                         .build())
                 .build();
@@ -307,21 +309,21 @@ public class HttpUserServiceTest {
 
     @Test
     public void testPut() {
-        User u3 = new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName("myspace.user1")
-                        .setNamespace("ns1")
+        User u3 = new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("myspace.user1")
+                        .withNamespace("ns1")
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername("user1")
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.password)
-                                .setPassword("p4ssw0rd")
+                .withSpec(new UserSpecBuilder()
+                        .withUsername("user1")
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.password)
+                                .withPassword("p4ssw0rd")
                                 .build())
-                        .setAuthorization(Arrays.asList(
-                                new UserAuthorization.Builder()
-                                        .setAddresses(Arrays.asList("queue2", "topic2"))
-                                        .setOperations(Arrays.asList(Operation.send, Operation.recv))
+                        .withAuthorization(Arrays.asList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(Arrays.asList("queue2", "topic2"))
+                                        .withOperations(Arrays.asList(Operation.send, Operation.recv))
                                         .build()))
                         .build())
                 .build();

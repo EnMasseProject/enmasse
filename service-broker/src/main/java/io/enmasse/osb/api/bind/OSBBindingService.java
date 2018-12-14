@@ -17,6 +17,7 @@ import io.enmasse.osb.api.EmptyResponse;
 import io.enmasse.osb.api.OSBServiceBase;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -102,34 +103,34 @@ public class OSBBindingService extends OSBServiceBase {
     }
 
     private User createOrReplaceUser(AddressSpace addressSpace, String username, String password, Map<String, String> parameters) throws Exception {
-        UserSpec.Builder specBuilder = new UserSpec.Builder();
-        specBuilder.setUsername(username);
-        specBuilder.setAuthentication(new UserAuthentication.Builder()
-                .setType(UserAuthenticationType.password)
-                .setPassword(Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)))
+        UserSpecBuilder specBuilder = new UserSpecBuilder();
+        specBuilder.withUsername(username);
+        specBuilder.withAuthentication(new UserAuthenticationBuilder()
+                .withType(UserAuthenticationType.password)
+                .withPassword(Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)))
                 .build());
 
 
         List<UserAuthorization> authorizations = new ArrayList<>();
 
-        authorizations.add(new UserAuthorization.Builder()
-                .setOperations(Arrays.asList(Operation.send))
-                .setAddresses(getAddresses(parameters.get("sendAddresses")))
+        authorizations.add(new UserAuthorizationBuilder()
+                .withOperations(Arrays.asList(Operation.send))
+                .withAddresses(getAddresses(parameters.get("sendAddresses")))
                 .build());
 
-        authorizations.add(new UserAuthorization.Builder()
-                .setOperations(Arrays.asList(Operation.recv))
-                .setAddresses(getAddresses(parameters.get("receiveAddresses")))
+        authorizations.add(new UserAuthorizationBuilder()
+                .withOperations(Arrays.asList(Operation.recv))
+                .withAddresses(getAddresses(parameters.get("receiveAddresses")))
                 .build());
 
-        specBuilder.setAuthorization(authorizations);
+        specBuilder.withAuthorization(authorizations);
 
-        User user = new User.Builder()
-            .setMetadata(new UserMetadata.Builder()
-                    .setNamespace(addressSpace.getNamespace())
-                    .setName(addressSpace.getName() + "." + username)
+        User user = new UserBuilder()
+            .withMetadata(new ObjectMetaBuilder()
+                    .withNamespace(addressSpace.getNamespace())
+                    .withName(addressSpace.getName() + "." + username)
                     .build())
-                        .setSpec(specBuilder.build())
+                        .withSpec(specBuilder.build())
                         .build();
 
         String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
@@ -154,8 +155,8 @@ public class OSBBindingService extends OSBServiceBase {
         return builder.toString();
     }
 
-    private Collection<String> getAddresses(String addressList) {
-        Set<String> groups = new HashSet<>();
+    private List<String> getAddresses(String addressList) {
+        final Set<String> groups = new HashSet<>();
         if(addressList != null) {
             for(String address : addressList.split(",")) {
                 address = address.trim();
@@ -164,7 +165,7 @@ public class OSBBindingService extends OSBServiceBase {
                 }
             }
         }
-        return groups;
+        return new ArrayList<>(groups);
     }
 
     @DELETE
