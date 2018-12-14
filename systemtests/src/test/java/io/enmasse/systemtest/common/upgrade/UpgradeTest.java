@@ -7,6 +7,7 @@ package io.enmasse.systemtest.common.upgrade;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.bases.TestBase;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,7 @@ class UpgradeTest extends TestBase {
             for (Destination dest : standardQueues) {
                 sendDurableMessages(standard, dest, cred, msgCount);
             }
+            Thread.sleep(10_000);
             log.info("End of before upgrade phase");
         } else {
             log.info("After upgrade phase");
@@ -118,7 +120,7 @@ class UpgradeTest extends TestBase {
             listOfMessages.add(msg);
         });
         Future<Integer> sent = client.sendMessages(destination.getAddress(), listOfMessages.toArray(new Message[0]));
-        assertThat("Cannot send durable messages to " + destination, sent.get(10, TimeUnit.SECONDS), is(count));
+        assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
         client.close();
     }
 
@@ -126,8 +128,8 @@ class UpgradeTest extends TestBase {
                                         UserCredentials credentials, int count) throws Exception {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
-        Future<List<Message>> received = client.recvMessages(dest.getAddress(), count);
-        assertThat("Cannot receive durable messages from " + dest, received.get(10, TimeUnit.SECONDS).size(), is(count));
+        ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getAddress(), count);
+        assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
         client.close();
     }
 }
