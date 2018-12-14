@@ -28,6 +28,7 @@ import org.keycloak.models.cache.OnUserCache;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
@@ -121,7 +122,11 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
 
     @Override
     public Set<String> getDisableableCredentialTypes(RealmModel realmModel, UserModel userModel) {
-        return null;
+        if(!"serviceaccount".equals(userModel.getFirstAttribute("authenticationType"))) {
+            return Collections.singleton(ENMASSE_SERVICE_ACCOUNT_TYPE);
+        } else {
+            return Collections.emptySet();
+        }
     }
 
 }
