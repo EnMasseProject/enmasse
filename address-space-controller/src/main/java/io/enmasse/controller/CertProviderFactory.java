@@ -4,7 +4,6 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.CertSpec;
 import io.enmasse.controller.auth.CertProvider;
 
 public interface CertProviderFactory {

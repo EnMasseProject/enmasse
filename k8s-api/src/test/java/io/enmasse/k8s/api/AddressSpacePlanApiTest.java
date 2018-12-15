@@ -12,8 +12,9 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -21,18 +22,27 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class AddressSpacePlanApiTest {
+class AddressSpacePlanApiTest {
 
-    @Rule
-    public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+
+    @BeforeEach
+    void setUp() {
+        openShiftServer.before();
+    }
+
+    @AfterEach
+    void tearDown() {
+        openShiftServer.after();
+    }
 
     @Test
-    public void testNotifiesExisting() throws Exception {
+    void testNotifiesExisting() throws Exception {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        CustomResourceDefinition crd = AdminCrd.addressspaceplans();
+        CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
         AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(client, client.getNamespace(), crd);
 
         client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class)
@@ -58,9 +68,9 @@ public class AddressSpacePlanApiTest {
     }
 
     @Test
-    public void testNotifiesCreated() throws Exception {
+    void testNotifiesCreated() throws Exception {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        CustomResourceDefinition crd = AdminCrd.addressspaceplans();
+        CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
         AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(client, client.getNamespace(), crd);
 
         CompletableFuture<List<AddressSpacePlan>> promise = new CompletableFuture<>();
@@ -71,14 +81,14 @@ public class AddressSpacePlanApiTest {
 
         }, Duration.ofSeconds(2))) {
             client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class)
-                .createNew()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("plan1")
-                        .withNamespace(client.getNamespace())
-                        .build())
-                .withAddressSpaceType("standard")
-                .withAddressPlans(Arrays.asList("p1", "p2"))
-                .done();
+                    .createNew()
+                    .withMetadata(new ObjectMetaBuilder()
+                            .withName("plan1")
+                            .withNamespace(client.getNamespace())
+                            .build())
+                    .withAddressSpaceType("standard")
+                    .withAddressPlans(Arrays.asList("p1", "p2"))
+                    .done();
 
             List<AddressSpacePlan> list = promise.get(30, TimeUnit.SECONDS);
             assertEquals(1, list.size());

@@ -8,7 +8,6 @@ import io.fabric8.kubernetes.api.model.Secret;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Interface for certificate managers

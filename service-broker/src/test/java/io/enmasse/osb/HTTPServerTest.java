@@ -18,21 +18,21 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class HTTPServerTest {
 
     private Vertx vertx;
@@ -40,8 +40,8 @@ public class HTTPServerTest {
     private AddressSpace addressSpace;
     private HTTPServer httpServer;
 
-    @Before
-    public void setup(TestContext context) {
+    @BeforeEach
+    public void setup(VertxTestContext context) {
         vertx = Vertx.vertx();
         instanceApi = new TestAddressSpaceApi();
         String addressSpaceName = "myinstance";
@@ -59,12 +59,12 @@ public class HTTPServerTest {
                 return "http://localhost/console/" + addressSpaceName;
             }
         });
-        vertx.deployVerticle(httpServer, context.asyncAssertSuccess());
+        vertx.deployVerticle(httpServer, context.succeeding(id -> context.completeNow()));
     }
 
-    @After
-    public void teardown(TestContext context) {
-        vertx.close(context.asyncAssertSuccess());
+    @AfterEach
+    public void teardown(VertxTestContext context) {
+        vertx.close(context.succeeding(id -> context.completeNow()));
     }
 
     private AddressSpace createAddressSpace(String name) {
@@ -82,21 +82,20 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testOpenServiceBrokerAPI(TestContext context) {
+    public void testOpenServiceBrokerAPI(VertxTestContext context) throws InterruptedException {
         HttpClientOptions options = new HttpClientOptions();
         HttpClient client = vertx.createHttpClient(options);
         try {
-            Async async = context.async();
             HttpClientRequest request = client.get(httpServer.getActualPort(), "localhost", "/osbapi/v2/catalog", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    context.assertTrue(data.containsKey("services"));
-                    async.complete();
+                    context.verify(() -> assertTrue(data.containsKey("services")));
+                    context.completeNow();
                 });
             });
             putAuthzToken(request);
             request.end();
-            async.awaitSuccess(60_000);
+            context.awaitCompletion(60, TimeUnit.SECONDS);
         } finally {
             client.close();
         }

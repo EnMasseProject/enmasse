@@ -5,9 +5,9 @@
 
 package io.enmasse.osb.api;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 
-@Ignore
+@Disabled
 public class CatalogServiceTest extends OSBTestBase {
 /*
     @Test

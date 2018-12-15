@@ -5,26 +5,22 @@
 
 package io.enmasse.keycloak.spi;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.keycloak.credential.CredentialModel;
+import org.mockito.ArgumentCaptor;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.keycloak.credential.CredentialModel;
-import org.mockito.ArgumentCaptor;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class ScramPasswordHashProviderTest {
     private ScramPasswordHashProvider hashprovider;
     private CredentialModel credentialModel;
 
-    @Before
+    @BeforeEach
     public void setup() {
         hashprovider = new ScramPasswordHashProvider("scramsha1", 10000, "HmacSHA1", "SHA-1");
         credentialModel = mock(CredentialModel.class);
@@ -64,13 +60,13 @@ public class ScramPasswordHashProviderTest {
     @Test
     public void testSameValueEncodedDifferently() {
         Set<String> encoded = new HashSet<>();
-        for(int i = 0; i < 100; i++) {
+        for (int i = 0; i < 100; i++) {
             hashprovider.encode("testpassword", 25000, credentialModel);
-            if(!encoded.add(credentialModel.getValue())) {
+            if (!encoded.add(credentialModel.getValue())) {
                 fail("Duplicate encoding of the password");
             }
         }
-        
+
     }
 
 }

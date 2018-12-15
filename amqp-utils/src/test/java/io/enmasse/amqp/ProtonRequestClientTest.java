@@ -11,21 +11,21 @@ import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProtonRequestClientTest {
     private Vertx vertx;
     private ProtonServer server;
 
-    @Before
+    @BeforeEach
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         server = ProtonServer.create(vertx);
@@ -71,7 +71,7 @@ public class ProtonRequestClientTest {
         latch.await();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         server.close();
         vertx.close();

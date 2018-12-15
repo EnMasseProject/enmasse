@@ -48,13 +48,13 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     public static KubeSchemaApi create(NamespacedOpenShiftClient openShiftClient, String namespace, boolean isOpenShift) {
-        AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(openShiftClient, namespace, AdminCrd.addressspaceplans());
+        AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(openShiftClient, namespace, AdminCrd.addressSpacePlans());
 
-        AddressPlanApi addressPlanApi = new KubeAddressPlanApi(openShiftClient, namespace, AdminCrd.addressplans());
+        AddressPlanApi addressPlanApi = new KubeAddressPlanApi(openShiftClient, namespace, AdminCrd.addressPlans());
 
-        BrokeredInfraConfigApi brokeredInfraConfigApi = new KubeBrokeredInfraConfigApi(openShiftClient, namespace, AdminCrd.brokeredinfraconfigs());
+        BrokeredInfraConfigApi brokeredInfraConfigApi = new KubeBrokeredInfraConfigApi(openShiftClient, namespace, AdminCrd.brokeredInfraConfigs());
 
-        StandardInfraConfigApi standardInfraConfigApi = new KubeStandardInfraConfigApi(openShiftClient, namespace, AdminCrd.standardinfraconfigs());
+        StandardInfraConfigApi standardInfraConfigApi = new KubeStandardInfraConfigApi(openShiftClient, namespace, AdminCrd.standardInfraConfigs());
 
         Clock clock = Clock.systemUTC();
 

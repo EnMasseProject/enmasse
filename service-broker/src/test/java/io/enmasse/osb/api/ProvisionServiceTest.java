@@ -5,11 +5,8 @@
 
 package io.enmasse.osb.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.Status;
 import io.enmasse.api.common.ConflictException;
 import io.enmasse.api.common.GoneException;
 import io.enmasse.api.common.UnprocessableEntityException;
@@ -17,18 +14,22 @@ import io.enmasse.osb.api.lastoperation.LastOperationResponse;
 import io.enmasse.osb.api.lastoperation.LastOperationState;
 import io.enmasse.osb.api.provision.ProvisionRequest;
 import io.enmasse.osb.api.provision.ProvisionResponse;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.Status;
 import org.jboss.resteasy.util.HttpResponseCodes;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.UUID;
 
-@Ignore
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+
+@Disabled
 public class ProvisionServiceTest extends OSBTestBase {
 
     public static final String QUEUE_SERVICE_ID_STRING = QUEUE_SERVICE_ID.toString();
@@ -38,24 +39,28 @@ public class ProvisionServiceTest extends OSBTestBase {
     public static final String TRANSACTIONAL = "transactional";
     private UriInfo uriInfo = mock(UriInfo.class);
 
-    @Test(expected = UnprocessableEntityException.class)
+    @Test
     public void testSyncProvisioningRequest() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(UnprocessableEntityException.class,
+                () -> provisioningService.provisionService(getSecurityContext(), null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testInvalidServiceUuid() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), null,  "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(BadRequestException.class,
+                () -> provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testInvalidPlan() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(BadRequestException.class,
+                () -> provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testInvalidServiceInstandeUuid() throws Exception {
-        provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(BadRequestException.class,
+                () -> provisioningService.provisionService(getSecurityContext(), null, "123", true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
     @Test
@@ -114,8 +119,7 @@ public class ProvisionServiceTest extends OSBTestBase {
     @Test
     public void testProvisionTwiceWithDifferentPrameters() throws Exception {
         provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
-        exceptionGrabber.expect(ConflictException.class);
-        provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(ServiceType.TOPIC.uuid(), TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(ConflictException.class, () -> provisioningService.provisionService(getSecurityContext(), null, SERVICE_INSTANCE_ID, true, new ProvisionRequest(ServiceType.TOPIC.uuid(), TOPIC_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
     @Test
@@ -126,19 +130,22 @@ public class ProvisionServiceTest extends OSBTestBase {
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
     }
 
-    @Test(expected = GoneException.class)
+    @Test
     public void testDeprovisionNonexistingServiceInstance() throws Exception {
-        provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
+        assertThrows(GoneException.class,
+                () -> provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testDeprovisionWithoutServiceId() throws Exception {
-        provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, null, QUEUE_PLAN_ID_STRING);
+        assertThrows(BadRequestException.class,
+                () -> provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, null, QUEUE_PLAN_ID_STRING));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testDeprovisionWithoutPlanId() throws Exception {
-        provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, null);
+        assertThrows(BadRequestException.class,
+                () -> provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, null));
     }
 
     @Test
@@ -154,8 +161,7 @@ public class ProvisionServiceTest extends OSBTestBase {
         provisionService(SERVICE_INSTANCE_ID);
         provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
 
-        exceptionGrabber.expect(GoneException.class);
-        provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
+        assertThrows(GoneException.class, () -> provisioningService.deprovisionService(getSecurityContext(), SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING));
     }
 
     @Test

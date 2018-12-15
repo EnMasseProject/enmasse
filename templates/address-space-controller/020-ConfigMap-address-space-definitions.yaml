@@ -1094,9 +1094,9 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: AMQ_NAME
-                value: broker
+                value: serverData
               - name: HOME
-                value: /home/artemis
+                value: /var/run/artemis/split-1/
               image: ${ARTEMIS_IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               command:
@@ -1133,6 +1133,8 @@ data:
                 requests:
                   memory: ${BROKER_MEMORY_LIMIT}
               volumeMounts:
+              - mountPath: /var/run/artemis
+                name: data
               - mountPath: /etc/prometheus-config
                 name: broker-prometheus-config
                 readOnly: true
@@ -1160,12 +1162,14 @@ data:
               - name: AUTHENTICATION_SERVICE_OAUTH_URL
                 value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
               - name: AMQ_NAME
-                value: broker
+                value: serverData
               - name: HOME
-                value: /home/artemis
+                value: /var/run/artemis/split-1/
               image: ${ARTEMIS_PLUGIN_IMAGE}
               name: broker-plugin
               volumeMounts:
+              - mountPath: /var/run/artemis
+                name: data
               - mountPath: /etc/enmasse-certs
                 name: broker-internal-cert
                 readOnly: true
@@ -1182,11 +1186,11 @@ data:
                 name: broker-custom
                 readOnly: false
             volumes:
-            - emptyDir: {}
-              name: broker-custom
             - name: data
               persistentVolumeClaim:
                 claimName: broker-data.${INFRA_UUID}
+            - emptyDir: {}
+              name: broker-custom
             - name: broker-prometheus-config
               configMap:
                 name: broker-prometheus-config

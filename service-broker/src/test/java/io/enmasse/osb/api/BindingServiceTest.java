@@ -5,11 +5,6 @@
 
 package io.enmasse.osb.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-
 import io.enmasse.api.common.ConflictException;
 import io.enmasse.api.common.GoneException;
 import io.enmasse.api.common.UnprocessableEntityException;
@@ -17,16 +12,22 @@ import io.enmasse.osb.api.bind.BindRequest;
 import io.enmasse.osb.api.bind.BindResponse;
 import io.enmasse.osb.api.provision.ProvisionRequest;
 import org.jboss.resteasy.util.HttpResponseCodes;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.UUID;
 
-@Ignore
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+
+@Disabled
 public class BindingServiceTest extends OSBTestBase {
 
     public static final String BINDING_ID = UUID.randomUUID().toString();
@@ -37,14 +38,15 @@ public class BindingServiceTest extends OSBTestBase {
         provisionService(SERVICE_INSTANCE_ID);
     }
 
-    @Test(expected = UnprocessableEntityException.class)
+    @Test
     public void testSyncProvisioningRequest() throws Exception {
         UriInfo uriInfo = mock(UriInfo.class);
-        provisioningService.provisionService(getSecurityContext(), null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID));
+        assertThrows(UnprocessableEntityException.class,
+                () -> provisioningService.provisionService(getSecurityContext(), null, "123", false, new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID)));
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testBind() throws Exception {
         Response response = bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
         BindResponse bindResponse = (BindResponse) response.getEntity();
@@ -62,36 +64,42 @@ public class BindingServiceTest extends OSBTestBase {
         bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, "123", new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
     }
 
-    @Test(expected = NotFoundException.class)
-    @Ignore
+    @Test
+    @Disabled
     public void testBindOnNonexistentService() throws Exception {
-        bindingService.bindServiceInstance(getSecurityContext(), UUID.randomUUID().toString(), BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
+        assertThrows(NotFoundException.class,
+                () -> bindingService.bindServiceInstance(getSecurityContext(), UUID.randomUUID().toString(), BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID)));
     }
 
-    @Test(expected = BadRequestException.class)
-    @Ignore
+    @Test
+    @Disabled
     public void testBindWithoutServiceId() throws Exception {
-        bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(null, QUEUE_PLAN_ID));
+        assertThrows(BadRequestException.class,
+                () -> bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(null, QUEUE_PLAN_ID)));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
+    @Disabled
     public void testBindWithoutPlanId() throws Exception {
-        bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, null));
+        assertThrows(BadRequestException.class,
+                () -> bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, null)));
     }
 
-    @Ignore("Not implemented yet")
-    @Test(expected = BadRequestException.class)
+    @Disabled("Not implemented yet")
+    @Test
     public void testWrongServiceId() throws Exception {
-        bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(UUID.randomUUID(), QUEUE_PLAN_ID));
+        assertThrows(BadRequestException.class,
+                () -> bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(UUID.randomUUID(), QUEUE_PLAN_ID)));
     }
 
-    @Ignore("Not implemented yet")
-    @Test(expected = BadRequestException.class)
+    @Disabled("Not implemented yet")
+    @Test
     public void testWrongPlanId() throws Exception {
-        bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, UUID.randomUUID()));
+        assertThrows(BadRequestException.class,
+                () -> bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, UUID.randomUUID())));
     }
 
-    @Ignore("bindings aren't persisted yet, so we can't do this yet")
+    @Disabled("bindings aren't persisted yet, so we can't do this yet")
     @Test
     public void testBindTwiceWithDifferentPrameters() throws Exception {
         bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
@@ -99,11 +107,10 @@ public class BindingServiceTest extends OSBTestBase {
         String otherServiceId = UUID.randomUUID().toString();
         provisionService(otherServiceId);
 
-        exceptionGrabber.expect(ConflictException.class);
-        bindingService.bindServiceInstance(getSecurityContext(), otherServiceId, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
+        assertThrows(ConflictException.class, () -> bindingService.bindServiceInstance(getSecurityContext(), otherServiceId, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID)));
     }
 
-    @Ignore("bindings aren't persisted yet, so we can't do this yet")
+    @Disabled("bindings aren't persisted yet, so we can't do this yet")
     @Test
     public void testBindTwiceWithSameParameters() throws Exception {
         bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
@@ -120,20 +127,20 @@ public class BindingServiceTest extends OSBTestBase {
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
     }
 
-    @Ignore("bindings aren't persisted yet, so we can't do this yet. OSB spec mandates the broker MUST return Gone, when binding doesn't exist")
-    @Test(expected = GoneException.class)
+    @Disabled("bindings aren't persisted yet, so we can't do this yet. OSB spec mandates the broker MUST return Gone, when binding doesn't exist")
+    @Test
     public void testUnbindNonexistingBinding() throws Exception {
-        bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, UUID.randomUUID().toString());
+        assertThrows(GoneException.class,
+                () -> bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, UUID.randomUUID().toString()));
     }
 
-    @Ignore("bindings aren't persisted yet, so we can't do this yet. OSB spec mandates the broker MUST return Gone, when binding doesn't exist")
+    @Disabled("bindings aren't persisted yet, so we can't do this yet. OSB spec mandates the broker MUST return Gone, when binding doesn't exist")
     @Test
     public void testUnbindTwice() throws Exception {
         bindingService.bindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID, new BindRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID));
         bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID);
 
-        exceptionGrabber.expect(GoneException.class);
-        bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID);
+        assertThrows(GoneException.class, () -> bindingService.unbindServiceInstance(getSecurityContext(), SERVICE_INSTANCE_ID, BINDING_ID));
     }
 
 }

@@ -4,15 +4,18 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.Status;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.*;
@@ -21,10 +24,10 @@ import java.util.function.Consumer;
 import static io.enmasse.address.model.Status.Phase.Configuring;
 import static io.enmasse.address.model.Status.Phase.Pending;
 import static java.util.Collections.singleton;
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -35,7 +38,7 @@ public class AddressProvisionerTest {
     private int id = 0;
     private BrokerIdGenerator idGenerator = () -> String.valueOf(id++);
 
-    @Before
+    @BeforeEach
     public void setup() {
         id = 0;
         generator = mock(BrokerSetGenerator.class);
@@ -176,7 +179,7 @@ public class AddressProvisionerTest {
         provisioner.provisionResources(createDeployment(1), clusterList, neededMap, Sets.newSet(queue));
 
         assertThat(clusterList.get(0).getResources().getItems().size(), is(0));
-        assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
+        assertTrue(queue.getStatus().getMessages().isEmpty(), queue.getStatus().getMessages().toString());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-0-0"));
     }
@@ -204,7 +207,7 @@ public class AddressProvisionerTest {
         when(generator.generateCluster(eq("broker-1234-1"), anyInt(), any(), any(), any())).thenReturn(new BrokerCluster("broker-1234-1", new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), clusterList, provisionMap, Sets.newSet(queue));
 
-        assertTrue(queue.getStatus().getMessages().toString(), queue.getStatus().getMessages().isEmpty());
+        assertTrue(queue.getStatus().getMessages().isEmpty(), queue.getStatus().getMessages().toString());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-1-0"));
     }
@@ -212,8 +215,8 @@ public class AddressProvisionerTest {
     @Test
     public void testProvisionColocated() {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
-                new ResourceAllowance("broker",  2),
-                new ResourceAllowance("router",  1),
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
                 new ResourceAllowance("aggregate", 2)));
 
         Set<Address> addressSet = Sets.newSet(
@@ -263,16 +266,16 @@ public class AddressProvisionerTest {
     private Address createQueue(String address, String plan) {
         return createQueue(address, plan, null);
     }
-    
-    private Address createQueue(String address, String plan, Consumer<Map<String,String>> customizeAnnotations) {
+
+    private Address createQueue(String address, String plan, Consumer<Map<String, String>> customizeAnnotations) {
         return createAddress(address, "queue", plan, customizeAnnotations);
     }
 
     private static Address createAddress(String address, String type, String plan) {
         return createAddress(address, type, plan, null);
     }
-    
-    private static Address createAddress(String address, String type, String plan, Consumer<Map<String,String>> customizeAnnotations) {
+
+    private static Address createAddress(String address, String type, String plan, Consumer<Map<String, String>> customizeAnnotations) {
         final Address.Builder addressBuilder = new Address.Builder()
                 .setName(address)
                 .setAddress(address)
@@ -281,8 +284,8 @@ public class AddressProvisionerTest {
                 .setPlan(plan)
                 .setType(type);
 
-        if ( customizeAnnotations != null ) {
-            final Map<String,String> annotations = new HashMap<>();
+        if (customizeAnnotations != null) {
+            final Map<String, String> annotations = new HashMap<>();
             customizeAnnotations.accept(annotations);
             addressBuilder.setAnnotations(annotations);
         }
@@ -321,12 +324,12 @@ public class AddressProvisionerTest {
         when(generator.generateCluster(eq(provisioner.getShardedClusterId(q2)), anyInt(), eq(q2), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(q2), new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, Sets.newSet(q1, q2));
 
-        assertTrue(q1.getStatus().getMessages().toString(), q1.getStatus().getMessages().isEmpty());
+        assertTrue(q1.getStatus().getMessages().isEmpty(), q1.getStatus().getMessages().toString());
         assertThat(q1.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(q1.getAnnotations().get(AnnotationKeys.BROKER_ID));
         verify(generator).generateCluster(eq(provisioner.getShardedClusterId(q1)), eq(2), eq(q1), any(), any());
 
-        assertTrue(q2.getStatus().getMessages().toString(), q2.getStatus().getMessages().isEmpty());
+        assertTrue(q2.getStatus().getMessages().isEmpty(), q2.getStatus().getMessages().toString());
         assertThat(q2.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(q2.getAnnotations().get(AnnotationKeys.BROKER_ID));
         verify(generator).generateCluster(eq(provisioner.getShardedClusterId(q2)), eq(1), eq(q2), any(), any());
@@ -352,16 +355,16 @@ public class AddressProvisionerTest {
         final Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, singleton(q), singleton(q));
 
         when(generator.generateCluster(eq(provisioner.getShardedClusterId(q)), anyInt(), eq(q), any(), any()))
-            .thenReturn(new BrokerCluster(provisioner.getShardedClusterId(q), new KubernetesList()));
+                .thenReturn(new BrokerCluster(provisioner.getShardedClusterId(q), new KubernetesList()));
 
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, singleton(q));
 
-        assertTrue(q.getStatus().getMessages().toString(), q.getStatus().getMessages().isEmpty());
+        assertTrue(q.getStatus().getMessages().isEmpty(), q.getStatus().getMessages().toString());
         assertThat(q.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertNull(q.getAnnotations().get(AnnotationKeys.BROKER_ID));
 
         verify(generator)
-            .generateCluster(eq(manualClusterId), eq(2), eq(q), any(), any());
+                .generateCluster(eq(manualClusterId), eq(2), eq(q), any(), any());
     }
 
     @Test
@@ -455,7 +458,7 @@ public class AddressProvisionerTest {
             }
         }
         assertEquals(2, unConfigured.size());
-        assertEquals("contains topic + 10 subscriptions", 11, configured.size());
+        assertEquals(11, configured.size(), "contains topic + 10 subscriptions");
         Iterator<Address> unconfiguredIterator = unConfigured.iterator();
         assertFalse(configured.contains(unconfiguredIterator.next()));
         assertFalse(configured.contains(unconfiguredIterator.next()));
@@ -543,7 +546,7 @@ public class AddressProvisionerTest {
         assertEquals(2, unConfigured.size());
         assertTrue(configured.contains(t1));
         assertTrue(configured.contains(t2));
-        assertEquals("contains 2 topic + 10 subscriptions", 12, configured.size());
+        assertEquals(12, configured.size(), "contains 2 topic + 10 subscriptions");
         Iterator<Address> unconfiguredIterator = unConfigured.iterator();
         assertFalse(configured.contains(unconfiguredIterator.next()));
         assertFalse(configured.contains(unconfiguredIterator.next()));

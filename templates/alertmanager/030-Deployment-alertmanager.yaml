@@ -30,14 +30,32 @@ spec:
       - image: ${ALERTMANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: alertmanager
-        ports:
-        - containerPort: 9093
-          name: alertmanager
         volumeMounts:
         - mountPath: /etc/alertmanager
           name: alertmanager-config
           readOnly: true
+      - image: openshift/oauth-proxy:latest
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
+        name: oauth-proxy
+        ports:
+        - containerPort: 8443
+          name: proxy
+        args:
+        - --https-address=:8443
+        - --provider=openshift
+        - --openshift-service-account=alertmanager-server
+        - --upstream=http://localhost:9093
+        - --tls-cert=/etc/tls/private/tls.crt
+        - --tls-key=/etc/tls/private/tls.key
+        - --cookie-secret=SECRET
+        volumeMounts:
+        - mountPath: /etc/tls/private
+          name: alertmanager-proxy-cert
+      serviceAccountName: alertmanager-server
       volumes:
       - configMap:
           name: alertmanager-config
         name: alertmanager-config
+      - name: alertmanager-proxy-cert
+        secret:
+          secretName: alertmanager-proxy-cert

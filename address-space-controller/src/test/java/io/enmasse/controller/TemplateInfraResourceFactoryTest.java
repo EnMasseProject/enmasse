@@ -16,29 +16,35 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TemplateInfraResourceFactoryTest {
-    @Rule
-    public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+
+    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 
     private TemplateInfraResourceFactory resourceFactory;
     private NamespacedOpenShiftClient client;
 
-    @Before
+    @AfterEach
+    void tearDown() {
+        openShiftServer.after();
+    }
+
+    @BeforeEach
     public void setup() {
+        openShiftServer.before();
         client = openShiftServer.getOpenshiftClient();
         client.secrets().createNew().editOrNewMetadata().withName("certs").endMetadata().addToData("tls.crt", "cert").done();
         AuthenticationServiceResolver authServiceResolver = mock(AuthenticationServiceResolver.class);

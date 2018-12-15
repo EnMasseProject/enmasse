@@ -15,8 +15,8 @@ import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,7 +42,7 @@ public class HttpNestedAddressServiceTest {
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
 
-    @Before
+    @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         this.addressService = new HttpNestedAddressService(addressSpaceApi, new TestSchemaProvider(), Clock.fixed(Instant.ofEpochSecond(1234), ZoneId.of("UTC")));
@@ -118,7 +118,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testGetByAddressNotFound() {
-        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace","b1", null));
+        Response response = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace", "b1", null));
 
         assertThat(response.getStatus(), is(404));
     }
@@ -197,7 +197,7 @@ public class HttpNestedAddressServiceTest {
         assertThat(addresses.isEmpty(), is(false));
         Address address = addresses.iterator().next();
         Address a1 = new Address.Builder(address).setPlan("plan1").build();
-        
+
         Response response = invoke(() -> addressService.replaceAddress(securityContext, "ns", "myspace", a1.getName(), a1));
         assertThat(response.getStatus(), is(200));
 
@@ -235,7 +235,7 @@ public class HttpNestedAddressServiceTest {
     public void testDelete() {
         Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
         assertThat(response.getStatus(), is(200));
-        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
+        assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
 
         assertThat(addressApi.listAddresses("ns"), hasItem(q1));
         assertThat(addressApi.listAddresses("ns").size(), is(1));
@@ -262,7 +262,7 @@ public class HttpNestedAddressServiceTest {
 
         response = invoke(() -> addressService.deleteAddresses(securityContext, "ns"));
         assertThat(response.getStatus(), is(200));
-        assertThat(((Status)response.getEntity()).getStatusCode(), is(200));
+        assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
         assertThat(addressApi.listAddresses("ns").size(), is(0));
     }
 }

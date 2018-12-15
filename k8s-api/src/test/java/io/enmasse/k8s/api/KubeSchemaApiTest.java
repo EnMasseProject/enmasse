@@ -9,16 +9,16 @@ import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -33,7 +33,7 @@ public class KubeSchemaApiTest {
     private StandardInfraConfigApi standardInfraConfigApi;
     private BrokeredInfraConfigApi brokeredInfraConfigApi;
 
-    @Before
+    @BeforeEach
     public void setup() {
         addressSpacePlanApi = mock(AddressSpacePlanApi.class);
         addressPlanApi = mock(AddressPlanApi.class);

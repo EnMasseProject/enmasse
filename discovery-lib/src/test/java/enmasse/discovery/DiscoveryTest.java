@@ -4,12 +4,18 @@
  */
 package enmasse.discovery;
 
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -53,29 +59,29 @@ public class DiscoveryTest {
     }
 
     public enmasse.discovery.Pod createPod(String ready, String phase) {
-       return new enmasse.discovery.Pod(new PodBuilder()
-               .editOrNewMetadata()
-               .withName("mypod")
-               .withLabels(Collections.singletonMap("my", "key"))
-               .withAnnotations(Collections.singletonMap("my", "annotation"))
-               .endMetadata()
-               .editOrNewStatus()
-               .withPhase(phase)
-               .withPodIP("10.0.0.1")
-               .addNewCondition()
-               .withType("Ready")
-               .withStatus(ready)
-               .endCondition()
-               .endStatus()
-               .withNewSpec()
-               .addToContainers(new ContainerBuilder()
-                       .withName("c")
-                       .addToPorts(new ContainerPortBuilder()
-                               .withName("http")
-                               .withContainerPort(1234)
-                               .build())
-                       .build())
-               .endSpec()
-               .build());
+        return new enmasse.discovery.Pod(new PodBuilder()
+                .editOrNewMetadata()
+                .withName("mypod")
+                .withLabels(Collections.singletonMap("my", "key"))
+                .withAnnotations(Collections.singletonMap("my", "annotation"))
+                .endMetadata()
+                .editOrNewStatus()
+                .withPhase(phase)
+                .withPodIP("10.0.0.1")
+                .addNewCondition()
+                .withType("Ready")
+                .withStatus(ready)
+                .endCondition()
+                .endStatus()
+                .withNewSpec()
+                .addToContainers(new ContainerBuilder()
+                        .withName("c")
+                        .addToPorts(new ContainerPortBuilder()
+                                .withName("http")
+                                .withContainerPort(1234)
+                                .build())
+                        .build())
+                .endSpec()
+                .build());
     }
 }
