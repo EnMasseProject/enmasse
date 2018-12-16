@@ -8,7 +8,6 @@ import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ServiceHelper {

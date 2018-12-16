@@ -97,8 +97,7 @@ public class AddressSpaceController {
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
-        controllerChain.addController(new MigrationController(schemaProvider, options.getVersion()));
-        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion()));
+        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
@@ -134,21 +133,21 @@ public class AddressSpaceController {
     private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
         String namespace = client.getNamespace();
         KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "brokeredinfraconfigs"),
-                client.customResources(AdminCrd.brokeredinfraconfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace),
+                client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace),
                 BrokeredInfraConfig.class,
                 Comparator.comparing(BrokeredInfraConfig::getVersion));
 
         KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "standardinfraconfigs"),
-                client.customResources(AdminCrd.standardinfraconfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
+                client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
                 StandardInfraConfig.class,
                 Comparator.comparing(StandardInfraConfig::getVersion));
 
         KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressplans"),
-                client.customResources(AdminCrd.addressplans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
+                client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
                 AddressPlan.class);
 
         KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressspaceplans"),
-                client.customResources(AdminCrd.addressspaceplans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace),
+                client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace),
                 AddressSpacePlan.class);
     }
 

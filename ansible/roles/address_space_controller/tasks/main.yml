@@ -3,5 +3,8 @@
   shell: oc create configmap address-space-controller-config -n {{ namespace }} --from-literal=enableRbac={{ enable_rbac }} --from-literal=environment={{ enmasse_environment }}
   register: config_exists
   failed_when: config_exists.stderr != '' and 'already exists' not in config_exists.stderr
+- name: Label address space controller configmap
+  shell: oc label configmap address-space-controller-config -n {{ namespace }} app=enmasse
+  when: config_exists.rc == 0
 - name: Apply the Address Space Controller configuration
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/address-space-controller

@@ -16,6 +16,16 @@ spec:
         app: enmasse
         component: kube-metrics
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node-role.enmasse.io/operator-infra
+                    operator: In
+                    values:
+                      - "true"
       containers:
       - name: kube-metrics
         image: ${KUBE_STATE_METRICS_IMAGE}

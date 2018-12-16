@@ -16,13 +16,20 @@ spec:
         app: enmasse
         name: prometheus
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node-role.enmasse.io/operator-infra
+                    operator: In
+                    values:
+                      - "true"
       containers:
       - image: ${PROMETHEUS_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: prometheus
-        ports:
-        - containerPort: 9090
-          name: prometheus
         volumeMounts:
         - mountPath: /etc/prometheus
           name: prometheus-config
@@ -30,6 +37,23 @@ spec:
         - mountPath: /prometheus
           name: prometheus-data
           readOnly: false
+      - image: ${OAUTH_PROXY_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
+        name: oauth-proxy
+        ports:
+        - containerPort: 8443
+          name: proxy
+        args:
+        - --https-address=:8443
+        - --provider=openshift
+        - --openshift-service-account=prometheus-server
+        - --upstream=http://localhost:9090
+        - --tls-cert=/etc/tls/private/tls.crt
+        - --tls-key=/etc/tls/private/tls.key
+        - --cookie-secret=SECRET
+        volumeMounts:
+        - mountPath: /etc/tls/private
+          name: prometheus-proxy-cert
       serviceAccountName: prometheus-server
       volumes:
       - configMap:
@@ -38,3 +62,6 @@ spec:
       - name: prometheus-data
         persistentVolumeClaim:
           claimName: prometheus-data
+      - name: prometheus-proxy-cert
+        secret:
+          secretName: prometheus-proxy-cert

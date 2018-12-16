@@ -8,6 +8,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
+import io.enmasse.metrics.api.*;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
@@ -39,14 +40,16 @@ public class AddressController implements Watcher<Address> {
     private final EventLogger eventLogger;
     private final SchemaProvider schemaProvider;
     private final Vertx vertx = Vertx.vertx();
+    private final Metrics metrics;
 
-    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider) {
+    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Metrics metrics) {
         this.options = options;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
+        this.metrics = metrics;
     }
 
     public void start() throws Exception {
@@ -77,7 +80,7 @@ public class AddressController implements Watcher<Address> {
         }
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
-        Set<Address> addressSet = migratePlanNames(addressList, addressResolver);
+        Set<Address> addressSet = new LinkedHashSet<>(addressList);
 
         final Map<String, ProvisionState> previousStatus = addressSet.stream()
                 .collect(Collectors.toMap(Address::getAddress,
@@ -93,12 +96,6 @@ public class AddressController implements Watcher<Address> {
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
-        if (countByPhase.get(Configuring) < 5) {
-            log.debug("Addresses in configuring: {}", filterByPhases(addressSet, EnumSet.of(Configuring)));
-        }
-        if (countByPhase.get(Pending) < 5) {
-            log.debug("Addresses in pending : {}", filterByPhases(addressSet, EnumSet.of(Pending)));
-        }
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, EnumSet.of(Pending)));
 
@@ -163,42 +160,34 @@ public class AddressController implements Watcher<Address> {
         long replaceAddresses = System.nanoTime();
         garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver);
         long gcTerminating = System.nanoTime();
+
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
-    }
-
-    private Set<Address> migratePlanNames(List<Address> addressList, AddressResolver addressResolver) {
-        // Migrate plan names
-        Set<Address> addressSet = new HashSet<>();
-        if (options.getVersion().startsWith("0.24")) {
-            for (Address address : addressList) {
-                if (addressResolver.findPlan(address).isPresent()) {
-                    addressSet.add(address);
-                } else {
-                    Address.Builder builder = new Address.Builder(address);
-                    String planName = address.getPlan();
-                    if ("pooled-queue".equals(planName)) {
-                        builder.setPlan("standard-small-queue");
-                    } else if ("pooled-topic".equals(planName)) {
-                        builder.setPlan("standard-small-topic");
-                    } else if ("standard-anycast".equals(planName)) {
-                        builder.setPlan("standard-small-anycast");
-                    } else if ("standard-multicast".equals(planName)) {
-                        builder.setPlan("standard-small-multicast");
-                    } else if ("standard-subscription".equals(planName)) {
-                        builder.setPlan("standard-small-subscription");
-                    } else if ("sharded-queue".equals(planName)) {
-                        builder.setPlan("standard-large-queue");
-                    } else if ("sharded-topic".equals(planName)) {
-                        builder.setPlan("standard-large-topic");
-                    }
-                    addressSet.add(builder.build());
-                }
-            }
-        } else {
-            addressSet = new HashSet<>(addressList);
+        int ready = 0;
+        for (Address address : addressList) {
+            ready += address.getStatus().isReady() ? 1 : 0;
         }
-        return addressSet;
+        int notReady = addressList.size() - ready;
+
+        long now = System.currentTimeMillis();
+
+        String componentName = "standard-controller-" + options.getInfraUuid();
+        metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion()))));
+        metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", componentName + " is healthy"))));
+
+        MetricLabel [] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
+        metrics.reportMetric(new Metric("addresses_ready_total", "Total number of addresses in ready state", MetricType.gauge, new MetricValue(ready, now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_not_ready_total", "Total number of address in a not ready state", MetricType.gauge, new MetricValue(notReady, now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_total", "Total number of addresses", MetricType.gauge, new MetricValue(addressList.size(), now, metricLabels)));
+
+        metrics.reportMetric(new Metric("addresses_pending_total", "Total number of addresses in Pending state", MetricType.gauge, new MetricValue(countByPhase.get(Pending), now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_failed_total", "Total number of addresses in Failed state", MetricType.gauge, new MetricValue(countByPhase.get(Failed), now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_terminating_total", "Total number of addresses in Terminating state", MetricType.gauge, new MetricValue(countByPhase.get(Terminating), now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_configuring_total", "Total number of addresses in Configuring state", MetricType.gauge, new MetricValue(countByPhase.get(Configuring), now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_active_total", "Total number of addresses in Active state", MetricType.gauge, new MetricValue(countByPhase.get(Active), now, metricLabels)));
+
+        long totalTime = gcTerminating - start;
+        metrics.reportMetric(new Metric("standard_controller_loop_duration_seconds", "Time spent in controller loop", MetricType.gauge, new MetricValue((double) totalTime / 1_000_000_000.0, now, metricLabels)));
     }
 
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
@@ -206,7 +195,7 @@ public class AddressController implements Watcher<Address> {
             StandardInfraConfig currentConfig = cluster.getInfraConfig();
             if (!desiredConfig.equals(currentConfig)) {
                 if (options.getVersion().equals(desiredConfig.getSpec().getVersion())) {
-                    if (currentConfig != null && currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
+                    if (!desiredConfig.getUpdatePersistentVolumeClaim() && currentConfig != null && !currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
                         desiredConfig = new StandardInfraConfigBuilder(desiredConfig)
                                 .editSpec()
                                 .editBroker()
@@ -232,7 +221,7 @@ public class AddressController implements Watcher<Address> {
                     }
                     log.info("Upgrading broker {}", cluster.getClusterId());
                     cluster.updateResources(upgradedCluster, desiredConfig);
-                    kubernetes.apply(cluster.getResources());
+                    kubernetes.apply(cluster.getResources(), desiredConfig.getUpdatePersistentVolumeClaim());
                     eventLogger.log(BrokerUpgraded, "Upgraded broker", Normal, Broker, cluster.getClusterId());
                 } else {
                     log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredConfig.getSpec().getVersion(), options.getVersion());
@@ -382,7 +371,6 @@ public class AddressController implements Watcher<Address> {
         }
         return false;
     }
-
 
     private class ProvisionState {
         private final Status status;

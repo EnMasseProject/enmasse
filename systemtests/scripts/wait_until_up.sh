@@ -16,32 +16,38 @@ else
 fi
 
 if [[ "${UPGRADED}" == "true" ]]; then
+    info "Enmasse was upgraded/downgraded"
     sleep 300
     EXPECTED_PODS=$(($($CMD get pods -n ${NAMESPACE} | grep -v deploy | wc -l) - 1))
 fi
 info "Expected pods: ${EXPECTED_PODS}"
 
 function waitingContainersReady {
-    ADDR_SPACE=$1
+    NAMESPACE=$1
     pods_id=$($CMD get pods -n ${NAMESPACE} | awk 'NR >1 {print $1}')
     for pod_id in ${pods_id}
     do
-        ready=$($CMD get -o json pod -n ${ADDR_SPACE}  ${pod_id} -o jsonpath={.status.containerStatuses[0].ready})
+        ready=$($CMD get -o json pod -n ${NAMESPACE}  ${pod_id} -o jsonpath={.status.containerStatuses[0].ready})
         if [[ "${UPGRADED}" == "true" ]]; then
             image=$($CMD get pod ${pod_id} -o jsonpath={.spec.containers[*].image})
-            upgraded=$(is_upgraded ${image})
-            if [[ "${upgraded}" == "true" ]]; then
-                info "Pod ${pod_id} is upgraded to ${image}"
+            initImage=$($CMD get pod ${pod_id} -o jsonpath={.spec.initContainers[*].image})
+            imageUpgraded=$(is_upgraded ${image})
+            initImageUpgraded=$(is_upgraded ${initImage})
+            if [[ "${imageUpgraded}" == "true" ]] && [[ "${initImageUpgraded}" == "true" ]]; then
+                info "Pod ${pod_id} is upgraded to ${image}, initImage: ${initImage}"
             else
-                info "Pod ${pod_id} is not upgraded, current image: ${image}"
+                info "Pod ${pod_id} is not upgraded, current image: ${image}, initImage: ${initImage}"
             fi
         else
-            upgraded="true"
+            imageUpgraded="true"
+            initImageUpgraded="true"
         fi
-        if [[ "${ready}" == "false" ]] || [[ "${upgraded}" == "false" ]]
+        if [[ "${ready}" == "false" ]] || [[ "${imageUpgraded}" == "false" ]] || [[ "${initImageUpgraded}" == "false" ]]
         then
             return 1
         fi
+        image=""
+        initImage=""
     done
     info "All containers are ready"
     return 0

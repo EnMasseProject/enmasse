@@ -5,12 +5,12 @@
 package io.enmasse.osb.api;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.osb.api.bind.BindRequest;
 import io.enmasse.osb.api.provision.ProvisionRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -57,15 +57,15 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
 
     public void connect(String host, int port, ProtonClientOptions clientOptions, String address, CompletableFuture<Void> promise) {
         if (connection != null) {
-            log.info("Already connected");
+            log.debug("Already connected");
             promise.complete(null);
             return;
         }
         ProtonClient client = ProtonClient.create(vertx);
-        log.info("Connecting to {}:{}", host, port);
+        log.debug("Connecting to {}:{}", host, port);
         client.connect(clientOptions, host, port, result -> {
             if (result.succeeded()) {
-                log.info("Connected to {}:{}", host, port);
+                log.debug("Connected to {}:{}", host, port);
                 connection = result.result();
                 connection.setContainer(containerId);
                 createSender(vertx, address, promise, 0);

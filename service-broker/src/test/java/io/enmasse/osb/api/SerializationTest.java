@@ -4,31 +4,20 @@
  */
 package io.enmasse.osb.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import io.enmasse.osb.api.bind.BindResponse;
-import io.enmasse.osb.api.catalog.CatalogResponse;
-import io.enmasse.osb.api.catalog.InputParameters;
-import io.enmasse.osb.api.catalog.Plan;
-import io.enmasse.osb.api.catalog.Schemas;
-import io.enmasse.osb.api.catalog.Service;
-import io.enmasse.osb.api.catalog.ServiceInstanceSchema;
+import io.enmasse.osb.api.catalog.*;
 import io.enmasse.osb.api.lastoperation.LastOperationResponse;
 import io.enmasse.osb.api.lastoperation.LastOperationState;
 import io.enmasse.osb.api.provision.ProvisionResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  *
@@ -70,7 +59,7 @@ public class SerializationTest {
         List plans = (List) serviceMap.get("plans");
         assertThat(plans.size(), is(1));
 
-        Map planMap = (Map)plans.get(0);
+        Map planMap = (Map) plans.get(0);
         assertThat(planMap.get("id"), is(planId.toString()));
         assertThat(planMap.get("name"), is("test-plan"));
         assertThat(planMap.get("description"), is("test-plan-description"));

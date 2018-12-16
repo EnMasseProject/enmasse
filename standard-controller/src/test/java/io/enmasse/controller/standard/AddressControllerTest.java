@@ -10,12 +10,13 @@ import io.enmasse.address.model.Status;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.metrics.api.Metrics;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -30,7 +31,7 @@ public class AddressControllerTest {
     private OpenShiftClient mockClient;
     private BrokerSetGenerator mockGenerator;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         mockHelper = mock(Kubernetes.class);
         mockGenerator = mock(BrokerSetGenerator.class);
@@ -44,7 +45,7 @@ public class AddressControllerTest {
         options.setAddressSpacePlanName("plan1");
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
-        controller = new AddressController(options,  mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema);
+        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, new Metrics());
     }
 
     @Test

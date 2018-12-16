@@ -5,20 +5,22 @@
 
 package io.enmasse.controller.standard;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.address.model.*;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.ParameterValue;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class TemplateBrokerSetGeneratorTest {
@@ -26,11 +28,11 @@ public class TemplateBrokerSetGeneratorTest {
     private StandardControllerSchema standardControllerSchema;
     private BrokerSetGenerator generator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         kubernetes = mock(Kubernetes.class);
 
-        standardControllerSchema  = new StandardControllerSchema();
+        standardControllerSchema = new StandardControllerSchema();
         generator = new TemplateBrokerSetGenerator(kubernetes, new StandardControllerOptions());
     }
 
@@ -75,7 +77,7 @@ public class TemplateBrokerSetGeneratorTest {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
         return generator.generateCluster(address.getName(), 1, address, null,
-                standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig)type.findInfraConfig("cfg1").orElse(null)).orElse(null));
+                standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null));
     }
 
 }

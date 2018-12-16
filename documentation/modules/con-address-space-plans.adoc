@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// master.adoc
+// assembly-configuring.adoc
 
 [id='con-address-space-plans-{context}']
 = Address space plans
@@ -25,5 +25,5 @@ The following fields are required:
 
 The other fields are used by the {ProductName} Console UI. Note the annotation `enmasse.io/defined-by`, which
 points to an infrastructure configuration that must exist when an address space using this plan is created.
-For more information on infrastructure configurations, see xref:infrastructure-configuration-{context}[].
+For more information about infrastructure configurations, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#infrastructure-configuration-messaging[Infrastructure configuration].
 

@@ -148,12 +148,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-    @Disabled("related issue: #818")
-    void testViewConnections() throws Exception {
-        doTestViewConnections();
-    }
-
-    @Test
     @Disabled("related issue: #819")
     void testViewAddressesWildcards() throws Exception {
         doTestViewAddressesWildcards();

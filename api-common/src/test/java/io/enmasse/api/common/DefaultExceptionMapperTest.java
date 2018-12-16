@@ -6,12 +6,14 @@ package io.enmasse.api.common;
 
 import io.fabric8.kubernetes.api.model.StatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class DefaultExceptionMapperTest {
 
@@ -46,5 +48,5 @@ public class DefaultExceptionMapperTest {
         assertEquals("Unprocessable Entity", responseEntity.getReason());
         assertEquals(message, responseEntity.getMessage());
     }
-    
+
 }

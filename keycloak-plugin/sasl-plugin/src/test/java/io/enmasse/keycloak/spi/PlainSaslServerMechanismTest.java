@@ -5,24 +5,16 @@
 
 package io.enmasse.keycloak.spi;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.keycloak.Config;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.models.KeycloakTransactionManager;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.RealmProvider;
-import org.keycloak.models.UserCredentialManager;
-import org.keycloak.models.UserModel;
-import org.keycloak.models.UserProvider;
+import org.keycloak.models.*;
 import org.keycloak.models.credential.PasswordUserCredentialModel;
 import org.mockito.ArgumentMatcher;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -33,7 +25,7 @@ public class PlainSaslServerMechanismTest {
     private KeycloakSession keycloakSession;
     private Config.Scope config;
 
-    @Before
+    @BeforeEach
     public void setup() {
         keycloakSessionFactory = mock(KeycloakSessionFactory.class);
         keycloakSession = mock(KeycloakSession.class);
@@ -59,14 +51,13 @@ public class PlainSaslServerMechanismTest {
         byte[] userBytes = user.getBytes(StandardCharsets.UTF_8);
         byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
         byte[] response = new byte[2 + userBytes.length + passwordBytes.length];
-        System.arraycopy(userBytes,0,response, 1, userBytes.length);
-        System.arraycopy(passwordBytes,0,response, 2+userBytes.length, passwordBytes.length);
+        System.arraycopy(userBytes, 0, response, 1, userBytes.length);
+        System.arraycopy(passwordBytes, 0, response, 2 + userBytes.length, passwordBytes.length);
 
         return response;
     }
 
-    private static final class PasswordCredentialMatcher implements ArgumentMatcher<PasswordUserCredentialModel>
-    {
+    private static final class PasswordCredentialMatcher implements ArgumentMatcher<PasswordUserCredentialModel> {
 
         private final String password;
 
@@ -128,11 +119,11 @@ public class PlainSaslServerMechanismTest {
     }
 
     // incorrect sasl format
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testBadInitialResponse() {
         final SaslServerMechanism.Instance instance =
                 (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config);
-        instance.processResponse("potato".getBytes(StandardCharsets.UTF_8));
+        assertThrows(IllegalArgumentException.class, () -> instance.processResponse("potato".getBytes(StandardCharsets.UTF_8)));
     }
 
 

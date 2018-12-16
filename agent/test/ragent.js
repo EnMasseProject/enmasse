@@ -818,12 +818,12 @@ describe('cooperating ragent group', function() {
     });
 });
 
-describe('probe support', function() {
+describe('health support', function() {
     var ragent, server, port;
 
     beforeEach(function(done) {
         ragent = new Ragent();
-        server = ragent.listen_probe({PROBE_PORT:0});
+        server = ragent.listen_health({HEALTH_PORT:0});
         server.on('listening', function () {
             port = server.address().port;
             done();
@@ -835,7 +835,7 @@ describe('probe support', function() {
         done();
     });
 
-    it('responds to probe request', function (done) {
+    it('responds to health request', function (done) {
         http.get('http://localhost:' + port, function (response) {
             assert.equal(response.statusCode, 200);
             done();

@@ -7,34 +7,41 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.Address;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ConfigMapAddressApiTest {
+
+class ConfigMapAddressApiTest {
     private static final String ADDRESS = "myaddress";
     private static final String ADDRESS_TYPE = "mytype";
     private static final String ADDRESS_PLAN = "myplan";
     private static final String ADDRESS_SPACE_NAMESPACE = "myproject";
     private static final String ADDRESS_SPACE = "myspace";
     private static final String ADDRESS_NAME = String.format("%s.%s", ADDRESS_SPACE, ADDRESS);
-    @Rule
-    public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+
+    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
     private AddressApi api;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
+        openShiftServer.before();
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        api = new ConfigMapAddressApi(client, ADDRESS_SPACE_NAMESPACE, UUID.randomUUID().toString());
+        api = new ConfigMapAddressApi(client, UUID.randomUUID().toString());
+    }
+
+    @AfterEach
+    void tearDown() {
+        openShiftServer.after();
     }
 
     @Test
-    public void create() {
+    void create() {
         Address address = createAddress(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME);
 
         api.createAddress(address);
@@ -51,7 +58,7 @@ public class ConfigMapAddressApiTest {
     }
 
     @Test
-    public void replace() {
+    void replace() {
         Address adddress = createAddress(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME);
         final String annotationKey = "myannotation";
         String annotationValue = "value";
@@ -70,7 +77,7 @@ public class ConfigMapAddressApiTest {
     }
 
     @Test
-    public void replaceNotFound() {
+    void replaceNotFound() {
         Address address = createAddress(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME);
 
         boolean replaced = api.replaceAddress(address);
@@ -78,7 +85,7 @@ public class ConfigMapAddressApiTest {
     }
 
     @Test
-    public void delete() {
+    void delete() {
         Address space = createAddress(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME);
 
         api.createAddress(space);

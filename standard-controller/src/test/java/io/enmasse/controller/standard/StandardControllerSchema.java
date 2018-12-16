@@ -141,19 +141,32 @@ public class StandardControllerSchema implements SchemaProvider {
                                                         new ResourceRequest("broker", 0.1)))
                                                 .build()))
                                 .build()))
-                .setInfraConfigs(Arrays.asList(new StandardInfraConfig(new ObjectMetaBuilder()
-                        .withName("cfg1")
-                        .addToAnnotations(AnnotationKeys.QUEUE_TEMPLATE_NAME, "queuetemplate")
-                        .build(), new StandardInfraConfigSpec("latest", null,
-                        new StandardInfraConfigSpecAdmin(
-                                new StandardInfraConfigSpecAdminResources("512Mi")),
-                        new StandardInfraConfigSpecBroker(
-                                new StandardInfraConfigSpecBrokerResources("512Mi", "2Gi"),
-                                "FAIL"),
-                        new StandardInfraConfigSpecRouter(
-                                new StandardInfraConfigSpecRouterResources("512Mi"),
-                                1,
-                                500)))))
+                .setInfraConfigs(Arrays.asList(
+                        new StandardInfraConfigBuilder()
+                            .withMetadata(new ObjectMetaBuilder()
+                                    .withName("cfg1")
+                                    .addToAnnotations(AnnotationKeys.QUEUE_TEMPLATE_NAME, "queuetemplate")
+                                    .build()
+                                    )
+                            .withNewSpec()
+                                .withVersion("latest")
+                                .withNewAdmin()
+                                    .withNewResources("512Mi")
+                                    .endAdmin()
+                                .withNewBroker()
+                                    .withNewResources("512Mi", "2Gi")
+                                    .withAddressFullPolicy("FAIL")
+                                    .withStorageClassName("default")
+                                    .withUpdatePersistentVolumeClaim(false)
+                                    .endBroker()
+                                .withNewRouter()
+                                    .withNewResources("512Mi")
+                                    .withMinReplicas(1)
+                                    .withLinkCapacity(500)
+                                    .endRouter()
+                                .endSpec()
+                            .build()
+                        ))
                 .setInfraConfigDeserializer(json -> null)
                 .build();
 

@@ -8,7 +8,7 @@
 You can edit existing configurations or create new ones.
 
 .Prerequisites
-* An infrastructure configuration change that you want to apply. For more information, see xref:infrastructure-configuration-messaging[].
+* An infrastructure configuration change that you want to apply. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#infrastructure-configuration-messaging[Infrastructure configuration].
 
 .Procedure
 

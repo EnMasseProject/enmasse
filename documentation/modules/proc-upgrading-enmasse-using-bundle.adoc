@@ -7,7 +7,7 @@
 
 .Prerequisites
 
-* A new release of {ProductName}. For more information, see xref:downloading-messaging[].
+* A new release of {ProductName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#downloading-messaging[Downloading {ProductName}].
 
 .Procedure
 
@@ -50,3 +50,4 @@ endif::[]
 ----
 +
 The upgrade should cause all pods to be restarted within a couple of minutes.
+

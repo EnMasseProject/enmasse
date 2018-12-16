@@ -19,6 +19,16 @@ spec:
         app: enmasse
         name: address-space-controller
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node-role.enmasse.io/operator-infra
+                    operator: In
+                    values:
+                      - "true"
       containers:
       - env:
         - name: JAVA_OPTS
@@ -87,9 +97,9 @@ spec:
             scheme: HTTP
         resources:
           limits:
-            memory: 256Mi
+            memory: 512Mi
           requests:
-            memory: 128Mi
+            memory: 256Mi
         volumeMounts:
         - mountPath: /address-space-definitions
           name: address-space-definitions

@@ -1,6 +1,7 @@
 def storeArtifacts(String artifactDir) {
     sh "./systemtests/scripts/store_kubernetes_info.sh '${artifactDir}/openshift-info/'"
     sh "./systemtests/scripts/collect_logs.sh '/tmp/testlogs' '${artifactDir}/openshift-logs'"
+    sh "cp -rf ${HOME}/.npm/_logs ${artifactDir}/npm-logs || true"
     sh 'rm -rf /tmp/testlogs'
 }
 
@@ -9,7 +10,7 @@ def tearDownOpenshift() {
     sh 'sudo ./systemtests/scripts/teardown-openshift.sh'
 }
 
-def makePlot() {
+def makeLinePlot() {
     plot csvFileName: 'duration_sum_report.csv',
             csvSeries: [[
                                 file: 'artifacts/openshift-logs/logs/timeMeasuring/duration_sum_report.csv',
@@ -20,6 +21,27 @@ def makePlot() {
             group: 'TimeReport',
             title: 'Sum of test operations',
             style: 'line',
+            exclZero: false,
+            keepRecords: false,
+            logarithmic: false,
+            numBuilds: '',
+            useDescr: false,
+            yaxis: '',
+            yaxisMaximum: '',
+            yaxisMinimum: ''
+}
+
+def makeStackedPlot() {
+    plot csvFileName: 'duration_sum_report.csv',
+            csvSeries: [[
+                                file: 'artifacts/openshift-logs/logs/timeMeasuring/duration_sum_report.csv',
+                                exclusionValues: '',
+                                displayTableFlag: false,
+                                inclusionFlag: 'OFF',
+                                url: '']],
+            group: 'TimeReport',
+            title: 'Sum of test operations (stacked)',
+            style: 'stackedArea',
             exclZero: false,
             keepRecords: false,
             logarithmic: false,
@@ -50,19 +72,26 @@ def buildEnmasse() {
 }
 
 def postAction(String coresDir, String artifactDir) {
+    def status = currentBuild.result
     storeArtifacts(artifactDir)
-    makePlot()
+    makeLinePlot()
+    makeStackedPlot()
     //store test results from build and system tests
     junit testResults: '**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
-    archiveArtifacts artifacts: '**/TEST-*.xml', allowEmptyArchive: true
-    archiveArtifacts artifacts: 'templates/build/**', allowEmptyArchive: true
+    archive '**/TEST-*.xml'
+    archive 'templates/build/**'
     sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
     sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
     try {
-        archiveArtifacts artifacts: "${artifactDir}/**", allowEmptyArchive: true
+        archive "${artifactDir}/**"
+    } catch(all) {
+        echo "Archive failed"
     } finally {
-        echo "Artifact are stored"
+        echo "Artifacts are stored"
+    }
+    if (status == null) {
+        currentBuild.result = 'SUCCESS'
     }
     tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"

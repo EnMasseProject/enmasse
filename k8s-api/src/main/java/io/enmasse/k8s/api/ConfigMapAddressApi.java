@@ -34,14 +34,13 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
     private final NamespacedOpenShiftClient client;
-    private final String namespace;
     private final String infraUuid;
+    private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
 
     private final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String namespace, String infraUuid) {
+    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String infraUuid) {
         this.client = client;
-        this.namespace = namespace;
         this.infraUuid = infraUuid;
     }
 
@@ -124,9 +123,10 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean replaceAddress(Address address) {
+        ConfigMap newMap = null;
         try {
             String name = getConfigMapName(address.getNamespace(), address.getName());
-            ConfigMap newMap = create(address);
+            newMap = create(address);
             ConfigMap result;
             if (address.getResourceVersion() != null) {
                 result = client.configMaps()
@@ -139,6 +139,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                         .withName(name)
                         .replace(newMap);
             }
+            cache.replace(newMap);
             return result != null;
         } catch (KubernetesClientException e) {
             if (e.getStatus().getCode() == 404) {
@@ -189,19 +190,20 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public Watch watchAddresses(Watcher<Address> watcher, Duration resyncInterval) {
-        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+    public Watch watchAddresses(CacheWatcher<Address> watcher, Duration resyncInterval) {
+        watcher.onInit(() -> cache.list().stream()
+                .map(ConfigMapAddressApi.this::getAddressFromConfig)
+                .collect(Collectors.toList()));
+
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
         config.setClock(Clock.systemUTC());
         config.setExpectedType(ConfigMap.class);
         config.setListerWatcher(this);
         config.setResyncInterval(resyncInterval);
-        config.setWorkQueue(queue);
+        config.setWorkQueue(cache);
         config.setProcessor(map -> {
-                    if (queue.hasSynced()) {
-                        watcher.onUpdate(queue.list().stream()
-                                .map(this::getAddressFromConfig)
-                                .collect(Collectors.toList()));
+                    if (cache.hasSynced()) {
+                        watcher.onUpdate();
                     }
                 });
 

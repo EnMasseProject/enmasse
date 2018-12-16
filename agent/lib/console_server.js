@@ -30,15 +30,18 @@ var Registry = require('./registry.js');
 var tls_options = require('./tls_options.js');
 var myutils = require('./utils.js');
 var auth_utils = require('./auth_utils.js');
+var Metrics = require('./metrics.js');
 
-function ConsoleServer (address_ctrl) {
+function ConsoleServer (address_ctrl, env) {
     this.address_ctrl = address_ctrl;
     this.addresses = new AddressList();
+    this.metrics = new Metrics(env.ADDRESS_SPACE_NAMESPACE, env.ADDRESS_SPACE);
     this.connections = new Registry();
     this.listeners = {};
     var self = this;
     this.addresses.on('updated', function (address) {
         self.publish({subject:'address',body:address});
+
     });
     this.addresses.on('deleted', function (address) {
         log.debug('address %s has been deleted, notifying clients...', address.address);
@@ -226,13 +229,21 @@ ConsoleServer.prototype.listen = function (env, callback) {
     return this.server;
 };
 
-ConsoleServer.prototype.listen_probe = function (env) {
-    if (env.PROBE_PORT !== undefined) {
-        var probe = http.createServer(function (req, res) {
-            res.writeHead(200, {'Content-Type': 'text/plain'});
-            res.end('OK');
+ConsoleServer.prototype.listen_health = function (env, callback) {
+    if (env.HEALTH_PORT !== undefined) {
+        var self = this;
+        var health = http.createServer(function (req, res) {
+            var pathname = url.parse(req.url).pathname;
+            if (pathname == "/metrics") {
+                var data = self.metrics.format_prometheus(new Date().getTime());
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end(data);
+            } else {
+                res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end('OK');
+            }
         });
-        return probe.listen(env.PROBE_PORT);
+        return health.listen(env.HEALTH_PORT, callback);
     }
 };
 

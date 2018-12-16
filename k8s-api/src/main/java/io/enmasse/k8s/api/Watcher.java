@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface Watcher<T> {
     void onUpdate(List<T> items) throws Exception;
+
 }

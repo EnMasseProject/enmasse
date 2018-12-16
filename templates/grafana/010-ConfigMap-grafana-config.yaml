@@ -11,10 +11,10 @@ data:
     - name: Prometheus
       type: prometheus
       access: direct
-      url: https://prometheus-enmasse.127.0.0.1.nip.io
+      url: https://prometheus-enmasse-infra.127.0.0.1.nip.io
     - name: AlertManager
       type: camptocamp-prometheus-alertmanager-datasource
-      url: https://alertmanager-enmasse.127.0.0.1.nip.io
+      url: https://alertmanager-enmasse-infra.127.0.0.1.nip.io
       access: direct
       jsonData:
         timeInterval: 10s

@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// master.adoc
+// assembly-tenant-guide.adoc
 
 [id='con-user-model-{context}']
 = User model
@@ -58,8 +58,4 @@ identity provider.
 In addition, authorization policies can be defined using operations and addresses. Valid operations
 are `send`, `recv`, `view`, and `manage`. If addresses are not specified, operations will be applied to all
 addresses.
-
-.Additional resources
-
-* xref:_io_enmasse_user_v1alpha1_messaginguser[MessagingUser definition]
 

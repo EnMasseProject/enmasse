@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-installing-openshift.adoc
+// assembly-installing.adoc
 
 [id='installing-using-template-{context}']
 = Installing {ProductName} using OpenShift template
@@ -8,9 +8,9 @@
 Installing {ProductName} using the OpenShift template is useful for evaluating {ProductName}. For a
 production setup, it is recommended to use one of the following installation methods instead:
 
-* xref:installing-using-bundle-{context}[]
-* xref:installing-using-ansible-{context}[]
-* xref:installing-using-manual-steps-{context}[]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-using-bundle-messaging[Installing {ProductName} using a YAML bundle]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-using-ansible-messaging[Installing {ProductName} using Ansible]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-using-manual-steps-messaging[Installing {ProductName} manually]
 
 .Procedure 
 
@@ -34,3 +34,4 @@ oc new-project _{ProductNamespace}_
 ----
 oc process -f install/templates/{ProductTemplateName} NAMESPACE=_{ProductNamespace}_ | oc apply -f -
 ----
+

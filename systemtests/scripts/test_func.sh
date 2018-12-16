@@ -19,7 +19,7 @@ function setup_test() {
     export_required_env
     export REGISTER_API_SERVER=${REG_API_SERVER}
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}"
 
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
@@ -66,7 +66,7 @@ function wait_until_enmasse_up() {
     wait_until_up ${expected_pods} ${NAMESPACE} ${UPGRADE}
     wait_code=$?
     if [ $wait_code -ne 0 ]; then
-        error_and_exit 1
+        err_and_exit 1
     fi
 
 }

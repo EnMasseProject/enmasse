@@ -48,7 +48,7 @@ public interface Kubernetes {
 
     void create(KubernetesList resources);
 
-    void apply(KubernetesList resources);
+    void apply(KubernetesList resources, boolean patchPersistentVolumeClaims);
 
     void delete(KubernetesList resources);
 

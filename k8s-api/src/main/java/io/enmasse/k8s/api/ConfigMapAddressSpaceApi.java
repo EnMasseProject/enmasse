@@ -6,7 +6,6 @@ package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
@@ -44,6 +43,8 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         return namespace + "." + name;
     }
 
+    private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
+
     @Override
     public Optional<AddressSpace> getAddressSpaceWithName(String namespace, String name) {
 
@@ -64,9 +65,10 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public boolean replaceAddressSpace(AddressSpace addressSpace) {
+        ConfigMap newMap = null;
         try {
             String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
-            ConfigMap newMap = create(addressSpace);
+            newMap = create(addressSpace);
             ConfigMap result;
             if (addressSpace.getResourceVersion() != null) {
                 result = client.configMaps()
@@ -79,6 +81,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
                         .withName(name)
                         .replace(newMap);
             }
+            cache.replace(newMap);
             return result != null;
         } catch (KubernetesClientException e) {
             if (e.getStatus().getCode() == 404) {
@@ -126,19 +129,31 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public Set<AddressSpace> listAddressSpaces(String namespace) {
-        Set<AddressSpace> instances = new LinkedHashSet<>();
-        for (ConfigMap map : list(namespace).getItems()) {
-            instances.add(getAddressSpaceFromConfig(map));
-        }
-        return instances;
+        return listAddressSpacesWithLabels(namespace, Collections.emptyMap());
     }
 
     @Override
     public Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels) {
-        Set<AddressSpace> instances = new LinkedHashSet<>();
         labels = new LinkedHashMap<>(labels);
         labels.put(LabelKeys.TYPE, "address-space");
         labels.put(LabelKeys.NAMESPACE, namespace);
+        return listAddressSpacesMatching(labels);
+    }
+
+    @Override
+    public Set<AddressSpace> listAllAddressSpaces() {
+        return listAllAddressSpacesWithLabels(Collections.emptyMap());
+    }
+
+    @Override
+    public Set<AddressSpace> listAllAddressSpacesWithLabels(Map<String, String> labels) {
+        labels = new LinkedHashMap<>(labels);
+        labels.put(LabelKeys.TYPE, "address-space");
+        return listAddressSpacesMatching(labels);
+    }
+
+    private Set<AddressSpace> listAddressSpacesMatching(Map<String, String> labels) {
+        Set<AddressSpace> instances = new LinkedHashSet<>();
         ConfigMapList list = client.configMaps().withLabels(labels).list();
         for (ConfigMap map : list.getItems()) {
             instances.add(getAddressSpaceFromConfig(map));
@@ -180,19 +195,19 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public Watch watchAddressSpaces(Watcher<AddressSpace> watcher, Duration resyncInterval) {
-        WorkQueue<ConfigMap> queue = new FifoQueue<>(config -> config.getMetadata().getName());
+    public Watch watchAddressSpaces(CacheWatcher<AddressSpace> watcher, Duration resyncInterval) {
         Reflector.Config<ConfigMap, ConfigMapList> config = new Reflector.Config<>();
+        watcher.onInit(() -> cache.list().stream()
+                .map(ConfigMapAddressSpaceApi.this::getAddressSpaceFromConfig)
+                .collect(Collectors.toList()));
         config.setClock(Clock.systemUTC());
         config.setExpectedType(ConfigMap.class);
         config.setListerWatcher(this);
         config.setResyncInterval(resyncInterval);
-        config.setWorkQueue(queue);
+        config.setWorkQueue(cache);
         config.setProcessor(map -> {
-            if (queue.hasSynced()) {
-                watcher.onUpdate(queue.list().stream()
-                        .map(this::getAddressSpaceFromConfig)
-                        .collect(Collectors.toList()));
+            if (cache.hasSynced()) {
+                watcher.onUpdate();
             }
         });
 
@@ -204,7 +219,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        return new ConfigMapAddressApi(client, client.getNamespace(), addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+        return new ConfigMapAddressApi(client, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
     private ConfigMapList list(String namespace) {

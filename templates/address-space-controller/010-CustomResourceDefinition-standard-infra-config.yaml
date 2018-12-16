@@ -54,6 +54,10 @@ spec:
                   - PAGE
                   - BLOCK
                   - FAIL
+                storageClassName:
+                  type: string
+                updatePersistentVolumeClaim:
+                  type: boolean
             router:
               type: object
               properties:

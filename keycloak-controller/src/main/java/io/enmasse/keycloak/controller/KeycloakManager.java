@@ -10,6 +10,8 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.Watcher;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,25 +110,25 @@ public class KeycloakManager implements Watcher<AddressSpace>
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
                 keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, keycloakRealmParams);
-                userApi.createUser(realmName, new User.Builder()
-                        .setMetadata(new UserMetadata.Builder()
-                                .setName(addressSpace.getName() + "." + KubeUtil.sanitizeUserName(userName))
-                                .setNamespace(addressSpace.getNamespace())
+                userApi.createUser(realmName, new UserBuilder()
+                        .withMetadata(new ObjectMetaBuilder()
+                                .withName(addressSpace.getName() + "." + KubeUtil.sanitizeUserName(userName))
+                                .withNamespace(addressSpace.getNamespace())
                                 .build())
-                        .setSpec(new UserSpec.Builder()
-                                .setUsername(KubeUtil.sanitizeUserName(userName))
-                                .setAuthentication(new UserAuthentication.Builder()
-                                        .setType(UserAuthenticationType.federated)
-                                        .setProvider("openshift")
-                                        .setFederatedUserid(userId)
-                                        .setFederatedUsername(userName)
+                        .withSpec(new UserSpecBuilder()
+                                .withUsername(KubeUtil.sanitizeUserName(userName))
+                                .withAuthentication(new UserAuthenticationBuilder()
+                                        .withType(UserAuthenticationType.federated)
+                                        .withProvider("openshift")
+                                        .withFederatedUserid(userId)
+                                        .withFederatedUsername(userName)
                                         .build())
-                                .setAuthorization(Arrays.asList(new UserAuthorization.Builder()
-                                                .setAddresses(Collections.singletonList("*"))
-                                                .setOperations(Arrays.asList(send, recv, view))
+                                .withAuthorization(Arrays.asList(new UserAuthorizationBuilder()
+                                                .withAddresses(Collections.singletonList("*"))
+                                                .withOperations(Arrays.asList(send, recv, view))
                                                 .build(),
-                                        new UserAuthorization.Builder()
-                                                .setOperations(Collections.singletonList(Operation.manage))
+                                        new UserAuthorizationBuilder()
+                                                .withOperations(Collections.singletonList(Operation.manage))
                                                 .build()))
                                 .build())
                         .build());

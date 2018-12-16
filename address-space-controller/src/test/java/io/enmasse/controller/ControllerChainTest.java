@@ -7,26 +7,27 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.metrics.api.Metric;
-import io.enmasse.metrics.api.Metrics;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
-import org.junit.Before;
-import org.junit.Test;
+import io.enmasse.metrics.api.Metric;
+import io.enmasse.metrics.api.Metrics;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class ControllerChainTest {
     private TestAddressSpaceApi testApi;
     private Kubernetes kubernetes;
 
-    @Before
+    @BeforeEach
     public void setup() {
         kubernetes = mock(Kubernetes.class);
         testApi = new TestAddressSpaceApi();
@@ -67,6 +68,8 @@ public class ControllerChainTest {
 
         List<Metric> metricList = metrics.snapshot();
         assertThat(metricList.size(), is(5));
+        assertTrue(a1.getStatus().isReady());
+        assertTrue(a2.getStatus().isReady());
     }
 }
 

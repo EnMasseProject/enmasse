@@ -1,6 +1,6 @@
 include ../Makefile.java.mk
 ARTIFACT_BASE=build/artemis-image
-ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis-2.6.3
+ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis
 
 build/apache-artemis-bin.tar.gz:
 	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.6.3/apache-artemis-2.6.3-bin.tar.gz
@@ -18,16 +18,7 @@ build_tar:
 	mkdir -p $(ARTEMIS_HOME)/lib
 	mkdir -p $(ARTIFACT_BASE)/opt
 
-	tar xvf plugin/target/broker-plugin-$(VERSION)-dist.tar.gz -C $(ARTIFACT_BASE)
-
-	cp -r $(ARTIFACT_BASE)/opt/broker-plugin/lib/*.jar $(ARTEMIS_HOME)/lib
-
-	# Prometheus support
-	mkdir -p $(ARTIFACT_BASE)/jmx_exporter
-	cp -f jmx_exporter/target/lib/jmx_prometheus_javaagent-0.1.0.jar $(ARTIFACT_BASE)/jmx_exporter/
-
-	# Tcnative SSL
-	cp -f tcnative/target/lib/netty-tcnative-boringssl-static-2.0.7.Final.jar $(ARTEMIS_HOME)/lib
+	cp -r utils/bin $(ARTEMIS_HOME)
 
 	tar -czf build/artemis-image-$(VERSION).tar.gz -C build/artemis-image .
 

@@ -24,7 +24,7 @@ public interface Kubernetes {
     String getNamespace();
 
     void create(KubernetesList resources);
-    void apply(KubernetesList resourceList);
+    void apply(KubernetesList resourceList, boolean patchPersistentVolumeClaims);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     void deleteResourcesNotIn(String[] addressSpaces);

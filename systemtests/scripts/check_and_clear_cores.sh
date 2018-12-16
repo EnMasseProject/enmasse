@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 CORE_DUMPS_LOCATION=${1}
 
-if [[ $(ls -A "${CORE_DUMPS_LOCATION}") ]]; then
+if [[ $(ls -A "${CORE_DUMPS_LOCATION}" | grep -v "^core.docker-runc-cur") ]]; then
     echo "FAIL: Core dumps found!"
     sudo rm -rf ${CORE_DUMPS_LOCATION}
     exit 1

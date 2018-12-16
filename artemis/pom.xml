@@ -9,12 +9,4 @@
   <packaging>pom</packaging>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>artemis</artifactId>
-  <modules>
-     <module>amqp-connector</module>
-     <module>sasl-delegation</module>
-     <module>shutdown-hook</module>
-     <module>jmx_exporter</module>
-     <module>tcnative</module>
-     <module>plugin</module>
-  </modules>
 </project>

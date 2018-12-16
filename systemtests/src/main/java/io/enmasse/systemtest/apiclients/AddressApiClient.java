@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import com.google.common.collect.Sets;
 import io.enmasse.systemtest.*;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -322,13 +321,13 @@ public class AddressApiClient extends ApiClient {
 
     public void appendAddresses(AddressSpace addressSpace, int batchSize, Destination... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
+        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
-        Set<Destination> desired = Sets.newHashSet(destinations);
+        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
 
-        Set<Destination> toCreate = Sets.difference(desired, current);
+        toCreate.removeAll(current);
 
-        log.info("Current: {}, desired: {}, toCreate: {}", current, desired, toCreate);
+        log.info("Current: {}, desired: {}, toCreate: {}", current, destinations, toCreate);
 
         destinations = toCreate.toArray(new Destination[0]);
         if (batchSize > destinations.length) {
@@ -358,11 +357,12 @@ public class AddressApiClient extends ApiClient {
 
     public void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, entries -> true));
 
-        Set<Destination> desired = Sets.newHashSet(destinations);
+        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
-        Set<Destination> toCreate = Sets.difference(desired, current);
+        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
+
+        toCreate.removeAll(current);
 
         for (Destination destination : toCreate) {
             createAddress(addressSpace, destination, HTTP_CREATED);
@@ -388,12 +388,14 @@ public class AddressApiClient extends ApiClient {
 
     public void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        Set<Destination> current = new HashSet<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
-        Set<Destination> desired = Sets.newHashSet(destinations);
+        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
-        Set<Destination> toCreate = Sets.difference(desired, current);
-        Set<Destination> toDelete = Sets.difference(current, desired);
+        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
+        List<Destination> toDelete= new ArrayList<>(current);
+
+        toDelete.removeAll(toCreate);
+        toCreate.removeAll(current);
 
         log.info("Creating {}", toCreate);
 

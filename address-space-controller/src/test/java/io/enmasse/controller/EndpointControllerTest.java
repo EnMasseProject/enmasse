@@ -13,26 +13,31 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EndpointControllerTest {
 
     private OpenShiftClient client;
+    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 
-    @Rule
-    public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
-
-
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
+        openShiftServer.before();
         client = openShiftServer.getOpenshiftClient();
+    }
+
+    @AfterEach
+    void tearDown() {
+        openShiftServer.after();
     }
 
     @Test

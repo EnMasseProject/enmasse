@@ -54,3 +54,7 @@ spec:
                   - PAGE
                   - BLOCK
                   - FAIL
+                storageClassName:
+                  type: string
+                updatePersistentVolumeClaim:
+                  type: boolean

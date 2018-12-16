@@ -38,36 +38,59 @@ public class AmqpClient implements AutoCloseable {
         return this;
     }
 
+    public ReceiverStatus recvMessagesWithStatus(String address, int numMessages) {
+        return recvMessagesWithStatus(options.getTerminusFactory().getSource(address), numMessages, Optional.empty());
+    }
+
     public Future<List<Message>> recvMessages(String address, int numMessages) {
-        return recvMessages(options.getTerminusFactory().getSource(address), numMessages, Optional.empty() );
+        return recvMessages(options.getTerminusFactory().getSource(address), numMessages, Optional.empty());
     }
 
     public Future<List<Message>> recvMessages(Source source, String linkName, int numMessages) {
         return recvMessages(source, numMessages, Optional.of(linkName));
     }
 
+    public Future<List<Message>> recvMessages(Source source, int numMessages, Optional<String> linkName) {
+        return recvMessages(source, new Count<>(numMessages), linkName).getResult();
+    }
+
+    public ReceiverStatus recvMessagesWithStatus(Source source, int numMessages, Optional<String> linkName) {
+        return recvMessages(source, new Count<>(numMessages), linkName);
+    }
+
     public Future<List<Message>> recvMessages(String address, Predicate<Message> done) {
-        return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty());
+        return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty()).getResult();
     }
 
     public Future<List<Message>> recvMessages(Source source, String linkName, Predicate<Message> done) {
-        return recvMessages(source, done, Optional.of(linkName));
+        return recvMessages(source, done, Optional.of(linkName)).getResult();
     }
 
-    public Future<List<Message>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName) {
+    public ReceiverStatus recvMessages(Source source, Predicate<Message> done, Optional<String> linkName) {
         CompletableFuture<List<Message>> resultPromise = new CompletableFuture<>();
 
         Vertx vertx = VertxFactory.create();
         clients.add(vertx);
         String containerId = "systemtest-receiver-" + source.getAddress();
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
-        vertx.deployVerticle(new Receiver(options, done, new LinkOptions(source, new Target(), linkName), connectPromise, resultPromise, containerId));
+        Receiver receiver = new Receiver(options, done, new LinkOptions(source, new Target(), linkName), connectPromise, resultPromise, containerId);
+        vertx.deployVerticle(receiver);
         try {
             connectPromise.get(2, TimeUnit.MINUTES);
         } catch (Exception e) {
             resultPromise.completeExceptionally(e);
         }
-        return resultPromise;
+        return new ReceiverStatus() {
+            @Override
+            public Future<List<Message>> getResult() {
+                return resultPromise;
+            }
+
+            @Override
+            public int getNumReceived() {
+                return receiver.getNumReceived();
+            }
+        };
     }
 
     @Override
@@ -75,11 +98,6 @@ public class AmqpClient implements AutoCloseable {
         for (Vertx client : clients) {
             client.close();
         }
-    }
-
-
-    public Future<List<Message>> recvMessages(Source source, int numMessages, Optional<String> linkName) {
-        return recvMessages(source, new Count<>(numMessages), linkName);
     }
 
     public Future<Integer> sendMessages(String address, List<String> messages) {

@@ -7,10 +7,13 @@ package io.enmasse.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.enmasse.controller.common.ControllerReason.AddressSpaceChanged;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceUpgraded;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
@@ -38,14 +42,16 @@ public class CreateController implements Controller {
     private final EventLogger eventLogger;
     private final String defaultCertProvider;
     private final String version;
+    private final AddressSpaceApi addressSpaceApi;
 
-    public CreateController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, EventLogger eventLogger, String defaultCertProvider, String version) {
+    public CreateController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, EventLogger eventLogger, String defaultCertProvider, String version, AddressSpaceApi addressSpaceApi) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
         this.eventLogger = eventLogger;
         this.defaultCertProvider = defaultCertProvider;
         this.version = version;
+        this.addressSpaceApi = addressSpaceApi;
     }
 
     private static List<EndpointSpec> validateEndpoints(AddressSpaceResolver addressSpaceResolver, AddressSpace addressSpace) {
@@ -101,6 +107,9 @@ public class CreateController implements Controller {
                 .setEndpointList(newEndpoints)
                 .build();
 
+        AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getType());
+        AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getPlan());
+
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
         InfraConfig currentInfraConfig = parseCurrentInfraConfig(addressSpace);
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
@@ -115,10 +124,13 @@ public class CreateController implements Controller {
             kubernetes.create(resourceList);
             eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getPlan());
         } else if (currentInfraConfig == null || !currentInfraConfig.equals(desiredInfraConfig)) {
 
             if (version.equals(desiredInfraConfig.getVersion())) {
-
+                if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
+                    return addressSpace;
+                }
                 kubernetes.ensureServiceAccountExists(addressSpace);
                 KubernetesList resourceList = new KubernetesListBuilder()
                         .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
@@ -127,14 +139,74 @@ public class CreateController implements Controller {
 
                 log.info("Upgrading address space {}", addressSpace);
 
-                kubernetes.apply(resourceList);
+                kubernetes.apply(resourceList,desiredInfraConfig.getUpdatePersistentVolumeClaim());
                 eventLogger.log(AddressSpaceUpgraded, "Upgraded address space", Normal, ControllerKind.AddressSpace, addressSpace.getName());
                 addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+                addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getPlan());
             } else {
                 log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
             }
+        } else if (!addressSpace.getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
+            if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
+                return addressSpace;
+            }
+
+            kubernetes.ensureServiceAccountExists(addressSpace);
+            KubernetesList resourceList = new KubernetesListBuilder()
+                    .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
+                    .build();
+            addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
+
+            log.info("Updating address space plan {}", addressSpace);
+
+            kubernetes.apply(resourceList, desiredInfraConfig.getUpdatePersistentVolumeClaim());
+            eventLogger.log(AddressSpaceChanged, "Changed address space plan", Normal, ControllerKind.AddressSpace, addressSpace.getName());
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getPlan());
         }
+
         return addressSpace;
+    }
+
+    private boolean checkExceedsQuota(AddressSpaceType addressSpaceType, AddressSpacePlan plan, AddressSpace addressSpace) {
+        AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
+        Set<Address> addresses = addressApi.listAddressesWithLabels(addressSpace.getNamespace(), Collections.singletonMap(LabelKeys.ADDRESS_SPACE, addressSpace.getName()));
+        Map<String, Double> quota = new HashMap<>();
+        Map<String, Double> usage = new HashMap<>();
+        for (ResourceAllowance allowance : plan.getResources()) {
+            quota.put(allowance.getName(), allowance.getMax());
+        }
+
+        AddressResolver addressResolver = new AddressResolver(addressSpaceType);
+        for (Address address : addresses) {
+            AddressPlan addressPlan = addressResolver.getPlan(address);
+            for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
+                usage.compute(resourceRequest.getName(), (s, old) -> {
+                    if (old == null) {
+                        return resourceRequest.getCredit();
+                    } else {
+                        return old + resourceRequest.getCredit();
+                    }
+                });
+                usage.compute("aggregate", (s, old) -> {
+                    if (old == null) {
+                        return resourceRequest.getCredit();
+                    } else {
+                        return old + resourceRequest.getCredit();
+                    }
+                });
+            }
+        }
+
+        boolean exceedsQuota = false;
+        for (Map.Entry<String, Double> usageEntry : usage.entrySet()) {
+            Double quotaValue = quota.get(usageEntry.getKey());
+            if (quotaValue != null && usageEntry.getValue() > quotaValue) {
+                addressSpace.getStatus().appendMessage(String.format("Unable to apply plan %s to address space %s:%s: quota exceeded for resource %s", plan.getAddressPlans(), addressSpace.getNamespace(), addressSpace.getName(), usageEntry.getKey()));
+                exceedsQuota = true;
+            }
+        }
+        return exceedsQuota;
     }
 
     private void addAppliedInfraConfigAnnotation(KubernetesList resourceList, InfraConfig infraConfig) throws JsonProcessingException {

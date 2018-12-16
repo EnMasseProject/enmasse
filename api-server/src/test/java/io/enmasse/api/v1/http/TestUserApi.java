@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class TestUserApi implements UserApi  {
+public class TestUserApi implements UserApi {
     private final Map<String, Map<String, User>> userMap = new HashMap<>();
     public boolean throwException = false;
 
@@ -75,7 +75,7 @@ public class TestUserApi implements UserApi  {
         for (Map<String, User> users : userMap.values()) {
             for (User user : users.values()) {
                 if (user.getMetadata().getNamespace().equals(namespace)) {
-                    list.add(user);
+                    list.getItems().add(user);
                 }
             }
         }

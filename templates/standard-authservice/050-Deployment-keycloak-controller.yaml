@@ -16,6 +16,16 @@ spec:
         app: enmasse
         name: keycloak-controller
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node-role.enmasse.io/operator-infra
+                    operator: In
+                    values:
+                      - "true"
       containers:
       - env:
         - name: AUTO_CREATE

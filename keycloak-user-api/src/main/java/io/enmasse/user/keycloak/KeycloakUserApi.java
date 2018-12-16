@@ -4,16 +4,21 @@
  */
 package io.enmasse.user.keycloak;
 
-import io.enmasse.k8s.util.TimeUtil;
-import io.enmasse.user.api.UserApi;
-import io.enmasse.user.model.v1.Operation;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthentication;
-import io.enmasse.user.model.v1.UserAuthenticationType;
-import io.enmasse.user.model.v1.UserAuthorization;
-import io.enmasse.user.model.v1.UserList;
-import io.enmasse.user.model.v1.UserMetadata;
-import io.enmasse.user.model.v1.UserSpec;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -27,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -37,15 +43,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
-public class KeycloakUserApi implements UserApi  {
+import io.enmasse.k8s.util.TimeUtil;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthentication;
+import io.enmasse.user.model.v1.UserAuthenticationBuilder;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorization;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
+import io.enmasse.user.model.v1.UserList;
+import io.enmasse.user.model.v1.UserSpecBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
+
+public class KeycloakUserApi implements UserApi {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
 
@@ -122,8 +142,6 @@ public class KeycloakUserApi implements UserApi  {
         return null;
     }
 
-
-
     @Override
     public Optional<User> getUserWithName(String realmName, String name) throws Exception {
         log.info("Retrieving user {} in realm {}", name, realmName);
@@ -167,6 +185,7 @@ public class KeycloakUserApi implements UserApi  {
     public void createUser(String realmName, User user) throws Exception {
         log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realmName);
         user.validate();
+        validateForCreation(user);
 
         withRealm(realmName, realm -> {
 
@@ -197,7 +216,7 @@ public class KeycloakUserApi implements UserApi  {
                     setFederatedIdentity(realm.users().get(userId), user.getSpec().getAuthentication());
                     break;
                 case serviceaccount:
-//                    setServiceAccountIdentity(realm.users().get(userId), user.getSpec().getAuthentication());
+                    // nothing to do
                     break;
                 default:
                     log.error("Authentication type {} requested, but not properly implemented", user.getSpec().getAuthentication().getType());
@@ -211,34 +230,27 @@ public class KeycloakUserApi implements UserApi  {
         });
     }
 
+    /**
+     * Check if the user is valid for creating a new instance.
+     * @param user The user to check.
+     */
+    private void validateForCreation(final User user) {
+        final UserAuthentication auth = user.getSpec().getAuthentication();
+        switch (auth.getType()) {
+            case password:
+                Objects.requireNonNull(auth.getPassword(), "'password' must be set for 'password' type");
+                break;
+            case federated:
+                Objects.requireNonNull(auth.getProvider(), "'provider' must be set for 'federated' type");
+                Objects.requireNonNull(auth.getFederatedUserid(), "'federatedUserid' must be set for 'federated' type");
+                Objects.requireNonNull(auth.getFederatedUsername(), "'federatedUsername' must be set for 'federated' type");
+                break;
+        }
+    }
+
     private void applyAuthorizationRules(RealmResource realm, User user, UserResource userResource) {
 
-        Set<String> desiredGroups = new HashSet<>();
-        for (UserAuthorization userAuthorization : user.getSpec().getAuthorization()) {
-            for (Operation operation : userAuthorization.getOperations()) {
-                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
-                    String groupName = operation.name();
-                    desiredGroups.add(groupName);
-                    if (groupName.equals("manage")) {
-                        desiredGroups.add("manage_#");
-                    }
-                } else {
-                    for (String address : userAuthorization.getAddresses()) {
-                        try {
-                            String groupName = operation.name() + "_" + URLEncoder.encode(address, StandardCharsets.UTF_8.name());
-                            desiredGroups.add(groupName);
-
-                            String brokeredGroupName = groupName.replace("*", "#");
-                            if (!groupName.equals(brokeredGroupName)) {
-                                desiredGroups.add(brokeredGroupName);
-                            }
-                        } catch (UnsupportedEncodingException e) {
-                            // UTF-8 must always be supported
-                        }
-                    }
-                }
-            }
-        }
+        Set<String> desiredGroups = createDesiredGroupsSet(user.getSpec().getAuthorization());
         List<GroupRepresentation> groups = realm.groups().groups();
 
         Set<String> existingGroups = userResource.groups()
@@ -264,6 +276,49 @@ public class KeycloakUserApi implements UserApi  {
             String groupId = createGroupIfNotExists(realm, group);
             userResource.joinGroup(groupId);
         }
+    }
+
+    /**
+     * Create the set of desired groups.
+     * 
+     * @param user The user to create the groups for.
+     * @return A set of groups.
+     */
+    static Set<String> createDesiredGroupsSet(final List<UserAuthorization> authorization) {
+
+        final Set<String> desiredGroups = new HashSet<>();
+
+        for (UserAuthorization userAuthorization : authorization) {
+
+            for (Operation operation : userAuthorization.getOperations()) {
+
+                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
+
+                    switch (operation) {
+                        case manage:
+                            desiredGroups.add("manage_#");
+                            desiredGroups.add("manage");
+                            break;
+                        default:
+                            desiredGroups.add(operation.name());
+                            break;
+                    }
+
+                } else {
+
+                    for (String address : userAuthorization.getAddresses()) {
+                        String groupName = operation.name() + "_" + encodePart(address);
+                        // normal name
+                        desiredGroups.add(groupName);
+                        // brokered name ( the set will remove duplicates for us)
+                        desiredGroups.add(groupName.replace("*", "#"));
+                    }
+
+                }
+            }
+        }
+
+        return desiredGroups;
     }
 
     private Optional<UserRepresentation> getUser(String realmName, String username) throws Exception {
@@ -397,13 +452,14 @@ public class KeycloakUserApi implements UserApi  {
                     List<UserRepresentation> userReps = keycloak.realm(realm).users().list();
                     for (UserRepresentation userRep : userReps) {
                         List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                        userList.add(buildUser(userRep, groupReps));
+                        userList.getItems().add(buildUser(userRep, groupReps));
                     }
                 }
             }
             return userList;
         });
     }
+
 
     static User buildUser(UserRepresentation userRep, List<GroupRepresentation> groupReps) {
         log.debug("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
@@ -414,7 +470,7 @@ public class KeycloakUserApi implements UserApi  {
             if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
-                String address = parts[1];
+                String address = decodePart(parts[1]);
                 operationsByAddress.computeIfAbsent(address, k -> new HashSet<>())
                         .add(operation);
             } else {
@@ -439,28 +495,28 @@ public class KeycloakUserApi implements UserApi  {
 
         List<UserAuthorization> authorizations = new ArrayList<>();
         for (Map.Entry<Set<Operation>, Set<String>> operationsEntry : operations.entrySet()) {
-            authorizations.add(new UserAuthorization.Builder()
-                    .setAddresses(new ArrayList<>(operationsEntry.getValue()))
-                    .setOperations(new ArrayList<>(operationsEntry.getKey()))
+            authorizations.add(new UserAuthorizationBuilder()
+                    .withAddresses(new ArrayList<>(operationsEntry.getValue()))
+                    .withOperations(new ArrayList<>(operationsEntry.getKey()))
                     .build());
         }
 
         String name = userRep.getAttributes().get("resourceName").get(0);
         String namespace = userRep.getAttributes().get("resourceNamespace").get(0);
 
-        return new User.Builder()
-                .setMetadata(new UserMetadata.Builder()
-                        .setName(name)
-                        .setNamespace(namespace)
-                        .setSelfLink("/apis/user.enmasse.io/v1alpha1/namespaces/" + namespace + "/messagingusers/" + name)
-                        .setCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
+        return new UserBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(name)
+                        .withNamespace(namespace)
+                        .withSelfLink("/apis/user.enmasse.io/v1alpha1/namespaces/" + namespace + "/messagingusers/" + name)
+                        .withCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
                         .build())
-                .setSpec(new UserSpec.Builder()
-                        .setUsername(userRep.getUsername())
-                        .setAuthentication(new UserAuthentication.Builder()
-                                .setType(UserAuthenticationType.valueOf(userRep.getAttributes().get("authenticationType").get(0)))
+                .withSpec(new UserSpecBuilder()
+                        .withUsername(userRep.getUsername())
+                        .withAuthentication(new UserAuthenticationBuilder()
+                                .withType(UserAuthenticationType.valueOf(userRep.getAttributes().get("authenticationType").get(0)))
                                 .build())
-                        .setAuthorization(authorizations)
+                        .withAuthorization(authorizations)
                         .build())
                 .build();
     }
@@ -487,7 +543,7 @@ public class KeycloakUserApi implements UserApi  {
 
                     for (UserRepresentation userRep : userReps) {
                         List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                        userList.add(buildUser(userRep, groupReps));
+                        userList.getItems().add(buildUser(userRep, groupReps));
                     }
                 }
             }
@@ -515,5 +571,22 @@ public class KeycloakUserApi implements UserApi  {
             return null;
         });
 
+    }
+    
+
+    public static String decodePart(final String part) {
+        try {
+            return URLDecoder.decode(part, StandardCharsets.UTF_8.name());
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String encodePart(final String part) {
+        try {
+            return URLEncoder.encode(part, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
