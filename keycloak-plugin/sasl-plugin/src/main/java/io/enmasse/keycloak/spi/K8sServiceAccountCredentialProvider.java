@@ -35,7 +35,7 @@ import java.util.Set;
 
 public class K8sServiceAccountCredentialProvider implements CredentialProvider, CredentialInputValidator, OnUserCache, CredentialInputUpdater {
 
-    private static final Logger LOG = Logger.getLogger(AmqpServer.class);
+    private static final Logger LOG = Logger.getLogger(K8sServiceAccountCredentialProvider.class);
 
     public static final String ENMASSE_SERVICE_ACCOUNT_TYPE = "enmasse-service-account";
 
@@ -78,9 +78,9 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
             }
         }
         if(!authenticated) {
-            LOG.info("User: " + userModel.getUsername() + " not authenticated for realm " + realmModel.getName());
+            LOG.debug("User: " + userModel.getUsername() + " not authenticated for realm " + realmModel.getName());
         } else if(!Objects.equals(userModel.getUsername(), userName)) {
-            LOG.info("Attempt to log in for user " + userModel.getUsername() + " in realm " + realmModel.getName() + " with token for " + userName);
+            LOG.debug("Attempt to log in for user " + userModel.getUsername() + " in realm " + realmModel.getName() + " with token for " + userName);
         }
 
         return authenticated && Objects.equals(userModel.getUsername(), userName);

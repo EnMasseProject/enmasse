@@ -112,10 +112,12 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                             complete = true;
                             return null;
                         }
+                        LOG.debug("Invalid password for " + username + " in realm " + hostname);
+                    } else {
+                        LOG.debug("user not found: " + username);
                     }
 
 
-                    LOG.info("Invalid password for " + username + " in realm " + hostname);
                     authenticated = false;
                     complete = true;
                     return null;
