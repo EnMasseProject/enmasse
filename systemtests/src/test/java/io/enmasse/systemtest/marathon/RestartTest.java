@@ -8,6 +8,7 @@ import io.enmasse.systemtest.*;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -59,7 +60,7 @@ class RestartTest extends MarathonTestBase {
             log.info("............................................................");
             log.info("..........Scheduler will pick pod and delete them...........");
             List<Pod> pods = kubernetes.listPods();
-            int podNum = new Random().nextInt(pods.size() - 1);
+            int podNum = new Random(System.currentTimeMillis()).nextInt(pods.size() - 1);
             kubernetes.deletePod(environment.namespace(), pods.get(podNum).getMetadata().getName());
             log.info("............................................................");
             log.info("............................................................");
@@ -71,6 +72,7 @@ class RestartTest extends MarathonTestBase {
     }
 
     @Test
+    @Disabled("Due to issue #2127")
     void testHAqdrouter() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
@@ -90,7 +92,7 @@ class RestartTest extends MarathonTestBase {
             log.info("............................................................");
             log.info("...........Scheduler will delete one of qdrouter............");
             List<Pod> qdrouters = kubernetes.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
-            Pod qdrouter = qdrouters.get(new Random().nextInt(qdrouters.size() - 1));
+            Pod qdrouter = qdrouters.get(new Random(System.currentTimeMillis()).nextInt(qdrouters.size()) % qdrouters.size());
             kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
             log.info("............................................................");
             log.info("............................................................");
