@@ -63,4 +63,11 @@ public class StandardInfraConfigSpecBrokerResources extends AbstractWithAddition
         return Objects.hash(memory, storage);
     }
 
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecBrokerResources{" +
+                "memory='" + memory + '\'' +
+                ", storage='" + storage + '\'' +
+                '}';
+    }
 }

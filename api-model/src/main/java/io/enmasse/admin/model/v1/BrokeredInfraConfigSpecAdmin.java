@@ -40,6 +40,13 @@ public class BrokeredInfraConfigSpecAdmin extends AbstractWithAdditionalProperti
     }
 
     @Override
+    public String toString() {
+        return "BrokeredInfraConfigSpecAdmin{" +
+                "resources=" + resources +
+                '}';
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(resources);
     }

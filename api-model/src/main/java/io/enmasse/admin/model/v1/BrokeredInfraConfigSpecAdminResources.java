@@ -40,6 +40,13 @@ public class BrokeredInfraConfigSpecAdminResources extends AbstractWithAdditiona
     }
 
     @Override
+    public String toString() {
+        return "BrokeredInfraConfigSpecAdminResources{" +
+                "memory='" + memory + '\'' +
+                '}';
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(memory);
     }

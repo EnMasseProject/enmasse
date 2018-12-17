@@ -91,4 +91,13 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         return Objects.hash(resources, addressFullPolicy, storageClassName, updatePersistentVolumeClaim);
     }
 
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecBroker{" +
+                "resources=" + resources +
+                ", addressFullPolicy='" + addressFullPolicy + '\'' +
+                ", storageClassName='" + storageClassName + '\'' +
+                ", updatePersistentVolumeClaim=" + updatePersistentVolumeClaim +
+                '}';
+    }
 }

@@ -44,6 +44,16 @@ public class BrokeredInfraConfigSpec extends AbstractWithAdditionalProperties {
     }
 
     @Override
+    public String toString() {
+        return "BrokeredInfraConfigSpec{" +
+                "version='" + version + '\'' +
+                ", networkPolicy=" + networkPolicy +
+                ", admin=" + admin +
+                ", broker=" + broker +
+                '}';
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(version, networkPolicy, admin, broker);
     }
