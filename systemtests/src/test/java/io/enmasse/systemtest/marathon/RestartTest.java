@@ -16,6 +16,7 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 class RestartTest extends MarathonTestBase {
     private static Logger log = CustomLogger.getLogger();
@@ -67,6 +68,37 @@ class RestartTest extends MarathonTestBase {
 
         runTestInLoop(60, () ->
                 assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses));
+    }
+
+    @Test
+    void testHAqdrouter() throws Exception {
+
+        UserCredentials user = new UserCredentials("test-user", "passsswooooord");
+        AddressSpace standard = new AddressSpace("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        createAddressSpaceList(standard);
+        createUser(standard, user);
+
+        List<Destination> standardAddresses = getAllStandardAddresses();
+
+        setAddresses(standard, standardAddresses.toArray(new Destination[0]));
+
+        assertCanConnect(standard, user, standardAddresses);
+
+        //set up restart scheduler
+        deleteService.scheduleAtFixedRate(() -> {
+            log.info("............................................................");
+            log.info("............................................................");
+            log.info("...........Scheduler will delete one of qdrouter............");
+            List<Pod> qdrouters = kubernetes.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
+            Pod qdrouter = qdrouters.get(new Random().nextInt(qdrouters.size() - 1));
+            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
+            log.info("............................................................");
+            log.info("............................................................");
+            log.info("............................................................");
+        }, 5, 75, TimeUnit.SECONDS);
+
+        runTestInLoop(30, () ->
+                assertCanConnect(standard, user, standardAddresses));
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
