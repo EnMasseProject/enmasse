@@ -31,6 +31,7 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     }
 
     public BrokeredInfraConfigSpecBroker(final BrokeredInfraConfigSpecBrokerResources resources) {
+        setResources(resources);
     }
 
     @Override
