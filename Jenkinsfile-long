@@ -74,7 +74,9 @@ pipeline {
             }
         }
         failure {
-            echo "build failed"
+            script {
+                lib.sendMail(env.MAILING_LIST, env.JOB_NAME, env.BUILD_URL)
+            }
         }
     }
 }
