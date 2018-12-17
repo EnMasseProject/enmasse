@@ -102,6 +102,7 @@ public class CliOutputData {
             try {
                 this.status = parsedData[5];
             } catch (Exception ignored) {
+                this.status = "";
             }
         }
 
@@ -139,6 +140,7 @@ public class CliOutputData {
             try {
                 this.status = parsedData[8];
             } catch (Exception ignored) {
+                this.status = "";
             }
         }
 

@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.cmdclients.CRDCmdClient.createCR;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,8 +116,13 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             CliOutputData data = new CliOutputData(CRDCmdClient.getAddressSpace(namespace, Optional.of("wide")).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady());
-            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getName()))
-                    .getStatus().contains("Following deployments and statefulsets are not ready"));
+            if(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady()) {
+                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).getStatus(),
+                        containsString(""));
+            } else {
+                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).getStatus(),
+                        containsString("Following deployments and statefulsets are not ready"));
+            }
 
             waitForAddressSpaceReady(standard, apiClient);
 
@@ -124,8 +130,8 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady());
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).isReady());
-            assertNull(((CliOutputData.AddressSpaceRow) data.getData(standard.getName()))
-                    .getStatus());
+            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getName()))
+                    .getStatus().isEmpty());
 
 
             //===========================
@@ -188,7 +194,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
                     "Configuring");
-            assertNotNull(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus());
+            assertFalse(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());
 
             TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
 
@@ -200,7 +206,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
                     "Active");
-            assertNull(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus());
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());
 
             //===========================
             // Clean part
