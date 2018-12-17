@@ -27,8 +27,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.cache.CachedUserModel;
 import org.keycloak.models.cache.OnUserCache;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -39,7 +38,13 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
 
     public static final String ENMASSE_SERVICE_ACCOUNT_TYPE = "enmasse-service-account";
 
+    private final NamespacedOpenShiftClient client;
+    private final OkHttpClient httpClient;
+
     K8sServiceAccountCredentialProvider(KeycloakSession session) {
+        client = new DefaultOpenShiftClient();
+        httpClient = client.adapt(OkHttpClient.class);
+
     }
 
     @Override
@@ -87,15 +92,14 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
     }
 
     private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
-        NamespacedOpenShiftClient client = new DefaultOpenShiftClient();
-        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
+
 
         HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
         Request.Builder requestBuilder = new Request.Builder()
-            .url(url)
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Authorization", "Bearer " + client.getConfiguration().getOauthToken())
-            .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
+                .url(url)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer " + client.getConfiguration().getOauthToken())
+                .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             try (ResponseBody responseBody = response.body()) {
@@ -114,6 +118,8 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+
+
     }
 
     @Override
@@ -138,4 +144,8 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
         }
     }
 
+    @Override
+    public void close() {
+        client.close();
+    }
 }
