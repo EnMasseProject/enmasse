@@ -50,6 +50,16 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         return Objects.hash(resources, addressFullPolicy, storageClassName, updatePersistentVolumeClaim);
     }
 
+    @Override
+    public String toString() {
+        return "BrokeredInfraConfigSpecBroker{" +
+                "resources=" + resources +
+                ", addressFullPolicy='" + addressFullPolicy + '\'' +
+                ", storageClassName='" + storageClassName + '\'' +
+                ", updatePersistentVolumeClaim=" + updatePersistentVolumeClaim +
+                '}';
+    }
+
     public void setResources(BrokeredInfraConfigSpecBrokerResources resources) {
         this.resources = resources;
     }

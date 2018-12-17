@@ -19,7 +19,7 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "linkCapacity"})
+@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
@@ -71,5 +71,14 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
 
     public int getMinReplicas() {
         return minReplicas;
+    }
+
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecRouter{" +
+                "resources=" + resources +
+                ", minReplicas=" + minReplicas +
+                ", linkCapacity=" + linkCapacity +
+                '}';
     }
 }

@@ -52,4 +52,10 @@ public class StandardInfraConfigSpecAdminResources extends AbstractWithAdditiona
         return Objects.hash(memory);
     }
 
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecAdminResources{" +
+                "memory='" + memory + '\'' +
+                '}';
+    }
 }

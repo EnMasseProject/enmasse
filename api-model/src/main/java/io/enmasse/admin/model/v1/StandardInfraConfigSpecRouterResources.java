@@ -52,4 +52,10 @@ public class StandardInfraConfigSpecRouterResources extends AbstractWithAddition
         return Objects.hash(memory);
     }
 
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecRouterResources{" +
+                "memory='" + memory + '\'' +
+                '}';
+    }
 }

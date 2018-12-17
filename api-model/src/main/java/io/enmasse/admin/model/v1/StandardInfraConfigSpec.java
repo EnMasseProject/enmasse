@@ -78,6 +78,17 @@ public class StandardInfraConfigSpec extends AbstractWithAdditionalProperties {
         return Objects.hash(version, networkPolicy, admin, broker, router);
     }
 
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpec{" +
+                "version='" + version + '\'' +
+                ", networkPolicy=" + networkPolicy +
+                ", admin=" + admin +
+                ", broker=" + broker +
+                ", router=" + router +
+                '}';
+    }
+
     public void setNetworkPolicy(NetworkPolicy networkPolicy) {
         this.networkPolicy = networkPolicy;
     }

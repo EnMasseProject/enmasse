@@ -43,6 +43,14 @@ public class BrokeredInfraConfigSpecBrokerResources extends AbstractWithAddition
     }
 
     @Override
+    public String toString() {
+        return "BrokeredInfraConfigSpecBrokerResources{" +
+                "memory='" + memory + '\'' +
+                ", storage='" + storage + '\'' +
+                '}';
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(memory, storage);
     }

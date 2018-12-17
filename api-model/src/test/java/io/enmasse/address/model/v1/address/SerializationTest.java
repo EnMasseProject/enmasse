@@ -7,10 +7,10 @@ package io.enmasse.address.model.v1.address;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.address.model.v1.DeserializeException;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRule;
+import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -468,6 +468,152 @@ public class SerializationTest {
 
         assertAddressSpace(deserialized, a1);
         assertAddressSpace(deserialized, a2);
+    }
+
+    @Test
+    public void testSerializeStandardInfraConfig() throws IOException {
+        StandardInfraConfig infraConfig = new StandardInfraConfigBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("infra")
+                        .build())
+                .editOrNewSpec()
+                .withVersion("123")
+                .editOrNewNetworkPolicy()
+                .withIngress(new NetworkPolicyIngressRuleBuilder().build())
+                .endNetworkPolicy()
+                .editOrNewAdmin()
+                .editOrNewResources()
+                .withMemory("512Mi")
+                .endResources()
+                .endAdmin()
+                .editOrNewBroker()
+                .editOrNewResources()
+                .withMemory("128Mi")
+                .withStorage("2Gi")
+                .endResources()
+                .withStorageClassName("local")
+                .withUpdatePersistentVolumeClaim(false)
+                .withAddressFullPolicy("FAIL")
+                .endBroker()
+                .editOrNewRouter()
+                .editOrNewResources()
+                .withMemory("128Mi")
+                .endResources()
+                .withLinkCapacity(100)
+                .endRouter()
+                .endSpec()
+                .build();
+
+        String serialized = CodecV1.getMapper().writeValueAsString(infraConfig);
+        StandardInfraConfig deserialized = CodecV1.getMapper().readValue(serialized, StandardInfraConfig.class);
+        assertEquals(infraConfig, deserialized);
+
+        serialized = "{" +
+                "\"apiVersion\":\"admin.enmasse.io/v1alpha1\"," +
+                "\"kind\":\"StandardInfraConfig\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"infra\"," +
+                "  \"labels\": {}," +
+                "  \"annotations\": {}" +
+                "}," +
+                "\"spec\": {" +
+                "  \"version\": \"123\"," +
+                "  \"networkPolicy\": {" +
+                "    \"ingress\": [{\"from\":[],\"ports\":[]}]," +
+                "    \"egress\": []" +
+                "  }," +
+                "  \"broker\": {" +
+                "     \"resources\": {" +
+                "       \"memory\": \"128Mi\"," +
+                "       \"storage\": \"2Gi\"" +
+                "     }," +
+                "     \"addressFullPolicy\": \"FAIL\"," +
+                "     \"storageClassName\": \"local\"," +
+                "     \"updatePersistentVolumeClaim\": false" +
+                "  }," +
+                "  \"admin\": {" +
+                "     \"resources\": {" +
+                "       \"memory\": \"512Mi\"" +
+                "     }" +
+                "  }," +
+                "  \"router\": {" +
+                "     \"resources\": {" +
+                "       \"memory\": \"128Mi\"" +
+                "     }," +
+                "     \"linkCapacity\": 100" +
+                "  }" +
+                "}}";
+
+
+        deserialized = CodecV1.getMapper().readValue(serialized, StandardInfraConfig.class);
+        assertEquals(infraConfig, deserialized);
+    }
+
+    @Test
+    public void testSerializeBrokeredInfraConfig() throws IOException {
+        BrokeredInfraConfig infraConfig = new BrokeredInfraConfigBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName("infra")
+                        .build())
+                .editOrNewSpec()
+                .withVersion("123")
+                .editOrNewNetworkPolicy()
+                .withIngress(new NetworkPolicyIngressRuleBuilder().build())
+                .endNetworkPolicy()
+                .editOrNewAdmin()
+                .editOrNewResources()
+                .withMemory("512Mi")
+                .endResources()
+                .endAdmin()
+                .editOrNewBroker()
+                .editOrNewResources()
+                .withMemory("128Mi")
+                .withStorage("2Gi")
+                .endResources()
+                .withStorageClassName("local")
+                .withUpdatePersistentVolumeClaim(false)
+                .withAddressFullPolicy("FAIL")
+                .endBroker()
+                .endSpec()
+                .build();
+
+        String serialized = CodecV1.getMapper().writeValueAsString(infraConfig);
+        BrokeredInfraConfig deserialized = CodecV1.getMapper().readValue(serialized, BrokeredInfraConfig.class);
+        assertEquals(infraConfig, deserialized);
+
+        serialized = "{" +
+                "\"apiVersion\":\"admin.enmasse.io/v1alpha1\"," +
+                "\"kind\":\"BrokeredInfraConfig\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"infra\"," +
+                "  \"labels\": {}," +
+                "  \"annotations\": {}" +
+                "}," +
+                "\"spec\": {" +
+                "  \"version\": \"123\"," +
+                "  \"networkPolicy\": {" +
+                "    \"ingress\": [{\"from\":[],\"ports\":[]}]," +
+                "    \"egress\": []" +
+                "  }," +
+                "  \"broker\": {" +
+                "     \"resources\": {" +
+                "       \"memory\": \"128Mi\"," +
+                "       \"storage\": \"2Gi\"" +
+                "     }," +
+                "     \"addressFullPolicy\": \"FAIL\"," +
+                "     \"storageClassName\": \"local\"," +
+                "     \"updatePersistentVolumeClaim\": false" +
+                "  }," +
+                "  \"admin\": {" +
+                "     \"resources\": {" +
+                "       \"memory\": \"512Mi\"" +
+                "     }" +
+                "  }" +
+                "}}";
+
+
+        deserialized = CodecV1.getMapper().readValue(serialized, BrokeredInfraConfig.class);
+        assertEquals(infraConfig, deserialized);
     }
 
     private void assertAddressSpace(AddressSpaceList deserialized, AddressSpace expected) {

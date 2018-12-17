@@ -53,4 +53,10 @@ public class StandardInfraConfigSpecAdmin extends AbstractWithAdditionalProperti
         return Objects.hash(resources);
     }
 
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecAdmin{" +
+                "resources=" + resources +
+                '}';
+    }
 }
