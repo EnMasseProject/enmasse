@@ -249,6 +249,53 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @Test
+    void testScalePooledBrokers() throws Exception {
+        //define and create address plans
+        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.99));
+        AddressPlan xlQueuePlan = new AddressPlan("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
+        plansProvider.createAddressPlan(xlQueuePlan);
+
+        //define and create address space plan
+        List<AddressSpaceResource> resources = Arrays.asList(
+                new AddressSpaceResource("broker", 10.0),
+                new AddressSpaceResource("router", 2.0),
+                new AddressSpaceResource("aggregate", 12.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(xlQueuePlan);
+        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
+                "default", AddressSpaceType.STANDARD, resources, addressPlans);
+        plansProvider.createAddressSpacePlan(manyAddressesPlan);
+
+        //create address space plan with new plan
+        AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
+                manyAddressesPlan.getName(), AuthService.STANDARD);
+        createAddressSpace(manyAddressesSpace);
+
+        UserCredentials cred = new UserCredentials("testus", "papyrus");
+        createUser(manyAddressesSpace, cred);
+
+        ArrayList<Destination> dest = new ArrayList<>();
+        int destCount = 4;
+        int toDeleteCount = 2;
+        for (int i = 0; i < destCount; i++) {
+            dest.add(Destination.queue("xl-queue-" + i, xlQueuePlan.getName()));
+        }
+
+        setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
+        for (Destination destination : dest) {
+            waitForBrokerReplicas(manyAddressesSpace, destination, 1);
+        }
+
+        assertCanConnect(manyAddressesSpace, cred, dest);
+
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
+        for (Destination destination : dest.subList(toDeleteCount, destCount)) {
+            waitForBrokerReplicas(manyAddressesSpace, destination, 1);
+        }
+
+        assertCanConnect(manyAddressesSpace, cred, dest.subList(toDeleteCount, destCount));
+    }
+
+    @Test
     @Tag(nonPR)
     @Disabled("test disabled as per-address limit enforcement has been removed")
     void testGlobalSizeLimitations() throws Exception {
@@ -343,7 +390,6 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 //    }
 
     @Test
-    @Disabled("test disabled due to issue: #1134")
     void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueueAlpha = Collections.singletonList(new AddressResource("broker", 0.3));
@@ -399,8 +445,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //remove addresses from first pod and wait for scale down
         deleteAddresses(messagePersistAddressSpace, queue1, queue2);
-        TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
-        //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
+        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, messagePersistAddressSpace, 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //validate count of addresses
         Future<List<String>> addresses = getAddresses(messagePersistAddressSpace, Optional.empty());
@@ -447,7 +492,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         setAddresses(messagePersistAddressSpace, queue);
 
         //pod should have 2 replicas
-        TestUtils.waitForNBrokerReplicas(kubernetes, messagePersistAddressSpace.getNamespace(), 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
+        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, messagePersistAddressSpace, 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //send 100000 messages to queue
         UserCredentials user = new UserCredentials("test-change-plan-user", "test_change_plan_pswd");
@@ -471,8 +516,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //wait until address will be scaled down to 1 pod
         TestUtils.waitForNBrokerReplicas(
+                addressApiClient,
                 kubernetes,
-                messagePersistAddressSpace.getNamespace(), 1, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
+                messagePersistAddressSpace, 1, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
         //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
 
         //receive messages

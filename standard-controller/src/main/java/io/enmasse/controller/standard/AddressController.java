@@ -41,8 +41,9 @@ public class AddressController implements Watcher<Address> {
     private final SchemaProvider schemaProvider;
     private final Vertx vertx = Vertx.vertx();
     private final Metrics metrics;
+    private final BrokerIdGenerator brokerIdGenerator;
 
-    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Metrics metrics) {
+    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Metrics metrics, BrokerIdGenerator brokerIdGenerator) {
         this.options = options;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
@@ -50,6 +51,7 @@ public class AddressController implements Watcher<Address> {
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
         this.metrics = metrics;
+        this.brokerIdGenerator = brokerIdGenerator;
     }
 
     public void start() throws Exception {
@@ -92,7 +94,7 @@ public class AddressController implements Watcher<Address> {
 
         long resolvedPlan = System.nanoTime();
 
-        AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid());
+        AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
@@ -207,8 +209,8 @@ public class AddressController implements Watcher<Address> {
                                 .build();
                     }
                     BrokerCluster upgradedCluster = null;
-                    if (cluster.getClusterId().startsWith("broker-pooled")) {
-                        upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), cluster.getNewReplicas(), null, null, desiredConfig);
+                    if (!cluster.getClusterId().startsWith("broker-sharded")) {
+                        upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), 1, null, null, desiredConfig);
                     } else {
                         Address address = addresses.stream()
                                 .filter(a -> cluster.getClusterId().equals(a.getAnnotation(AnnotationKeys.CLUSTER_ID)))
@@ -216,7 +218,14 @@ public class AddressController implements Watcher<Address> {
                                 .orElse(null);
                         if (address != null) {
                             AddressPlan plan = addressResolver.getPlan(address);
-                            upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), cluster.getNewReplicas(), address, plan, desiredConfig);
+                            int brokerNeeded = 0;
+                            for (ResourceRequest resourceRequest : plan.getRequiredResources()) {
+                                if (resourceRequest.getName().equals("broker")) {
+                                    brokerNeeded = (int) resourceRequest.getCredit();
+                                    break;
+                                }
+                            }
+                            upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), brokerNeeded, address, plan, desiredConfig);
                         }
                     }
                     log.info("Upgrading broker {}", cluster.getClusterId());

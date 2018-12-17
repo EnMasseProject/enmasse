@@ -42,25 +42,6 @@ public class TestUtils {
     private static Set<String> validDestinationTypes = new HashSet<>(Arrays.asList("queue", "topic", "anycast", "multicast", "subscription"));
 
     /**
-     * scale up/down specific Destination (type: StatefulSet) in address space
-     */
-    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        kubernetes.setStatefulSetReplicas(destination.getDeployment(), numReplicas);
-        waitForNBrokerReplicas(kubernetes, addressSpace.getNamespace(), numReplicas, true, destination, budget, checkInterval);
-    }
-
-    /**
-     * scale up/down specific Destination (type: StatefulSet) in address space WITHOUT WAIT
-     */
-    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas) throws InterruptedException {
-        kubernetes.setStatefulSetReplicas(destination.getDeployment(), numReplicas);
-    }
-
-    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        setReplicas(kubernetes, addressSpace, destination, numReplicas, budget, 5000);
-    }
-
-    /**
      * scale up/down specific pod (type: Deployment) in address space
      */
     public static void setReplicas(Kubernetes kubernetes, String infraUuid, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
@@ -84,13 +65,13 @@ public class TestUtils {
     /**
      * wait for expected count of Destination replicas in address space
      */
-    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String infraUuid, int expectedReplicas, boolean readyRequired,
-                                              Destination destination, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        String statefulsetName = destination.getDeployment().startsWith("broker") ?
-                String.format("broker-pooled-%s", infraUuid) : destination.getDeployment();
+    public static void waitForNBrokerReplicas(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
+                                              Destination destination, TimeoutBudget budget, long checkInterval) throws Exception {
+        Address address = getAddressObject(addressApiClient.getAddresses(addressSpace, Optional.of(destination.getName())));
+        String statefulsetName = (String) address.getAnnotations().get("cluster_id");
         Map<String, String> labels = new HashMap<>();
         labels.put("role", "broker");
-        labels.put("infraUuid", infraUuid);
+        labels.put("infraUuid", addressSpace.getInfraUuid());
         waitForNReplicas(kubernetes,
                 expectedReplicas,
                 readyRequired,
@@ -100,8 +81,8 @@ public class TestUtils {
                 checkInterval);
     }
 
-    public static void waitForNBrokerReplicas(Kubernetes kubernetes, String infraUuid, int expectedReplicas, Destination destination, TimeoutBudget budget) throws InterruptedException {
-        waitForNBrokerReplicas(kubernetes, infraUuid, expectedReplicas, true, destination, budget, 5000);
+    public static void waitForNBrokerReplicas(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, int expectedReplicas, Destination destination, TimeoutBudget budget) throws Exception {
+        waitForNBrokerReplicas(addressApiClient, kubernetes, addressSpace, expectedReplicas, true, destination, budget, 5000);
     }
 
 
@@ -706,6 +687,11 @@ public class TestUtils {
         String name = metadata.getString("name");
         String uid = metadata.getString("uid");
         String addressSpaceName = metadata.getString("addressSpace");
+        JsonObject annotationsJson = metadata.getJsonObject("annotations");
+        Map<String, Object> annotations = new HashMap<>();
+        if (annotationsJson != null) {
+            annotations = annotationsJson.getMap();
+        }
 
         JsonObject status = addressJsonObject.getJsonObject("status");
         boolean isReady = status.getBoolean("isReady");
@@ -718,7 +704,7 @@ public class TestUtils {
             }
         } catch (Exception ignored) {
         }
-        return new Address(addressSpaceName, address, name, type, plan, phase, isReady, messages, uid);
+        return new Address(addressSpaceName, address, annotations, name, type, plan, phase, isReady, messages, uid);
     }
 
     /**

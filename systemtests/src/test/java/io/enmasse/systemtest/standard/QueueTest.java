@@ -182,7 +182,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
         setAddresses(dest);
-        scale(dest, 4);
+        // scale(dest, 4);
 
         Thread.sleep(30000);
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -207,7 +207,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages received",
                 received.get(1, TimeUnit.MINUTES).size(), is(500));
 
-        scale(dest, 1);
+        // scale(dest, 1);
 
         Thread.sleep(30000);
 

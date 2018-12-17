@@ -5,11 +5,13 @@
 package io.enmasse.systemtest;
 
 import java.util.List;
+import java.util.Map;
 
 public class Address {
 
     private String addressSpace;
     private String address;
+    private Map<String, Object> annotations;
     private String name;
     private String uuid;
     private String type;
@@ -19,9 +21,10 @@ public class Address {
     private List<String> statusMessages;
 
 
-    public Address(String addressSpace, String address, String name, String type, String plan, String phase, boolean isReady, List<String> statusMessages, String uuid) {
+    public Address(String addressSpace, String address, Map<String, Object> annotations, String name, String type, String plan, String phase, boolean isReady, List<String> statusMessages, String uuid) {
         this.addressSpace = addressSpace;
         this.address = address;
+        this.annotations = annotations;
         this.name = name;
         this.uuid = uuid;
         this.type = type;
@@ -65,5 +68,9 @@ public class Address {
 
     public String getUuid() {
         return uuid;
+    }
+
+    public Map<String, Object> getAnnotations() {
+        return annotations;
     }
 }

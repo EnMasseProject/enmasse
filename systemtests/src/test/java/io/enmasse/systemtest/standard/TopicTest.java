@@ -369,7 +369,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         Destination dest = Destination.topic("lrtopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
         String linkName = "systest-durable";
         setAddresses(dest);
-        scale(dest, 4);
+        // scale(dest, 4);
 
         Thread.sleep(60_000);
 
@@ -420,7 +420,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         log.info("Deploying");
         setAddresses(dest);
         log.info("Scaling");
-        scale(dest, 1);
+        // scale(dest, 1);
 
         Thread.sleep(120_000);
 

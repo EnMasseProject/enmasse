@@ -93,7 +93,8 @@ public class StandardController {
                 clusterGenerator,
                 eventLogger,
                 schemaProvider,
-                metrics);
+                metrics,
+                new RandomBrokerIdGenerator());
 
         log.info("Starting standard controller for " + options.getAddressSpace());
         addressController.start();

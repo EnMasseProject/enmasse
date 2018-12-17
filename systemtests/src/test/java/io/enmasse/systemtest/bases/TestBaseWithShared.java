@@ -95,10 +95,6 @@ public abstract class TestBaseWithShared extends TestBase {
         super.createAddressSpace(addressSpace);
     }
 
-    protected void scale(Destination destination, int numReplicas) throws Exception {
-        scale(sharedAddressSpace, destination, numReplicas);
-    }
-
     /**
      * get all addresses except 'dummy-address'
      */
