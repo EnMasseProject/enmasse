@@ -932,7 +932,28 @@ public class TestUtils {
      * @param fn    request function
      * @return
      */
-    public static <T> Boolean doCommandNTimes(int retry, Callable<Boolean> fn) throws Exception {
+    public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
+        for (int i = 0; i < retry; i++) {
+            try {
+                log.info("Running command, attempt: {}", i);
+                return fn.call();
+            } catch (Exception ex) {
+                log.info("Command failed");
+                ex.printStackTrace();
+            }
+            Thread.sleep(1000);
+        }
+        throw new IllegalStateException(String.format("Command wasn't pass in %s attempts", retry));
+    }
+
+    /**
+     * Repeat command n-times
+     *
+     * @param retry count of remaining retries
+     * @param fn    request function
+     * @return
+     */
+    public static Boolean doCommandNTimes(int retry, Callable<Boolean> fn) throws Exception {
         if (retry == 0)
             throw new IllegalStateException(String.format("Operation was not correctly completed within %d attempts", retry));
         Boolean result = fn.call();

@@ -8,7 +8,6 @@ import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.clients.ClusterClientTestBase;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
-import io.enmasse.systemtest.messagingclients.proton.python.PythonClientReceiver;
 import org.junit.jupiter.api.Test;
 
 class MsgPatternsInternalTest extends ClusterClientTestBase implements ITestBaseBrokered {

@@ -9,5 +9,5 @@ public enum AddressStatus {
     PENDING,
     ERROR,
     WARNING,
-    UNKNOWN;
+    UNKNOWN
 }

@@ -6,17 +6,7 @@
 package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.*;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
-import org.eclipse.paho.client.mqttv3.MqttTopic;
+import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 
@@ -28,13 +18,7 @@ import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class MqttClientFactory {
 
@@ -71,8 +55,7 @@ public class MqttClientFactory {
                 Arrays.toString(protocols)));
     }
 
-    public Builder build()
-    {
+    public Builder build() {
         return new Builder() {
             AddressSpace addressSpace = defaultAddressSpace;
             MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
@@ -386,12 +369,12 @@ public class MqttClientFactory {
         }
 
         @Override
-        public void publish(String topic, byte[] payload, int qos, boolean retained) throws MqttException, MqttPersistenceException {
+        public void publish(String topic, byte[] payload, int qos, boolean retained) throws MqttException {
             this.mqttClient.publish(topic, payload, qos, retained);
         }
 
         @Override
-        public void publish(String topic, MqttMessage message) throws MqttException, MqttPersistenceException {
+        public void publish(String topic, MqttMessage message) throws MqttException {
             this.mqttClient.publish(topic, message);
         }
 
@@ -448,8 +431,11 @@ public class MqttClientFactory {
     public interface Builder {
 
         Builder addressSpace(AddressSpace addressSpace);
+
         Builder mqttConnectionOptions(MqttConnectOptions options);
+
         Builder clientId(String clientId);
+
         IMqttClient create() throws Exception;
     }
 }

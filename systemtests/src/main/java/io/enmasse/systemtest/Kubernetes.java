@@ -4,8 +4,6 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.executor.Executor;
-import io.enmasse.systemtest.resources.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -15,19 +13,16 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import okhttp3.Response;
 import org.slf4j.Logger;
 
-import java.io.*;
-import java.net.MalformedURLException;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public abstract class Kubernetes {
@@ -149,12 +144,9 @@ public abstract class Kubernetes {
     public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
         return client.pods().withLabels(labelSelector).list().getItems().stream().filter(pod -> {
             for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
-                if (pod.getMetadata().getAnnotations() == null
-                        || pod.getMetadata().getAnnotations().get(entry.getKey()) == null
-                        || !pod.getMetadata().getAnnotations().get(entry.getKey()).equals(entry.getValue())) {
-                    return false;
-                }
-                return true;
+                return pod.getMetadata().getAnnotations() != null
+                        && pod.getMetadata().getAnnotations().get(entry.getKey()) != null
+                        && pod.getMetadata().getAnnotations().get(entry.getKey()).equals(entry.getValue());
             }
             return true;
         }).collect(Collectors.toList());
@@ -197,7 +189,7 @@ public abstract class Kubernetes {
         if (secret == null) {
             throw new IllegalStateException("Unable to find CA cert for keycloak");
         }
-        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), "UTF-8");
+        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
     }
 
     public List<ConfigMap> listConfigMaps(String type) {
@@ -253,6 +245,11 @@ public abstract class Kubernetes {
         client.namespaces().withName(namespace).delete();
     }
 
+    public void deletePod(String namespace, Map<String, String> labels) {
+        log.info("Delete pods with labels: {}", labels.toString());
+        client.pods().inNamespace(namespace).withLabels(labels).delete();
+    }
+
     /***
      * Creates pod from resources
      * @param namespace
@@ -274,7 +271,7 @@ public abstract class Kubernetes {
      * @param podName
      * @throws Exception
      */
-    public void deletePod(String namespace, String podName) throws Exception {
+    public void deletePod(String namespace, String podName) {
         client.pods().inNamespace(namespace).withName(podName).delete();
         log.info("Pod {} removed", podName);
     }
@@ -372,7 +369,7 @@ public abstract class Kubernetes {
         return listPods().get(0).getMetadata().getLabels().get("app");
     }
 
-    public String runOnPod(Pod pod, String container, String ... command) {
+    public String runOnPod(Pod pod, String container, String... command) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         log.info("Running command on pod {}: {}", pod.getMetadata().getName(), command);
         CompletableFuture<String> data = new CompletableFuture<>();

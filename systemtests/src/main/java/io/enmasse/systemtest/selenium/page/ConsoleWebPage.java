@@ -8,7 +8,6 @@ package io.enmasse.systemtest.selenium.page;
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import org.openqa.selenium.By;
@@ -19,7 +18,6 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -307,7 +305,7 @@ public class ConsoleWebPage implements IWebPage {
     public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
         long endTime = System.currentTimeMillis() + 30000;
-        while(connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
+        while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
             log.info("First iteration waiting for {} connections items", expectedCount);
             WebElement content = getContentContainer();
             List<WebElement> elements = content.findElements(By.className("list-group-item"));

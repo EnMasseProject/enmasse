@@ -342,7 +342,7 @@ public class AddressApiClient extends ApiClient {
             int start = 0;
             try {
                 while (start < destinations.length) {
-                    Destination[] splice = Arrays.copyOfRange(destinations, start,  Math.min(start + batchSize, destinations.length));
+                    Destination[] splice = Arrays.copyOfRange(destinations, start, Math.min(start + batchSize, destinations.length));
                     JsonObject payload = createAddressListPayloadJson(addressSpace, splice);
                     createAddresses(addressSpace, payload, HTTP_CREATED);
                     start += splice.length;
@@ -392,7 +392,7 @@ public class AddressApiClient extends ApiClient {
         List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
 
         List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
-        List<Destination> toDelete= new ArrayList<>(current);
+        List<Destination> toDelete = new ArrayList<>(current);
 
         toDelete.removeAll(toCreate);
         toCreate.removeAll(current);

@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class Endpoint {

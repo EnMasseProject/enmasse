@@ -11,5 +11,6 @@ import java.util.concurrent.Future;
 
 public interface ReceiverStatus {
     Future<List<Message>> getResult();
+
     int getNumReceived();
 }

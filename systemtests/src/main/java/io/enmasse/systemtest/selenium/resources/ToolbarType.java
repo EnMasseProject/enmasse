@@ -14,5 +14,5 @@ public enum ToolbarType {
         public String toString() {
             return "connectionToolbar";
         }
-    };
+    }
 }
