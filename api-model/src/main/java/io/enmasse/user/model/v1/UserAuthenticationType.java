@@ -6,5 +6,6 @@ package io.enmasse.user.model.v1;
 
 public enum UserAuthenticationType {
     password,
-    federated
+    federated,
+    serviceaccount
 }

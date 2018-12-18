@@ -105,6 +105,7 @@ spec:
         - mountPath: /opt/enmasse/cert
           name: standard-authservice-cert
           readOnly: false
+      serviceAccountName: standard-authservice
       volumes:
       - name: standard-authservice-cert
         secret:

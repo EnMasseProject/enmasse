@@ -28,12 +28,11 @@ import java.util.regex.Pattern;
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserSpec {
-    private final static Pattern USERNAME_PATTERN = Pattern.compile("^[a-z0-9]+([a-z0-9_@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
+    private final static Pattern USERNAME_PATTERN = Pattern.compile("^[a-z0-9]+([a-z0-9_@.:\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     private final String username;
     private final UserAuthentication authentication;
     private final List<UserAuthorization> authorization;
-    
 
     @JsonCreator
     public UserSpec(@JsonProperty("username") String username,

@@ -4,6 +4,7 @@
  */
 package io.enmasse.user.keycloak;
 
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -30,8 +31,6 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -64,6 +63,7 @@ import io.enmasse.user.model.v1.UserBuilder;
 import io.enmasse.user.model.v1.UserList;
 import io.enmasse.user.model.v1.UserSpecBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 
 public class KeycloakUserApi implements UserApi {
 
@@ -215,6 +215,13 @@ public class KeycloakUserApi implements UserApi {
                 case federated:
                     setFederatedIdentity(realm.users().get(userId), user.getSpec().getAuthentication());
                     break;
+                case serviceaccount:
+                    // nothing to do
+                    break;
+                default:
+                    log.error("Authentication type {} requested, but not properly implemented", user.getSpec().getAuthentication().getType());
+                    throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+
             }
 
             applyAuthorizationRules(realm, user, realm.users().get(userId));
