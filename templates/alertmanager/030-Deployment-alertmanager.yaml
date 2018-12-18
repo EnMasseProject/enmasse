@@ -34,6 +34,9 @@ spec:
         - mountPath: /etc/alertmanager
           name: alertmanager-config
           readOnly: true
+        ports:
+        - containerPort: 9093
+          name: alertmanager
       - image: openshift/oauth-proxy:latest
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: oauth-proxy

@@ -37,6 +37,9 @@ spec:
         - mountPath: /prometheus
           name: prometheus-data
           readOnly: false
+        ports:
+        - containerPort: 9090
+          name: prometheus
       - image: ${OAUTH_PROXY_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         name: oauth-proxy

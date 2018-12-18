@@ -8,6 +8,9 @@ metadata:
     app: enmasse
 spec:
   ports:
+  - name: alertmanager
+    port: 9093
+    targetPort: 9093
   - name: proxy
     port: 443
     targetPort: 8443
