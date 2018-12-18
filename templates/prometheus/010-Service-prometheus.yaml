@@ -8,6 +8,9 @@ metadata:
     app: enmasse
 spec:
   ports:
+  - name: prometheus
+    port: 9090
+    targetPort: 9090
   - name: proxy
     port: 443
     targetPort: 8443

@@ -10,12 +10,12 @@ data:
     datasources:
     - name: Prometheus
       type: prometheus
-      access: direct
-      url: https://prometheus-enmasse-infra.127.0.0.1.nip.io
+      access: proxy
+      url: http://prometheus:9090
     - name: AlertManager
       type: camptocamp-prometheus-alertmanager-datasource
-      url: https://alertmanager-enmasse-infra.127.0.0.1.nip.io
-      access: direct
+      url: http://alertmanager:9093
+      access: proxy
       jsonData:
         timeInterval: 10s
         severity_critical: "4"
