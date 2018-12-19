@@ -288,7 +288,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         logCollector.collectRouterState("setAddresses");
-        setAddresses(addressSpace, budget, expectedCode, destinations);
+
+        if (expectedCode == 409){
+           try {
+           setAddresses(addressSpace, budget, expectedCode, destinations);
+           } catch( ExecutionException EE) {
+               log.info(EE.getMessage());
+               throw new AddressAlreadyExistsException("Address cannot be created, already exists");
+               }
+           }   
+        else {
+            setAddresses(addressSpace, budget, expectedCode, destinations);
+        }
     }
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
