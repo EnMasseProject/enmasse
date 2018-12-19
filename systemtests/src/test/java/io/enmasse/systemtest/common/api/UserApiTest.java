@@ -10,12 +10,18 @@ import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -29,17 +35,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(isolated)
 class UserApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
+    private AddressSpace brokered = new AddressSpace("user-api-address-space-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+    private AddressSpace standard = new AddressSpace("user-api-address-space-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
+
+    @BeforeEach
+    void deployAddressSpaces() throws Exception {
+        if (!TestUtils.existAddressSpace(addressApiClient, brokered.getName())) {
+            createAddressSpace(brokered);
+        }
+        if (!TestUtils.existAddressSpace(addressApiClient, standard.getName())) {
+            createAddressSpace(standard);
+        }
+        setReuseAddressSpace();
+    }
+
+    @AfterAll
+    void removeAddressSpaces() throws Exception {
+        unsetReuseAddressSpace();
+        deleteAddressspacesFromList();
+    }
+
 
     @Test
     void testCreateDeleteUserUsingCRD() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-create-delete-crd", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        addToAddressSpacess(brokered);
-        JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
-
-        //create addressspace
-        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
-        waitForAddressSpaceReady(brokered);
-
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -60,14 +78,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateUserWithWrongPayloadCRD() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-wrong-payload-crd", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        addToAddressSpacess(brokered);
-        JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
-
-        //create addressspace
-        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
-        waitForAddressSpaceReady(brokered);
-
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -101,9 +111,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateUserWrongPayloadUserAPI() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-wrong-payload-api", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -128,14 +135,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUpdateUserPermissionsCRD() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-update-crd", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        addToAddressSpacess(brokered);
-        JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
-
-        //create addressspace
-        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
-        waitForAddressSpaceReady(brokered);
-
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -170,11 +169,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUpdateUserPermissionsUserAPI() throws Exception {
-        AddressSpace standard = new AddressSpace("user-api-space-update-user", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        standard.setPlan("standard-unlimited");
-
-        createAddressSpace(standard);
-
         Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
         setAddresses(standard, queue);
 
@@ -204,9 +198,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUpdateUserWrongPayload() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-update-user-wrong-payload", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
         UserCredentials cred = new UserCredentials("pepa", "pepapw");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -228,9 +219,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUpdateNoExistsUser() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-update-noexists-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -243,9 +231,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUserWithSimilarNamesAndAlreadyExistingUser() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-similar-user", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
         UserCredentials cred = new UserCredentials("user2", "user2");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -267,9 +252,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateUserUppercaseUsername() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-uppercase-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
         UserCredentials cred = new UserCredentials("UserPepinator", "ff^%fh16");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -281,9 +263,6 @@ class UserApiTest extends TestBase {
 
     @Test
     void testCreateUsersWithSymbolsInVariousPlaces() throws Exception {
-        AddressSpace brokered = new AddressSpace("user-api-space-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(brokered);
-
         //valid user is created (response HTTP:201)
         UserCredentials cred = new UserCredentials("normalusername", "password");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
@@ -344,5 +323,58 @@ class UserApiTest extends TestBase {
                         .addOperation(User.Operation.RECEIVE));
         assertThrows(ExecutionException.class, () ->
                 getUserApiClient().createUser(brokered.getName(), testUser7.toJson(brokered.getName(), "userpepinator"), HTTP_BAD_REQUEST));
+    }
+
+    @Test
+    void testFederatedUsers() throws Exception {
+        UserCredentials ocUser = new UserCredentials("test-federated-user", "testovaci");
+        createUserFederated(brokered, ocUser);
+
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), ocUser.getUsername()).getRetCode(), is(true));
+
+        assertCanOpenWebconsole(brokered, ocUser);
+
+        //delete user
+        assertThat("User deleting failed using oc cmd",
+                KubeCMDClient.deleteUser(kubernetes.getNamespace(), brokered.getName(), ocUser.getUsername()).getRetCode(), is(true));
+        assertThat("User is still present",
+                KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), ocUser.getUsername()).getRetCode(), is(false));
+    }
+
+    @Test
+    void testServiceaccountUser() throws Exception {
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        setAddresses(standard, queue);
+        UserCredentials serviceAccount = new UserCredentials("test-service-account", "");
+        createUserServiceAccount(standard, serviceAccount, environment.namespace());
+        UserCredentials messagingUser = new UserCredentials("@@serviceaccount@@",
+                kubernetes.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
+        log.info("username: {}, password: {}", messagingUser.getUsername(), messagingUser.getPassword());
+
+        assertCanConnect(standard, messagingUser, Collections.singletonList(queue));
+
+        //delete user
+        assertThat("User deleting failed using oc cmd",
+                KubeCMDClient.deleteUser(kubernetes.getNamespace(), standard.getName(), serviceAccount.getUsername()).getRetCode(), is(true));
+        assertThat("User is still present",
+                KubeCMDClient.getUser(kubernetes.getNamespace(), standard.getName(), serviceAccount.getUsername()).getRetCode(), is(false));
+
+        assertCannotConnect(standard, messagingUser, Collections.singletonList(queue));
+
+        kubernetes.deleteServiceAccount("test-service-account", environment.namespace());
+    }
+
+    private void assertCanOpenWebconsole(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+        SeleniumProvider selenium = new SeleniumProvider();
+        try {
+            SeleniumContainers.deployFirefoxContainer();
+            selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
+            ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
+            page.openWebConsolePage(credentials, true, true);
+        } finally {
+            selenium.saveScreenShots("UserApiTests", "testFederatedUsers");
+            selenium.tearDownDrivers();
+            SeleniumContainers.stopAndRemoveFirefoxContainer();
+        }
     }
 }

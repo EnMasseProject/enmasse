@@ -215,4 +215,15 @@ public class KubeCMDClient extends CmdClient {
         List<String> deleteCmd = Arrays.asList(CMD, "cp", String.format("%s:%s", podName, source), destination);
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, false);
     }
+
+    public static String getOpenshiftUserId(String username) {
+        List<String> command = Arrays.asList(CMD, "get", "users", username, "-o", "jsonpath={.metadata.uid}");
+        return execute(command, DEFAULT_SYNC_TIMEOUT, true).getStdOut()
+                .replaceAll(System.getProperty("line.separator"), "");
+    }
+
+    public static ExecutionResultData createOcUser(String username) {
+        List<String> deleteCmd = Arrays.asList(CMD, "create", "user", username);
+        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
 }
