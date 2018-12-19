@@ -91,5 +91,8 @@ docu_htmlclean:
 docu_check:
 	./scripts/check_docs.sh
 
+docu_clean: docu_htmlclean
+	rm scripts/swagger2markup.jar
+
 
 .PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
