@@ -18,7 +18,7 @@
 var log = require("./log.js").logger();
 var util = require('util');
 
-var MAX_OUTSTANDING = process.env.MAX_OUTSTANDING_QDR_REQUESTS || 1000;
+var MAX_OUTSTANDING = process.env.MAX_OUTSTANDING_QDR_REQUESTS || 250;
 
 var Router = function (connection, router, agent) {
     if (router) {
