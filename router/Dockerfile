@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.5-SNAPSHOT-DISPATCH-1181
+FROM enmasseproject/qdrouterd-base:1.5.0-rc1
 ARG version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit} TZ=GMT0
