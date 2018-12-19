@@ -10,5 +10,5 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: std-authsvc
+  name: standard-authservice
   namespace: ${NAMESPACE}
