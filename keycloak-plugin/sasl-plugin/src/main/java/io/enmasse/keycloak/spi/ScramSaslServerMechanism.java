@@ -93,7 +93,10 @@ class ScramSaslServerMechanism implements SaslServerMechanism {
     }
 
     @Override
-    public final Instance newInstance(KeycloakSessionFactory keycloakSessionFactory, String hostname, Config.Scope config) {
+    public final Instance newInstance(KeycloakSessionFactory keycloakSessionFactory,
+                                      String hostname,
+                                      Config.Scope config,
+                                      AmqpServer amqpServer) {
         return new ScramSaslAuthenticator(keycloakSessionFactory, hostname, digestName, hmacName, keyRetrievalFunctions);
     }
 

@@ -59,67 +59,66 @@ public class K8sServiceAccountCredentialProvider implements CredentialProvider, 
 
     @Override
     public boolean isValid(RealmModel realmModel, UserModel userModel, CredentialInput credentialInput) {
-        JsonObject body = new JsonObject();
+        String token = ((UserCredentialModel) credentialInput).getValue();
+        String userName = authenticateToken(token, client, httpClient);
 
+        boolean authenticated = Objects.equals(userModel.getUsername(), userName);
+        if(userName == null) {
+            LOG.debug("User: " + userModel.getUsername() + " not authenticated for realm " + realmModel.getName());
+        } else if(!authenticated) {
+            LOG.debug("Attempt to log in for user " + userModel.getUsername() + " in realm " + realmModel.getName() + " with token for " + userName);
+        }
+
+        return authenticated;
+    }
+
+    public static String authenticateToken(String token, NamespacedOpenShiftClient client, OkHttpClient httpClient) {
+        JsonObject body = new JsonObject();
+        String userName = null;
         body.put("kind", "TokenReview");
         body.put("apiVersion", "authentication.k8s.io/v1beta1");
 
         JsonObject spec = new JsonObject();
-        spec.put("token", ((UserCredentialModel)credentialInput).getValue());
+        spec.put("token", token);
         body.put("spec", spec);
 
-        JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false);
+        JsonObject result;
 
-        JsonObject status = responseBody.getJsonObject("status");
-
-        boolean authenticated = false;
-        String userName = null;
-        if (status != null) {
-            Boolean auth = status.getBoolean("authenticated");
-            authenticated = auth == null ? false : auth;
-            JsonObject user = status.getJsonObject("user");
-            if (user != null) {
-                userName = user.getString("username");
-            }
-        }
-        if(!authenticated) {
-            LOG.debug("User: " + userModel.getUsername() + " not authenticated for realm " + realmModel.getName());
-        } else if(!Objects.equals(userModel.getUsername(), userName)) {
-            LOG.debug("Attempt to log in for user " + userModel.getUsername() + " in realm " + realmModel.getName() + " with token for " + userName);
-        }
-
-        return authenticated && Objects.equals(userModel.getUsername(), userName);
-    }
-
-    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
-
-
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
+        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/authentication.k8s.io/v1beta1/tokenreviews");
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Bearer " + client.getConfiguration().getOauthToken())
-                .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null);
+                .method("POST", RequestBody.create(MediaType.parse("application/json"), body.encode()));
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             try (ResponseBody responseBody = response.body()) {
                 String responseString = responseBody != null ? responseBody.string() : "{}";
                 if (response.isSuccessful()) {
-                    return new JsonObject(responseString);
+                    result = new JsonObject(responseString);
                 } else {
-                    if (errorOk) {
-                        return null;
-                    } else {
-                        String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), responseString);
-                        throw new RuntimeException(errorMessage);
-                    }
+                    String errorMessage = String.format("Error performing POST on /apis/authentication.k8s.io/v1beta1/tokenreviews: %d, %s", response.code(), responseString);
+                    throw new RuntimeException(errorMessage);
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
 
+        JsonObject status = result.getJsonObject("status");
 
+        if (status != null) {
+            Boolean auth = status.getBoolean("authenticated");
+            if(auth == null ? false : auth) {
+                JsonObject user = status.getJsonObject("user");
+                if (user != null) {
+                    userName = user.getString("username");
+                }
+            } else {
+                LOG.debug("Token was not authenticated");
+            }
+        }
+        return userName;
     }
 
     @Override

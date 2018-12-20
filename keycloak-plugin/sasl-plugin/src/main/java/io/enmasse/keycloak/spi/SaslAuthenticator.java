@@ -63,6 +63,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
             new XOAUTH2SaslServerMechanism()));
 
     private final Config.Scope config;
+    private final AmqpServer amqpServer;
 
     private KeycloakSessionFactory keycloakSessionFactory;
     private Sasl sasl;
@@ -70,9 +71,13 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
     private SaslServerMechanism.Instance saslMechanism;
     private ProtonConnection connection;
 
-    SaslAuthenticator(final KeycloakSessionFactory sessionFactory, final Config.Scope config, final boolean secure) {
+    SaslAuthenticator(final KeycloakSessionFactory sessionFactory,
+                      final Config.Scope config,
+                      final boolean secure,
+                      AmqpServer amqpServer) {
         this.keycloakSessionFactory = sessionFactory;
         this.config = config;
+        this.amqpServer = amqpServer;
     }
 
     @Override
@@ -145,7 +150,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
                     if(saslHostname == null) {
                         saslHostname = config.get("defaultDomain","");
                     }
-                    saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config);
+                    saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config, amqpServer);
 
                 } else {
 

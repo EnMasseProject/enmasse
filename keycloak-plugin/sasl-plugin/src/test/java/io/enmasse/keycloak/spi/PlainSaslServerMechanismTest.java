@@ -75,7 +75,7 @@ public class PlainSaslServerMechanismTest {
     @Test
     public void testUnknownRealm() {
         final SaslServerMechanism.Instance instance =
-                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "unknownRealm", config);
+                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "unknownRealm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "password"));
         assertTrue(response == null || response.length == 0);
         assertTrue(instance.isComplete());
@@ -87,7 +87,7 @@ public class PlainSaslServerMechanismTest {
     @Test
     public void testUnknownUser() {
         final SaslServerMechanism.Instance instance =
-                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config);
+                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("unknown", "password"));
         assertTrue(response == null || response.length == 0);
         assertTrue(instance.isComplete());
@@ -99,7 +99,7 @@ public class PlainSaslServerMechanismTest {
     @Test
     public void testWrongPassword() {
         final SaslServerMechanism.Instance instance =
-                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config);
+                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "wrong"));
         assertTrue(response == null || response.length == 0);
         assertTrue(instance.isComplete());
@@ -111,7 +111,7 @@ public class PlainSaslServerMechanismTest {
     @Test
     public void testCorrectPassword() {
         final SaslServerMechanism.Instance instance =
-                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config);
+                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "password"));
         assertTrue(response == null || response.length == 0);
         assertTrue(instance.isComplete());
@@ -122,7 +122,7 @@ public class PlainSaslServerMechanismTest {
     @Test
     public void testBadInitialResponse() {
         final SaslServerMechanism.Instance instance =
-                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config);
+                (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         assertThrows(IllegalArgumentException.class, () -> instance.processResponse("potato".getBytes(StandardCharsets.UTF_8)));
     }
 
