@@ -21,7 +21,10 @@
 
 package io.enmasse.keycloak.spi;
 
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.Vertx;
+import okhttp3.OkHttpClient;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
@@ -31,6 +34,7 @@ public class AmqpServerProviderImpl implements AmqpServerProviderFactory {
 
     private static final Logger LOG = Logger.getLogger(AmqpServerProviderImpl.class);
 
+    private NamespacedOpenShiftClient client;
     private AmqpServer server;
     private AmqpServer tlsServer;
 
@@ -44,12 +48,14 @@ public class AmqpServerProviderImpl implements AmqpServerProviderFactory {
     @Override
     public void init(final Config.Scope config) {
 
+        client = new DefaultOpenShiftClient();
+        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
         if(config.getBoolean("enableNonTls", true)) {
             Integer port = config.getInt("port", 5672);
             String hostname = config.get("host", "localhost");
 
             try {
-                server = new AmqpServer(hostname, port, config, false);
+                server = new AmqpServer(hostname, port, config, false, client, httpClient);
             } catch (RuntimeException e) {
                 LOG.error("Unable to create AMQP Server using non-TLS", e);
             }
@@ -58,7 +64,7 @@ public class AmqpServerProviderImpl implements AmqpServerProviderFactory {
             Integer port = config.getInt("tlsPort", 5671);
             String hostname = config.get("tlsHost", "0.0.0.0");
             try {
-                tlsServer = new AmqpServer(hostname, port, config, true);
+                tlsServer = new AmqpServer(hostname, port, config, true, client, httpClient);
             } catch (RuntimeException e) {
                 LOG.error("Unable to create AMQP Server using TLS", e);
             }
@@ -95,6 +101,10 @@ public class AmqpServerProviderImpl implements AmqpServerProviderFactory {
         if(tlsServer != null) {
             tlsServer.stop();
         }
+        if(client != null) {
+            client.close();
+        }
+
     }
 
     @Override

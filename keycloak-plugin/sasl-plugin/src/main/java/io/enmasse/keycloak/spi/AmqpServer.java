@@ -21,7 +21,6 @@
 
 package io.enmasse.keycloak.spi;
 
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
@@ -78,13 +77,18 @@ public class AmqpServer extends AbstractVerticle {
     private volatile ProtonServer server;
     private KeycloakSessionFactory keycloakSessionFactory;
 
-    public AmqpServer(String hostname, int port, final Config.Scope config, final boolean useTls) {
+    public AmqpServer(String hostname,
+                      int port,
+                      final Config.Scope config,
+                      final boolean useTls,
+                      NamespacedOpenShiftClient client,
+                      OkHttpClient httpClient) {
         this.hostname = hostname;
         this.port = port;
         this.config = config;
         this.useTls = useTls;
-        client = new DefaultOpenShiftClient();
-        httpClient = client.adapt(OkHttpClient.class);
+        this.client = client;
+        this.httpClient = httpClient;
     }
 
     private void connectHandler(ProtonConnection connection) {
@@ -194,7 +198,6 @@ public class AmqpServer extends AbstractVerticle {
         if (server != null) {
             server.close();
         }
-        client.close();
     }
 
     void setKeycloakSessionFactory(final KeycloakSessionFactory keycloakSessionFactory)
@@ -202,11 +205,11 @@ public class AmqpServer extends AbstractVerticle {
         this.keycloakSessionFactory = keycloakSessionFactory;
     }
 
-    public NamespacedOpenShiftClient getOpenShiftClient() {
+    NamespacedOpenShiftClient getOpenShiftClient() {
         return client;
     }
 
-    public OkHttpClient getHttpClient() {
+    OkHttpClient getHttpClient() {
         return httpClient;
     }
 }

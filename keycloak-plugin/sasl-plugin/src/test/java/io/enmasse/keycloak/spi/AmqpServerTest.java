@@ -22,6 +22,8 @@
 package io.enmasse.keycloak.spi;
 
 
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -30,12 +32,13 @@ import java.util.HashSet;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 public class AmqpServerTest {
 
     @Test
     public void testEmptyGroupsGeneratesEmptyPermissions() {
-        AmqpServer amqpServer = new AmqpServer(null, 0, null, false);
+        AmqpServer amqpServer = new AmqpServer(null, 0, null, false, mock(NamespacedOpenShiftClient.class), mock(OkHttpClient.class));
         Map<String, String[]> props = amqpServer.getPermissionsFromGroups(Collections.emptySet());
         assertNotNull(props);
         assertTrue(props.isEmpty());
@@ -56,7 +59,7 @@ public class AmqpServerTest {
 
     @Test
     public void testMultiplePermissionsForSameAddress() {
-        AmqpServer amqpServer = new AmqpServer(null, 0, null, false);
+        AmqpServer amqpServer = new AmqpServer(null, 0, null, false, mock(NamespacedOpenShiftClient.class), mock(OkHttpClient.class));
         Map<String, String[]> props = amqpServer.getPermissionsFromGroups(new HashSet<>(Arrays.asList("send_foo", "consume_foo")));
         assertNotNull(props);
         assertEquals(1, props.size());
@@ -69,7 +72,7 @@ public class AmqpServerTest {
 
     @Test
     public void testMultiplePermissionsWithUrlEncoding() {
-        AmqpServer amqpServer = new AmqpServer(null, 0, null, false);
+        AmqpServer amqpServer = new AmqpServer(null, 0, null, false, mock(NamespacedOpenShiftClient.class), mock(OkHttpClient.class));
         Map<String, String[]> props = amqpServer.getPermissionsFromGroups(new HashSet<>(Arrays.asList("send_foo%2Fbar", "view_%66oo%2Fbar", "recv_foo")));
         assertNotNull(props);
         assertEquals(2, props.size());
