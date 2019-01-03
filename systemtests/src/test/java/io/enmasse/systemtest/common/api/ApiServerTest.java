@@ -8,7 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.cmdclients.CRDCmdClient;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.resources.*;
@@ -284,8 +284,8 @@ class ApiServerTest extends TestBase {
         UserCredentials user = new UserCredentials("jarda", "jarda");
 
         try {
-            String token = CRDCmdClient.loginUser(user.getUsername(), user.getPassword());
-            CRDCmdClient.createNamespace(namespace);
+            String token = KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
+            KubeCMDClient.createNamespace(namespace);
 
             AddressSpace addrSpace = new AddressSpace("non-admin-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace, token);
@@ -295,8 +295,8 @@ class ApiServerTest extends TestBase {
 
             deleteAddressSpace(addrSpace, apiClient);
         } finally {
-            CRDCmdClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
-            CRDCmdClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
+            KubeCMDClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
     }

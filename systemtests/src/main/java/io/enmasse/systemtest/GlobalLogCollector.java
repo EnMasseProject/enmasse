@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
@@ -11,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -144,6 +146,24 @@ public class GlobalLogCollector {
             }
         } catch (IOException e) {
             log.warn("Error collecting router state: {}", e.getMessage());
+        }
+    }
+
+    public void collectApiServerJmapLog() {
+        log.info("Collecting jmap from api server");
+        kubernetes.listPods(Collections.singletonMap("component", "api-server")).forEach(this::collectJmap);
+    }
+
+    private void collectJmap(Pod pod) {
+        String output = kubernetes.runOnPod(pod, "api-server", "jmap", "-dump:live,format=b,file=/tmp/dump.bin", "1");
+        try {
+            Path path = Paths.get(logDir.getPath(), namespace);
+            File jmapLog = new File(
+                    Files.createDirectories(path).toFile(),
+                    pod.getMetadata().getName() + ".dump." + Instant.now() + ".bin");
+            KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin", jmapLog.getAbsolutePath());
+        } catch (Exception e) {
+            log.warn("Error collecting jmap state: {}", e.getMessage());
         }
     }
 }

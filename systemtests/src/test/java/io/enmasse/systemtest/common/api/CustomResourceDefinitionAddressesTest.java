@@ -7,7 +7,7 @@ package io.enmasse.systemtest.common.api;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.cmdclients.CRDCmdClient;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -73,7 +73,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         appendAddresses(brokered, false, dest2);
         waitForDestinationsReady(brokered, dest1, dest2);
 
-        ExecutionResultData addresses = CRDCmdClient.getAddress(environment.namespace(), "-a");
+        ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
         String output = addresses.getStdOut().trim();
 
 
@@ -94,11 +94,11 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         assertEquals(1, dest1Response.size(), String.format("Received unexpected count of addresses! got following addresses %s",
                 dest1Response.stream().map(address -> address.getName()).reduce("", String::concat)));
 
-        CRDCmdClient.deleteAddress(environment.namespace(), dest1Response.get(0).getName());
-        CRDCmdClient.deleteAddress(environment.namespace(), dest2.getAddressName(brokered.getName()));
+        KubeCMDClient.deleteAddress(environment.namespace(), dest1Response.get(0).getName());
+        KubeCMDClient.deleteAddress(environment.namespace(), dest2.getAddressName(brokered.getName()));
 
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = CRDCmdClient.getAddress(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
             return allAddresses.getStdErr() + allAddresses.getStdOut();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -114,7 +114,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         JsonObject address1 = dest1.toJson(addressApiClient.getApiVersion());
         String address2 = dest2.toYaml(addressApiClient.getApiVersion());
 
-        ExecutionResultData result = CRDCmdClient.createCR(address1.toString());
+        ExecutionResultData result = KubeCMDClient.createCR(address1.toString());
         String output = result.getStdOut().trim();
 
         String addressString = "%s \"%s.%s\" created";
@@ -127,7 +127,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Unexpected response on create custom resource '%s': %s", address1.toString(), output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address1.toString()));
 
-        result = CRDCmdClient.createCR(address2);
+        result = KubeCMDClient.createCR(address2);
         output = result.getStdOut().trim();
 
         List<String> dest2Expected = Arrays.asList(
@@ -140,7 +140,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
         waitForDestinationsReady(brokered, dest1, dest2);
 
-        result = CRDCmdClient.getAddress(environment.namespace(), "-a");
+        result = KubeCMDClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();
 
         assertTrue(output.contains(dest1.getAddressName(brokered.getName())),
@@ -157,7 +157,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         deleteAddresses(brokered, dest2);
 
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData addresses = CRDCmdClient.getAddress(environment.namespace(), "-a");
+            ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
             return addresses.getStdOut() + addresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }

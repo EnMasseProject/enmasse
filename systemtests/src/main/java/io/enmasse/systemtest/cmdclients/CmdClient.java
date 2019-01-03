@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 
 import java.util.List;
 
-public class CmdClient {
+public abstract class CmdClient {
     private static Logger log = CustomLogger.getLogger();
     protected static final Object lock = new Object();
     protected static final Environment env = new Environment();
