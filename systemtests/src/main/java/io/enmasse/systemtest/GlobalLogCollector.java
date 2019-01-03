@@ -160,7 +160,7 @@ public class GlobalLogCollector {
             Path path = Paths.get(logDir.getPath(), namespace);
             File jmapLog = new File(
                     Files.createDirectories(path).toFile(),
-                    pod.getMetadata().getName() + ".dump." + Instant.now() + ".bin");
+                    pod.getMetadata().getName() + ".dump." + Instant.now().toString().replace(":", "_") + ".bin");
             KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin", jmapLog.getAbsolutePath());
         } catch (Exception e) {
             log.warn("Error collecting jmap state: {}", e.getMessage());
