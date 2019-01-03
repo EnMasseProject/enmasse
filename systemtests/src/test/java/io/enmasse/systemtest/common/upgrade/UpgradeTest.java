@@ -6,24 +6,15 @@ package io.enmasse.systemtest.common.upgrade;
 
 
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.bases.TestBase;
-import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.upgrade;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag(upgrade)
 class UpgradeTest extends TestBase {
@@ -105,30 +96,5 @@ class UpgradeTest extends TestBase {
     private List<Destination> getQueues(List<Destination> addresses) {
         return addresses.stream().filter(dest -> dest.getType()
                 .equals(AddressType.QUEUE.toString())).collect(Collectors.toList());
-    }
-
-    private void sendDurableMessages(AddressSpace addressSpace, Destination destination,
-                                     UserCredentials credentials, int count) throws Exception {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-        List<Message> listOfMessages = new ArrayList<>();
-        IntStream.range(0, count).forEach(num -> {
-            Message msg = Message.Factory.create();
-            msg.setAddress(destination.getAddress());
-            msg.setDurable(true);
-            listOfMessages.add(msg);
-        });
-        Future<Integer> sent = client.sendMessages(destination.getAddress(), listOfMessages.toArray(new Message[0]));
-        assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
-        client.close();
-    }
-
-    private void receiveDurableMessages(AddressSpace addressSpace, Destination dest,
-                                        UserCredentials credentials, int count) throws Exception {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-        ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getAddress(), count);
-        assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
-        client.close();
     }
 }
