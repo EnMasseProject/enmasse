@@ -259,6 +259,10 @@ data:
                 initialDelaySeconds: 60
                 tcpSocket:
                   port: amqp
+              readinessProbe:
+                initialDelaySeconds: 60
+                tcpSocket:
+                  port: amqps-probe
               name: router
               resources:
                 limits:
@@ -280,6 +284,9 @@ data:
                 protocol: TCP
               - containerPort: 56671
                 name: amqps-broker
+                protocol: TCP
+              - containerPort: 56711
+                name: amqps-probe
                 protocol: TCP
               volumeMounts:
               - mountPath: /etc/qpid-dispatch/ssl

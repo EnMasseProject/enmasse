@@ -77,6 +77,18 @@ function linkroute_describe (a) {
     return 'linkroute ' + a.direction + ' ' + a.prefix;
 }
 
+function listener_compare(a, b) {
+    return myutils.string_compare(a.host, b.host) || myutils.string_compare(a.port, b.port);
+}
+
+function same_listener_definition(a, b) {
+    return a.host === b.host && a.port === b.port && a.sslProfile === b.sslProfile && a.saslMechanisms === b.saslMechanisms && a.authenticatePeer === b.authenticatePeer;
+}
+
+function listener_describe (a) {
+    return 'listener ' + a.name + ' (' + a.host + ':' + a.port + ')';
+}
+
 const entities = [
     {
         name:'addresses',
@@ -101,6 +113,14 @@ const entities = [
         describe:linkroute_describe,
         type:'org.apache.qpid.dispatch.router.config.linkRoute',
         singular:'linkroute'
+    },
+    {
+        name:'listeners',
+        comparator:listener_compare,
+        equality:same_listener_definition,
+        describe:listener_describe,
+        type:'org.apache.qpid.dispatch.listener',
+        singular:'listener'
     }
 ];
 
@@ -111,6 +131,7 @@ function RouterConfig(prefix) {
     this.autolinks = [];
     this.addresses = [];
     this.linkroutes = [];
+    this.listeners = [];
 }
 
 RouterConfig.prototype.add_address = function (a) {
@@ -119,6 +140,10 @@ RouterConfig.prototype.add_address = function (a) {
 
 RouterConfig.prototype.add_autolink = function (a) {
     this.autolinks.push(myutils.merge({name:this.prefix + a.addr + '-' + a.direction}, a));
+};
+
+RouterConfig.prototype.add_listener = function (a) {
+    this.listeners.push(myutils.merge({name:this.prefix + a.host + '-' + a.port}, a));
 };
 
 RouterConfig.prototype.add_linkroute = function (l) {
@@ -328,6 +353,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_address({prefix:def.address, distribution:'multicast', waypoint:false});
         }
     }
+    config.add_listener({host:'0.0.0.0', port: '56711', sslProfile: 'inter_router_tls', saslMechanisms: 'EXTERNAL', authenticatePeer: true})
     sort_config(config);
     log.debug('mapped %j => %j', high_level_address_definitions, config);
     return config;
