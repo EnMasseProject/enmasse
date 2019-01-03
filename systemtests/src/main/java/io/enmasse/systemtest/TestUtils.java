@@ -1003,6 +1003,7 @@ public class TestUtils {
     public static void deleteAddressSpace(AddressApiClient addressApiClient, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
+        logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
@@ -1010,8 +1011,13 @@ public class TestUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void deleteAllAddressSpaces(AddressApiClient addressApiClient) throws Exception {
+    public static void deleteAllAddressSpaces(AddressApiClient addressApiClient, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        logCollector.collectEvents();
+        logCollector.collectApiServerJmapLog();
+        logCollector.collectLogsTerminatedPods();
+        logCollector.collectConfigMaps();
+        logCollector.collectRouterState("deleteAddressSpace");
         addressApiClient.deleteAddressSpaces(200);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -1019,6 +1025,7 @@ public class TestUtils {
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
+        logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");

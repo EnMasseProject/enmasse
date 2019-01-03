@@ -6,7 +6,7 @@ package io.enmasse.systemtest.common;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.cmdclients.CRDCmdClient;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -75,14 +75,14 @@ class CommonTest extends TestBase {
 
         for (Label label : labels) {
             log.info("Restarting {}", label.labelValue);
-            CRDCmdClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+            KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(60, TimeUnit.SECONDS));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
         log.info("Restarting whole enmasse");
-        CRDCmdClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+        KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
         Thread.sleep(180_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(120, TimeUnit.SECONDS));
         TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(180, TimeUnit.SECONDS),
@@ -105,9 +105,9 @@ class CommonTest extends TestBase {
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
                 .collect(Collectors.toList()).get(0).getMetadata().getName();
-        assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-c").getRetCode());
-        assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-a").getRetCode());
-        assertTrue(CRDCmdClient.runQDstat(qdRouterName, "-l").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-c").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-a").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-l").getRetCode());
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,

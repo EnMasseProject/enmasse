@@ -18,7 +18,7 @@ import java.util.*;
 /**
  * Class represent abstract client which keeps common features of client
  */
-public class CRDCmdClient extends CmdClient {
+public class KubeCMDClient extends CmdClient {
     protected static int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static String CMD = setUpKubernetesCmd();
     private static Logger log = CustomLogger.getLogger();
@@ -208,5 +208,11 @@ public class CRDCmdClient extends CmdClient {
         Collections.addAll(runCmd, base);
         Collections.addAll(runCmd, args);
         return execute(runCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData copyPodContent(String podName, String source, String destination) {
+        log.info("Copying file {} from pod {}", source, podName);
+        List<String> deleteCmd = Arrays.asList(CMD, "cp", String.format("%s:%s", podName, source), destination);
+        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, false);
     }
 }

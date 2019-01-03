@@ -8,7 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.cmdclients.CRDCmdClient;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
@@ -37,7 +37,7 @@ class UserApiTest extends TestBase {
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
         //create addressspace
-        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
         waitForAddressSpaceReady(brokered);
 
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
@@ -50,12 +50,12 @@ class UserApiTest extends TestBase {
         JsonObject userDefinitionPayload = testUser.toCRDJson(brokered.getName());
 
         //create user
-        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
 
         //delete user
-        assertThat(CRDCmdClient.deleteUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.deleteUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
     }
 
     @Test
@@ -65,7 +65,7 @@ class UserApiTest extends TestBase {
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
         //create addressspace
-        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
         waitForAddressSpaceReady(brokered);
 
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
@@ -79,10 +79,10 @@ class UserApiTest extends TestBase {
         JsonObject userDefinitionPayload = testUser.toCRDJson(brokered.getName());
 
         //create user
-        ExecutionResultData createUserResponse = CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString());
+        ExecutionResultData createUserResponse = KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString());
         assertThat(createUserResponse.getRetCode(), is(false));
         assertTrue(createUserResponse.getStdErr().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
 
         User testUser2 = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
@@ -93,10 +93,10 @@ class UserApiTest extends TestBase {
         JsonObject userDefinitionPayload2 = testUser2.toCRDJson("");
 
         //create user
-        ExecutionResultData createUserResponse2 = CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload2.toString());
+        ExecutionResultData createUserResponse2 = KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload2.toString());
         assertThat(createUserResponse2.getRetCode(), is(false));
         assertTrue(createUserResponse2.getStdErr().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
     }
 
     @Test
@@ -133,7 +133,7 @@ class UserApiTest extends TestBase {
         JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
 
         //create addressspace
-        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), addressSpacePayloadJson.toString()).getRetCode(), is(true));
         waitForAddressSpaceReady(brokered);
 
         UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
@@ -145,8 +145,8 @@ class UserApiTest extends TestBase {
         JsonObject userDefinitionPayload = testUser.toCRDJson(brokered.getName());
 
         //create user
-        assertThat(CRDCmdClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
 
         UserCredentials updatedCred = new UserCredentials("pepanatestovani", null);
         testUser = new User().setUserCredentials(updatedCred).addAuthorization(
@@ -157,14 +157,14 @@ class UserApiTest extends TestBase {
         userDefinitionPayload = testUser.toCRDJson(brokered.getName());
 
         //update user
-        assertThat(CRDCmdClient.updateCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.updateCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
         assertTrue(getUserApiClient().getUser(brokered.getName(), testUser.getUsername()).toString().contains(User.Operation.RECEIVE));
 
 
         //delete user
-        assertThat(CRDCmdClient.deleteUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
-        assertThat(CRDCmdClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.deleteUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getName(), cred.getUsername()).getRetCode(), is(false));
     }
 
 
