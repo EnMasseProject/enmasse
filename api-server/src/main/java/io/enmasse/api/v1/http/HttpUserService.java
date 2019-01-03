@@ -119,10 +119,9 @@ public class HttpUserService {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            log.debug("Retrieving user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
 
-            String userName = parseUserName(userNameWithAddressSpace);
-            log.debug("Retrieving user {} in realm {} namespace {}", userName, realm, namespace);
-            return userApi.getUserWithName(realm, userName)
+            return userApi.getUserWithName(realm, userNameWithAddressSpace)
                     .map(user -> Response.ok(formatResponse(acceptHeader, user)).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build());
         });
@@ -134,14 +133,6 @@ public class HttpUserService {
             throw new BadRequestException("User name '" + userNameWithAddressSpace + "' does not contain valid separator (.) to identify address space");
         }
         return parts[0];
-    }
-
-    private static String parseUserName(String userNameWithAddressSpace) {
-        String [] parts = userNameWithAddressSpace.split("\\.");
-        if (parts.length < 2) {
-            throw new BadRequestException("User name '" + userNameWithAddressSpace + "' does not contain valid separator (.) to identify user");
-        }
-        return parts[1];
     }
 
     @POST
@@ -161,7 +152,7 @@ public class HttpUserService {
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
             userApi.createUser(realm, user);
-            User created = userApi.getUserWithName(realm, user.getSpec().getUsername()).orElse(user);
+            User created = userApi.getUserWithName(realm, user.getMetadata().getName()).orElse(user);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
             builder.path(created.getMetadata().getName());
             return Response.created(builder.build()).entity(created).build();
@@ -200,7 +191,7 @@ public class HttpUserService {
             if (!userApi.replaceUser(realm, user)) {
                 return Response.status(404).entity(Status.notFound("MessagingUser", user.getMetadata().getName())).build();
             }
-            User replaced = userApi.getUserWithName(realm, user.getSpec().getUsername()).orElse(user);
+            User replaced = userApi.getUserWithName(realm, user.getMetadata().getName()).orElse(user);
             return Response.ok().entity(replaced).build();
         });
     }
@@ -211,7 +202,6 @@ public class HttpUserService {
     public Response deleteUser(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("userName") String userNameWithAddressSpace) throws Exception {
         return doRequest("Error deleting user " + userNameWithAddressSpace, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
-            String userName = parseUserName(userNameWithAddressSpace);
 
             String addressSpaceName = parseAddressSpace(userNameWithAddressSpace);
             checkAddressSpaceName(userNameWithAddressSpace, addressSpaceName);
@@ -221,8 +211,8 @@ public class HttpUserService {
             }
             String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
-            log.debug("Deleting user {} in realm {} namespace {}", userName, realm, namespace);
-            User user = userApi.getUserWithName(realm, userName).orElse(null);
+            log.debug("Deleting user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
+            User user = userApi.getUserWithName(realm, userNameWithAddressSpace).orElse(null);
             if (user == null) {
                 return Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build();
             }
