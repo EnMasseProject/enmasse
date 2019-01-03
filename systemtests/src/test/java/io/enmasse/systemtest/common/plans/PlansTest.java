@@ -557,7 +557,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             try {
                 appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Destination[0]));
             } catch (IllegalStateException ex) {
-                if (!ex.getMessage().contains("addresses are not ready")) {
+                if (!ex.getMessage().contains("addresses are not matched")) {
                     throw ex;
                 }
             }

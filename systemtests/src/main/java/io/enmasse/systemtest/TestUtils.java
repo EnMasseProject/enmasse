@@ -827,8 +827,7 @@ public class TestUtils {
         if (!notMatched.isEmpty()) {
             JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
             notMatched = addressListMatcher.matchAddresses(addressList);
-            throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations
-                    + " addresses are not matched: " + notMatched.values());
+            throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
         }
     }
 
