@@ -9,7 +9,7 @@ if [ "$TAG" != "latest" ]; then
 fi
 
 export PACKAGE=enmasse
-export REPOSITORY="snapshots"
+export REPOSITORY="travis"
 if [ "$TAG" != "latest" ]
 then
     export REPOSITORY="releases"
