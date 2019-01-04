@@ -800,15 +800,21 @@ public class TestUtils {
      * @throws Exception IllegalStateException if destinations are not ready within timeout
      */
     public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.ADDRESS_WAIT_READY);
         waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isAddressReady, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.ADDRESS_WAIT_PLAN_CHANGE);
         waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isPlanSynced, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.ADDRESS_WAIT_BROKER_DRAINED);
         waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::areBrokersDrained, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     private static void waitForAddressesMatched(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget timeoutBudget, int totalDestinations, AddressListMatcher addressListMatcher) throws Exception {
@@ -1047,15 +1053,20 @@ public class TestUtils {
         return service;
     }
 
-    public static void deleteAddressSpace(AddressApiClient addressApiClient, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAddressSpaceAndWait(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        deleteAddressSpace(addressApiClient, addressSpace, logCollector);
+        waitForAddressSpaceDeleted(kubernetes, addressSpace);
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    private static void deleteAddressSpace(AddressApiClient addressApiClient, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
         addressApiClient.deleteAddressSpace(addressSpace);
-        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void deleteAllAddressSpaces(AddressApiClient addressApiClient, GlobalLogCollector logCollector) throws Exception {

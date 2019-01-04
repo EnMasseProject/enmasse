@@ -205,8 +205,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
         if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
-            TestUtils.deleteAddressSpace(apiClient, addressSpace, logCollector);
-            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+            TestUtils.deleteAddressSpaceAndWait(apiClient, kubernetes, addressSpace, logCollector);
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
