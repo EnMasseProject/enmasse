@@ -9,12 +9,10 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Interface for Kubernetes operations done by the address space controller
@@ -29,7 +27,8 @@ public interface Kubernetes {
 
     void deleteResourcesNotIn(String[] addressSpaces);
 
-    Set<Deployment> getReadyDeployments();
+    Set<Deployment> getReadyDeployments(AddressSpace addressSpace);
+    Set<StatefulSet> getReadyStatefulSets(AddressSpace addressSpace);
 
     Optional<Secret> getSecret(String secretName);
 
