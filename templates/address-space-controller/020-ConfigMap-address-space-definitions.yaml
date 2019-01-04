@@ -88,6 +88,7 @@ data:
             host: 0.0.0.0
             port: 5672
             saslPlugin: auth_service
+            authenticatePeer: yes
             linkCapacity: ${ROUTER_LINK_CAPACITY}
           }
 
@@ -122,6 +123,7 @@ data:
             port: 5671
             saslPlugin: auth_service
             sslProfile: ssl_details
+            authenticatePeer: yes
             requireSsl: true
             linkCapacity: ${ROUTER_LINK_CAPACITY}
           }
