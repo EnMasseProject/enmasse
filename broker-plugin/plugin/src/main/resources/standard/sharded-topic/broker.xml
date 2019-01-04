@@ -91,7 +91,7 @@ under the License.
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
-            <address-full-policy>FAIL</address-full-policy>
+            <address-full-policy>${ADDRESS_FULL_POLICY}</address-full-policy>
          </address-setting>
       </address-settings>
       <addresses>
