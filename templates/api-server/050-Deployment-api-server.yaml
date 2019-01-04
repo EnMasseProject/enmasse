@@ -30,7 +30,7 @@ spec:
       containers:
       - env:
         - name: JAVA_OPTS
-          value: -verbose:gc
+          value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
         - name: CERT_DIR
           value: /api-server-cert
         - name: ENABLE_RBAC

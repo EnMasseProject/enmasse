@@ -93,13 +93,14 @@ public class GlobalLogCollector {
     }
 
     public void collectEvents() {
+        long timestamp = System.currentTimeMillis();
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("kubectl", "get", "events", "-n", namespace);
         processBuilder.redirectErrorStream(true);
         Process process;
         log.info("Collecting events in {}", namespace);
 
-        File eventLog = new File(logDir, namespace + ".events");
+        File eventLog = new File(logDir, namespace + ".events." + timestamp);
         try (FileWriter fileWriter = new FileWriter(eventLog)) {
             process = processBuilder.start();
             InputStream stdout = process.getInputStream();
