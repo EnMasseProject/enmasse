@@ -58,7 +58,8 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
     @Override
     public Instance newInstance(final KeycloakSessionFactory keycloakSessionFactory,
                                 final String hostname,
-                                final Config.Scope config)
+                                final Config.Scope config,
+                                AmqpServer amqpServer)
     {
         return new Instance()
         {
@@ -90,7 +91,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                 int passwordLen = response.length - authcidNullPosition - 1;
                 String password = new String(response, authcidNullPosition + 1, passwordLen, StandardCharsets.UTF_8);
 
-                LOG.info("SASL hostname: " + hostname);
+                LOG.debug("SASL hostname: " + hostname);
                 KeycloakSession keycloakSession = keycloakSessionFactory.create();
                 KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
                 transactionManager.begin();
@@ -102,22 +103,39 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                         complete = true;
                         return null;
                     }
-
-                    final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
-                    if (user != null) {
-                        UserCredentialModel credentialModel = "serviceaccount".equals(user.getFirstAttribute("authenticationType")) ? createServiceAccountUserCredential(password) :  UserCredentialModel.password(password);
-                        if (keycloakSession.userCredentialManager().isValid(realm, user, credentialModel)) {
-                            authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
-                            authenticated = true;
-                            complete = true;
-                            return null;
+                    if("@@serviceaccount@@".equals(username)) {
+                        String tokenUser = K8sServiceAccountCredentialProvider.authenticateToken(password, amqpServer.getOpenShiftClient(), amqpServer.getHttpClient());
+                        if(tokenUser != null) {
+                            final UserModel user = keycloakSession.userStorageManager().getUserByUsername(tokenUser, realm);
+                            if (user != null) {
+                                if ("serviceaccount".equals(user.getFirstAttribute("authenticationType"))) {
+                                    authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                                    authenticated = true;
+                                    complete = true;
+                                    return null;
+                                } else {
+                                    LOG.debug("User " + tokenUser + " in realm " + hostname + " is not a serviceaccount user");
+                                }
+                            } else {
+                                LOG.debug("No such user " + tokenUser + " in realm " + hostname);
+                            }
                         }
-                        LOG.debug("Invalid password for " + username + " in realm " + hostname);
                     } else {
-                        LOG.debug("user not found: " + username);
+                        final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
+                        if (user != null) {
+                            UserCredentialModel credentialModel = "serviceaccount".equals(user.getFirstAttribute("authenticationType")) ? createServiceAccountUserCredential(password) : UserCredentialModel.password(password);
+                            if (keycloakSession.userCredentialManager().isValid(realm, user, credentialModel)) {
+                                authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                                authenticated = true;
+                                complete = true;
+                                return null;
+                            }
+                            LOG.debug("Invalid password for " + username + " in realm " + hostname);
+                        } else {
+                            LOG.debug("user not found: " + username);
+                        }
+
                     }
-
-
                     authenticated = false;
                     complete = true;
                     return null;

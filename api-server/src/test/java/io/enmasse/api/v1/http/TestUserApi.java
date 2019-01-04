@@ -22,7 +22,9 @@ public class TestUserApi implements UserApi {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        return Optional.ofNullable(userMap.get(realm).get(name));
+        return userMap.get(realm).values().stream()
+                .filter(user -> user.getMetadata().getName().equals(name))
+                .findFirst();
     }
 
     @Override

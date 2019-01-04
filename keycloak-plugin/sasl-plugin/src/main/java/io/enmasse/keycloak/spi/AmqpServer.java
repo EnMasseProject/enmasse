@@ -21,6 +21,7 @@
 
 package io.enmasse.keycloak.spi;
 
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -30,6 +31,7 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
+import okhttp3.OkHttpClient;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
@@ -70,14 +72,23 @@ public class AmqpServer extends AbstractVerticle {
     private final int port;
     private final Config.Scope config;
     private final boolean useTls;
+    private final NamespacedOpenShiftClient client;
+    private final OkHttpClient httpClient;
     private volatile ProtonServer server;
     private KeycloakSessionFactory keycloakSessionFactory;
 
-    public AmqpServer(String hostname, int port, final Config.Scope config, final boolean useTls) {
+    public AmqpServer(String hostname,
+                      int port,
+                      final Config.Scope config,
+                      final boolean useTls,
+                      NamespacedOpenShiftClient client,
+                      OkHttpClient httpClient) {
         this.hostname = hostname;
         this.port = port;
         this.config = config;
         this.useTls = useTls;
+        this.client = client;
+        this.httpClient = httpClient;
     }
 
     private void connectHandler(ProtonConnection connection) {
@@ -170,7 +181,7 @@ public class AmqpServer extends AbstractVerticle {
         }
         server = ProtonServer.create(vertx, options);
 
-        server.saslAuthenticatorFactory(() -> new SaslAuthenticator(keycloakSessionFactory, config, useTls));
+        server.saslAuthenticatorFactory(() -> new SaslAuthenticator(keycloakSessionFactory, config, useTls, this));
         server.connectHandler(this::connectHandler);
         LOG.info("Starting server on "+hostname+":"+ port);
         server.listen(port, hostname, event -> {
@@ -192,5 +203,13 @@ public class AmqpServer extends AbstractVerticle {
     void setKeycloakSessionFactory(final KeycloakSessionFactory keycloakSessionFactory)
     {
         this.keycloakSessionFactory = keycloakSessionFactory;
+    }
+
+    NamespacedOpenShiftClient getOpenShiftClient() {
+        return client;
+    }
+
+    OkHttpClient getHttpClient() {
+        return httpClient;
     }
 }

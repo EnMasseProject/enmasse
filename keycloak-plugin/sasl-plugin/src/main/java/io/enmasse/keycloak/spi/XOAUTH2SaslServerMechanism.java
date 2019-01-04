@@ -54,7 +54,7 @@ public class XOAUTH2SaslServerMechanism implements SaslServerMechanism {
     @Override
     public Instance newInstance(final KeycloakSessionFactory keycloakSessionFactory,
                                 final String hostname,
-                                final Config.Scope config)
+                                final Config.Scope config, AmqpServer amqpServer)
     {
         return new Instance()
         {

@@ -143,10 +143,13 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public Optional<User> getUserWithName(String realmName, String name) throws Exception {
-        log.info("Retrieving user {} in realm {}", name, realmName);
-        return withRealm(realmName, realm -> realm.users().search(name).stream()
-                .filter(userRep -> name.equals(userRep.getUsername()))
+    public Optional<User> getUserWithName(String realmName, String resourceName) throws Exception {
+        log.info("Retrieving user {} in realm {}", resourceName, realmName);
+        return withRealm(realmName, realm -> realm.users().list().stream()
+                .filter(userRep -> {
+                    Map<String, List<String>> attributes = userRep.getAttributes();
+                    return attributes != null && attributes.get("resourceName") != null && resourceName.equals(attributes.get("resourceName").get(0));
+                })
                 .findFirst()
                 .map(userRep -> {
                     List<GroupRepresentation> groupReps = realm.users().get(userRep.getId()).groups();

@@ -134,7 +134,7 @@ public class OSBBindingService extends OSBServiceBase {
                         .build();
 
         String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        if (userApi.getUserWithName(realmName, username).isPresent()) {
+        if (userApi.getUserWithName(realmName, user.getMetadata().getName()).isPresent()) {
             userApi.replaceUser(realmName, user);
         } else {
             userApi.createUser(realmName, user);
@@ -193,7 +193,7 @@ public class OSBBindingService extends OSBServiceBase {
     private boolean deleteUser(AddressSpace addressSpace, String username) throws Exception {
 
         String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        Optional<User> user = userApi.getUserWithName(realmName, username);
+        Optional<User> user = userApi.getUserWithName(realmName, addressSpace.getName() + "." + username);
         if (user.isPresent()) {
             userApi.deleteUser(realmName, user.get());
             return true;

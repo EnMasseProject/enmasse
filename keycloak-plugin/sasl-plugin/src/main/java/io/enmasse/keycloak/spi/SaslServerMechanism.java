@@ -30,7 +30,10 @@ public interface SaslServerMechanism {
     int priority();
     String getName();
 
-    Instance newInstance(KeycloakSessionFactory session, String hostname, final Config.Scope config);
+    Instance newInstance(KeycloakSessionFactory session,
+                         String hostname,
+                         final Config.Scope config,
+                         AmqpServer amqpServer);
     interface Instance {
         byte[] processResponse(byte[] response) throws IllegalArgumentException;
         boolean isComplete();
