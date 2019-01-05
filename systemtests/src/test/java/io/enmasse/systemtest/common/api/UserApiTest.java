@@ -14,10 +14,7 @@ import io.enmasse.systemtest.selenium.SeleniumContainers;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -46,6 +43,10 @@ class UserApiTest extends TestBase {
         if (!TestUtils.existAddressSpace(addressApiClient, standard.getName())) {
             createAddressSpace(standard);
         }
+    }
+
+    @BeforeAll
+    void beforeAll() {
         setReuseAddressSpace();
     }
 

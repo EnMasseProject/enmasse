@@ -82,7 +82,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         if (addressApiClient == null) {
             addressApiClient = new AddressApiClient(kubernetes);
         }
-        addressSpaceList = new ArrayList<>();
+        if (!reuseAddressSpace) {
+            addressSpaceList = new ArrayList<>();
+        }
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials);
     }
@@ -185,6 +187,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void deleteAddressspacesFromList() throws Exception {
+        log.info("All addressspaces will be removed");
         for (AddressSpace addressSpace : addressSpaceList) {
             deleteAddressSpace(addressSpace);
         }
