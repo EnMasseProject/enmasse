@@ -794,7 +794,7 @@ data:
           ],
           "targets": [
             {
-              "expr": "addresses_not_ready_total > 0",
+              "expr": "addresses_not_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
