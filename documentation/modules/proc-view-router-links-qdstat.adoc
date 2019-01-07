@@ -20,7 +20,7 @@ You can view the router links using `qdstat`.
 +
 [source=bash,options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} exec -n _namespace_ -it qdrouterd-_podname_ -- qdstat -l
+{cmdcli} exec -n _namespace_ -it qdrouterd-_podname_ -- qdstat -b 127.0.0.1:7777 -l
 
 Router Links
   type      dir  conn id  id  peer  class   addr                  phs  cap  undel  unsett  del   presett  psdrop  acc   rej  rel  mod  admin    oper
