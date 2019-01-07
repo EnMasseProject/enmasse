@@ -1228,20 +1228,56 @@
                             "service": {
                                 "type": "string"
                             },
-                            "servicePort": {
-                                "type": "string"
-                            },
-                            "host": {
-                                "type": "string"
-                            },
                             "cert": {
                                 "type": "object",
                                 "properties": {
                                     "provider": {
                                         "type": "string"
                                     },
+                                    "tlsKey": {
+                                        "type": "string"
+                                    },
+                                    "tlsCert": {
+                                        "type": "string"
+                                    },
                                     "secretName": {
                                         "type": "string"
+                                    }
+                                }
+                            },
+                            "expose": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "route",
+                                            "loadbalancer"
+                                        ]
+                                    },
+                                    "annotations": {
+                                        "type": "object"
+                                    },
+                                    "routeHost": {
+                                        "type": "string"
+                                    },
+                                    "routeTlsTermination": {
+                                        "type": "string"
+                                    },
+                                    "routeServicePort": {
+                                        "type": "string"
+                                    },
+                                    "loadBalancerSourceRanges": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "loadBalancerPorts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
                                     }
                                 }
                             }
@@ -1256,6 +1292,23 @@
                         },
                         "details": {
                             "type": "object"
+                        }
+                    }
+                },
+                "networkPolicy": {
+                    "type": "object",
+                    "properties": {
+                        "ingress": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/io.k8s.api.networking.v1.NetworkPolicyIngressRule"
+                            }
+                        },
+                        "egress": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/io.k8s.api.networking.v1.NetworkPolicyEgressRule"
+                            }
                         }
                     }
                 }
@@ -1284,12 +1337,6 @@
                             "serviceHost": {
                                 "type": "string"
                             },
-                            "host": {
-                                "type": "string"
-                            },
-                            "port": {
-                                "type": "integer"
-                            },
                             "servicePorts": {
                                 "type": "array",
                                 "items": {
@@ -1303,6 +1350,26 @@
                                         }
                                     }
                                 }
+                            },
+                            "externalHost": {
+                                "type": "string"
+                            },
+                            "externalPorts": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "port": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            },
+                            "cert": {
+                                "type": "string"
                             }
                         }
                     }

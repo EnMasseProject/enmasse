@@ -1689,6 +1689,8 @@ __required__||enum (AddressSpaceList)
 __optional__|<<_io_enmasse_v1alpha1_addressspacespec_authenticationservice,authenticationService>>
 |**endpoints** +
 __optional__|< <<_io_enmasse_v1alpha1_addressspacespec_endpoints,endpoints>> > array
+|**networkPolicy** +
+__optional__|<<_io_enmasse_v1alpha1_addressspacespec_networkpolicy,networkPolicy>>
 |**plan** +
 __required__|string
 |**type** +
@@ -1715,13 +1717,11 @@ __optional__|string
 |Name|Schema
 |**cert** +
 __optional__|<<_io_enmasse_v1alpha1_addressspacespec_cert,cert>>
-|**host** +
-__optional__|string
+|**expose** +
+__optional__|<<_io_enmasse_v1alpha1_addressspacespec_expose,expose>>
 |**name** +
 __optional__|string
 |**service** +
-__optional__|string
-|**servicePort** +
 __optional__|string
 |===
 
@@ -1735,6 +1735,44 @@ __optional__|string
 __optional__|string
 |**secretName** +
 __optional__|string
+|**tlsCert** +
+__optional__|string
+|**tlsKey** +
+__optional__|string
+|===
+
+[[_io_enmasse_v1alpha1_addressspacespec_expose]]
+**expose**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**annotations** +
+__optional__|object
+|**loadBalancerPorts** +
+__optional__|< string > array
+|**loadBalancerSourceRanges** +
+__optional__|< string > array
+|**routeHost** +
+__optional__|string
+|**routeServicePort** +
+__optional__|string
+|**routeTlsTermination** +
+__optional__|string
+|**type** +
+__optional__|enum (route, loadbalancer)
+|===
+
+[[_io_enmasse_v1alpha1_addressspacespec_networkpolicy]]
+**networkPolicy**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**egress** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicyegressrule,io.k8s.api.networking.v1.NetworkPolicyEgressRule>> > array
+|**ingress** +
+__optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.networking.v1.NetworkPolicyIngressRule>> > array
 |===
 
 
@@ -1758,16 +1796,30 @@ __optional__|< string > array
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
-|**host** +
+|**cert** +
 __optional__|string
+|**externalHost** +
+__optional__|string
+|**externalPorts** +
+__optional__|< <<_io_enmasse_v1alpha1_addressspacestatus_externalports,externalPorts>> > array
 |**name** +
 __optional__|string
-|**port** +
-__optional__|integer
 |**serviceHost** +
 __optional__|string
 |**servicePorts** +
 __optional__|< <<_io_enmasse_v1alpha1_addressspacestatus_serviceports,servicePorts>> > array
+|===
+
+[[_io_enmasse_v1alpha1_addressspacestatus_externalports]]
+**externalPorts**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**name** +
+__optional__|string
+|**port** +
+__optional__|integer
 |===
 
 [[_io_enmasse_v1alpha1_addressspacestatus_serviceports]]
