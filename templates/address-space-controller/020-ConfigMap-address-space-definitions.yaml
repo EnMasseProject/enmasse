@@ -85,9 +85,16 @@ data:
           }
 
           listener {
+            host: 127.0.0.1
+            port: 7777
+            authenticatePeer: no
+          }
+
+          listener {
             host: 0.0.0.0
             port: 5672
             saslPlugin: auth_service
+            authenticatePeer: yes
             linkCapacity: ${ROUTER_LINK_CAPACITY}
           }
 
@@ -123,6 +130,7 @@ data:
             saslPlugin: auth_service
             sslProfile: ssl_details
             requireSsl: true
+            authenticatePeer: yes
             linkCapacity: ${ROUTER_LINK_CAPACITY}
           }
 

@@ -13,9 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class GlobalLogCollector {
@@ -133,8 +131,19 @@ public class GlobalLogCollector {
         });
     }
 
-    private void collectRouterInfo(Pod pod, String filesuffix, String... command) {
-        String output = kubernetes.runOnPod(pod, "router", command);
+    private void collectRouterInfo(Pod pod, String filesuffix, String command, String ... args) {
+        List<String> allArgs = new ArrayList<>();
+        allArgs.add(command);
+        allArgs.add("--sasl-mechanisms=EXTERNAL");
+        allArgs.add("--ssl-certificate=/etc/enmasse-certs/tls.crt");
+        allArgs.add("--ssl-key=/etc/enmasse-certs/tls.key");
+        allArgs.add("--ssl-trustfile=/etc/enmasse-certs/ca.crt");
+        allArgs.add("--ssl-disable-peer-name-verify");
+        allArgs.add("-b");
+        allArgs.add("127.0.0.1:55671");
+        allArgs.addAll(Arrays.asList(args));
+
+        String output = kubernetes.runOnPod(pod, "router", allArgs.toArray(new String[0]));
         try {
             Path path = Paths.get(logDir.getPath(), namespace);
             File routerAutoLinks = new File(
