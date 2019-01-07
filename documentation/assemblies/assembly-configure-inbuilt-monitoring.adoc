@@ -1,0 +1,8 @@
+[id='config-monitoring-{context}']
+= Monitor {ProductName} with existing infrastructure
+
+{ProductName} can also be monitored using an existing Prometheus server and optionally `kube-state-metrics` for the relevant {KubePlatform} infrastructure.
+
+include::../modules/proc-scraping-metrics.adoc[leveloffset=+1]
+
+include::../modules/proc-configure-alerts.adoc[leveloffset=+1]

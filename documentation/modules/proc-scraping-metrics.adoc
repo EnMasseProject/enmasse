@@ -1,0 +1,28 @@
+[id='scrape-metrics-{context}']
+
+= Exposed metrics
+
+The Address Space Controller and API Server export Prometheus metrics about {ProductName}'s health on port 8080. These metrics can be scraped using the services created during {ProductName} installation and the following sample Prometheus scrape configuration.
+
+.Prerequisites
+
+* Prometheus' service account must have View privileges to the {ProductName} namespace.
+
+.Procedure
+
+. Add the following job to your Prometheus scrape configuration:
++
+[source,yaml,options="nowrap"]
+----
+  - job_name: <component-health>
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - <namespace>
+    metrics_path: "/metrics"
+    relabel_configs:
+    - action: keep
+      regex: health.*
+      source_labels: [__meta_kubernetes_service_port_name]
+----
