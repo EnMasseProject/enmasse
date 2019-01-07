@@ -18,6 +18,7 @@ public class AmqpConnectOptions {
     private ProtonClientOptions protonClientOptions;
     private String username;
     private String password;
+    private String saslMechanism;
 
     public AmqpConnectOptions() {
     }
@@ -97,6 +98,15 @@ public class AmqpConnectOptions {
                 .setHostnameVerificationAlgorithm("")
                 .setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(pemCert)))
                 .setTrustAll(false);
+        return this;
+    }
+
+    public String getSaslMechanism() {
+        return saslMechanism;
+    }
+
+    public AmqpConnectOptions setSaslMechanism(String sasl) {
+        this.protonClientOptions.addEnabledSaslMechanism(sasl);
         return this;
     }
 

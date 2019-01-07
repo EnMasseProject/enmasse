@@ -14,6 +14,7 @@ import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
@@ -45,10 +46,14 @@ import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,41 +75,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private UserApiClient userApiClient;
-
-    protected void addToAddressSpacess(AddressSpace addressSpace) {
-        this.addressSpaceList.add(addressSpace);
-    }
-
-    protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        deleteAddressSpace(addressSpace, addressApiClient);
-    }
-
-    protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
-            TestUtils.deleteAddressSpace(apiClient, addressSpace, logCollector);
-            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
-        } else {
-            log.info("Address space '" + addressSpace + "' doesn't exists!");
-        }
-    }
-
-    protected void deleteAllAddressSpaces() throws Exception {
-        TestUtils.deleteAllAddressSpaces(addressApiClient, logCollector);
-        for (AddressSpace addressSpace : addressSpaceList) {
-            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
-        }
-    }
-
-    protected AddressSpace getSharedAddressSpace() {
-        return null;
-    }
+    private boolean reuseAddressSpace;
 
     @BeforeEach
     public void setup() throws Exception {
         if (addressApiClient == null) {
             addressApiClient = new AddressApiClient(kubernetes);
         }
-        addressSpaceList = new ArrayList<>();
+        if (!reuseAddressSpace) {
+            addressSpaceList = new ArrayList<>();
+        }
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, defaultCredentials);
     }
@@ -119,11 +99,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 amqpClientFactory.close();
             }
 
-            if (!environment.skipCleanup()) {
-                for (AddressSpace addressSpace : addressSpaceList) {
-                    deleteAddressSpace(addressSpace);
-                }
-                addressSpaceList.clear();
+            if (!environment.skipCleanup() && !reuseAddressSpace) {
+                deleteAddressspacesFromList();
             } else {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }
@@ -131,6 +108,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             log.error("Error tearing down test: {}", e.getMessage());
             throw e;
         }
+    }
+
+    protected void setReuseAddressSpace() {
+        reuseAddressSpace = true;
+    }
+
+    protected void unsetReuseAddressSpace() {
+        reuseAddressSpace = false;
     }
 
 
@@ -199,6 +184,42 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         addressSpace.setInfraUuid(addrSpaceResponse.getInfraUuid());
         log.info("Address-space successfully created: '{}'", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    protected void deleteAddressspacesFromList() throws Exception {
+        log.info("All addressspaces will be removed");
+        for (AddressSpace addressSpace : addressSpaceList) {
+            deleteAddressSpace(addressSpace);
+        }
+        addressSpaceList.clear();
+    }
+
+    protected void addToAddressSpacess(AddressSpace addressSpace) {
+        this.addressSpaceList.add(addressSpace);
+    }
+
+    protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+        deleteAddressSpace(addressSpace, addressApiClient);
+    }
+
+    protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
+        if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
+            TestUtils.deleteAddressSpace(apiClient, addressSpace, logCollector);
+            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+        } else {
+            log.info("Address space '" + addressSpace + "' doesn't exists!");
+        }
+    }
+
+    protected void deleteAllAddressSpaces() throws Exception {
+        TestUtils.deleteAllAddressSpaces(addressApiClient, logCollector);
+        for (AddressSpace addressSpace : addressSpaceList) {
+            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+        }
+    }
+
+    protected AddressSpace getSharedAddressSpace() {
+        return null;
     }
 
     //!TODO: protected void appendAddressSpace(...)
@@ -367,6 +388,52 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
         log.info("User {} in address space {} will be created", user, addressSpace.getName());
         if (!userExist(addressSpace, user.getUsername())) {
+            return getUserApiClient().createUser(addressSpace.getName(), user);
+        }
+        return new JsonObject();
+    }
+
+    protected JsonObject createUserFederated(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+        User user = new User()
+                .setUserCredentials(credentials)
+                .setType(User.Type.FEDERATED)
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(User.Operation.MANAGE));
+        return createUserFederated(addressSpace, user);
+    }
+
+    protected JsonObject createUserFederated(AddressSpace addressSpace, User user) throws Exception {
+        log.info("Federated user {} in address space {} will be created", user.getUsername(), addressSpace.getName());
+        if (!userExist(addressSpace, user.getUsername())) {
+            KubeCMDClient.createOcUser(user.getUsername());
+            String userID = KubeCMDClient.getOpenshiftUserId(user.getUsername());
+            return getUserApiClient().createUser(
+                    addressSpace.getName(),
+                    user.toJson(addressSpace.getName(), user.getUsername(), user.getUsername(), userID),
+                    HTTP_CREATED);
+        }
+        return new JsonObject();
+    }
+
+    protected JsonObject createUserServiceAccount(AddressSpace addressSpace, UserCredentials credentials, String namespace) throws Exception {
+        User user = new User()
+                .setUserCredentials(credentials)
+                .setType(User.Type.SERVICEACCOUNT)
+                .addAuthorization(new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.SEND)
+                        .addOperation(User.Operation.RECEIVE)
+                        .addOperation(User.Operation.VIEW))
+                .addAuthorization(new User.AuthorizationRule()
+                        .addOperation(User.Operation.MANAGE));
+        return createUserServiceaccount(addressSpace, user, namespace);
+    }
+
+    protected JsonObject createUserServiceaccount(AddressSpace addressSpace, User user, String namespace) throws Exception {
+        log.info("ServiceAccount user {} in address space {} will be created", user.getUsername(), addressSpace.getName());
+        if (!userExist(addressSpace, user.getUsername())) {
+            String serviceaccountName = kubernetes.createServiceAccount(user.getUsername(), namespace);
+            user.setUsername(serviceaccountName);
             return getUserApiClient().createUser(addressSpace.getName(), user);
         }
         return new JsonObject();

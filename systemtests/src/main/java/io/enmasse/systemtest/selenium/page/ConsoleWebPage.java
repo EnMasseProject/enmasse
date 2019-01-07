@@ -371,21 +371,25 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public void openWebConsolePage(boolean viaOpenShift) throws Exception {
-        openWebConsolePage(credentials, viaOpenShift);
+        openWebConsolePage(credentials, false, viaOpenShift);
     }
 
     public void openWebConsolePage(UserCredentials credentials) throws Exception {
-        openWebConsolePage(credentials, false);
+        openWebConsolePage(credentials, false, false);
     }
 
     public void openWebConsolePage(UserCredentials credentials, boolean viaOpenShift) throws Exception {
+        openWebConsolePage(credentials, false, viaOpenShift);
+    }
+
+    public void openWebConsolePage(UserCredentials credentials, boolean clickOnOpenshift, boolean viaOpenShift) throws Exception {
         log.info("Opening console web page");
         logout();
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
         if (defaultAddressSpace.getAuthService().equals(AuthService.STANDARD)) {
-            if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift))
+            if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), clickOnOpenshift, viaOpenShift))
                 throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
         }
         checkReachableWebPage();
@@ -793,8 +797,15 @@ public class ConsoleWebPage implements IWebPage {
         }
 
         public boolean login(String username, String password, boolean viaOpenShift) throws Exception {
+            return login(username, password, false, viaOpenShift);
+        }
+
+        public boolean login(String username, String password, boolean openOpenshiftLoginPage, boolean viaOpenShift) throws Exception {
             if (viaOpenShift) {
                 checkReachableWebPage();
+                if (openOpenshiftLoginPage) {
+                    selenium.clickOnItem(getOpenshiftButton());
+                }
                 OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
                 boolean login = ocLoginPage.login(username, password);
                 return login;

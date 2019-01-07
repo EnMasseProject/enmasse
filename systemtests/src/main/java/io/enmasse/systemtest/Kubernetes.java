@@ -400,4 +400,23 @@ public abstract class Kubernetes {
             return "";
         }
     }
+
+    public String createServiceAccount(String name, String namespace) {
+        log.info("Create serviceaccount {} in namespace {}", name, namespace);
+        client.serviceAccounts().inNamespace(namespace)
+                .create(new ServiceAccountBuilder().withNewMetadata().withName(name).endMetadata().build());
+        return "system:serviceaccount:" + namespace + ":" + name;
+    }
+
+    public String deleteServiceAccount(String name, String namespace) {
+        log.info("Delete serviceaccount {} from namespace {}", name, namespace);
+        client.serviceAccounts().inNamespace(namespace).withName(name).delete();
+        return "system:serviceaccount:" + namespace + ":" + name;
+    }
+
+    public String getServiceaccountToken(String name, String namespace) {
+        return new String(Base64.getDecoder().decode(client.secrets().inNamespace(namespace).list().getItems().stream()
+                .filter(secret -> secret.getMetadata().getName().contains(name + "-token")).collect(Collectors.toList())
+                .get(0).getData().get("token")), StandardCharsets.UTF_8);
+    }
 }

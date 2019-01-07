@@ -7,18 +7,41 @@ package io.enmasse.systemtest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class User {
+    private Type type;
     private String username;
     private String password;
-    // TODO: Support federated user
+
+    public User() {
+        this.type = Type.PASSWORD;
+    }
+
+    public User(Type type) {
+        this.type = type;
+    }
+
+    public User(Type type, String username) {
+        this.type = type;
+        this.username = username;
+    }
 
     private final List<AuthorizationRule> authorization = new ArrayList<>();
+
+    public Type getType() {
+        return type;
+    }
+
+    public User setType(Type type) {
+        this.type = type;
+        return this;
+    }
 
     public String getUsername() {
         return username;
@@ -49,24 +72,36 @@ public class User {
         return this;
     }
 
-    public JsonObject toJson(String addressSpace) throws UnsupportedEncodingException {
-        return toJson(addressSpace, getUsername());
+    public JsonObject toJson(String addressSpace) {
+        return toJson(addressSpace, getUsername(), "", "");
     }
 
-    public JsonObject toJson(String addressSpace, String metaUserName) throws UnsupportedEncodingException {
+    public JsonObject toJson(String addressSpace, String metaUserName) {
+        return toJson(addressSpace, metaUserName, "", "");
+    }
+
+    public JsonObject toJson(String addressSpace, String federatedUserName, String federatedUserId) {
+        return toJson(addressSpace, getUsername(), federatedUserName, federatedUserId);
+    }
+
+    public JsonObject toJson(String addressSpace, String metaUserName, String federatedUserName, String federatedUserId) {
         JsonObject config = new JsonObject();
         JsonObject metadata = new JsonObject();
-        metadata.put("name", addressSpace + "." + metaUserName);
+        metadata.put("name", addressSpace + "." + Pattern.compile(".*:").matcher(metaUserName).replaceAll(""));
         config.put("metadata", metadata);
 
         JsonObject spec = new JsonObject();
         spec.put("username", getUsername());
-        if (password != null) {
-            JsonObject authentication = new JsonObject();
-            authentication.put("type", "password");
-            authentication.put("password", Base64.getEncoder().encodeToString(getPassword().getBytes("UTF-8")));
-            spec.put("authentication", authentication);
+        JsonObject authentication = new JsonObject();
+        authentication.put("type", type.toString().toLowerCase());
+        if (type.equals(Type.PASSWORD) && password != null) {
+            authentication.put("password", Base64.getEncoder().encodeToString(getPassword().getBytes(StandardCharsets.UTF_8)));
+        } else if (type.equals(Type.FEDERATED)) {
+            authentication.put("provider", "openshift");
+            authentication.put("federatedUsername", federatedUserName);
+            authentication.put("federatedUserid", federatedUserId);
         }
+        spec.put("authentication", authentication);
 
         JsonArray authorization = new JsonArray();
 
@@ -92,8 +127,15 @@ public class User {
         return config;
     }
 
-    public JsonObject toCRDJson(String addressSpace) throws UnsupportedEncodingException {
+    public JsonObject toCRDJson(String addressSpace) {
         JsonObject config = this.toJson(addressSpace);
+        config.put("apiVersion", "user.enmasse.io/v1alpha1");
+        config.put("kind", "MessagingUser");
+        return config;
+    }
+
+    public JsonObject toCRDJson(String addressSpace, String federatedUserIp) {
+        JsonObject config = this.toJson(addressSpace, username, federatedUserIp);
         config.put("apiVersion", "user.enmasse.io/v1alpha1");
         config.put("kind", "MessagingUser");
         return config;
@@ -154,5 +196,11 @@ public class User {
         public static final String RECEIVE = "recv";
         public static final String VIEW = "view";
         public static final String MANAGE = "manage";
+    }
+
+    public enum Type {
+        PASSWORD,
+        FEDERATED,
+        SERVICEACCOUNT
     }
 }

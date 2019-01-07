@@ -396,7 +396,7 @@ public class TestUtils {
         TimeoutBudget budget = null;
 
         boolean isReady = false;
-        budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+        budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
             addressSpaceObject = apiClient.getAddressSpace(addressSpace);
             isReady = isAddressSpaceReady(addressSpaceObject);
