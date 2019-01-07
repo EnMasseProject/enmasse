@@ -30,7 +30,7 @@ spec:
       containers:
       - env:
         - name: JAVA_OPTS
-          value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+          value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heapdumps
         - name: CERT_DIR
           value: /api-server-cert
         - name: ENABLE_RBAC
@@ -79,8 +79,13 @@ spec:
         - mountPath: /api-server-cert
           name: api-server-cert
           readOnly: true
+        - mountPath: /heapdumps
+          name: heapdumps
+
       serviceAccountName: api-server
       volumes:
       - name: api-server-cert
         secret:
           secretName: api-server-cert
+      - name: heapdumps
+        emptyDir: {}

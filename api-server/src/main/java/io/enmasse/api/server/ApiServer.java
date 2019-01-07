@@ -85,16 +85,18 @@ public class ApiServer extends AbstractVerticle {
             userApi = new NullUserApi();
         }
 
-        String clientCa;
-        String requestHeaderClientCa;
-        try {
-            ConfigMap extensionApiserverAuthentication = client.configMaps().inNamespace(options.getApiserverClientCaConfigNamespace()).withName(options.getApiserverClientCaConfigName()).get();
-            clientCa = validateCert("client-ca", extensionApiserverAuthentication.getData().get("client-ca-file"));
-            requestHeaderClientCa = validateCert("request-header-client-ca", extensionApiserverAuthentication.getData().get("requestheader-client-ca-file"));
-        } catch (KubernetesClientException e) {
-            log.info("Unable to retrieve config for client CA. Skipping", e);
-            clientCa = null;
-            requestHeaderClientCa = null;
+        String clientCa = null;
+        String requestHeaderClientCa = null;
+        if (options.getApiserverClientCaConfigNamespace() != null && options.getApiserverClientCaConfigName() != null) {
+            try {
+                ConfigMap extensionApiserverAuthentication = client.configMaps().inNamespace(options.getApiserverClientCaConfigNamespace()).withName(options.getApiserverClientCaConfigName()).get();
+                clientCa = validateCert("client-ca", extensionApiserverAuthentication.getData().get("client-ca-file"));
+                requestHeaderClientCa = validateCert("request-header-client-ca", extensionApiserverAuthentication.getData().get("requestheader-client-ca-file"));
+            } catch (KubernetesClientException e) {
+                log.info("Unable to retrieve config for client CA. Skipping", e);
+                clientCa = null;
+                requestHeaderClientCa = null;
+            }
         }
 
         Metrics metrics = new Metrics();

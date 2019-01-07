@@ -144,9 +144,21 @@ public class GlobalLogCollector {
         }
     }
 
-    public void collectApiServerJmapLog() {
-        log.info("Collecting jmap from api server");
-        kubernetes.listPods(Collections.singletonMap("component", "api-server")).forEach(this::collectJmap);
+    public void collectApiServerInfo() {
+        log.info("Collecting info from api server");
+        kubernetes.listPods(Collections.singletonMap("component", "api-server")).forEach(pod -> { collectJmap(pod); collectHeapDumps(pod); });
+    }
+
+    private void collectHeapDumps(Pod pod) {
+        try {
+            Path path = Paths.get(logDir.getPath(), namespace);
+            File heapDumpDir = new File(
+                    Files.createDirectories(path).toFile(),
+                    pod.getMetadata().getName() + "-heapdumps");
+            KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/heapdumps", heapDumpDir.getAbsolutePath());
+        } catch (Exception e) {
+            log.warn("Error collecting heap dumps from {}: {}", pod.getMetadata().getName(), e.getMessage());
+        }
     }
 
     private void collectJmap(Pod pod) {
