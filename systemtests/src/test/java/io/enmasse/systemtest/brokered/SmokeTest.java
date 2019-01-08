@@ -10,7 +10,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -99,16 +99,16 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
     }
 
-    @Test()
-    @Disabled("disabled until #346 will be fixed")
+    @Test
     void testCreateAlreadyExistingAddress() throws Exception {
+        String addr_name = "brokeredAddrA";
         AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED, AuthService.STANDARD);
         createAddressSpace(addressSpaceA);
-        Destination queueA = Destination.queue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
+        Destination queueA = Destination.queue(addr_name, getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueA);
 
-        Destination topicA = Destination.topic("brokeredTopicA", getDefaultPlan(AddressType.TOPIC));
-        assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(addressSpaceA, topicA),
+        Destination topicA = Destination.topic(addr_name, getDefaultPlan(AddressType.TOPIC));
+        assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(addressSpaceA, HTTP_CONFLICT, topicA),
                 "setAddresses does not throw right exception");
     }
 }

@@ -54,6 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -288,7 +289,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         logCollector.collectRouterState("setAddresses");
-        setAddresses(addressSpace, budget, expectedCode, destinations);
+
+        if (expectedCode == HTTP_CONFLICT) {
+            try {
+                setAddresses(addressSpace, budget, expectedCode, destinations);
+            } catch (ExecutionException ee) {
+                log.info(ee.getMessage());
+                throw new AddressAlreadyExistsException("Address cannot be created, already exists");
+            }
+        } else {
+            setAddresses(addressSpace, budget, expectedCode, destinations);
+        }
     }
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
