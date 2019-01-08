@@ -66,7 +66,7 @@ public class StatusController implements Controller {
             checkStatefulSetsReady(addressSpace, requiredResources);
         } catch (Exception e) {
             String msg = String.format("Error checking for ready components: %s", e.getMessage());
-            log.warn(msg);
+            log.warn(msg, e);
             addressSpace.getStatus().setReady(false);
             addressSpace.getStatus().appendMessage(msg);
         }
