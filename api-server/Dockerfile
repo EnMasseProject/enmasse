@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:8-11
+FROM lulf/java-base:8-debug
 
 ARG version
 ARG maven_version
