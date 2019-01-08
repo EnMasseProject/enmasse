@@ -26,4 +26,6 @@ done
 
 if [[ ! -z "$(ls ${LOGDIR})" ]]; then
     cp -r ${LOGDIR}/* ${ARTIFACTS_DIR}/logs/
+    tar -czvf ${ARTIFACTS_DIR}/components-jmap.tar.gz $(find ${ARTIFACTS_DIR} -name *.bin) || true
+    rm -rf $(find ${ARTIFACTS_DIR} -name *.bin) || true
 fi
