@@ -10,6 +10,9 @@ CONFIG_TEMPLATES=${BROKER_CUSTOM_DIR}/conf
 
 echo "JAVA_OPTS=$JAVA_OPTS"
 
+sed -i 's/@JAVA_OPTS@/${JAVA_OPTS}/g' ${BROKER_CUSTOM_DIR}/conf/artemis.profile
+
+
 # Parameters are
 # - instance directory
 function init_configure() {
