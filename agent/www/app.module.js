@@ -9,7 +9,7 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
                              }
                             );
         $stateProvider.state('connections',
-                             { url: '/connections',
+                             { url: '/connections?containerId',
                                templateUrl: 'components/connections/connections.html'
                              }
                             );
