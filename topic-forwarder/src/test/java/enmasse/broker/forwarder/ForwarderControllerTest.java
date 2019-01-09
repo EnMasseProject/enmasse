@@ -47,6 +47,17 @@ public class ForwarderControllerTest {
         vertx.deployVerticle(serverA, testContext.succeeding(arg -> testContext.completeNow()));
         vertx.deployVerticle(serverB, testContext.succeeding(arg -> testContext.completeNow()));
         vertx.deployVerticle(serverC, testContext.succeeding(arg -> testContext.completeNow()));
+        waitForPort(serverA, 1, TimeUnit.MINUTES);
+        waitForPort(serverB, 1, TimeUnit.MINUTES);
+        waitForPort(serverC, 1, TimeUnit.MINUTES);
+    }
+
+    private void waitForPort(TestBroker server, int timeout, TimeUnit timeUnit) throws InterruptedException {
+        long end = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        while (server.getPort() <= 0 && System.currentTimeMillis() < end) {
+            Thread.sleep(1000);
+        }
+        assertTrue(server.getPort() > 0);
     }
 
     @AfterEach
