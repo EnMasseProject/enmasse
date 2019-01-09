@@ -1,0 +1,34 @@
+[id='config-alerts-{context}']
+
+= Alerts
+
+You can enable alerts regarding the health of {ProductName} resources.
+
+.Procedure
+
+. Add the following rules to your Prometheus Rules configuration:
++
+[source,yaml,options="nowrap"]
+----
+  - alert: Component_Health
+    annotations:
+      description: '{{ $labels.summary }}'
+      value: "{{ $value }}"
+      severity: warning
+    expr: health == 1
+    for: 60s
+  - alert: Address_Space_Health
+    annotations:
+      description: '{{ $labels.summary }}'
+      value: "{{ $value }}"
+      severity: warning
+    expr: address_spaces_not_ready_total > 0
+    for: 300s
+  - alert: Address_Health
+    annotations:
+      description: '{{ $labels.summary }}'
+      value: "{{ $value }}"
+      severity: warning
+    expr: addresses_not_ready_total > 0
+    for: 300s
+----

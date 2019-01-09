@@ -4,20 +4,14 @@
 
 :parent-context: {context}
 [id='monitoring-{context}']
+
 = Monitoring {ProductName}
 
-Monitoring services run frequent health checks  on {ProductName} and send alerts when health checks
-fail. Health is assessed using Prometheus and `kube-state-metrics`. Alerting is implemented with
-`Alertmanager`. Grafana is also configured to provide a dashboard of the current status of health
-checks.
+You can monitor {ProductName} by deploying built-in monitoring tools or using your pre-existing monitoring infrastructure.
 
-include::../modules/proc-deploy-prometheus.adoc[leveloffset=+1]
+include::assembly-deploy-monitoring.adoc[leveloffset=+1]
 
-include::../modules/proc-deploy-kube-state-metrics.adoc[leveloffset=+1]
-
-include::../modules/proc-deploy-alertmanager.adoc[leveloffset=+1]
-
-include::../modules/proc-deploy-grafana.adoc[leveloffset=+1]
+include::assembly-configure-inbuilt-monitoring.adoc[leveloffset=+1]
 
 include::../modules/proc-restart-component.adoc[leveloffset=+1]
 
