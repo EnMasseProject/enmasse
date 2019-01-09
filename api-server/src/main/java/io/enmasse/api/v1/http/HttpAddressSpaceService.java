@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Path(HttpAddressSpaceService.BASE_URI)
 public class HttpAddressSpaceService {
 
-    static final String BASE_URI = "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addressspaces";
+    static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/namespaces/{namespace}/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
     private final SchemaProvider schemaProvider;

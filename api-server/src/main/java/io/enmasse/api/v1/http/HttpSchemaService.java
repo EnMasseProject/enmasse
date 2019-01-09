@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
  */
 @Path(HttpSchemaService.BASE_URI)
 public class HttpSchemaService {
-    static final String BASE_URI = "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addressspaceschemas";
+    static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/namespaces/{namespace}/addressspaceschemas";
     private static final Logger log = LoggerFactory.getLogger(HttpSchemaService.class.getName());
 
     private final SchemaProvider schemaProvider;
