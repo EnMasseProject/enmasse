@@ -5,14 +5,14 @@
 package io.enmasse.address.model.v1.address;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressValidationFailedException;
 import io.enmasse.address.model.Status;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AddressTest {
     @Test
@@ -73,6 +73,35 @@ public class AddressTest {
         assertThat(b1.getAddress(), is(b2.getAddress()));
         assertThat(b1.getPlan(), is(b2.getPlan()));
         assertThat(b1.getType(), is(b2.getType()));
+    }
+
+    @Test
+    public void testValidating() {
+        assertInvalidAddress("my:address");
+        assertInvalidAddress("my#address");
+        assertInvalidAddress("my address");
+        assertInvalidAddress("my!address");
+    }
+
+    private void assertInvalidAddress(String address) {
+        Address obj = createAddress(address);
+        try {
+            obj.validate();
+            fail("Expected validation exception");
+        } catch (AddressValidationFailedException a) {
+            // Success
+        }
+    }
+
+    private Address createAddress(String address) {
+        return new Address.Builder()
+                .setNamespace("ns1")
+                .setAddress(address)
+                .setAddressSpace("myspace")
+                .setName("myspace.b")
+                .setPlan("b")
+                .setType("c")
+                .build();
     }
 
     @Test

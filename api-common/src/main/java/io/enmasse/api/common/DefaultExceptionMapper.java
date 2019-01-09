@@ -10,6 +10,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.enmasse.address.model.AddressValidationFailedException;
 import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.address.model.UnresolvedAddressSpaceException;
 import io.enmasse.address.model.v1.DeserializeException;
@@ -29,7 +30,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             statusCode = ((WebApplicationException) exception).getResponse().getStatus();
         } else if (exception instanceof KubernetesClientException) {
             statusCode = ((KubernetesClientException) exception).getStatus().getCode();
-        } else if (exception instanceof UnresolvedAddressException || exception instanceof JsonProcessingException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException || exception instanceof UserValidationFailedException) {
+        } else if (exception instanceof UnresolvedAddressException || exception instanceof JsonProcessingException || exception instanceof UnresolvedAddressSpaceException || exception instanceof DeserializeException || exception instanceof UserValidationFailedException || exception instanceof AddressValidationFailedException) {
             statusCode = Response.Status.BAD_REQUEST.getStatusCode();
         } else {
             statusCode = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();

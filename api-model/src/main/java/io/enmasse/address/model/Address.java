@@ -6,6 +6,7 @@ package io.enmasse.address.model;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * An EnMasse Address addressspace.
@@ -121,6 +122,7 @@ public class Address {
         validateName(name);
         Objects.requireNonNull(namespace, "namespace not set");
         Objects.requireNonNull(address, "address not set");
+        validateAddress(address);
         Objects.requireNonNull(addressSpace, "addressSpace not set");
         Objects.requireNonNull(plan, "plan not set");
         Objects.requireNonNull(type, "type not set");
@@ -130,13 +132,21 @@ public class Address {
     private void validateName(String name) {
         String[] components = name.split("\\.");
         if (components.length < 2) {
-            throw new IllegalArgumentException("Address name must be on the form addressSpace.addressName");
+            throw new AddressValidationFailedException("Address name must be in the form addressSpace.addressName");
         }
         if (!components[0].equals(addressSpace)) {
-            throw new IllegalArgumentException("Address space component of address name does not match address space");
+            throw new AddressValidationFailedException("Address space component of address name does not match address space");
         }
         for (String component : components) {
             KubeUtil.validateName(component);
+        }
+    }
+
+    private static final Pattern ILLEGAL_ADDRESS_PATTERN = Pattern.compile(".*[#!:\\s]+.*");
+
+    private static void validateAddress(String address) {
+        if (ILLEGAL_ADDRESS_PATTERN.matcher(address).matches()) {
+            throw new AddressValidationFailedException("Invalid address " + address + "', must not contain characters '#', '!', '.', ':' or ' '");
         }
     }
 
