@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -36,7 +37,7 @@ public class StatusControllerTest {
                 .endStatus()
                 .build();
 
-        when(kubernetes.getReadyDeployments()).thenReturn(Collections.emptySet());
+        when(kubernetes.getReadyDeployments(new AddressSpace.Builder().setName("a").setNamespace("b").setPlan("c").setType("d").putAnnotation(AnnotationKeys.INFRA_UUID, "1234").build())).thenReturn(Collections.emptySet());
 
         StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, null);
 

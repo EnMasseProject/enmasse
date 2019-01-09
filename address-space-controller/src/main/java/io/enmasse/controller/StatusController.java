@@ -11,11 +11,13 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.user.api.UserApi;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,8 +37,8 @@ public class StatusController implements Controller {
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
-        checkDeploymentsReady(addressSpace);
+    public AddressSpace handle(AddressSpace addressSpace) {
+        checkComponentsReady(addressSpace);
         checkAuthServiceReady(addressSpace);
         return addressSpace;
     }
@@ -55,30 +57,58 @@ public class StatusController implements Controller {
         return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
-    private void checkDeploymentsReady(AddressSpace addressSpace) {
+    private void checkComponentsReady(AddressSpace addressSpace) {
         try {
-            Set<String> readyDeployments = kubernetes.getReadyDeployments().stream()
-                    .map(deployment -> deployment.getMetadata().getName())
-                    .collect(Collectors.toSet());
-
             InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
-            Set<String> requiredDeployments = infraResourceFactory.createInfraResources(addressSpace, infraConfig).stream()
-                    .filter(KubernetesHelper::isDeployment)
-                    .map(item -> item.getMetadata().getName())
-                    .collect(Collectors.toSet());
+            List<HasMetadata> requiredResources = infraResourceFactory.createInfraResources(addressSpace, infraConfig);
 
-            boolean isReady = readyDeployments.containsAll(requiredDeployments);
-            if (!isReady) {
-                Set<String> missing = new HashSet<>(requiredDeployments);
-                missing.removeAll(readyDeployments);
-                addressSpace.getStatus().setReady(false);
-                addressSpace.getStatus().appendMessage("Following deployments and statefulsets are not ready: " + missing);
-            }
+            checkDeploymentsReady(addressSpace, requiredResources);
+            checkStatefulSetsReady(addressSpace, requiredResources);
         } catch (Exception e) {
-            String msg = String.format("Error checking for ready deployments: %s", e.getMessage());
-            log.warn(msg);
+            String msg = String.format("Error checking for ready components: %s", e.getMessage());
+            log.warn(msg, e);
             addressSpace.getStatus().setReady(false);
             addressSpace.getStatus().appendMessage(msg);
+        }
+    }
+
+    private void checkStatefulSetsReady(AddressSpace addressSpace, List<HasMetadata> requiredResources) {
+        Set<String> readyStatefulSets = kubernetes.getReadyStatefulSets(addressSpace).stream()
+                .map(statefulSet -> statefulSet.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+
+        Set<String> requiredStatefulSets = requiredResources.stream()
+                .filter(KubernetesHelper::isStatefulSet)
+                .map(item -> item.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+        boolean isReady = readyStatefulSets.containsAll(requiredStatefulSets);
+        if (!isReady) {
+            Set<String> missing = new HashSet<>(requiredStatefulSets);
+            missing.removeAll(readyStatefulSets);
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("The following stateful sets are not ready: " + missing);
+        }
+    }
+
+    private void checkDeploymentsReady(AddressSpace addressSpace, List<HasMetadata> requiredResources) {
+        Set<String> readyDeployments = kubernetes.getReadyDeployments(addressSpace).stream()
+                .map(deployment -> deployment.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+
+        Set<String> requiredDeployments = requiredResources.stream()
+                .filter(KubernetesHelper::isDeployment)
+                .map(item -> item.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+        boolean isReady = readyDeployments.containsAll(requiredDeployments);
+        if (!isReady) {
+            Set<String> missing = new HashSet<>(requiredDeployments);
+            missing.removeAll(readyDeployments);
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("The following deployments are not ready: " + missing);
         }
     }
 

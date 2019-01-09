@@ -97,14 +97,28 @@ public class KubernetesHelper implements Kubernetes {
         return client.templates().load(templateFile).processLocally(parameterValues);
     }
 
-    public Set<Deployment> getReadyDeployments() {
-        return client.apps().deployments().inNamespace(namespace).list().getItems().stream()
+    @Override
+    public Set<Deployment> getReadyDeployments(AddressSpace addressSpace) {
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        return client.apps().deployments().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().stream()
                 .filter(KubernetesHelper::isReady)
                 .collect(Collectors.toSet());
     }
 
     public static boolean isDeployment(HasMetadata res) {
         return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
+    }
+
+    @Override
+    public Set<StatefulSet> getReadyStatefulSets(AddressSpace addressSpace) {
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        return client.apps().statefulSets().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().stream()
+                .filter(KubernetesHelper::isReady)
+                .collect(Collectors.toSet());
+    }
+
+    public static boolean isStatefulSet(HasMetadata res) {
+        return res.getKind().equals("StatefulSet");  // TODO: is there an existing constant for this somewhere?
     }
 
     @Override
@@ -129,8 +143,15 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     private static boolean isReady(Deployment deployment) {
-        Integer unavailableReplicas = deployment.getStatus().getUnavailableReplicas();
-        return unavailableReplicas == null || unavailableReplicas == 0;
+        // TODO: Assuming at least one replica is ok
+        Integer readyReplicas = deployment.getStatus().getReadyReplicas();
+        return readyReplicas != null && readyReplicas >= 1;
+    }
+
+    private static boolean isReady(StatefulSet statefulSet) {
+        // TODO: Assuming at least one replica is ok
+        Integer readyReplicas = statefulSet.getStatus().getReadyReplicas();
+        return readyReplicas != null && readyReplicas >= 1;
     }
 
     @Override
