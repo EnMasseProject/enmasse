@@ -31,8 +31,9 @@ STATS_PID=$!
 info "process for checking system resources is running with PID: ${STATS_PID}"
 
 export_required_env
-export KUBERNETES_API_TOKEN=`oc whoami -t`
-export KUBERNETES_API_URL=${OPENSHIFT_PROJECT}
+export KUBERNETES_API_TOKEN=$(oc whoami -t)
+export KUBERNETES_API_URL=${OPENSHIFT_URL}
+export KUBERNETES_NAMESPACE=${OPENSHIFT_PROJECT}
 
 #start docker logging
 DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
