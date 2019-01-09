@@ -1,0 +1,47 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='replace-address-space-cli-{context}']
+= Replacing address spaces using the command line
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a messaging tenant:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+
+. Select the project for the messaging application:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} project myapp
+----
+endif::[]
+
+. Update address space definition:
++
+[source,yaml,options="nowrap"]
+----
+include::../common/standard-address-space-replace.yaml[]
+----
+
+. Replace the address space:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} replace -f standard-address-space-replace.yaml
+----
+
+. Check the status of the address space:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
+----
++
+The address space is ready for use when the above command outputs `true`.
