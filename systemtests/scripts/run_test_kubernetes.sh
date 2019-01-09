@@ -8,7 +8,7 @@ TEST_PROFILE=$2
 TESTCASE=$3
 failure=0
 
-API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " "
+API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
 API_TOKEN=$(kubectl describe secret $(kubectl get secrets | grep ^default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
 export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
@@ -19,15 +19,15 @@ export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
 export DEFAULT_AUTHSERVICE=standard
 export USE_MINIKUBE=true
 
-SANITIZED_NAMESPACE=$KUBERNETES_NAMESPACE
+SANITIZED_NAMESPACE=${KUBERNETES_NAMESPACE}
 SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
 SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
-export KUBERNETES_NAMESPACE=$SANITIZED_NAMESPACE
+export KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 
 kubectl exec -ti busybox -- nslookup kubernetes.default
 
-kubectl create namespace $KUBERNETES_NAMESPACE
-kubectl config set-context $(kubectl config current-context) --namespace=$KUBERNETES_NAMESPACE
+kubectl create namespace ${KUBERNETES_NAMESPACE}
+kubectl config set-context $(kubectl config current-context) --namespace=${KUBERNETES_NAMESPACE}
 
 
 mkdir -p api-server-cert/
@@ -83,12 +83,11 @@ get_kubernetes_info ${LOG_DIR} pods default "-after"
 get_kubernetes_info ${LOG_DIR} events ${KUBERNETES_NAMESPACE}
 
 #store artifacts
-$CURDIR/collect_logs.sh ${TEST_LOGDIR} ${ARTIFACTS_DIR}
+${CURDIR}/collect_logs.sh ${TEST_LOGDIR} ${ARTIFACTS_DIR}
 
-if [ $failure -gt 0 ]
-then
+if [[ ${failure} -gt 0 ]]; then
     echo "Systemtests failed"
     exit 1
 else
-    teardown_test $KUBERNETES_NAMESPACE
+    teardown_test ${KUBERNETES_NAMESPACE}
 fi

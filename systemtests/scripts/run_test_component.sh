@@ -63,8 +63,7 @@ info "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill -9 ${LOGS_PID}
 categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
-if [ $failure -gt 0 ]
-then
+if [[ ${failure} -gt 0 ]]; then
     err_and_exit "Systemtests failed"
 elif [[ "${TEST_PROFILE}" != "systemtests-upgrade" ]]; then
     teardown_test ${KUBERNETES_NAMESPACE}
