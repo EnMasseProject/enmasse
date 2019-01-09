@@ -59,7 +59,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 @Path(HttpUserService.BASE_URI)
 public class HttpUserService {
 
-    static final String BASE_URI = "/apis/user.enmasse.io/v1alpha1/namespaces/{namespace}/messagingusers";
+    static final String BASE_URI = "/apis/user.enmasse.io/v1beta1/namespaces/{namespace}/messagingusers";
 
     private static final Logger log = LoggerFactory.getLogger(HttpUserService.class.getName());
 

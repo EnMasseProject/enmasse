@@ -70,7 +70,7 @@ getting started] instructions to try out the queue
 * Create the service instance:
 ```
 cat <<EOF | oc create -f -
-apiVersion: servicecatalog.k8s.io/v1alpha1
+apiVersion: servicecatalog.k8s.io/v1beta1
 kind: Instance
 metadata:
   name: my-inmemory-queue
@@ -104,7 +104,7 @@ provisioned successfully"
 * Create the binding:
 ```
 cat <<EOF | oc create -f -
-apiVersion: servicecatalog.k8s.io/v1alpha1
+apiVersion: servicecatalog.k8s.io/v1beta1
 kind: Binding
 metadata:
   name: my-inmemory-queue-binding
@@ -115,7 +115,7 @@ spec:
 EOF
 ```
 * Verify the binding's status:
-* `oc get bindings.v1alpha1.servicecatalog.k8s.io -o yaml`
+* `oc get bindings.v1beta1.servicecatalog.k8s.io -o yaml`
 * The `status.conditions.message` property should show "Injected bind
 result"
 * Verify the secret has been created:
@@ -125,7 +125,7 @@ result"
 === Unbinding the queue
 
 * Delete the binding:
-* `oc delete bindings.v1alpha1.servicecatalog.k8s.io my-inmemory-queue-binding`
+* `oc delete bindings.v1beta1.servicecatalog.k8s.io my-inmemory-queue-binding`
 * Verify the secret has been deleted:
 * `oc get secrets`
 

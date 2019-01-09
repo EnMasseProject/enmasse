@@ -67,10 +67,10 @@
         "https"
     ],
     "paths": {
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces": {
+        "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addressspaces": {
           "get": {
             "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspaces"
                 ],
                 "description": "list objects of kind AddressSpace",
@@ -91,7 +91,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpaceList"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpaceList"
                         }
                     },
                     "401": {
@@ -101,7 +101,7 @@
             },
             "post": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspaces"
                 ],
                 "description": "create an AddressSpace",
@@ -118,7 +118,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     }
                 ],
@@ -126,13 +126,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     },
                     "401": {
@@ -151,10 +151,10 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{name}": {
+        "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addressspaces/{name}": {
             "get": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspaces"
                 ],
                 "description": "read the specified AddressSpace",
@@ -178,7 +178,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     },
                     "401": {
@@ -191,7 +191,7 @@
             },
             "put": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspaces"
                 ],
                 "description": "replace the specified AddressSpace",
@@ -212,7 +212,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     }
                 ],
@@ -220,13 +220,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                         }
                     },
                     "401": {
@@ -236,7 +236,7 @@
             },
             "delete": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspaces"
                 ],
                 "description": "delete an AddressSpace",
@@ -279,10 +279,10 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses": {
+        "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses": {
             "get": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspace_addresses"
                 ],
                 "description": "list objects of kind Address in AddressSpace",
@@ -303,7 +303,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressList"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressList"
                         }
                     },
                     "401": {
@@ -316,7 +316,7 @@
             },
             "post": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspace_addresses"
                 ],
                 "description": "create Addresses in an AddressSpace",
@@ -341,7 +341,7 @@
                         "description": "AddressList object",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressList"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressList"
                         }
                     }
                 ],
@@ -371,10 +371,10 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses/{address}": {
+        "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addressspaces/{addressSpace}/addresses/{address}": {
             "put": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspace_addresses"
                 ],
                 "description": "replace Address in an AddressSpace",
@@ -406,7 +406,7 @@
                         "description": "Address object",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     }
                 ],
@@ -414,13 +414,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "401": {
@@ -433,7 +433,7 @@
             },
             "get": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspace_addresses"
                 ],
                 "description": "read the specified Address in AddressSpace",
@@ -461,7 +461,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "401": {
@@ -474,7 +474,7 @@
             },
             "delete": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addressspace_addresses"
                 ],
                 "description": "delete an Address in AddressSpace",
@@ -524,10 +524,10 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses": {
+        "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addresses": {
           "get": {
             "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addresses"
                 ],
                 "description": "list objects of kind Address",
@@ -548,7 +548,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.AddressList"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressList"
                         }
                     },
                     "401": {
@@ -558,7 +558,7 @@
             },
             "post": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addresses"
                 ],
                 "description": "create an Address",
@@ -575,7 +575,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     }
                 ],
@@ -583,13 +583,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "401": {
@@ -608,10 +608,10 @@
                 }
             ]
         },
-        "/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses/{name}": {
+        "/apis/enmasse.io/v1beta1/namespaces/{namespace}/addresses/{name}": {
             "get": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addresses"
                 ],
                 "description": "read the specified Address",
@@ -635,7 +635,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "401": {
@@ -648,7 +648,7 @@
             },
             "put": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addresses"
                 ],
                 "description": "replace the specified Address",
@@ -669,7 +669,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     }
                 ],
@@ -677,13 +677,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                         }
                     },
                     "401": {
@@ -693,7 +693,7 @@
             },
             "delete": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "addresses"
                 ],
                 "description": "delete an Address",
@@ -736,10 +736,10 @@
                 }
             ]
         },
-        "/apis/user.enmasse.io/v1alpha1/namespaces/{namespace}/messagingusers": {
+        "/apis/user.enmasse.io/v1beta1/namespaces/{namespace}/messagingusers": {
           "get": {
             "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "auth",
                     "user"
                 ],
@@ -761,7 +761,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUserList"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUserList"
                         }
                     },
                     "401": {
@@ -771,7 +771,7 @@
             },
             "post": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "auth",
                     "user"
                 ],
@@ -789,7 +789,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     }
                 ],
@@ -797,13 +797,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     },
                     "401": {
@@ -822,10 +822,10 @@
                 }
             ]
         },
-        "/apis/user.enmasse.io/v1alpha1/namespaces/{namespace}/messagingusers/{name}": {
+        "/apis/user.enmasse.io/v1beta1/namespaces/{namespace}/messagingusers/{name}": {
             "get": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "auth",
                     "user"
                 ],
@@ -850,7 +850,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     },
                     "401": {
@@ -863,7 +863,7 @@
             },
             "put": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "auth",
                     "user"
                 ],
@@ -885,7 +885,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     }
                 ],
@@ -893,13 +893,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }
                     },
                     "401": {
@@ -909,7 +909,7 @@
             },
             "delete": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "auth",
                     "user"
                 ],
@@ -953,10 +953,10 @@
                 }
             ]
         },
-        "/apis/admin.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaceplans": {
+        "/apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans": {
           "get": {
             "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "admin",
                     "addressspaceplan"
                 ],
@@ -978,7 +978,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlanList"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlanList"
                         }
                     },
                     "401": {
@@ -988,7 +988,7 @@
             },
             "post": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "admin",
                     "addressspaceplan"
                 ],
@@ -1006,7 +1006,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     }
                 ],
@@ -1014,13 +1014,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     },
                     "401": {
@@ -1039,10 +1039,10 @@
                 }
             ]
         },
-        "/apis/admin.enmasse.io/v1alpha1/namespaces/{namespace}/addressspaceplans/{name}": {
+        "/apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans/{name}": {
             "get": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "admin",
                     "addressspaceplan"
                 ],
@@ -1067,7 +1067,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     },
                     "401": {
@@ -1080,7 +1080,7 @@
             },
             "put": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "admin",
                     "addressspaceplan"
                 ],
@@ -1102,7 +1102,7 @@
                         "name": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     }
                 ],
@@ -1110,13 +1110,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                            "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                         }
                     },
                     "401": {
@@ -1126,7 +1126,7 @@
             },
             "delete": {
                 "tags": [
-                    "enmasse_v1alpha1",
+                    "enmasse_v1beta1",
                     "admin",
                     "addressspaceplan"
                 ],
@@ -1172,7 +1172,7 @@
         }
     },
     "definitions": {
-        "io.enmasse.v1alpha1.AddressSpace": {
+        "io.enmasse.v1beta1.AddressSpace": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1184,7 +1184,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1197,14 +1197,14 @@
                     "$ref": "#/definitions/ObjectMeta"
                 },
                 "spec": {
-                    "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpaceSpec"
+                    "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpaceSpec"
                 },
                 "status": {
-                    "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpaceStatus"
+                    "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpaceStatus"
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressSpaceSpec": {
+        "io.enmasse.v1beta1.AddressSpaceSpec": {
             "type": "object",
             "required": [
                 "type",
@@ -1212,7 +1212,7 @@
             ],
             "properties": {
                 "type": {
-                    "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpaceType"
+                    "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpaceType"
                 },
                 "plan": {
                     "type": "string"
@@ -1314,7 +1314,7 @@
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressSpaceStatus": {
+        "io.enmasse.v1beta1.AddressSpaceStatus": {
             "type": "object",
             "properties": {
                 "isReady": {
@@ -1376,7 +1376,7 @@
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressSpaceList": {
+        "io.enmasse.v1beta1.AddressSpaceList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1386,9 +1386,9 @@
             "properties": {
                 "apiVersion": {
                     "type": "string",
-                    "default": "enmasse.io/v1alpha1",
+                    "default": "enmasse.io/v1beta1",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1400,12 +1400,12 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpace"
+                        "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
                     }
                 }
             }
         },
-        "io.enmasse.v1alpha1.Address": {
+        "io.enmasse.v1beta1.Address": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1417,7 +1417,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1430,14 +1430,14 @@
                     "$ref": "#/definitions/ObjectMeta"
                 },
                 "spec": {
-                    "$ref": "#/definitions/io.enmasse.v1alpha1.AddressSpec"
+                    "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpec"
                 },
                 "status": {
-                    "$ref": "#/definitions/io.enmasse.v1alpha1.AddressStatus"
+                    "$ref": "#/definitions/io.enmasse.v1beta1.AddressStatus"
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressSpec": {
+        "io.enmasse.v1beta1.AddressSpec": {
             "type": "object",
             "required": [
                 "address",
@@ -1446,7 +1446,7 @@
             ],
             "properties": {
                 "type": {
-                    "$ref": "#/definitions/io.enmasse.v1alpha1.AddressType"
+                    "$ref": "#/definitions/io.enmasse.v1beta1.AddressType"
                 },
                 "plan": {
                     "type": "string"
@@ -1456,7 +1456,7 @@
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressStatus": {
+        "io.enmasse.v1beta1.AddressStatus": {
             "type": "object",
             "properties": {
                 "isReady": {
@@ -1480,7 +1480,7 @@
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressList": {
+        "io.enmasse.v1beta1.AddressList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1490,9 +1490,9 @@
             "properties": {
                 "apiVersion": {
                     "type": "string",
-                    "default": "enmasse.io/v1alpha1",
+                    "default": "enmasse.io/v1beta1",
                     "enum": [
-                        "enmasse.io/v1alpha1"
+                        "enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1504,12 +1504,12 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.v1alpha1.Address"
+                        "$ref": "#/definitions/io.enmasse.v1beta1.Address"
                     }
                 }
             }
         },
-        "io.enmasse.user.v1alpha1.MessagingUser": {
+        "io.enmasse.user.v1beta1.MessagingUser": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1521,7 +1521,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "user.enmasse.io/v1alpha1"
+                        "user.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1534,11 +1534,11 @@
                     "$ref": "#/definitions/ObjectMeta"
                 },
                 "spec": {
-                    "$ref": "#/definitions/io.enmasse.user.v1alpha1.UserSpec"
+                    "$ref": "#/definitions/io.enmasse.user.v1beta1.UserSpec"
                 }
             }
         },
-        "io.enmasse.user.v1alpha1.UserSpec": {
+        "io.enmasse.user.v1beta1.UserSpec": {
             "type": "object",
             "required": [
                 "username"
@@ -1610,7 +1610,7 @@
                 }
             }
         },
-        "io.enmasse.user.v1alpha1.MessagingUserList": {
+        "io.enmasse.user.v1beta1.MessagingUserList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1621,7 +1621,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "user.enmasse.io/v1alpha1"
+                        "user.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1633,7 +1633,7 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.user.v1alpha1.MessagingUser"
+                        "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                     }
                 }
             }
@@ -1663,7 +1663,7 @@
                 }
             }
         },
-        "io.enmasse.v1alpha1.AddressSpaceType": {
+        "io.enmasse.v1beta1.AddressSpaceType": {
             "type": "string",
             "description": "AddressSpaceType is the type of address space (standard, brokered). Each type supports different types of addresses and semantics for those types.",
             "enum": [
@@ -1671,7 +1671,7 @@
                 "brokered"
             ]
         },
-        "io.enmasse.v1alpha1.AddressType": {
+        "io.enmasse.v1beta1.AddressType": {
             "type": "string",
             "description": "Type of address (queue, topic, ...). Each address type support different kinds of messaging semantics.",
             "enum": [
@@ -1681,7 +1681,7 @@
                 "multicast"
             ]
         },
-        "io.enmasse.admin.v1alpha1.BrokeredInfraConfig": {
+        "io.enmasse.admin.v1beta1.BrokeredInfraConfig": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1693,7 +1693,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1706,11 +1706,11 @@
                     "$ref": "#/definitions/ObjectMeta"
                 },
                 "spec": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpec"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.BrokeredInfraConfigSpec"
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpec": {
+        "io.enmasse.admin.v1beta1.BrokeredInfraConfigSpec": {
             "type": "object",
             "required": [
                 "version"
@@ -1737,14 +1737,14 @@
                     }
                 },
                 "admin": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecAdmin"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.BrokeredInfraConfigSpecAdmin"
                 },
                 "broker": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecBroker"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.BrokeredInfraConfigSpecBroker"
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecAdmin": {
+        "io.enmasse.admin.v1beta1.BrokeredInfraConfigSpecAdmin": {
             "type": "object",
             "properties": {
                 "resources": {
@@ -1757,7 +1757,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigSpecBroker": {
+        "io.enmasse.admin.v1beta1.BrokeredInfraConfigSpecBroker": {
             "type": "object",
             "properties": {
                 "resources": {
@@ -1787,7 +1787,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.BrokeredInfraConfigList": {
+        "io.enmasse.admin.v1beta1.BrokeredInfraConfigList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1798,7 +1798,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1810,12 +1810,12 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.BrokeredInfraConfig"
+                        "$ref": "#/definitions/io.enmasse.admin.v1beta1.BrokeredInfraConfig"
                     }
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.StandardInfraConfig": {
+        "io.enmasse.admin.v1beta1.StandardInfraConfig": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1827,7 +1827,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1840,11 +1840,11 @@
                     "$ref": "#/definitions/ObjectMeta"
                 },
                 "spec": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpec"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.StandardInfraConfigSpec"
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpec": {
+        "io.enmasse.admin.v1beta1.StandardInfraConfigSpec": {
             "type": "object",
             "required": [
                 "version"
@@ -1871,17 +1871,17 @@
                     }
                 },
                 "admin": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpecAdmin"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.StandardInfraConfigSpecAdmin"
                 },
                 "broker": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpecBroker"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.StandardInfraConfigSpecBroker"
                 },
                 "router": {
-                    "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfigSpecRouter"
+                    "$ref": "#/definitions/io.enmasse.admin.v1beta1.StandardInfraConfigSpecRouter"
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpecAdmin": {
+        "io.enmasse.admin.v1beta1.StandardInfraConfigSpecAdmin": {
             "type": "object",
             "properties": {
                 "resources": {
@@ -1894,7 +1894,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpecBroker": {
+        "io.enmasse.admin.v1beta1.StandardInfraConfigSpecBroker": {
             "type": "object",
             "properties": {
                 "resources": {
@@ -1924,7 +1924,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.StandardInfraConfigSpecRouter": {
+        "io.enmasse.admin.v1beta1.StandardInfraConfigSpecRouter": {
             "type": "object",
             "properties": {
                 "resources": {
@@ -1943,7 +1943,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.StandardInfraConfigList": {
+        "io.enmasse.admin.v1beta1.StandardInfraConfigList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1954,7 +1954,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -1966,12 +1966,12 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.StandardInfraConfig"
+                        "$ref": "#/definitions/io.enmasse.admin.v1beta1.StandardInfraConfig"
                     }
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.AddressSpacePlan": {
+        "io.enmasse.admin.v1beta1.AddressSpacePlan": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -1988,7 +1988,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -2044,7 +2044,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.AddressSpacePlanList": {
+        "io.enmasse.admin.v1beta1.AddressSpacePlanList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -2055,7 +2055,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -2067,12 +2067,12 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressSpacePlan"
+                        "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressSpacePlan"
                     }
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.AddressPlan": {
+        "io.enmasse.admin.v1beta1.AddressPlan": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -2089,7 +2089,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -2139,7 +2139,7 @@
                 }
             }
         },
-        "io.enmasse.admin.v1alpha1.AddressPlanList": {
+        "io.enmasse.admin.v1beta1.AddressPlanList": {
             "type": "object",
             "required": [
                 "apiVersion",
@@ -2150,7 +2150,7 @@
                 "apiVersion": {
                     "type": "string",
                     "enum": [
-                        "admin.enmasse.io/v1alpha1"
+                        "admin.enmasse.io/v1beta1"
                     ]
                 },
                 "kind": {
@@ -2162,7 +2162,7 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/io.enmasse.admin.v1alpha1.AddressPlan"
+                        "$ref": "#/definitions/io.enmasse.admin.v1beta1.AddressPlan"
                     }
                 }
             }

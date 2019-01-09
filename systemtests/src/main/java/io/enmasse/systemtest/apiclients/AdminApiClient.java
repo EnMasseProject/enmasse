@@ -18,9 +18,9 @@ public class AdminApiClient extends ApiClient {
     private final String addressPlansPath;
 
     public AdminApiClient(Kubernetes kubernetes) {
-        super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/v1alpha1");
-        this.addressSpacePlansPath = String.format("/apis/admin.enmasse.io/v1alpha1/namespaces/%s/addressspaceplans", kubernetes.getNamespace());
-        this.addressPlansPath = String.format("/apis/admin.enmasse.io/v1alpha1/namespaces/%s/addressplans", kubernetes.getNamespace());
+        super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/v1beta1");
+        this.addressSpacePlansPath = String.format("/apis/admin.enmasse.io/v1beta1/namespaces/%s/addressspaceplans", kubernetes.getNamespace());
+        this.addressPlansPath = String.format("/apis/admin.enmasse.io/v1beta1/namespaces/%s/addressplans", kubernetes.getNamespace());
     }
 
     public void close() {

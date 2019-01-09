@@ -41,7 +41,7 @@ import static io.enmasse.api.v1.http.HttpAddressSpaceService.removeSecrets;
 @Path(HttpClusterAddressSpaceService.BASE_URI)
 public class HttpClusterAddressSpaceService {
 
-    static final String BASE_URI = "/apis/enmasse.io/v1alpha1/addressspaces";
+    static final String BASE_URI = "/apis/enmasse.io/v1beta1/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpClusterAddressSpaceService.class.getName());
 

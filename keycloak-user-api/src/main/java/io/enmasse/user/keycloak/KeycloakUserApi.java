@@ -511,7 +511,7 @@ public class KeycloakUserApi implements UserApi {
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)
                         .withNamespace(namespace)
-                        .withSelfLink("/apis/user.enmasse.io/v1alpha1/namespaces/" + namespace + "/messagingusers/" + name)
+                        .withSelfLink("/apis/user.enmasse.io/v1beta1/namespaces/" + namespace + "/messagingusers/" + name)
                         .withCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
                         .build())
                 .withSpec(new UserSpecBuilder()

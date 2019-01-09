@@ -129,14 +129,14 @@ public class User {
 
     public JsonObject toCRDJson(String addressSpace) {
         JsonObject config = this.toJson(addressSpace);
-        config.put("apiVersion", "user.enmasse.io/v1alpha1");
+        config.put("apiVersion", "user.enmasse.io/v1beta1");
         config.put("kind", "MessagingUser");
         return config;
     }
 
     public JsonObject toCRDJson(String addressSpace, String federatedUserIp) {
         JsonObject config = this.toJson(addressSpace, username, federatedUserIp);
-        config.put("apiVersion", "user.enmasse.io/v1alpha1");
+        config.put("apiVersion", "user.enmasse.io/v1beta1");
         config.put("kind", "MessagingUser");
         return config;
     }

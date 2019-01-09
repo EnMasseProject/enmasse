@@ -121,7 +121,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1beta1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -137,7 +137,7 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addresses/myinstance.addr1", response -> {
+                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1beta1/namespaces/ns/addresses/myinstance.addr1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         context.verify(() -> {
@@ -152,7 +152,7 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1beta1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                     response.bodyHandler(buffer -> {
                         context.verify(() -> assertEquals(201, response.statusCode()));
                         context.completeNow();
@@ -160,11 +160,11 @@ public class HTTPServerTest {
                 });
                 r3.putHeader("Content-Type", "application/json");
                 putAuthzToken(r3);
-                r3.end("{\"apiVersion\":\"enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
+                r3.end("{\"apiVersion\":\"enmasse.io/v1beta1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
+                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1beta1/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         System.out.println(data.toString());
@@ -194,7 +194,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1beta1", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -209,7 +209,7 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/user.enmasse.io/v1alpha1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/user.enmasse.io/v1beta1", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -233,7 +233,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/myinstance/addressspaceschemas", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1beta1/namespaces/myinstance/addressspaceschemas", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -259,7 +259,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/user.enmasse.io/v1alpha1/namespaces/ns/messagingusers", response -> {
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/user.enmasse.io/v1beta1/namespaces/ns/messagingusers", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
