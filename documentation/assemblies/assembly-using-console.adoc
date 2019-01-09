@@ -1,0 +1,21 @@
+// This assembly is included in the following assemblies:
+//
+// 
+
+:parent-context: {context}
+[id='assembly-using-console-{context}']
+= Using the {ProductName} Console
+
+You can use the {ProductName} Console to perform tasks such as creating an address and viewing message and connection statistics.
+
+include::modules/proc-logging-in-console.adoc[leveloffset=+1]
+
+include::modules/proc-create-address-console.adoc[leveloffset=+1]
+
+include::modules/ref-console-address-filtering.adoc[leveloffset=+1]
+
+include::modules/ref-view-message-conn-stats-table.adoc[leveloffset=+1]
+
+
+:context: {parent-context}
+
