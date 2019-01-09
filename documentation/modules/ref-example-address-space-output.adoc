@@ -1,0 +1,28 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='ref-example-address-space-output-{context}']
+= Example address space status output
+
+The `AddressSpace` resource contains a `status` field that can be used to retrieve information about
+its state and endpoints. The following output is an example of the output you can get from running
+ifeval::["{cmdcli}" == "kubectl"]
+`kubectl get addressspace myspace -o yaml`:
+endif::[]
+ifeval::["{cmdcli}" == "oc"]
+`oc get addressspace myspace -o yaml`:
+endif::[]
+
+[source,yaml,options="nowrap"]
+----
+include::../common/address-space-output-example1.yaml[]
+----
+<1> The `status.isReady` field can be either `true` or `false`.
+<2> The `status.endpointStatuses` field provides information about available endpoints for this address space.
+<3> The `cert` field contains the base64-encoded certificate for a given endpoint.
+<4> The `serviceHost` field contains the cluster-internal host name for a given endpoint.
+<5> The `servicePorts` field contains the available ports for the cluster-internal host.
+<6> The `externalHost` field contains the external host name for a given endpoint.
+<7> The `externalPorts` field contains the available ports for the external host.
+

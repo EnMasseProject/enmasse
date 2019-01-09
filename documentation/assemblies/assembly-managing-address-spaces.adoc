@@ -1,6 +1,7 @@
 // Module included in the following assemblies:
 //
 // assembly-tenant-guide.adoc
+// using/master.adoc
 
 [id='managing-address-spaces-{context}']
 = Managing address spaces
@@ -8,62 +9,26 @@
 {ProductName} is configured to support managing address spaces using the {KubePlatform} command-line
 tools. Address spaces are managed like any other {KubePlatform} resource using `{cmdcli}`.
 
-Address spaces can also be replaced in order to change the plan, endpoints, or network policies, or
-replacing certificates if using the `certBundle` certificate provider. When changing the plan,
-{ProductName} will attempt to apply the new plan if the current set of addresses fits within the new
-quota. If not, an error will be provided on the `AddressSpace` resource.
+include::../modules/con-address-space.adoc[leveloffset=+1]
 
-== Minimal example
+include::../modules/con-standard-address-space.adoc[leveloffset=+1]
 
-The minimal example shows the smallest set of options needed to create an `AddressSpace`.
+include::assembly-standard-address-types.adoc[leveloffset=+2]
 
-[source,yaml,options="nowrap"]
-----
-include::../common/address-space-example1.yaml[]
-----
-<1> The address space type can be either `brokered` or `standard`.
-<2> The address space plan depends on the address space type and what has been configured by the {ProductName} admin.
+include::../modules/con-brokered-address-space.adoc[leveloffset=+1]
 
-== Advanced example
+include::assembly-brokered-address-types.adoc[leveloffset=+2]
 
-The advanced example show how you can configure the authentication service and endpoints of an `AddressSpace`.
+include::../modules/ref-address-space-example.adoc[leveloffset=+1]
 
-[source,yaml,options="nowrap"]
-----
-include::../common/address-space-example2.yaml[]
-----
-<1> The address space type can be either `brokered` or `standard`.
-<2> The address space plan depends on the address space type and what has been configured by the {ProductName} admin.
-<3> The authentication service type can be `none`, `standard` or `external`. External requires an additional field, `details`, including `host` and `port` information.
-<4> The endpoints that must be configured for the `AddressSpace`.  Endpoints can specity either `messaging`, `console` or `mqtt` services. However, the `mqtt` service is supported for the `standard` address space type only. Endpoints can be changed by replacing the address space.
-<5> Expose the configuration of an endpoint. Endpoints can be kept internal to the cluster, or exposed using an OpenShift route or a load-balancer service. Expose configuration can be changed by replacing the address space.
-<6> The certificate configuration can be used to specify how the endpoint certificate is provided.  The provider can be `selfsigned` (default), `wildcard` (requires it to be enabled by the {ProductName} admin), `openshift` (signed by the OpenShift cluster CA), or `certBundle` (base64-encoded PEM key and certificate). When using the `certBundle` provider, the certificate can be rotated by updating the `tlsKey` and `tlsCert` values and replacing the address space.
+include::../modules/ref-address-space-example-auth-service.adoc[leveloffset=+1]
 
-== Example address space status output
+include::../modules/ref-example-address-space-output.adoc[leveloffset=+1]
 
-The `AddressSpace` resource contains a `status` field that can be used to retrieve information about
-its state and endpoints. The following output is an example of the output you can get from running
-ifeval::["{cmdcli}" == "kubectl"]
-`kubectl get addressspace myspace -o yaml`:
-endif::[]
-ifeval::["{cmdcli}" == "oc"]
-`oc get addressspace myspace -o yaml`:
-endif::[]
-
-[source,yaml,options="nowrap"]
-----
-include::../common/address-space-output-example1.yaml[]
-----
-<1> The `status.isReady` field can be either `true` or `false`.
-<2> The `status.endpointStatuses` field provides information about available endpoints for this address space.
-<3> The `cert` field contains the base64-encoded certificate for a given endpoint.
-<4> The `serviceHost` field contains the cluster-internal host name for a given endpoint.
-<5> The `servicePorts` field contains the available ports for the cluster-internal host.
-<6> The `externalHost` field contains the external host name for a given endpoint.
-<7> The `externalPorts` field contains the available ports for the external host.
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
 include::../modules/ref-retrieving-address-space-information.adoc[leveloffset=+1]
 
 include::../modules/proc-replace-address-space-cli.adoc[leveloffset=+1]
+
