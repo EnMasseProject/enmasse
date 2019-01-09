@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:8-9
+FROM enmasseproject/java-base:8-11
 
 RUN yum -y install which python gettext hostname iputils openssl && yum clean all -y && mkdir -p /var/run/artemis/
 

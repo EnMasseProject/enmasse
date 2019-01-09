@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:8-10
+FROM enmasseproject/java-base:8-11
 
 ARG version
 ARG commit
