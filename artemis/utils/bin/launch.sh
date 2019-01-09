@@ -16,7 +16,7 @@ JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true"
 JAVA_OPTS="$(adjust_java_options ${JAVA_OPTS})"
 #GC Option conflicts with the one already configured.
 
-JAVA_OPTS=$(echo $JAVA_OPTS | sed -e "s/-XX:+UseParallelGC/ /")
+JAVA_OPTS=$(echo $JAVA_OPTS | sed -e "s/-XX:+UseParallelOldGC/ /")
 
 # Parameters are
 # - instance directory
