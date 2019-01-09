@@ -13,7 +13,7 @@ pipeline {
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
     }
     options {
-        timeout(time: 7, unit: 'HOURS')
+        timeout(time: 8, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {

@@ -61,7 +61,7 @@ public abstract class Kubernetes {
     }
 
     public String getApiToken() {
-        return environment.openShiftToken();
+        return environment.getApiToken();
     }
 
     public Endpoint getEndpoint(String serviceName, String port) {

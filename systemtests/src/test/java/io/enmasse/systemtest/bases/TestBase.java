@@ -609,7 +609,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getOCConsoleRoute() {
-        return String.format("%s/console", environment.openShiftUrl());
+        return String.format("%s/console", environment.getApiUrl());
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {

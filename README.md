@@ -4,39 +4,33 @@
 [![GitHub release](https://img.shields.io/github/release/EnMasseProject/enmasse.svg)](https://github.com/EnMasseProject/enmasse/releases/latest)
 [![Twitter Follow](https://img.shields.io/twitter/follow/enmasseio.svg?style=social&label=Follow&style=for-the-badge)](https://twitter.com/enmasseio)
 
---- 
+----
 
-EnMasse is an open source messaging platform, with focus on scalability and performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the deployment of messaging infrastructure. See our [web site](http://enmasse.io) for more information on what EnMasse is and what it can do.
+EnMasse is an open source messaging platform, with focus on scalability and performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the deployment of messaging infrastructure.
 
+---- 
 
-# Internals
+## To start using EnMasse
 
-EnMasse is made of different components needed for the deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s). Other broker implementations such as Apache Kafka may also be used.
+See our documentation on [enmasse.io].
 
-* [address-space-controller](https://github.com/EnMasseProject/enmasse/tree/master/address-space-controller): Controls address spaces
-* [standard-controller](https://github.com/EnMasseProject/enmasse/tree/master/standard-controller): Controls resources within the standard address space
-* [api-server](https://github.com/EnMasseProject/enmasse/tree/master/api-server): REST API for creating address spaces and addresses
-* [service-broker](https://github.com/EnMasseProject/enmasse/tree/master/service-broker): Open Service Broker API implementation for EnMasse
-* [subserv](https://github.com/EnMasseProject/enmasse/tree/master/subserv): Subscription service for durable subscriptions
-* [agent](https://github.com/EnMasseProject/enmasse/tree/master/agent): Messaging-centric console, managing and monitoring addresses on routers and brokers
-* [mqtt-gateway](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
-* [mqtt-lwt](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
+## To start developing EnMasse
 
-# Documentation
+See [developing] for information on how to get started building EnMasse.
 
-See the our [documentation](http://enmasse.io/documentation) for up to date documentation. We also have some [design documents](documentation/design_docs/design) for various parts of EnMasse.
+See [contributing] for information on how to contribute to EnMasse.
 
-# Getting help
+## Support
 
-See [contributing](http://enmasse.io#contributing) for more info on how to get help from the community.
+If you need support, reach out to us via the [mailinglist] or on [IRC].
 
-If you encounter some issues during deployment, please check the following [page](documentation/design_docs/issues/issues.adoc) with
-well known issues and related fixes/workaround.
+See [contributing] for more info on how to get help from the community.
 
-# Developing
+If you run into issues, don't hesitate to raise an [issue].
 
-See [HACKING](HACKING.md) for details on how to build EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See [contributing](http://enmasse.io#contributing) for more info.
-
-# License
-
-EnMasse is licensed under the [Apache License, Version 2.0](LICENSE)
+[enmasse.io]: http://enmasse.io
+[contributing]: CONTRIBUTING.md
+[developing]: HACKING.md
+[mailinglist]: https://www.redhat.com/mailman/listinfo/enmasse
+[IRC]: https://webchat.freenode.net/?randomnick=1&channels=enmasse&uio=d4
+[issue]: https://github.com/EnMasseProject/enmasse/issues/new/choose
