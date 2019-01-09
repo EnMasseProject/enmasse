@@ -20,5 +20,8 @@ public interface UserApi {
 
     UserList listUsers(String namespace);
     UserList listUsersWithLabels(String namespace, Map<String, String> labels);
+    UserList listAllUsers();
+    UserList listAllUsersWithLabels(Map<String, String> labels);
+
     void deleteUsers(String namespace);
 }

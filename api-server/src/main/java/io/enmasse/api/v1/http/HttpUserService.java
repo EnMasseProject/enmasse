@@ -94,6 +94,7 @@ public class HttpUserService {
         return doRequest("Error getting user list", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
 
+            Instant now = clock.instant();
             UserList userList = new UserList();
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
@@ -101,7 +102,7 @@ public class HttpUserService {
             } else {
                 userList.getItems().addAll(userApi.listUsers(namespace).getItems());
             }
-            return Response.ok(formatResponse(acceptHeader, userList)).build();
+            return Response.ok(formatResponse(acceptHeader, now, userList)).build();
         });
     }
 
@@ -112,6 +113,7 @@ public class HttpUserService {
         return doRequest("Error getting user " + userNameWithAddressSpace, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.get);
 
+            Instant now = clock.instant();
             String addressSpaceName = parseAddressSpace(userNameWithAddressSpace);
             checkAddressSpaceName(userNameWithAddressSpace, addressSpaceName);
             AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
@@ -122,7 +124,7 @@ public class HttpUserService {
             log.debug("Retrieving user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
 
             return userApi.getUserWithName(realm, userNameWithAddressSpace)
-                    .map(user -> Response.ok(formatResponse(acceptHeader, user)).build())
+                    .map(user -> Response.ok(formatResponse(acceptHeader, now, user)).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build());
         });
     }
@@ -265,30 +267,29 @@ public class HttpUserService {
                     0,
                     "string"));
 
-    private Object formatResponse(String headerParam, UserList userList) {
+    static Object formatResponse(String headerParam, Instant now, UserList userList) {
         if (isTableFormat(headerParam)) {
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(userList));
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(userList, now));
         } else {
             return userList;
         }
     }
 
-    private Object formatResponse(String headerParam, User user) {
+    static Object formatResponse(String headerParam, Instant now, User user) {
         if (isTableFormat(headerParam)) {
             UserList list = new UserList();
             list.getItems().add(user);
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(list));
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(list, now));
         } else {
             return user;
         }
     }
 
-    private boolean isTableFormat(String acceptHeader) {
+    static boolean isTableFormat(String acceptHeader) {
         return acceptHeader != null && acceptHeader.contains("as=Table") && acceptHeader.contains("g=meta.k8s.io") && acceptHeader.contains("v=v1beta1");
     }
 
-    private List<TableRow> createRows(UserList userList) {
-        Instant now = clock.instant();
+    static List<TableRow> createRows(UserList userList, Instant now) {
         return userList.getItems().stream()
                 .map(user -> new TableRow(
                         Arrays.asList(

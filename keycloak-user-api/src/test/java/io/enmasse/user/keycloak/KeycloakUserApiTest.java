@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.keycloak.representations.idm.GroupRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import io.enmasse.user.model.v1.Operation;
@@ -317,4 +319,34 @@ public class KeycloakUserApiTest {
         assertSorted(expected, actual.toArray(new String[actual.size()]));
     }
 
+    @Test
+    public void testHasAttribute1() {
+        final RealmRepresentation realm = new RealmRepresentation();
+        realm.setAttributes(new HashMap<>());
+        realm.getAttributes().put("foo", "bar");
+
+        assertTrue(KeycloakUserApi.hasAttribute(realm, "foo", "bar"));
+        assertFalse(KeycloakUserApi.hasAttribute(realm, "foo", null));
+        assertFalse(KeycloakUserApi.hasAttribute(realm, "foo2", "bar"));
+        assertTrue(KeycloakUserApi.hasAttribute(realm, "foo2", null));
+
+        assertFalse(KeycloakUserApi.hasAttribute(realm, null, null));
+
+    }
+
+    @Test
+    public void testHasAttribute2() {
+        assertFalse(KeycloakUserApi.hasAttribute(null, "foo", "bar"));
+        assertFalse(KeycloakUserApi.hasAttribute(null, "foo", null));
+        assertFalse(KeycloakUserApi.hasAttribute(null, null, null));
+    }
+
+    @Test
+    public void testHasAttribute3() {
+        final RealmRepresentation realm = new RealmRepresentation();
+
+        assertFalse(KeycloakUserApi.hasAttribute(realm, "foo", "bar"));
+        assertTrue(KeycloakUserApi.hasAttribute(realm, "foo", null));
+        assertFalse(KeycloakUserApi.hasAttribute(realm, null, null));
+    }
 }
