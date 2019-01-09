@@ -170,7 +170,10 @@ public class CreateController implements Controller {
 
     private boolean checkExceedsQuota(AddressSpaceType addressSpaceType, AddressSpacePlan plan, AddressSpace addressSpace) {
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
-        Set<Address> addresses = addressApi.listAddressesWithLabels(addressSpace.getNamespace(), Collections.singletonMap(LabelKeys.ADDRESS_SPACE, addressSpace.getName()));
+        Set<Address> addresses = addressApi.listAddresses(addressSpace.getNamespace()).stream()
+                .filter(address -> addressSpace.getName().equals(address.getAddressSpace()))
+                .collect(Collectors.toSet());
+
         Map<String, Double> quota = new HashMap<>();
         Map<String, Double> usage = new HashMap<>();
         for (ResourceAllowance allowance : plan.getResources()) {
