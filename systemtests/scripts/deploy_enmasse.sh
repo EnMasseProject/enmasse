@@ -10,5 +10,5 @@ UPGRADE=${5:-false}
 
 
 if [[ ${SKIP_SETUP} != 'true' ]]; then
-    setup_test "${ENMASSE_DIR}" $(get_kubeconfig_path) "${REG_API_SERVER}" "${SKIP_DEPENDENCIES}" "${UPGRADE}"
+    setup_test_openshift "${ENMASSE_DIR}" $(get_kubeconfig_path) "${REG_API_SERVER}" "${SKIP_DEPENDENCIES}" "${UPGRADE}"
 fi

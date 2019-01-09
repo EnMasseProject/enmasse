@@ -31,7 +31,8 @@ STATS_PID=$!
 info "process for checking system resources is running with PID: ${STATS_PID}"
 
 export_required_env
-export OPENSHIFT_TOKEN=`oc whoami -t`
+export KUBERNETES_API_TOKEN=`oc whoami -t`
+export KUBERNETES_API_URL=${OPENSHIFT_PROJECT}
 
 #start docker logging
 DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
@@ -66,5 +67,5 @@ if [ $failure -gt 0 ]
 then
     err_and_exit "Systemtests failed"
 elif [[ "${TEST_PROFILE}" != "systemtests-upgrade" ]]; then
-    teardown_test ${OPENSHIFT_PROJECT}
+    teardown_test ${KUBERNETES_NAMESPACE}
 fi

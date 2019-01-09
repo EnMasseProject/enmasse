@@ -8,41 +8,42 @@ TEST_PROFILE=$2
 TESTCASE=$3
 failure=0
 
-export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
-export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
-export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
-export OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
-export OPENSHIFT_TEST_LOGDIR=${OPENSHIFT_TEST_LOGDIR:-/tmp/testlogs}
-export OPENSHIFT_USE_TLS=${OPENSHIFT_USE_TLS:-true}
+API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " "
+API_TOKEN=$(kubectl describe secret $(kubectl get secrets | grep ^default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
+
+export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
+export KUBERNETES_API_TOKEN=${KUBERNETES_API_TOKEN:-${API_TOKEN}}
+export KUBERNETES_NAMESPACE=${KUBERNETES_NAMESPACE:-enmasseci}
+export TEST_LOGDIR=${TEST_LOGDIR:-/tmp/testlogs}
 export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
 export DEFAULT_AUTHSERVICE=standard
 export USE_MINIKUBE=true
 
-SANITIZED_PROJECT=$OPENSHIFT_PROJECT
-SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
-SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
-export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
+SANITIZED_NAMESPACE=$KUBERNETES_NAMESPACE
+SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
+SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
+export KUBERNETES_NAMESPACE=$SANITIZED_NAMESPACE
 
 kubectl exec -ti busybox -- nslookup kubernetes.default
 
-kubectl create namespace $OPENSHIFT_PROJECT
-kubectl config set-context $(kubectl config current-context) --namespace=$OPENSHIFT_PROJECT
+kubectl create namespace $KUBERNETES_NAMESPACE
+kubectl config set-context $(kubectl config current-context) --namespace=$KUBERNETES_NAMESPACE
 
 
 mkdir -p api-server-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${OPENSHIFT_PROJECT}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
 mkdir -p none-authservice-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.${OPENSHIFT_PROJECT}.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
 kubectl create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
 
 mkdir -p standard-authservice-cert/
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${OPENSHIFT_PROJECT}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
 cp -r ${ENMASSE_DIR}/install/components/none-authservice/*.yaml ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice
-sed -i "s/enmasse-infra/${OPENSHIFT_PROJECT}/" ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice/*.yaml
+sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice/*.yaml
 kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice
 
 #environment info
@@ -57,7 +58,7 @@ ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
 LOGS_PID=$!
 echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
-wait_until_enmasse_up 'kubernetes' ${OPENSHIFT_PROJECT}
+wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
 #execute test
 if [[ "${TEST_PROFILE}" = "smoke" ]]; then
@@ -75,19 +76,19 @@ kill ${LOGS_PID}
 categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
 #environment info
-get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
-get_kubernetes_info ${LOG_DIR} pods ${OPENSHIFT_PROJECT} 
+get_kubernetes_info ${LOG_DIR} pv ${KUBERNETES_NAMESPACE}
+get_kubernetes_info ${LOG_DIR} pods ${KUBERNETES_NAMESPACE} 
 get_kubernetes_info ${LOG_DIR} services default "-after"
 get_kubernetes_info ${LOG_DIR} pods default "-after"
-get_kubernetes_info ${LOG_DIR} events ${OPENSHIFT_PROJECT}
+get_kubernetes_info ${LOG_DIR} events ${KUBERNETES_NAMESPACE}
 
 #store artifacts
-$CURDIR/collect_logs.sh ${OPENSHIFT_TEST_LOGDIR} ${ARTIFACTS_DIR}
+$CURDIR/collect_logs.sh ${TEST_LOGDIR} ${ARTIFACTS_DIR}
 
 if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
     exit 1
 else
-    teardown_test $OPENSHIFT_PROJECT
+    teardown_test $KUBERNETES_NAMESPACE
 fi

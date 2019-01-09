@@ -17,9 +17,9 @@ public class OpenShift extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
 
     public OpenShift(Environment environment, String globalNamespace) {
-        super(environment, new DefaultOpenShiftClient(new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
-                .withOauthToken(environment.openShiftToken())
-                .withUsername(environment.openShiftUser()).build()), globalNamespace);
+        super(environment, new DefaultOpenShiftClient(new ConfigBuilder().withMasterUrl(environment.getApiUrl())
+                .withOauthToken(environment.getApiToken())
+                .build()), globalNamespace);
     }
 
     @Override

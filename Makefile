@@ -3,12 +3,6 @@ BUILD_DIRS     = none-authservice
 DOCKER_DIRS	   = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io
-OPENSHIFT_PROJECT             ?= $(shell oc project -q)
-OPENSHIFT_USER                ?= $(shell oc whoami)
-OPENSHIFT_TOKEN               ?= $(shell oc whoami -t)
-OPENSHIFT_MASTER              ?= $(shell oc whoami --show-server=true)
-OPENSHIFT_USE_TLS             ?= true
-OPENSHIFT_REGISTER_API_SERVER ?= false
 
 DOCKER_TARGETS = docker_build docker_tag docker_push clean
 BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
@@ -30,6 +24,11 @@ templates: docu_html
 
 build_java:
 	mvn package -q -B $(MAVEN_ARGS)
+
+buildpush:
+	make 
+	make docker_tag
+	make docker_push
 
 clean_java:
 	mvn -B -q clean
@@ -56,18 +55,11 @@ $(DOCKER_TARGETS): $(DOCKER_DIRS)
 $(DOCKER_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
-systemtests:
-	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) \
-		OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) \
-		OPENSHIFT_USER=$(OPENSHIFT_USER) \
-		OPENSHIFT_URL=$(OPENSHIFT_MASTER) \
-		OPENSHIFT_USE_TLS=$(OPENSHIFT_USE_TLS) \
-		REGISTER_API_SERVER=$(OPENSHIFT_REGISTER_API_SERVER) \
-		./systemtests/scripts/run_tests.sh $(SYSTEMTEST_ARGS) $(SYSTEMTESTS_PROFILE)
-
 client_install:
 	./systemtests/scripts/client_install.sh
 
+systemtests:
+	make -C systemtests
 
 scripts/swagger2markup.jar:
 	curl -o scripts/swagger2markup.jar https://repo.maven.apache.org/maven2/io/github/swagger2markup/swagger2markup-cli/1.3.3/swagger2markup-cli-1.3.3.jar

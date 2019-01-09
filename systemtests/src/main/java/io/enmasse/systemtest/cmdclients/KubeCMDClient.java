@@ -164,6 +164,11 @@ public class KubeCMDClient extends CmdClient {
         return cmd;
     }
 
+    public static void loginUser(String apiToken) {
+        List<String> cmd = Arrays.asList(CMD, "login", "--token=" + apiToken);
+        execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
     public static String loginUser(String username, String password) {
         List<String> cmd = Arrays.asList(CMD, "login", "-u", username, "-p", password);
         execute(cmd, DEFAULT_SYNC_TIMEOUT, true);

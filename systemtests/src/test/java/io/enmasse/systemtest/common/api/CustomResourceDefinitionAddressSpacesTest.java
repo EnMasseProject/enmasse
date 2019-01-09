@@ -84,7 +84,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
             }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
-            KubeCMDClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
+            KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
@@ -217,7 +217,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
             }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
-            KubeCMDClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
+            KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
@@ -233,7 +233,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             assertThat(KubeCMDClient.createCR(addressSpacePayloadJson.toString()).getRetCode(), is(false));
         } finally {
-            KubeCMDClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
+            KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
         }
     }

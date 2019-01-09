@@ -295,7 +295,7 @@ class ApiServerTest extends TestBase {
 
             deleteAddressSpace(addrSpace, apiClient);
         } finally {
-            KubeCMDClient.loginUser(environment.openShiftUser(), environment.openShiftUser());
+            KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
