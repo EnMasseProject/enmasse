@@ -335,7 +335,6 @@ public class AddressProvisioner {
             double resourceNeeded = sumNeeded(resourceUsage);
             if (resourceNeeded > limits.get(resourceName)) {
                 log.info("address {} for {} needed {} > limit {}", address.getAddress(), resourceName, resourceNeeded, limits.get(resourceRequest.getName()));
-                address.getStatus().setPhase(Status.Phase.Pending);
                 address.getStatus().appendMessage("Quota exceeded");
                 return null;
             }
@@ -346,7 +345,6 @@ public class AddressProvisioner {
         double totalNeeded = sumTotalNeeded(needed);
         if (totalNeeded > limits.get("aggregate")) {
             log.info("address {} usage {}, total needed {} > limit {}", address.getAddress(), usage, totalNeeded, limits.get("aggregate"));
-            address.getStatus().setPhase(Status.Phase.Pending);
             address.getStatus().appendMessage("Quota exceeded");
             return null;
         }
