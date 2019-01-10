@@ -31,15 +31,15 @@ public class Environment {
 
     public Environment() {
         String debugFormat = "{}:{}";
-        log.debug(debugFormat, useMinikubeEnv, useMinikube);
-        log.debug(debugFormat, registerApiServerEnv, registerApiServer);
-        log.debug(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
-        log.debug(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
-        log.debug(debugFormat, testLogDirEnv, testLogDir);
-        log.debug(debugFormat, namespaceEnv, namespace);
-        log.debug(debugFormat, urlEnv, url);
-        log.debug(debugFormat, tokenEnv, token);
-        log.debug(debugFormat, upgradeEnv, upgrade);
+        log.info(debugFormat, useMinikubeEnv, useMinikube);
+        log.info(debugFormat, registerApiServerEnv, registerApiServer);
+        log.info(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
+        log.info(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
+        log.info(debugFormat, testLogDirEnv, testLogDir);
+        log.info(debugFormat, namespaceEnv, namespace);
+        log.info(debugFormat, urlEnv, url);
+        log.info(debugFormat, tokenEnv, token);
+        log.info(debugFormat, upgradeEnv, upgrade);
     }
 
     /**
