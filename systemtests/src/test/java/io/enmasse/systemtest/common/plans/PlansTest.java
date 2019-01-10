@@ -695,7 +695,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         assertEquals(beforeAddressSpacePlan.getName(),
                 data.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan"));
         assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
-                afterAddressSpacePlan.getName(), environment.namespace(), addressSpace.getName()),
+                afterQueuePlan.getName(), environment.namespace(), addressSpace.getName()),
                 data.getJsonObject("status").getJsonArray("messages").getString(0));
     }
 

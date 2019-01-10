@@ -450,6 +450,7 @@ public class TestUtils {
             }
             log.info("Waiting until Address space plan will be applied: '{}'", addressSpace.getPlan());
         }
+        isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
         if (!isPlanApplied) {
             String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan") : "";
             throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
