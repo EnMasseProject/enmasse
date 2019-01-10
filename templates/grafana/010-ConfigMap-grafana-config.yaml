@@ -12,12 +12,14 @@ data:
       type: prometheus
       access: proxy
       url: http://prometheus:9090
+      jsonData:
+        timeInterval: 60s
     - name: AlertManager
       type: camptocamp-prometheus-alertmanager-datasource
       url: http://alertmanager:9093
       access: proxy
       jsonData:
-        timeInterval: 10s
+        timeInterval: 60s
         severity_critical: "4"
         severity_high: "3"
         severity_warning: "2"
