@@ -203,6 +203,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         final int totalNumMessages = numMessages * prefixes.size();
         final int numReceiveBeforeDraining = numMessages / 2;
         final int numReceivedAfterScaled = totalNumMessages - numReceiveBeforeDraining;
+        final int numReceivedAfterScaledPhase1 = numReceivedAfterScaled / 2;
+        final int numReceivedAfterScaledPhase2 = numReceivedAfterScaled - numReceivedAfterScaledPhase1;
 
         List<Future<Integer>> sent = prefixes.stream().map(prefix -> client.sendMessages(before.getAddress(), TestUtils.generateMessages(prefix, numMessages))).collect(Collectors.toList());
 
@@ -224,7 +226,12 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         replaceAddress(getSharedAddressSpace(), after);
         // Receive messages sent before address was replaced
-        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numReceivedAfterScaled).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaled));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numReceivedAfterScaledPhase1).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase1));
+
+        Thread.sleep(30_000);
+
+        // Give system a chance to do something stupid
+        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numReceivedAfterScaledPhase2).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase2));
 
         // Ensure send and receive works after address was replaced
         assertThat("Wrong count of messages sent", client.sendMessages(after.getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
