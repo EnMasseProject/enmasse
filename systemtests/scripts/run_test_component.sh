@@ -13,7 +13,6 @@ source "${CURDIR}/../../scripts/logger.sh"
 
 TEST_PROFILE=${1}
 TESTCASE=${2:-"io.enmasse.**"}
-REG_API_SERVER=${3:-true}
 
 info "Running tests with profile: ${TEST_PROFILE}, tests: ${TESTCASE}"
 

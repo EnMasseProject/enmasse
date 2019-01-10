@@ -12,12 +12,10 @@ function download_enmasse() {
 function setup_test_openshift() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
-    REG_API_SERVER=${3:-true}
-    SKIP_DEPENDENCIES=${4:-false}
-    UPGRADE=${5:-false}
+    SKIP_DEPENDENCIES=${3:-false}
+    UPGRADE=${4:-false}
 
     export_required_env
-    export REGISTER_API_SERVER=${REG_API_SERVER}
 
     info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}"
 
@@ -116,11 +114,7 @@ function create_address_space() {
     ADDRESS_SPACE_NAME=$2
     ADDRESS_SPACE_DEF=$3
     TOKEN=$(oc whoami -t)
-    if [[ ${REGISTER_API_SERVER} == "true" ]]; then
-        URL="${KUBERNETES_API_URL}"
-    else
-        URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
-    fi
+    URL="${KUBERNETES_API_URL}"
     curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1beta1/namespaces/${NAMESPACE}/addressspaces
     wait_until_up 2 ${NAMESPACE}-${ADDRESS_SPACE_NAME} || return 1
 }
@@ -133,12 +127,7 @@ function create_address() {
     TYPE=$5
     PLAN=$6
 
-    if [[ ${REGISTER_API_SERVER} == "true" ]]; then
-        URL="${KUBERNETES_API_URL}"
-    else
-        URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
-    fi
-
+    URL="${KUBERNETES_API_URL}"
     PAYLOAD="{\"apiVersion\": \"enmasse.io/v1beta1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
     TOKEN=$(oc whoami -t)
     curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1beta1/namespaces/${NAMESPACE}/addresses

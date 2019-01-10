@@ -30,18 +30,8 @@ public class OpenShift extends Kubernetes {
     public Endpoint getRestEndpoint() {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Endpoint endpoint = null;
-        if (environment.registerApiServer()) {
-            endpoint = new Endpoint(client.getMasterUrl());
-        } else {
-            Route route = openShift.routes().inNamespace(globalNamespace).withName("restapi").get();
-            if (route != null) {
-                endpoint = new Endpoint(route.getSpec().getHost(), 443);
-            }
-        }
 
-        if (endpoint == null) {
-            return getEndpoint("api-server", "https");
-        }
+        endpoint = new Endpoint(client.getMasterUrl());
 
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;

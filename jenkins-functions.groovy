@@ -54,7 +54,7 @@ def makeStackedPlot() {
 
 def runSystemtests(String coreDir, String profile, String testCases) {
     sh "sudo ./systemtests/scripts/enable_core_dumps.sh ${coreDir}"
-    sh "./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}' 'true'"
+    sh "./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}'"
 }
 
 def startOpenshift() {
@@ -102,7 +102,7 @@ def installEnmasse(String tag, Boolean skipDependencies, Boolean upgrade, Boolea
         sh "make -C templates clean"
         sh 'make templates || true'
     }
-    sh "./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' true ${skipDependencies} ${upgrade}"
+    sh "./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' ${skipDependencies} ${upgrade}"
 }
 
 def sendMail(address, jobName, buildUrl) {

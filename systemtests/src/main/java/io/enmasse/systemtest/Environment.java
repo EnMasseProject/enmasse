@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 public class Environment {
     private static Logger log = CustomLogger.getLogger();
     public static final String useMinikubeEnv = "USE_MINIKUBE";
-    public static final String registerApiServerEnv = "REGISTER_API_SERVER";
     public static final String keycloakAdminPasswordEnv = "KEYCLOAK_ADMIN_PASSWORD";
     public static final String keycloakAdminUserEnv = "KEYCLOAK_ADMIN_USER";
     public static final String testLogDirEnv = "TEST_LOGDIR";
@@ -25,14 +24,12 @@ public class Environment {
     private final String testLogDir = System.getenv().getOrDefault(testLogDirEnv, "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault(keycloakAdminUserEnv, "admin");
     private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
-    private final boolean registerApiServer = Boolean.parseBoolean(System.getenv(registerApiServerEnv));
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
     private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
 
     public Environment() {
         String debugFormat = "{}:{}";
         log.info(debugFormat, useMinikubeEnv, useMinikube);
-        log.info(debugFormat, registerApiServerEnv, registerApiServer);
         log.info(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
         log.info(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
         log.info(debugFormat, testLogDirEnv, testLogDir);
@@ -63,10 +60,6 @@ public class Environment {
 
     public String getApiToken() {
         return token;
-    }
-
-    public boolean registerApiServer() {
-        return registerApiServer;
     }
 
     public String namespace() {
