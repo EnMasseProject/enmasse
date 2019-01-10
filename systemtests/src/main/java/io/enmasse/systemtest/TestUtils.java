@@ -438,7 +438,7 @@ public class TestUtils {
      * @throws Exception
      */
     public static void waitForServiceInstanceReady(OSBApiClient apiClient, String username, String instanceId) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         boolean isReady = false;
         while (budget.timeLeft() >= 0 && !isReady) {
             isReady = isServiceInstanceReady(apiClient.getLastOperation(username, instanceId));

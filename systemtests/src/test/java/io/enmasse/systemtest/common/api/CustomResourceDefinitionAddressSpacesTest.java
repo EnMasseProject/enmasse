@@ -181,8 +181,6 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
-                    "Pending");
 
             TestUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
 
@@ -192,9 +190,6 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
-                    "Configuring");
-            assertFalse(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());
 
             TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
 
