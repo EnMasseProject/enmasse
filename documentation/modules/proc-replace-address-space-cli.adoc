@@ -5,6 +5,11 @@
 [id='replace-address-space-cli-{context}']
 = Replacing address spaces using the command line
 
+Address spaces can be replaced in order to change the plan, endpoints, or network policies, or
+to replace certificates if using the `certBundle` certificate provider. When changing the plan,
+{ProductName} will attempt to apply the new plan if the current set of addresses fits within the new
+quota. If it does not, an error is provided on the `AddressSpace` resource.
+
 .Procedure
 
 ifeval::["{cmdcli}" == "oc"]
@@ -45,3 +50,4 @@ include::../common/standard-address-space-replace.yaml[]
 ----
 +
 The address space is ready for use when the above command outputs `true`.
+

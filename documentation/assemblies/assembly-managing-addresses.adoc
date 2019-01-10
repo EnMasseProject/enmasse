@@ -1,6 +1,7 @@
 // Module included in the following assemblies:
 //
 // assembly-tenant-guide.adoc
+// using/master.adoc
 
 [id='managing-addresses-{context}']
 = Managing addresses
@@ -14,20 +15,12 @@ address types in the `standard` address space support changing the plan as long 
 does not exceed the allowed quota. For queues, addresses are dynamically migrated across brokers
 which may cause reordering of messages.
 
-== Example
+include::../modules/con-address.adoc[leveloffset=+1]
 
-[source,yaml,options="nowrap"]
-----
-include::../common/address-example1.yaml[]
-----
-<1> The address name must be prefixed with the address space name and a dot. Address names can only include alphanumeric characters.
-<2> The address is the messaging address this address resource represents.
-<3> The address type dictates the semantics of this address.
-<4> The address plan describes the resource usage for the address.
+include::../modules/ref-address-example.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
 
 include::../modules/proc-replace-address-cli.adoc[leveloffset=+1]
 
-include::../modules/proc-create-address-console.adoc[leveloffset=+1]
 
