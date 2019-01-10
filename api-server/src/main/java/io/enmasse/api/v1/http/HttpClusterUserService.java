@@ -36,7 +36,7 @@ public class HttpClusterUserService {
 
     private static final String RESOURCE_NAME = "messagingusers";
 
-    static final String BASE_URI = "/apis/" + User.GROUP + "/" + User.VERSION + "/" + RESOURCE_NAME;
+    static final String BASE_URI = "/apis/" + User.GROUP + "/{version:v1alpha1|v1beta1}/" + RESOURCE_NAME;
 
     private static final Logger log = LoggerFactory.getLogger(HttpClusterUserService.class.getName());
 

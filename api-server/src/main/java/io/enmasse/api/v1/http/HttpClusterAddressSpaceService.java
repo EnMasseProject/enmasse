@@ -4,44 +4,37 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.*;
-import io.enmasse.api.auth.RbacSecurityContext;
-import io.enmasse.api.auth.ResourceVerb;
-import io.enmasse.api.common.Exceptions;
-import io.enmasse.api.common.Status;
-import io.enmasse.api.common.UuidGenerator;
-import io.enmasse.api.v1.AddressApiHelper;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.SchemaProvider;
-import io.enmasse.k8s.model.v1beta1.PartialObjectMetadata;
-import io.enmasse.k8s.model.v1beta1.Table;
-import io.enmasse.k8s.model.v1beta1.TableColumnDefinition;
-import io.enmasse.k8s.model.v1beta1.TableRow;
-import io.enmasse.k8s.util.TimeUtil;
-import io.fabric8.kubernetes.api.model.ListMeta;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import static io.enmasse.api.v1.http.HttpAddressSpaceService.formatResponse;
+import static io.enmasse.api.v1.http.HttpAddressSpaceService.removeSecrets;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-
-import static io.enmasse.api.v1.http.HttpAddressSpaceService.formatResponse;
-import static io.enmasse.api.v1.http.HttpAddressSpaceService.removeSecrets;
+import io.enmasse.api.auth.RbacSecurityContext;
+import io.enmasse.api.auth.ResourceVerb;
+import io.enmasse.api.common.Exceptions;
+import io.enmasse.api.v1.AddressApiHelper;
+import io.enmasse.k8s.api.AddressSpaceApi;
 
 @Path(HttpClusterAddressSpaceService.BASE_URI)
 public class HttpClusterAddressSpaceService {
 
-    static final String BASE_URI = "/apis/enmasse.io/v1beta1/addressspaces";
+    static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpClusterAddressSpaceService.class.getName());
 

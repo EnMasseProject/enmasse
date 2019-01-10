@@ -25,7 +25,7 @@ public class HttpClusterAddressService extends HttpAddressServiceBase {
 
     private static final String RESOURCE_NAME = "addresses";
 
-    static final String BASE_URI = "/apis/enmasse.io/v1alpha1/" + RESOURCE_NAME;
+    static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/" + RESOURCE_NAME;
 
     public HttpClusterAddressService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
         super(addressSpaceApi, schemaProvider, clock);
