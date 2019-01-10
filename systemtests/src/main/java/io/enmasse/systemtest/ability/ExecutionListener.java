@@ -31,8 +31,7 @@ public class ExecutionListener implements TestExecutionListener {
                     TestUtils.getAddressSpacesObjects(apiClient).forEach((addrSpace) -> {
                         log.info("address space '{}' will be removed", addrSpace);
                         try {
-                            TestUtils.deleteAddressSpace(apiClient, addrSpace, logCollector);
-                            TestUtils.waitForAddressSpaceDeleted(kube, addrSpace);
+                            TestUtils.deleteAddressSpaceAndWait(apiClient, kube, addrSpace, logCollector);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

@@ -6,10 +6,10 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.api.*;
-import io.enmasse.metrics.api.Metric;
 import io.enmasse.metrics.api.Metrics;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.vertx.core.Vertx;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -85,6 +85,9 @@ public class StandardController {
 
         Metrics metrics = new Metrics();
 
+        Vertx vertx = Vertx.vertx();
+
+        BrokerClientFactory brokerClientFactory = new MutualTlsBrokerClientFactory(vertx, options.getCertDir());
 
         addressController = new AddressController(
                 options,
@@ -93,8 +96,10 @@ public class StandardController {
                 clusterGenerator,
                 eventLogger,
                 schemaProvider,
+                vertx,
                 metrics,
-                new RandomBrokerIdGenerator());
+                new RandomBrokerIdGenerator(),
+                brokerClientFactory);
 
         log.info("Starting standard controller for " + options.getAddressSpace());
         addressController.start();

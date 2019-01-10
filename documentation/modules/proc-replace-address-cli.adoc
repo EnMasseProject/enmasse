@@ -1,0 +1,31 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-addresses-cli.adoc
+
+[id='replace-address-cli-{context}']
+= Replacing addresses using the command line
+
+.Procedure
+
+. Update an address definition:
++
+[source,yaml,options="nowrap"]
+----
+include::../common/standard-xlarge-queue.yaml[]
+----
++
+
+. Replace the address:
++
+[source,yaml,options="nowrap",subs="attributes"]
+----
+{cmdcli} replace -f standard-xlarge-queue.yaml
+----
+
+. List the addresses:
++
+[source,yaml,options="nowrap",subs="attributes"]
+----
+{cmdcli} get addresses -o yaml
+----
+

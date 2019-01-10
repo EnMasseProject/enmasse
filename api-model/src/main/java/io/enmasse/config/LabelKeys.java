@@ -24,4 +24,5 @@ public interface LabelKeys {
     String INFRA_UUID = "infraUuid";
     String INFRA_TYPE = "infraType";
     String NAME = "name";
+    String ROLE = "role";
 }

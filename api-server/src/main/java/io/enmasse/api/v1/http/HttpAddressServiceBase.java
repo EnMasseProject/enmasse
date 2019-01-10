@@ -10,6 +10,7 @@ import io.enmasse.address.model.v1.Either;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
 import io.enmasse.api.v1.AddressApiHelper;
@@ -106,7 +107,7 @@ public class HttpAddressServiceBase {
 
     private Response createAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Address address) throws Exception {
         checkRequestBodyNotNull(address);
-        Address finalAddress = setAddressDefaults(namespace, addressSpace, address);
+        Address finalAddress = setAddressDefaults(namespace, addressSpace, address, null);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             Address created = apiHelper.createAddress(addressSpace, finalAddress);
@@ -121,36 +122,96 @@ public class HttpAddressServiceBase {
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             Set<Address> finalAddresses = addressList.stream()
-                    .map(a -> setAddressDefaults(namespace, addressSpace, a))
+                    .map(a -> setAddressDefaults(namespace, addressSpace, a, null))
                     .collect(Collectors.toSet());
             apiHelper.createAddresses(addressSpace, finalAddresses);
             return Response.created(uriInfo.getAbsolutePathBuilder().build()).build();
         });
     }
 
-    private static Address setAddressDefaults(String namespace, String addressSpace, Address address) {
-        if (address.getNamespace() == null || address.getAddressSpace() == null || address.getName() == null) {
-            Address.Builder builder = new Address.Builder(address);
-            if (address.getNamespace() == null) {
-                builder.setNamespace(namespace);
+    private static Address setAddressDefaults(String namespace, String addressSpace, Address address, Address existing) {
+        if (existing == null) {
+            if (address.getNamespace() == null || address.getAddressSpace() == null || address.getName() == null) {
+                Address.Builder builder = new Address.Builder(address);
+                if (address.getNamespace() == null) {
+                    builder.setNamespace(namespace);
+                }
+
+                if (address.getAddressSpace() == null) {
+                    builder.setAddressSpace(addressSpace);
+                }
+
+                if (address.getName() == null) {
+                    builder.setName(Address.generateName(addressSpace, address.getAddress()));
+                }
+
+                address = builder.build();
             }
 
-            if (address.getAddressSpace() == null) {
-                builder.setAddressSpace(addressSpace);
+            if (address.getLabel(LabelKeys.ADDRESS_TYPE) == null) {
+                address.putLabel(LabelKeys.ADDRESS_TYPE, address.getType());
             }
 
-            if (address.getName() == null) {
-                builder.setName(Address.generateName(addressSpace, address.getAddress()));
+        } else {
+            validateChanges(existing, address);
+            Map<String, String> annotations = existing.getAnnotations();
+            if (annotations == null) {
+                annotations = new HashMap<>();
             }
+            annotations.putAll(address.getAnnotations());
 
-            address = builder.build();
+            Map<String, String> labels = existing.getLabels();
+            if (labels == null) {
+                labels = new HashMap<>();
+            }
+            labels.putAll(address.getLabels());
+
+            address = new Address.Builder(existing)
+                    .setPlan(address.getPlan())
+                    .setAnnotations(annotations)
+                    .setLabels(labels)
+                    .build();
         }
-
-        if (address.getLabel(LabelKeys.ADDRESS_TYPE) == null) {
-            address.putLabel(LabelKeys.ADDRESS_TYPE, address.getType());
-        }
-
         return address;
+    }
+
+    private static void validateChanges(Address existing, Address address) {
+        if (!existing.getType().equals(address.getType())) {
+            throw new BadRequestException("Cannot change type of address " + address.getName() + " from " + existing.getType() + " to " + address.getType());
+        }
+
+        if (!existing.getAddress().equals(address.getAddress())) {
+            throw new BadRequestException("Cannot change address of address " + address.getName() + " from " + existing.getAddress() + " to " + address.getAddress());
+        }
+
+        if (!existing.getTopic().equals(address.getTopic())) {
+            throw new BadRequestException("Cannot change topic of address " + address.getName() + " from " + existing.getTopic() + " to " + address.getTopic());
+        }
+
+        overrideAnnotation(existing, address, AnnotationKeys.BROKER_ID);
+        overrideAnnotation(existing, address, AnnotationKeys.CLUSTER_ID);
+        overrideAnnotation(existing, address, AnnotationKeys.APPLIED_PLAN);
+        overrideAnnotation(existing, address, AnnotationKeys.INFRA_UUID);
+        overrideLabel(existing, address, LabelKeys.ADDRESS_SPACE);
+        overrideLabel(existing, address, LabelKeys.NAMESPACE);
+    }
+
+    private static void overrideAnnotation(Address existing, Address address, String annotationKey) {
+        if (existing.getAnnotation(annotationKey) == null) {
+            return;
+        }
+        if (!existing.getAnnotation(annotationKey).equals(address.getAnnotation(annotationKey))) {
+            address.putAnnotation(annotationKey, existing.getAnnotation(annotationKey));
+        }
+    }
+
+    private static void overrideLabel(Address existing, Address address, String labelKey) {
+        if (existing.getLabel(labelKey) == null) {
+            return;
+        }
+        if (!existing.getLabel(labelKey).equals(address.getLabel(labelKey))) {
+            address.putLabel(labelKey, existing.getLabel(labelKey));
+        }
     }
 
     private void checkRequestBodyNotNull(Object object) {
@@ -163,15 +224,15 @@ public class HttpAddressServiceBase {
         checkRequestBodyNotNull(payload);
         checkAddressObjectNameNotNull(payload, addressNameFromURL);
         checkMatchingAddressName(addressNameFromURL, payload);
-        Address finalAddress = setAddressDefaults(namespace, addressSpace, payload);
         return doRequest("Error updating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
-            try {
-                Address replaced = apiHelper.replaceAddress(addressSpace, finalAddress);
-                return Response.ok(replaced).build();
-            } catch (NotFoundException e) {
-                return Response.status(404).entity(Status.notFound("Address", finalAddress.getName())).build();
+            Address existing = apiHelper.getAddress(namespace, addressSpace, addressNameFromURL).orElse(null);
+            if (existing == null) {
+                return Response.status(404).entity(Status.notFound("Address", addressNameFromURL)).build();
             }
+            Address toReplace = setAddressDefaults(namespace, addressSpace, payload, existing);
+            Address replaced = apiHelper.replaceAddress(addressSpace, toReplace);
+            return Response.ok(replaced).build();
         });
     }
 

@@ -49,11 +49,26 @@ public class BrokerCluster {
     }
 
     private final String clusterId;
+    private final int replicas;
     private KubernetesList resources;
+    private int newReplicas;
 
     public BrokerCluster(String clusterId, KubernetesList resources) {
         this.clusterId = clusterId;
         this.resources = resources;
+        this.replicas = findReplicas(resources.getItems());
+        this.newReplicas = replicas;
+    }
+
+    private int findReplicas(List<HasMetadata> items) {
+        for (HasMetadata item : items) {
+            if (item instanceof StatefulSet) {
+                return ((StatefulSet)item).getSpec().getReplicas();
+            } else if (item instanceof Deployment) {
+                return ((Deployment)item).getSpec().getReplicas();
+            }
+        }
+        return 0;
     }
 
     private StandardInfraConfig findStandardInfraConfig(List<HasMetadata> items) throws IOException {
@@ -67,6 +82,23 @@ public class BrokerCluster {
             }
         }
         return config;
+    }
+
+
+    public void setNewReplicas(int replicas) {
+        this.newReplicas = replicas;
+    }
+
+    public int getReplicas() {
+        return replicas;
+    }
+
+    public int getNewReplicas() {
+        return newReplicas;
+    }
+
+    public boolean hasChanged() {
+        return replicas != newReplicas;
     }
 
     public KubernetesList getResources() {

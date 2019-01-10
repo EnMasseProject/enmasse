@@ -178,43 +178,64 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("disabled due to issue #851")
     void testScaledown() throws Exception {
-        Destination dest = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
-        setAddresses(dest);
-        // scale(dest, 4);
+        Destination before = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        Destination after = Destination.queue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        testScale(before, after);
+    }
 
-        Thread.sleep(30000);
+    @Test
+    void testScaleup() throws Exception {
+        Destination before = Destination.queue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        Destination after = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        testScale(before, after);
+    }
+
+    private void testScale(Destination before, Destination after) throws Exception {
+        assertEquals(before.getAddress(), after.getAddress());
+        assertEquals(before.getName(), after.getName());
+        assertEquals(before.getType(), after.getType());
+        setAddresses(before);
+
         AmqpClient client = amqpClientFactory.createQueueClient();
-        List<Future<Integer>> sent = Arrays.asList(
-                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
-                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("bar", 1000)),
-                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("baz", 1000)),
-                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("quux", 1000)));
+        final List<String> prefixes = Arrays.asList("foo", "bar", "baz", "quux");
+        final int numMessages = 1000;
+        final int totalNumMessages = numMessages * prefixes.size();
+        final int numReceiveBeforeDraining = numMessages / 2;
+        final int numReceivedAfterScaled = totalNumMessages - numReceiveBeforeDraining;
+
+        List<Future<Integer>> sent = prefixes.stream().map(prefix -> client.sendMessages(before.getAddress(), TestUtils.generateMessages(prefix, numMessages))).collect(Collectors.toList());
 
         assertAll("All sender should send all messages",
                 () -> assertThat("Wrong count of messages sent: sender0",
-                        sent.get(0).get(1, TimeUnit.MINUTES), is(1000)),
+                        sent.get(0).get(1, TimeUnit.MINUTES), is(numMessages)),
                 () -> assertThat("Wrong count of messages sent: sender1",
-                        sent.get(1).get(1, TimeUnit.MINUTES), is(1000)),
+                        sent.get(1).get(1, TimeUnit.MINUTES), is(numMessages)),
                 () -> assertThat("Wrong count of messages sent: sender2",
-                        sent.get(2).get(1, TimeUnit.MINUTES), is(1000)),
+                        sent.get(2).get(1, TimeUnit.MINUTES), is(numMessages)),
                 () -> assertThat("Wrong count of messages sent: sender3",
-                        sent.get(3).get(1, TimeUnit.MINUTES), is(1000))
+                        sent.get(3).get(1, TimeUnit.MINUTES), is(numMessages))
         );
 
-        Future<List<Message>> received = client.recvMessages(dest.getAddress(), 500);
+        Future<List<Message>> received = client.recvMessages(before.getAddress(), numReceiveBeforeDraining);
         assertThat("Wrong count of messages received",
-                received.get(1, TimeUnit.MINUTES).size(), is(500));
+                received.get(1, TimeUnit.MINUTES).size(), is(numReceiveBeforeDraining));
 
-        // scale(dest, 1);
 
-        Thread.sleep(30000);
+        replaceAddress(getSharedAddressSpace(), after);
+        // Receive messages sent before address was replaced
+        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numReceivedAfterScaled).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaled));
 
-        received = client.recvMessages(dest.getAddress(), 3500);
+        // Ensure send and receive works after address was replaced
+        assertThat("Wrong count of messages sent", client.sendMessages(after.getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
 
-        assertThat("Wrong count of messages received",
-                received.get(1, TimeUnit.MINUTES).size(), is(3500));
+        // Ensure there are no brokers in Draining state
+        TestUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
+
+        // Ensure send and receive works after all brokers are drained
+        assertThat("Wrong count of messages sent", client.sendMessages(after.getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
     }
 
     @Test

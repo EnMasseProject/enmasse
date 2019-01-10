@@ -5,7 +5,14 @@
 [id='managing-addresses-{context}']
 = Managing addresses
 
-{ProductName} is configured to support managing address using the {KubePlatform} command-line tools and the {ProductName} Console.
+{ProductName} is configured to support managing addresses using the {KubePlatform} command-line tools
+and the {ProductName} Console. `Address` resources can be managed like any other {KubePlatform}
+API resource using `{cmdcli}`.
+
+Some address types also support changing the `plan` field: `queue`, `anycast` and `multicast`
+address types in the `standard` address space support changing the plan as long as the new plan
+does not exceed the allowed quota. For queues, addresses are dynamically migrated across brokers
+which may cause reordering of messages.
 
 == Example
 
@@ -19,6 +26,8 @@ include::../common/address-example1.yaml[]
 <4> The address plan describes the resource usage for the address.
 
 include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
+
+include::../modules/proc-replace-address-cli.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-console.adoc[leveloffset=+1]
 

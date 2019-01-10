@@ -205,8 +205,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
         if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
-            TestUtils.deleteAddressSpace(apiClient, addressSpace, logCollector);
-            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+            TestUtils.deleteAddressSpaceAndWait(apiClient, kubernetes, addressSpace, logCollector);
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
@@ -314,6 +313,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
         TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
         logCollector.collectConfigMaps();
+    }
+
+    protected void replaceAddress(AddressSpace addressSpace, Destination destination) throws Exception {
+        TestUtils.replaceAddress(addressApiClient, addressSpace, destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
     protected JsonObject sendRestApiRequest(HttpMethod method, URL url, int expectedCode, Optional<JsonObject> payload) throws Exception {

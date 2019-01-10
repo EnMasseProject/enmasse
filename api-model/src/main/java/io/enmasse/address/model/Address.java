@@ -175,6 +175,11 @@ public class Address {
         return annotations.get(annotationKey);
     }
 
+    public Address removeAnnotation(String annotationKey) {
+        annotations.remove(annotationKey);
+        return this;
+    }
+
     public static class Builder {
         private String name;
         private String namespace;
