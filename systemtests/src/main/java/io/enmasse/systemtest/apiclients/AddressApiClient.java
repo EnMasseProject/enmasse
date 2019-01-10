@@ -98,6 +98,32 @@ public class AddressApiClient extends ApiClient {
         createAddressSpace(addressSpace, HTTP_CREATED);
     }
 
+    public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
+        replaceAddressSpace(addressSpace, HTTP_OK);
+    }
+
+    public void replaceAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
+        String path = addressSpacesPath + "/" + addressSpace.getName();
+        JsonObject config = addressSpace.toJson(getApiVersion());
+
+        log.info("UPDATE-address-space: path {}; body {}", addressSpacesPath, config.toString());
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+
+        doRequestNTimes(initRetry, () -> {
+                    client.put(endpoint.getPort(), endpoint.getHost(), path)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(config, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    expectedCode,
+                                    String.format("Error: replacing address space '%s'", addressSpace)));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
+    }
+
     public void deleteAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
         String path = addressSpacesPath + "/" + addressSpace.getName();
         log.info("DELETE-address-space: path '{}'", path);

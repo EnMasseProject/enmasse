@@ -11,6 +11,7 @@ import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
@@ -145,7 +146,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         List<AddressSpace> results = TestUtils.getAddressSpacesObjects(addressApiClient);
         for (AddressSpace addressSpace : results) {
             logCollector.startCollecting(addressSpace);
-            addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName()));
+            addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace));
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
@@ -167,9 +168,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
         AddressSpace addrSpaceResponse;
         if (!TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
-            log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
+            log.info("Address space '{}' doesn't exist and will be created.", addressSpace);
             apiClient.createAddressSpace(addressSpace);
-            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(apiClient, addressSpace.getName());
+            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(apiClient, addressSpace);
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
@@ -222,7 +223,36 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return null;
     }
 
-    //!TODO: protected void appendAddressSpace(...)
+    protected void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
+        replaceAddressSpace(addressSpace, true);
+    }
+
+    protected void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_ADDRESS_SPACE);
+        AddressSpace addrSpaceResponse;
+        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+            log.info("Address space '{}' exists and will be updated.", addressSpace);
+            addressApiClient.replaceAddressSpace(addressSpace);
+            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+            if (waitForPlanApplied) {
+                TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
+            }
+
+            if (!addressSpace.equals(getSharedAddressSpace())) {
+                addressSpaceList.add(addressSpace);
+            }
+        } else {
+            addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
+            log.info("Address space '{}' does not exists.", addressSpace);
+        }
+
+        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
+        log.info("Address-space '{}' endpoints successfully set.", addressSpace.getName());
+
+        addressSpace.setInfraUuid(addrSpaceResponse.getInfraUuid());
+        log.info("Address-space successfully updated: '{}'", addressSpace);
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
 
     protected AddressSpace getAddressSpace(String name) throws Exception {
         return TestUtils.getAddressSpaceObject(addressApiClient, name);
@@ -237,7 +267,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void waitForAddressSpaceReady(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        TestUtils.waitForAddressSpaceReady(apiClient, addressSpace.getName());
+        TestUtils.waitForAddressSpaceReady(apiClient, addressSpace);
+    }
+
+    protected void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
+        TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
     }
 
     protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
@@ -246,13 +280,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return !addrSpaceResponse.getEndpoints().isEmpty();
     }
 
-
-    protected UserApiClient getUserApiClient() throws Exception {
-        if (userApiClient == null) {
-            userApiClient = new UserApiClient(kubernetes);
-        }
-        return userApiClient;
-    }
+    //================================================================================================
+    //====================================== Address methods =========================================
+    //================================================================================================
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         logCollector.collectConfigMaps();
@@ -349,46 +379,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return getAddressesObjects(addressSpace, addressName, Optional.empty());
     }
 
-    /**
-     * give you a schema object
-     *
-     * @return schema object
-     * @throws Exception
-     */
-    protected Future<SchemaData> getSchema() throws Exception {
-        return TestUtils.getSchema(addressApiClient);
-    }
+    //================================================================================================
+    //======================================= User methods ===========================================
+    //================================================================================================
 
-    /**
-     * give you a list of objects of all deployed addresses (or single deployed address)
-     *
-     * @param addressName name of single address
-     * @return list of Destinations
-     * @throws Exception
-     */
-    protected Future<List<Destination>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
-    }
-
-    protected void scaleKeycloak(int numReplicas) throws Exception {
-        scaleInGlobal("keycloak", numReplicas);
-    }
-
-    /**
-     * scale up/down deployment to count of replicas, includes waiting for expected replicas
-     *
-     * @param deployment  name of deployment
-     * @param numReplicas count of replicas
-     * @throws InterruptedException
-     */
-    private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
-        if (numReplicas >= 0) {
-            TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-            TestUtils.setReplicas(kubernetes, null, deployment, numReplicas, budget);
-        } else {
-            throw new IllegalArgumentException("'numReplicas' must be greater than 0");
+    protected UserApiClient getUserApiClient() throws Exception {
+        if (userApiClient == null) {
+            userApiClient = new UserApiClient(kubernetes);
         }
-
+        return userApiClient;
     }
 
     protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
@@ -494,6 +493,52 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         }
         return false;
+    }
+
+    //================================================================================================
+    //======================================= Help methods ===========================================
+    //================================================================================================
+
+    /**
+     * give you a schema object
+     *
+     * @return schema object
+     * @throws Exception
+     */
+    protected Future<SchemaData> getSchema() throws Exception {
+        return TestUtils.getSchema(addressApiClient);
+    }
+
+    /**
+     * give you a list of objects of all deployed addresses (or single deployed address)
+     *
+     * @param addressName name of single address
+     * @return list of Destinations
+     * @throws Exception
+     */
+    protected Future<List<Destination>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
+    }
+
+    protected void scaleKeycloak(int numReplicas) throws Exception {
+        scaleInGlobal("keycloak", numReplicas);
+    }
+
+    /**
+     * scale up/down deployment to count of replicas, includes waiting for expected replicas
+     *
+     * @param deployment  name of deployment
+     * @param numReplicas count of replicas
+     * @throws InterruptedException
+     */
+    private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
+        if (numReplicas >= 0) {
+            TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+            TestUtils.setReplicas(kubernetes, null, deployment, numReplicas, budget);
+        } else {
+            throw new IllegalArgumentException("'numReplicas' must be greater than 0");
+        }
+
     }
 
     protected boolean isBrokered(AddressSpace addressSpace) {
@@ -962,50 +1007,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             logger.info(message);
     }
 
-    //================================================================================================
-    //==================================== Asserts methods ===========================================
-    //================================================================================================
-    protected void assertSorted(String message, Iterable list) throws Exception {
-        assertSorted(message, list, false);
-    }
-
-    protected void assertSorted(String message, Iterable list, Comparator comparator) throws Exception {
-        assertSorted(message, list, false, comparator);
-    }
-
-    protected void assertSorted(String message, Iterable list, boolean reverse) {
-        log.info("Assert sort reverse: " + reverse);
-        if (!reverse)
-            assertTrue(Ordering.natural().isOrdered(list), message);
-        else
-            assertTrue(Ordering.natural().reverse().isOrdered(list), message);
-    }
-
-    protected void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) {
-        log.info("Assert sort reverse: " + reverse);
-        if (!reverse)
-            assertTrue(Ordering.from(comparator).isOrdered(list), message);
-        else
-            assertTrue(Ordering.from(comparator).reverse().isOrdered(list), message);
-    }
-
-    protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {
-        Integer got = null;
-        log.info("waiting for expected value '{}' ...", expected);
-        while (budget.timeLeft() >= 0) {
-            got = fn.call();
-            if (got != null && expected == got.intValue()) {
-                return;
-            }
-            Thread.sleep(100);
-        }
-        fail(String.format("Incorrect results value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got).intValue()));
-    }
-
-    protected void assertWaitForValue(int expected, Callable<Integer> fn) throws Exception {
-        assertWaitForValue(expected, fn, new TimeoutBudget(10, TimeUnit.SECONDS));
-    }
-
     /**
      * body for rest api tests
      */
@@ -1086,5 +1087,74 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return Arrays.asList(
                 Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan()),
                 Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan()));
+    }
+
+    protected void sendDurableMessages(AddressSpace addressSpace, Destination destination,
+                                       UserCredentials credentials, int count) throws Exception {
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setCredentials(credentials);
+        List<Message> listOfMessages = new ArrayList<>();
+        IntStream.range(0, count).forEach(num -> {
+            Message msg = Message.Factory.create();
+            msg.setAddress(destination.getAddress());
+            msg.setDurable(true);
+            listOfMessages.add(msg);
+        });
+        Future<Integer> sent = client.sendMessages(destination.getAddress(), listOfMessages.toArray(new Message[0]));
+        assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
+        client.close();
+    }
+
+    protected void receiveDurableMessages(AddressSpace addressSpace, Destination dest,
+                                          UserCredentials credentials, int count) throws Exception {
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setCredentials(credentials);
+        ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getAddress(), count);
+        assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
+        client.close();
+    }
+
+    //================================================================================================
+    //==================================== Asserts methods ===========================================
+    //================================================================================================
+    protected void assertSorted(String message, Iterable list) throws Exception {
+        assertSorted(message, list, false);
+    }
+
+    protected void assertSorted(String message, Iterable list, Comparator comparator) throws Exception {
+        assertSorted(message, list, false, comparator);
+    }
+
+    protected void assertSorted(String message, Iterable list, boolean reverse) {
+        log.info("Assert sort reverse: " + reverse);
+        if (!reverse)
+            assertTrue(Ordering.natural().isOrdered(list), message);
+        else
+            assertTrue(Ordering.natural().reverse().isOrdered(list), message);
+    }
+
+    protected void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) {
+        log.info("Assert sort reverse: " + reverse);
+        if (!reverse)
+            assertTrue(Ordering.from(comparator).isOrdered(list), message);
+        else
+            assertTrue(Ordering.from(comparator).reverse().isOrdered(list), message);
+    }
+
+    protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {
+        Integer got = null;
+        log.info("waiting for expected value '{}' ...", expected);
+        while (budget.timeLeft() >= 0) {
+            got = fn.call();
+            if (got != null && expected == got.intValue()) {
+                return;
+            }
+            Thread.sleep(100);
+        }
+        fail(String.format("Incorrect results value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got).intValue()));
+    }
+
+    protected void assertWaitForValue(int expected, Callable<Integer> fn) throws Exception {
+        assertWaitForValue(expected, fn, new TimeoutBudget(10, TimeUnit.SECONDS));
     }
 }

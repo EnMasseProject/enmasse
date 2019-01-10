@@ -127,7 +127,7 @@ public class TestUtils {
 
         if (!done) {
             String message = String.format("Only '%s' out of '%s' in state 'Running' before timeout %s", actualReplicas, expectedReplicas,
-                    String.join(",", pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList())));
+                    pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.joining(",")));
             throw new RuntimeException(message);
         }
     }
@@ -363,11 +363,11 @@ public class TestUtils {
      * @return true if AddressSpace is ready, false otherwise
      */
     public static boolean isAddressSpaceReady(JsonObject addressSpace) {
-        boolean isReady = false;
-        if (addressSpace != null) {
-            isReady = addressSpace.getJsonObject("status").getBoolean("isReady");
-        }
-        return isReady;
+        return addressSpace != null && addressSpace.getJsonObject("status").getBoolean("isReady");
+    }
+
+    public static boolean matchAddressSpacePlan(JsonObject data, AddressSpace addressSpace) {
+        return data != null && data.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan").equals(addressSpace.getPlan());
     }
 
     /**
@@ -407,27 +407,55 @@ public class TestUtils {
      * @param addressSpace name of addressSpace
      * @throws Exception IllegalStateException if address space is not ready within timeout
      */
-    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
+    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
         JsonObject addressSpaceObject = null;
         TimeoutBudget budget = null;
 
         boolean isReady = false;
         budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
-            addressSpaceObject = apiClient.getAddressSpace(addressSpace);
+            addressSpaceObject = apiClient.getAddressSpace(addressSpace.getName());
             isReady = isAddressSpaceReady(addressSpaceObject);
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: '{}' will be in ready state", addressSpace);
+            log.info("Waiting until Address space: '{}' will be in ready state", addressSpace.getName());
         }
         if (!isReady) {
             String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getJsonObject("status").toString() : "";
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout: " + jsonStatus);
         }
-        waitUntilEndpointsPresent(apiClient, addressSpace);
+        waitUntilEndpointsPresent(apiClient, addressSpace.getName());
         return convertToAddressSpaceObject(apiClient.listAddressSpacesObjects()).stream().filter(addrSpaceI ->
-                addrSpaceI.getName().equals(addressSpace)).findFirst().get();
+                addrSpaceI.getName().equals(addressSpace.getName())).findFirst().get();
+    }
+
+    /**
+     * wait until enmasse.io/applied-plan parameter of Address Space is set to right plan within timeout
+     *
+     * @param apiClient    instance of AddressApiClient
+     * @param addressSpace name of addressSpace
+     * @throws Exception IllegalStateException if address space is not ready within timeout
+     */
+    public static void waitForAddressSpacePlanApplied(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
+        JsonObject addressSpaceObject = null;
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+
+        boolean isPlanApplied = false;
+        while (budget.timeLeft() >= 0 && !isPlanApplied) {
+            addressSpaceObject = apiClient.getAddressSpace(addressSpace.getName());
+            isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
+            if (!isPlanApplied) {
+                Thread.sleep(1000);
+            }
+            log.info("Waiting until Address space plan will be applied: '{}'", addressSpace.getPlan());
+        }
+        isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
+        if (!isPlanApplied) {
+            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan") : "";
+            throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
+        }
+        log.info("Address plan {} successfully applied", addressSpace.getPlan());
     }
 
     /**

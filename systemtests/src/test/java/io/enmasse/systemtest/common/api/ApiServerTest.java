@@ -36,11 +36,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.isolated;
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
 class ApiServerTest extends TestBase {
@@ -299,5 +300,33 @@ class ApiServerTest extends TestBase {
             KubeCMDClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
+    }
+
+    @Test
+    void testReplaceAddressSpace() throws Exception {
+        AddressSpace addressspace = new AddressSpace("test-replace-address-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        Destination dest = Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan());
+        UserCredentials cred = new UserCredentials("david", "password");
+
+        createAddressSpace(addressspace);
+        setAddresses(addressspace, dest);
+        createUser(addressspace, cred);
+
+        assertCanConnect(addressspace, cred, Collections.singletonList(dest));
+
+        replaceAddressSpace(addressspace);
+
+        assertCanConnect(addressspace, cred, Collections.singletonList(dest));
+
+        addressspace.setName("another-name");
+
+        Throwable exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(addressspace, HTTP_NOT_FOUND));
+        assertTrue(exception.getMessage().contains(String.format("AddressSpace %s not found", addressspace.getName())));
+
+        addressspace.setName("test-replace-address-space");
+        addressspace.setPlan("no-exists");
+
+        exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(addressspace, HTTP_BAD_REQUEST));
+        assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
     }
 }
