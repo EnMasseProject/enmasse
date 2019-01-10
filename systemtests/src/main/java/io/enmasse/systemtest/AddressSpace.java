@@ -220,13 +220,17 @@ public class AddressSpace {
         return addressSpaceString.toString();
     }
 
-    public JsonObject toJson(String version) {
+    public JsonObject toJson(String version, boolean useEndpoints) {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", version);
         entry.put("kind", "AddressSpace");
         entry.put("metadata", this.jsonMetadata());
-        entry.put("spec", this.jsonSpec());
+        entry.put("spec", this.jsonSpec(useEndpoints));
         return entry;
+    }
+
+    public JsonObject toJson(String version) {
+        return toJson(version, false);
     }
 
     public JsonObject jsonMetadata() {
@@ -242,14 +246,14 @@ public class AddressSpace {
         return annotations;
     }
 
-    public JsonObject jsonSpec() {
+    public JsonObject jsonSpec(boolean useEndpoints) {
         JsonObject spec = new JsonObject();
         spec.put("type", this.getType().toString().toLowerCase());
         spec.put("plan", this.getPlan());
         JsonObject authService = new JsonObject();
         authService.put("type", this.getAuthService().toString());
         spec.put("authenticationService", authService);
-        if (!this.getEndpoints().isEmpty()) {
+        if (!this.getEndpoints().isEmpty() && useEndpoints) {
             spec.put("endpoints", this.jsonEndpoints());
         }
         return spec;

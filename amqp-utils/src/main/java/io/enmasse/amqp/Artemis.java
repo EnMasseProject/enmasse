@@ -154,7 +154,7 @@ public class Artemis implements AutoCloseable {
         return queues;
     }
 
-    public void close() {
+    public void close() throws Exception {
         syncRequestClient.close();
     }
 

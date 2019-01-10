@@ -188,7 +188,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeAddressSpaceCompat() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"AddressSpace\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"myspace\"" +
@@ -210,20 +210,20 @@ public class SerializationTest {
 
     @Test
     public void testDeserializeAddressSpaceMissingDefaults() throws IOException {
-        String serialized = "{\"kind\": \"AddressSpace\", \"apiVersion\": \"v1alpha1\"}";
+        String serialized = "{\"kind\": \"AddressSpace\", \"apiVersion\": \"v1beta1\"}";
         assertThrows(DeserializeException.class, () -> CodecV1.getMapper().readValue(serialized, AddressSpace.class));
     }
 
     @Test
     public void testDeserializeAddressMissingDefaults() throws IOException {
-        String serialized = "{\"kind\": \"Address\", \"apiVersion\": \"v1alpha1\"}";
+        String serialized = "{\"kind\": \"Address\", \"apiVersion\": \"v1beta1\"}";
         assertThrows(DeserializeException.class, () -> CodecV1.getMapper().readValue(serialized, Address.class));
     }
 
     @Test
     public void testDeserializeAddressSpacePlan() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"AddressSpacePlan\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"myspace\"," +
@@ -259,7 +259,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeAddressSpacePlanWithDefaults() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"AddressSpacePlan\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"myspace\"" +
@@ -302,7 +302,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeResourceDefinitionWithTemplate() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"ResourceDefinition\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"rdef1\"" +
@@ -326,7 +326,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeResourceDefinitionNoTemplate() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"ResourceDefinition\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"rdef1\"" +
@@ -341,7 +341,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeAddressPlan() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"AddressPlan\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"plan1\"" +
@@ -369,7 +369,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeAddressPlanWithDefaults() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"AddressPlan\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"plan1\"" +
@@ -393,7 +393,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeAddressSpaceWithMissingAuthServiceValues() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
                 "\"kind\":\"AddressSpace\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"myspace\"" +
@@ -412,7 +412,7 @@ public class SerializationTest {
     @Test
     public void testDeserializeAddressSpaceWithExtraAuthServiceValues() throws IOException {
         String json = "{" +
-                "\"apiVersion\":\"enmasse.i/v1alpha1\"," +
+                "\"apiVersion\":\"enmasse.i/v1beta1\"," +
                 "\"kind\":\"AddressSpace\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"myspace\"" +
@@ -509,7 +509,7 @@ public class SerializationTest {
         assertEquals(infraConfig, deserialized);
 
         serialized = "{" +
-                "\"apiVersion\":\"admin.enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"admin.enmasse.io/v1beta1\"," +
                 "\"kind\":\"StandardInfraConfig\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"infra\"," +
@@ -582,7 +582,7 @@ public class SerializationTest {
         assertEquals(infraConfig, deserialized);
 
         serialized = "{" +
-                "\"apiVersion\":\"admin.enmasse.io/v1alpha1\"," +
+                "\"apiVersion\":\"admin.enmasse.io/v1beta1\"," +
                 "\"kind\":\"BrokeredInfraConfig\"," +
                 "\"metadata\":{" +
                 "  \"name\":\"infra\"," +

@@ -12,7 +12,7 @@
 [source,json,options="nowrap"]
 ----
 {
-  "apiVersion": "enmasse.io/v1alpha1",
+  "apiVersion": "enmasse.io/v1beta1",
   "kind": "Address",
   "metadata": {
       "addressSpace": "myspace"
@@ -30,7 +30,7 @@
 [source,bash,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X POST -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
+curl -X POST -T address.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1beta1/namespaces/[:namespace]/addressspaces/myspace/addresses
 ----
 
 where `namespace` is the name of the address space.
@@ -43,7 +43,7 @@ where `namespace` is the name of the address space.
 +
 [source,bash,options="nowrap"]
 ----
-curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace/addresses
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1beta1/namespaces/[:namespace]/addressspaces/myspace/addresses
 ----
 +
 The addresses are ready to be used by messaging clients once the `status.isReady` field of each

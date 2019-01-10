@@ -5,6 +5,7 @@
 package io.enmasse.address.model;
 
 import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.config.AnnotationKeys;
 
 import java.util.Optional;
 
@@ -23,8 +24,13 @@ public class AddressResolver {
         return getType(address).findAddressPlan(address.getPlan());
     }
 
+    public AddressPlan getPlan(AddressType addressType, String plan) {
+        return addressType.findAddressPlan(plan).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + plan + " for address type " + addressType.getName()));
+    }
+
     public AddressPlan getPlan(AddressType addressType, Address address) {
-        return addressType.findAddressPlan(address.getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getPlan() + " for address type " + address.getType()));
+        return addressType.findAddressPlan(address.getAnnotation(AnnotationKeys.APPLIED_PLAN))
+                .orElse(addressType.findAddressPlan(address.getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getPlan() + " for address type " + address.getType())));
     }
 
     public AddressType getType(Address address) {

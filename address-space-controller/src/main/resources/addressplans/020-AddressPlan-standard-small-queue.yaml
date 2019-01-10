@@ -1,4 +1,4 @@
-apiVersion: admin.enmasse.io/v1alpha1
+apiVersion: admin.enmasse.io/v1beta1
 kind: AddressPlan
 metadata:
   name: standard-small-queue

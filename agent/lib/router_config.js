@@ -40,7 +40,7 @@ function address_describe (a) {
 }
 
 function autolink_compare (a, b) {
-    return myutils.string_compare(a.addr, b.addr) || myutils.string_compare(a.direction, b.direction);
+    return myutils.string_compare(a.addr, b.addr) || myutils.string_compare(a.direction, b.direction) || myutils.string_compare(a.containerId, b.containerId);
 }
 
 function is_not_defined (a) {
@@ -58,13 +58,16 @@ function same_autolink_definition (a, b) {
 }
 
 function autolink_describe (a) {
-    return 'autolink ' + a.direction + ' ' + a.addr;
+    return 'autolink ' + a.name + ' (dir: ' + a.direction + ', addr: ' + a.addr + ')';
 }
 
 function linkroute_compare (a, b) {
     var result = myutils.string_compare(a.prefix, b.prefix);
     if (result === 0) {
         result = myutils.string_compare(a.direction, b.direction);
+    }
+    if (result === 0) {
+        result = myutils.string_compare(a.containerId, b.containerId);
     }
     return result;
 }
@@ -75,6 +78,18 @@ function same_linkroute_definition (a, b) {
 
 function linkroute_describe (a) {
     return 'linkroute ' + a.direction + ' ' + a.prefix;
+}
+
+function listener_compare(a, b) {
+    return myutils.string_compare(a.host, b.host) || myutils.string_compare(a.port, b.port);
+}
+
+function same_listener_definition(a, b) {
+    return a.host === b.host && a.port === b.port && a.sslProfile === b.sslProfile && a.saslMechanisms === b.saslMechanisms && a.authenticatePeer === b.authenticatePeer;
+}
+
+function listener_describe (a) {
+    return 'listener ' + a.name + ' (' + a.host + ':' + a.port + ')';
 }
 
 const entities = [
@@ -101,6 +116,14 @@ const entities = [
         describe:linkroute_describe,
         type:'org.apache.qpid.dispatch.router.config.linkRoute',
         singular:'linkroute'
+    },
+    {
+        name:'listeners',
+        comparator:listener_compare,
+        equality:same_listener_definition,
+        describe:listener_describe,
+        type:'org.apache.qpid.dispatch.listener',
+        singular:'listener'
     }
 ];
 
@@ -111,6 +134,7 @@ function RouterConfig(prefix) {
     this.autolinks = [];
     this.addresses = [];
     this.linkroutes = [];
+    this.listeners = [];
 }
 
 RouterConfig.prototype.add_address = function (a) {
@@ -118,11 +142,15 @@ RouterConfig.prototype.add_address = function (a) {
 };
 
 RouterConfig.prototype.add_autolink = function (a) {
-    this.autolinks.push(myutils.merge({name:this.prefix + a.addr + '-' + a.direction}, a));
+    this.autolinks.push(myutils.merge({name: this.prefix + a.addr + '-' + a.containerId}, a));
+};
+
+RouterConfig.prototype.add_listener = function (a) {
+    this.listeners.push(myutils.merge({name:this.prefix + a.host + '-' + a.port}, a));
 };
 
 RouterConfig.prototype.add_linkroute = function (l) {
-    this.linkroutes.push(myutils.merge({name:this.prefix + l.prefix + '-' + l.direction}, l));
+    this.linkroutes.push(myutils.merge({name:this.prefix + l.prefix + '-' + l.containerId}, l));
 };
 
 function distinct_container_per_direction(props) {
@@ -137,6 +165,10 @@ RouterConfig.prototype.add_autolink_pair = function (def) {
         this.add_autolink(distinct_container_per_direction(myutils.merge({direction:directions[i]}, def)));
     }
 };
+
+RouterConfig.prototype.add_autolink_in = function (def) {
+    this.add_autolink(distinct_container_per_direction(myutils.merge({direction:'in'}, def)));
+}
 
 RouterConfig.prototype.add_linkroute_pair = function (def) {
     for (let i = 0; i < directions.length; i++) {
@@ -313,12 +345,37 @@ function desired_address_config(high_level_address_definitions) {
         var def = high_level_address_definitions[i];
         if (def.type === 'queue') {
             config.add_address({prefix:def.address, distribution:'balanced', waypoint:true});
-            config.add_autolink_pair({addr:def.address, containerId: def.allocated_to || def.address});
+            if (def.allocated_to) {
+                log.info("Constructing config for queue " + def.address + " allocated to: " + JSON.stringify(def.allocated_to));
+                for (var j in def.allocated_to) {
+                    var brokerStatus = def.allocated_to[j];
+                    if (brokerStatus.state === 'Active') {
+                        config.add_autolink_pair({addr:def.address, containerId: brokerStatus.containerId});
+                    } else if (brokerStatus.state === 'Draining') {
+                        config.add_autolink_in({addr:def.address, containerId: brokerStatus.containerId});
+                    }
+                }
+            } else {
+                log.info("Constructing old config for queue " + def.address);
+                config.add_autolink_pair({addr:def.address, containerId: def.address});
+            }
         } else if (def.type === 'topic') {
-            config.add_linkroute_pair({prefix:def.address, containerId: def.allocated_to ? def.allocated_to : def.address});
+            if (def.allocated_to) {
+                for (var j in def.allocated_to) {
+                    var brokerStatus = def.allocated_to[j];
+                    config.add_linkroute_pair({prefix:def.address, containerId: brokerStatus.containerId});
+                    // TODO: Handle Draining?
+                }
+            } else {
+                config.add_linkroute_pair({prefix:def.address, containerId: def.address});
+            }
         } else if (def.type === 'subscription') {
             if (def.allocated_to) {
-                config.add_linkroute(distinct_container_per_direction({prefix:def.topic+'::'+def.address, containerId: def.allocated_to, direction:'out'}));
+                for (var j in def.allocated_to) {
+                    var brokerStatus = def.allocated_to[j];
+                    config.add_linkroute(distinct_container_per_direction({prefix:def.topic+'::'+def.address, containerId: brokerStatus.containerId, direction:'out'}));
+                    // TODO: Handle Draining?
+                }
             } else {
                 log.warn('subscription %s not allocated to broker', def.address);
             }
@@ -328,6 +385,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_address({prefix:def.address, distribution:'multicast', waypoint:false});
         }
     }
+    config.add_listener({host:'0.0.0.0', port: '56711', sslProfile: 'inter_router_tls', saslMechanisms: 'EXTERNAL', authenticatePeer: true})
     sort_config(config);
     log.debug('mapped %j => %j', high_level_address_definitions, config);
     return config;

@@ -37,7 +37,15 @@ function extract_spec(def) {
     var o = myutils.merge(def.spec, {status:def.status});
     o.name = def.metadata ? def.metadata.name : def.address;
     if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
-        o.allocated_to = def.metadata.annotations['enmasse.io/broker-id'];
+        var broker_id = def.metadata.annotations['enmasse.io/broker-id'];
+        var cluster_id = def.metadata.annotations['cluster_id'];
+        if (cluster_id === undefined) {
+            cluster_id = broker_id;
+        }
+        o.allocated_to = [{clusterId: cluster_id, containerId: broker_id, state: 'Active'}];
+    }
+    if (def.status && def.status.brokerStatuses) {
+        o.allocated_to = def.status.brokerStatuses;
     }
     return o;
 }
@@ -55,9 +63,25 @@ function ready (addr) {
     return addr && addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
+function same_allocation(a, b) {
+    for (var i in a) {
+        var equal = false;
+        for (var j in b) {
+            if (a[i].containerId == b[j].containerId && a[i].clusterId == b[j].clusterId && a[i].state == b[j].state) {
+                equal = false;
+                break;
+            }
+        }
+        if (!equal) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function same_address_definition(a, b) {
-    if (a.address === b.address && a.type === b.type && a.allocated_to !== b.allocated_to) {
-        log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, a.allocated_to, b.allocated_to);
+    if (a.address === b.address && a.type === b.type && same_allocation(a.allocated_to, b.allocated_to)) {
+        log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
     }
     return a.address === b.address && a.type === b.type && a.allocated_to === b.allocated_to;
 }
@@ -232,7 +256,7 @@ AddressSource.prototype.create_address = function (definition) {
     var address_name = get_address_name_for_address(definition.address, this.config.ADDRESS_SPACE);
     var configmap_name = this.get_configmap_name(address_name);
     var address = {
-        apiVersion: 'enmasse.io/v1alpha1',
+        apiVersion: 'enmasse.io/v1beta1',
         kind: 'Address',
         metadata: {
             name: address_name,
@@ -300,8 +324,8 @@ function extract_plan_details (plan) {
 
 AddressSource.prototype.get_address_types = function () {
     var options = this.config;
-    var address_space_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1alpha1/namespaces/', 'addressspaceplans/' + this.config.ADDRESS_SPACE_PLAN, options);
-    var address_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1alpha1/namespaces/', 'addressplans', options);
+    var address_space_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta1/namespaces/', 'addressspaceplans/' + this.config.ADDRESS_SPACE_PLAN, options);
+    var address_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta1/namespaces/', 'addressplans', options);
     return kubernetes.get_raw(address_space_plan_path, options).then(function (address_space_plan) {
             return address_space_plan.addressPlans;
         }).then(function (supported_plans) {

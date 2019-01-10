@@ -1,4 +1,4 @@
-apiVersion: user.enmasse.io/v1alpha1
+apiVersion: user.enmasse.io/v1beta1
 kind: MessagingUser
 metadata:
   name: myspace.user1

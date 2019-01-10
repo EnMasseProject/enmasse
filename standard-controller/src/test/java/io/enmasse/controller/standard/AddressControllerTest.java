@@ -6,6 +6,8 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.address.model.Status;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
@@ -15,6 +17,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.Vertx;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +25,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class AddressControllerTest {
@@ -45,10 +49,12 @@ public class AddressControllerTest {
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1, null));
         StandardControllerOptions options = new StandardControllerOptions();
         options.setAddressSpace("me1");
+        options.setInfraUuid("infra");
         options.setAddressSpacePlanName("plan1");
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
-        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, new Metrics(), idGenerator);
+        Vertx vertx = Vertx.vertx();
+        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options.getCertDir()));
     }
 
     @Test
@@ -60,7 +66,9 @@ public class AddressControllerTest {
                 .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
+                .putAnnotation(AnnotationKeys.APPLIED_PLAN, "small-queue")
+                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-infra-0")
+                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-infra-0-0")
                 .setStatus(new Status(true).setPhase(Status.Phase.Active))
                 .build();
         Address terminating = new Address.Builder()
@@ -70,10 +78,12 @@ public class AddressControllerTest {
                 .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
+                .putAnnotation(AnnotationKeys.APPLIED_PLAN, "small-queue")
+                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-infra-0")
+                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-infra-0-0")
                 .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
                 .build();
-        when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker", new KubernetesList())));
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker-infra-0", new KubernetesList())));
         controller.onUpdate(Arrays.asList(alive, terminating));
         verify(mockApi).deleteAddress(any());
         verify(mockApi).deleteAddress(eq(terminating));
@@ -88,9 +98,9 @@ public class AddressControllerTest {
                 .setNamespace("ns")
                 .setType("queue")
                 .setPlan("small-queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0")
-                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+                .setStatus(new Status(true).setPhase(Status.Phase.Active)
+                        .appendBrokerStatus(new BrokerStatus("broker-infra-0", "broker-infra-0-0", BrokerState.Active))
+                        .appendBrokerStatus(new BrokerStatus("broker-infra-1", "broker-infra-1-0", BrokerState.Draining)))
                 .build();
 
         KubernetesList oldList = new KubernetesListBuilder()
@@ -101,12 +111,14 @@ public class AddressControllerTest {
                         .build())
                 .build();
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(
-                new BrokerCluster("broker", new KubernetesList()),
-                new BrokerCluster("unused", oldList)));
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", oldList)));
 
         controller.onUpdate(Arrays.asList(alive));
 
         verify(mockHelper).delete(any());
         verify(mockHelper).delete(eq(oldList));
+        assertEquals(1, alive.getStatus().getBrokerStatuses().size());
+        assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
     }
 }

@@ -51,8 +51,9 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
-        AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type);
-        AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, AuthService.STANDARD);
+        String plan = type.equals(AddressSpaceType.STANDARD) ? "standard-small" : "brokered-single-broker";
+        AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type, plan, AuthService.NONE);
+        AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, plan, AuthService.STANDARD);
         createAddressSpaceList(s3standard, s4standard);
 
         assertCanConnect(s3standard, new UserCredentials(emptyUser, emptyPassword), amqpAddressList);
@@ -65,8 +66,9 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
-        AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type, AuthService.STANDARD);
-        AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type, AuthService.STANDARD);
+        String plan = type.equals(AddressSpaceType.STANDARD) ? "standard-small" : "brokered-single-broker";
+        AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type, plan, AuthService.STANDARD);
+        AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type, plan, AuthService.STANDARD);
         createAddressSpaceList(s1brokered, s2brokered);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials

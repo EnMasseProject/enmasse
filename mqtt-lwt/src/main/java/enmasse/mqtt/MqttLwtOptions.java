@@ -77,7 +77,7 @@ public class MqttLwtOptions {
 
         options.setStartupTimeout(getEnv(env, "ENMASSE_MQTT_STARTUPTIMEOUT")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofSeconds(20)));
+                .orElse(Duration.ofMinutes(5)));
 
         options.setCertDir(getEnv(env, "CERT_DIR")
                 .orElseThrow(() -> new IllegalArgumentException("CERT_DIR is required")));

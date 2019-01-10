@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.address.model.Status;
 
 import java.io.IOException;
@@ -108,6 +110,13 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
                 ArrayNode messages = (ArrayNode) status.get(Fields.MESSAGES);
                 for (int i = 0; i < messages.size(); i++) {
                     s.appendMessage(messages.get(i).asText());
+                }
+            }
+            if (status.hasNonNull(Fields.BROKER_STATUSES)) {
+                ArrayNode brokerStatuses = (ArrayNode) status.get(Fields.BROKER_STATUSES);
+                for (int i = 0; i < brokerStatuses.size(); i++) {
+                    ObjectNode data = (ObjectNode) brokerStatuses.get(i);
+                    s.appendBrokerStatus(new BrokerStatus(data.get(Fields.CLUSTER_ID).asText(), data.get(Fields.CONTAINER_ID).asText(), BrokerState.valueOf(data.get(Fields.STATE).asText())));
                 }
             }
             builder.setStatus(s);

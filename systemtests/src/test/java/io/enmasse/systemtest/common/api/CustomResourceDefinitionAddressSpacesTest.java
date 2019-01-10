@@ -21,13 +21,14 @@ import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.cmdclients.KubeCMDClient.createCR;
+import static io.enmasse.systemtest.cmdclients.KubeCMDClient.updateCR;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
-public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
+class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
 
     @Test
@@ -43,6 +44,22 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
             return allAddresses.getStdOut() + allAddresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void testReplaceAddressSpace() throws Exception {
+        AddressSpace standard = new AddressSpace("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        standard.setPlan("standard-small");
+        createCR(standard.toJson(addressApiClient.getApiVersion()).toString());
+        addToAddressSpacess(standard);
+        waitForAddressSpaceReady(standard);
+        waitForAddressSpacePlanApplied(standard);
+
+        standard.setPlan("standard-unlimited");
+        updateCR(standard.toJson(addressApiClient.getApiVersion()).toString());
+        waitForAddressSpaceReady(standard);
+
+        assertThat(getAddressSpace(standard.getName()).getPlan(), is("standard-unlimited"));
     }
 
     @Test
@@ -116,7 +133,7 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             CliOutputData data = new CliOutputData(KubeCMDClient.getAddressSpace(namespace, Optional.of("wide")).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady());
-            if(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady()) {
+            if (((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady()) {
                 assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).getStatus(),
                         containsString(""));
             } else {
@@ -181,8 +198,6 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
-                    "Pending");
 
             TestUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
 
@@ -192,9 +207,6 @@ public class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
-                    "Configuring");
-            assertFalse(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());
 
             TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
 

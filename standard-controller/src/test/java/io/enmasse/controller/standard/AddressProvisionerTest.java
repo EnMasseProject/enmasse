@@ -4,10 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
@@ -86,8 +83,8 @@ public class AddressProvisionerTest {
                 .setNamespace("ns")
                 .setPlan("small-queue")
                 .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0-0")
-                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-0")
+                .setStatus(new Status(true)
+                        .appendBrokerStatus(new BrokerStatus("broker-0", "broker-0-0").setState(BrokerState.Active)))
                 .build());
 
         usageMap = provisioner.checkUsage(addresses);
@@ -182,6 +179,8 @@ public class AddressProvisionerTest {
         assertTrue(queue.getStatus().getMessages().isEmpty(), queue.getStatus().getMessages().toString());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-0-0"));
+        assertThat(queue.getStatus().getBrokerStatuses().get(0).getContainerId(), is("broker-1234-0-0"));
+        assertThat(queue.getStatus().getBrokerStatuses().get(0).getClusterId(), is("broker-1234-0"));
     }
 
     private static RouterCluster createDeployment(int replicas) {
@@ -210,6 +209,8 @@ public class AddressProvisionerTest {
         assertTrue(queue.getStatus().getMessages().isEmpty(), queue.getStatus().getMessages().toString());
         assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
         assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-1-0"));
+        assertThat(queue.getStatus().getBrokerStatuses().get(0).getClusterId(), is("broker-1234-1"));
+        assertThat(queue.getStatus().getBrokerStatuses().get(0).getContainerId(), is("broker-1234-1-0"));
     }
 
     @Test
@@ -350,6 +351,7 @@ public class AddressProvisionerTest {
 
         final Address q = createQueue("q1", "xlarge-queue", annotations -> {
             annotations.put(AnnotationKeys.CLUSTER_ID, manualClusterId);
+            annotations.put(AnnotationKeys.APPLIED_PLAN, "xlarge-queue");
         });
 
         final Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, singleton(q), singleton(q));

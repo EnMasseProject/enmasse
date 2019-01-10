@@ -65,34 +65,58 @@ public class AddressProvisioner {
         AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
 
         for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-            String instanceId = null;
-            String resourceName = resourceRequest.getName();
             if ("subscription".equals(address.getType())) {
-                resourceName = "subscription";
-                if (!getBrokerId(address).isPresent()) {
-                    log.warn("Unexpected subscription without broker id: " + address.getAddress());
-                    return;
-                }
-                instanceId = getBrokerId(address).get();
-            } else if (resourceRequest.getName().equals("router")) {
-                instanceId = "all";
-
-            //Should we check the plan type, instead of the amount? addressPlan.getName="pooled-topic"
-            } else if (resourceRequest.getName().equals("broker") && resourceRequest.getCredit() < 1) {
-                if (!getClusterId(address).isPresent()) {
+                if (address.getStatus().getBrokerStatuses().isEmpty() && address.getAnnotation(AnnotationKeys.BROKER_ID) == null) {
                     log.warn("Unexpected pooled address without cluster id: " + address.getAddress());
                     return;
                 }
-                instanceId = getClusterId(address).get();
+                String instanceId = address.getAnnotation(AnnotationKeys.BROKER_ID);
+                if (!address.getStatus().getBrokerStatuses().isEmpty()) {
+                    for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
+                        if (BrokerState.Active.equals(status.getState())) {
+                            addToUsage(usageMap, status.getContainerId(), "subscription", resourceRequest.getCredit());
+                        }
+                    }
+                } else {
+                    addToUsage(usageMap, instanceId, "subscription", resourceRequest.getCredit());
+                }
+            } else if (resourceRequest.getName().equals("router")) {
+                addToUsage(usageMap, "all", "router", resourceRequest.getCredit());
 
-            //Should we check the plan type, instead of the amount? addressPlan.getName="sharded-topic"
+            } else if (resourceRequest.getName().equals("broker") && resourceRequest.getCredit() < 1) {
+                if (address.getStatus().getBrokerStatuses().isEmpty() && address.getAnnotation(AnnotationKeys.CLUSTER_ID) == null) {
+                    log.warn("Unexpected pooled address without cluster id: " + address.getAddress());
+                    return;
+                }
+                if (!address.getStatus().getBrokerStatuses().isEmpty()) {
+                    for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
+                        if (BrokerState.Active.equals(status.getState())) {
+                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getCredit());
+                        }
+                    }
+                } else {
+                    addToUsage(usageMap, address.getAnnotation(AnnotationKeys.CLUSTER_ID), "broker", resourceRequest.getCredit());
+                }
+
             } else if (resourceRequest.getName().equals("broker")) {
-                instanceId = getShardedClusterId(address);
+                if (address.getStatus().getBrokerStatuses().isEmpty()) {
+                    addToUsage(usageMap, getShardedClusterId(address), "broker", resourceRequest.getCredit());
+                } else {
+                    for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
+                        if (BrokerState.Active.equals(status.getState())) {
+                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getCredit());
+                        }
+                    }
+                }
             }
-            Map<String, UsageInfo> resourceUsage = usageMap.computeIfAbsent(resourceName, k -> new HashMap<>());
-            UsageInfo info = resourceUsage.computeIfAbsent(instanceId, i -> new UsageInfo());
-            info.addUsed(resourceRequest.getCredit());
+
         }
+    }
+
+    private static void addToUsage(Map<String, Map<String, UsageInfo>> usageMap, String id, String resourceName, double credit) {
+        Map<String, UsageInfo> resourceUsage = usageMap.computeIfAbsent(resourceName, k -> new HashMap<>());
+        UsageInfo info = resourceUsage.computeIfAbsent(id, i -> new UsageInfo());
+        info.addUsed(credit);
     }
 
     public Map<String, Map<String, UsageInfo>> checkQuota(Map<String, Map<String, UsageInfo>> usageMap, Set<Address> pending, Set<Address> all) {
@@ -128,6 +152,7 @@ public class AddressProvisioner {
                 if (neededMap != null) {
                     newUsageMap = neededMap;
                     address.getStatus().setPhase(Status.Phase.Configuring);
+                    address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getPlan());
                 }
             }
         }
@@ -174,7 +199,19 @@ public class AddressProvisioner {
         String cluster = topic.getAnnotation(AnnotationKeys.CLUSTER_ID);
         String broker = topic.getAnnotation(AnnotationKeys.BROKER_ID);
 
-        boolean isPooled = broker != null;
+        AddressPlan topicPlan = addressResolver.getPlan(topic);
+        boolean isPooled = false;
+
+        for (ResourceRequest resourceRequest : topicPlan.getRequiredResources()) {
+            if ("broker".equals(resourceRequest.getName()) && resourceRequest.getCredit() < 1) {
+                isPooled = true;
+                break;
+            }
+        }
+
+        if (isPooled && !topic.getStatus().getBrokerStatuses().isEmpty()) {
+            broker = topic.getStatus().getBrokerStatuses().get(0).getContainerId();
+        }
 
         subscription.putAnnotation(AnnotationKeys.CLUSTER_ID, cluster);
 
@@ -182,7 +219,13 @@ public class AddressProvisioner {
             UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(broker, k -> new UsageInfo());
             if (usageInfo.getUsed()+requested.getCredit() <= 1) {
                 usageInfo.addUsed(requested.getCredit());
+
+                // TODO: Remove after releasing 0.26.0
                 subscription.putAnnotation(AnnotationKeys.BROKER_ID, broker);
+
+                BrokerStatus brokerStatus = new BrokerStatus(cluster, broker);
+                brokerStatus.setState(BrokerState.Active);
+                subscription.getStatus().setBrokerStatuses(Collections.singletonList(brokerStatus));
             } else {
                 log.info("no quota available on broker {} for {} on topic {}", cluster, subscription.getAddress(), topic.getAddress());
             }
@@ -204,18 +247,22 @@ public class AddressProvisioner {
             for (BrokerInfo brokerInfo : shardedBrokers) {
                 UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(brokerInfo.getBrokerId(), k -> new UsageInfo());
                 if (brokerInfo.getCredit() + requested.getCredit() < 1) {
+                    // TODO: Remove after releasing 0.26.0
                     subscription.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
+                    BrokerStatus brokerStatus = new BrokerStatus(cluster, brokerInfo.getBrokerId());
+                    brokerStatus.setState(BrokerState.Active);
+                    subscription.getStatus().setBrokerStatuses(Collections.singletonList(brokerStatus));
                     usageInfo.addUsed(requested.getCredit());
                     break;
                 }
             }
         }
-        return subscription.getAnnotation(AnnotationKeys.BROKER_ID) != null;
+        return !subscription.getStatus().getBrokerStatuses().isEmpty();
     }
 
     private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
         AddressType addressType = addressResolver.getType(address);
-        AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
+        AddressPlan addressPlan = addressResolver.getPlan(addressType, address.getPlan());
 
         Map<String, Map<String, UsageInfo>> needed = copyUsageMap(usage);
 
@@ -247,14 +294,20 @@ public class AddressProvisioner {
                         }
                     }
                 } else {
-                    UsageInfo info = resourceUsage.get(getShardedClusterId(address));
+                    if (hasPlansChanged(address)) {
+                        address.removeAnnotation(AnnotationKeys.CLUSTER_ID);
+                        address.removeAnnotation(AnnotationKeys.BROKER_ID);
+                    }
+                    String clusterId = getShardedClusterId(address);
+                    UsageInfo info = resourceUsage.get(clusterId);
                     if (info != null) {
                         throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
                     }
                     info = new UsageInfo();
                     info.addUsed(resourceRequest.getCredit());
-                    resourceUsage.put(getShardedClusterId(address), info);
-                    address.putAnnotation(AnnotationKeys.CLUSTER_ID, getShardedClusterId(address));
+                    resourceUsage.put(clusterId, info);
+
+                    address.putAnnotation(AnnotationKeys.CLUSTER_ID, clusterId);
 	                List<BrokerInfo> brokers = new ArrayList<>();
                     for (String host : resourceUsage.keySet()) {
                         if (host.startsWith(address.getAddress())) {
@@ -262,11 +315,15 @@ public class AddressProvisioner {
                         }
                     }
 
+                    BrokerStatus brokerStatus = new BrokerStatus(clusterId, address.getAddress());
+                    brokerStatus.setState(BrokerState.Active);
+
+                    updateBrokerStatus(address, Collections.singletonList(brokerStatus));
+
                     brokers.sort(Comparator.comparingDouble(BrokerInfo::getCredit));
 
                     for (BrokerInfo brokerInfo : brokers) {
                         if (brokerInfo.getCredit() + resourceRequest.getCredit() < 1) {
-                            address.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                             UsageInfo used = resourceUsage.get(brokerInfo.getBrokerId());
                             used.addUsed(resourceRequest.getCredit());
                             break;
@@ -300,6 +357,10 @@ public class AddressProvisioner {
         return needed;
     }
 
+    static boolean hasPlansChanged(Address address) {
+        return !address.getPlan().equals(address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
     static int sumTotalNeeded(Map<String, Map<String, UsageInfo>> usageMap) {
         int totalNeeded = 0;
         for (String resource : usageMap.keySet()) {
@@ -331,6 +392,26 @@ public class AddressProvisioner {
         return needed;
     }
 
+    private static void updateBrokerStatus(Address address, List<BrokerStatus> brokerStatuses) {
+        List<BrokerStatus> toAdd = new ArrayList<>(brokerStatuses);
+        for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+            boolean found = false;
+            for (BrokerStatus newBrokerStatus : brokerStatuses) {
+                if (newBrokerStatus.getContainerId().equals(brokerStatus.getContainerId()) && newBrokerStatus.getClusterId().equals(brokerStatus.getClusterId())) {
+                    brokerStatus.setState(newBrokerStatus.getState());
+                    toAdd.remove(newBrokerStatus);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                brokerStatus.setState(BrokerState.Draining);
+            }
+        }
+
+        address.getStatus().addAllBrokerStatuses(toAdd);
+    }
+
     public String getShardedClusterId(Address address) {
         final String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
 
@@ -343,14 +424,6 @@ public class AddressProvisioner {
         crc32.update(address.getAddressSpace().getBytes());
         crc32.update(address.getAddress().getBytes());
         return "broker-sharded-" + Long.toHexString(crc32.getValue()) + "-" + infraUuid;
-    }
-
-    public static Optional<String> getClusterId(Address address) {
-        return Optional.ofNullable(address.getAnnotation(AnnotationKeys.CLUSTER_ID));
-    }
-
-    public static Optional<String> getBrokerId(Address address) {
-        return Optional.ofNullable(address.getAnnotation(AnnotationKeys.BROKER_ID));
     }
 
     private Map<String, Double> computeLimits() {
@@ -410,6 +483,15 @@ public class AddressProvisioner {
             log.info("Scaling router to {} replicas", router.getNewReplicas());
             kubernetes.scaleStatefulSet(router.getName(), router.getNewReplicas());
         }
+
+        for (BrokerCluster cluster : existingClusters) {
+            if (cluster.hasChanged()) {
+                log.info("Scaling broker cluster {} to {} replicas", cluster.getClusterId(), cluster.getNewReplicas());
+                kubernetes.scaleStatefulSet(cluster.getClusterId(), cluster.getNewReplicas());
+            }
+        }
+
+
     }
 
     private final Pattern pooledPattern;
@@ -426,8 +508,13 @@ public class AddressProvisioner {
 
         for (BrokerInfo brokerInfo : brokers) {
             if (brokerInfo.getCredit() + credit < 1) {
+                // TODO: Remove after releasing 0.26.0
                 address.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId() + "-0");
+
                 address.putAnnotation(AnnotationKeys.CLUSTER_ID, brokerInfo.getBrokerId());
+                BrokerStatus brokerStatus = new BrokerStatus(brokerInfo.getBrokerId(), brokerInfo.getBrokerId() + "-0");
+                brokerStatus.setState(BrokerState.Active);
+                updateBrokerStatus(address, Collections.singletonList(brokerStatus));
                 UsageInfo used = usageMap.get(brokerInfo.getBrokerId());
                 used.addUsed(credit);
                 return true;
@@ -447,6 +534,7 @@ public class AddressProvisioner {
         try {
             for (BrokerCluster cluster : clusterList) {
                 if (cluster.getClusterId().equals(clusterId)) {
+                    cluster.setNewReplicas(numReplicas);
                     return;
                 }
             }
@@ -484,6 +572,10 @@ public class AddressProvisioner {
             this.credit = credit;
         }
 
+        @Override
+        public String toString() {
+            return "{brokerId=" + brokerId + ",credit=" + credit + "}";
+        }
     }
 
 }

@@ -24,7 +24,7 @@ class AddressSpaceSchemaV1Serializer extends JsonSerializer<AddressSpaceSchema> 
     @Override
     public void serialize(AddressSpaceSchema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
-        root.put(Fields.API_VERSION, "enmasse.io/v1alpha1");
+        root.put(Fields.API_VERSION, "enmasse.io/v1beta1");
         root.put(Fields.KIND, "AddressSpaceSchema");
 
         ObjectNode metadata = root.putObject(Fields.METADATA);

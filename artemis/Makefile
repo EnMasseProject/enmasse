@@ -9,7 +9,6 @@ clean_modules:
 	rm -rf sasl-delegation/target
 	rm -rf amqp-connector/target
 	rm -rf plugin/target
-	rm -rf shutdown-hook/target
 
 clean: clean_modules
 

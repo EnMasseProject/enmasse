@@ -12,7 +12,7 @@
 [source,json,options="nowrap"]
 ----
 {
-    "apiVersion": "enmasse.io/v1alpha1",
+    "apiVersion": "enmasse.io/v1beta1",
     "kind": "AddressSpace",
     "metadata": {
         "name": "myspace"
@@ -29,7 +29,7 @@
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces
+curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1beta1/namespaces/[:namespace]/addressspaces
 ----
 +
 This command creates the infrastructure required for that address space. Replace `namespace` with the
@@ -46,7 +46,7 @@ various components.
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1alpha1/namespaces/[:namespace]/addressspaces/myspace
+curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1beta1/namespaces/[:namespace]/addressspaces/myspace
 ----
 +
 You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON

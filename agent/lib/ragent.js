@@ -261,7 +261,14 @@ Ragent.prototype.wait_for_stable = function (addresses, routers, brokers) {
 
 
 function if_allocated_to (id) {
-    return function (a) { return a.allocated_to === id; };
+    return function (a) {
+        for (var i in a.allocated_to) {
+            if (a.allocated_to[i].containerId === id) {
+                return true;
+            }
+        }
+        return false;
+    };
 }
 
 function get_address (a) { return a.address; }

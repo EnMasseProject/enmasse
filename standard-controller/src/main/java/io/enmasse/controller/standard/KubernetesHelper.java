@@ -104,7 +104,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public List<Pod> listRouters() {
-        return client.pods().withLabel(LabelKeys.CAPABILITY, "router").withLabel(LabelKeys.INFRA_UUID).list().getItems();
+        return client.pods().withLabel(LabelKeys.CAPABILITY, "router").withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
     }
 
     @Override
@@ -153,6 +153,11 @@ public class KubernetesHelper implements Kubernetes {
     public void scaleStatefulSet(String name, int numReplicas) {
         log.info("Scaling stateful set with id {} and {} replicas", name, numReplicas);
         client.apps().statefulSets().withName(name).scale(numReplicas);
+    }
+
+    @Override
+    public List<Pod> listBrokers(String clusterId) {
+        return client.pods().withLabel(LabelKeys.ROLE, "broker").withLabel(LabelKeys.NAME, clusterId).withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
     }
 
     @Override

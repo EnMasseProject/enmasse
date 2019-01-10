@@ -4,9 +4,7 @@
  */
 package io.enmasse.address.model;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents the status of an address
@@ -15,6 +13,7 @@ public class Status {
     private boolean isReady = false;
     private Phase phase = Phase.Pending;
     private Set<String> messages = new HashSet<>();
+    private List<BrokerStatus> brokerStatuses = new ArrayList<>();
 
     public Status(boolean isReady) {
         this.isReady = isReady;
@@ -23,7 +22,8 @@ public class Status {
     public Status(io.enmasse.address.model.Status other) {
         this.isReady = other.isReady();
         this.phase = other.getPhase();
-        this.messages.addAll(other.getMessages());
+        this.messages = new HashSet<>(other.getMessages());
+        this.brokerStatuses = new ArrayList<>(other.getBrokerStatuses());
     }
 
     public boolean isReady() {
@@ -32,6 +32,10 @@ public class Status {
 
     public Phase getPhase() {
         return phase;
+    }
+
+    public List<BrokerStatus> getBrokerStatuses() {
+        return Collections.unmodifiableList(brokerStatuses);
     }
 
     public Status setReady(boolean isReady) {
@@ -59,9 +63,20 @@ public class Status {
     }
 
     public Status setMessages(Set<String> messages) {
-        this.messages = messages;
+        this.messages = new HashSet<>(messages);
         return this;
     }
+
+    public Status appendBrokerStatus(BrokerStatus brokerStatus) {
+        this.brokerStatuses.add(brokerStatus);
+        return this;
+    }
+
+    public Status setBrokerStatuses(List<BrokerStatus> brokerStatuses) {
+        this.brokerStatuses = new ArrayList<>(brokerStatuses);
+        return this;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -70,12 +85,13 @@ public class Status {
         Status status = (Status) o;
         return isReady == status.isReady &&
                 phase == status.phase &&
-                Objects.equals(messages, status.messages);
+                Objects.equals(messages, status.messages) &&
+                Objects.equals(brokerStatuses, status.brokerStatuses);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isReady, phase, messages);
+        return Objects.hash(isReady, phase, messages, brokerStatuses);
     }
 
 
@@ -85,8 +101,13 @@ public class Status {
                 .append("{isReady=").append(isReady)
                 .append(",").append("phase=").append(phase)
                 .append(",").append("messages=").append(messages)
+                .append(",").append("brokerStatuses=").append(brokerStatuses)
                 .append("}")
                 .toString();
+    }
+
+    public void addAllBrokerStatuses(List<BrokerStatus> toAdd) {
+        brokerStatuses.addAll(toAdd);
     }
 
     public enum Phase {

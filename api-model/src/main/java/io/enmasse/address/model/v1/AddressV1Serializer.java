@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.BrokerStatus;
 
 import java.io.IOException;
 import java.util.Map;
@@ -23,7 +24,7 @@ class AddressV1Serializer extends JsonSerializer<Address> {
     @Override
     public void serialize(Address address, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
-        root.put(Fields.API_VERSION, "enmasse.io/v1alpha1");
+        root.put(Fields.API_VERSION, "enmasse.io/v1beta1");
         root.put(Fields.KIND, "Address");
         serialize(address, root);
         root.serialize(jsonGenerator, serializerProvider);
@@ -80,6 +81,16 @@ class AddressV1Serializer extends JsonSerializer<Address> {
             ArrayNode messages = status.putArray(Fields.MESSAGES);
             for (String message : address.getStatus().getMessages()) {
                 messages.add(message);
+            }
+        }
+
+        if (!address.getStatus().getBrokerStatuses().isEmpty()) {
+            ArrayNode brokerStatuses = status.putArray(Fields.BROKER_STATUSES);
+            for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                ObjectNode brokerStatusJson = brokerStatuses.addObject();
+                brokerStatusJson.put(Fields.CLUSTER_ID, brokerStatus.getClusterId());
+                brokerStatusJson.put(Fields.CONTAINER_ID, brokerStatus.getContainerId());
+                brokerStatusJson.put(Fields.STATE, brokerStatus.getState().name());
             }
         }
     }

@@ -73,11 +73,11 @@ class ServiceCatalogApiTest extends TestBase implements ISeleniumProviderFirefox
     private ServiceInstance createServiceInstance(AddressSpace addressSpace, String username, boolean wait, Optional<String> instanceId) throws Exception {
         ServiceInstance provInstance = osbApiClient.provisionInstance(addressSpace, username, instanceId);
         addressSpace.setInfraUuid(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()).getInfraUuid());
+        instances.put(addressSpace, provInstance.getInstanceId());
         if (wait) {
             waitForServiceInstanceReady(username, provInstance.getInstanceId());
             Thread.sleep(10_000);
         }
-        instances.put(addressSpace, provInstance.getInstanceId());
         return provInstance;
     }
 

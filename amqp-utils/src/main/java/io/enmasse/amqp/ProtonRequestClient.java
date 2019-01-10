@@ -21,7 +21,7 @@ import java.util.concurrent.*;
 /**
  * A simple client for doing request-response over AMQP.
  */
-public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
+public class ProtonRequestClient implements SyncRequestClient {
     private static final Logger log = LoggerFactory.getLogger(ProtonRequestClient.class);
     private final Vertx vertx;
     private final int maxRetries;
@@ -71,7 +71,7 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
                 createSender(vertx, address, promise, 0);
                 connection.open();
             } else {
-                log.info("Connection to {}:{} failed", host, port);
+                log.info("Connection to {}:{} failed", host, port, result.cause());
                 promise.completeExceptionally(result.cause());
             }
         });
@@ -144,7 +144,43 @@ public class ProtonRequestClient implements SyncRequestClient, AutoCloseable {
     }
 
     @Override
-    public void close() {
-        context.runOnContext(v -> connection.close());
+    public void close() throws Exception {
+        if (context != null) {
+            CompletableFuture.allOf(
+                    runOnContext(context, () -> {
+                        if (sender != null) {
+                            sender.close();
+                        }
+                    }),
+                    runOnContext(context, () -> {
+                        if (receiver != null) {
+                            receiver.close();
+                        }
+                    }),
+                    runOnContext(context, () -> {
+                        if (connection != null) {
+                            connection.close();
+                        }
+                    })).get(1, TimeUnit.MINUTES);
+        }
+        sender = null;
+        receiver = null;
+        connection = null;
+        replies.clear();
+        replyTo = null;
+        context = null;
+    }
+
+    private static CompletableFuture<Void> runOnContext(Context context, Runnable runnable) {
+        CompletableFuture<Void> promise = new CompletableFuture<>();
+        context.runOnContext(h -> {
+            try {
+                runnable.run();
+                promise.complete(null);
+            } catch (Exception e) {
+                promise.completeExceptionally(e);
+            }
+        });
+        return promise;
     }
 }

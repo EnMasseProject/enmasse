@@ -59,7 +59,7 @@ public class AddressSpacePlan {
     public JsonObject toJson() {
         //definition
         JsonObject config = new JsonObject();
-        config.put("apiVersion", "admin.enmasse.io/v1alpha1");
+        config.put("apiVersion", "admin.enmasse.io/v1beta1");
         config.put("kind", "AddressSpacePlan");
 
         JsonObject definitionMetadata = new JsonObject(); // <metadata>

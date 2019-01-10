@@ -43,16 +43,16 @@ import static org.mockito.Mockito.when;
 public class HTTPServerTest {
 
     private Vertx vertx;
-    private TestAddressSpaceApi instanceApi;
+    private TestAddressSpaceApi addressSpaceApi;
     private AddressSpace addressSpace;
 
     @BeforeEach
     public void setup(VertxTestContext context) throws InterruptedException {
         vertx = Vertx.vertx();
-        instanceApi = new TestAddressSpaceApi();
+        addressSpaceApi = new TestAddressSpaceApi();
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
-        instanceApi.createAddressSpace(addressSpace);
+        addressSpaceApi.createAddressSpace(addressSpace);
 
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
@@ -84,7 +84,7 @@ public class HTTPServerTest {
         ApiServerOptions options = new ApiServerOptions();
         options.setVersion("1.0");
         options.setCertDir("/doesnotexist");
-        vertx.deployVerticle(new HTTPServer(instanceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC()), context.succeeding(arg -> context.completeNow()));
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC()), context.succeeding(arg -> context.completeNow()));
     }
 
     @AfterEach
@@ -107,8 +107,17 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testAddressingApi(VertxTestContext context) throws InterruptedException {
-        instanceApi.withAddressSpace(addressSpace).createAddress(
+    public void testAddressingApiV1Alpha1(VertxTestContext context) throws InterruptedException {
+        testAddressApi(context, "v1alpha1");
+    }
+
+    @Test
+    public void testAddressingApiV1Beta1(VertxTestContext context) throws InterruptedException {
+        testAddressApi(context, "v1beta1");
+    }
+
+    private void testAddressApi(VertxTestContext context, String apiVersion) throws InterruptedException {
+        addressSpaceApi.withAddressSpace(addressSpace).createAddress(
                 new Address.Builder()
                         .setAddressSpace("myinstance")
                         .setName("myinstance.addr1")
@@ -121,7 +130,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -137,7 +146,7 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addresses/myinstance.addr1", response -> {
+                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addresses/myinstance.addr1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         context.verify(() -> {
@@ -152,7 +161,7 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
                     response.bodyHandler(buffer -> {
                         context.verify(() -> assertEquals(201, response.statusCode()));
                         context.completeNow();
@@ -160,11 +169,11 @@ public class HTTPServerTest {
                 });
                 r3.putHeader("Content-Type", "application/json");
                 putAuthzToken(r3);
-                r3.end("{\"apiVersion\":\"enmasse.io/v1alpha1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
+                r3.end("{\"apiVersion\":\"enmasse.io/" + apiVersion + "\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"address\":\"a4\",\"type\":\"queue\",\"plan\":\"plan1\"}}]}");
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
+                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         System.out.println(data.toString());
@@ -190,11 +199,20 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testApiResources(VertxTestContext context) throws InterruptedException {
+    public void testApiResourcesV1Alpha1(VertxTestContext context) throws InterruptedException {
+        testApiResources(context, "v1alpha1");
+    }
+
+    @Test
+    public void testApiResourcesV1Beta1(VertxTestContext context) throws InterruptedException {
+        testApiResources(context, "v1beta1");
+    }
+
+    private void testApiResources(VertxTestContext context, String apiVersion) throws InterruptedException {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion, response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -209,7 +227,7 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/user.enmasse.io/v1alpha1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/user.enmasse.io/" + apiVersion, response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -229,11 +247,20 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testSchemaApi(VertxTestContext context) throws InterruptedException {
+    public void testSchemaApiV1Alpha1(VertxTestContext context) throws InterruptedException {
+        testSchemaApi(context, "v1alpha1");
+    }
+
+    @Test
+    public void testSchemaApiV1Beta1(VertxTestContext context) throws InterruptedException {
+        testSchemaApi(context, "v1beta1");
+    }
+
+    private void testSchemaApi(VertxTestContext context, String apiVersion) throws InterruptedException {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1alpha1/namespaces/myinstance/addressspaceschemas", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/myinstance/addressspaceschemas", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -255,11 +282,20 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testUserApi(VertxTestContext context) throws Exception {
+    public void testUserApiV1Alpha1(VertxTestContext context) throws Exception {
+        testUserApi(context, "v1alpha1");
+    }
+
+    @Test
+    public void testUserApiV1Beta1(VertxTestContext context) throws Exception {
+        testUserApi(context, "v1beta1");
+    }
+
+    private void testUserApi(VertxTestContext context, String apiVersion) throws Exception {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/user.enmasse.io/v1alpha1/namespaces/ns/messagingusers", response -> {
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/user.enmasse.io/" + apiVersion + "/namespaces/ns/messagingusers", response -> {
                     context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -279,52 +315,83 @@ public class HTTPServerTest {
         }
     }
 
-    /*
     @Test
-    public void testInstanceApi() throws InterruptedException {
-        Instance instance = new Instance.Builder(AddressSpaceId.withId("myinstance"))
-                .messagingHost(Optional.of("messaging.example.com"))
-                .build();
-        addressSpaceApi.createAddressSpace(instance);
+    public void testAddressSpaceApiV1Alpha1(VertxTestContext context) throws InterruptedException {
+        testAddressSpaceApi(context, "v1alpha1");
+    }
+
+    @Test
+    public void testAddressSpaceApiV1Beta1(VertxTestContext context) throws InterruptedException {
+        testAddressSpaceApi(context, "v1beta1");
+    }
+
+    private void testAddressSpaceApi(VertxTestContext context, String apiVersion) throws InterruptedException {
 
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                final CountDownLatch latch = new CountDownLatch(1);
-                client.getNow(8080, "localhost", "/v3/addressspace", response -> {
+                HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces", response -> {
+                    context.verify(() -> assertEquals(200, response.statusCode()));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
-                        assertTrue(data.containsKey("kind"));
-                        assertThat(data.getString("kind"), is("InstanceList"));
-                        assertTrue(data.containsKey("items"));
-                        JsonArray items = data.getJsonArray("items");
-                        assertThat(items.size(), is(1));
-                        assertThat(items.getJsonObject(0).getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
-                        latch.countDown();
+                        context.verify(() -> {
+                            assertTrue(data.containsKey("items"));
+                            assertEquals("myinstance", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                        });
+                        context.completeNow();
                     });
                 });
-                assertTrue(latch.await(1, TimeUnit.MINUTES));
+                putAuthzToken(r1);
+                r1.end();
+                context.awaitCompletion(60, TimeUnit.SECONDS);
             }
-
             {
-                final CountDownLatch latch = new CountDownLatch(1);
-                client.getNow(8080, "localhost", "/v3/addressspace/myinstance", response -> {
+                HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
-                        assertTrue(data.containsKey("metadata"));
-                        assertThat(data.getJsonObject("metadata").getString("name"), is("myinstance"));
-                        assertThat(data.getString("kind"), is("Instance"));
-                        assertThat(data.getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
-                        latch.countDown();
+                        context.verify(() -> {
+                            assertTrue(data.containsKey("metadata"));
+                            assertEquals("myinstance", data.getJsonObject("metadata").getString("name"));
+                        });
+                        context.completeNow();
                     });
                 });
-                assertTrue(latch.await(1, TimeUnit.MINUTES));
+                putAuthzToken(r2);
+                r2.end();
+                context.awaitCompletion(60, TimeUnit.SECONDS);
+            }
+            {
+                HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces", response -> {
+                    response.bodyHandler(buffer -> {
+                        context.verify(() -> assertEquals(201, response.statusCode()));
+                        context.completeNow();
+                    });
+                });
+                r3.putHeader("Content-Type", "application/json");
+                putAuthzToken(r3);
+                r3.end("{\"apiVersion\":\"enmasse.io/" + apiVersion + "\",\"kind\":\"AddressSpace\",\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"standard\",\"plan\":\"plan1\"}}");
+                context.awaitCompletion(60, TimeUnit.SECONDS);
+            }
+            {
+                HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/a4", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        System.out.println(data.toString());
+                        context.verify(() -> {
+                            assertTrue(data.containsKey("metadata"));
+                            assertEquals("plan1", data.getJsonObject("spec").getString("plan"));
+                        });
+                        context.completeNow();
+                    });
+                });
+                putAuthzToken(r4);
+                r4.end();
+                context.awaitCompletion(60, TimeUnit.SECONDS);
             }
         } finally {
             client.close();
         }
     }
-    */
 
     @Test
     public void testOpenApiSpec(VertxTestContext context) throws InterruptedException {

@@ -34,27 +34,27 @@ public class AddressApiClient extends ApiClient {
     private final String addressResourcePath;
 
     public AddressApiClient(Kubernetes kubernetes) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "enmasse.io/v1alpha1");
-        this.schemaPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaceschemas", kubernetes.getNamespace());
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace());
-        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
-        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", kubernetes.getNamespace());
+        super(kubernetes, kubernetes::getRestEndpoint, "enmasse.io/v1beta1");
+        this.schemaPath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaceschemas", kubernetes.getNamespace());
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaces", kubernetes.getNamespace());
+        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaces", kubernetes.getNamespace()) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addresses", kubernetes.getNamespace());
     }
 
     public AddressApiClient(Kubernetes kubernetes, String namespace) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "enmasse.io/v1alpha1");
-        this.schemaPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaceschemas", kubernetes.getNamespace());
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
-        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
-        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
+        super(kubernetes, kubernetes::getRestEndpoint, "enmasse.io/v1beta1");
+        this.schemaPath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaceschemas", kubernetes.getNamespace());
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaces", namespace);
+        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addresses", namespace);
     }
 
     public AddressApiClient(Kubernetes kubernetes, String namespace, String token) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "enmasse.io/v1alpha1", token);
-        this.schemaPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaceschemas", kubernetes.getNamespace());
-        this.addressSpacesPath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace);
-        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
-        this.addressResourcePath = String.format("/apis/enmasse.io/v1alpha1/namespaces/%s/addresses", namespace);
+        super(kubernetes, kubernetes::getRestEndpoint, "enmasse.io/v1beta1", token);
+        this.schemaPath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaceschemas", kubernetes.getNamespace());
+        this.addressSpacesPath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaces", namespace);
+        this.addressNestedPathPattern = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addressspaces", namespace) + "/%s/addresses";
+        this.addressResourcePath = String.format("/apis/enmasse.io/v1beta1/namespaces/%s/addresses", namespace);
     }
 
     public void close() {
@@ -96,6 +96,32 @@ public class AddressApiClient extends ApiClient {
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         createAddressSpace(addressSpace, HTTP_CREATED);
+    }
+
+    public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
+        replaceAddressSpace(addressSpace, HTTP_OK);
+    }
+
+    public void replaceAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
+        String path = addressSpacesPath + "/" + addressSpace.getName();
+        JsonObject config = addressSpace.toJson(getApiVersion());
+
+        log.info("UPDATE-address-space: path {}; body {}", addressSpacesPath, config.toString());
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+
+        doRequestNTimes(initRetry, () -> {
+                    client.put(endpoint.getPort(), endpoint.getHost(), path)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(config, ar -> responseHandler(ar,
+                                    responsePromise,
+                                    expectedCode,
+                                    String.format("Error: replacing address space '%s'", addressSpace)));
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
@@ -301,6 +327,24 @@ public class AddressApiClient extends ApiClient {
 
     public void deleteAddress(String addressSpace, Destination destination, int expectedCode) throws Exception {
         doDelete(getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace), expectedCode);
+    }
+
+    public void replaceAddress(String addressSpace, Destination destination, int expectedCode) throws Exception {
+        String path = getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace);
+        log.info("UPDATE-address: path {}", path);
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        JsonObject payload = destination.toJson(apiVersion, addressSpace);
+        doRequestNTimes(initRetry, () -> {
+                    client.put(endpoint.getPort(), endpoint.getHost(), path)
+                            .timeout(20_000)
+                            .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                            .as(BodyCodec.jsonObject())
+                            .sendJsonObject(payload, ar -> responseHandler(ar, responsePromise, expectedCode, "Error: delete address"));
+
+                    return responsePromise.get(30, TimeUnit.SECONDS);
+                },
+                Optional.of(() -> kubernetes.getRestEndpoint()),
+                Optional.empty());
     }
 
     private void doDelete(String path, int expectedCode) throws Exception {

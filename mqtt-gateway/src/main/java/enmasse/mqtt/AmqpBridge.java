@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  */
 public class AmqpBridge {
 
-    private static final int AMQP_SERVICES_CONNECTION_TIMEOUT = 5000; // in ms
+    private static final int AMQP_SERVICES_CONNECTION_TIMEOUT = 60_000; // in ms
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpBridge.class);
 

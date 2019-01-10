@@ -53,7 +53,7 @@ public class ArtemisTest {
     }
 
     @Test
-    public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
+    public void testManagement() throws Exception {
         TestClient testClient = new TestClient();
         try (Artemis artemis = new Artemis(testClient)) {
 
