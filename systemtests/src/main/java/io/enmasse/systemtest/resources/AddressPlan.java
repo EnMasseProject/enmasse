@@ -46,7 +46,7 @@ public class AddressPlan {
 
     public JsonObject toJson() {
         JsonObject config = new JsonObject();
-        config.put("apiVersion", "admin.enmasse.io/v1alpha1");
+        config.put("apiVersion", "admin.enmasse.io/v1beta1");
         config.put("kind", "AddressPlan");
 
         JsonObject definitionMetadata = new JsonObject(); // <metadata>

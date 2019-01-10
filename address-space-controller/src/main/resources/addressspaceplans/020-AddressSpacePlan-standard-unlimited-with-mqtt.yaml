@@ -1,4 +1,4 @@
-apiVersion: admin.enmasse.io/v1alpha1
+apiVersion: admin.enmasse.io/v1beta1
 kind: AddressSpacePlan
 metadata:
   name: standard-unlimited-with-mqtt

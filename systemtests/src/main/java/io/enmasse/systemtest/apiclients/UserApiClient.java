@@ -30,13 +30,13 @@ public class UserApiClient extends ApiClient {
     private final String userPath;
 
     public UserApiClient(Kubernetes kubernetes) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1alpha1");
-        this.userPath = String.format("/apis/user.enmasse.io/v1alpha1/namespaces/%s/messagingusers", kubernetes.getNamespace());
+        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1beta1");
+        this.userPath = String.format("/apis/user.enmasse.io/v1beta1/namespaces/%s/messagingusers", kubernetes.getNamespace());
     }
 
     public UserApiClient(Kubernetes kubernetes, String namespace) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1alpha1");
-        this.userPath = String.format("/apis/user.enmasse.io/v1alpha1/namespaces/%s/messagingusers", namespace);
+        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1beta1");
+        this.userPath = String.format("/apis/user.enmasse.io/v1beta1/namespaces/%s/messagingusers", namespace);
     }
 
     public JsonObject getUser(String addressSpace, String userName) throws Exception {

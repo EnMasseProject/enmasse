@@ -16,14 +16,14 @@
       apiVersion: apiregistration.k8s.io/v1beta1
       kind: APIService
       metadata:
-        name: v1alpha1.enmasse.io
+        name: v1beta1.enmasse.io
         labels:
           app: enmasse
       spec:
         group: enmasse.io
         groupPriorityMinimum: 1000
         caBundle: "{{ ca_bundle | b64encode }}"
-        version: v1alpha1
+        version: v1beta1
         versionPriority: 10
         service:
           name: api-server
@@ -38,14 +38,14 @@
       apiVersion: apiregistration.k8s.io/v1beta1
       kind: APIService
       metadata:
-        name: v1alpha1.user.enmasse.io
+        name: v1beta1.user.enmasse.io
         labels:
           app: enmasse
       spec:
         group: user.enmasse.io
         groupPriorityMinimum: 1000
         caBundle: "{{ ca_bundle | b64encode }}"
-        version: v1alpha1
+        version: v1beta1
         versionPriority: 10
         service:
           name: api-server

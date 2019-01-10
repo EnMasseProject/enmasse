@@ -32,7 +32,7 @@ public class User extends AbstractHasMetadata<User> {
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-z]+([a-z0-9\\-]*[a-z0-9]+|[a-z0-9]*)\\.[a-z0-9]+([a-z0-9@.\\-]*[a-z0-9]+|[a-z0-9]*)$");
 
     public static final String KIND = "User";
-    public static final String VERSION = "v1alpha1";
+    public static final String VERSION = "v1beta1";
     public static final String GROUP = "user.enmasse.io";
     public static final String API_VERSION = GROUP +"/" + VERSION;
 

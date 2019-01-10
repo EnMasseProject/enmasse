@@ -14,7 +14,7 @@ import io.enmasse.common.model.DefaultCustomResource;
 public class AddressSpacePlanList extends AbstractList<AddressSpacePlan> {
 
     public static final String KIND = "AddressSpacePlanList";
-    public static final String VERSION = "v1alpha1";
+    public static final String VERSION = "v1beta1";
     public static final String GROUP = "admin.enmasse.io";
     public static final String API_VERSION = GROUP + "/" + VERSION;
 

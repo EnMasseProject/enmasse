@@ -18,7 +18,7 @@ import java.time.Clock;
 /**
  * HTTP API for operating on addresses within an address space
  */
-@Path("/apis/enmasse.io/v1alpha1/namespaces/{namespace}/addresses")
+@Path("/apis/enmasse.io/{versoin:v1alpha1|v1beta1}/namespaces/{namespace}/addresses")
 public class HttpAddressService extends HttpAddressServiceBase {
     public HttpAddressService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
         super(addressSpaceApi, schemaProvider, clock);

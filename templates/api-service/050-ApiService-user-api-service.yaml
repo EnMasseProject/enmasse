@@ -3,7 +3,7 @@ kind: APIService
 metadata:
   labels:
     app: enmasse
-  name: v1alpha1.user.enmasse.io
+  name: v1beta1.user.enmasse.io
 spec:
   group: user.enmasse.io
   groupPriorityMinimum: 1000
@@ -11,5 +11,5 @@ spec:
   service:
     name: api-server
     namespace: ${NAMESPACE}
-  version: v1alpha1
+  version: v1beta1
   versionPriority: 15

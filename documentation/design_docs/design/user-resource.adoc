@@ -15,24 +15,24 @@ A new api group 'user.enmasse.io' will be created. It will support the following
 
 To create a user (oc create -f user1.yaml):
 ```
-POST /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers
+POST /apis/user.enmasse.io/v1beta1/namespaces/myproject/messagingusers
 ```
 
 To read a user (oc get myspace.user1):
 ```
-GET /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers/myspace.user1
+GET /apis/user.enmasse.io/v1beta1/namespaces/myproject/messagingusers/myspace.user1
 ```
 
 To update a user (oc replace -f user1.yaml):
 
 ```
-PUT /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers/myspace.user1
+PUT /apis/user.enmasse.io/v1beta1/namespaces/myproject/messagingusers/myspace.user1
 ```
 
 To remove a user (oc delete enmasse-user myspace.user1)
 
 ```
-DELETE /apis/user.enmasse.io/v1alpha1/namespaces/myproject/messagingusers/myspace.user1
+DELETE /apis/user.enmasse.io/v1beta1/namespaces/myproject/messagingusers/myspace.user1
 ```
 
 In the same way as addresses, users are scoped by namespace _and_ address space and resource names
@@ -45,7 +45,7 @@ using secrets or other mechanisms. To start with, users can not be modified (i.e
 changed).
 
 ```
-apiVersion: user.enmasse.io/v1alpha1
+apiVersion: user.enmasse.io/v1beta1
 kind: MessagingUser
 metadata:
     name: myspace.user1
@@ -64,7 +64,7 @@ supported. In the first instance, federated users can only be used for console a
 reflected in user documentation).
 
 ```
-apiVersion: user.enmasse.io/v1alpha1
+apiVersion: user.enmasse.io/v1beta1
 kind: MessagingUser 
 metadata:
     name: myspace.user2
