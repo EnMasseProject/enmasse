@@ -1,0 +1,12 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='con-tenant-address-space-plans-{context}']
+= Address space plans
+
+An address space is configured with an address space plan, which describes the allowed resource
+usage of that address space. The address space plans are configured by the service administrator and
+can vary between {ProductName} installations.
+
+The address space plan can be changed if the address space requires more, or less, resources.

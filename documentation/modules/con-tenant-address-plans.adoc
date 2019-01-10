@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='con-tenant-address-plans-{context}']
+= Address plans
+
+An address is configured with an address plan, which describes the resource usage of that address.
+The address plans are configured by the service administrator and can vary between {ProductName}
+installations. The number of addresses that can be created, and what plans are available, depends on
+quota enforced by the address space plan.
+
+Some address types also support changing the `plan` field: `queue`, `anycast` and `multicast`
+address types in the `standard` address space support changing the plan as long as the new plan
+does not exceed the allowed quota. For queues, addresses are dynamically migrated across brokers
+which may cause reordering of messages.

@@ -19,12 +19,15 @@ include::../modules/con-brokered-address-space.adoc[leveloffset=+1]
 
 include::assembly-brokered-address-types.adoc[leveloffset=+2]
 
+include::../modules/con-tenant-address-space-plans.adoc[leveloffset=+1]
+
+include::../modules/proc-list-available-plans.adoc[leveloffset=+1]
+
 include::../modules/ref-address-space-example.adoc[leveloffset=+1]
 
 include::../modules/ref-address-space-example-auth-service.adoc[leveloffset=+1]
 
 include::../modules/ref-example-address-space-output.adoc[leveloffset=+1]
-
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
