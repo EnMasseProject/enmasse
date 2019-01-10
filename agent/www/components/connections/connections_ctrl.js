@@ -251,6 +251,9 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
         };
 
         if (initialContainerId) {
+
+           $scope.clickNavigationItem("Connections");
+
             var initialFilter = {
                 id:'container',
                 value: initialContainerId,
