@@ -299,11 +299,7 @@ public class AddressProvisioner {
                         address.removeAnnotation(AnnotationKeys.BROKER_ID);
                     }
                     String clusterId = getShardedClusterId(address);
-                    UsageInfo info = resourceUsage.get(clusterId);
-                    if (info != null && address.getAnnotation(AnnotationKeys.APPLIED_PLAN) != null) {
-                        throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
-                    }
-                    info = new UsageInfo();
+                    UsageInfo info = new UsageInfo();
                     info.addUsed(resourceRequest.getCredit());
                     resourceUsage.put(clusterId, info);
 

@@ -18,6 +18,7 @@ import org.mockito.internal.util.collections.Sets;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static io.enmasse.address.model.Status.Phase.Active;
 import static io.enmasse.address.model.Status.Phase.Configuring;
 import static io.enmasse.address.model.Status.Phase.Pending;
 import static java.util.Collections.singleton;
@@ -352,6 +353,31 @@ public class AddressProvisionerTest {
         assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
 
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
+    public void testSwitchShardedAddressPlan() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = createQueue("q1", "large-queue");
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
+        q1 = new Address.Builder(q1)
+                .setPlan("xlarge-queue")
+                .build();
+
+        q1.getStatus().setPhase(Active);
+
+        usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
         assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
