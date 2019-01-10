@@ -9,17 +9,17 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
                              }
                             );
         $stateProvider.state('connections',
-                             { url: '/connections',
+                             { url: '/connections?containerId',
                                templateUrl: 'components/connections/connections.html'
                              }
                             );
-    }).controller('NavCtrl', ['$scope',
-    function ($scope) {
+    }).controller('NavCtrl', ['$scope', '$timeout',
+    function ($scope, $timeout) {
         $scope.navigationItems = [
             {
                 title: "Addresses",
                 iconClass: "fa pficon-topology",
-                uiSref: "addresses"
+                uiSref: "addresses",
             },
             {
                 title: "Connections",
@@ -27,5 +27,13 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
                 uiSref: "connections",
             }
         ];
+        $scope.clickNavigationItem = function (title) {
+            var connectionsNavItem = $scope.navigationItems.find(item => item.title == title);
+            var selector = "span."+connectionsNavItem.iconClass.replace(" ", ".");
+            $timeout(function() {
+                //If already navigated to the page, the click will only mark the menu item as active.
+                angular.element(selector).parent().click();
+            }, 0);
+        }
     }
 ]);

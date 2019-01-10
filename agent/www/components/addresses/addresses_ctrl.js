@@ -1,5 +1,7 @@
 angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeout', '$sce', '$templateCache', 'pfViewUtils', 'address_service',
     function ($scope, $timeout, $sce, $templateCache, pfViewUtils, address_service) {
+
+        $scope.clickNavigationItem("Addresses");
         $scope.admin_disabled = address_service.admin_disabled;
         $scope.get_stored_chart_config = function (address) {
             var chart = get_donut_chart(address, 'shard_depth_chart', 'Stored', get_tooltip_for_shard(address));
@@ -122,7 +124,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         var linkTableConfig = function () {
           this.data = []
           this.columnDefs = [
-            {field: 'clientName', displayName: 'Container ID'},
+            {field: 'clientName', displayName: 'Container ID', cellTemplate:'<div class="ui-grid-cell-contents"><a ng-href="#/connections?containerId={{row.entity.clientName}}">{{row.entity.clientName}}</a></div>' },
             {field: 'name', displayName: 'Name'},
             {field: 'deliveryRate', displayName: 'Delivery Rate', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
             {field: 'backlog', displayName: 'Backlog', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
@@ -603,4 +605,3 @@ angular.module('patternfly.wizard').controller('SummaryController', ['$rootScope
         }
       }
     ]);
-

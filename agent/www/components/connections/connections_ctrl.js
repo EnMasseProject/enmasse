@@ -1,5 +1,7 @@
-angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', '$timeout', 'pfViewUtils', 'address_service',
-    function ($scope, $timeout, pfViewUtils, address_service) {
+angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', '$stateParams', '$timeout', 'pfViewUtils', 'address_service',
+    function ($scope, $stateParams, $timeout, pfViewUtils, address_service) {
+
+		var initialContainerId = $stateParams.containerId;
 
         $scope.address_space_type = address_service.address_space_type
         var connectionGridConfig = function () {
@@ -142,9 +144,13 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
                 $scope.notification.show_alert = true;
                 $scope.notification.alert_msg = messages.join(" ");
             }
-            $scope.filterConfig.appliedFilters = valid;
-            $scope.filtersText = valid.map(function (filter) { return  filter.title + " : " + filter.value + "\n"; }).join();
+            addNewFiltersToMap(valid);
             applyFilters();
+        };
+
+        var addNewFiltersToMap = function (validFilters) {
+            $scope.filterConfig.appliedFilters = validFilters;
+            $scope.filtersText = validFilters.map(function (filter) { return  filter.title + " : " + filter.value + "\n"; }).join();
         };
 
         $scope.filtersText = '';
@@ -243,5 +249,19 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
             useExpandingRows: true,
             checkDisabled: false
         };
+
+        if (initialContainerId) {
+
+           $scope.clickNavigationItem("Connections");
+
+            var initialFilter = {
+                id:'container',
+                value: initialContainerId,
+                title:  'Container ID',
+                filterType: 'text'
+            };
+            addNewFiltersToMap([initialFilter]);
+            applyFilters();
+        }
       }
     ]);
