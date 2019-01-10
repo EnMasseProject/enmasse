@@ -337,6 +337,25 @@ public class AddressProvisionerTest {
     }
 
     @Test
+    public void testUpgradeFromNoAppliedPlan() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Set<Address> addresses = new HashSet<>();
+        Address q1 = createQueue("q1", "xlarge-queue");
+        addresses.add(q1);
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
+
+        assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
     public void testProvisioningShardedWithClusterId() throws Exception {
         final Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
