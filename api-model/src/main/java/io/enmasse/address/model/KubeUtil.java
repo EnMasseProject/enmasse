@@ -4,15 +4,20 @@
  */
 package io.enmasse.address.model;
 
+import java.util.regex.Pattern;
+
 import io.enmasse.config.AnnotationKeys;
 
 /**
  * Various static utilities that don't belong in a specific place
  */
-public class KubeUtil {
-    private static int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
-    private static final String addressPattern = "[^a-z0-9\\-]";
-    private static final String usernamePattern = "[^a-z0-9\\-.@_]";
+public final class KubeUtil {
+    private static final int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
+    private static final Pattern addressPattern = Pattern.compile("[^a-z0-9\\-]");
+    private static final Pattern usernamePattern = Pattern.compile("[^a-z0-9\\-.@_]");
+
+    public KubeUtil() {
+    }
 
     public static String sanitizeName(String name) {
         return sanitizeWithPattern(name, addressPattern);
@@ -22,12 +27,15 @@ public class KubeUtil {
         return sanitizeWithPattern(name, usernamePattern);
     }
 
-    private static String sanitizeWithPattern(String value, String pattern) {
+    private static String sanitizeWithPattern(String value, Pattern pattern) {
         if (value == null) {
             return null;
         }
 
-        String clean = value.toLowerCase().replaceAll(pattern, "");
+        String clean = pattern
+                        .matcher(value.toLowerCase())
+                        .replaceAll("");
+
         if (clean.startsWith("-")) {
             clean = clean.replaceFirst("-", "1");
         }
@@ -39,6 +47,7 @@ public class KubeUtil {
         if (clean.endsWith("-")) {
             clean = clean.substring(0, clean.length() - 1) + "1";
         }
+
         return clean;
     }
 
@@ -88,7 +97,7 @@ public class KubeUtil {
             throw new IllegalArgumentException("Name length is longer than " + MAX_KUBE_NAME + " characters");
         }
 
-        if (name.matches(addressPattern)) {
+        if (addressPattern.matcher(name).matches()) {
             throw new IllegalArgumentException("Illegal characters found in " + name + ". Must not match " + addressPattern);
         }
     }
