@@ -13,5 +13,5 @@
 
 . Log in with your OpenShift user credentials. The {ProductName} console opens.
 
-image::../images/console-screenshot.png[{ProductName} console]
+image::{imagesdir}/console-screenshot.png[{ProductName} console]
 
