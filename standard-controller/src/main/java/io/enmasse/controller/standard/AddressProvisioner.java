@@ -399,7 +399,7 @@ public class AddressProvisioner {
                 }
             }
             if (!found) {
-                brokerStatus.setState(BrokerState.Draining);
+                brokerStatus.setState(BrokerState.Migrating);
             }
         }
 

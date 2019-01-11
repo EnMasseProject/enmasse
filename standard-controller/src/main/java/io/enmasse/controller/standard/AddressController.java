@@ -134,6 +134,7 @@ public class AddressController implements Watcher<Address> {
             }
         }
 
+        checkAndMoveMigratingBrokersToDraining(addressSet, clusterList);
         checkAndRemoveDrainingBrokers(addressSet);
 
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
@@ -312,6 +313,32 @@ public class AddressController implements Watcher<Address> {
             if (entry.getValue() == 0) {
                 log.info("Garbage collecting {}", entry.getKey());
                 addressApi.deleteAddress(entry.getKey());
+            }
+        }
+    }
+
+    private void checkAndMoveMigratingBrokersToDraining(Set<Address> addresses, List<BrokerCluster> brokerList) throws Exception {
+        for (Address address : addresses) {
+            int numActive = 0;
+            int numReadyActive = 0;
+            for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                if (BrokerState.Active.equals(brokerStatus.getState())) {
+                    numActive++;
+                    for (BrokerCluster cluster : brokerList) {
+                        if (brokerStatus.getClusterId().equals(cluster.getClusterId()) && cluster.getReadyReplicas() > 0) {
+                            numReadyActive++;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (numActive == numReadyActive) {
+                for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                    if (BrokerState.Migrating.equals(brokerStatus.getState())) {
+                        brokerStatus.setState(BrokerState.Draining);
+                    }
+                }
             }
         }
     }

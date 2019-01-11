@@ -16,6 +16,7 @@ import io.enmasse.metrics.api.Metrics;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.BeforeEach;
@@ -120,5 +121,68 @@ public class AddressControllerTest {
         verify(mockHelper).delete(eq(oldList));
         assertEquals(1, alive.getStatus().getBrokerStatuses().size());
         assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
+    }
+
+    @Test
+    public void testMovesBrokersToDrained() throws Exception {
+        Address alive = new Address.Builder()
+                .setName("q1")
+                .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
+                .setType("queue")
+                .setPlan("small-queue")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active)
+                        .appendBrokerStatus(new BrokerStatus("broker-infra-0", "broker-infra-0-0", BrokerState.Migrating))
+                        .appendBrokerStatus(new BrokerStatus("broker-infra-1", "broker-infra-1-0", BrokerState.Active)))
+                .build();
+
+        KubernetesList oldList = new KubernetesListBuilder()
+                .addToStatefulSetItems(new StatefulSetBuilder()
+                        .editOrNewMetadata()
+                        .withName("broker-infra-0")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withReplicas(1)
+                        .endSpec()
+                        .editOrNewStatus()
+                        .withReadyReplicas(0)
+                        .endStatus()
+                        .build())
+                .build();
+
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(
+                new BrokerCluster("broker-infra-0", oldList),
+                new BrokerCluster("broker-infra-1", oldList)));
+
+        controller.onUpdate(Arrays.asList(alive));
+
+        assertEquals(2, alive.getStatus().getBrokerStatuses().size());
+        assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
+        assertEquals(BrokerState.Migrating, alive.getStatus().getBrokerStatuses().get(0).getState());
+
+        oldList = new KubernetesListBuilder()
+                .addToStatefulSetItems(new StatefulSetBuilder()
+                        .editOrNewMetadata()
+                        .withName("broker-infra-0")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withReplicas(1)
+                        .endSpec()
+                        .editOrNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build())
+                .build();
+
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(
+                new BrokerCluster("broker-infra-0", oldList),
+                new BrokerCluster("broker-infra-1", oldList)));
+
+        controller.onUpdate(Arrays.asList(alive));
+
+        assertEquals(1, alive.getStatus().getBrokerStatuses().size());
+        assertEquals("broker-infra-1", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
+        assertEquals(BrokerState.Active, alive.getStatus().getBrokerStatuses().get(0).getState());
     }
 }
