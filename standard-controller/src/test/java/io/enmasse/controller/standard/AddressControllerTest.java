@@ -111,16 +111,31 @@ public class AddressControllerTest {
                         .endMetadata()
                         .build())
                 .build();
+
+        KubernetesList newList = new KubernetesListBuilder()
+                .addToStatefulSetItems(new StatefulSetBuilder()
+                        .editOrNewMetadata()
+                        .withName("broker-infra-0")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withReplicas(1)
+                        .endSpec()
+                        .editOrNewStatus()
+                        .withReadyReplicas(1)
+                        .endStatus()
+                        .build())
+                .build();
+
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(
-                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-0", newList),
                 new BrokerCluster("broker-infra-1", oldList)));
 
         controller.onUpdate(Arrays.asList(alive));
 
-        verify(mockHelper).delete(any());
-        verify(mockHelper).delete(eq(oldList));
         assertEquals(1, alive.getStatus().getBrokerStatuses().size());
         assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
+        verify(mockHelper).delete(any());
+        verify(mockHelper).delete(eq(oldList));
     }
 
     @Test
