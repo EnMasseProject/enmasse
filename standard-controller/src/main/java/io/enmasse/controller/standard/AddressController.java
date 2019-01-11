@@ -100,6 +100,10 @@ public class AddressController implements Watcher<Address> {
 
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
+        for (Address address : addressList) {
+            address.getStatus().setReady(true).clearMessages();
+        }
+
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
 
@@ -370,9 +374,6 @@ public class AddressController implements Watcher<Address> {
         Map<Address, Integer> numOk = new HashMap<>();
         if (addresses.isEmpty()) {
             return numOk;
-        }
-        for (Address address : addresses) {
-            address.getStatus().setReady(true).clearMessages();
         }
         RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
         List<RouterStatus> routerStatusList = new ArrayList<>();
