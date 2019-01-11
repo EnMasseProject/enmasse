@@ -30,14 +30,11 @@ import io.sundr.builder.annotations.Inline;
 public class StandardInfraConfig extends AbstractInfraConfig<StandardInfraConfig> {
 
     public static final String KIND = "StandardInfraConfig";
-    public static final String VERSION = "v1beta1";
-    public static final String GROUP = "admin.enmasse.io";
-    public static final String API_VERSION = GROUP + "/" + VERSION;
 
     private StandardInfraConfigSpec spec;
 
     public StandardInfraConfig() {
-        super(KIND, API_VERSION);
+        super(KIND, AdminCrd.API_VERSION);
     }
 
     public void setSpec(StandardInfraConfigSpec spec) {

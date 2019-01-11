@@ -35,6 +35,6 @@ public class HttpClusterAddressService extends HttpAddressServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response getAddressList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @QueryParam("address") String address, @QueryParam("labelSelector") String labelSelector) throws Exception {
-        return super.getAddressList(securityContext, acceptHeader, "", null, address, labelSelector);
+        return super.internalGetAddressList(securityContext, acceptHeader, "", null, address, labelSelector);
     }
 }
