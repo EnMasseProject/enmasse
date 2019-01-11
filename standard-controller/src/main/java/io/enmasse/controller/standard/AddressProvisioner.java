@@ -148,11 +148,23 @@ public class AddressProvisioner {
             Map<String, Map<String, UsageInfo>> newUsageMap, Map<String, Double> limits) {
         for (Address address : pending) {
             if (!Status.Phase.Configuring.equals(address.getStatus().getPhase())) {
+                Status previousStatus = new Status(address.getStatus());
+                String previousBrokerId = address.getAnnotation(AnnotationKeys.BROKER_ID);
+                String previousClusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
+
                 Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
                 if (neededMap != null) {
                     newUsageMap = neededMap;
                     address.getStatus().setPhase(Status.Phase.Configuring);
                     address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getPlan());
+                } else {
+                    if (previousBrokerId != null) {
+                        address.putAnnotation(AnnotationKeys.BROKER_ID, previousBrokerId);
+                    }
+                    if (previousClusterId != null) {
+                        address.putAnnotation(AnnotationKeys.CLUSTER_ID, previousClusterId);
+                    }
+                    address.getStatus().setBrokerStatuses(previousStatus.getBrokerStatuses());
                 }
             }
         }
