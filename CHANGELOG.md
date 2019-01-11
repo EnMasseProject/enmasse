@@ -1,3 +1,27 @@
+## 0.26.0
+* Support for switching address space plans
+* Support for switching address plans for `anycast`, `multicast`, and `queue` address types in standard address space
+* Readiness on initial configuration for routers in standard address space. This ensures that routers can only be connected to once they have receive initial configuration, and will allow a HA configuration (> 1) routers to upgrade without downtime for the service.
+* Router configuration now enforces authenticatePeer: yes, requiring clients to perform SASL handshake
+* Allow querying all EnMasse resources cluster wide
+* Allow listing connections by container id by clicking on link in Addresses pane in the console
+* Update all API versions from v1alpha1 to v1beta1. v1alpha1 is now deprecated for all EnMasse custom resources and will get removed.
+* Bugfix: allow address full policy to be set for brokers in standard address space
+* Allow clients to authenticate as service account users by supplying @@serviceaccount@@ as the username and the token as the password.
+
+## 0.25.0
+* Prometheus metrics and alerts for address health are now exposed
+* Pooled broker deployments now use N deployments with 1 broker instead of 1 deployment with N brokers. This is to handle a resize bug in previous versions. When upgrading, take care to drain all queues first to avoid message loss.
+* Improved command line output of addresses and address spaces with more tabular information about the resource(s)
+* Allow configuring storageClass used for broker volumes
+* Add support for serviceaccount authentication type for users
+* Allow resizing volumes if configured (and underlying provider supports it)
+* Add support for nodeAffinity preferred labels for operators and messaging infra
+* Add support for configuring network network policies for address space infrastructure
+* Add support for changing address space plans
+* Split broker image into a 'broker' and 'broker-plugin' image run as initContainer image
+* Bugfixes in address handling in standard-controller
+
 ## 0.24.0 (...)
 * Support automatic upgrades of EnMasse based on infrastructure configuration versions
 * Update default set of address space plans and address plans to better show their use
