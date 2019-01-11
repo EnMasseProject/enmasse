@@ -130,6 +130,7 @@ public class AddressProvisionerTest {
 
         assertThat(neededMap, is(usageMap));
         assertThat(largeQueue.getStatus().getPhase(), is(Pending));
+        assertTrue(largeQueue.getStatus().getMessages().contains("Quota exceeded"));
 
         Address smallQueue = createQueue("q4", "small-queue");
         neededMap = provisioner.checkQuota(usageMap, Sets.newSet(smallQueue), Sets.newSet(smallQueue));
