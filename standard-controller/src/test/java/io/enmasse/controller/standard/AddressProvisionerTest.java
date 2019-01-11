@@ -382,6 +382,60 @@ public class AddressProvisionerTest {
     }
 
     @Test
+    public void testSwitchPooledToShardedQuotaCheck() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 1),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = createQueue("q1", "small-queue");
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
+        q1.getStatus().setPhase(Active);
+        q1 = new Address.Builder(q1)
+                .setPlan("large-queue")
+                .build();
+
+
+        usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertTrue(q1.getStatus().getMessages().contains("Quota exceeded"));
+        assertThat(q1.getStatus().getPhase(), is(Active));
+        assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
+    public void testSwitchShardedToShardedQuotaCheck() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = createQueue("q1", "large-queue");
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
+        q1.getStatus().setPhase(Active);
+        q1 = new Address.Builder(q1)
+                .setPlan("xlarge-queue")
+                .build();
+
+
+        usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertTrue(q1.getStatus().getMessages().isEmpty());
+        assertThat(q1.getStatus().getPhase(), is(Configuring));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
     public void testProvisioningShardedWithClusterId() throws Exception {
         final Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
