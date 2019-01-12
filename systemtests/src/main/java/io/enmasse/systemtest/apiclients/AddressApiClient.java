@@ -331,9 +331,9 @@ public class AddressApiClient extends ApiClient {
 
     public void replaceAddress(String addressSpace, Destination destination, int expectedCode) throws Exception {
         String path = getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace);
-        log.info("UPDATE-address: path {}", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         JsonObject payload = destination.toJson(apiVersion, addressSpace);
+        log.info("UPDATE-address: path {}: {}", path, payload.toString());
         doRequestNTimes(initRetry, () -> {
                     client.put(endpoint.getPort(), endpoint.getHost(), path)
                             .timeout(20_000)

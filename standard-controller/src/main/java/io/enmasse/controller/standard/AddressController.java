@@ -100,6 +100,10 @@ public class AddressController implements Watcher<Address> {
 
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
+        for (Address address : addressList) {
+            address.getStatus().setReady(true).clearMessages();
+        }
+
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
 
@@ -134,6 +138,7 @@ public class AddressController implements Watcher<Address> {
             }
         }
 
+        checkAndMoveMigratingBrokersToDraining(addressSet, clusterList);
         checkAndRemoveDrainingBrokers(addressSet);
 
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
@@ -316,6 +321,32 @@ public class AddressController implements Watcher<Address> {
         }
     }
 
+    private void checkAndMoveMigratingBrokersToDraining(Set<Address> addresses, List<BrokerCluster> brokerList) throws Exception {
+        for (Address address : addresses) {
+            int numActive = 0;
+            int numReadyActive = 0;
+            for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                if (BrokerState.Active.equals(brokerStatus.getState())) {
+                    numActive++;
+                    for (BrokerCluster cluster : brokerList) {
+                        if (brokerStatus.getClusterId().equals(cluster.getClusterId()) && cluster.getReadyReplicas() > 0) {
+                            numReadyActive++;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (numActive == numReadyActive) {
+                for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                    if (BrokerState.Migrating.equals(brokerStatus.getState())) {
+                        brokerStatus.setState(BrokerState.Draining);
+                    }
+                }
+            }
+        }
+    }
+
     private void checkAndRemoveDrainingBrokers(Set<Address> addresses) throws Exception {
         BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory);
         for (Address address : addresses) {
@@ -343,9 +374,6 @@ public class AddressController implements Watcher<Address> {
         Map<Address, Integer> numOk = new HashMap<>();
         if (addresses.isEmpty()) {
             return numOk;
-        }
-        for (Address address : addresses) {
-            address.getStatus().setReady(true).clearMessages();
         }
         RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
         List<RouterStatus> routerStatusList = new ArrayList<>();

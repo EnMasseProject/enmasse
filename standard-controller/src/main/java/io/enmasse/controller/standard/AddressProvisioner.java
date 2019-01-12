@@ -148,11 +148,23 @@ public class AddressProvisioner {
             Map<String, Map<String, UsageInfo>> newUsageMap, Map<String, Double> limits) {
         for (Address address : pending) {
             if (!Status.Phase.Configuring.equals(address.getStatus().getPhase())) {
+                Status previousStatus = new Status(address.getStatus());
+                String previousBrokerId = address.getAnnotation(AnnotationKeys.BROKER_ID);
+                String previousClusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
+
                 Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
                 if (neededMap != null) {
                     newUsageMap = neededMap;
                     address.getStatus().setPhase(Status.Phase.Configuring);
                     address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getPlan());
+                } else {
+                    if (previousBrokerId != null) {
+                        address.putAnnotation(AnnotationKeys.BROKER_ID, previousBrokerId);
+                    }
+                    if (previousClusterId != null) {
+                        address.putAnnotation(AnnotationKeys.CLUSTER_ID, previousClusterId);
+                    }
+                    address.getStatus().setBrokerStatuses(previousStatus.getBrokerStatuses());
                 }
             }
         }
@@ -299,11 +311,7 @@ public class AddressProvisioner {
                         address.removeAnnotation(AnnotationKeys.BROKER_ID);
                     }
                     String clusterId = getShardedClusterId(address);
-                    UsageInfo info = resourceUsage.get(clusterId);
-                    if (info != null && address.getAnnotation(AnnotationKeys.APPLIED_PLAN) != null) {
-                        throw new IllegalArgumentException("Found unexpected conflicting usage for address " + address.getName());
-                    }
-                    info = new UsageInfo();
+                    UsageInfo info = new UsageInfo();
                     info.addUsed(resourceRequest.getCredit());
                     resourceUsage.put(clusterId, info);
 
@@ -339,7 +347,6 @@ public class AddressProvisioner {
             double resourceNeeded = sumNeeded(resourceUsage);
             if (resourceNeeded > limits.get(resourceName)) {
                 log.info("address {} for {} needed {} > limit {}", address.getAddress(), resourceName, resourceNeeded, limits.get(resourceRequest.getName()));
-                address.getStatus().setPhase(Status.Phase.Pending);
                 address.getStatus().appendMessage("Quota exceeded");
                 return null;
             }
@@ -350,7 +357,6 @@ public class AddressProvisioner {
         double totalNeeded = sumTotalNeeded(needed);
         if (totalNeeded > limits.get("aggregate")) {
             log.info("address {} usage {}, total needed {} > limit {}", address.getAddress(), usage, totalNeeded, limits.get("aggregate"));
-            address.getStatus().setPhase(Status.Phase.Pending);
             address.getStatus().appendMessage("Quota exceeded");
             return null;
         }
@@ -405,7 +411,7 @@ public class AddressProvisioner {
                 }
             }
             if (!found) {
-                brokerStatus.setState(BrokerState.Draining);
+                brokerStatus.setState(BrokerState.Migrating);
             }
         }
 

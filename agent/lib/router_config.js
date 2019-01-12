@@ -351,6 +351,8 @@ function desired_address_config(high_level_address_definitions) {
                     var brokerStatus = def.allocated_to[j];
                     if (brokerStatus.state === 'Active') {
                         config.add_autolink_pair({addr:def.address, containerId: brokerStatus.containerId});
+                    } else if (brokerStatus.state === 'Migrating') {
+                        config.add_autolink_pair({addr:def.address, containerId: brokerStatus.containerId});
                     } else if (brokerStatus.state === 'Draining') {
                         config.add_autolink_in({addr:def.address, containerId: brokerStatus.containerId});
                     }

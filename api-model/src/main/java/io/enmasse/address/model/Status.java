@@ -23,7 +23,10 @@ public class Status {
         this.isReady = other.isReady();
         this.phase = other.getPhase();
         this.messages = new HashSet<>(other.getMessages());
-        this.brokerStatuses = new ArrayList<>(other.getBrokerStatuses());
+        this.brokerStatuses = new ArrayList<>();
+        for (BrokerStatus brokerStatus : other.getBrokerStatuses()) {
+            brokerStatuses.add(new BrokerStatus(brokerStatus.getClusterId(), brokerStatus.getContainerId(), brokerStatus.getState()));
+        }
     }
 
     public boolean isReady() {

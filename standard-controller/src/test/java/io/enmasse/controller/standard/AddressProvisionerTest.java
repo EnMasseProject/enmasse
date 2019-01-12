@@ -18,6 +18,7 @@ import org.mockito.internal.util.collections.Sets;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static io.enmasse.address.model.Status.Phase.Active;
 import static io.enmasse.address.model.Status.Phase.Configuring;
 import static io.enmasse.address.model.Status.Phase.Pending;
 import static java.util.Collections.singleton;
@@ -129,6 +130,7 @@ public class AddressProvisionerTest {
 
         assertThat(neededMap, is(usageMap));
         assertThat(largeQueue.getStatus().getPhase(), is(Pending));
+        assertTrue(largeQueue.getStatus().getMessages().contains("Quota exceeded"));
 
         Address smallQueue = createQueue("q4", "small-queue");
         neededMap = provisioner.checkQuota(usageMap, Sets.newSet(smallQueue), Sets.newSet(smallQueue));
@@ -352,6 +354,85 @@ public class AddressProvisionerTest {
         assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
 
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
+    public void testSwitchShardedAddressPlan() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = createQueue("q1", "large-queue");
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
+        q1 = new Address.Builder(q1)
+                .setPlan("xlarge-queue")
+                .build();
+
+        q1.getStatus().setPhase(Active);
+
+        usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
+    public void testSwitchPooledToShardedQuotaCheck() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 1),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = createQueue("q1", "small-queue");
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
+        q1.getStatus().setPhase(Active);
+        q1 = new Address.Builder(q1)
+                .setPlan("large-queue")
+                .build();
+
+
+        usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertTrue(q1.getStatus().getMessages().contains("Quota exceeded"));
+        assertThat(q1.getStatus().getPhase(), is(Active));
+        assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    }
+
+    @Test
+    public void testSwitchShardedToShardedQuotaCheck() throws Exception {
+
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = createQueue("q1", "large-queue");
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
+        q1.getStatus().setPhase(Active);
+        q1 = new Address.Builder(q1)
+                .setPlan("xlarge-queue")
+                .build();
+
+
+        usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertTrue(q1.getStatus().getMessages().isEmpty());
+        assertThat(q1.getStatus().getPhase(), is(Configuring));
         assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 

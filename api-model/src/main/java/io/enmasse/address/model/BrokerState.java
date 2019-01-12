@@ -6,5 +6,6 @@ package io.enmasse.address.model;
 
 public enum BrokerState {
     Active,
+    Migrating,
     Draining
 }

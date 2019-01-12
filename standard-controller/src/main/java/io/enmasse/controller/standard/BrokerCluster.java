@@ -11,12 +11,15 @@ import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Represents a cluster of resources for a given destination.
@@ -52,12 +55,25 @@ public class BrokerCluster {
     private final int replicas;
     private KubernetesList resources;
     private int newReplicas;
+    private final int readyReplicas;
 
     public BrokerCluster(String clusterId, KubernetesList resources) {
         this.clusterId = clusterId;
         this.resources = resources;
         this.replicas = findReplicas(resources.getItems());
+        this.readyReplicas = findReadyReplicas(resources.getItems());
         this.newReplicas = replicas;
+    }
+
+    private int findReadyReplicas(List<HasMetadata> items) {
+        for (HasMetadata item : items) {
+            if (item instanceof StatefulSet) {
+                return Optional.ofNullable(((StatefulSet)item).getStatus()).map(StatefulSetStatus::getReadyReplicas).orElse(0);
+            } else if (item instanceof Deployment) {
+                return Optional.ofNullable(((Deployment)item).getStatus()).map(DeploymentStatus::getReadyReplicas).orElse(0);
+            }
+        }
+        return 0;
     }
 
     private int findReplicas(List<HasMetadata> items) {
@@ -122,5 +138,9 @@ public class BrokerCluster {
                 }
             }
         }
+    }
+
+    public int getReadyReplicas() {
+        return readyReplicas;
     }
 }
