@@ -38,8 +38,7 @@ import java.util.stream.IntStream;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -100,7 +99,8 @@ class ApiServerTest extends TestBase {
         addressSpace.setEndpoints(Arrays.asList(
                 new AddressSpaceEndpoint(endpointPrefix + "messaging", "messaging", "amqps"),
                 new AddressSpaceEndpoint(endpointPrefix + "console", "console", "https"),
-                new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")));
+                new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")),
+                true);
         createAddressSpace(addressSpace);
 
         UserCredentials luckyUser = new UserCredentials("lucky", "luckyPswd");

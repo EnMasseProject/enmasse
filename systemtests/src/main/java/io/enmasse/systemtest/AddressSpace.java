@@ -23,6 +23,7 @@ public class AddressSpace {
     private AuthService authService;
     private List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
     private Map<String, String> annotations = new HashMap<>();
+    private boolean useEndpointsInJson;
 
     public AddressSpace(String name) {
         this(name, name, AddressSpaceType.STANDARD, AuthService.NONE);
@@ -137,6 +138,11 @@ public class AddressSpace {
         this.endpoints = endpoints;
     }
 
+    public void setEndpoints(List<AddressSpaceEndpoint> endpoints, boolean useEndpointsInJson) {
+        this.endpoints = endpoints;
+        this.useEndpointsInJson = useEndpointsInJson;
+    }
+
     public String getName() {
         return name;
     }
@@ -220,17 +226,13 @@ public class AddressSpace {
         return addressSpaceString.toString();
     }
 
-    public JsonObject toJson(String version, boolean useEndpoints) {
+    public JsonObject toJson(String version) {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", version);
         entry.put("kind", "AddressSpace");
         entry.put("metadata", this.jsonMetadata());
-        entry.put("spec", this.jsonSpec(useEndpoints));
+        entry.put("spec", this.jsonSpec());
         return entry;
-    }
-
-    public JsonObject toJson(String version) {
-        return toJson(version, false);
     }
 
     public JsonObject jsonMetadata() {
@@ -246,14 +248,14 @@ public class AddressSpace {
         return annotations;
     }
 
-    public JsonObject jsonSpec(boolean useEndpoints) {
+    public JsonObject jsonSpec() {
         JsonObject spec = new JsonObject();
         spec.put("type", this.getType().toString().toLowerCase());
         spec.put("plan", this.getPlan());
         JsonObject authService = new JsonObject();
         authService.put("type", this.getAuthService().toString());
         spec.put("authenticationService", authService);
-        if (!this.getEndpoints().isEmpty() && useEndpoints) {
+        if (!this.getEndpoints().isEmpty() && this.useEndpointsInJson) {
             spec.put("endpoints", this.jsonEndpoints());
         }
         return spec;
