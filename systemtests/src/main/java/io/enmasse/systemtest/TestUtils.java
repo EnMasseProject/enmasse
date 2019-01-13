@@ -412,7 +412,7 @@ public class TestUtils {
         TimeoutBudget budget = null;
 
         boolean isReady = false;
-        budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
             addressSpaceObject = apiClient.getAddressSpace(addressSpace.getName());
             isReady = isAddressSpaceReady(addressSpaceObject);
@@ -439,7 +439,7 @@ public class TestUtils {
      */
     public static void waitForAddressSpacePlanApplied(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
         JsonObject addressSpaceObject = null;
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
 
         boolean isPlanApplied = false;
         while (budget.timeLeft() >= 0 && !isPlanApplied) {
@@ -466,7 +466,7 @@ public class TestUtils {
      * @throws Exception
      */
     public static void waitForServiceInstanceReady(OSBApiClient apiClient, String username, String instanceId) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         boolean isReady = false;
         while (budget.timeLeft() >= 0 && !isReady) {
             isReady = isServiceInstanceReady(apiClient.getLastOperation(username, instanceId));
@@ -935,7 +935,7 @@ public class TestUtils {
      */
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
         log.info("Waiting for AddressSpace {} to be deleted", addressSpace);
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         waitForItems(addressSpace, budget, () -> kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
         waitForItems(addressSpace, budget, () -> kubernetes.listConfigMaps(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
         waitForItems(addressSpace, budget, () -> kubernetes.listServices(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).size());
@@ -962,7 +962,7 @@ public class TestUtils {
      * @param namespace  project/namespace to remove
      */
     public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(namespace)) {
             Thread.sleep(1000);
         }
