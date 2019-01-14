@@ -1,0 +1,129 @@
+{
+    "apiVersion": "enmasse.io/v1beta1",
+    "kind": "AddressSpaceSchema",
+    "metadata": {
+        "creationTimestamp": "2019-01-14T12:16:41.596Z",
+        "name": "standard"
+    },
+    "spec": {
+        "addressTypes": [
+            {
+                "description": "A direct messaging address type. Messages sent to an anycast address are not stored but forwarded directly to a consumer.",
+                "name": "anycast",
+                "plans": [
+                    {
+                        "description": "Creates a medium anycast address.",
+                        "name": "standard-medium-anycast"
+                    },
+                    {
+                        "description": "Creates a large anycast address.",
+                        "name": "standard-large-anycast"
+                    },
+                    {
+                        "description": "Creates a small anycast address.",
+                        "name": "standard-small-anycast"
+                    }
+                ]
+            },
+            {
+                "description": "A direct messaging address type. Messages sent to a multicast address are not stored but forwarded directly to multiple consumers.",
+                "name": "multicast",
+                "plans": [
+                    {
+                        "description": "Creates a large multicast address.",
+                        "name": "standard-large-multicast"
+                    },
+                    {
+                        "description": "Creates a small multicast address.",
+                        "name": "standard-small-multicast"
+                    },
+                    {
+                        "description": "Creates a medium multicast address.",
+                        "name": "standard-medium-multicast"
+                    }
+                ]
+            },
+            {
+                "description": "A store-and-forward queue. A queue may be sharded across multiple storage units, in which case message ordering is no longer guaranteed.",
+                "name": "queue",
+                "plans": [
+                    {
+                        "description": "Creates a small queue sharing underlying broker with other queues.",
+                        "name": "standard-small-queue"
+                    },
+                    {
+                        "description": "Creates an extra large queue backed by 2 brokers.",
+                        "name": "standard-xlarge-queue"
+                    },
+                    {
+                        "description": "Creates a large queue backed by a dedicated broker.",
+                        "name": "standard-large-queue"
+                    },
+                    {
+                        "description": "Creates a medium sized queue sharing underlying broker with other queues.",
+                        "name": "standard-medium-queue"
+                    }
+                ]
+            },
+            {
+                "description": "A topic address for store-and-forward publish-subscribe messaging. Each message published to a topic address is forwarded to all subscribes on that address.",
+                "name": "topic",
+                "plans": [
+                    {
+                        "description": "Creates a large topic backed by a dedicated broker.",
+                        "name": "standard-large-topic"
+                    },
+                    {
+                        "description": "Creates an extra large topic backed by 2 brokers.",
+                        "name": "standard-xlarge-topic"
+                    },
+                    {
+                        "description": "Creates a medium sized topic sharing underlying broker with other topics.",
+                        "name": "standard-medium-topic"
+                    },
+                    {
+                        "description": "Creates a small topic sharing underlying broker with other topics.",
+                        "name": "standard-small-topic"
+                    }
+                ]
+            },
+            {
+                "description": "A subscription on a topic",
+                "name": "subscription",
+                "plans": [
+                    {
+                        "description": "Creates a small durable subscription on a topic.",
+                        "name": "standard-small-subscription"
+                    },
+                    {
+                        "description": "Creates a large durable subscription on a topic.",
+                        "name": "standard-large-subscription"
+                    },
+                    {
+                        "description": "Creates a medium durable subscription on a topic.",
+                        "name": "standard-medium-subscription"
+                    }
+                ]
+            }
+        ],
+        "description": "A standard address space consists of an AMQP router network in combination with attachable 'storage units'. The implementation of a storage unit is hidden from the client and the routers with a well defined API.",
+        "plans": [
+            {
+                "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
+                "name": "standard-small"
+            },
+            {
+                "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.",
+                "name": "standard-unlimited"
+            },
+            {
+                "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support.",
+                "name": "standard-unlimited-with-mqtt"
+            },
+            {
+                "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.",
+                "name": "standard-medium"
+            }
+        ]
+    }
+}

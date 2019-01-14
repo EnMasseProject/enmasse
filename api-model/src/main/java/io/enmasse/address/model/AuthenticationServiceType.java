@@ -6,6 +6,9 @@ package io.enmasse.address.model;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * The type of authentication services supported in EnMasse.
  */
@@ -39,11 +42,12 @@ public enum AuthenticationServiceType {
         return Collections.unmodifiableSet(mandatoryFields);
     }
 
-
+    @JsonValue
     public String getName() {
         return name().toLowerCase();
     }
 
+    @JsonCreator
     public static AuthenticationServiceType create(String name) {
         return valueOf(name.toUpperCase());
     }

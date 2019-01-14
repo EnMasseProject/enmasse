@@ -9,7 +9,6 @@ import io.enmasse.api.auth.AllowAllAuthInterceptor;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
-import io.enmasse.api.common.JacksonConfig;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -84,7 +83,6 @@ public class HTTPServer extends AbstractVerticle {
         deployment.start();
 
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
-        deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
         if (isRbacEnabled) {
             log.info("Enabling RBAC for REST API");

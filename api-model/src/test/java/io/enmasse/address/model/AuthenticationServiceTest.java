@@ -25,8 +25,8 @@ public class AuthenticationServiceTest {
     @Test
     public void testEqualsEmpty() {
         assertEquality(true,
-                new AuthenticationService.Builder().build(),
-                new AuthenticationService.Builder().build());
+                new AuthenticationServiceBuilder().build(),
+                new AuthenticationServiceBuilder().build());
     }
 
     /**
@@ -35,11 +35,11 @@ public class AuthenticationServiceTest {
     @Test
     public void testEqualsSameType() {
         assertEquality(true,
-                new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.EXTERNAL)
+                new AuthenticationServiceBuilder()
+                        .withType(AuthenticationServiceType.EXTERNAL)
                         .build(),
-                new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.EXTERNAL)
+                new AuthenticationServiceBuilder()
+                        .withType(AuthenticationServiceType.EXTERNAL)
                         .build());
     }
 
@@ -49,11 +49,11 @@ public class AuthenticationServiceTest {
     @Test
     public void testNonEqualsDifferentType() {
         assertEquality(false,
-                new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.NONE)
+                new AuthenticationServiceBuilder()
+                        .withType(AuthenticationServiceType.NONE)
                         .build(),
-                new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.EXTERNAL)
+                new AuthenticationServiceBuilder()
+                        .withType(AuthenticationServiceType.EXTERNAL)
                         .build());
     }
 
@@ -72,13 +72,13 @@ public class AuthenticationServiceTest {
         }
 
         assertEquality(true,
-                new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.EXTERNAL)
-                        .setDetails(details1)
+                new AuthenticationServiceBuilder()
+                        .withType(AuthenticationServiceType.EXTERNAL)
+                        .withDetails(details1)
                         .build(),
-                new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.EXTERNAL)
-                        .setDetails(details2)
+                new AuthenticationServiceBuilder()
+                        .withType(AuthenticationServiceType.EXTERNAL)
+                        .withDetails(details2)
                         .build());
     }
 

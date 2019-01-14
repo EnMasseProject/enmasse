@@ -6,6 +6,7 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -57,26 +58,32 @@ public class TemplateBrokerSetGeneratorTest {
         for (HasMetadata resource : resources) {
             Map<String, String> annotations = resource.getMetadata().getAnnotations();
             assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
-            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
+            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getMetadata().getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
         assertThat(parameters.size(), is(13));
     }
 
     private Address createAddress(String address, String type) {
-        return new Address.Builder()
-                .setName(address)
-                .setAddress(address)
-                .setAddressSpace("myinstance")
-                .setType(type)
-                .setPlan("plan1")
+        return new AddressBuilder()
+                .withNewMetadata()
+                .withName(address)
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(address)
+                .withAddressSpace("myinstance")
+                .withType(type)
+                .withPlan("plan1")
+                .endSpec()
+
                 .build();
     }
 
     private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) throws Exception {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
-        return generator.generateCluster(address.getName(), 1, address, null,
+        return generator.generateCluster(address.getMetadata().getName(), 1, address, null,
                 standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null));
     }
 

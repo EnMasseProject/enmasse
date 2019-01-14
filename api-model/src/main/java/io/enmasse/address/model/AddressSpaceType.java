@@ -6,20 +6,41 @@ package io.enmasse.address.model;
 
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
 
 import java.util.*;
+
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Represents the Standard address space type.
  */
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressSpaceType {
-    private final String name;
-    private final String description;
-    private final InfraConfigDeserializer infraConfigDeserializer;
-    private final List<AddressSpacePlan> plans;
-    private final List<AddressType> addressTypes;
-    private final List<EndpointSpec> availableEndpoints;
-    private final List<InfraConfig> infraConfigs;
+    private String name;
+    private String description;
+    private InfraConfigDeserializer infraConfigDeserializer;
+    private List<@Valid AddressSpacePlan> plans = new ArrayList<>();
+    private List<@Valid AddressType> addressTypes = new ArrayList<>();
+    private List<@Valid EndpointSpec> availableEndpoints = new ArrayList<>();
+    private List<@Valid InfraConfig> infraConfigs = new ArrayList<>();
+
+    public AddressSpaceType() {
+    }
 
     public AddressSpaceType(String name, String description, InfraConfigDeserializer infraConfigDeserializer, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints, List<InfraConfig> infraConfigs) {
         this.name = name;
@@ -31,16 +52,32 @@ public class AddressSpaceType {
         this.infraConfigs = infraConfigs;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getDescription() {
         return description;
     }
 
+    public void setAddressTypes(List<AddressType> addressTypes) {
+        this.addressTypes = addressTypes;
+    }
+
     public List<AddressType> getAddressTypes() {
         return Collections.unmodifiableList(addressTypes);
+    }
+
+    public void setPlans(List<AddressSpacePlan> plans) {
+        this.plans = plans;
     }
 
     public List<AddressSpacePlan> getPlans() {
@@ -65,6 +102,10 @@ public class AddressSpaceType {
         return Optional.empty();
     }
 
+    public void setAvailableEndpoints(List<EndpointSpec> availableEndpoints) {
+        this.availableEndpoints = availableEndpoints;
+    }
+
     public List<EndpointSpec> getAvailableEndpoints() {
         return Collections.unmodifiableList(availableEndpoints);
     }
@@ -78,68 +119,19 @@ public class AddressSpaceType {
         return Optional.empty();
     }
 
+    public void setInfraConfigs(List<InfraConfig> infraConfigs) {
+        this.infraConfigs = infraConfigs;
+    }
+
     public List<InfraConfig> getInfraConfigs() {
         return infraConfigs;
     }
 
-    public InfraConfigDeserializer getInfraConfigDeserializer() {
-        return infraConfigDeserializer;
+    public void setInfraConfigDeserializer(InfraConfigDeserializer infraConfigDeserializer) {
+        this.infraConfigDeserializer = infraConfigDeserializer;
     }
 
-    public static class Builder {
-        private String name;
-        private String description;
-        private InfraConfigDeserializer infraConfigDeserializer;
-        private List<AddressType> addressTypes;
-        private List<AddressSpacePlan> addressSpacePlans;
-        private List<EndpointSpec> availableEndpoints;
-        private List<InfraConfig> infraConfigs;
-
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder setDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder setInfraConfigDeserializer(InfraConfigDeserializer infraConfigDeserializer) {
-            this.infraConfigDeserializer = infraConfigDeserializer;
-            return this;
-        }
-
-        public Builder setAddressTypes(List<AddressType> addressTypes) {
-            this.addressTypes = new ArrayList<>(addressTypes);
-            return this;
-        }
-
-        public Builder setAddressSpacePlans(List<AddressSpacePlan> addressSpacePlans) {
-            this.addressSpacePlans = new ArrayList<>(addressSpacePlans);
-            return this;
-        }
-
-        public Builder setAvailableEndpoints(List<EndpointSpec> availableEndpoints) {
-            this.availableEndpoints = new ArrayList<>(availableEndpoints);
-            return this;
-        }
-
-        public Builder setInfraConfigs(List<InfraConfig> infraConfigs) {
-            this.infraConfigs = infraConfigs;
-            return this;
-        }
-
-        public AddressSpaceType build() {
-            Objects.requireNonNull(name);
-            Objects.requireNonNull(description);
-            Objects.requireNonNull(infraConfigDeserializer);
-            Objects.requireNonNull(addressSpacePlans);
-            Objects.requireNonNull(addressTypes);
-            Objects.requireNonNull(availableEndpoints);
-            Objects.requireNonNull(infraConfigs);
-
-            return new AddressSpaceType(name, description, infraConfigDeserializer, addressSpacePlans, addressTypes, availableEndpoints, infraConfigs);
-        }
+    public InfraConfigDeserializer getInfraConfigDeserializer() {
+        return infraConfigDeserializer;
     }
 }

@@ -7,6 +7,7 @@ package io.enmasse.osb.api;
 import java.util.*;
 
 import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceBuilder;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.api.auth.AuthApi;
@@ -18,6 +19,7 @@ import io.enmasse.api.common.UuidGenerator;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,57 +66,59 @@ public abstract class OSBServiceBase {
     }
 
     protected Optional<AddressSpace> findAddressSpaceByName(String name) {
-        return addressSpaceApi.listAddressSpaces(namespace).stream().filter(a -> a.getName().equals(name)).findAny();
+        return addressSpaceApi.listAddressSpaces(namespace).stream().filter(a -> a.getMetadata().getName().equals(name)).findAny();
     }
 
     protected AddressSpace createAddressSpace(String instanceId, String name, String type, String plan, String userId, String userName) throws Exception {
-        AuthenticationService authService = new AuthenticationService.Builder()
-                .setType(AuthenticationServiceType.STANDARD)
-                .setDetails(Collections.emptyMap())
+        AuthenticationService authService = new AuthenticationServiceBuilder()
+                .withType(AuthenticationServiceType.STANDARD)
+                .withDetails(Collections.emptyMap())
                 .build();
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName(name)
-                .setType(type)
-                .setPlan(plan)
-                .putAnnotation(AnnotationKeys.CREATED_BY, userName)
-                .putAnnotation(AnnotationKeys.CREATED_BY_UID, userId)
-                .setAuthenticationService(authService)
-                .putLabel(LabelKeys.SERVICE_INSTANCE_ID, instanceId)
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .addToAnnotations(AnnotationKeys.CREATED_BY, userName)
+                .addToAnnotations(AnnotationKeys.CREATED_BY_UID, userId)
+                .addToLabels(LabelKeys.SERVICE_INSTANCE_ID, instanceId)
+                .endMetadata()
+
+                .withNewSpec()
+                .withType(type)
+                .withPlan(plan)
+                .withAuthenticationService(authService)
+                .endSpec()
+
                 .build();
         addressSpace = setDefaults(addressSpace, namespace);
         addressSpaceApi.createAddressSpace(addressSpace);
-        log.info("Created MaaS addressspace {}", addressSpace.getName());
+        log.info("Created MaaS addressspace {}", addressSpace.getMetadata().getName());
         return addressSpace;
     }
 
     private AddressSpace setDefaults(AddressSpace addressSpace, String namespace) {
-        if (addressSpace.getNamespace() == null) {
-            addressSpace = new AddressSpace.Builder(addressSpace)
-                    .setNamespace(namespace)
+
+        if (addressSpace.getMetadata().getNamespace() == null) {
+            addressSpace = new AddressSpaceBuilder(addressSpace)
+                    .editOrNewMetadata()
+                    .withNamespace(namespace)
+                    .endMetadata()
                     .build();
         }
 
-        if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
-            addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
-        }
+        final Map<String, String> annotations = addressSpace.getMetadata().getAnnotations();
+        final Map<String, String> labels = addressSpace.getMetadata().getLabels();
 
-        if (addressSpace.getLabel(LabelKeys.ADDRESS_SPACE_TYPE) == null) {
-            addressSpace.putLabel(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getType());
-        }
+        annotations.putIfAbsent(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getMetadata().getNamespace() + "-" + addressSpace.getMetadata().getName()));
+        annotations.putIfAbsent(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
 
-        if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
-            addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
-        }
-
-        if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
-            addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
-        }
+        labels.putIfAbsent(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getSpec().getType());
+        labels.putIfAbsent(LabelKeys.NAMESPACE, addressSpace.getMetadata().getNamespace());
 
         return addressSpace;
     }
 
     protected boolean deleteAddressSpace(AddressSpace addressSpace) {
-        log.info("Deleting address space : {}", addressSpace.getName());
+        log.info("Deleting address space : {}", addressSpace.getMetadata().getName());
         addressSpaceApi.deleteAddressSpace(addressSpace);
         return true;
     }

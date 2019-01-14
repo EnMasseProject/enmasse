@@ -5,7 +5,7 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceStatus;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.k8s.api.cache.CacheWatcher;
 
 import java.time.Duration;
@@ -29,12 +29,12 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        addressSpaces.put(addressSpace.getName(), addressSpace);
+        addressSpaces.put(addressSpace.getMetadata().getName(), addressSpace);
     }
 
     @Override
     public boolean replaceAddressSpace(AddressSpace addressSpace) {
-        if (!addressSpaces.containsKey(addressSpace.getName())) {
+        if (!addressSpaces.containsKey(addressSpace.getMetadata().getName())) {
             return false;
         }
         createAddressSpace(addressSpace);
@@ -46,7 +46,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return addressSpaces.remove(addressSpace.getName()) != null;
+        return addressSpaces.remove(addressSpace.getMetadata().getName()) != null;
     }
 
     @Override
@@ -81,9 +81,9 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     @Override
     public void deleteAddressSpaces(String namespace) {
         for (AddressSpace addressSpace : new HashSet<>(addressSpaces.values())) {
-            if (namespace.equals(addressSpace.getNamespace())) {
-                addressSpaces.remove(addressSpace.getName());
-                addressApiMap.remove(addressSpace.getName());
+            if (namespace.equals(addressSpace.getMetadata().getNamespace())) {
+                addressSpaces.remove(addressSpace.getMetadata().getName());
+                addressApiMap.remove(addressSpace.getMetadata().getName());
             }
         }
     }
@@ -95,11 +95,11 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        if (!addressApiMap.containsKey(addressSpace.getName())) {
-            addressSpaces.put(addressSpace.getName(), addressSpace);
-            addressApiMap.put(addressSpace.getName(), new TestAddressApi());
+        if (!addressApiMap.containsKey(addressSpace.getMetadata().getName())) {
+            addressSpaces.put(addressSpace.getMetadata().getName(), addressSpace);
+            addressApiMap.put(addressSpace.getMetadata().getName(), new TestAddressApi());
         }
-        return getAddressApi(addressSpace.getName());
+        return getAddressApi(addressSpace.getMetadata().getName());
     }
 
     public TestAddressApi getAddressApi(String id) {
@@ -113,6 +113,6 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     public void setAllInstancesReady(boolean ready) {
         addressSpaces.entrySet().stream().forEach(entry -> addressSpaces.put(
                 entry.getKey(),
-                new AddressSpace.Builder(entry.getValue()).setStatus(new AddressSpaceStatus(ready)).build()));
+                new AddressSpaceBuilder(entry.getValue()).withNewStatus(ready).build()));
     }
 }

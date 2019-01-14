@@ -17,8 +17,6 @@ import io.enmasse.osb.api.EmptyResponse;
 import io.enmasse.osb.api.OSBServiceBase;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -62,7 +60,7 @@ public class OSBBindingService extends OSBServiceBase {
             credentials.put("username", username);
             credentials.put("password", password);
 
-            for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
+            for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
                 if (endpointSpec.getService().startsWith("console")) {
                     continue;
                 }
@@ -87,10 +85,10 @@ public class OSBBindingService extends OSBServiceBase {
                     String portName = servicePort.getKey().substring(0, 1).toUpperCase() + servicePort.getKey().substring(1);
                     credentials.put(prefix + portName + "Port", String.format("%d", servicePort.getValue()));
                 }
-                endpointSpec.getCertSpec().ifPresent(certSpec -> {
-                    String cert = getAuthApi().getCert(certSpec.getSecretName());
+                if(endpointSpec.getCert() !=null) {
+                    String cert = getAuthApi().getCert(endpointSpec.getCert().getSecretName());
                     credentials.put(prefix + "Cert.pem", cert);
-                });
+                }
             }
             return Response.status(Response.Status.CREATED).entity(new BindResponse(credentials)).build();
 
@@ -126,12 +124,13 @@ public class OSBBindingService extends OSBServiceBase {
         specBuilder.withAuthorization(authorizations);
 
         User user = new UserBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                    .withNamespace(addressSpace.getNamespace())
-                    .withName(addressSpace.getName() + "." + username)
-                    .build())
-                        .withSpec(specBuilder.build())
-                        .build();
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(addressSpace.getMetadata().getName() + "." + username)
+                .endMetadata()
+
+                .withSpec(specBuilder.build())
+                .build();
 
         String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
         if (userApi.getUserWithName(realmName, user.getMetadata().getName()).isPresent()) {
@@ -193,7 +192,7 @@ public class OSBBindingService extends OSBServiceBase {
     private boolean deleteUser(AddressSpace addressSpace, String username) throws Exception {
 
         String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        Optional<User> user = userApi.getUserWithName(realmName, addressSpace.getName() + "." + username);
+        Optional<User> user = userApi.getUserWithName(realmName, addressSpace.getMetadata().getName() + "." + username);
         if (user.isPresent()) {
             userApi.deleteUser(realmName, user.get());
             return true;

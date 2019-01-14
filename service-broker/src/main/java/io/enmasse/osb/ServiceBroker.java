@@ -5,6 +5,7 @@
 
 package io.enmasse.osb;
 
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
@@ -42,6 +43,7 @@ public class ServiceBroker extends AbstractVerticle {
 
     static {
         try {
+            CoreCrd.registerCustomCrds();
             AdminCrd.registerCustomCrds();
         } catch (RuntimeException t) {
             t.printStackTrace();
@@ -73,7 +75,7 @@ public class ServiceBroker extends AbstractVerticle {
             if (route == null) {
                 return null;
             }
-            return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getName());
+            return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getMetadata().getName());
         };
 
         vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy),

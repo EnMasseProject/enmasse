@@ -6,7 +6,7 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.k8s.api.cache.CacheWatcher;
 
 import java.time.Duration;
@@ -30,7 +30,7 @@ public class TestAddressApi implements AddressApi {
 
     @Override
     public boolean replaceAddress(Address destination) {
-        if (addresses.stream().noneMatch(d -> d.getName().equals(destination.getName()))) {
+        if (addresses.stream().noneMatch(d -> d.getMetadata().getName().equals(destination.getMetadata().getName()))) {
             return false;
         }
         deleteAddress(destination); // necessary, because a simple set.add() doesn't replace the element
@@ -56,7 +56,7 @@ public class TestAddressApi implements AddressApi {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        return addresses.stream().filter(d -> d.getName().equals(address)).findAny();
+        return addresses.stream().filter(d -> d.getMetadata().getName().equals(address)).findAny();
     }
 
     @Override
@@ -66,7 +66,7 @@ public class TestAddressApi implements AddressApi {
         }
         Set<Address> listed = new LinkedHashSet<>();
         for (Address address : addresses) {
-            if (namespace.equals(address.getNamespace())) {
+            if (namespace.equals(address.getMetadata().getNamespace())) {
                 listed.add(address);
             }
         }
@@ -80,10 +80,10 @@ public class TestAddressApi implements AddressApi {
 
     @Override
     public void deleteAddresses(String namespace) {
-        addresses.removeIf(address -> namespace.equals(address.getNamespace()));
+        addresses.removeIf(address -> namespace.equals(address.getMetadata().getNamespace()));
     }
 
     public void setAllAddressesReady(boolean ready) {
-        addresses.stream().forEach(d -> replaceAddress(new Address.Builder(d).setStatus(new Status(ready)).build()));
+        addresses.stream().forEach(d -> replaceAddress(new AddressBuilder(d).withNewStatus(ready).build()));
     }
 }

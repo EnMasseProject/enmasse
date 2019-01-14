@@ -4,21 +4,22 @@
  */
 package io.enmasse.controller;
 
-
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.controller.common.Kubernetes;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.controller.common.Kubernetes;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 
 public class StatusControllerTest {
 
@@ -37,14 +38,32 @@ public class StatusControllerTest {
                 .endStatus()
                 .build();
 
-        when(kubernetes.getReadyDeployments(new AddressSpace.Builder().setName("a").setNamespace("b").setPlan("c").setType("d").putAnnotation(AnnotationKeys.INFRA_UUID, "1234").build())).thenReturn(Collections.emptySet());
+        when(kubernetes.getReadyDeployments(new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("a")
+                .withNamespace("b")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("c")
+                .withType("d")
+                .endSpec()
+
+                .build()))
+        .thenReturn(Collections.emptySet());
 
         StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, null);
 
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setType("type1")
-                .setPlan("myplan")
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
                 .build();
 
         when(infraResourceFactory.createInfraResources(eq(addressSpace), any())).thenReturn(Collections.singletonList(deployment));

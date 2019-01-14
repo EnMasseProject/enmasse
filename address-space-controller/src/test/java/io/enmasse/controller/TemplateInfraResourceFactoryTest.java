@@ -4,31 +4,36 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceResolver;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.admin.model.v1.*;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.controller.common.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AuthenticationServiceResolver;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.controller.common.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
 public class TemplateInfraResourceFactoryTest {
 
@@ -63,28 +68,35 @@ public class TemplateInfraResourceFactoryTest {
 
     @Test
     public void testGenerateStandard() {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("myproject")
-                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
-                .setType("standard")
-                .setPlan("standard-unlimited")
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("messaging")
-                        .setService("messaging")
-                        .setCertSpec(new CertSpec("selfsigned", "messaging-secret", null, null))
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("myproject")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("standard")
+                .withPlan("standard-unlimited")
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("messaging")
+                        .withService("messaging")
+                        .withCert(new CertSpec("selfsigned", "messaging-secret", null, null))
                         .build())
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("console")
-                        .setService("console")
-                        .setCertSpec(new CertSpec("selfsigned", "console-secret", null, null))
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("console")
+                        .withService("console")
+                        .withCert(new CertSpec("selfsigned", "console-secret", null, null))
                         .build())
+                .endSpec()
+
                 .build();
 
         StandardInfraConfig infraConfig = new StandardInfraConfigBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("test")
-                        .build())
+                .withNewMetadata()
+                .withName("test")
+                .endMetadata()
+
                 .withNewSpec()
                 .withVersion("master")
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
@@ -102,15 +114,15 @@ public class TemplateInfraResourceFactoryTest {
                 .build();
         List<HasMetadata> items = resourceFactory.createInfraResources(addressSpace, infraConfig);
         assertEquals(1, items.size());
-        ConfigMap map = findItem("ConfigMap", "mymap", items);
+        ConfigMap map = findItem(ConfigMap.class, "ConfigMap", "mymap", items);
         assertEquals("FAIL", map.getData().get("key"));
     }
 
-    private <T> T findItem(String kind, String name, List<HasMetadata> items) {
+    private <T> T findItem(Class<T> clazz, String kind, String name, List<HasMetadata> items) {
         T found = null;
         for (HasMetadata item : items) {
             if (kind.equals(item.getKind()) && name.equals(item.getMetadata().getName())) {
-                found = (T) item;
+                found = clazz.cast(item);
                 break;
             }
         }

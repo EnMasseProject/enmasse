@@ -37,8 +37,8 @@ public class NetworkPolicyController implements Controller {
             networkPolicy = infraConfig.getNetworkPolicy();
         }
 
-        if (addressSpace.getNetworkPolicy() != null) {
-            networkPolicy = addressSpace.getNetworkPolicy();
+        if (addressSpace.getSpec().getNetworkPolicy() != null) {
+            networkPolicy = addressSpace.getSpec().getNetworkPolicy();
         }
 
 
@@ -73,7 +73,7 @@ public class NetworkPolicyController implements Controller {
             return null;
         }
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getType());
+        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getSpec().getType());
         return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
@@ -81,7 +81,7 @@ public class NetworkPolicyController implements Controller {
         NetworkPolicyBuilder builder = new NetworkPolicyBuilder()
                 .editOrNewMetadata()
                 .withName(KubeUtil.getNetworkPolicyName(addressSpace))
-                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType())
                 .addToLabels(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID))
                 .addToLabels(LabelKeys.APP, "enmasse")
                 .endMetadata();
@@ -128,7 +128,7 @@ public class NetworkPolicyController implements Controller {
 
     private List<NetworkPolicyPort> getPortsForAddressSpace(AddressSpace addressSpace, List<Service> items) {
         List<NetworkPolicyPort> networkPolicyPorts = new ArrayList<>();
-        for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
+        for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
             Service service = findService(items, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace));
             if (service != null) {
                 for (int port : ServiceHelper.getServicePorts(service).values()) {

@@ -82,7 +82,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
     @Override
     public void onUpdate(List<AddressSpace> resources) throws Exception {
-        log.info("Check address spaces: {}", resources.stream().map(a -> a.getNamespace()+":"+a.getName()).collect(Collectors.toSet()));
+        log.info("Check address spaces: {}", resources.stream().map(a -> a.getMetadata().getNamespace()+":"+a.getMetadata().getName()).collect(Collectors.toSet()));
 
         if (schemaProvider.getSchema() == null) {
             log.info("No schema available");
@@ -91,7 +91,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
         for (AddressSpace addressSpace : resources) {
             try {
-                log.info("Checking address space {}:{}", addressSpace.getNamespace(), addressSpace.getName());
+                log.info("Checking address space {}:{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
                 addressSpace.getStatus().setReady(true);
                 addressSpace.getStatus().clearMessages();
                 for (Controller controller : chain) {
@@ -104,10 +104,10 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
                 addressSpaceApi.replaceAddressSpace(addressSpace);
             } catch (KubernetesClientException e) {
-                log.warn("Error syncing address space {}", addressSpace.getName(), e);
-                eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getName());
+                log.warn("Error syncing address space {}", addressSpace.getMetadata().getName(), e);
+                eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             } catch (Exception e) {
-                log.warn("Error processing address space {}", addressSpace.getName(), e);
+                log.warn("Error processing address space {}", addressSpace.getMetadata().getName(), e);
             }
         }
         retainAddressSpaces(resources);
@@ -119,7 +119,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
         List<MetricValue> readyValues = new ArrayList<>();
         List<MetricValue> notReadyValues = new ArrayList<>();
         for (AddressSpace addressSpace : resources) {
-            MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getName()), new MetricLabel("namespace", addressSpace.getNamespace())};
+            MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
             readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, labels));
             notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, now, labels));
         }

@@ -16,9 +16,6 @@ import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -26,7 +23,6 @@ import java.nio.file.Files;
 import java.util.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
-    private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class.getName());
     private static final String KC_IDP_HINT_NONE = "none";
     private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
 
@@ -43,19 +39,19 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private void prepareParameters(InfraConfig infraConfig,
                                    AddressSpace addressSpace,
                                    Map<String, String> parameters) {
-        AuthenticationService authService = addressSpace.getAuthenticationService();
+        AuthenticationService authService = addressSpace.getSpec().getAuthenticationService();
         AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
         Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService.getType());
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
-        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
-        parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getNamespace());
+        parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getMetadata().getNamespace());
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
-        parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getPlan());
+        parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint.orElse(""));
 
         String encodedCaCert = authResolver.getCaSecretName(authService)
@@ -76,10 +72,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
 
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-                endpoint.getCertSpec().ifPresent(cert -> {
-                    serviceCertMapping.put(endpoint.getService(), cert);
-            });
+        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+            if (endpoint.getCert() != null) {
+                serviceCertMapping.put(endpoint.getService(), endpoint.getCert());
+            }
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
         parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console").getSecretName());
@@ -96,21 +92,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         kcIdpHint = getAnnotation(infraConfig.getMetadata().getAnnotations(), AnnotationKeys.KC_IDP_HINT, kcIdpHint);
 
-        if  (addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT) != null) {
-            kcIdpHint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
+        final String hint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
+        if  ( hint != null) {
+            kcIdpHint = hint;
         }
         return KC_IDP_HINT_NONE.equals(kcIdpHint) ? Optional.empty() : Optional.ofNullable(kcIdpHint);
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-            endpoint.getCertSpec().ifPresent(cert -> {
-                serviceCertMapping.put(endpoint.getService(), cert);
-            });
+        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+            if (endpoint.getCert() != null) {
+                serviceCertMapping.put(endpoint.getService(), endpoint.getCert());
+            }
         }
         parameters.put(TemplateParameter.MQTT_SECRET, serviceCertMapping.get("mqtt").getSecretName());
     }
@@ -185,12 +182,12 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
     @Override
     public List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig) {
-        if ("standard".equals(addressSpace.getType())) {
+        if ("standard".equals(addressSpace.getSpec().getType())) {
             return createStandardInfra(addressSpace, (StandardInfraConfig) infraConfig);
-        } else if ("brokered".equals(addressSpace.getType())) {
+        } else if ("brokered".equals(addressSpace.getSpec().getType())) {
             return createBrokeredInfra(addressSpace, (BrokeredInfraConfig) infraConfig);
         } else {
-            throw new IllegalArgumentException("Unknown address space type " + addressSpace.getType());
+            throw new IllegalArgumentException("Unknown address space type " + addressSpace.getSpec().getType());
         }
     }
 }

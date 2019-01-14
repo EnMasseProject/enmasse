@@ -28,19 +28,16 @@ public class APIGroup
     private String kind = "APIGroup";
 
     @JsonProperty("name")
-    @Valid
     private String name;
 
     @JsonProperty("versions")
-    @Valid
-    private List<APIGroupVersion> versions;
+    private List<@Valid APIGroupVersion> versions;
 
     @JsonProperty("preferredVersion")
     @Valid
     private APIGroupVersion preferredVersion;
 
     @JsonProperty("serverAddressByClientCIDRs")
-    @Valid
     private String serverAddressByClientCIDRs;
 
     public APIGroup(String name, List<APIGroupVersion> versions, APIGroupVersion preferredVersion, String serverAddressByClientCIDRs) {

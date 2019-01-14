@@ -4,11 +4,28 @@
  */
 package io.enmasse.controller;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
@@ -16,17 +33,6 @@ import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.Arrays;
-import java.util.UUID;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 public class CreateControllerTest {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -36,12 +42,18 @@ public class CreateControllerTest {
         Kubernetes kubernetes = mock(Kubernetes.class);
         when(kubernetes.getNamespace()).thenReturn("otherspace");
 
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setUid(UUID.randomUUID().toString())
-                .setNamespace("mynamespace")
-                .setType("type1")
-                .setPlan("myplan")
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withUid(UUID.randomUUID().toString())
+                .withNamespace("mynamespace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
 
 
@@ -70,15 +82,21 @@ public class CreateControllerTest {
         when(kubernetes.getNamespace()).thenReturn("otherspace");
         SchemaProvider testSchema = new TestSchemaProvider();
 
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .putAnnotation(AnnotationKeys.APPLIED_PLAN, "plan1")
-                .setUid(UUID.randomUUID().toString())
-                .putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG,
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .withUid(UUID.randomUUID().toString())
+                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "plan1")
+                .addToAnnotations(AnnotationKeys.APPLIED_INFRA_CONFIG,
                         mapper.writeValueAsString(testSchema.getSchema().findAddressSpaceType("type1").get().getInfraConfigs().get(0)))
-                .setNamespace("mynamespace")
-                .setType("type1")
-                .setPlan("myplan")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
 
 
@@ -87,22 +105,34 @@ public class CreateControllerTest {
 
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
-        Address address = new Address.Builder()
-                .setAddressSpace(addressSpace.getName())
-                .setName("myspace.q1")
-                .setNamespace("mynamespace")
-                .setAddress("q1")
-                .setType("queue")
-                .setPlan("plan1")
+        Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.q1")
+                .withNamespace("mynamespace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddressSpace(addressSpace.getMetadata().getName())
+                .withAddress("q1")
+                .withType("queue")
+                .withPlan("plan1")
+                .endSpec()
+
                 .build();
 
-        Address address2 = new Address.Builder()
-                .setAddressSpace(addressSpace.getName())
-                .setName("myspace.q2")
-                .setNamespace("mynamespace")
-                .setAddress("q2")
-                .setType("queue")
-                .setPlan("plan1")
+        Address address2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.q2")
+                .withNamespace("mynamespace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddressSpace(addressSpace.getMetadata().getName())
+                .withAddress("q2")
+                .withType("queue")
+                .withPlan("plan1")
+                .endSpec()
+
                 .build();
 
         addressApi.createAddress(address);

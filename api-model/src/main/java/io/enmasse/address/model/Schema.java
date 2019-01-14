@@ -6,13 +6,42 @@ package io.enmasse.address.model;
 
 import java.util.*;
 
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Schema {
-    private final List<AddressSpaceType> addressSpaceTypes;
-    private final String creationTimestamp;
+    private List<@Valid AddressSpaceType> addressSpaceTypes = new ArrayList<>();
+    private String creationTimestamp;
+
+    public Schema() {
+    }
 
     public Schema(List<AddressSpaceType> addressSpaceTypes, String creationTimestamp) {
         this.addressSpaceTypes = addressSpaceTypes;
         this.creationTimestamp = creationTimestamp;
+    }
+
+    public void setAddressSpaceTypes(List<AddressSpaceType> addressSpaceTypes) {
+        this.addressSpaceTypes = addressSpaceTypes;
     }
 
     public List<AddressSpaceType> getAddressSpaceTypes() {
@@ -28,27 +57,11 @@ public class Schema {
         return Optional.empty();
     }
 
-    public String getCreationTimestamp() {
-        return creationTimestamp;
+    public void setCreationTimestamp(String creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 
-    public static class Builder {
-        private List<AddressSpaceType> addressSpaceTypes = new ArrayList<>();
-        private String creationTimestamp;
-
-        public Builder setAddressSpaceTypes(List<AddressSpaceType> addressSpaceTypes) {
-            this.addressSpaceTypes = new ArrayList<>(addressSpaceTypes);
-            return this;
-        }
-
-        public Builder setCreationTimestamp(String creationTimestamp) {
-            this.creationTimestamp = creationTimestamp;
-            return this;
-        }
-
-        public Schema build() {
-            Objects.requireNonNull(addressSpaceTypes, "addressSpaceTypes not set");
-            return new Schema(addressSpaceTypes, creationTimestamp);
-        }
+    public String getCreationTimestamp() {
+        return creationTimestamp;
     }
 }

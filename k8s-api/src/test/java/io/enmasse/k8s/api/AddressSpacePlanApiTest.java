@@ -8,7 +8,6 @@ import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressSpacePlanList;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
@@ -47,10 +46,11 @@ class AddressSpacePlanApiTest {
 
         client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class)
                 .createNew()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("plan1")
-                        .withNamespace(client.getNamespace())
-                        .build())
+                .withNewMetadata()
+                .withName("plan1")
+                .withNamespace(client.getNamespace())
+                .endMetadata()
+
                 .withAddressSpaceType("standard")
                 .withAddressPlans(Arrays.asList("p1", "p2"))
                 .done();
@@ -82,10 +82,11 @@ class AddressSpacePlanApiTest {
         }, Duration.ofSeconds(2))) {
             client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class)
                     .createNew()
-                    .withMetadata(new ObjectMetaBuilder()
-                            .withName("plan1")
-                            .withNamespace(client.getNamespace())
-                            .build())
+                    .withNewMetadata()
+                    .withName("plan1")
+                    .withNamespace(client.getNamespace())
+                    .endMetadata()
+
                     .withAddressSpaceType("standard")
                     .withAddressPlans(Arrays.asList("p1", "p2"))
                     .done();

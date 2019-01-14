@@ -5,10 +5,11 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.common.model.AbstractHasMetadataFluent.MetadataNested;
 import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<ConfigMap, ConfigMapList> {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
     private final NamespacedOpenShiftClient client;
-    private final ObjectMapper mapper = CodecV1.getMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public ConfigMapAddressSpaceApi(NamespacedOpenShiftClient client) {
         this.client = client;
@@ -58,7 +59,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public void createAddressSpace(AddressSpace addressSpace) {
-        String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+        String name = getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         ConfigMap map = create(addressSpace);
         client.configMaps().withName(name).create(map);
     }
@@ -67,13 +68,13 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     public boolean replaceAddressSpace(AddressSpace addressSpace) {
         ConfigMap newMap = null;
         try {
-            String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+            String name = getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
             newMap = create(addressSpace);
             ConfigMap result;
-            if (addressSpace.getResourceVersion() != null) {
+            if (addressSpace.getMetadata().getResourceVersion() != null) {
                 result = client.configMaps()
                         .withName(name)
-                        .lockResourceVersion(addressSpace.getResourceVersion())
+                        .lockResourceVersion(addressSpace.getMetadata().getResourceVersion())
                         .replace(newMap);
 
             } else {
@@ -93,26 +94,31 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     private ConfigMap create(AddressSpace addressSpace) {
-        Map<String, String> labels = addressSpace.getLabels();
-        String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+        Map<String, String> labels = addressSpace.getMetadata().getLabels();
+        if ( labels == null )  {
+            labels = new HashMap<>();
+            addressSpace.getMetadata().setLabels(labels);
+        }
+        String name = getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         labels.put(LabelKeys.TYPE, "address-space");
-        labels.put(LabelKeys.NAMESPACE, addressSpace.getNamespace());
+        labels.put(LabelKeys.NAMESPACE, addressSpace.getMetadata().getNamespace());
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .editOrNewMetadata()
                 .withName(name)
                 .addToLabels(labels)
-                .addToAnnotations(addressSpace.getAnnotations())
+                .addToAnnotations(addressSpace.getMetadata().getAnnotations())
                 .endMetadata();
 
-        if (addressSpace.getResourceVersion() != null) {
+        if (addressSpace.getMetadata().getResourceVersion() != null) {
             builder.editOrNewMetadata()
-                    .withResourceVersion(addressSpace.getResourceVersion())
+                    .withResourceVersion(addressSpace.getMetadata().getResourceVersion())
                     .endMetadata();
         }
 
         try {
             // Reset resource version to avoid unneeded extra writes
-            builder.addToData("config.json", mapper.writeValueAsString(new AddressSpace.Builder(addressSpace).setResourceVersion(null).build()));
+            AddressSpace newAddressSpace = new AddressSpaceBuilder(addressSpace).editOrNewMetadata().withResourceVersion(null).endMetadata().build();
+            builder.addToData("config.json", mapper.writeValueAsString(newAddressSpace));
             return builder.build();
         } catch (IOException e) {
             log.info("Error serializing addressspace for {}", addressSpace, e);
@@ -122,7 +128,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public boolean deleteAddressSpace(AddressSpace addressSpace) {
-        String name = getConfigMapName(addressSpace.getNamespace(), addressSpace.getName());
+        String name = getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         Boolean deleted = client.configMaps().withName(name).delete();
         return deleted != null && deleted;
     }
@@ -172,20 +178,25 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
         try {
             AddressSpace addressSpace = mapper.readValue(map.getData().get("config.json"), AddressSpace.class);
-            AddressSpace.Builder builder = new AddressSpace.Builder(addressSpace);
-            if (addressSpace.getUid() == null) {
-                builder.setUid(map.getMetadata().getUid());
+            AddressSpaceBuilder builder = new AddressSpaceBuilder(addressSpace);
+            MetadataNested<AddressSpaceBuilder> metadataBuilder = builder.editOrNewMetadata();
+
+            if (addressSpace.getMetadata().getUid() == null) {
+                metadataBuilder.withUid(map.getMetadata().getUid());
             }
 
-            builder.setResourceVersion(map.getMetadata().getResourceVersion());
+            metadataBuilder.withResourceVersion(map.getMetadata().getResourceVersion());
 
-            if (addressSpace.getCreationTimestamp() == null) {
-                builder.setCreationTimestamp(map.getMetadata().getCreationTimestamp());
+            if (addressSpace.getMetadata().getCreationTimestamp() == null) {
+                metadataBuilder.withCreationTimestamp(map.getMetadata().getCreationTimestamp());
             }
 
-            if (addressSpace.getSelfLink() == null) {
-                builder.setSelfLink("/apis/enmasse.io/v1beta1/namespaces/" + addressSpace.getNamespace() + "/addressspaces/" + addressSpace.getName());
+            if (addressSpace.getMetadata().getSelfLink() == null) {
+                metadataBuilder.withSelfLink("/apis/enmasse.io/v1beta1/namespaces/" + addressSpace.getMetadata().getNamespace() + "/addressspaces/" + addressSpace.getMetadata().getName());
             }
+
+            // commit changes
+            metadataBuilder.endMetadata();
 
             return builder.build();
         } catch (IOException e) {
@@ -222,6 +233,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         return new ConfigMapAddressApi(client, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
+    @SuppressWarnings("unused")
     private ConfigMapList list(String namespace) {
         return client.configMaps()
                 .inNamespace(client.getNamespace())

@@ -5,9 +5,12 @@
 package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.CertSpecBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -42,13 +45,18 @@ public class OpenShiftCertProviderTest {
     @Test
     public void testProvideCertNoService() {
 
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("myspace")
-                .setPlan("myplan")
-                .setType("standard")
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("standard")
+                .endSpec()
                 .build();
 
-        CertSpec spec = new CertSpec.Builder().setProvider("openshift").setSecretName("mycerts").build();
+        CertSpec spec = new CertSpecBuilder().withProvider("openshift").withSecretName("mycerts").build();
         certProvider.provideCert(space, new EndpointInfo("messaging", spec));
 
         Secret cert = client.secrets().withName("mycerts").get();
@@ -57,11 +65,17 @@ public class OpenShiftCertProviderTest {
 
     @Test
     public void testProvideCert() {
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("myspace")
-                .setPlan("myplan")
-                .setType("standard")
-                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("standard")
+                .endSpec()
+
                 .build();
 
         client.services().inNamespace("test").create(new ServiceBuilder()
@@ -73,7 +87,7 @@ public class OpenShiftCertProviderTest {
                 .endSpec()
                 .build());
 
-        CertSpec spec = new CertSpec.Builder().setProvider("openshift").setSecretName("mycerts").build();
+        CertSpec spec = new CertSpecBuilder().withProvider("openshift").withSecretName("mycerts").build();
         certProvider.provideCert(space, new EndpointInfo("messaging", spec));
 
         Secret cert = client.secrets().withName("mycerts").get();

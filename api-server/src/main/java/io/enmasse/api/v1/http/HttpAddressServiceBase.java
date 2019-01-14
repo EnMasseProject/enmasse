@@ -5,8 +5,8 @@
 package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.v1.Either;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
@@ -33,10 +33,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * HTTP API for operating on addresses within an address space
+ * HTTP API for operating on addresses within an address space.
+ * <br>
+ * In order to properly work with annotations, this implementation doesn't make use of annotations on its operation
+ * methods, and only provides "internal" methods. Concrete implementations, which expose the operation methods via
+ * HTTP will declare those methods, with proper annotations and do call the "internal" methods of this class.
  */
 public class HttpAddressServiceBase {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressServiceBase.class.getName());
@@ -63,7 +68,7 @@ public class HttpAddressServiceBase {
         }
     }
 
-    Response getAddressList(SecurityContext securityContext, String acceptHeader, String namespace, String addressSpace, String address, String labelSelector) throws Exception {
+    Response internalGetAddressList(SecurityContext securityContext, String acceptHeader, String namespace, String addressSpace, String address, String labelSelector) throws Exception {
 
         return doRequest("Error listing addresses",() -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
@@ -78,8 +83,8 @@ public class HttpAddressServiceBase {
                 }
             } else {
                 AddressList list = apiHelper.getAddresses(namespace, addressSpace);
-                for (Address entity : list) {
-                    if (entity.getAddress().equals(address)) {
+                for (Address entity : list.getItems()) {
+                    if (entity.getSpec().getAddress().equals(address)) {
                         return Response.ok(formatResponse(acceptHeader, entity)).build();
                     }
                 }
@@ -88,7 +93,7 @@ public class HttpAddressServiceBase {
         });
     }
 
-    Response getAddress(SecurityContext securityContext, String acceptHeader, String namespace, String addressSpace, String address) throws Exception {
+    Response internalGetAddress(SecurityContext securityContext, String acceptHeader, String namespace, String addressSpace, String address) throws Exception {
         return doRequest("Error getting address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.list);
             return apiHelper.getAddress(namespace, addressSpace, address)
@@ -97,31 +102,23 @@ public class HttpAddressServiceBase {
         });
     }
 
-    Response createAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Either<Address, AddressList> payload) throws Exception {
-        if (payload.isLeft()) {
-            return createAddress(securityContext, uriInfo, namespace, addressSpace, payload.getLeft());
-        } else {
-            return createAddresses(securityContext, uriInfo, namespace, addressSpace, payload.getRight());
-        }
-    }
-
-    private Response createAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Address address) throws Exception {
+    Response internalCreateAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Address address) throws Exception {
         checkRequestBodyNotNull(address);
         Address finalAddress = setAddressDefaults(namespace, addressSpace, address, null);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             Address created = apiHelper.createAddress(addressSpace, finalAddress);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-            builder.path(created.getName());
+            builder.path(created.getMetadata().getName());
             return Response.created(builder.build()).entity(created).build();
         });
     }
 
-    private Response createAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, AddressList addressList) throws Exception {
+    Response internalCreateAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, AddressList addressList) throws Exception {
         checkRequestBodyNotNull(addressList);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
-            Set<Address> finalAddresses = addressList.stream()
+            Set<Address> finalAddresses = addressList.getItems().stream()
                     .map(a -> setAddressDefaults(namespace, addressSpace, a, null))
                     .collect(Collectors.toSet());
             apiHelper.createAddresses(addressSpace, finalAddresses);
@@ -131,61 +128,75 @@ public class HttpAddressServiceBase {
 
     private static Address setAddressDefaults(String namespace, String addressSpace, Address address, Address existing) {
         if (existing == null) {
-            if (address.getNamespace() == null || address.getAddressSpace() == null || address.getName() == null) {
-                Address.Builder builder = new Address.Builder(address);
-                if (address.getNamespace() == null) {
-                    builder.setNamespace(namespace);
+            if (address.getMetadata().getNamespace() == null || address.getSpec().getAddressSpace() == null || address.getMetadata().getName() == null) {
+                AddressBuilder builder = new AddressBuilder(address);
+                if (address.getMetadata().getNamespace() == null) {
+                    builder.editOrNewMetadata().withNamespace(namespace).endMetadata();
                 }
 
-                if (address.getAddressSpace() == null) {
-                    builder.setAddressSpace(addressSpace);
+                if (address.getSpec().getAddressSpace() == null) {
+                    builder.editOrNewSpec().withAddressSpace(addressSpace).endSpec();
                 }
 
-                if (address.getName() == null) {
-                    builder.setName(Address.generateName(addressSpace, address.getAddress()));
+                if (address.getMetadata().getName() == null) {
+                    builder.editOrNewMetadata().withName(Address.generateName(addressSpace, address.getSpec().getAddress())).endMetadata();
                 }
 
                 address = builder.build();
             }
 
-            if (address.getLabel(LabelKeys.ADDRESS_TYPE) == null) {
-                address.putLabel(LabelKeys.ADDRESS_TYPE, address.getType());
-            }
+            address.putLabelIfAbsent(LabelKeys.ADDRESS_TYPE, address.getSpec().getType());
 
         } else {
             validateChanges(existing, address);
-            Map<String, String> annotations = existing.getAnnotations();
+            Map<String, String> annotations = existing.getMetadata().getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();
             }
-            annotations.putAll(address.getAnnotations());
+            annotations.putAll(address.getMetadata().getAnnotations());
 
-            Map<String, String> labels = existing.getLabels();
+            Map<String, String> labels = existing.getMetadata().getLabels();
             if (labels == null) {
                 labels = new HashMap<>();
             }
-            labels.putAll(address.getLabels());
+            labels.putAll(address.getMetadata().getLabels());
 
-            address = new Address.Builder(existing)
-                    .setPlan(address.getPlan())
-                    .setAnnotations(annotations)
-                    .setLabels(labels)
+            address = new AddressBuilder(existing)
+
+                    .editOrNewMetadata()
+                    .withAnnotations(annotations)
+                    .withLabels(labels)
+                    .endMetadata()
+
+                    .editOrNewSpec()
+                    .withPlan(address.getSpec().getPlan())
+                    .endSpec()
+
                     .build();
         }
         return address;
     }
 
+    private static  <T> boolean hasChanged ( final Address existing, final Address address, final Function<Address, T> extractor ) {
+
+        final T v1 = extractor.apply(existing );
+        final T v2 = extractor.apply(address);
+
+        return !Objects.equals(v1,  v2);
+    }
+
     private static void validateChanges(Address existing, Address address) {
-        if (!existing.getType().equals(address.getType())) {
-            throw new BadRequestException("Cannot change type of address " + address.getName() + " from " + existing.getType() + " to " + address.getType());
+
+        if (hasChanged(existing, address, a -> a.getSpec().getType())) {
+            throw new BadRequestException("Cannot change type of address " + address.getMetadata().getName() + " from " + existing.getSpec().getType() + " to " + address.getSpec().getType());
         }
 
-        if (!existing.getAddress().equals(address.getAddress())) {
-            throw new BadRequestException("Cannot change address of address " + address.getName() + " from " + existing.getAddress() + " to " + address.getAddress());
+        if (hasChanged(existing, address, a -> a.getSpec().getAddress())) {
+            throw new BadRequestException("Cannot change address of address " + address.getMetadata().getName() + " from " + existing.getSpec().getAddress() + " to " + address.getSpec().getAddress());
         }
 
-        if (!existing.getTopic().equals(address.getTopic())) {
-            throw new BadRequestException("Cannot change topic of address " + address.getName() + " from " + existing.getTopic() + " to " + address.getTopic());
+        if (hasChanged(existing, address, a -> a.getSpec().getTopic())) {
+            throw new BadRequestException("Cannot change topic of address " + address.getMetadata().getName() + " from " + existing.getSpec().getTopic() + " to " + address.getSpec().getTopic());
         }
 
         overrideAnnotation(existing, address, AnnotationKeys.BROKER_ID);
@@ -196,22 +207,22 @@ public class HttpAddressServiceBase {
         overrideLabel(existing, address, LabelKeys.NAMESPACE);
     }
 
-    private static void overrideAnnotation(Address existing, Address address, String annotationKey) {
-        if (existing.getAnnotation(annotationKey) == null) {
+    private static void override(Map<String,String> map1, Map<String,String> map2, String key ) {
+        if (map1.get(key) == null) {
             return;
         }
-        if (!existing.getAnnotation(annotationKey).equals(address.getAnnotation(annotationKey))) {
-            address.putAnnotation(annotationKey, existing.getAnnotation(annotationKey));
+        if (!map1.get(key).equals(map2.get(key))) {
+            map2.put(key, map1.get(key));
         }
     }
 
+    private static void overrideAnnotation(Address existing, Address address, String annotationKey) {
+        override(existing.getMetadata().getAnnotations(), address.getMetadata().getAnnotations(), annotationKey);
+    }
+
     private static void overrideLabel(Address existing, Address address, String labelKey) {
-        if (existing.getLabel(labelKey) == null) {
-            return;
-        }
-        if (!existing.getLabel(labelKey).equals(address.getLabel(labelKey))) {
-            address.putLabel(labelKey, existing.getLabel(labelKey));
-        }
+        override(existing.getMetadata().getLabels(), address.getMetadata().getLabels(), labelKey);
+
     }
 
     private void checkRequestBodyNotNull(Object object) {
@@ -220,7 +231,7 @@ public class HttpAddressServiceBase {
         }
     }
 
-    Response replaceAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressNameFromURL, Address payload) throws Exception {
+    Response internalReplaceAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressNameFromURL, Address payload) throws Exception {
         checkRequestBodyNotNull(payload);
         checkAddressObjectNameNotNull(payload, addressNameFromURL);
         checkMatchingAddressName(addressNameFromURL, payload);
@@ -237,29 +248,29 @@ public class HttpAddressServiceBase {
     }
 
     protected void checkAddressObjectNameNotNull(Address address, String addressNameFromURL) {
-        if (address.getName() == null) {
+        if (address.getMetadata().getName() == null) {
             throw new BadRequestException("the name of the object (" + addressNameFromURL + " based on URL) was undeterminable: name must be provided");
         }
     }
 
     private void checkMatchingAddressName(String addressNameFromURL, Address addressFromPayload) {
-        if (addressFromPayload.getName() != null && !addressFromPayload.getName().equals(addressNameFromURL)) {
-            throw new BadRequestException("the name of the object (" + addressFromPayload.getName() + ") does not match the name on the URL (" + addressNameFromURL + ")");
+        if (addressFromPayload.getMetadata().getName() != null && !addressFromPayload.getMetadata().getName().equals(addressNameFromURL)) {
+            throw new BadRequestException("the name of the object (" + addressFromPayload.getMetadata().getName() + ") does not match the name on the URL (" + addressNameFromURL + ")");
         }
     }
 
-    Response deleteAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressName) throws Exception {
+    Response internalDeleteAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressName) throws Exception {
         return doRequest("Error deleting address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
             Address address = apiHelper.deleteAddress(namespace, addressSpace, addressName);
             if (address == null) {
                 return Response.status(404).entity(Status.notFound("Address", addressName)).build();
             }
-            return Response.ok(Status.successStatus(200, "Address", addressName, address.getUid())).build();
+            return Response.ok(Status.successStatus(200, "Address", addressName, address.getMetadata().getUid())).build();
         });
     }
 
-    protected Response deleteAddresses(SecurityContext securityContext, String namespace) throws Exception {
+    protected Response internalDeleteAddresses(SecurityContext securityContext, String namespace) throws Exception {
         return doRequest("Error deleting addresses", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
             apiHelper.deleteAddresses(namespace);
@@ -277,7 +288,7 @@ public class HttpAddressServiceBase {
 
     private Object formatResponse(String acceptHeader, AddressList list) {
         if (isTableFormat(acceptHeader)) {
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(list));
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(list.getItems()));
         } else {
             return list;
         }
@@ -339,26 +350,26 @@ public class HttpAddressServiceBase {
         return addressList.stream()
                 .map(address -> new TableRow(
                         Arrays.asList(
-                                address.getName(),
-                                address.getAddress(),
-                                address.getAddressSpace(),
-                                address.getType(),
-                                address.getPlan(),
+                                address.getMetadata().getName(),
+                                address.getSpec().getAddress(),
+                                address.getSpec().getAddressSpace(),
+                                address.getSpec().getType(),
+                                address.getSpec().getPlan(),
                                 address.getStatus().isReady(),
                                 address.getStatus().getPhase(),
-                                Optional.ofNullable(address.getCreationTimestamp())
+                                Optional.ofNullable(address.getMetadata().getCreationTimestamp())
                                         .map(s -> TimeUtil.formatHumanReadable(Duration.between(TimeUtil.parseRfc3339(s), now)))
                                         .orElse(""),
                                 String.join(". ", address.getStatus().getMessages())),
                         new PartialObjectMetadata(new ObjectMetaBuilder()
-                                .withNamespace(address.getNamespace())
-                                .withName(address.getName())
-                                .withLabels(address.getLabels())
-                                .withAnnotations(address.getAnnotations())
-                                .withCreationTimestamp(address.getCreationTimestamp())
-                                .withSelfLink(address.getSelfLink())
-                                .withUid(address.getUid())
-                                .withResourceVersion(address.getResourceVersion())
+                                .withNamespace(address.getMetadata().getNamespace())
+                                .withName(address.getMetadata().getName())
+                                .withLabels(address.getMetadata().getLabels())
+                                .withAnnotations(address.getMetadata().getAnnotations())
+                                .withCreationTimestamp(address.getMetadata().getCreationTimestamp())
+                                .withSelfLink(address.getMetadata().getSelfLink())
+                                .withUid(address.getMetadata().getUid())
+                                .withResourceVersion(address.getMetadata().getResourceVersion())
                                 .build())))
                 .collect(Collectors.toList());
     }

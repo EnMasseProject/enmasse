@@ -34,7 +34,7 @@ public class SelfsignedCertProvider implements CertProvider {
             Secret secret = certManager.getCertSecret(addressSpaceCaSecretName);
             if (secret == null) {
                 secret = certManager.createSelfSignedCertSecret(addressSpaceCaSecretName, labels);
-                log.info("Created CA secret for {}", addressSpace.getName());
+                log.info("Created CA secret for {}", addressSpace.getMetadata().getName());
             }
             return secret;
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class SelfsignedCertProvider implements CertProvider {
             log.info("Creating self-signed certificates for {}", cn);
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             Map<String, String> labels = new HashMap<>();
-            labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+            labels.put(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType());
             labels.put(LabelKeys.INFRA_UUID, infraUuid);
             if (cn != null) {
                 Secret ca = issueAddressSpaceCert(addressSpace, labels);

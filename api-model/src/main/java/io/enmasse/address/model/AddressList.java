@@ -5,21 +5,26 @@
 
 package io.enmasse.address.model;
 
-import java.util.ArrayList;
-import java.util.Set;
+import java.util.Collection;
+
+import io.enmasse.common.model.AbstractList;
+import io.enmasse.common.model.DefaultCustomResource;
 
 /**
  * Type for address lists.
  */
-public class AddressList extends ArrayList<Address> {
+@DefaultCustomResource
+@SuppressWarnings("serial")
+public class AddressList extends AbstractList<Address> {
 
-    private static final long serialVersionUID = 1L;
+    public static final String KIND = "AddressList";
 
     public AddressList() {
-        super();
+        super(KIND, CoreCrd.API_VERSION);
     }
 
-    public AddressList(Set<Address> addresses) {
-        super(addresses);
+    public AddressList(final Collection<Address> addresses) {
+        this();
+        setItems(addresses);
     }
 }

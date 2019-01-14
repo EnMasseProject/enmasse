@@ -39,7 +39,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
     }
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
-        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
+        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
             if (endpoint.getService().startsWith("console")) {
                 return endpoint;
             }
@@ -81,8 +81,12 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
-                             .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getEndpoints() != null)
-                             .collect(Collectors.toMap(addressSpace -> Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getName()), Function.identity()));
+                             .filter(x -> x.getSpec().getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getSpec().getEndpoints() != null)
+                             .collect(Collectors.toMap(
+                                     addressSpace -> Optional
+                                         .ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME))
+                                         .orElse(addressSpace.getMetadata().getName()),
+                                     Function.identity()));
 
         Set<String> realmNames = keycloak.getRealmNames();
         log.info("Actual: {}, Desired: {}", realmNames, standardAuthSvcSpaces.keySet());
@@ -104,16 +108,16 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
             EndpointStatus endpointStatus = getConsoleEndpointStatus(addressSpace);
             if (endpointStatus == null) {
-                log.info("Address space {} has no endpoints defined", addressSpace.getName());
+                log.info("Address space {} has no endpoints defined", addressSpace.getMetadata().getName());
             } else if (endpointStatus.getExternalHost() == null && endpointStatus.getExternalPorts().isEmpty()) {
-                log.info("Address space {} console endpoint host not known, waiting", addressSpace.getName());
+                log.info("Address space {} console endpoint host not known, waiting", addressSpace.getMetadata().getName());
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
-                keycloak.createRealm(addressSpace.getNamespace(), realmName, consoleUri, keycloakRealmParams);
+                keycloak.createRealm(addressSpace.getMetadata().getNamespace(), realmName, consoleUri, keycloakRealmParams);
                 userApi.createUser(realmName, new UserBuilder()
                         .withMetadata(new ObjectMetaBuilder()
-                                .withName(addressSpace.getName() + "." + KubeUtil.sanitizeUserName(userName))
-                                .withNamespace(addressSpace.getNamespace())
+                                .withName(addressSpace.getMetadata().getName() + "." + KubeUtil.sanitizeUserName(userName))
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
                                 .build())
                         .withSpec(new UserSpecBuilder()
                                 .withUsername(KubeUtil.sanitizeUserName(userName))

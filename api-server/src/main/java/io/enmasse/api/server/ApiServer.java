@@ -5,6 +5,7 @@
 
 package io.enmasse.api.server;
 
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
@@ -53,6 +54,7 @@ public class ApiServer extends AbstractVerticle {
 
     static {
         try {
+            CoreCrd.registerCustomCrds();
             AdminCrd.registerCustomCrds();
         } catch (RuntimeException t) {
             t.printStackTrace();

@@ -4,20 +4,50 @@
  */
 package io.enmasse.address.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExposeSpec {
-    private final ExposeType type;
-    private final Map<String, String> annotations;
+    @Valid
+    private ExposeType type;
+    private Map<String, String> annotations = new HashMap<>();
 
     // For 'route' type
-    private final String routeHost;
-    private final String routeServicePort;
-    private final TlsTermination routeTlsTermination;
+    private String routeHost;
+    private String routeServicePort;
+    private TlsTermination routeTlsTermination;
 
     // For 'loadbalancer' type
-    private final List<String> loadBalancerPorts;
-    private final List<String> loadBalancerSourceRanges;
+    private List<String> loadBalancerPorts = new ArrayList<>();
+    private List<String> loadBalancerSourceRanges = new ArrayList<>();
+
+    public ExposeSpec () {
+    }
 
     public ExposeSpec(ExposeType type, Map<String, String> annotations, String routeHost, String routeServicePort, TlsTermination routeTlsTermination, List<String> loadBalancerPorts, List<String> loadBalancerSourceRanges) {
         this.type = type;
@@ -29,93 +59,59 @@ public class ExposeSpec {
         this.loadBalancerSourceRanges = loadBalancerSourceRanges;
     }
 
+    public void setType(ExposeType type) {
+        this.type = type;
+    }
+
     public ExposeType getType() {
         return type;
     }
 
-    public Optional<String> getRouteHost() {
-        return Optional.ofNullable(routeHost);
+    public void setRouteHost(String routeHost) {
+        this.routeHost = routeHost;
+    }
+
+    public String getRouteHost() {
+        return routeHost;
+    }
+
+    public void setRouteServicePort(String routeServicePort) {
+        this.routeServicePort = routeServicePort;
     }
 
     public String getRouteServicePort() {
         return routeServicePort;
     }
 
+    public void setRouteTlsTermination(TlsTermination routeTlsTermination) {
+        this.routeTlsTermination = routeTlsTermination;
+    }
+
     public TlsTermination getRouteTlsTermination() {
         return routeTlsTermination;
+    }
+
+    public void setAnnotations(Map<String, String> annotations) {
+        this.annotations = annotations;
     }
 
     public Map<String, String> getAnnotations() {
         return annotations;
     }
 
+    public void setLoadBalancerPorts(List<String> loadBalancerPorts) {
+        this.loadBalancerPorts = loadBalancerPorts;
+    }
+
     public List<String> getLoadBalancerPorts() {
         return Collections.unmodifiableList(loadBalancerPorts);
     }
 
+    public void setLoadBalancerSourceRanges(List<String> loadBalancerSourceRanges) {
+        this.loadBalancerSourceRanges = loadBalancerSourceRanges;
+    }
+
     public List<String> getLoadBalancerSourceRanges() {
         return Collections.unmodifiableList(loadBalancerSourceRanges);
-    }
-
-    public enum ExposeType {
-        route,
-        loadbalancer
-    }
-
-    public enum TlsTermination {
-        reencrypt,
-        passthrough
-    }
-
-    public static class Builder {
-        private ExposeType type;
-        private Map<String, String> annotations;
-        private String routeHost;
-        private String routeServicePort;
-        private TlsTermination routeTlsTermination;
-        private List<String> loadBalancerPorts = Collections.emptyList();
-        private List<String> loadBalancerSourceRanges = Collections.emptyList();
-
-        public Builder setType(ExposeType type) {
-            this.type = type;
-            return this;
-        }
-
-        public Builder setRouteHost(String routeHost) {
-            this.routeHost = routeHost;
-            return this;
-        }
-
-        public Builder setRouteTlsTermination(TlsTermination routeTlsTermination) {
-            this.routeTlsTermination = routeTlsTermination;
-            return this;
-        }
-
-        public void setAnnotations(Map<String, String> annotations) {
-            this.annotations = annotations;
-        }
-
-        public void setLoadBalancerSourceRanges(List<String> loadBalancerSourceRanges) {
-            this.loadBalancerSourceRanges = new ArrayList<>(loadBalancerSourceRanges);
-        }
-
-        public Builder setRouteServicePort(String routeServicePort) {
-            this.routeServicePort = routeServicePort;
-            return this;
-        }
-
-        public Builder setLoadBalancerPorts(List<String> loadBalancerPorts) {
-            this.loadBalancerPorts = new ArrayList<>(loadBalancerPorts);
-            return this;
-        }
-
-        public ExposeSpec build() {
-            Objects.requireNonNull(type);
-            if (type.equals(ExposeType.route)) {
-                Objects.requireNonNull(routeServicePort);
-                Objects.requireNonNull(routeTlsTermination);
-            }
-            return new ExposeSpec(type, annotations, routeHost, routeServicePort, routeTlsTermination, loadBalancerPorts, loadBalancerSourceRanges);
-        }
     }
 }
