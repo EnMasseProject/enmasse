@@ -14,7 +14,7 @@ production setup, it is recommended to use one of the following installation met
 
 .Procedure 
 
-. Log in as as a user with `cluster-admin` privileges:
+. Log in as a user with `cluster-admin` privileges:
 +
 [options="nowrap",subs="attributes"]
 ----

@@ -29,7 +29,8 @@ Use the output as the host name in the following step.
 
 . Run the client:
 +
-[options="nowrap",subs=attributes+]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-python client-example1.py -u amqps://user1:password@messaging.example1.com:443/myqueue
+python client-example1.py -u amqps://user1:password@_messaging.example1.com_:443/myqueue
 ----
+
