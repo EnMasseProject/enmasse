@@ -33,4 +33,4 @@
 |Total number of messages delivered |For the desired connection, expand the twisty on the left to show the *Senders* and *Receivers* tables; see the *Deliveries* columns.
 |Standard address space only: Username used by the client to connect |The third column
 |===
-
+NOTE: For the brokered address space only, on the Connections page, the number of senders is either `0` or `1`. As soon as one or more senders exist, `1` is displayed rather than reflecting the actual number of senders.
